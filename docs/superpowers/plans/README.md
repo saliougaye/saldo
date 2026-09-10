@@ -174,6 +174,11 @@ page, then the full token flow through `curl` — code exchange, bearer `/api/me
 killing the rotated one too. The **Docker image was built and run** against that Postgres: it migrates on start and
 serves, and `registrationAllowed` flips to false after the first account in `first-user` mode.
 
+**Review findings, both fixed here:** every expiry compared `expiresAt < now`, leaving auth codes, challenges and
+refresh tokens usable *at* their deadline (RFC 7519 says reject on or after `exp`) — now `<=`, each with a boundary
+test that fails against the old code. And the rate limiter bucketed on the **first** `X-Forwarded-For` entry, which is
+client-supplied, so anyone could rotate the header and reset their own bucket; it reads the last hop now.
+
 **Not verified:** the manual browser passkey ceremony. It needs a real platform authenticator (Touch ID / Windows
 Hello) and there is no browser automation on this machine, so it is the one acceptance criterion left to the user;
 `docs/self-hosting.md` has the steps. Deviations from the spec, both deliberate: `webauthn_challenges` gained a
