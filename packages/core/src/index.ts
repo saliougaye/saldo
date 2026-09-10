@@ -8,5 +8,6 @@ export * from './history';
 export * from './ids';
 export * from './ledger';
 export * from './money';
+export * from './recurrence';
 export * from './stats';
 export * from './sync/hlc';

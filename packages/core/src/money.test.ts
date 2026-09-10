@@ -1,21 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
-  type AmountKey,
   amountBufferToMinor,
   COMMON_CURRENCY_CODES,
   CURRENCY_CODES,
   CURRENCY_TABLE,
   getCurrency,
-  type MinorDigits,
   maxIntegerDigits,
   minorToAmountBuffer,
   parseDecimalAmount,
-  pressAmountKey,
+  sanitizeAmountInput,
 } from './money';
-
-function typeKeys(keys: AmountKey[], minorDigits: MinorDigits = 2): string {
-  return keys.reduce((buffer, key) => pressAmountKey(buffer, key, minorDigits), '');
-}
 
 describe('currencies', () => {
   it('covers every currency CLDR can format', () => {
@@ -53,40 +47,50 @@ describe('maxIntegerDigits', () => {
   });
 });
 
-describe('pressAmountKey', () => {
-  it('types integers and decimals', () => {
-    expect(typeKeys(['1', '2', 'decimal', '5'])).toBe('12.5');
+describe('sanitizeAmountInput', () => {
+  it('keeps digits and a single decimal separator', () => {
+    expect(sanitizeAmountInput('12.5', 2)).toBe('12.5');
+    expect(sanitizeAmountInput('12', 2)).toBe('12');
+    expect(sanitizeAmountInput('12.', 2)).toBe('12.');
   });
 
-  it('ignores a decimal separator on an empty buffer or a second one', () => {
-    expect(typeKeys(['decimal'])).toBe('');
-    expect(typeKeys(['1', 'decimal', 'decimal', '2'])).toBe('1.2');
+  it('accepts the comma the system keypad emits in a comma locale', () => {
+    expect(sanitizeAmountInput('12,5', 2)).toBe('12.5');
+    expect(sanitizeAmountInput('1.842,60', 2)).toBe('1.84');
   });
 
-  it('limits decimals to the currency minor digits', () => {
-    expect(typeKeys(['1', 'decimal', '2', '3', '4'])).toBe('1.23');
-    expect(typeKeys(['1', 'decimal', '2', '3', '4'], 3)).toBe('1.234');
+  it('drops anything the keyboard should not have produced', () => {
+    expect(sanitizeAmountInput('-12', 2)).toBe('12');
+    expect(sanitizeAmountInput('1a2', 2)).toBe('12');
+    expect(sanitizeAmountInput('  ', 2)).toBe('');
   });
 
-  it('has no fractional part for zero decimal currencies', () => {
-    expect(typeKeys(['1', '2', 'decimal', '5'], 0)).toBe('125');
-    expect(typeKeys(['1', 'decimal'], 0)).toBe('1');
+  it('treats only the first separator as the decimal point', () => {
+    expect(sanitizeAmountInput('1.2.3', 2)).toBe('1.23');
   });
 
-  it('limits the integer part to six digits', () => {
-    expect(typeKeys(['1', '2', '3', '4', '5', '6', '7'])).toBe('123456');
-    expect(typeKeys(['1', '2', '3', '4', '5', '6', '7', '8', '9'], 0)).toBe('12345678');
-    expect(typeKeys(['1', '2', '3', '4', '5', '6'], 3)).toBe('12345');
+  it('limits the decimals to the currency scale', () => {
+    expect(sanitizeAmountInput('1.234', 2)).toBe('1.23');
+    expect(sanitizeAmountInput('1.234', 3)).toBe('1.234');
+    expect(sanitizeAmountInput('1.2345', 3)).toBe('1.234');
   });
 
-  it('replaces a single leading zero', () => {
-    expect(typeKeys(['0', '5'])).toBe('5');
-    expect(typeKeys(['0', 'decimal', '5'])).toBe('0.5');
+  it('has no fractional part for a currency without a minor unit', () => {
+    expect(sanitizeAmountInput('12.5', 0)).toBe('12');
+    expect(sanitizeAmountInput('12,', 0)).toBe('12');
   });
 
-  it('deletes the last character', () => {
-    expect(typeKeys(['1', '2', 'del'])).toBe('1');
-    expect(typeKeys(['del'])).toBe('');
+  it('limits the integer digits to the currency scale', () => {
+    expect(sanitizeAmountInput('1234567', 2)).toBe('123456');
+    expect(sanitizeAmountInput('123456789', 0)).toBe('12345678');
+    expect(sanitizeAmountInput('123456', 3)).toBe('12345');
+  });
+
+  it('strips leading zeros but keeps a lone one', () => {
+    expect(sanitizeAmountInput('05', 2)).toBe('5');
+    expect(sanitizeAmountInput('0', 2)).toBe('0');
+    expect(sanitizeAmountInput('0.5', 2)).toBe('0.5');
+    expect(sanitizeAmountInput('.5', 2)).toBe('0.5');
   });
 });
 

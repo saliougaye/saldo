@@ -12,8 +12,11 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ToastProvider } from '../src/components/Toast';
 import { DatabaseProvider } from '../src/db/DatabaseProvider';
 import { useSettings } from '../src/db/hooks';
+import { MaterialiserGate } from '../src/features/period/MaterialiserGate';
+import { PeriodProvider } from '../src/features/period/PeriodProvider';
 import { createI18n } from '../src/i18n';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
@@ -45,7 +48,11 @@ function SettingsScopedProviders({ children }: { children: ReactNode }) {
     <ThemeProvider preference={settings?.theme ?? 'system'}>
       <I18nextProvider i18n={i18n}>
         <ThemedStatusBar />
-        {children}
+        <PeriodProvider>
+          <ToastProvider>
+            <MaterialiserGate>{children}</MaterialiserGate>
+          </ToastProvider>
+        </PeriodProvider>
       </I18nextProvider>
     </ThemeProvider>
   );

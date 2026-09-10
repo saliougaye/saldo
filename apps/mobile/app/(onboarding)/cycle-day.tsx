@@ -31,14 +31,14 @@ export default function CycleDayStep() {
           label={t('common.continue')}
           onPress={() => {
             setDraft({ cycleStartDay: day });
-            router.push('/first-account');
+            router.push('/account-details');
           }}
         />
       }
     >
-      <ProgressBar ratio={1 / 3} />
+      <ProgressBar ratio={1 / 4} />
       <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 1, total: 3 })}
+        {t('onboarding.step', { current: 1, total: 4 })}
       </Text>
       <Text size="display" weight="semibold" tracking="tighter">
         {t('onboarding.cycleTitle')}

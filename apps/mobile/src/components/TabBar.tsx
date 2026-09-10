@@ -21,13 +21,16 @@ export interface TabBarProps {
   state: { index: number; routes: readonly { key: string; name: string }[] };
   navigation: { navigate: (name: string) => void };
   onFabPress: () => void;
+  /** Route name to visible label. The layout owns the i18n keys, so this stays decoupled. */
+  label: (routeName: string) => string;
+  fabLabel: string;
 }
 
 /**
  * Custom tab bar of §6.14: height 78 plus the bottom inset, with the FAB raised 16px over the
  * middle. The FAB is part of the bar so it keeps its place on every tab.
  */
-export function TabBar({ state, navigation, onFabPress }: TabBarProps) {
+export function TabBar({ state, navigation, onFabPress, label, fabLabel }: TabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const half = Math.ceil(state.routes.length / 2);
@@ -49,7 +52,7 @@ export function TabBar({ state, navigation, onFabPress }: TabBarProps) {
           color={focused ? theme.palette.text : theme.palette.textFaint}
         />
         <Text size="caption" color={focused ? 'text' : 'textFaint'}>
-          {route.name}
+          {label(route.name)}
         </Text>
       </Pressable>
     );
@@ -70,7 +73,7 @@ export function TabBar({ state, navigation, onFabPress }: TabBarProps) {
       <View style={{ width: theme.layout.fabSize + 16, alignItems: 'center' }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="new-transaction"
+          accessibilityLabel={fabLabel}
           onPress={onFabPress}
           style={{
             position: 'absolute',

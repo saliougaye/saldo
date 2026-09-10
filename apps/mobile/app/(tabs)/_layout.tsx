@@ -1,10 +1,11 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { TabBar } from '../../src/components/TabBar';
 import { useAppLock } from '../../src/features/lock/useAppLock';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const router = useRouter();
   useAppLock();
   return (
     <Tabs
@@ -12,9 +13,9 @@ export default function TabsLayout() {
       tabBar={(props) => (
         <TabBar
           {...props}
-          onFabPress={() => {
-            // The new-transaction sheet arrives in phase 03.
-          }}
+          label={(name) => t(`tabs.${name === 'index' ? 'home' : name}`)}
+          fabLabel={t('transactions.newTransaction')}
+          onFabPress={() => router.push('/transaction/new')}
         />
       )}
     >
