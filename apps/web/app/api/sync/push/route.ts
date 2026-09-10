@@ -13,7 +13,7 @@ const MAX_BODY_BYTES = 5 * 1024 * 1024;
 export function POST(request: Request): Promise<Response> {
   return handle(async () => {
     const now = new Date();
-    const user = await requireUser(request, now);
+    const user = await requireUser(request);
     const body = await readJson(request, pushRequestSchema, MAX_BODY_BYTES);
 
     // §8.1: refuse rather than let rows the peer cannot represent diverge silently.

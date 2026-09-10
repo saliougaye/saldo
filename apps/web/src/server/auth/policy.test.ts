@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { users } from '../db/schema';
+import { user } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
-import { registrationAllowed } from './registration';
+import { registrationAllowed } from './policy';
 
 let harness: TestDatabase;
 
@@ -21,14 +21,24 @@ describe('registrationAllowed', () => {
   it('is always allowed when open and never when closed', async () => {
     await expect(registrationAllowed(harness.db, 'open')).resolves.toBe(true);
     await expect(registrationAllowed(harness.db, 'closed')).resolves.toBe(false);
-    await harness.db.insert(users).values({ displayName: 'Ada' });
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: `${crypto.randomUUID()}@passkey.saldo.invalid`,
+      emailVerified: false,
+    });
     await expect(registrationAllowed(harness.db, 'open')).resolves.toBe(true);
     await expect(registrationAllowed(harness.db, 'closed')).resolves.toBe(false);
   });
 
   it('allows the first user only', async () => {
     await expect(registrationAllowed(harness.db, 'first-user')).resolves.toBe(true);
-    await harness.db.insert(users).values({ displayName: 'Ada' });
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: `${crypto.randomUUID()}@passkey.saldo.invalid`,
+      emailVerified: false,
+    });
     await expect(registrationAllowed(harness.db, 'first-user')).resolves.toBe(false);
   });
 });

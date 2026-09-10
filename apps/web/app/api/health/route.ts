@@ -1,5 +1,5 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
-import { registrationAllowed } from '../../../src/server/auth/registration';
+import { registrationAllowed } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { handle } from '../../../src/server/http/errors';

@@ -1,8 +1,7 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { issueAccessToken } from '../../../../src/server/auth/tokens';
-import { users } from '../../../../src/server/db/schema';
 import { createTestDatabase, type TestDatabase } from '../../../../src/server/test/harness';
+import { createTestSession } from '../../../../src/server/test/session';
 import { GET as pull } from '../pull/route';
 import { POST as push } from './route';
 
@@ -35,10 +34,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const [user] = await harness.db.insert(users).values({ displayName: 'Ada' }).returning();
-  if (user === undefined) throw new Error('insert returned no row');
-  userId = user.id;
-  bearer = `Bearer ${await issueAccessToken(user.id, new Date())}`;
+  const created = await createTestSession(harness.db);
+  userId = created.userId;
+  bearer = created.bearer;
 });
 
 afterEach(async () => {
@@ -124,15 +122,14 @@ describe('sync routes', () => {
         { authorization: bearer },
       ),
     );
-    const [other] = await harness.db.insert(users).values({ displayName: 'Bob' }).returning();
-    if (other === undefined) throw new Error('insert returned no row');
-    const otherBearer = `Bearer ${await issueAccessToken(other.id, new Date())}`;
+    const other = await createTestSession(harness.db, 'Bob');
+    const otherBearer = other.bearer;
     const page = await pull(
       new Request('http://localhost/api/sync/pull?since=0', {
         headers: { authorization: otherBearer },
       }),
     );
     await expect(page.json()).resolves.toMatchObject({ changes: [] });
-    expect(userId).not.toBe(other.id);
+    expect(userId).not.toBe(other.userId);
   });
 });

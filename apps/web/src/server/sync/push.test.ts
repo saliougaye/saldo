@@ -1,8 +1,9 @@
 import { SYNC_SCHEMA_VERSION, type SyncChangeEnvelope } from '@saldo/core';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { syncRows, users } from '../db/schema';
+import { syncRows } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
+import { createTestSession } from '../test/session';
 import { applyPush } from './push';
 
 let harness: TestDatabase;
@@ -11,9 +12,7 @@ const NOW = new Date('2026-09-10T10:00:00.000Z');
 const WALL = String(NOW.getTime()).padStart(15, '0');
 
 async function seedUser(name = 'Ada'): Promise<string> {
-  const [user] = await harness.db.insert(users).values({ displayName: name }).returning();
-  if (user === undefined) throw new Error('insert returned no row');
-  return user.id;
+  return (await createTestSession(harness.db, name)).userId;
 }
 
 function tag(id: string, name: string, hlc: string): SyncChangeEnvelope {

@@ -1,14 +1,13 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { syncRows, users } from '../db/schema';
+import { syncRows } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
+import { createTestSession } from '../test/session';
 import { readPull } from './pull';
 
 let harness: TestDatabase;
 
 async function seedUser(name: string): Promise<string> {
-  const [user] = await harness.db.insert(users).values({ displayName: name }).returning();
-  if (user === undefined) throw new Error('insert returned no row');
-  return user.id;
+  return (await createTestSession(harness.db, name)).userId;
 }
 
 async function seedRow(userId: string, id: string, seq: number): Promise<void> {

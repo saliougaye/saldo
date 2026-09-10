@@ -1,11 +1,10 @@
 'use client';
 
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { useState } from 'react';
+import { authClient } from '../../../src/client/authClient';
 
 interface Props {
   redirectUri: string;
-  codeChallenge: string;
   state: string;
   canRegister: boolean;
   initialMode: 'login' | 'register';
@@ -36,40 +35,29 @@ const input = {
   boxSizing: 'border-box',
 } as const;
 
-async function postJson(path: string, body: unknown): Promise<unknown> {
-  const response = await fetch(path, {
-    method: 'POST',
-    body: JSON.stringify(body),
-    headers: { 'content-type': 'application/json' },
-  });
-  const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message =
-      typeof payload === 'object' && payload !== null
-        ? ((payload as { error?: { message?: string } }).error?.message ?? 'Request failed')
-        : 'Request failed';
-    throw new Error(message);
-  }
-  return payload;
-}
-
 /**
- * The two ceremonies of §9.3. On success the server answers with the `saldo://` redirect it minted
- * and the browser follows it, which is what closes `openAuthSessionAsync` on the app side.
+ * The two ceremonies of §9.3, run by Better Auth's passkey client. On success the browser follows
+ * the `saldo://` redirect, which is what closes `openAuthSessionAsync` on the app side.
  */
-export function MobileAuth({ redirectUri, codeChallenge, state, canRegister, initialMode }: Props) {
+export function MobileAuth({ redirectUri, state, canRegister, initialMode }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [displayName, setDisplayName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const finish = (payload: unknown) => {
-    const redirect =
-      typeof payload === 'object' && payload !== null
-        ? (payload as { redirect?: unknown }).redirect
-        : undefined;
-    if (typeof redirect !== 'string') throw new Error('The server did not return a redirect');
-    window.location.href = redirect;
+  /**
+   * The ceremony leaves this browser holding a session. The app cannot read it, so a one-time
+   * token is minted and travels back in the deep link: single use, one minute, stored hashed.
+   */
+  const finish = async () => {
+    const { data, error } = await authClient.oneTimeToken.generate();
+    if (error !== null || data === null) {
+      throw new Error(error?.message ?? 'Could not finish sign-in');
+    }
+    const url = new URL(redirectUri);
+    url.searchParams.set('ott', data.token);
+    url.searchParams.set('state', state);
+    window.location.href = url.toString();
   };
 
   const run = async (action: () => Promise<void>) => {
@@ -86,36 +74,20 @@ export function MobileAuth({ redirectUri, codeChallenge, state, canRegister, ini
 
   const login = () =>
     run(async () => {
-      const options = await postJson('/api/auth/login/options', {});
-      const assertion = await startAuthentication({
-        optionsJSON: options as Parameters<typeof startAuthentication>[0]['optionsJSON'],
-      });
-      finish(
-        await postJson('/api/auth/login/verify', {
-          response: assertion,
-          code_challenge: codeChallenge,
-          redirect_uri: redirectUri,
-          state,
-        }),
-      );
+      const { error } = await authClient.signIn.passkey();
+      if (error !== null) throw new Error(error.message ?? 'Could not sign you in');
+      await finish();
     });
 
   const register = () =>
     run(async () => {
-      const trimmed = displayName.trim();
-      if (trimmed.length === 0) throw new Error('Choose a name first');
-      const options = await postJson('/api/auth/register/options', { displayName: trimmed });
-      const attestation = await startRegistration({
-        optionsJSON: options as Parameters<typeof startRegistration>[0]['optionsJSON'],
-      });
-      finish(
-        await postJson('/api/auth/register/verify', {
-          response: attestation,
-          code_challenge: codeChallenge,
-          redirect_uri: redirectUri,
-          state,
-        }),
-      );
+      const name = displayName.trim();
+      if (name.length === 0) throw new Error('Choose a name first');
+      // `context` is the plugin's passthrough to `resolveUser`, where the registration policy and
+      // the display name are enforced server-side.
+      const { error } = await authClient.passkey.addPasskey({ context: name, createSession: true });
+      if (error !== null) throw new Error(error.message ?? 'Could not create the account');
+      await finish();
     });
 
   return (

@@ -16,7 +16,7 @@ const querySchema = z.object({
 export function GET(request: Request): Promise<Response> {
   return handle(async () => {
     const now = new Date();
-    const user = await requireUser(request, now);
+    const user = await requireUser(request);
     const url = new URL(request.url);
     const parsed = querySchema.safeParse({
       since: url.searchParams.get('since') ?? undefined,
