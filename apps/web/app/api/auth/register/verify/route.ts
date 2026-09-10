@@ -42,10 +42,7 @@ export function POST(request: Request): Promise<Response> {
     if (stored.displayName === null) {
       throw new ApiError(400, 'challenge_not_found', 'Unknown or already used challenge');
     }
-    const credential = await verifyRegistration(
-      body.response as Parameters<typeof verifyRegistration>[0],
-      stored.challenge,
-    );
+    const credential = await verifyRegistration(body.response, stored.challenge);
 
     const [user] = await db.insert(users).values({ displayName: stored.displayName }).returning();
     if (user === undefined) throw new ApiError(500, 'internal_error', 'Could not create the user');

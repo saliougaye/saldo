@@ -49,13 +49,18 @@ export interface VerifiedRegistration {
   backedUp: boolean;
 }
 
+/**
+ * `response` is `unknown` on purpose: the route validates only the two fields it reads itself and
+ * `@simplewebauthn/server` is the component that validates the rest of the attestation, so the one
+ * cast to its type belongs here rather than being repeated at each call site.
+ */
 export async function verifyRegistration(
-  response: RegistrationResponseJSON,
+  response: unknown,
   expectedChallenge: string,
 ): Promise<VerifiedRegistration> {
   const { publicUrl, rpId } = env();
   const result = await verifyRegistrationResponse({
-    response,
+    response: response as RegistrationResponseJSON,
     expectedChallenge,
     expectedOrigin: publicUrl,
     expectedRPID: rpId,
@@ -74,8 +79,9 @@ export async function verifyRegistration(
   };
 }
 
+/** `response` is `unknown` for the same reason as in `verifyRegistration`. */
 export async function verifyAuthentication(
-  response: AuthenticationResponseJSON,
+  response: unknown,
   expectedChallenge: string,
   credential: {
     id: string;
@@ -86,7 +92,7 @@ export async function verifyAuthentication(
 ): Promise<{ newCounter: number }> {
   const { publicUrl, rpId } = env();
   const result = await verifyAuthenticationResponse({
-    response,
+    response: response as AuthenticationResponseJSON,
     expectedChallenge,
     expectedOrigin: publicUrl,
     expectedRPID: rpId,
