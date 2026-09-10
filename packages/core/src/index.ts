@@ -10,6 +10,7 @@ export * from './history';
 export * from './ids';
 export * from './ledger';
 export * from './money';
+export * from './period';
 export * from './recurrence';
 export * from './rollover';
 export * from './stats';
