@@ -3126,8 +3126,8 @@ export function AmountText({
 }
 ```
 
-`Keypad.tsx` — note the delete key uses the icon named `del`, and a zero-decimal currency has no
-decimal key at all (§5.1):
+`Keypad.tsx` — **superseded in phase 03 (D23)**: amounts are now typed on the device keyboard, so this
+component was replaced by `AmountInput.tsx`. Skip it if you are building the app fresh:
 
 ```tsx
 import { type AmountKey, type MinorDigits, pressAmountKey } from '@saldo/core';
@@ -3779,7 +3779,10 @@ export default function CycleDayStep() {
 }
 ```
 
-- [x] **Step 7: Step 2 — first account**
+- [x] **Step 7: Step 2 — account details**
+
+> **Changed in phase 03:** this step was split in two — account details here, balance and currency in
+> `balance.tsx` — so each screen asks one thing (spec §6.29). Onboarding has four steps.
 
 ```tsx
 import {

@@ -69,6 +69,7 @@ cycle, and am I going faster than I should?*
 | D19 | **MIT license** | The user wants anyone to clone and release freely. |
 | D20 | App identity (name, bundle id, URL scheme) configurable via env in `app.config.ts` | Forks must be able to sideload their own build without clashing ids. |
 | D21 | Scheduled occurrences of recurring transactions have **deterministic ids** `${recurrenceId}:${occurrenceDate}` | Two devices generating the same occurrence offline converge to one row after sync. |
+| D23 | Amounts are typed on the **device keyboard**, not an in-app keypad | One less thing between the user and the number, and no screen space spent on keys the OS already draws. `keyboardType="decimal-pad"` gives digits and a separator; iOS adds a done button through `InputAccessoryView`, which Android has no primitive for (there the keyboard's own dismiss key and the form's save button serve). The trade is that the keyboard's separator follows the *device* locale, so `sanitizeAmountInput` accepts both `.` and `,`. |
 | D22 | **TanStack Query is used for the network layer only** (auth + sync, phases 06–07), never for local reads | Local reads are already reactive through the `expo-sqlite` change listener, with SQLite as the single source of truth; a query cache on top would have to be invalidated by hand on every mutation, re-implementing what the listener does for free and inviting stale-screen bugs. React Query caches *server* state, and on a local-first device there is none. It earns its place on retries, backoff, dedup and `onlineManager` for the sync and auth calls, driven imperatively through `QueryClient` rather than by component mounts (§8.5 runs sync on app start, foreground and after writes, not on mount). |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
@@ -283,10 +284,15 @@ picker to keep the grid at 12). Children are created together with their selecte
 
 ### 5.1 Money
 
-- Stored in minor units. Keypad input buffer uses `.` internally; the key label is `,` (it) or `.` (en).
-- Keypad rules: max **8 significant digits** split by the currency scale — `maxIntegerDigits = 8 − minorDigits`, so
-  6 integer digits + 2 decimals for EUR, 8 + 0 for JPY, 5 + 3 for KWD. A decimal separator only after at least one
-  digit and never for a 0-decimal currency, no leading zeros (`0` then `5` → `5`), and `del` removes the last char.
+- Stored in minor units. The amount buffer uses `.` internally whatever the device shows (D23).
+- **Input is the device's numeric keyboard** (`decimal-pad`), not an in-app keypad. `sanitizeAmountInput(text,
+  minorDigits)` normalises every edit: it accepts `.` or `,` (the system keypad follows the device locale, not the app
+  language), treats only the first separator as the decimal point, drops anything that is not a digit or separator,
+  strips leading zeros while keeping a lone `0`, and enforces max **8 significant digits** split by the currency scale
+  — `maxIntegerDigits = 8 − minorDigits`, so 6 + 2 for EUR, 8 + 0 for JPY, 5 + 3 for KWD. A 0-decimal currency gets no
+  fractional part at all.
+- The field shows the raw buffer while typing, not a grouped number: re-formatting text under the caret fights the
+  user. Grouping applies wherever an amount is *displayed*.
 - Display: `formatMoneyParts` returns `{ sign, integer, fraction, decimalSeparator, symbol, symbolPosition }`.
   The design renders the fraction and symbol at **50% opacity** (`1.842<span opacity .5>,60 €</span>`).
   - it: group `.`, decimal `,`, symbol suffix with a space (`1.842,60 €`).
@@ -504,7 +510,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.13 | **Tag admin** | 936–957 | List with count; tap → Modifica tag sheet. Footnote copy from design. |
 | 6.14 | **Tab bar + FAB** | 961–975 | Height 78 + bottom inset; FAB 56×56, radius 18, accent, raised −16px. FAB opens new transaction sheet. |
 | 6.15 | **Period sheet** | 981–1009 | Lists cycles that contain data (current first; sub "in corso, giorno X di Y" or "{expenses} di uscite"); Periodo personalizzato (date range picker); Giorno di inizio ciclo → picker. Remove the prototype's "non disponibile offline" rows (everything is local). |
-| 6.16 | **New/Edit transaction sheet** | 1011–1174 | Kind segmented (Uscita/Entrata/Trasferimento); amount display (tap reopens keypad in edit mode); category grid 4 cols (top 10 by usage + "Altro" → full picker incl. subcategories); account chips (non-archived); transfer Da/A pickers; date chips Oggi/Ieri + calendar picker; Descrizione (placeholder "Dove"/"Da chi"); Tag input with suggestions, create, selected chips; **Allega foto** (action sheet: Scatta foto / Scegli dalla libreria / Scegli file PDF; shows count badge + thumbnails); Ripeti toggle; Escludi dai totali toggle + footnote; Elimina (edit only). Keypad 3×4 + Save column (80px); in edit mode the keypad is closed and a full-width save button shows. Save disabled until amount > 0 (and for transfers, from ≠ to). |
+| 6.16 | **New/Edit transaction sheet** | 1011–1174 | Kind segmented (Uscita/Entrata/Trasferimento); amount display (tap reopens keypad in edit mode); category grid 4 cols (top 10 by usage + "Altro" → full picker incl. subcategories); account chips (non-archived); transfer Da/A pickers; date chips Oggi/Ieri + calendar picker; Descrizione (placeholder "Dove"/"Da chi"); Tag input with suggestions, create, selected chips; **Allega foto** (action sheet: Scatta foto / Scegli dalla libreria / Scegli file PDF; shows count badge + thumbnails); Ripeti toggle; Escludi dai totali toggle + footnote; Elimina (edit only). The amount is a `decimal-pad` field styled as the big amount, focused automatically on a new transaction (D23); there is no in-app keypad and no separate save column. Save is disabled until amount > 0, an account is chosen, a non-transfer has a category and a transfer has a different destination. |
 | 6.17 | **Budget detail sheet** | 1176–1209 | §5.8. Add "Modifica" (opens budget form prefilled) and "Elimina budget". |
 | 6.18 | **New budget sheet** | 1211–1283 | Amount input + currency symbol, median hint + "Usa", category grid 2 cols with taken dots, Nome (auto placeholder), Si ripete segmented, Avvisami a segmented + note, Porta avanti il residuo toggle, footnote ("+12% sulla mediana di spesa"), "Crea budget" disabled until valid. Reused for edit ("Salva"). |
 | 6.19 | **Category sheet** | 1285–1362 | Preview tile, name, icon search + grouped grid (7 cols; groups Casa, Trasporti, Cibo, Salute, Svago, Lavoro with search labels from design `ICON_LABEL`, translated), 10 colour swatches with ring, Categoria madre picker (only top-level, same direction; hidden if the category has children), Budget mensile toggle + amount, Archivia (edit only), Salva disabled until name. |
@@ -517,7 +523,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
-| 6.29 | **Onboarding** | 1616–1717 | NEW step 0 **Welcome** (not in design; same visual language: 32px title, muted body, two big buttons): "Usa solo su questo telefono" (local) / "Accedi al tuo server" (→ server URL → passkey; on success pull existing data; if the server already has settings with `onboardingCompletedAt`, skip the rest). Then step 1 cycle day (7-col day grid, "Il tuo mese va dal X al Y" timeline), step 2 first account (name, type, balance keypad, currency picker), step 3 categories. Progress bar 2px. "Inizia" writes settings + account + categories. |
+| 6.29 | **Onboarding** | 1616–1717 | NEW step 0 **Welcome** (not in design; same visual language: 32px title, muted body, two big buttons): "Usa solo su questo telefono" (local) / "Accedi al tuo server" (→ server URL → passkey; on success pull existing data; if the server already has settings with `onboardingCompletedAt`, skip the rest). Then **four steps**: 1 cycle day (7-col day grid, "Il tuo mese va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 were split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
 | 6.30 | **Server & sync** (NEW) | — | Server URL field + "Verifica" (GET /api/health), status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
 | 6.31 | **Import wizard** (NEW) | — | §11.3 steps, each a full screen with a sticky bottom CTA. |
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |
