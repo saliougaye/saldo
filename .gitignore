@@ -34,5 +34,8 @@ apps/mobile/ios/
 .vscode/*
 !.vscode/extensions.json
 
+# local simulator screenshots
+.screenshots/
+
 # design prototype (local reference only)
 docs/design
