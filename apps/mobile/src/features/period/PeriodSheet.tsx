@@ -79,7 +79,7 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
           return (
             <ListRow
               key={entry.period.start}
-              title={formatCycleRange(entry.period, locale)}
+              title={formatCycleRange(entry.period, locale, today)}
               subtitle={
                 isCurrent
                   ? t('period.inProgress', {

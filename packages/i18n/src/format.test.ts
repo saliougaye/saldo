@@ -6,6 +6,7 @@ import {
   formatMajor,
   formatMoney,
   formatMoneyParts,
+  formatPeriodTick,
   formatSignedPercent,
   resolveLocale,
 } from './format';
@@ -66,6 +67,48 @@ describe('dates', () => {
     const range = { start: '2026-03-27', end: '2026-04-26' };
     expect(formatCycleRange(range, 'it')).toBe('27 mar – 26 apr');
     expect(formatCycleRange(range, 'en')).toBe('Mar 27 – Apr 26');
+  });
+
+  it('leaves the year out of a range inside the reference year', () => {
+    const range = { start: '2026-03-27', end: '2026-04-26' };
+    expect(formatCycleRange(range, 'it', '2026-09-11')).toBe('27 mar – 26 apr');
+  });
+
+  it('names the year of the end when the range crosses into the next one', () => {
+    const range = { start: '2026-12-27', end: '2027-01-26' };
+    expect(formatCycleRange(range, 'it', '2026-09-11')).toBe('27 dic – 26 gen 2027');
+    expect(formatCycleRange(range, 'en', '2026-09-11')).toBe('Dec 27 – Jan 26, 2027');
+  });
+
+  it('names the year of the start when the range began in the previous one', () => {
+    const range = { start: '2025-12-27', end: '2026-01-26' };
+    expect(formatCycleRange(range, 'it', '2026-09-11')).toBe('27 dic 2025 – 26 gen');
+    expect(formatCycleRange(range, 'en', '2026-09-11')).toBe('Dec 27, 2025 – Jan 26');
+  });
+
+  it('names the year once for a whole range outside the reference year', () => {
+    const range = { start: '2025-03-27', end: '2025-04-26' };
+    expect(formatCycleRange(range, 'it', '2026-09-11')).toBe('27 mar – 26 apr 2025');
+    expect(formatCycleRange(range, 'en', '2026-09-11')).toBe('Mar 27 – Apr 26, 2025');
+  });
+
+  it('names both years when neither is the reference year', () => {
+    const range = { start: '2024-12-27', end: '2025-01-26' };
+    expect(formatCycleRange(range, 'it', '2026-09-11')).toBe('27 dic 2024 – 26 gen 2025');
+  });
+
+  it('labels a chart column by what tells its period apart', () => {
+    expect(formatPeriodTick('2025-01-01', 'year', 'it')).toBe('2025');
+    expect(formatPeriodTick('2026-01-01', 'month', 'it')).toBe('gen');
+    expect(formatPeriodTick('2026-01-01', 'month', 'en')).toBe('Jan');
+    expect(formatPeriodTick('2026-12-27', 'cycle', 'it')).toBe('27 dic');
+    expect(formatPeriodTick('2026-12-28', 'week', 'en')).toBe('Dec 28');
+  });
+
+  it('falls back to the start year when no reference date is given', () => {
+    expect(formatCycleRange({ start: '2026-12-27', end: '2027-01-26' }, 'it')).toBe(
+      '27 dic – 26 gen 2027',
+    );
   });
 });
 

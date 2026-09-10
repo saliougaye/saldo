@@ -3,6 +3,7 @@ import {
   type DateRange,
   getCurrency,
   type LocalDate,
+  type PeriodKind,
   parseLocalDate,
 } from '@saldo/core';
 
@@ -136,9 +137,49 @@ export function formatLongDate(date: LocalDate, locale: AppLocale): string {
   return locale === 'it' ? `${day} ${name} ${year}` : `${name} ${day}, ${year}`;
 }
 
-/** it `27 mar – 26 apr`, en `Mar 27 – Apr 26` */
-export function formatCycleRange(range: DateRange, locale: AppLocale): string {
-  return `${formatDayMonth(range.start, locale)} ${EN_DASH} ${formatDayMonth(range.end, locale)}`;
+/** it `18 apr 2025`, en `Apr 18, 2025` */
+function formatDayMonthYear(date: LocalDate, locale: AppLocale): string {
+  const { year } = parseLocalDate(date);
+  const dayMonth = formatDayMonth(date, locale);
+  return locale === 'it' ? `${dayMonth} ${year}` : `${dayMonth}, ${year}`;
+}
+
+/**
+ * it `27 mar – 26 apr`, en `Mar 27 – Apr 26`, with the year named on any end that does not fall in
+ * `today`'s year: `27 dic 2025 – 26 gen`, `27 mar – 26 apr 2025`.
+ *
+ * Without the year the period list of §6.15 is ambiguous — two consecutive Decembers produce the
+ * same label — and so is a range that crosses New Year. A range that lies wholly in one other year
+ * names it once, at the end, rather than twice.
+ *
+ * `today` is optional because some labels have no reference date to speak of; the start year is
+ * then the reference, so only a crossing into another year is named.
+ */
+export function formatCycleRange(range: DateRange, locale: AppLocale, today?: LocalDate): string {
+  const startYear = parseLocalDate(range.start).year;
+  const endYear = parseLocalDate(range.end).year;
+  const reference = today === undefined ? startYear : parseLocalDate(today).year;
+  const bothOutside = startYear !== reference && endYear !== reference;
+  const withYear = (date: LocalDate) => formatDayMonthYear(date, locale);
+  const plain = (date: LocalDate) => formatDayMonth(date, locale);
+  // One year for the whole range reads better than the same year twice.
+  const startFormat = startYear !== reference && !(bothOutside && startYear === endYear);
+  const endFormat = endYear !== reference;
+  const start = startFormat ? withYear(range.start) : plain(range.start);
+  const end = endFormat ? withYear(range.end) : plain(range.end);
+  return `${start} ${EN_DASH} ${end}`;
+}
+
+/**
+ * The label under a chart column (§5.7): an 11px slot, so it carries only what tells one period
+ * apart from its neighbours. A year is named by its number — six columns each reading `1 gen`
+ * would be six identical labels — and a month by its name, the first of the month being noise.
+ */
+export function formatPeriodTick(start: LocalDate, kind: PeriodKind, locale: AppLocale): string {
+  const { year, month } = parseLocalDate(start);
+  if (kind === 'year') return String(year);
+  if (kind === 'month') return monthName(MONTHS_SHORT, locale, month);
+  return formatDayMonth(start, locale);
 }
 
 /** `+12%`, `−7%`, `0%` */

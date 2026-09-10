@@ -14,7 +14,7 @@ import {
   summarizePeriod,
   upcomingExpenses,
 } from '@saldo/core';
-import { formatCycleRange, formatDayMonth, formatMoney, formatSignedPercent } from '@saldo/i18n';
+import { formatCycleRange, formatMoney, formatPeriodTick, formatSignedPercent } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -68,7 +68,7 @@ export default function StatsTab() {
       const cycleSummary = summarizePeriod(rows, cycle, today);
       return {
         key: cycle.start,
-        label: formatDayMonth(cycle.start, locale),
+        label: formatPeriodTick(cycle.start, def.kind, locale),
         income: cycleSummary.income,
         expenses: cycleSummary.spent,
         current: cycle.start === period.range.start,
@@ -278,7 +278,7 @@ export default function StatsTab() {
       </Card>
 
       <Text size="caption" color="textFaint">
-        {formatCycleRange(period.range, locale)}
+        {formatCycleRange(period.range, locale, today)}
       </Text>
     </Screen>
   );

@@ -8,7 +8,7 @@ import {
   shiftPeriod,
   spendingByCategory,
 } from '@saldo/core';
-import { formatDayMonth, formatMoney, formatSignedPercent } from '@saldo/i18n';
+import { formatDayMonth, formatMoney, formatPeriodTick, formatSignedPercent } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -82,7 +82,7 @@ export default function CategoryDetail() {
       for (const categoryId of ids) spent += amounts.get(categoryId) ?? 0;
       return {
         key: cycle.start,
-        label: formatDayMonth(cycle.start, locale),
+        label: formatPeriodTick(cycle.start, def.kind, locale),
         amount: spent,
         current: cycle.start === period.range.start,
       };

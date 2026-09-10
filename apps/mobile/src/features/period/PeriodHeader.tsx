@@ -1,4 +1,4 @@
-import { formatCycleRange, formatDayMonth } from '@saldo/i18n';
+import { formatCycleRange } from '@saldo/i18n';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
@@ -14,12 +14,11 @@ export function PeriodHeader() {
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
-  const { period, shift } = usePeriod();
+  const { today, period, shift } = usePeriod();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const label = period.isPeriod
-    ? formatCycleRange(period.range, locale)
-    : `${formatDayMonth(period.range.start, locale)} – ${formatDayMonth(period.range.end, locale)}`;
+  // A custom range reads the same way a period does; only the subtitle below tells them apart.
+  const label = formatCycleRange(period.range, locale, today);
   const subtitle = period.isCurrent
     ? t('period.dayOf', { elapsed: period.elapsed, length: period.length })
     : t('period.closed');
