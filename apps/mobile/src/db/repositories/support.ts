@@ -1,13 +1,18 @@
 import type { HlcString } from '@saldo/core';
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import type { Clock } from '../clock';
-import type { TestDatabase } from '../testing';
+import type { schema } from '../schema';
 
 /** `sync_state` values (§7). */
 export const SYNCED = 0;
 export const PENDING = 1;
 
-/** Any Drizzle SQLite handle; typed off the test driver so repositories stay importable in Node. */
-export type RepositoryDatabase = TestDatabase;
+/**
+ * Driver-agnostic Drizzle handle. Repositories run against `expo-sqlite` on device and
+ * `better-sqlite3` in tests; the two drivers differ only in their `run()` result type, so this is
+ * their common supertype rather than either concrete one.
+ */
+export type RepositoryDatabase = BaseSQLiteDatabase<'sync', unknown, typeof schema>;
 
 export interface RepositoryContext {
   db: RepositoryDatabase;

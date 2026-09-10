@@ -1,13 +1,10 @@
 import { newId } from '@saldo/core';
 import { eq } from 'drizzle-orm';
+import type { RepositoryDatabase } from './repositories/support';
 import { kv } from './schema';
-import type { TestDatabase } from './testing';
 
-/**
- * Any Drizzle SQLite handle that can run the kv statements. Typed off the test driver so this
- * module stays importable in Node; the Expo handle is structurally compatible.
- */
-export type KvDatabase = Pick<TestDatabase, 'select' | 'insert' | 'delete'>;
+/** Any Drizzle SQLite handle that can run the kv statements. */
+export type KvDatabase = Pick<RepositoryDatabase, 'select' | 'insert' | 'delete'>;
 
 /** Device-local keys (§7). Never synced. */
 export type KvKey = 'deviceId' | 'serverUrl' | 'syncCursor' | 'appLockEnabled' | 'hlc' | string;

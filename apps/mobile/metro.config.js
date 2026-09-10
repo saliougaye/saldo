@@ -13,6 +13,13 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
-config.resolver.disableHierarchicalLookup = true;
+// Hierarchical lookup stays ON. It is disabled in Yarn/npm monorepos where everything is hoisted,
+// but pnpm gives each package its own node_modules, so walking up is exactly how a dependency
+// finds its own dependencies — turning it off makes expo-router fail to resolve
+// @expo/metro-runtime.
+
+// drizzle-kit's expo output imports the migration files as source, so Metro must treat .sql as a
+// source extension (§7).
+config.resolver.sourceExts.push('sql');
 
 module.exports = config;
