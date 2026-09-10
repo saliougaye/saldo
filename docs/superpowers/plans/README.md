@@ -60,9 +60,9 @@ repository unit tests pass; `expo run:android` and `expo run:ios` launch.
 mobile tests green. `expo run:android` is **unverified**: the machine this phase was built on has no Android SDK.
 Recurrences, attachments and the tags/budgets admin screens stay with their own phases.
 
-### 03 — Transactions & Home
+### 03 — Transactions & Home ✅ done
 
-**Spec:** §5.2, §5.3, §5.6, §5.9, §5.10 (tag input only), §5.12, §6.1, 6.2, 6.6, 6.15, 6.16, 6.21, 6.23, 6.26, 6.27
+**Plan:** `2026-09-10-03-transactions-home.md` · **Spec:** §5.2, §5.3, §5.6, §5.9, §5.10 (tag input only), §5.12, §6.1, 6.2, 6.6, 6.15, 6.16, 6.21, 6.23, 6.26, 6.27
 
 - New/edit transaction sheet (all fields except attachments, which get a disabled button with "Presto" until phase 08).
 - Recurrence entity + materialiser + edit-scope sheet.
@@ -72,6 +72,11 @@ Recurrences, attachments and the tags/budgets admin screens stay with their own 
 
 **Acceptance:** add/edit/delete/undo expense, income and transfer; recurring edit with all three scopes; Home numbers
 match `@saldo/core` for demo data; component tests for keypad, swipe thresholds and form validation.
+
+**Status:** met on iOS, verified on the simulator with the demo data seeded straight into the app's SQLite file
+(`pnpm --filter mobile seed:db`), since `simctl` cannot tap through onboarding. The keypad tests became
+`sanitizeAmountInput` tests when amounts moved to the device keyboard (D23); swipe thresholds come from the shared
+`gestures` tokens and are exercised by hand, not by a test. Attachments stay disabled until phase 08.
 
 ### 04 — Budgets & Statistics
 
