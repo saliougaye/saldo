@@ -48,6 +48,16 @@ pnpm test             # turbo: vitest / jest in every package/app
 pnpm --filter @saldo/core test -- --watch
 ```
 
+**Reading the results.** Two false greens have already cost time in this repository, so check the
+output, not the exit code:
+
+- `pnpm lint` can exit 0 while Biome is reporting errors. What means "clean" is the **absence** of
+  `lint/…` lines and of the trailing `× Some errors were emitted while running checks.` Biome's
+  `Checked N files … No fixes applied.` line only says nothing was auto-fixable — it is **not** a
+  pass.
+- The same goes for the test and lint filters in the shell wrapper: run a gate through
+  `rtk proxy <command>` (or with `--json`) before believing it.
+
 ## When in doubt
 
 - Spec vs design prototype disagree → **the spec wins** (the prototype fakes data and some behaviours).

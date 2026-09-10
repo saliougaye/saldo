@@ -14,9 +14,8 @@ export interface SyncCounts {
  * as one query.
  */
 export function useSyncCounts(): SyncCounts {
-  const { updatedAt } = useLiveQuery(
-    db.select({ id: transactions.id }).from(transactions).limit(1),
-  );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: updatedAt is the change signal.
+  // Subscribed for the re-render, not for the rows: `useLiveQuery` re-renders this component on
+  // any reported change, and the counts are then read across all seven tables.
+  useLiveQuery(db.select({ id: transactions.id }).from(transactions).limit(1));
   return { pending: pendingCount(db), errors: errorCount(db) };
 }

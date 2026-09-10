@@ -52,7 +52,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [api, kv, repos, today, cycleStartDay]);
 
   useEffect(() => {
-    if (scheduler === null) {
+    // No scheduler means local-only; no user means signed out, and a cycle would only 401.
+    if (scheduler === null || user === null) {
       setStatus(IDLE);
       return;
     }
@@ -70,7 +71,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       appState.remove();
       scheduler.stop();
     };
-  }, [scheduler, user?.id]);
+  }, [scheduler, user]);
 
   const value = useMemo<SyncValue>(() => ({ status, scheduler }), [status, scheduler]);
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;

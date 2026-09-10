@@ -82,7 +82,7 @@ describe('applyPush', () => {
       .select()
       .from(syncRows)
       .where(and(eq(syncRows.userId, userId), eq(syncRows.id, 'tag-1')));
-    expect((row?.data as { name: string }).name).toBe('New');
+    expect(row?.data).toMatchObject({ name: 'New' });
   });
 
   it('answers invalid for a body that does not match its schema, and applies the rest', async () => {
@@ -164,6 +164,6 @@ describe('applyPush', () => {
       .select()
       .from(syncRows)
       .where(and(eq(syncRows.userId, ada), eq(syncRows.id, 'tag-1')));
-    expect((row?.data as { name: string }).name).toBe('Ada');
+    expect(row?.data).toMatchObject({ name: 'Ada' });
   });
 });
