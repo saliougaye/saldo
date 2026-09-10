@@ -301,6 +301,25 @@ session.
 **Not verified:** signing in for real (the passkey ceremony needs a platform authenticator), so the screenshots above
 were taken with the sign-in gate bypassed by a temporary probe that was then reverted.
 
+### 08b — The server comes from the build, not from the user 🔜 queued
+
+Asked for by the user after 08: "durante sign in non serve chiedere server, l'app sarà buildata con l'env verso il
+server corretto."
+
+- `SALDO_SERVER_URL` joins the §15 build env table and reaches the app through `app.config.ts` → `extra` →
+  `expo-constants`. Validated with the existing `normaliseServerUrl`; a build without a usable value says so plainly,
+  because sign-in is required and the app cannot work without one.
+- `ConnectForm` loses its URL field and its "Verifica" button: it checks `/api/health` on mount to learn
+  `registrationAllowed`, then offers "Accedi con passkey" and, when allowed, "Crea account". Onboarding step 0 becomes
+  one screen with one or two buttons.
+- `ServerProvider` reads the URL from the build instead of `kv`, so `kv.serverUrl` goes away and signing out no longer
+  has to forget an address. Token-store keys stay scoped by URL, which still matters if a later build points
+  somewhere else.
+- §6.30 shows the configured address as read-only text.
+- Spec: §9.3 step 1, §6.29 step 0, §6.30, §15.
+
+**This removes code from what phase 08 just added**, so it is worth doing before 09 rather than after.
+
 ### 09 — Attachments & Import/Export
 
 **Spec:** §10, §11, §6.6 (attachments), 6.16 (Allega foto), 6.28, 6.31
@@ -313,7 +332,26 @@ were taken with the sign-in gate bypassed by a temporary probe that was then rev
 **Acceptance:** export → wipe → restore round-trip is lossless (test); CSV import of a fixture creates the expected
 accounts/categories/tags and skips duplicates on a second run; an attachment added on device A appears on device B.
 
-### 10 — Release docs & hardening
+### 10 — Access control: who is allowed in 🔜 queued
+
+Asked for by the user: "dare la possibilità di scegliere chi può accedere all'app per non avere malintenzionati."
+
+Today `REGISTRATION` (§9.2) is all-or-nothing: `open`, `first-user`, or `closed`. Once it is closed the owner cannot
+let a second person in without redeploying, and while it is open anyone who can reach the server can create an
+account. Accounts are passkey-only and carry no email, so the natural mechanism is an **invite**:
+
+- The owner mints a single-use invite (an admin page or a CLI on `apps/web`), with a TTL and an optional label.
+- "Crea account" asks for the invite code; the server validates and burns it inside the same ceremony that creates
+  the user, so a failed registration does not consume it.
+- The owner can list accounts and revoke one; deleting a user cascades to their `sync_rows` (the foreign key already
+  does this).
+- `REGISTRATION` gains `invite` alongside the three existing values, and `/api/health` keeps reporting whether
+  registration is possible so the app knows whether to offer the button at all.
+
+**Acceptance:** an invite works exactly once; an expired or unknown code is refused without telling the caller which;
+a revoked user's bearer stops working and their rows stop syncing; the whole flow has route-handler tests.
+
+### 11 — Release docs & hardening
 
 **Spec:** §15, §16 (E2E), §18, §19
 
