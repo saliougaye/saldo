@@ -2,6 +2,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { type Clock, createClock } from './clock';
+import { createKvStore, type KvStore } from './kv';
+import { createRepositories, type Repositories } from './repositories/index';
 import { schema } from './schema';
 
 export type TestDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -30,4 +33,22 @@ export function createTestDatabase(): TestDatabase {
     }
   }
   return drizzle(sqlite, { schema });
+}
+
+export interface TestContext {
+  db: TestDatabase;
+  repos: Repositories;
+  kv: KvStore;
+  clock: Clock;
+}
+
+/**
+ * A whole device in memory: the migrated database plus the repositories, kv store and HLC clock
+ * built over it. Sync tests need all four, and they must be the *same* instances the repositories
+ * write through or the clock would fork.
+ */
+export function createTestContext(createdAt = '2026-04-18T10:00:00.000Z'): TestContext {
+  const db = createTestDatabase();
+  const kv = createKvStore(db);
+  return { db, repos: createRepositories(db, () => createdAt), kv, clock: createClock(kv) };
 }
