@@ -233,6 +233,11 @@ simulators would not be. `packages/core/src/sync/merge.test.ts` adds the propert
 replicas with drifting wall clocks, plus an order-independence check. The server has tests for applied/stale/invalid,
 the envelope-vs-body disagreement, a clock more than 24h ahead, pagination and per-user scoping.
 
+The review found no data-loss or scoping issue. Its one actionable note — that `applyPull`'s
+`onConflictDoUpdate({ target: table.id })` assumes `id` is each table's primary key, or the apply would insert a
+duplicate instead of overwriting and the devices would diverge — is now an explicit test over all seven tables
+(`src/sync/entities.test.ts`, reading `pragma_table_info`).
+
 The §8.1 decision (schema-version gate) is implemented on both sides and refuses a mismatched peer with
 `schema_too_old`/`schema_too_new`.
 
