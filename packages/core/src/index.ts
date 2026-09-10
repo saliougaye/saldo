@@ -9,3 +9,4 @@ export * from './ids';
 export * from './ledger';
 export * from './money';
 export * from './stats';
+export * from './sync/hlc';
