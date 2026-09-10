@@ -267,8 +267,9 @@ own server, which becomes required — the app still works offline, what it need
 - Core: `PeriodDef`, `periodContaining`/`shiftPeriod`/`previousPeriods`, and the period-shaped functions
   (`periodHistory`, `budgetRange`, `budgetCarry`) re-parameterised. Everything that already took a `DateRange` is
   untouched, which is what keeps this wide but shallow.
-- Schema: `settings.periodKind`, `budget.period: 'period' | 'week' | 'month' | 'year'`, `SYNC_SCHEMA_VERSION` → 2.
-  Regenerated rather than migrated: no instance is deployed and no user exists.
+- Schema: `settings.periodKind`, `budget.period: 'period' | 'week' | 'month' | 'year'`. Regenerated rather than
+  migrated, and `SYNC_SCHEMA_VERSION` stays 1: no instance is deployed and no account exists, so there is no older
+  peer for the §8.1 gate to protect.
 - Mobile: the period sheet, a period question in onboarding step 1, and step 0 becoming the sign-in.
 
 **Acceptance:** core tests for every kind including the February and leap-year edges and a month budget inside a cycle

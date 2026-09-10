@@ -447,11 +447,17 @@ rm -rf apps/mobile/drizzle && pnpm --filter mobile db:generate
 
 Then reseed any simulator with `pnpm --filter mobile seed:db <path> --reset`.
 
-- [ ] **Step 4: Bump the sync schema version**
+- [ ] **Step 4: Leave the sync schema version at 1**
 
-`SYNC_SCHEMA_VERSION` goes to **2** in `packages/core/src/sync/protocol.ts`: a device on version 1
-cannot represent `periodKind`, and §8.1's gate exists precisely so it refuses instead of dropping
-rows. Its test asserting `peer-too-old` now has a version below it to use.
+`SYNC_SCHEMA_VERSION` **stays 1**, on the user's instruction. The gate of §8.1 protects a peer that
+already speaks an older shape, and no such peer exists: no instance is deployed and no account has
+ever been created, so version 1 simply *is* the current shape. Bumping it would only mean two
+versions where one of them was never used by anything. It gets bumped the first time a schema
+changes after a real device is in the field.
+
+The same reasoning is why the local database is regenerated rather than migrated: wipe the
+simulator's copy (`pnpm --filter mobile seed:db <path> --reset`, or uninstall the app) instead of
+writing a migration for rows nobody has.
 
 - [ ] **Step 5: Commit** — `feat!: settings carry the period kind`
 
@@ -560,7 +566,7 @@ sync. The confirm sheet says exactly that.
 - [ ] **Step 1:** Spec: §1.1 (the server is required; a server-less variant is a later option),
       §5.2 (periods, with the pay cycle as one kind and its clamping rule intact), §5.8
       (`budget.period` vocabulary), §6.15 (the sheet's three extra rows), §6.29 (step 0 is a
-      sign-in; step 1 asks the period), §8.1 (`SYNC_SCHEMA_VERSION` is 2 and why).
+      sign-in; step 1 asks the period), §8.1 (why the version stays 1 for now).
 - [ ] **Step 2:** Roadmap: this phase, and renumber attachments/import-export to 09 and
       docs/hardening to 10.
 - [ ] **Step 3:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — reading the output, not the exit code
@@ -577,7 +583,8 @@ sync. The confirm sheet says exactly that.
 - **What does not change:** every function that already took a `DateRange` — `summarizePeriod`,
   `spendingByCategory`, `dailyCumulative`, `committedSpend`, `projectEndOfCycle`, `accountBalances`.
   That is why this is a wide but shallow refactor.
-- **What breaks on purpose:** `budget.period`'s vocabulary, `settings`' shape, and the sync schema
-  version. No instance is deployed and no user exists, so the migrations are regenerated.
+- **What breaks on purpose:** `budget.period`'s vocabulary and `settings`' shape. No instance is
+  deployed and no account exists, so the migrations are regenerated and the sync schema version
+  stays 1 — there is no older peer for it to protect.
 - **Risk to watch:** a month budget inside a cycle period (and the reverse) — two windows that do
   not line up. `budgetRange` clips, and Task 2 step 2 pins that down with a test.
