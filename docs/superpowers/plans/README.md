@@ -275,6 +275,25 @@ own server, which becomes required — the app still works offline, what it need
 **Acceptance:** core tests for every kind including the February and leap-year edges and a month budget inside a cycle
 period; the sheet's three new rows work on the simulator; switching kind reshapes Home and Statistics.
 
+**Status:** met. `packages/core/src/period.test.ts` covers all four kinds, the leap-February month end, a Sunday
+belonging to the week that started six days earlier, the pay cycle's per-month clamping, reversibility of every
+`shiftPeriod`, and closed versus current periods; `budgetRanges.test.ts` adds a month budget inside a pay cycle and
+the rule that an annual budget browsed from a past month still measures the whole year.
+
+Verified on the simulator against a reseeded database: the period sheet shows the three rows the design has —
+custom period, period type, and the cycle start day under the cycle kind — and with `periodKind = 'week'` the header
+reads "Sep 7 – Sep 13, day 4 of 7" (the ISO week containing today) with the list filtered to it, which exercises the
+whole chain from settings through the provider to the screens.
+
+Two defects were found that way and fixed: the sheet was missing the cycle-start-day row the spec had just described,
+and the welcome copy still promised the app stays on this phone unless a server is connected — the opposite of what
+it now does. A third thing worth recording: after regenerating the migrations, Metro served a **cached** copy of the
+inlined `.sql`, so the app applied the old schema and the seeder failed on the missing column. `expo start --clear`
+plus deleting the simulator's database file is the fix.
+
+**Not verified:** signing in for real (the passkey ceremony needs a platform authenticator), so the screenshots above
+were taken with the sign-in gate bypassed by a temporary probe that was then reverted.
+
 ### 09 — Attachments & Import/Export
 
 **Spec:** §10, §11, §6.6 (attachments), 6.16 (Allega foto), 6.28, 6.31
