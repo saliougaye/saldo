@@ -59,7 +59,7 @@ export const en: Messages = {
     periodTimeline: 'Right now that runs {{start}} – {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Track what you spend by pay cycle. Everything stays on this phone unless you connect your own server.',
+      'Track what you spend, period by period. Sign in to your server to start; after that the app works offline.',
     welcomeOffline:
       'You need to reach your server once to sign in. After that Saldo works offline.',
     cycleTitle: 'When does your month start?',
@@ -355,6 +355,7 @@ export const en: Messages = {
     categories: 'Categories',
     tags: 'Tags',
     cycle: 'Cycle',
+    cycleFootnote: 'Changing this only regroups your transactions. Nothing moves.',
     cycleValue: 'from the {{day}}',
     currency: 'Currency',
     newAccount: 'New account',

@@ -18,6 +18,7 @@ import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { CustomRangeSheet } from './CustomRangeSheet';
+import { CycleStartDaySheet } from './CycleStartDaySheet';
 import { PeriodKindSheet } from './PeriodKindSheet';
 import { usePeriod } from './PeriodProvider';
 
@@ -40,6 +41,7 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
   const { today, def, period, goToPeriod, setCustomRange, resetToCurrent } = usePeriod();
   const [kindOpen, setKindOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
+  const [dayOpen, setDayOpen] = useState(false);
 
   const oldest = previousPeriods(def, period.range, LOOKBACK).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(oldest, period.range.end);
@@ -105,6 +107,14 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
             chevron
             onPress={() => setKindOpen(true)}
           />
+          {def.kind === 'cycle' ? (
+            <ListRow
+              title={t('period.cycleStartDay')}
+              trailing={<Text color="textMuted">{String(def.startDay)}</Text>}
+              chevron
+              onPress={() => setDayOpen(true)}
+            />
+          ) : null}
         </View>
       </View>
 
@@ -118,6 +128,16 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
           resetToCurrent();
         }}
         onClose={() => setKindOpen(false)}
+      />
+      <CycleStartDaySheet
+        visible={dayOpen}
+        selected={def.startDay}
+        onSelect={(day) => {
+          repos.settings.update({ cycleStartDay: day });
+          // Same reason as a changed kind: the stored range belongs to the old start day.
+          resetToCurrent();
+        }}
+        onClose={() => setDayOpen(false)}
       />
       <CustomRangeSheet
         visible={rangeOpen}

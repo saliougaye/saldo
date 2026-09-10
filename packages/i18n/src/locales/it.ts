@@ -59,7 +59,7 @@ export const it = {
     periodTimeline: 'In questo momento va dal {{start}} al {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Tieni le spese per ciclo di stipendio. Tutto resta su questo telefono, a meno che tu non colleghi il tuo server.',
+      "Tieni le spese periodo per periodo. Accedi al tuo server per iniziare; dopo, l'app funziona offline.",
     welcomeOffline:
       'Per accedere devi raggiungere il tuo server una volta. Dopo, Saldo funziona offline.',
     cycleTitle: 'Quando inizia il tuo mese?',
@@ -357,6 +357,7 @@ export const it = {
     categories: 'Categorie',
     tags: 'Tag',
     cycle: 'Ciclo',
+    cycleFootnote: 'Cambiarlo raggruppa solo le transazioni. Niente si sposta.',
     cycleValue: 'dal {{day}}',
     currency: 'Valuta',
     newAccount: 'Nuovo conto',
