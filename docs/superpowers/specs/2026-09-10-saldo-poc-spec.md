@@ -829,6 +829,17 @@ Category name → category; Amount → signed decimal `.`; Note → description;
 
 - Tokens come from design lines 14–41 and are exported by `@saldo/ui` (`palettes.dark`, `palettes.light`,
   `categoryColors`, `accentOptions`, `radii`, `spacing`, `fontSize`, `fontWeight`, `tracking`, `motion`, `layout`).
+- **The accent is neutral, not the design's orange.** `accent` is the high-contrast grey of its theme
+  (`#C7C7C7` on dark, `#4A4A46` on light) and `barGrey` the low-contrast one; the design's `#E8823C` stays
+  available in `accentOptions`. Two consequences run through the rest of this spec:
+  - Wherever it says "accent when over pace / over limit, grey otherwise" (§5.3 Home bar, §5.7 committed share,
+    §5.8 budget bars), the contrast is now **brightness**, not hue. `accent` vs `barGrey` still reads clearly in
+    both themes, and a unit test in `@saldo/ui` guards the ratio so a future palette edit cannot collapse it.
+  - `positive` (green) becomes the only chromatic signal in the app, which sharpens "below usual = good".
+  - The `segments` ramp is a grey ramp, so `segmentOther` sits **outside** it (dimmer on dark, lighter on light)
+    instead of reusing `barGrey`; a test asserts no segment equals `segmentOther`. A neutral accent also has to
+    invert with `onAccent`, and the contrast of both pairs is unit-tested — a mid grey such as the design's
+    `#C7C7C7` in *light* theme would be unreadable behind white text, which is why the two themes differ.
 - `ThemeProvider` resolves `settings.theme` (`system` uses `useColorScheme`). Status bar style follows the theme.
 - **Typography:** Geist (400/500/600) via `expo-font` (`@expo-google-fonts/geist`, or the variable TTF from the Geist
   repo bundled in `apps/mobile/assets/fonts` if the package is unavailable). Letter-spacing in the design is in `em`;

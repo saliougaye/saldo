@@ -14,6 +14,9 @@
   "dependencies": {
     "@expo-google-fonts/geist": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@saldo/core": "workspace:*",
+    "@saldo/i18n": "workspace:*",
+    "@saldo/ui": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.21",
     "expo-application": "~57.0.2",
@@ -39,6 +42,8 @@
   "devDependencies": {
     "@testing-library/react-native": "^14.0.1",
     "@types/better-sqlite3": "^9.6.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.20.2",
     "@types/react": "~19.2.2",
     "better-sqlite3": "^12.11.1",
     "drizzle-kit": "^0.31.10",

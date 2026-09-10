@@ -3,6 +3,13 @@
 
 export type ThemeName = 'dark' | 'light';
 
+/**
+ * Saldo's accent is **neutral**, not chromatic: `accent` is the high-contrast grey of the theme
+ * (near-white on dark, near-black on light) and `barGrey` the low-contrast one. Every place the
+ * spec says "accent when over pace, grey otherwise" therefore reads as a brightness contrast
+ * rather than a hue contrast, and `positive` (green) stays the only chromatic signal.
+ * `onAccent` is the colour that stays legible **on** `accent`, so the two must always invert.
+ */
 export interface Palette {
   page: string;
   bg: string;
@@ -37,14 +44,14 @@ export const palettes: Record<ThemeName, Palette> = {
     text: '#EDEDED',
     textMuted: '#8C8C8C',
     textFaint: '#5C5C5C',
-    accent: '#E8823C',
+    accent: '#C7C7C7',
     positive: '#5FBF7F',
     onAccent: '#0A0A0A',
     barGrey: '#3A3A3A',
     track: '#1E1E1E',
     heatmap: ['#151515', '#333333', '#4F4F4F', '#757575', '#A8A8A8'],
-    segments: ['#E8823C', '#C57036', '#9E5A2C', '#754322', '#4E2E1A'],
-    segmentOther: '#333333',
+    segments: ['#EDEDED', '#B8B8B8', '#8C8C8C', '#606060', '#454545'],
+    segmentOther: '#2A2A2A',
     scrim: 'rgba(0,0,0,0.55)',
     dialogScrim: 'rgba(0,0,0,0.6)',
     shadow: 'rgba(0,0,0,0.5)',
@@ -59,14 +66,14 @@ export const palettes: Record<ThemeName, Palette> = {
     text: '#171717',
     textMuted: '#6E6E6E',
     textFaint: '#9A9A9A',
-    accent: '#C4661D',
+    accent: '#4A4A46',
     positive: '#2E8A50',
     onAccent: '#FFFFFF',
     barGrey: '#C9C9C6',
     track: '#EDEDEB',
     heatmap: ['#F0F0EE', '#D8D8D4', '#B2B2AD', '#8A8A85', '#57574F'],
-    segments: ['#C4661D', '#A9581B', '#8C4818', '#6E3915', '#502A11'],
-    segmentOther: '#C9C9C6',
+    segments: ['#3A3A37', '#5C5C58', '#7E7E79', '#A0A09B', '#BFBFBA'],
+    segmentOther: '#DCDCD8',
     scrim: 'rgba(0,0,0,0.55)',
     dialogScrim: 'rgba(0,0,0,0.6)',
     shadow: 'rgba(0,0,0,0.5)',
@@ -87,7 +94,11 @@ export const categoryColors = [
   '#8A8A8A',
 ] as const;
 
-export const accentOptions = ['#E8823C', '#C7C7C7', '#7C9CC4', '#5FBF7F'] as const;
+/**
+ * Accent choices offered in Profile. The neutral grey is the default (see the `accent` tokens);
+ * the design's orange and the blue/green options remain available.
+ */
+export const accentOptions = ['#C7C7C7', '#E8823C', '#7C9CC4', '#5FBF7F'] as const;
 
 export const radii = {
   iconBox: 8,

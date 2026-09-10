@@ -11,7 +11,6 @@ const config: ExpoConfig = {
   version: '0.1.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   assetBundlePatterns: ['**/*'],
   ios: {
     bundleIdentifier: bundleId,
@@ -21,10 +20,16 @@ const config: ExpoConfig = {
     },
   },
   android: {
+    // SDK 57 is edge-to-edge by default, so there is no flag to set here.
     package: bundleId,
-    edgeToEdgeEnabled: true,
   },
-  plugins: ['expo-router', 'expo-font', 'expo-sqlite', 'expo-splash-screen', 'expo-local-authentication'],
+  plugins: [
+    'expo-router',
+    'expo-font',
+    'expo-sqlite',
+    'expo-splash-screen',
+    'expo-local-authentication',
+  ],
   experiments: {
     typedRoutes: true,
   },
