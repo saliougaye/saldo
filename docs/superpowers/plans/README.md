@@ -152,7 +152,7 @@ system "Open in Saldo?" dialog that itself needs one). Android remains unverifie
 
 ### 06 — Server & passkey authentication
 
-**Spec:** §9, §14, §18 · **Can run in parallel with 02–05**
+**Plan:** `2026-09-10-06-server-auth.md` · **Spec:** §9, §14, §18 · **Can run in parallel with 02–05**
 
 - `apps/web` via `create-next-app` (App Router, TS), Drizzle + Postgres schema/migrations, PGlite test harness, docker
   compose + Dockerfile + Caddyfile example.
