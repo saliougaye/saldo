@@ -204,6 +204,7 @@ export const it = {
     verify: 'Verifica',
     verifying: 'Controllo…',
     notConnected: 'Non connesso',
+    localOnly: 'Sincronizzazione spenta. I dati restano su questo telefono.',
     connectedAs: 'Connesso come {{name}}',
     lastSync: 'Ultima sincronizzazione {{when}}',
     never: 'mai',

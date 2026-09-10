@@ -204,6 +204,7 @@ export const en: Messages = {
     verify: 'Verify',
     verifying: 'Checking…',
     notConnected: 'Not connected',
+    localOnly: 'Sync is off. Your data stays on this phone.',
     connectedAs: 'Signed in as {{name}}',
     lastSync: 'Last sync {{when}}',
     never: 'never',

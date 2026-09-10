@@ -76,7 +76,8 @@ export default function ServerScreen() {
       return key === undefined ? status.message : t(key);
     }
     if (user !== null) return t('sync.lastSync', { when: relative });
-    return t('sync.notConnected');
+    // The card's title already says "not connected"; this line says what that means.
+    return t('sync.localOnly');
   };
 
   const connected = serverUrl !== null && user !== null;

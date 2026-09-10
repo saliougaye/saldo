@@ -15,6 +15,9 @@ export default function Welcome() {
 
   return (
     <Screen
+      // `scroll={false}` so the copy can actually take the space above the pinned buttons: inside
+      // a ScrollView a flexed child has nothing to flex against.
+      scroll={false}
       footer={
         <View style={{ gap: 8 }}>
           <PrimaryButton

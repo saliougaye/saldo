@@ -212,7 +212,7 @@ the clear.
 **Not verified:** the browser ceremony itself, which needs a real platform authenticator (Touch ID) — still the
 user's to run. **Accepted risk, recorded in §9.3:** the handoff token travels in a `saldo://` URL.
 
-### 07 — Sync engine
+### 07 — Sync engine ✅ done
 
 **Plan:** `2026-09-10-07-sync.md` · **Spec:** §8, §6.29 step 0 (welcome/connect), §6.30, §9.3 (mobile side)
 
@@ -224,6 +224,26 @@ user's to run. **Accepted risk, recorded in §9.3:** the handoff token travels i
 
 **Acceptance:** two simulators signed into the same server converge after concurrent offline edits (manual script in the
 plan); core property test showing random interleavings converge; server tests for stale/invalid/pagination.
+
+**Status:** all three met, the first one better than asked. Convergence is proved by `src/sync/convergence.test.ts`:
+two `better-sqlite3` devices and an in-memory server implementing §8.3/§8.4, over six scenarios — independent
+creates, a concurrent edit of the same row, an edit racing a delete in **both** directions, a transaction amount
+corrected on the other device, and nothing left pending afterwards. That is deterministic and runs in CI, which two
+simulators would not be. `packages/core/src/sync/merge.test.ts` adds the property test: 40 seeded interleavings of two
+replicas with drifting wall clocks, plus an order-independence check. The server has tests for applied/stale/invalid,
+the envelope-vs-body disagreement, a clock more than 24h ahead, pagination and per-user scoping.
+
+The §8.1 decision (schema-version gate) is implemented on both sides and refuses a mismatched peer with
+`schema_too_old`/`schema_too_new`.
+
+Screens verified on the simulator after a native rebuild (three new native modules): the app boots with the sync
+providers mounted, §6.29 step 0 renders with its two ways in, and §6.30 renders its not-connected state. Two flaws
+were caught that way and fixed — "Non connesso" printed twice, and a `justifyContent: 'center'` that could not work
+inside a `ScrollView`.
+
+**Not verified:** signing in for real, which needs the browser passkey ceremony (§9.3) and therefore a platform
+authenticator; and with it the connected state of §6.30, the scheduler against a real server, and two devices over
+the network. The logic behind all of them is covered by the tests above.
 
 ### 08 — Attachments & Import/Export
 
