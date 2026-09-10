@@ -21,7 +21,7 @@ module.exports = {
     {
       displayName: 'db',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/src/db/**/*.test.ts'],
+      testMatch: ['<rootDir>/src/db/**/*.test.ts', '<rootDir>/src/features/**/*.test.ts'],
       transform: {
         '^.+\\.[jt]sx?$': ['babel-jest', { presets: ['babel-preset-expo'] }],
       },

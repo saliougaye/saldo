@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { TabBar } from '../../src/components/TabBar';
+import { useAppLock } from '../../src/features/lock/useAppLock';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  useAppLock();
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
