@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { LoadingScreen } from '../src/components/LoadingScreen';
 import { useDatabase } from '../src/db/DatabaseProvider';
 import { useSettingsQuery } from '../src/db/hooks';
 
@@ -14,7 +15,7 @@ export default function Boot() {
   const { settings, loaded } = useSettingsQuery();
   const { kv } = useDatabase();
 
-  if (!loaded) return null;
+  if (!loaded) return <LoadingScreen />;
   if (kv.get('appLockEnabled') === 'true') return <Redirect href="/lock" />;
   if (settings === null || settings.onboardingCompletedAt === null) {
     return <Redirect href="/cycle-day" />;

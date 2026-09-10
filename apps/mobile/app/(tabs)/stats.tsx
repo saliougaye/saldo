@@ -152,11 +152,23 @@ export default function StatsTab() {
       <PeriodHeader />
 
       <Card>
-        <Text weight="medium" tracking="tight">
-          {t('stats.cashflow')}
-        </Text>
-        <View style={{ marginTop: 12 }}>
-          <CashflowChart bars={bars} />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 8,
+          }}
+        >
+          <Text weight="medium" tracking="tight">
+            {t('stats.cashflow')}
+          </Text>
+          <Text size="caption" color="textFaint" numberOfLines={1}>
+            {t('stats.lastCycles')}
+          </Text>
+        </View>
+        <View style={{ marginTop: 18 }}>
+          <CashflowChart bars={bars} currency={currency} locale={locale} />
         </View>
       </Card>
 

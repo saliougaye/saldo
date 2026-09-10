@@ -6,6 +6,7 @@ import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { Segmented } from '../../src/components/Segmented';
 import { TextField } from '../../src/components/TextField';
 import { useOnboarding } from '../../src/features/onboarding/state';
@@ -33,6 +34,7 @@ export default function AccountDetailsStep() {
         />
       }
     >
+      <BackButton />
       <ProgressBar ratio={2 / 4} />
       <Text size="caption" color="textFaint">
         {t('onboarding.step', { current: 2, total: 4 })}

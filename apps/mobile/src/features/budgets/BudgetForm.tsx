@@ -20,6 +20,7 @@ import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { IconBox } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
+import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
 import { TextField } from '../../components/TextField';
 import { useToast } from '../../components/Toast';
@@ -147,9 +148,7 @@ export function BudgetForm({
         </View>
       }
     >
-      <Text size="headline" weight="semibold" tracking="tight">
-        {mode === 'new' ? t('budgets.newBudget') : t('budgets.editBudget')}
-      </Text>
+      <ScreenHeader title={mode === 'new' ? t('budgets.newBudget') : t('budgets.editBudget')} />
 
       <Card>
         <Text size="footnote" color="textMuted">

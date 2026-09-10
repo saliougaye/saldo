@@ -16,6 +16,7 @@ export const en: Messages = {
     restore: 'Restore',
     archive: 'Archive',
     search: 'Search',
+    loading: 'Loading…',
     and: 'and',
   },
   tabs: {
@@ -182,6 +183,9 @@ export const en: Messages = {
     newLabel: 'new',
     ofTotal: '{{pct}}% of total',
     lastCycles: 'Last 6 cycles',
+    legendIncome: 'Income',
+    legendExpenses: 'Expenses',
+    legendCurrent: 'Current cycle',
     median: 'Median {{amount}}',
     average: '6-cycle average',
     subcategories: 'Subcategories',

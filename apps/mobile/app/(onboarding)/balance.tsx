@@ -8,6 +8,7 @@ import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
@@ -35,6 +36,7 @@ export default function BalanceStep() {
         />
       }
     >
+      <BackButton />
       <ProgressBar ratio={3 / 4} />
       <Text size="caption" color="textFaint">
         {t('onboarding.step', { current: 3, total: 4 })}

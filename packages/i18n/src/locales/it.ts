@@ -16,6 +16,7 @@ export const it = {
     restore: 'Ripristina',
     archive: 'Archivia',
     search: 'Cerca',
+    loading: 'Caricamento…',
     and: 'e',
   },
   tabs: {
@@ -182,6 +183,9 @@ export const it = {
     newLabel: 'nuova',
     ofTotal: '{{pct}}% del totale',
     lastCycles: 'Ultimi 6 cicli',
+    legendIncome: 'Entrate',
+    legendExpenses: 'Uscite',
+    legendCurrent: 'Ciclo in corso',
     median: 'Mediana {{amount}}',
     average: 'Media 6 cicli',
     subcategories: 'Sottocategorie',

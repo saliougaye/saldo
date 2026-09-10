@@ -10,6 +10,12 @@ export function median(values: readonly number[]): number | null {
   return ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2;
 }
 
+/** Rounded arithmetic mean in minor units; null on an empty series. */
+export function mean(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
 /** Rounded percentage change vs a baseline; null when there is no usable baseline. */
 export function deltaPercent(value: number, baseline: number | null): number | null {
   if (baseline === null || baseline === 0) return null;

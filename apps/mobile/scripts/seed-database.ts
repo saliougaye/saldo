@@ -5,7 +5,10 @@
  * Run with (esbuild bundles it because the workspace packages use extensionless imports, which
  * plain Node ESM cannot resolve):
  *
- *   pnpm --filter mobile seed:db <path-to-saldo.db>
+ *   pnpm --filter mobile seed:db <path-to-saldo.db> [--reset]
+ *
+ * Without `--reset` an already-seeded file is left untouched; with it every row is dropped first,
+ * which is how a change to the demo data reaches a simulator that has already run the seeder.
  *
  * Find the simulator's file with:
  *
@@ -15,6 +18,7 @@
  * The database must already exist, i.e. the app has to have launched once so its migrations ran.
  */
 import { todayLocal } from '@saldo/core';
+import { en } from '@saldo/i18n';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { seedDemoData } from '../src/db/demo';
@@ -23,16 +27,39 @@ import { createRepositories } from '../src/db/repositories/index';
 import { schema } from '../src/db/schema';
 import { seedFromOnboarding } from '../src/db/seed';
 
-const target = process.argv[2];
+const args = process.argv.slice(2);
+const reset = args.includes('--reset');
+const target = args.find((arg) => !arg.startsWith('--'));
 if (target === undefined) {
-  throw new Error('usage: pnpm --filter mobile seed:db <saldo.db>');
+  throw new Error('usage: pnpm --filter mobile seed:db <saldo.db> [--reset]');
 }
 
 const sqlite = new Database(target);
 const db = drizzle(sqlite, { schema });
 const repos = createRepositories(db);
+/** The seed catalogues name their categories by `seed.*` key (§4.2); resolve them in English. */
+const translate = (key: string): string =>
+  (en.seed as Record<string, string | undefined>)[key] ?? key;
+
 const today = todayLocal();
 const CYCLE_START_DAY = 27;
+
+if (reset) {
+  // Hard delete, not tombstones: this is a development fixture, not a user action.
+  for (const table of [
+    'transactions',
+    'attachments',
+    'recurrences',
+    'budgets',
+    'tags',
+    'categories',
+    'accounts',
+    'settings',
+    'kv',
+  ]) {
+    sqlite.prepare(`delete from ${table}`).run();
+  }
+}
 
 if (repos.settings.get() === null) {
   seedFromOnboarding(repos, {
@@ -43,12 +70,12 @@ if (repos.settings.get() === null) {
     account: { name: 'Conto corrente', type: 'checking', openingBalance: 0, icon: 'landmark' },
     // The demo data brings its own catalogue, so onboarding creates none here.
     selectedCategoryKeys: [],
-    translate: (key) => key,
+    translate,
     completedAt: new Date().toISOString(),
   });
   for (const category of repos.categories.list()) repos.categories.remove(category.id);
   for (const account of repos.accounts.list()) repos.accounts.remove(account.id);
-  seedDemoData(repos, { today, cycleStartDay: CYCLE_START_DAY, translate: (key) => key });
+  seedDemoData(repos, { today, cycleStartDay: CYCLE_START_DAY, translate });
   runMaterialiser(db, repos, today, CYCLE_START_DAY);
 }
 

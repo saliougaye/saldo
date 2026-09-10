@@ -73,9 +73,15 @@ export function useBudgets(): Budget[] {
   return data.map(toEntity);
 }
 
+export interface TransactionsQuery {
+  rows: Transaction[];
+  /** False until the first result arrives, so a list can tell "still loading" from "empty". */
+  loaded: boolean;
+}
+
 /** Only the range a screen needs (§7): the selected cycle, plus earlier cycles for baselines. */
-export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transaction[] {
-  const { data } = useLiveQuery(
+export function useTransactionsInRangeQuery(start: LocalDate, end: LocalDate): TransactionsQuery {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(transactions)
@@ -89,5 +95,9 @@ export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transa
       .orderBy(desc(transactions.date), asc(transactions.createdAt)),
     [start, end],
   );
-  return data.map(toEntity);
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
+}
+
+export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transaction[] {
+  return useTransactionsInRangeQuery(start, end).rows;
 }

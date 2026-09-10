@@ -5,6 +5,7 @@ import {
   committedSpend,
   dailyCumulative,
   deltaPercent,
+  mean,
   median,
   projectEndOfCycle,
   resampleSeries,
@@ -16,6 +17,14 @@ describe('median', () => {
     expect(median([3, 1, 2])).toBe(2);
     expect(median([4, 1, 3, 2])).toBe(2.5);
     expect(median([])).toBeNull();
+  });
+});
+
+describe('mean', () => {
+  it('rounds the arithmetic mean and rejects an empty series', () => {
+    expect(mean([100, 200, 301])).toBe(200);
+    expect(mean([1, 2])).toBe(2);
+    expect(mean([])).toBeNull();
   });
 });
 

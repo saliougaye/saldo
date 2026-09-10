@@ -8,6 +8,7 @@ import { Card } from '../../src/components/Card';
 import { Chip } from '../../src/components/Chip';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useCategories, useSettings, useTags } from '../../src/db/hooks';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -53,6 +54,7 @@ export default function TransactionDetail() {
         />
       }
     >
+      <BackButton />
       <AmountText
         minor={transaction.kind === 'income' ? transaction.amount : -transaction.amount}
         currency={currency}

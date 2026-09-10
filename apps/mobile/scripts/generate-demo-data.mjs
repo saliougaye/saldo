@@ -4,8 +4,10 @@
  * Run with: pnpm --filter mobile generate:demo
  *
  * `docs/design` is gitignored, so the generated file is the committed artefact and this script only
- * runs on a machine that has the prototype. Row format in the prototype:
- * `[date, description, categoryName, accountName, amountEuros, isIncome?, isExcluded?, tags?]`.
+ * runs on a machine that has the prototype. Row format in the prototype, from its own `toObj`:
+ * `[date, description, categoryName, accountName, amountEuros, isIncome?, isScheduled?, tags?,
+ * isExcludedFromTotals?]`. `isScheduled` has no counterpart in Saldo, where "upcoming" is simply
+ * `date > today` (§5.2), so it is dropped: the seeder's date shift puts those rows in the future.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -63,7 +65,7 @@ const RECURRING = [
 const toMinor = (euros) => Math.round(euros * 100);
 
 function normalise(row) {
-  const [date, description, category, account, amount, income = 0, excluded = 0, tags = []] = row;
+  const [date, description, category, account, amount, income = 0, , tags = [], excluded = 0] = row;
   const key = CATEGORY_KEYS[category];
   if (key === undefined) throw new Error(`Unmapped category: ${category}`);
   return {

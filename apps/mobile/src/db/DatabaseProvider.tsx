@@ -2,6 +2,7 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import { View } from 'react-native';
 import migrations from '../../drizzle/migrations';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 import { db } from './client';
@@ -49,7 +50,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     [],
   );
   if (error) return <CenteredMessage title="Saldo" body={error.message} />;
-  if (!success) return null;
+  if (!success) return <LoadingScreen />;
   return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;
 }
 

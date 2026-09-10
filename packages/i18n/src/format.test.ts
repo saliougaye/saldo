@@ -3,6 +3,7 @@ import {
   formatCycleRange,
   formatDayMonth,
   formatLongDate,
+  formatMajor,
   formatMoney,
   formatMoneyParts,
   formatSignedPercent,
@@ -73,5 +74,30 @@ describe('formatSignedPercent', () => {
     expect(formatSignedPercent(12)).toBe('+12%');
     expect(formatSignedPercent(-7.4)).toBe('−7%');
     expect(formatSignedPercent(0.2)).toBe('0%');
+  });
+});
+
+describe('formatMajor', () => {
+  it('drops the sign on request', () => {
+    expect(formatMajor(-19_349, 'EUR', 'en', 'never')).toBe('193');
+    expect(formatMajor(32_500, 'EUR', 'en', 'negative')).toBe('325');
+    expect(formatMajor(-32_500, 'EUR', 'en', 'negative')).toBe('−325');
+  });
+
+  it('rounds to whole units and groups thousands', () => {
+    expect(formatMajor(32_500, 'EUR', 'it')).toBe('+325');
+    expect(formatMajor(-19_349, 'EUR', 'en')).toBe('−193');
+    expect(formatMajor(123_456_78, 'EUR', 'it')).toBe('+123.457');
+    expect(formatMajor(123_456_78, 'EUR', 'en')).toBe('+123,457');
+  });
+
+  it('respects the currency scale', () => {
+    expect(formatMajor(325, 'JPY', 'en')).toBe('+325');
+    expect(formatMajor(325_000, 'BHD', 'en')).toBe('+325');
+  });
+
+  it('has no sign at zero', () => {
+    expect(formatMajor(0, 'EUR', 'it')).toBe('0');
+    expect(formatMajor(-4, 'EUR', 'it')).toBe('0');
   });
 });

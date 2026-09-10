@@ -11,7 +11,7 @@ import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
@@ -27,7 +27,7 @@ import {
   useCategories,
   useSettings,
   useTags,
-  useTransactionsInRange,
+  useTransactionsInRangeQuery,
 } from '../../src/db/hooks';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -55,7 +55,7 @@ export default function TransactionsTab() {
   const [tagSheetOpen, setTagSheetOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
 
-  const rows = useTransactionsInRange(period.range.start, period.range.end);
+  const { rows, loaded } = useTransactionsInRangeQuery(period.range.start, period.range.end);
 
   const lookup = useMemo<FilterLookup>(() => {
     const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
@@ -104,7 +104,14 @@ export default function TransactionsTab() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6 }}
+        // A horizontal ScrollView in a flex column would otherwise stretch and clip its chips,
+        // and the negative margin lets them scroll edge to edge under the screen padding.
+        style={{ flexGrow: 0, flexShrink: 0, marginHorizontal: -theme.layout.screenPaddingX }}
+        contentContainerStyle={{
+          gap: 6,
+          paddingHorizontal: theme.layout.screenPaddingX,
+          paddingVertical: 2,
+        }}
       >
         <Chip
           label={t('transactions.onlyExpenses')}
@@ -129,8 +136,22 @@ export default function TransactionsTab() {
         />
       </ScrollView>
 
-      <ScrollView contentContainerStyle={{ gap: 10, paddingBottom: 24 }}>
-        {groups.length === 0 ? (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ gap: 10, paddingBottom: 24 }}
+        keyboardDismissMode="on-drag"
+      >
+        {!loaded ? (
+          <Card>
+            <View
+              accessibilityRole="progressbar"
+              accessibilityLabel={t('common.loading')}
+              style={{ paddingVertical: 12, alignItems: 'center' }}
+            >
+              <ActivityIndicator color={theme.palette.textMuted} />
+            </View>
+          </Card>
+        ) : groups.length === 0 ? (
           <Card>
             <Text color="textMuted">
               {active ? t('transactions.noResults') : t('transactions.empty')}

@@ -10,6 +10,7 @@ import { Card } from '../src/components/Card';
 import { IconBox } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
+import { BackButton } from '../src/components/ScreenHeader';
 import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '../src/db/hooks';
 import { BudgetDetailSheet } from '../src/features/budgets/BudgetDetailSheet';
 import { budgetViews } from '../src/features/budgets/useBudgetProgress';
@@ -53,6 +54,7 @@ export default function BudgetsScreen() {
 
   return (
     <Screen>
+      <BackButton />
       <Text size="display" weight="semibold" tracking="tighter">
         {t('budgets.title')}
       </Text>

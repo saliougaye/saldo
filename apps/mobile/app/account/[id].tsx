@@ -21,6 +21,7 @@ import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { archiveAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
@@ -106,6 +107,7 @@ export default function AccountDetail() {
       }
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <BackButton />
         <IconBox name={account.icon as IconName} colour={theme.categoryColor(account.colorIndex)} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text size="headline" weight="semibold" tracking="tight" numberOfLines={1}>
