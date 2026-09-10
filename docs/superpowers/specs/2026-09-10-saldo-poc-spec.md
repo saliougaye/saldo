@@ -556,8 +556,8 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
-| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, so this asks for the server address → "Verifica" → passkey sign-in, or "Crea account" when the server allows it. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then **four steps**: 1 **period** (four kinds, with the 7-col day grid revealed only for the pay cycle, and the "il tuo periodo va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
-| 6.30 | **Server & sync** (NEW) | — | Server URL field + "Verifica" (GET /api/health), status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
+| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, and the build already knows which one (§15), so this screen only names the server and offers passkey sign-in, plus "Crea account" when the server allows it. A build without a usable `SALDO_SERVER_URL` says exactly that and offers nothing. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then **four steps**: 1 **period** (four kinds, with the 7-col day grid revealed only for the pay cycle, and the "il tuo periodo va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
+| 6.30 | **Server & sync** (NEW) | — | The configured server address, read-only, status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
 | 6.31 | **Import wizard** (NEW) | — | §11.3 steps, each a full screen with a sticky bottom CTA. |
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |
 
@@ -736,8 +736,10 @@ Notes that follow from using the library:
 A passkey ceremony needs `navigator.credentials`, which React Native does not have (§9.4), so it runs on a page the
 server serves and the resulting session is handed to the app.
 
-1. App: the user enters the server URL → `GET /api/health`. It must return `app: "saldo"` and `apiVersion: 1`; it also
-   returns `schemaVersion` (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered.
+1. App: the server is the one the build points at (§15), so nothing is asked for. The sign-in screen calls
+   `GET /api/health` on mount, which must return `app: "saldo"` and `apiVersion: 1`; it also returns `schemaVersion`
+   (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered. A failed check does not disable
+   "Accedi con passkey" — it may be transient, and the ceremony reports its own error — it only offers "Riprova".
 2. App generates `state` (`expo-crypto`) and calls
    `WebBrowser.openAuthSessionAsync("{server}/auth/mobile?redirect_uri=saldo://auth/callback&state=…&mode=login|register", "saldo://auth/callback")`.
 3. `/auth/mobile` (server component + client component) validates `redirect_uri` scheme ∈ `APP_REDIRECT_SCHEMES`
@@ -956,11 +958,17 @@ Category name → category; Amount → signed decimal `.`; Note → description;
 | `SALDO_APP_NAME` | `Saldo` |
 | `SALDO_BUNDLE_ID` | `io.github.saldo.app` (forks must change it) |
 | `SALDO_SCHEME` | `saldo` |
+| `SALDO_SERVER_URL` | — (**required**: the server this build signs in to, e.g. `saldo.example.com`) |
+
+The address is a build input, not something typed on the phone: an app belongs to one server. It
+reaches the app through `extra.serverUrl` and is validated at runtime with `normaliseServerUrl`; a
+build without a usable value can only say so (§6.29 step 0).
 
 **Android APK (docs/building-android.md):**
 
 1. Prerequisites: JDK 17, Android SDK + platform tools, `ANDROID_HOME`.
-2. `pnpm install` then `pnpm --filter mobile exec expo prebuild --platform android --clean`.
+2. `pnpm install` then
+   `SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile exec expo prebuild --platform android --clean`.
 3. Generate a keystore: `keytool -genkeypair -v -storetype PKCS12 -keystore saldo-release.keystore -alias saldo -keyalg RSA -keysize 2048 -validity 10000`.
 4. Put `SALDO_UPLOAD_STORE_FILE`, `SALDO_UPLOAD_KEY_ALIAS`, `SALDO_UPLOAD_STORE_PASSWORD`, `SALDO_UPLOAD_KEY_PASSWORD`
    in `~/.gradle/gradle.properties`. A config plugin in `apps/mobile/plugins/withReleaseSigning.js` wires
@@ -972,7 +980,7 @@ Category name → category; Amount → signed decimal `.`; Note → description;
 **iOS (docs/building-ios.md):**
 
 1. Prerequisites: macOS, Xcode (current), CocoaPods, an Apple ID.
-2. `SALDO_BUNDLE_ID=com.<you>.saldo pnpm --filter mobile exec expo prebuild --platform ios --clean`.
+2. `SALDO_BUNDLE_ID=com.<you>.saldo SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile exec expo prebuild --platform ios --clean`.
 3. Open `apps/mobile/ios/Saldo.xcworkspace`, then Signing & Capabilities → Team: your Personal Team.
 4. Select the device and run with the **Release** scheme configuration (Product → Scheme → Edit Scheme → Run → Release).
 5. **Free Apple ID limits:** the app expires after 7 days (re-run from Xcode) and you can have 3 sideloaded apps. A paid

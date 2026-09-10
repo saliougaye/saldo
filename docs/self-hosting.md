@@ -1,7 +1,11 @@
 # Self-hosting Saldo
 
-The Saldo server (`apps/web`) is optional. The app is local-first: everything works without it. You
-need a server only for passkey sign-in, multi-device sync and attachment backup.
+The Saldo server (`apps/web`) holds the accounts, so a Saldo app needs one: sign-in is the first
+thing it asks for. Everything after that is local-first — the app works offline and keeps working
+if the server is down — and the server is what gives you multi-device sync and attachment backup.
+
+The app is **built for one server**: you set `SALDO_SERVER_URL` when you build the APK or the iOS
+app, and nobody types an address on the phone (§15 of the spec, and `docs/building-*.md`).
 
 ## What you need
 
@@ -61,8 +65,8 @@ curl -s https://saldo.example.com/api/health
 # {"app":"saldo","apiVersion":1,"version":"0.1.0","registrationAllowed":true}
 ```
 
-`app` and `apiVersion` are what the mobile app looks for when you type a server URL into it, and
-`registrationAllowed` is what decides whether it offers "create account".
+`app` and `apiVersion` are what the mobile app looks for when it reaches the server it was built
+for, and `registrationAllowed` is what decides whether it offers "create account".
 
 ## Local development
 

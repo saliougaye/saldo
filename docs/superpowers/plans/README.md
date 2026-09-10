@@ -301,7 +301,7 @@ session.
 **Not verified:** signing in for real (the passkey ceremony needs a platform authenticator), so the screenshots above
 were taken with the sign-in gate bypassed by a temporary probe that was then reverted.
 
-### 08b — The server comes from the build, not from the user 🔜 queued
+### 08b — The server comes from the build, not from the user ✅
 
 Asked for by the user after 08: "durante sign in non serve chiedere server, l'app sarà buildata con l'env verso il
 server corretto."
@@ -318,7 +318,8 @@ server corretto."
 - §6.30 shows the configured address as read-only text.
 - Spec: §9.3 step 1, §6.29 step 0, §6.30, §15.
 
-**This removes code from what phase 08 just added**, so it is worth doing before 09 rather than after.
+**Done** (plan: `2026-09-11-08b-server-from-build-env.md`). `SALDO_SERVER_URL` → `extra.serverUrl` → `readServerUrl`;
+`ConnectForm` probes `/api/health` on mount and offers sign-in without a field; `kv.serverUrl` is gone.
 
 ### 09 — Attachments & Import/Export
 
