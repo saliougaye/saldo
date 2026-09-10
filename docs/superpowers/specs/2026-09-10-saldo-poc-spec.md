@@ -35,7 +35,9 @@ cycle, and am I going faster than I should?*
 - Web app UI. `apps/web` exists in the POC only to host the API and the passkey web ceremony pages.
 - App store distribution, EAS cloud builds, OTA updates.
 - Bank connections or automatic transaction feeds.
-- Multi-currency conversion (one currency per app; switching currency re-formats and does not convert, as in the design).
+- Multi-currency conversion and per-account currencies (one currency per app; switching currency re-formats and does
+  not convert, as in the design). Correct conversion needs *historical* rates per transaction date — with today's rate
+  past totals, budgets and statistics would silently change as rates move — so it belongs to its own phase.
 - Shared budgets or households (the server can be multi-user, but data is never shared between users).
 - AI features (see §17; they are future iterations with bring-your-own-key).
 - Non-monthly cycles (the "Il mio ciclo non è mensile" link in onboarding is out of scope: hide it).
@@ -52,7 +54,7 @@ cycle, and am I going faster than I should?*
 | D4 | `packages/ui` contains **tokens and icon data only**, with no rendering components | The user asked for UI sharing to stay renderer-agnostic. Each app renders with its own primitives (RN `View`/`Text`/`react-native-svg`, web DOM/SVG). |
 | D5 | `packages/core` is **pure TypeScript** (no React, RN, Node or DOM APIs) | Runs identically on Hermes, Node and browsers; 100% unit-testable with Vitest. |
 | D6 | Internal packages ship **TypeScript source** (`exports` → `./src/index.ts`), with no build step | Metro and Next (`transpilePackages`) compile them directly. Simpler for forks. |
-| D7 | Money is stored as **integer minor units** (cents) | No floating-point drift. All supported currencies have 2 decimals. |
+| D7 | Money is stored as **integer minor units** of the app currency | No floating-point drift. The scale is the currency's CLDR exponent (`minorDigits`: 0 for JPY/ISK, 2 for most, 3 for KWD), so every amount is read together with `settings.currency`. |
 | D8 | Dates of transactions are **`LocalDate` strings `YYYY-MM-DD`** with no time zone | A finance entry belongs to a calendar day, not an instant. Metadata timestamps are ISO-8601 UTC. |
 | D9 | **Local-first**: SQLite on device (`expo-sqlite` + Drizzle ORM) is the source of truth | The user chose local-first + sync. |
 | D10 | **Custom row-level LWW sync** with hybrid logical clocks (HLC) over a small REST API | Single-user, multi-device data; row-level last-writer-wins is enough and has zero vendor lock-in for self-hosters. PowerSync, Electric and Zero were considered and rejected: extra services to self-host, and licensing/complexity. |
@@ -161,7 +163,7 @@ All synced entities share **sync metadata**:
 | Field | Type | Rules |
 | --- | --- | --- |
 | `cycleStartDay` | int 1–31 | Default 27 in design; onboarding asks. Clamped per month (§5.2). |
-| `currency` | `EUR \| USD \| GBP \| CHF` | One for the whole app. |
+| `currency` | `CurrencyCode` | Any of the 162 ISO 4217 codes CLDR can format (`CURRENCY_CODES`). One for the whole app; `EUR/USD/GBP/CHF` are shown first in the picker. |
 | `language` | `system \| it \| en` | |
 | `theme` | `system \| dark \| light` | Design default dark. |
 | `onboardingCompletedAt` | ISO \| null | |
@@ -219,7 +221,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 
 | Field | Type | Rules |
 | --- | --- | --- |
-| `frequency` | `monthly` | POC supports monthly ("Ogni mese") only. |
+| `frequency` | `monthly` | POC supports monthly ("Ogni mese") only. The field exists now so that adding `weekly` later is additive — no device migration and no new sync column. |
 | `startDate` | LocalDate | Day of month used for every occurrence, clamped to the month length. |
 | `endDate` | LocalDate \| null | Inclusive. |
 | `template` | object | `{ kind, amount, accountId, toAccountId, categoryId, description, tagIds, excludeFromTotals }`. |
@@ -231,8 +233,8 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `name` | string 1–40 | Default auto-name: 1 cat → name, 2 → "A e B" / "A and B", 3+ → "A +2". |
 | `categoryIds` | id[] ≥1 | Expense categories. A parent id includes its children. A category may belong to **at most one** budget. |
 | `amount` | minor int > 0 | Limit per period. |
-| `period` | `cycle \| week \| year` | Labels: Ogni ciclo, Settimana, Anno. |
-| `alertThreshold` | 75 \| 90 \| 100 \| null | null = "Mai". |
+| `period` | `cycle \| week \| year` | Labels: Ogni ciclo, Settimana, Anno. There is deliberately no `month`: the app's month *is* the cycle (§5.2), and a budget on calendar months would disagree with every other total in the app. Users who want calendar months set `cycleStartDay = 1`. |
+| `alertThreshold` | int 1–100 \| null | Percent of the limit. null = "Mai". The "Avvisami a" control offers `BUDGET_ALERT_THRESHOLDS` (75/90/100), but the stored value is any percentage: the alert rule (§5.8) is arithmetic, and pinning the three UI options into a synced row would make a slider a migration. |
 | `rollover` | boolean | "Porta avanti il residuo". |
 | `icon` | IconName | Default: icon of first category. |
 | `sortOrder` | int | |
@@ -281,14 +283,22 @@ picker to keep the grid at 12). Children are created together with their selecte
 ### 5.1 Money
 
 - Stored in minor units. Keypad input buffer uses `.` internally; the key label is `,` (it) or `.` (en).
-- Keypad rules: max **6 integer digits**, max **2 decimals**, a decimal separator only after at least one digit,
-  no leading zeros (`0` then `5` → `5`), and `del` removes the last char.
+- Keypad rules: max **8 significant digits** split by the currency scale — `maxIntegerDigits = 8 − minorDigits`, so
+  6 integer digits + 2 decimals for EUR, 8 + 0 for JPY, 5 + 3 for KWD. A decimal separator only after at least one
+  digit and never for a 0-decimal currency, no leading zeros (`0` then `5` → `5`), and `del` removes the last char.
 - Display: `formatMoneyParts` returns `{ sign, integer, fraction, decimalSeparator, symbol, symbolPosition }`.
   The design renders the fraction and symbol at **50% opacity** (`1.842<span opacity .5>,60 €</span>`).
   - it: group `.`, decimal `,`, symbol suffix with a space (`1.842,60 €`).
   - en: group `,`, decimal `.`, symbol prefix (`€1,842.60`; multi-letter symbols get a space: `CHF 1,842.60`).
   - Negative sign is U+2212 `−`. Income rows show a `+` prefix.
-- Changing currency never converts. Confirm sheet copy: "Gli importi vengono riformattati, non convertiti."
+- Changing currency never converts (§1.2). Confirm sheet copy: "Gli importi vengono riformattati, non convertiti."
+  Switching between currencies with a *different* `minorDigits` **keeps the stored integers untouched**: `184260` reads
+  as `1.842,60 €` and as `184.260 ¥`. Rationale: re-scaling the stored amounts to preserve the displayed number
+  (`184260` @2 → `1843` @0) is lossy and irreversible — it discards the minor unit on every row, so EUR → JPY → EUR
+  returns `184300`, and it buys no correctness anyway (the FX value is nowhere near either number). Keeping the integers
+  is a no-op migration and fully reversible. When the scales differ the confirm sheet states the effect with a concrete
+  example built from the user's own total: "1.842,60 € diventerà 184.260 ¥. Gli importi vengono riformattati, non
+  convertiti." Users who genuinely need two currencies want per-account currencies (§1.2), not this switch.
 
 ### 5.2 Cycles
 
@@ -431,7 +441,9 @@ Let `today = todayLocal()`.
 - Groups by day desc; sticky day header with day expense total (counted, non-excluded).
 - Search matches description, category name and account name: case-insensitive and accent-insensitive.
 - Chips: Conto (picker), Categoria (picker), Tag (multi-select sheet), Solo uscite, Solo entrate, and "Solo escluse"
-  when active. In the POC, Conto/Categoria open pickers (a bottom sheet list) rather than cycling as in the prototype.
+  when active. **Transfers match neither direction chip**: they move money between the user's own accounts and §5.3
+  keeps them out of every total, so "Solo uscite" shows real spending only. They stay visible with no direction filter,
+  and the Conto chip still matches both legs. In the POC, Conto/Categoria open pickers (a bottom sheet list) rather than cycling as in the prototype.
 - **Swipe row:** drag right > 70px → edit; drag left > 70px → delete dialog; max travel 120px; release below threshold
   snaps back (240ms, easing `cubic-bezier(0.32,0.72,0,1)`); tap (< 5px) → detail. Background reveals "Modifica"
   (left) and "Elimina" (right, accent), with opacity `min(1, |dx|/70)`. Use Reanimated + Gesture Handler.
@@ -500,7 +512,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.22 | **Account sheet** | 1405–1481 | Balance display with keypad, name, type grid 3 cols, credit close/charge day pickers, colour swatches + 8 icons, "Includi nel saldo disponibile" toggle + note, Salva. In edit mode, the amount edits **current balance**: store `openingBalance = entered − Σ(transaction effects)`. |
 | 6.23 | **Tag filter sheet** | 1483–1502 | Multi-select by usage, Azzera / Fatto. |
 | 6.24 | **Tag edit sheet** | 1504–1543 | §5.10. |
-| 6.25 | **Currency sheets** | 1545–1579 | §5.1. |
+| 6.25 | **Currency sheets** | 1545–1579 | §5.1. The design lists four currencies; with 162 supported the sheet needs a **search field** and a "Comuni" section (`COMMON_CURRENCY_CODES`) above the alphabetical list. Rows show code, symbol and localised name. |
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
@@ -551,6 +563,12 @@ screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, Secondar
 - Entity names: `settings, account, category, tag, transaction, recurrence, budget, attachment`.
 - Order of application doesn't matter for integrity (no FK constraints across synced tables locally; the UI tolerates
   dangling references by showing "—" and repositories filter tombstoned parents).
+- **OPEN — unknown enum values on pull.** The §4 schemas validate closed enums (`frequency`, `period`, `mimeType`,
+  `accountType`, …). A device on a newer app version that writes a value this device doesn't know (`frequency: 'weekly'`)
+  would have that row rejected by the Zod schema on pull, silently losing it while the newer device keeps it — the rows
+  diverge with no conflict to resolve. Decide a policy before the sync phase: reject-and-report, store-as-opaque, or an
+  `apiVersion`/schema-version gate that refuses to sync with a newer peer at all. Whichever it is, prefer widening enums
+  only when a real second value ships. This is why `alertThreshold` is a plain percentage rather than three literals.
 
 ### 8.2 Hybrid logical clock (in `@saldo/core/sync/hlc.ts`)
 
