@@ -1,3 +1,4 @@
+import type { AccountRef } from '../accounts';
 import type { CategoryRef, LedgerTx } from '../ledger';
 
 let sequence = 0;
@@ -30,6 +31,45 @@ export const CATEGORIES: CategoryRef[] = [
   { id: 'cat-health', parentId: null },
   { id: 'cat-transport', parentId: null },
   { id: 'cat-salary', parentId: null },
+];
+
+export const ACCOUNTS: AccountRef[] = [
+  {
+    id: 'acc-card',
+    type: 'credit_card',
+    openingBalance: 0,
+    includeInSpendable: false,
+    archivedAt: null,
+    creditCloseDay: 20,
+    creditChargeDay: 5,
+  },
+  {
+    id: 'acc-checking',
+    type: 'checking',
+    openingBalance: 500000,
+    includeInSpendable: true,
+    archivedAt: null,
+    creditCloseDay: null,
+    creditChargeDay: null,
+  },
+  {
+    id: 'acc-savings',
+    type: 'savings',
+    openingBalance: 1000000,
+    includeInSpendable: false,
+    archivedAt: null,
+    creditCloseDay: null,
+    creditChargeDay: null,
+  },
+  {
+    id: 'acc-old',
+    type: 'cash',
+    openingBalance: 20000,
+    includeInSpendable: true,
+    archivedAt: '2026-01-31T12:00:00.000Z',
+    creditCloseDay: null,
+    creditChargeDay: null,
+  },
 ];
 
 export function aprilTransactions(): LedgerTx[] {
