@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import type { TokenStore, Tokens } from '../auth/tokenStore';
 
 export class ApiClientError extends Error {
   constructor(
@@ -21,26 +20,14 @@ export interface ApiClient {
 
 export interface ApiClientOptions {
   serverUrl: string;
-  store: TokenStore;
+  /**
+   * The headers that carry Better Auth's session, or null when this device is signed out. On React
+   * Native that is the `Cookie` header the Expo client keeps in SecureStore — cookies are not sent
+   * automatically there, so they are attached by hand (as Better Auth's Expo guide prescribes).
+   */
+  getAuthHeaders: () => Promise<Record<string, string> | null>;
   onSessionExpired?: () => void;
   fetchImpl?: (request: Request) => Promise<Response>;
-}
-
-export interface TokenPairBody {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  user: { id: string; displayName: string };
-}
-
-export function tokensFromBody(body: TokenPairBody, now: number): Tokens {
-  return {
-    accessToken: body.access_token,
-    refreshToken: body.refresh_token,
-    expiresAt: now + body.expires_in * 1000,
-    userId: body.user.id,
-    displayName: body.user.displayName,
-  };
 }
 
 async function readError(response: Response): Promise<ApiClientError> {
@@ -57,65 +44,30 @@ async function readError(response: Response): Promise<ApiClientError> {
 }
 
 /**
- * The one place that talks to the server. It attaches the bearer, and on a 401 it refreshes
- * **once** and retries. The refresh is shared between concurrent callers on purpose: the server
- * revokes a whole refresh chain when a token is presented twice (§9.3 step 6), so two parallel
- * refreshes would sign the device out.
+ * The one place that talks to the server. It attaches the bearer Better Auth issued and reports a
+ * 401 as an expired session.
+ *
+ * There is no refresh dance here on purpose: Better Auth renews a session as it is used, so there
+ * is no second credential to rotate — and no reuse-detection race to lose.
  */
 export function createApiClient(options: ApiClientOptions): ApiClient {
   const fetchImpl = options.fetchImpl ?? ((request: Request) => fetch(request));
   const base = options.serverUrl.replace(/\/$/, '');
-  let refreshing: Promise<Tokens | null> | null = null;
 
-  const refresh = async (current: Tokens): Promise<Tokens | null> => {
+  const send = async <T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<T> => {
+    const auth = await options.getAuthHeaders();
+    if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
     const response = await fetchImpl(
-      new Request(`${base}/api/auth/token`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          grant_type: 'refresh_token',
-          refresh_token: current.refreshToken,
-        }),
+      new Request(`${base}${path}`, {
+        ...init,
+        // `omit` so the platform does not also attach its own cookie jar and confuse the server.
+        credentials: 'omit',
+        headers: { ...(init.headers as Record<string, string> | undefined), ...auth },
       }),
     );
-    if (!response.ok) {
-      await options.store.clear(options.serverUrl);
+    if (response.status === 401) {
       options.onSessionExpired?.();
-      return null;
-    }
-    const body = (await response.json()) as TokenPairBody;
-    const next = tokensFromBody(body, Date.now());
-    await options.store.save(options.serverUrl, next);
-    return next;
-  };
-
-  const refreshOnce = (current: Tokens): Promise<Tokens | null> => {
-    refreshing ??= refresh(current).finally(() => {
-      refreshing = null;
-    });
-    return refreshing;
-  };
-
-  const send = async <T>(
-    path: string,
-    init: RequestInit,
-    schema: z.ZodType<T>,
-    retried = false,
-  ): Promise<T> => {
-    const stored = await options.store.load(options.serverUrl);
-    if (stored === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
-    const request = new Request(`${base}${path}`, {
-      ...init,
-      headers: {
-        ...(init.headers as Record<string, string> | undefined),
-        authorization: `Bearer ${stored.accessToken}`,
-      },
-    });
-    const response = await fetchImpl(request);
-    if (response.status === 401 && !retried) {
-      const refreshed = await refreshOnce(stored);
-      if (refreshed === null) throw await readError(response);
-      return send(path, init, schema, true);
+      throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
     }
     if (!response.ok) throw await readError(response);
     const payload: unknown = await response.json();
@@ -138,6 +90,6 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         },
         schema,
       ),
-    hasSession: async () => (await options.store.load(options.serverUrl)) !== null,
+    hasSession: async () => (await options.getAuthHeaders()) !== null,
   };
 }
