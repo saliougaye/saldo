@@ -10,8 +10,10 @@ export interface ScreenProps {
   /** Onboarding pins its buttons to the bottom instead of scrolling them away. */
   footer?: ReactNode;
   /**
-   * Tab screens must clear the custom tab bar, which floats over their content. Push screens and
-   * onboarding have no tab bar, so they leave this off.
+   * Tab screens clear the FAB, which is lifted over the top edge of the tab bar. The bar itself
+   * needs no room: a custom `tabBar` is laid out in flow by the navigator, so the screen already
+   * ends above it — reserving its height again left a dead band the content could not scroll
+   * into. Push screens and onboarding have no tab bar, so they leave this off.
    */
   underTabBar?: boolean;
 }
@@ -24,7 +26,8 @@ export function Screen({ children, scroll = true, footer, underTabBar = false }:
     paddingHorizontal: theme.layout.screenPaddingX,
     paddingTop: insets.top + 8,
   };
-  const bottomSpace = 24 + (underTabBar ? theme.layout.tabBarHeight + insets.bottom : 0);
+  const tabBarSpace = underTabBar ? theme.layout.fabLift : 0;
+  const bottomSpace = 24 + tabBarSpace;
   return (
     <View style={{ flex: 1, backgroundColor: theme.palette.bg }}>
       {scroll ? (
@@ -42,7 +45,7 @@ export function Screen({ children, scroll = true, footer, underTabBar = false }:
           style={{
             flex: 1,
             ...padding,
-            paddingBottom: underTabBar ? theme.layout.tabBarHeight + insets.bottom : 0,
+            paddingBottom: tabBarSpace,
             gap: theme.layout.cardGap,
           }}
         >

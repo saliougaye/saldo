@@ -130,6 +130,11 @@ phases 03–05 had already delivered.
   column sizes itself to its content and is then clipped by the parent instead of scrolling; the horizontal chips row
   was stretching for the same reason. The list now takes `flex: 1` and the chips row `flexGrow: 0`, bleeding to the
   screen edges with a negative margin.
+- **Dead black band above the tab bar.** A custom `tabBar` is laid out *in flow* by the navigator,
+  so a tab screen already ends above it, but `Screen` reserved `tabBarHeight + insets.bottom` on
+  top of that. On `scroll={false}` screens that padding sits on the container and shrinks the
+  list's viewport, so 112pt of the screen could not be scrolled into at all. `Screen` now reserves
+  only `fabLift`, the overhang of the FAB.
 - **Cashflow chart did not match the design.** Rewritten to the prototype's geometry (lines 265-289): net label per
   column, 16px bars in two 54px halves around a 1px axis, 45° hatching on the running cycle, and the legend. The
   hatch is drawn as diagonal `Path` lines: `patternTransform="rotate(45)"` renders as dots in react-native-svg. The
