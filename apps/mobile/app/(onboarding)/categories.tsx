@@ -56,7 +56,7 @@ export default function CategoriesStep() {
     <Screen footer={<PrimaryButton label={t('common.start')} loading={saving} onPress={finish} />}>
       <ProgressBar ratio={1} />
       <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 3, total: 3 })}
+        {t('onboarding.step', { current: 4, total: 4 })}
       </Text>
       <Text size="display" weight="semibold" tracking="tighter">
         {t('onboarding.categoriesTitle')}

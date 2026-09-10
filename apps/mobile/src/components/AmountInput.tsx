@@ -1,0 +1,117 @@
+import {
+  amountBufferToMinor,
+  type CurrencyCode,
+  getCurrency,
+  sanitizeAmountInput,
+} from '@saldo/core';
+import { type AppLocale, formatMoneyParts } from '@saldo/i18n';
+import { useRef } from 'react';
+import { InputAccessoryView, Platform, Pressable, TextInput, View } from 'react-native';
+import { Text } from '../theme/Text';
+import { useTheme } from '../theme/ThemeProvider';
+
+export interface AmountInputProps {
+  /** Locale-agnostic buffer using `.` (§5.1). */
+  buffer: string;
+  onChange: (buffer: string) => void;
+  currency: CurrencyCode;
+  locale: AppLocale;
+  autoFocus?: boolean;
+  /** Label for the accessory bar's dismiss button. */
+  doneLabel: string;
+  onDone?: () => void;
+}
+
+/**
+ * Amount entry on the **device keyboard** (D23): a `decimal-pad` field styled as the big amount,
+ * with the currency symbol beside it.
+ *
+ * The field shows the raw buffer rather than a grouped number: re-formatting text while someone
+ * types moves the caret and fights them. Grouping is applied everywhere the amount is *displayed*.
+ *
+ * iOS gets an `InputAccessoryView` with a done button, which is the platform way to extend the
+ * keyboard. Android has no equivalent primitive, so there the keyboard's own dismiss key and the
+ * form's save button do the job.
+ */
+export function AmountInput({
+  buffer,
+  onChange,
+  currency,
+  locale,
+  autoFocus = false,
+  doneLabel,
+  onDone,
+}: AmountInputProps) {
+  const theme = useTheme();
+  const input = useRef<TextInput>(null);
+  const accessoryId = 'saldo-amount-accessory';
+  const { minorDigits } = getCurrency(currency);
+  const parts = formatMoneyParts(amountBufferToMinor(buffer, minorDigits), currency, locale);
+  const separator = locale === 'it' ? ',' : '.';
+
+  return (
+    <Pressable accessibilityRole="button" onPress={() => input.current?.focus()}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        {parts.symbolPosition === 'prefix' ? (
+          <Text size="amountXl" weight="semibold" color="textFaint">
+            {parts.symbol}
+          </Text>
+        ) : null}
+        <TextInput
+          ref={input}
+          accessibilityLabel={doneLabel}
+          value={buffer.replace('.', separator)}
+          onChangeText={(text) => onChange(sanitizeAmountInput(text, minorDigits))}
+          keyboardType="decimal-pad"
+          autoFocus={autoFocus}
+          placeholder="0"
+          placeholderTextColor={theme.palette.textFaint}
+          inputAccessoryViewID={Platform.OS === 'ios' ? accessoryId : undefined}
+          style={{
+            flex: 1,
+            minWidth: 80,
+            paddingVertical: 0,
+            color: theme.palette.text,
+            fontFamily: 'Geist_600SemiBold',
+            fontSize: theme.fontSize.amountXl,
+            fontVariant: ['tabular-nums'],
+          }}
+        />
+        {parts.symbolPosition === 'suffix' ? (
+          <Text size="amountXl" weight="semibold" color="textFaint">
+            {parts.symbol}
+          </Text>
+        ) : null}
+      </View>
+
+      {Platform.OS === 'ios' ? (
+        <InputAccessoryView nativeID={accessoryId}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              paddingHorizontal: theme.layout.screenPaddingX,
+              paddingVertical: 8,
+              backgroundColor: theme.palette.raised,
+              borderTopWidth: 1,
+              borderTopColor: theme.palette.border,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={() => {
+                input.current?.blur();
+                onDone?.();
+              }}
+            >
+              <Text weight="medium" color="accent">
+                {doneLabel}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
+    </Pressable>
+  );
+}

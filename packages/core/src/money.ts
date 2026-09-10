@@ -31,35 +31,28 @@ export function maxIntegerDigits(minorDigits: MinorDigits): number {
   return MAX_AMOUNT_SIGNIFICANT_DIGITS - minorDigits;
 }
 
-export type AmountKey =
-  | '0'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | 'decimal'
-  | 'del';
-
 /**
- * Keypad reducer. The buffer uses `.` as decimal separator regardless of locale;
- * the UI shows `,` or `.` on the key. Currencies without a minor unit ignore the key.
+ * Normalises whatever the device's numeric keyboard produced into an amount buffer (§5.1).
+ *
+ * The buffer always uses `.` as its decimal separator, but the system keypad emits `.` or `,`
+ * depending on the device locale, so both are accepted. Anything else is dropped rather than
+ * rejected: a keyboard can deliver a paste, a minus sign or a second separator, and refusing the
+ * whole edit would leave the field stuck.
+ *
+ * Limits mirror the old on-screen keypad: `maxIntegerDigits(minorDigits)` before the separator,
+ * `minorDigits` after it, and no separator at all for a currency without a minor unit.
  */
-export function pressAmountKey(buffer: string, key: AmountKey, minorDigits: MinorDigits): string {
-  if (key === 'del') return buffer.slice(0, -1);
-  if (key === 'decimal') {
-    if (minorDigits === 0) return buffer;
-    return buffer.length > 0 && !buffer.includes('.') ? `${buffer}.` : buffer;
-  }
-  const [integerPart = '', decimalPart] = buffer.split('.');
-  if (decimalPart !== undefined) return decimalPart.length >= minorDigits ? buffer : buffer + key;
-  if (integerPart === '0') return key;
-  if (integerPart.length >= maxIntegerDigits(minorDigits)) return buffer;
-  return buffer + key;
+export function sanitizeAmountInput(text: string, minorDigits: MinorDigits): string {
+  const digitsAndSeparators = text.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+  const [rawInteger = '', ...rest] = digitsAndSeparators.split('.');
+  // Only the first separator counts; later ones join the fraction.
+  const rawFraction = rest.join('');
+
+  let integer = rawInteger.replace(/^0+(?=\d)/, '').slice(0, maxIntegerDigits(minorDigits));
+  if (integer.length === 0 && rawInteger.length > 0) integer = '0';
+
+  if (minorDigits === 0 || rest.length === 0) return integer;
+  return `${integer.length === 0 ? '0' : integer}.${rawFraction.slice(0, minorDigits)}`;
 }
 
 export function amountBufferToMinor(buffer: string, minorDigits: MinorDigits): MinorUnits {

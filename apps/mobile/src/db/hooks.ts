@@ -1,10 +1,10 @@
-import type { Account, Category, LocalDate, Settings, Transaction } from '@saldo/core';
+import type { Account, Category, LocalDate, Settings, Tag, Transaction } from '@saldo/core';
 import { SETTINGS_ID } from '@saldo/core';
 import { and, asc, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from './client';
 import { toEntity } from './repositories/support';
-import { accounts, categories, settings, transactions } from './schema';
+import { accounts, categories, settings, tags, transactions } from './schema';
 
 /**
  * Live reads (§3.3). `useLiveQuery` re-runs whenever `expo-sqlite` reports a change, which is why
@@ -35,6 +35,13 @@ export function useCategories(): Category[] {
       .from(categories)
       .where(isNull(categories.deletedAt))
       .orderBy(asc(categories.sortOrder), asc(categories.name)),
+  );
+  return data.map(toEntity);
+}
+
+export function useTags(): Tag[] {
+  const { data } = useLiveQuery(
+    db.select().from(tags).where(isNull(tags.deletedAt)).orderBy(asc(tags.name)),
   );
   return data.map(toEntity);
 }
