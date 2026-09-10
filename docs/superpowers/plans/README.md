@@ -241,6 +241,11 @@ providers mounted, §6.29 step 0 renders with its two ways in, and §6.30 render
 were caught that way and fixed — "Non connesso" printed twice, and a `justifyContent: 'center'` that could not work
 inside a `ScrollView`.
 
+Push and pull were also exercised against **real Postgres 17** through `curl`, which PGlite does not stand in for on
+the two parts that matter: `nextval('sync_seq')` and the upsert's `setWhere` HLC comparison. An older copy of a row
+came back `stale` and left the stored row untouched, the sequence stayed monotonic, and a second user's pull returned
+nothing.
+
 **Not verified:** signing in for real, which needs the browser passkey ceremony (§9.3) and therefore a platform
 authenticator; and with it the connected state of §6.30, the scheduler against a real server, and two devices over
 the network. The logic behind all of them is covered by the tests above.
