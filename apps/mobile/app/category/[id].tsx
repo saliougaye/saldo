@@ -2,6 +2,7 @@ import {
   cycleHistory,
   deltaPercent,
   isWithin,
+  mean,
   median,
   previousCycles,
   shiftCycle,
@@ -17,9 +18,10 @@ import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
-import { CashflowChart } from '../../src/features/stats/CashflowChart';
+import { SpendHistoryChart } from '../../src/features/stats/SpendHistoryChart';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -81,12 +83,14 @@ export default function CategoryDetail() {
       return {
         key: cycle.start,
         label: formatDayMonth(cycle.start, locale),
-        income: 0,
-        expenses: spent,
+        amount: spent,
         current: cycle.start === period.range.start,
       };
     });
   }, [rows, period.range, cycleStartDay, today, ids, locale]);
+
+  // "Media 6 cicli" of the design: the plain mean of the six columns, current cycle included.
+  const average = useMemo(() => mean(bars.map((bar) => bar.amount)) ?? 0, [bars]);
 
   const pastMedian = useMemo(() => {
     const history = cycleHistory(rows, period.range, cycleStartDay, HISTORY_CYCLES);
@@ -121,9 +125,7 @@ export default function CategoryDetail() {
 
   return (
     <Screen>
-      <Text size="headline" weight="semibold" tracking="tight">
-        {category.name}
-      </Text>
+      <ScreenHeader title={category.name} />
       <AmountText
         minor={total}
         currency={currency}
@@ -137,17 +139,43 @@ export default function CategoryDetail() {
       </Text>
 
       <Card>
-        <Text weight="medium" tracking="tight">
-          {t('stats.lastCycles')}
-        </Text>
-        <View style={{ marginTop: 12 }}>
-          <CashflowChart bars={bars} />
-        </View>
-        {pastMedian === null ? null : (
-          <Text size="footnote" color="textMuted" style={{ marginTop: 8 }}>
-            {t('stats.median', { amount: formatMoney(pastMedian, currency, locale) })}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}
+        >
+          <Text weight="medium" tracking="tight">
+            {t('stats.lastCycles')}
           </Text>
-        )}
+          {pastMedian === null ? null : (
+            <Text size="caption" color="textFaint" tabular numberOfLines={1}>
+              {t('stats.median', { amount: formatMoney(pastMedian, currency, locale) })}
+            </Text>
+          )}
+        </View>
+        <View style={{ marginTop: 18 }}>
+          <SpendHistoryChart bars={bars} currency={currency} locale={locale} />
+        </View>
+        <View
+          style={{
+            marginTop: 16,
+            paddingTop: 14,
+            borderTopWidth: 1,
+            borderTopColor: theme.palette.border,
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}
+        >
+          <Text size="footnote" color="textMuted">
+            {t('stats.average')}
+          </Text>
+          <Text tabular>{formatMoney(average, currency, locale)}</Text>
+        </View>
       </Card>
 
       {childSpend.withSpend.length < MIN_CHILDREN_WITH_SPEND ? null : (

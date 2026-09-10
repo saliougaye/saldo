@@ -113,6 +113,38 @@ that stops an archived category leaving a budget measuring nothing. Of the scree
 (which is how a card that was written but never rendered got caught); the rest need taps that `simctl` cannot give.
 Import/export and the server row are deliberately "Presto" until phases 07 and 08.
 
+### 05b — UI fixes from the first hands-on review ✅ done
+
+Found by running the seeded app on the simulator, after 05 was merged. No plan file: five bounded fixes to screens
+phases 03–05 had already delivered.
+
+- **No loading state.** `app/index.tsx`, `DatabaseProvider` and the i18n gate all returned `null`, so the boot gaps
+  showed a blank screen once the splash had gone. They now render `LoadingScreen`, and the transactions list shows a
+  spinner until its first query result arrives (`useTransactionsInRangeQuery().loaded`).
+- **No way back from a pushed screen.** The root `Stack` runs with `headerShown: false` because §6 draws its own
+  chrome, and none of the pushed screens drew a back affordance. Added `BackButton`/`ScreenHeader`
+  (`src/components/ScreenHeader.tsx`), used by the four forms, the four detail screens, Budgets, Profile, Settings and
+  the onboarding steps. It hides itself when `router.canGoBack()` is false, so a deep-linked screen shows no dead
+  control.
+- **Transactions list clipped, filter chips cut off.** A vertical `ScrollView` with no `flex` inside a `flex: 1`
+  column sizes itself to its content and is then clipped by the parent instead of scrolling; the horizontal chips row
+  was stretching for the same reason. The list now takes `flex: 1` and the chips row `flexGrow: 0`, bleeding to the
+  screen edges with a negative margin.
+- **Cashflow chart did not match the design.** Rewritten to the prototype's geometry (lines 265-289): net label per
+  column, 16px bars in two 54px halves around a 1px axis, 45° hatching on the running cycle, and the legend. The
+  hatch is drawn as diagonal `Path` lines: `patternTransform="rotate(45)"` renders as dots in react-native-svg. The
+  category detail screen was reusing this chart with `income: 0`; it now has `SpendHistoryChart`, which is the
+  single-series column chart the design actually shows there (lines 878-887), plus the "6-cycle average" footer.
+- **Demo data flags were wrong.** `scripts/generate-demo-data.mjs` assumed the prototype's row format was
+  `[…, isIncome, isExcluded, tags]`, but its own `toObj` reads `[…, isIncome, isScheduled, tags, isExcluded]`. Three
+  scheduled rows were therefore seeded as "excluded from totals", which is why day totals read €0.00 next to a
+  non-zero row. `seed:db` also grew a `--reset` flag, without which a change to the demo data never reaches an
+  already-seeded simulator, and it now resolves category names through the English locale instead of showing raw keys.
+
+**Verified:** transactions list and statistics screenshotted on the simulator against a freshly seeded database; the
+pushed-screen header screenshotted via a temporary `router.push` probe (`simctl` cannot tap, and a deep link raises a
+system "Open in Saldo?" dialog that itself needs one). Android remains unverified.
+
 ### 06 — Server & passkey authentication
 
 **Spec:** §9, §14, §18 · **Can run in parallel with 02–05**

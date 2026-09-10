@@ -11,6 +11,7 @@ import { Card } from '../../components/Card';
 import { Chip } from '../../components/Chip';
 import { IconBox } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
+import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
 import { TextField } from '../../components/TextField';
 import { Toggle } from '../../components/Toggle';
@@ -135,9 +136,7 @@ export function TransactionForm({
         </View>
       }
     >
-      <Text size="headline" weight="semibold" tracking="tight">
-        {mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')}
-      </Text>
+      <ScreenHeader title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')} />
 
       <Segmented
         accessibilityLabel={t('txForm.amount')}

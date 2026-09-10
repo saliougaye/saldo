@@ -148,3 +148,24 @@ export function formatSignedPercent(value: number): string {
   if (rounded < 0) return `${MINUS}${Math.abs(rounded)}%`;
   return '0%';
 }
+
+/**
+ * `+325`, `\u2212193`, `0`: rounded to whole major units, no currency symbol. The column labels of
+ * §5.7 are 11px slots that must fit six of them side by side, so they drop the fraction and the
+ * symbol and keep only the magnitude. `signDisplay: 'never'` gives the unsigned variant the
+ * category history uses.
+ */
+export function formatMajor(
+  minor: number,
+  currency: CurrencyCode,
+  locale: AppLocale,
+  signDisplay: SignDisplay = 'always',
+): string {
+  const { minorDigits } = getCurrency(currency);
+  const units = Math.round(minor / 10 ** minorDigits);
+  const digits = String(Math.abs(units)).replace(/\B(?=(\d{3})+(?!\d))/g, SEPARATORS[locale].group);
+  if (signDisplay === 'never') return digits;
+  if (units > 0) return signDisplay === 'always' ? `+${digits}` : digits;
+  if (units < 0) return `${MINUS}${digits}`;
+  return '0';
+}

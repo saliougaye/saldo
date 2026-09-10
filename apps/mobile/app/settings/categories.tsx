@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { SectionLabel } from '../../src/components/SectionLabel';
 import { restoreCategory } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
@@ -95,6 +96,7 @@ export default function CategoriesAdmin() {
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <BackButton />
         <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
           {t('categories.title')}
         </Text>

@@ -7,6 +7,7 @@ import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { PICKABLE_SEED_CATEGORIES, seedFromOnboarding } from '../../src/db/seed';
 import { useOnboarding } from '../../src/features/onboarding/state';
@@ -54,6 +55,7 @@ export default function CategoriesStep() {
 
   return (
     <Screen footer={<PrimaryButton label={t('common.start')} loading={saving} onPress={finish} />}>
+      <BackButton />
       <ProgressBar ratio={1} />
       <Text size="caption" color="textFaint">
         {t('onboarding.step', { current: 4, total: 4 })}

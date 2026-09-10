@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { useCategories, useSettings, useTags } from '../../src/db/hooks';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -19,6 +20,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
+      <BackButton />
       <Text size="display" weight="semibold" tracking="tighter">
         {t('settings.title')}
       </Text>

@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { BackButton } from '../../src/components/ScreenHeader';
 import { tagUsage } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useTags } from '../../src/db/hooks';
@@ -22,6 +23,7 @@ export default function TagsAdmin() {
 
   return (
     <Screen>
+      <BackButton />
       <Text size="display" weight="semibold" tracking="tighter">
         {t('tags.title')}
       </Text>

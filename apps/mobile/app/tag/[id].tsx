@@ -10,6 +10,7 @@ import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { useCategories, useSettings, useTags, useTransactionsInRange } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
@@ -80,9 +81,7 @@ export default function TagView() {
     <Screen
       footer={<SecondaryButton label={t('tags.editTag')} onPress={() => setEditOpen(true)} />}
     >
-      <Text size="headline" weight="semibold" tracking="tight">
-        {tag.name}
-      </Text>
+      <ScreenHeader title={tag.name} />
       <Text size="footnote" color="textMuted">
         {t('tags.total')}
       </Text>

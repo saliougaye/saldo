@@ -9,6 +9,7 @@ import { Card } from '../src/components/Card';
 import { ConfirmDialog } from '../src/components/ConfirmDialog';
 import { ListRow } from '../src/components/ListRow';
 import { Screen } from '../src/components/Screen';
+import { BackButton } from '../src/components/ScreenHeader';
 import { Sheet } from '../src/components/Sheet';
 import { useToast } from '../src/components/Toast';
 import { Toggle } from '../src/components/Toggle';
@@ -61,6 +62,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
+      <BackButton />
       <Text size="display" weight="semibold" tracking="tighter">
         {t('profile.title')}
       </Text>

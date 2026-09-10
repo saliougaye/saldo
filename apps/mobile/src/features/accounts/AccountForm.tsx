@@ -11,6 +11,7 @@ import { AmountInput } from '../../components/AmountInput';
 import { PrimaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Screen } from '../../components/Screen';
+import { ScreenHeader } from '../../components/ScreenHeader';
 import { TextField } from '../../components/TextField';
 import { Toggle } from '../../components/Toggle';
 import { useSettings } from '../../db/hooks';
@@ -110,9 +111,7 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
     <Screen
       footer={<PrimaryButton label={t('common.save')} disabled={!ready} onPress={onSubmit} />}
     >
-      <Text size="headline" weight="semibold" tracking="tight">
-        {mode === 'new' ? t('accounts.newAccount') : t('accounts.editAccount')}
-      </Text>
+      <ScreenHeader title={mode === 'new' ? t('accounts.newAccount') : t('accounts.editAccount')} />
 
       <Card>
         <Text size="footnote" color="textMuted">

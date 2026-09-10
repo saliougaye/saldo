@@ -12,6 +12,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { LoadingScreen } from '../src/components/LoadingScreen';
 import { ToastProvider } from '../src/components/Toast';
 import { DatabaseProvider } from '../src/db/DatabaseProvider';
 import { useSettings } from '../src/db/hooks';
@@ -43,7 +44,13 @@ function SettingsScopedProviders({ children }: { children: ReactNode }) {
     };
   }, [settings?.language]);
 
-  if (i18n === null) return null;
+  if (i18n === null) {
+    return (
+      <ThemeProvider preference={settings?.theme ?? 'system'}>
+        <LoadingScreen />
+      </ThemeProvider>
+    );
+  }
   return (
     <ThemeProvider preference={settings?.theme ?? 'system'}>
       <I18nextProvider i18n={i18n}>
@@ -80,7 +87,13 @@ export default function RootLayout() {
     Geist_600SemiBold,
   });
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded) {
+    return (
+      <ThemeProvider preference="system">
+        <LoadingScreen />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
