@@ -60,8 +60,8 @@ export const en: Messages = {
     welcomeTitle: 'Saldo',
     welcomeBody:
       'Track what you spend by pay cycle. Everything stays on this phone unless you connect your own server.',
-    localOnly: 'Use on this phone only',
-    connectServer: 'Sign in to your server',
+    welcomeOffline:
+      'You need to reach your server once to sign in. After that Saldo works offline.',
     cycleTitle: 'When does your month start?',
     cycleBody: 'Pick the day you get paid: Saldo counts every cycle from that day.',
     cycleTimeline: 'Your month runs from {{start}} to {{end}}',
@@ -245,6 +245,7 @@ export const en: Messages = {
     cancelled: 'Sign-in was cancelled',
     serverFound: 'Saldo {{version}}',
     registrationClosed: 'This server is not accepting new accounts',
+    nameRequired: 'Choose a name first',
     passkeyNote: 'The passkey stays on this phone; the server only keeps its public key.',
   },
   budgets: {

@@ -60,8 +60,8 @@ export const it = {
     welcomeTitle: 'Saldo',
     welcomeBody:
       'Tieni le spese per ciclo di stipendio. Tutto resta su questo telefono, a meno che tu non colleghi il tuo server.',
-    localOnly: 'Usa solo su questo telefono',
-    connectServer: 'Accedi al tuo server',
+    welcomeOffline:
+      'Per accedere devi raggiungere il tuo server una volta. Dopo, Saldo funziona offline.',
     cycleTitle: 'Quando inizia il tuo mese?',
     cycleBody: 'Scegli il giorno in cui ricevi lo stipendio: Saldo conta i cicli da quel giorno.',
     cycleTimeline: 'Il tuo mese va dal {{start}} al {{end}}',
@@ -246,6 +246,7 @@ export const it = {
     cancelled: 'Accesso annullato',
     serverFound: 'Saldo {{version}}',
     registrationClosed: 'Questo server non accetta nuovi account',
+    nameRequired: 'Prima scegli un nome',
     passkeyNote:
       'La passkey resta su questo telefono; il server conserva solo la sua chiave pubblica.',
   },

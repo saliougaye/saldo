@@ -12,11 +12,18 @@ import { type ApiClient, createApiClient } from '../net/apiClient';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
 import { checkServer, type ServerHealth, type SignedInUser, signIn, signOut } from './session';
 
+export type ServerStatus = 'loading' | 'signed-out' | 'signed-in';
+
 export interface ServerValue {
-  /** Null when the app is local-only (§6.29 step 0). */
+  /** Null until a server has been signed in to. */
   serverUrl: string | null;
   user: SignedInUser | null;
   api: ApiClient | null;
+  /**
+   * `loading` until the stored session has been read. Boot has to wait for it: redirecting on a
+   * half-read session would send a signed-in user back to the sign-in screen.
+   */
+  status: ServerStatus;
   sessionExpired: boolean;
   check(url: string): Promise<ServerHealth>;
   connect(url: string, mode: 'login' | 'register'): Promise<SignedInUser>;
@@ -33,6 +40,9 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   const { kv } = useDatabase();
   const [serverUrl, setServerUrl] = useState<string | null>(() => kv.get('serverUrl'));
   const [user, setUser] = useState<SignedInUser | null>(null);
+  const [status, setStatus] = useState<ServerStatus>(
+    kv.get('serverUrl') === null ? 'signed-out' : 'loading',
+  );
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const client = useMemo<ServerAuthClient | null>(
@@ -60,16 +70,34 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (client === null) {
       setUser(null);
+      setStatus('signed-out');
       return;
     }
     let cancelled = false;
-    client
-      .getSession()
-      .then(({ data }) => {
-        if (cancelled || data === null) return;
+    void (async () => {
+      // The cookie is on the device, so this answer needs no network: it is what lets a signed-in
+      // user open the app offline. Only the server actually saying "no session" signs them out.
+      const cookie = await client.getCookie().catch(() => null);
+      if (cancelled) return;
+      if (cookie === null || cookie.length === 0) {
+        setUser(null);
+        setStatus('signed-out');
+        return;
+      }
+      setStatus('signed-in');
+      const { data, error } = await client.getSession().catch(() => ({ data: null, error: null }));
+      if (cancelled) return;
+      if (data !== null) {
         setUser({ id: data.user.id, displayName: data.user.name });
-      })
-      .catch(() => undefined);
+        return;
+      }
+      // A null answer *without* an error is the server rejecting the session; a network failure
+      // leaves the cached session in place.
+      if (error === null) {
+        setUser(null);
+        setStatus('signed-out');
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -82,6 +110,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       kv.set('serverUrl', url);
       setServerUrl(url);
       setUser(signedIn);
+      setStatus('signed-in');
       setSessionExpired(false);
       return signedIn;
     },
@@ -95,6 +124,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
     kv.remove('syncCursor');
     setServerUrl(null);
     setUser(null);
+    setStatus('signed-out');
     setSessionExpired(false);
   }, [client, kv]);
 
@@ -103,12 +133,13 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       serverUrl,
       user,
       api,
+      status,
       sessionExpired,
       check: checkServer,
       connect,
       disconnect,
     }),
-    [serverUrl, user, api, sessionExpired, connect, disconnect],
+    [serverUrl, user, api, status, sessionExpired, connect, disconnect],
   );
 
   return <ServerContext.Provider value={value}>{children}</ServerContext.Provider>;

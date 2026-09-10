@@ -1,39 +1,42 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import { PrimaryButton, SecondaryButton } from '../../src/components/Button';
+import { ScrollView, View } from 'react-native';
+import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
+import { ConnectForm } from '../../src/features/server/ConnectForm';
 import { Text } from '../../src/theme/Text';
 
 /**
- * §6.29 step 0. Two ways in: stay on this phone, or sign in to a server and let the pull decide
- * whether onboarding is needed at all — a device joining an existing account already has settings.
+ * §6.29 step 0. One way in: sign in to the server that holds the account. The app then works
+ * offline — what it needs is an account, not a connection — but a first run with no network
+ * cannot get past this screen, so the copy says so instead of leaving the user guessing.
  */
 export default function Welcome() {
   const router = useRouter();
   const { t } = useTranslation();
 
   return (
-    <Screen
-      // `scroll={false}` so the copy can actually take the space above the pinned buttons: inside
-      // a ScrollView a flexed child has nothing to flex against.
-      scroll={false}
-      footer={
-        <View style={{ gap: 8 }}>
-          <PrimaryButton label={t('onboarding.localOnly')} onPress={() => router.push('/period')} />
-          <SecondaryButton
-            label={t('onboarding.connectServer')}
-            onPress={() => router.push('/profile/server')}
-          />
+    <Screen scroll={false}>
+      <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }} style={{ flex: 1 }}>
+        <View style={{ paddingTop: 24, gap: 12 }}>
+          <Text size="display" weight="semibold" tracking="tighter">
+            {t('onboarding.welcomeTitle')}
+          </Text>
+          <Text color="textMuted">{t('onboarding.welcomeBody')}</Text>
         </View>
-      }
-    >
-      <View style={{ flex: 1, justifyContent: 'center', gap: 12 }}>
-        <Text size="display" weight="semibold" tracking="tighter">
-          {t('onboarding.welcomeTitle')}
+        <Card>
+          <ConnectForm
+            onConnected={() => {
+              // Where to go next is the boot router's decision: a device joining an account that
+              // already has settings must skip onboarding entirely (§6.29).
+              router.replace('/');
+            }}
+          />
+        </Card>
+        <Text size="caption" color="textFaint">
+          {t('onboarding.welcomeOffline')}
         </Text>
-        <Text color="textMuted">{t('onboarding.welcomeBody')}</Text>
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
