@@ -441,7 +441,9 @@ Let `today = todayLocal()`.
 - Groups by day desc; sticky day header with day expense total (counted, non-excluded).
 - Search matches description, category name and account name: case-insensitive and accent-insensitive.
 - Chips: Conto (picker), Categoria (picker), Tag (multi-select sheet), Solo uscite, Solo entrate, and "Solo escluse"
-  when active. In the POC, Conto/Categoria open pickers (a bottom sheet list) rather than cycling as in the prototype.
+  when active. **Transfers match neither direction chip**: they move money between the user's own accounts and §5.3
+  keeps them out of every total, so "Solo uscite" shows real spending only. They stay visible with no direction filter,
+  and the Conto chip still matches both legs. In the POC, Conto/Categoria open pickers (a bottom sheet list) rather than cycling as in the prototype.
 - **Swipe row:** drag right > 70px → edit; drag left > 70px → delete dialog; max travel 120px; release below threshold
   snaps back (240ms, easing `cubic-bezier(0.32,0.72,0,1)`); tap (< 5px) → detail. Background reveals "Modifica"
   (left) and "Elimina" (right, accent), with opacity `min(1, |dx|/70)`. Use Reanimated + Gesture Handler.
