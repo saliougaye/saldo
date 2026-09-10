@@ -57,7 +57,7 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
                   {view.budget.name}
                 </Text>
                 <Text size="footnote" color="textMuted" tabular>
-                  {`${formatMoney(view.spent, currency, locale)} · ${t('budgets.ofLimit', {
+                  {`${formatMoney(view.spent, currency, locale)} ${t('budgets.ofLimit', {
                     amount: formatMoney(view.limitWithCarry, currency, locale),
                   })}`}
                 </Text>

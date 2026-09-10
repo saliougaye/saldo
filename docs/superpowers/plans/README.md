@@ -95,9 +95,9 @@ device-local `kv` marker, so it is tested too. Statistics was checked on the sim
 card were not, because reaching them needs a tap that `simctl` cannot give — they rest on the tested `budgetViews`.
 Notifications were not observed firing on the simulator.
 
-### 05 — Accounts, Categories, Tags, Settings, Profile
+### 05 — Accounts, Categories, Tags, Settings, Profile ✅ done
 
-**Spec:** §5.3 (balances, credit card), §5.10, §5.11, §6.5, 6.7–6.11, 6.13, 6.19, 6.20, 6.22, 6.24, 6.25
+**Plan:** `2026-09-10-05-accounts-settings.md` · **Spec:** §5.3 (balances, credit card), §5.10, §5.11, §6.5, 6.7–6.11, 6.13, 6.19, 6.20, 6.22, 6.24, 6.25
 
 - Accounts tab, account detail (sparkline, credit card box, transfer shortcut), account sheet (edit current balance →
   opening balance), archive/restore.
@@ -107,6 +107,11 @@ Notifications were not observed firing on the simulator.
   "Presto" until 08; the server row is hidden until 07.
 
 **Acceptance:** every design screen reachable and functional locally; merge/archive operations are transactional (tests).
+
+**Status:** met on the logic — every merge/archive path is transactional and unit-tested, including the budget rewrite
+that stops an archived category leaving a budget measuring nothing. Of the screens, only Home was checked visually
+(which is how a card that was written but never rendered got caught); the rest need taps that `simctl` cannot give.
+Import/export and the server row are deliberately "Presto" until phases 07 and 08.
 
 ### 06 — Server & passkey authentication
 

@@ -19,6 +19,7 @@ import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
 import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
+import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { DevTools } from '../../src/features/home/DevTools';
@@ -132,6 +133,8 @@ export default function HomeTab() {
           </Text>
         </View>
       </Card>
+
+      <HomeBudgetCard views={views} />
 
       <Card>
         <View
