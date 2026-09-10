@@ -1,0 +1,19 @@
+{
+  "name": "saldo",
+  "private": true,
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "turbo": "^2.10.12",
+    "typescript": "^7.0.2"
+  }
+}
