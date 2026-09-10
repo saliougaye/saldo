@@ -52,7 +52,7 @@ regenerated rather than migrated.
 - Create: `packages/core/src/period.ts`, `packages/core/src/period.test.ts`
 - Modify: `packages/core/src/cycle.ts` (keeps the cycle primitives), `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/core/src/period.test.ts
@@ -195,12 +195,12 @@ describe('isPeriodKind', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @saldo/core test period`
 Expected: FAIL — cannot resolve `./period`.
 
-- [ ] **Step 3: Implement `packages/core/src/period.ts`**
+- [x] **Step 3: Implement `packages/core/src/period.ts`**
 
 ```ts
 import { isoWeekRange, yearRange } from './budgetRanges';
@@ -315,15 +315,15 @@ export function describePeriod(range: DateRange, today: LocalDate): CurrentPerio
 }
 ```
 
-- [ ] **Step 4: Export it** — add `export * from './period';` to `packages/core/src/index.ts`.
+- [x] **Step 4: Export it** — add `export * from './period';` to `packages/core/src/index.ts`.
       `budgetRanges.ts` must not import from `period.ts` (it is the other way round); check for a cycle.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `pnpm --filter @saldo/core test period`
 Expected: PASS (14 tests).
 
-- [ ] **Step 6: Commit** — `feat(core): PeriodDef for month, week, cycle and year`
+- [x] **Step 6: Commit** — `feat(core): PeriodDef for month, week, cycle and year`
 
 ---
 
@@ -350,7 +350,7 @@ The rename table — every one of these keeps its behaviour and gains a `PeriodD
 `elapsedDays`, `isWithin` — they are the pay-cycle primitives `period.ts` builds on, and the last
 three are already period-shaped.
 
-- [ ] **Step 1: `budget.period` gains its new vocabulary**
+- [x] **Step 1: `budget.period` gains its new vocabulary**
 
 In `packages/core/src/entities.ts`:
 
@@ -361,7 +361,7 @@ export const budgetPeriodSchema = z.enum(['period', 'week', 'month', 'year']);
 `'period'` means "the app's own period" — what `'cycle'` meant before. Update `budgetSchema` and the
 `Budget` type, and the entity tests that name a period.
 
-- [ ] **Step 2: `budgetRange` learns the fourth case**
+- [x] **Step 2: `budgetRange` learns the fourth case**
 
 ```ts
 /**
@@ -392,23 +392,23 @@ Keep the existing `referenceDay`/clipping behaviour — the only new case is `'m
 replaces `'cycle'`. Add tests for the month case and for a month budget inside a *cycle* period,
 where the two windows do not line up.
 
-- [ ] **Step 3: `rollover.ts` walks by definition**
+- [x] **Step 3: `rollover.ts` walks by definition**
 
 `budgetCarry` currently steps with `shiftCycle` back to the budget's creation cycle; it now steps
 with `shiftPeriod(def, …)`. Rollover stays limited to `period: 'period'`, and its test that walks
 three periods back gains a month-kind case.
 
-- [ ] **Step 4: `history.ts` renames and re-parameterises**
+- [x] **Step 4: `history.ts` renames and re-parameterises**
 
 `periodHistory(txs, def, range, count)` — bounded to `count` periods, empties removed, emptiness
 still measured on rows and not on counted amounts (the two properties its tests already pin down).
 
-- [ ] **Step 5: Run the whole core suite**
+- [x] **Step 5: Run the whole core suite**
 
 Run: `pnpm --filter @saldo/core test`
 Expected: green, with the renamed functions covered by the tests that already existed.
 
-- [ ] **Step 6: Commit** — `refactor(core)!: period-shaped functions take a PeriodDef`
+- [x] **Step 6: Commit** — `refactor(core)!: period-shaped functions take a PeriodDef`
 
 ---
 
@@ -418,7 +418,7 @@ Expected: green, with the renamed functions covered by the tests that already ex
 - Modify: `packages/core/src/entities.ts`, `apps/mobile/src/db/schema.ts`,
   `apps/mobile/src/db/seed.ts`, `apps/mobile/drizzle/**` (regenerated)
 
-- [ ] **Step 1: The entity**
+- [x] **Step 1: The entity**
 
 ```ts
 export const settingsSchema = z.object({
@@ -435,9 +435,9 @@ export const settingsSchema = z.object({
 
 `periodKindSchema` is `z.enum(PERIOD_KINDS)` re-exported from `period.ts`, so there is one list.
 
-- [ ] **Step 2: The local column** — `period_kind text not null` in the `settings` table.
+- [x] **Step 2: The local column** — `period_kind text not null` in the `settings` table.
 
-- [ ] **Step 3: Regenerate the migrations**
+- [x] **Step 3: Regenerate the migrations**
 
 No user exists, so the history is squashed rather than migrated:
 
@@ -447,7 +447,7 @@ rm -rf apps/mobile/drizzle && pnpm --filter mobile db:generate
 
 Then reseed any simulator with `pnpm --filter mobile seed:db <path> --reset`.
 
-- [ ] **Step 4: Leave the sync schema version at 1**
+- [x] **Step 4: Leave the sync schema version at 1**
 
 `SYNC_SCHEMA_VERSION` **stays 1**, on the user's instruction. The gate of §8.1 protects a peer that
 already speaks an older shape, and no such peer exists: no instance is deployed and no account has
@@ -459,7 +459,7 @@ The same reasoning is why the local database is regenerated rather than migrated
 simulator's copy (`pnpm --filter mobile seed:db <path> --reset`, or uninstall the app) instead of
 writing a migration for rows nobody has.
 
-- [ ] **Step 5: Commit** — `feat!: settings carry the period kind`
+- [x] **Step 5: Commit** — `feat!: settings carry the period kind`
 
 ---
 
@@ -470,7 +470,7 @@ writing a migration for rows nobody has.
 - Create: `apps/mobile/src/features/period/PeriodKindSheet.tsx`,
   `apps/mobile/src/features/period/CustomRangeSheet.tsx`
 
-- [ ] **Step 1: `PeriodProvider` exposes the definition**
+- [x] **Step 1: `PeriodProvider` exposes the definition**
 
 It replaces `cycleStartDay: number` with `def: PeriodDef` (read from settings, defaulting to
 `{ kind: 'month', startDay: 27 }`), keeps the selection union
@@ -478,7 +478,7 @@ It replaces `cycleStartDay: number` with `def: PeriodDef` (read from settings, d
 `shiftPeriod(def, …)` and is a no-op for a custom range, since "the week before this arbitrary
 range" is not a thing the user asked for.
 
-- [ ] **Step 2: The sheet gets the rows the design shows**
+- [x] **Step 2: The sheet gets the rows the design shows**
 
 `PeriodSheet` (§6.15, the design's bottom sheet) lists the periods that hold data, then two rows the
 implementation was missing:
@@ -492,7 +492,7 @@ implementation was missing:
 
 The header keeps `formatCycleRange` for a cycle and a plain range for the others.
 
-- [ ] **Step 3: Every call site drops `cycleStartDay` for `def`**
+- [x] **Step 3: Every call site drops `cycleStartDay` for `def`**
 
 The screens and hooks in this list pass `def` through instead: `(tabs)/index.tsx`,
 `(tabs)/stats.tsx`, `budgets.tsx`, `category/[id].tsx`, `account/[id].tsx`, `transaction/new.tsx`,
@@ -500,18 +500,18 @@ The screens and hooks in this list pass `def` through instead: `(tabs)/index.tsx
 `MaterialiserGate.tsx`, `SyncProvider.tsx`, `DevTools.tsx`, `recurrenceService.ts`, `demo.ts`,
 `seed.ts`. None of them changes behaviour; they stop knowing that a period is a cycle.
 
-- [ ] **Step 4: Strings**
+- [x] **Step 4: Strings**
 
 The `period` namespace gains `kind`, `kindMonth`, `kindWeek`, `kindCycle`, `kindYear`,
 `customRange`, `customFrom`, `customTo`, `cycleStartDay`; `budgets` renames its `cycle` option to
 `period`. Both locales, as the parity test requires.
 
-- [ ] **Step 5: Run the mobile suite**
+- [x] **Step 5: Run the mobile suite**
 
 Run: `pnpm --filter mobile test`
 Expected: green after the call sites are updated.
 
-- [ ] **Step 6: Commit** — `feat(mobile): pick the period, not just the cycle`
+- [x] **Step 6: Commit** — `feat(mobile): pick the period, not just the cycle`
 
 ---
 
@@ -521,11 +521,11 @@ Expected: green after the call sites are updated.
 - Modify: `apps/mobile/app/(onboarding)/cycle-day.tsx` → `period.tsx`,
   `apps/mobile/src/features/onboarding/state.tsx`
 
-- [ ] **Step 1** Replace step 1 with a period question: four options, with the day grid revealed
+- [x] **Step 1** Replace step 1 with a period question: four options, with the day grid revealed
       under "Ciclo di stipendio" — the only kind that needs a second answer. The default selection
       is the month, and the progress bar and copy keep their shape (§6.29).
-- [ ] **Step 2** The draft carries `periodKind` and `cycleStartDay`, and "Inizia" writes both.
-- [ ] **Step 3** Commit — `feat(mobile): onboarding asks how you track spending`
+- [x] **Step 2** The draft carries `periodKind` and `cycleStartDay`, and "Inizia" writes both.
+- [x] **Step 3** Commit — `feat(mobile): onboarding asks how you track spending`
 
 ---
 
@@ -535,7 +535,7 @@ Expected: green after the call sites are updated.
 - Modify: `apps/mobile/app/(onboarding)/welcome.tsx`, `apps/mobile/app/index.tsx`,
   `apps/mobile/app/profile.tsx`, `apps/mobile/app/profile/server.tsx`
 
-- [ ] **Step 1: The welcome step asks for the server, and only that**
+- [x] **Step 1: The welcome step asks for the server, and only that**
 
 The two buttons become one flow: server address → "Verifica" → passkey sign-in or account creation.
 It reuses the pieces `profile/server.tsx` already has, so the logic is shared rather than copied —
@@ -544,7 +544,7 @@ extract the connect form into `src/features/server/ConnectForm.tsx` and use it f
 When there is no network, the screen says so and offers "Riprova": with sign-in mandatory, a first
 run offline cannot proceed, and pretending otherwise would be worse than saying it.
 
-- [ ] **Step 2: Boot gating**
+- [x] **Step 2: Boot gating**
 
 `app/index.tsx` becomes: not signed in → `/welcome`; signed in but no settings row → `/period`
 (step 1); otherwise → `/(tabs)`. The lock screen still wins over everything.
@@ -552,24 +552,24 @@ run offline cannot proceed, and pretending otherwise would be worse than saying 
 A signed-in device with no local settings pulls first: if the server already holds settings with
 `onboardingCompletedAt`, the rest of onboarding is skipped (§6.29 already says so).
 
-- [ ] **Step 3: "Esci" no longer means "go local-only"**
+- [x] **Step 3: "Esci" no longer means "go local-only"**
 
 Signing out returns to `/welcome`; the local data stays on the phone, and signing back in resumes
 sync. The confirm sheet says exactly that.
 
-- [ ] **Step 4** Commit — `feat(mobile)!: one sign-in, and it is required`
+- [x] **Step 4** Commit — `feat(mobile)!: one sign-in, and it is required`
 
 ---
 
 ## Task 7: Docs and verification
 
-- [ ] **Step 1:** Spec: §1.1 (the server is required; a server-less variant is a later option),
+- [x] **Step 1:** Spec: §1.1 (the server is required; a server-less variant is a later option),
       §5.2 (periods, with the pay cycle as one kind and its clamping rule intact), §5.8
       (`budget.period` vocabulary), §6.15 (the sheet's three extra rows), §6.29 (step 0 is a
       sign-in; step 1 asks the period), §8.1 (why the version stays 1 for now).
-- [ ] **Step 2:** Roadmap: this phase, and renumber attachments/import-export to 09 and
+- [x] **Step 2:** Roadmap: this phase, and renumber attachments/import-export to 09 and
       docs/hardening to 10.
-- [ ] **Step 3:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — reading the output, not the exit code
+- [x] **Step 3:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — reading the output, not the exit code
       (see AGENTS.md).
 - [ ] **Step 4:** On the simulator, with a reseeded database: the period sheet shows the new rows,
       switching to "settimana" reshapes Home and Statistics, and a custom range applies. Screenshot

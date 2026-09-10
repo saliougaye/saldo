@@ -21,8 +21,11 @@ cycle, and am I going faster than I should?*
 ### 1.1 Goals (POC)
 
 1. Every feature visible in the design (§6), working on Android and iOS against a local database.
-2. **Local-first:** the app is fully usable offline with no server.
-3. **Passkey authentication** against a self-hosted Next.js server, which enables sync.
+2. **Local-first, one account.** Every read and write is local, so the app is fully usable offline — but it needs an
+   account on the user's own server, which is signed in to once at first run (§6.29 step 0). The account and the
+   database are the user's, so requiring them is not a hosted dependency; a server-less variant is a later option, not
+   part of this POC.
+3. **Passkey authentication** against that self-hosted Next.js server, which is also what enables sync.
 4. **Sync** of all data between devices through that server.
 5. **Attachments** (receipt photos/PDFs) on transactions, synced.
 6. **Import & export:** full JSON backup/restore, CSV export, CSV import (generic mapping + Spendee preset).
@@ -40,7 +43,9 @@ cycle, and am I going faster than I should?*
   past totals, budgets and statistics would silently change as rates move — so it belongs to its own phase.
 - Shared budgets or households (the server can be multi-user, but data is never shared between users).
 - AI features (see §17; they are future iterations with bring-your-own-key).
-- Non-monthly cycles (the "Il mio ciclo non è mensile" link in onboarding is out of scope: hide it).
+- Nothing shorter than a week or longer than a year as a period: §5.2's four kinds (month, week, pay cycle, year) plus
+  an arbitrary range cover what the design offers. A fortnightly or four-weekly *recurring* period is not among them.
+- A first run with no network: sign-in is required, so the welcome screen says so instead of appearing broken.
 
 ---
 
@@ -164,7 +169,8 @@ All synced entities share **sync metadata**:
 
 | Field | Type | Rules |
 | --- | --- | --- |
-| `cycleStartDay` | int 1–31 | Default 27 in design; onboarding asks. Clamped per month (§5.2). |
+| `periodKind` | `month \| week \| cycle \| year` | How the user tracks spending (§5.2). Default `month`; onboarding step 1 asks. |
+| `cycleStartDay` | int 1–28 | Default 27 in design; asked only when `periodKind` is `cycle`, and remembered when it is not. Clamped per month (§5.2). |
 | `currency` | `CurrencyCode` | Any of the 162 ISO 4217 codes CLDR can format (`CURRENCY_CODES`). One for the whole app; `EUR/USD/GBP/CHF` are shown first in the picker. |
 | `language` | `system \| it \| en` | |
 | `theme` | `system \| dark \| light` | Design default dark. |
@@ -235,7 +241,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `name` | string 1–40 | Default auto-name: 1 cat → name, 2 → "A e B" / "A and B", 3+ → "A +2". |
 | `categoryIds` | id[] ≥1 | Expense categories. A parent id includes its children. A category may belong to **at most one** budget. |
 | `amount` | minor int > 0 | Limit per period. |
-| `period` | `cycle \| week \| year` | Labels: Ogni ciclo, Settimana, Anno. There is deliberately no `month`: the app's month *is* the cycle (§5.2), and a budget on calendar months would disagree with every other total in the app. Users who want calendar months set `cycleStartDay = 1`. |
+| `period` | `period \| week \| month \| year` | Labels: Ogni periodo, Settimana, Mese, Anno. `period` follows the app's own period whatever kind it is (§5.2), which is what the old `cycle` value meant. The other three are **absolute** windows, so a monthly budget inside a pay cycle measures the calendar month and disagrees with the period total on purpose — that is the point of choosing it. |
 | `alertThreshold` | int 1–100 \| null | Percent of the limit. null = "Mai". The "Avvisami a" control offers `BUDGET_ALERT_THRESHOLDS` (75/90/100), but the stored value is any percentage: the alert rule (§5.8) is arithmetic, and pinning the three UI options into a synced row would make a slider a migration. |
 | `rollover` | boolean | "Porta avanti il residuo". |
 | `icon` | IconName | Default: icon of first category. |
@@ -307,19 +313,42 @@ picker to keep the grid at 12). Children are created together with their selecte
   example built from the user's own total: "1.842,60 € diventerà 184.260 ¥. Gli importi vengono riformattati, non
   convertiti." Users who genuinely need two currencies want per-account currencies (§1.2), not this switch.
 
-### 5.2 Cycles
+### 5.2 Periods
 
-- `cycleStartDay` S ∈ 1..31. The **effective start day** in a month is `min(S, daysInMonth)`.
+The period is **how the user tracks spending**, not a fixed pay cycle. `settings.periodKind` picks one of four kinds,
+and `PeriodDef = { kind, startDay }` is what every calculation takes (`@saldo/core/period.ts`):
+
+| Kind | Range | Steps by |
+| --- | --- | --- |
+| `month` (default) | the 1st to the last day of the calendar month | one month |
+| `week` | Monday to Sunday (ISO) | seven days |
+| `cycle` | `startDay` to the day before the next `startDay` | one cycle, clamped per month |
+| `year` | 1 January to 31 December | one year |
+
+`month` is the default because it needs no decision; `cycle` is the only kind that asks a second question, so
+onboarding step 1 reveals its day grid only when it is chosen. Everything downstream takes a `DateRange` and does not
+care which kind produced it, which is why `summarizePeriod`, `spendingByCategory`, `dailyCumulative`, `committedSpend`
+and the projections are shared by all four.
+
+Stepping is always **by definition, never by day arithmetic**: a month is not 30 days, and a cycle starting on the 28th
+starts earlier than "31 days back" in February.
+
+The pay cycle keeps its own rule:
+
+- `cycleStartDay` S ∈ 1..28 (the UI offers no more; a start day of 29–31 has no meaning in February). The **effective
+  start day** in a month is `min(S, daysInMonth)`.
 - `cycleContaining(date, S)`: if `date ≥ effectiveStart(month of date)`, the cycle starts in that month, otherwise in the
   previous month. The end is the day before the next cycle's effective start.
   - Example S=27: `2026-04-18` → `2026-03-27 … 2026-04-26` (31 days).
   - Example S=31: `2026-03-30` → `2026-02-28 … 2026-03-30`.
 - `elapsedDays(cycle, today)`: 0 before start, `length` after end, otherwise `diff(start, today) + 1`.
 - `pace = elapsed / length`. The **pace marker** is the 1px vertical tick on every progress bar at `pace × 100%`.
-- Period navigation (`‹ ›` on Home) moves one cycle back or forward. Forward is disabled (faint colour) on the current cycle.
+- Period navigation (`‹ ›` on Home) moves one period back or forward, by the kind in force. Forward is disabled (faint
+  colour) on the current period.
 - Custom period ("Periodo personalizzato"): an arbitrary `{start,end}` range. For a custom range, `pace` uses the same
   formula with that range, and projections are hidden.
-- Changing `cycleStartDay` only regroups transactions. Nothing moves (settings footnote copy).
+- Changing the kind or `cycleStartDay` only regroups transactions. Nothing moves (settings footnote copy). The
+  selection falls back to the period containing today, because a range of the previous shape is no longer a period.
 
 ### 5.3 What counts
 
@@ -386,12 +415,16 @@ Let `today = todayLocal()`.
 
 ### 5.8 Budgets
 
-- **Range:** `cycle` → the selected cycle; `week` → the ISO week (Mon–Sun) containing `today` (for past cycles: the
-  last week of that cycle); `year` → the calendar year of the cycle's end date.
+- **Range:** `period` → the selected period; `week`/`month`/`year` → the ISO week (Mon–Sun), calendar month or
+  calendar year containing the reference day, which is `today` while the period is current and the period's end once
+  it is closed. Those three are **not** clipped to the period: an annual budget browsed from a past month still
+  measures that whole year. The one exception is the week of a closed period, which becomes that period's last week,
+  clipped to it — "this week" has no meaning once the period is over.
 - **Progress:** `spent` = Σ counted expenses in range for expanded category ids. `ratio = spent/limit`,
   `overPace = ratio > pace(range)`, `overLimit = ratio > 1` (amount turns accent).
-- **Rollover** (`cycle` only in POC): `effectiveLimit = amount + carry`, `carry = max(0, prevEffectiveLimit − prevSpent)`
-  computed recursively back to the budget's `createdAt` cycle. For week/year, rollover is ignored and the toggle is hidden.
+- **Rollover** (`period` only): `effectiveLimit = amount + carry`, `carry = max(0, prevEffectiveLimit − prevSpent)`
+  computed recursively back to the period the budget was created in. For week/month/year, rollover is ignored and the
+  toggle is hidden: a carry between two windows of a different shape than the period has no defined meaning.
 - **Home card:** top 3 budgets by `ratio` desc. Note: `"{n} oltre il ritmo"` if n > 0, else `"nei limiti"`.
 - **Alerts:** when a write makes `ratio × 100` cross `alertThreshold` (from below), schedule an immediate **local
   notification** (`expo-notifications`): "Budget {name}: {pct}% usato". Notify once per budget per period (remember
@@ -509,7 +542,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.12 | **Category detail** | 859–934 | §5.7. |
 | 6.13 | **Tag admin** | 936–957 | List with count; tap → Modifica tag sheet. Footnote copy from design. |
 | 6.14 | **Tab bar + FAB** | 961–975 | Height 78 + bottom inset; FAB 56×56, radius 18, accent, raised −16px. FAB opens new transaction sheet. |
-| 6.15 | **Period sheet** | 981–1009 | Lists cycles that contain data (current first; sub "in corso, giorno X di Y" or "{expenses} di uscite"); Periodo personalizzato (date range picker); Giorno di inizio ciclo → picker. Remove the prototype's "non disponibile offline" rows (everything is local). |
+| 6.15 | **Period sheet** | 981–1009 | Lists the periods that contain data (current first, with a check on the selected one; sub "in corso, giorno X di Y" or "{expenses} di uscite"); then **Periodo personalizzato** (date range picker, `start <= end`), **Tipo di periodo** (mese / settimana / ciclo di stipendio / anno → writes `settings.periodKind`) and, under the cycle kind only, **Giorno di inizio ciclo**. Remove the prototype's "non disponibile offline" rows (everything is local). |
 | 6.16 | **New/Edit transaction sheet** | 1011–1174 | Kind segmented (Uscita/Entrata/Trasferimento); amount display (tap reopens keypad in edit mode); category grid 4 cols (top 10 by usage + "Altro" → full picker incl. subcategories); account chips (non-archived); transfer Da/A pickers; date chips Oggi/Ieri + calendar picker; Descrizione (placeholder "Dove"/"Da chi"); Tag input with suggestions, create, selected chips; **Allega foto** (action sheet: Scatta foto / Scegli dalla libreria / Scegli file PDF; shows count badge + thumbnails); Ripeti toggle; Escludi dai totali toggle + footnote; Elimina (edit only). The amount is a `decimal-pad` field styled as the big amount, focused automatically on a new transaction (D23); there is no in-app keypad and no separate save column. Save is disabled until amount > 0, an account is chosen, a non-transfer has a category and a transfer has a different destination. |
 | 6.17 | **Budget detail sheet** | 1176–1209 | §5.8. Add "Modifica" (opens budget form prefilled) and "Elimina budget". |
 | 6.18 | **New budget sheet** | 1211–1283 | Amount input + currency symbol, median hint + "Usa", category grid 2 cols with taken dots, Nome (auto placeholder), Si ripete segmented, Avvisami a segmented + note, Porta avanti il residuo toggle, footnote ("+12% sulla mediana di spesa"), "Crea budget" disabled until valid. Reused for edit ("Salva"). |
@@ -523,7 +556,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
-| 6.29 | **Onboarding** | 1616–1717 | NEW step 0 **Welcome** (not in design; same visual language: 32px title, muted body, two big buttons): "Usa solo su questo telefono" (local) / "Accedi al tuo server" (→ server URL → passkey; on success pull existing data; if the server already has settings with `onboardingCompletedAt`, skip the rest). Then **four steps**: 1 cycle day (7-col day grid, "Il tuo mese va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 were split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
+| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, so this asks for the server address → "Verifica" → passkey sign-in, or "Crea account" when the server allows it. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then **four steps**: 1 **period** (four kinds, with the 7-col day grid revealed only for the pay cycle, and the "il tuo periodo va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
 | 6.30 | **Server & sync** (NEW) | — | Server URL field + "Verifica" (GET /api/health), status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
 | 6.31 | **Import wizard** (NEW) | — | §11.3 steps, each a full screen with a sticky bottom CTA. |
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |
