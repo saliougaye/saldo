@@ -69,6 +69,7 @@ cycle, and am I going faster than I should?*
 | D19 | **MIT license** | The user wants anyone to clone and release freely. |
 | D20 | App identity (name, bundle id, URL scheme) configurable via env in `app.config.ts` | Forks must be able to sideload their own build without clashing ids. |
 | D21 | Scheduled occurrences of recurring transactions have **deterministic ids** `${recurrenceId}:${occurrenceDate}` | Two devices generating the same occurrence offline converge to one row after sync. |
+| D22 | **TanStack Query is used for the network layer only** (auth + sync, phases 06–07), never for local reads | Local reads are already reactive through the `expo-sqlite` change listener, with SQLite as the single source of truth; a query cache on top would have to be invalidated by hand on every mutation, re-implementing what the listener does for free and inviting stale-screen bugs. React Query caches *server* state, and on a local-first device there is none. It earns its place on retries, backoff, dedup and `onlineManager` for the sync and auth calls, driven imperatively through `QueryClient` rather than by component mounts (§8.5 runs sync on app start, foreground and after writes, not on mount). |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
