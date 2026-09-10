@@ -1,41 +1,36 @@
 import type { Cycle, DateRange } from './cycle';
 import { isWithin } from './cycle';
-import { addDays, type LocalDate, makeLocalDate, parseLocalDate } from './dates';
+import type { LocalDate } from './dates';
 import type { Budget } from './entities';
-
-/** Day of week with Monday as 0, from a `LocalDate` without going through a time zone. */
-function isoWeekday(date: LocalDate): number {
-  const { year, month, day } = parseLocalDate(date);
-  // getUTCDay is Sunday-based; shift so Monday is 0.
-  return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
-}
-
-/** The ISO week (Monday–Sunday) containing `date` (§5.8). */
-export function isoWeekRange(date: LocalDate): DateRange {
-  const start = addDays(date, -isoWeekday(date));
-  return { start, end: addDays(start, 6) };
-}
-
-/** The calendar year containing `date`. */
-export function yearRange(date: LocalDate): DateRange {
-  const { year } = parseLocalDate(date);
-  return { start: makeLocalDate(year, 1, 1), end: makeLocalDate(year, 12, 31) };
-}
+import { isoWeekRange, monthRangeOf, yearRange } from './period';
 
 /**
- * The range a budget measures (§5.8): the selected cycle, the ISO week containing today, or the
- * calendar year of the cycle's end.
+ * The window a budget is measured over (§5.8): the app's own period, or the week, month or year
+ * around a reference day.
  *
- * For a past cycle the week budget shows *that cycle's last week*, clipped to the cycle, since
- * "this week" is meaningless once the cycle is closed.
+ * `'period'` follows whatever kind the user tracks by, so a budget keeps meaning the same thing
+ * when they switch from a pay cycle to a month. The other three are **absolute** windows and are
+ * deliberately not clipped to the period: an annual budget browsed from a past month still measures
+ * that whole year, and a monthly budget inside a pay cycle still measures the calendar month.
+ *
+ * The one exception is the week of a closed period, where "this week" has no meaning: it becomes
+ * that period's last week, clipped to it.
  */
-export function budgetRange(period: Budget['period'], cycle: Cycle, today: LocalDate): DateRange {
-  if (period === 'cycle') return cycle;
-  if (period === 'year') return yearRange(cycle.end);
-  if (isWithin(cycle, today)) return isoWeekRange(today);
-  const lastWeek = isoWeekRange(cycle.end);
+export function budgetRange(period: Budget['period'], range: Cycle, today: LocalDate): DateRange {
+  if (period === 'period') return range;
+  const isCurrent = isWithin(range, today);
+  const reference = isCurrent ? today : range.end;
+  if (period === 'year') return yearRange(reference);
+  if (period === 'month') return monthRangeOf(monthOf(reference));
+  if (isCurrent) return isoWeekRange(reference);
+  const lastWeek = isoWeekRange(range.end);
   return {
-    start: lastWeek.start < cycle.start ? cycle.start : lastWeek.start,
-    end: lastWeek.end > cycle.end ? cycle.end : lastWeek.end,
+    start: lastWeek.start < range.start ? range.start : lastWeek.start,
+    end: lastWeek.end > range.end ? range.end : lastWeek.end,
   };
+}
+
+function monthOf(date: LocalDate): { year: number; month: number } {
+  const [year, month] = date.split('-');
+  return { year: Number(year), month: Number(month) };
 }

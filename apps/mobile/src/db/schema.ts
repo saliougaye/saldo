@@ -1,4 +1,4 @@
-import type { CurrencyCode, Recurrence } from '@saldo/core';
+import type { BudgetPeriod, CurrencyCode, PeriodKind, Recurrence } from '@saldo/core';
 import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
@@ -20,6 +20,7 @@ export const settings = sqliteTable(
     ...syncMeta,
     /** Always the literal `settings`: this table holds one row (§4). */
     id: text('id').$type<'settings'>().primaryKey(),
+    periodKind: text('period_kind').$type<PeriodKind>().notNull(),
     cycleStartDay: integer('cycle_start_day').notNull(),
     currency: text('currency').$type<CurrencyCode>().notNull(),
     language: text('language').$type<'system' | 'it' | 'en'>().notNull(),
@@ -122,7 +123,7 @@ export const budgets = sqliteTable(
     name: text('name').notNull(),
     categoryIds: text('category_ids', { mode: 'json' }).$type<string[]>().notNull(),
     amount: integer('amount').notNull(),
-    period: text('period').$type<'cycle' | 'week' | 'year'>().notNull(),
+    period: text('period').$type<BudgetPeriod>().notNull(),
     alertThreshold: integer('alert_threshold'),
     rollover: integer('rollover', { mode: 'boolean' }).notNull(),
     icon: text('icon').notNull(),

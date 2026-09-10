@@ -1,8 +1,11 @@
-import type { CurrencyCode } from '@saldo/core';
+import type { CurrencyCode, PeriodKind } from '@saldo/core';
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 /** What the three onboarding steps collect before anything is written (§6.29). */
 export interface OnboardingDraft {
+  /** How the user tracks spending (§5.2); asked in step 1. */
+  periodKind: PeriodKind;
+  /** Only meaningful when `periodKind === 'cycle'`, but remembered either way. */
   cycleStartDay: number;
   currency: CurrencyCode;
   accountName: string;
@@ -18,6 +21,7 @@ export interface OnboardingValue {
 }
 
 const INITIAL: OnboardingDraft = {
+  periodKind: 'month',
   cycleStartDay: 27,
   currency: 'EUR',
   accountName: '',

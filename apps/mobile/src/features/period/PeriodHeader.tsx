@@ -17,7 +17,7 @@ export function PeriodHeader() {
   const { period, shift } = usePeriod();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const label = period.isCycle
+  const label = period.isPeriod
     ? formatCycleRange(period.range, locale)
     : `${formatDayMonth(period.range.start, locale)} – ${formatDayMonth(period.range.end, locale)}`;
   const subtitle = period.isCurrent

@@ -31,7 +31,7 @@ const SyncContext = createContext<SyncValue>({ status: IDLE, scheduler: null });
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { kv, repos } = useDatabase();
   const { api, user } = useServer();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const [status, setStatus] = useState<SyncStatus>(IDLE);
 
   const scheduler = useMemo(() => {
@@ -46,10 +46,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         api,
         deviceId: kv.deviceId(),
         // A pulled recurrence may owe occurrences; the materialiser is idempotent.
-        materialise: () => runMaterialiser(db, repos, today, cycleStartDay),
+        materialise: () => runMaterialiser(db, repos, today, def),
       }),
     });
-  }, [api, kv, repos, today, cycleStartDay]);
+  }, [api, kv, repos, today, def]);
 
   useEffect(() => {
     // No scheduler means local-only; no user means signed out, and a cycle would only 401.

@@ -1,5 +1,6 @@
 import {
   type MinorDigits,
+  type PeriodDef,
   planRecurrenceEdit,
   type RecurrenceEditScope,
   type Transaction,
@@ -22,7 +23,7 @@ export interface RecurrenceScopeSheetProps {
   values: TransactionFormValues;
   minorDigits: MinorDigits;
   today: string;
-  cycleStartDay: number;
+  def: PeriodDef;
   onDone: () => void;
 }
 
@@ -45,7 +46,7 @@ export function RecurrenceScopeSheet({
   values,
   minorDigits,
   today,
-  cycleStartDay,
+  def,
   onDone,
 }: RecurrenceScopeSheetProps) {
   const { t } = useTranslation();
@@ -92,7 +93,7 @@ export function RecurrenceScopeSheet({
       },
       date: input.date,
       today,
-      cycleStartDay,
+      def,
     });
     onDone();
   };

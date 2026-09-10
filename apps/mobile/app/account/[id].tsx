@@ -2,11 +2,11 @@ import {
   accountBalances,
   creditCardDue,
   creditStatementAccrued,
-  cycleContaining,
   deltaPercent,
   isWithin,
   monthEndBalances,
   nextCreditChargeDate,
+  periodContaining,
   summarizePeriod,
 } from '@saldo/core';
 import { formatDayMonth, formatLongDate, formatMoney, formatSignedPercent } from '@saldo/i18n';
@@ -44,7 +44,7 @@ export default function AccountDetail() {
   const repos = useRepositories();
   const settings = useSettings();
   const accounts = useAccounts();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [confirmArchive, setConfirmArchive] = useState(false);
 
@@ -66,7 +66,7 @@ export default function AccountDetail() {
     [account, rows, today],
   );
 
-  const cycle = cycleContaining(today, cycleStartDay);
+  const cycle = periodContaining(def, today);
   const cycleRows = useMemo(
     () => rows.filter((tx) => tx.accountId === id && isWithin(cycle, tx.date)),
     [rows, id, cycle],

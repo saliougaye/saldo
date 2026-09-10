@@ -66,9 +66,15 @@ describe('occurrenceDates', () => {
 });
 
 describe('recurrenceHorizonEnd', () => {
-  it('reaches the end of the cycle after the current one', () => {
-    expect(recurrenceHorizonEnd('2026-04-18', 27)).toBe('2026-05-26');
-    expect(recurrenceHorizonEnd('2026-04-27', 27)).toBe('2026-06-26');
+  it('reaches the end of the period after the current one', () => {
+    expect(recurrenceHorizonEnd({ kind: 'cycle', startDay: 27 }, '2026-04-18')).toBe('2026-05-26');
+    expect(recurrenceHorizonEnd({ kind: 'cycle', startDay: 27 }, '2026-04-27')).toBe('2026-06-26');
+  });
+
+  it('follows whatever kind the user tracks by', () => {
+    // A month period reaches the end of next month, a week period the end of next week.
+    expect(recurrenceHorizonEnd({ kind: 'month', startDay: 1 }, '2026-09-10')).toBe('2026-10-31');
+    expect(recurrenceHorizonEnd({ kind: 'week', startDay: 1 }, '2026-09-10')).toBe('2026-09-20');
   });
 });
 

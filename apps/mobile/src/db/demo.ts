@@ -1,4 +1,4 @@
-import { addDays, cycleContaining, diffDays, type LocalDate } from '@saldo/core';
+import { addDays, diffDays, type LocalDate, type PeriodDef, periodContaining } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import {
   DEMO_ACCOUNTS,
@@ -12,7 +12,7 @@ import { SEED_CATEGORIES } from './seed';
 
 export interface DemoSeedInput {
   today: LocalDate;
-  cycleStartDay: number;
+  def: PeriodDef;
   /** Resolves a `seed.*` key to the user's language. */
   translate: (key: string) => string;
 }
@@ -22,8 +22,8 @@ export interface DemoSeedInput {
  * today. The whole set moves by one offset, which keeps every relative distance — a transaction
  * three days after the cycle start stays three days after it.
  */
-function dateShift(today: LocalDate, cycleStartDay: number): number {
-  const currentStart = cycleContaining(today, cycleStartDay).start;
+function dateShift(today: LocalDate, def: PeriodDef): number {
+  const currentStart = periodContaining(def, today).start;
   return diffDays(DEMO_REFERENCE_CYCLE.start, currentStart);
 }
 
@@ -37,7 +37,7 @@ function dateShift(today: LocalDate, cycleStartDay: number): number {
  * §8.1 already requires the UI to tolerate a dangling reference.
  */
 export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
-  const shift = dateShift(input.today, input.cycleStartDay);
+  const shift = dateShift(input.today, input.def);
 
   const categoryIdByKey = new Map<string, string>();
   let sortOrder = 0;
@@ -126,7 +126,7 @@ export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
       name: input.translate(budget.categoryKey),
       categoryIds: [categoryId],
       amount: budget.amount,
-      period: 'cycle',
+      period: 'period',
       alertThreshold: 90,
       rollover: false,
       icon: SEED_CATEGORIES.find((c) => c.nameKey === budget.categoryKey)?.icon ?? 'target',

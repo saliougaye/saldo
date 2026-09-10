@@ -16,7 +16,7 @@ export function DevTools() {
   const { t } = useTranslation();
   const { repos } = useDatabase();
   const toast = useToast();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
 
   if (!__DEV__) return null;
 
@@ -25,8 +25,8 @@ export function DevTools() {
       <SecondaryButton
         label={t('dev.loadDemo')}
         onPress={() => {
-          seedDemoData(repos, { today, cycleStartDay, translate: (key) => t(`seed.${key}`) });
-          runMaterialiser(db, repos, today, cycleStartDay);
+          seedDemoData(repos, { today, def, translate: (key) => t(`seed.${key}`) });
+          runMaterialiser(db, repos, today, def);
           toast.show(t('dev.demoLoaded'));
         }}
       />

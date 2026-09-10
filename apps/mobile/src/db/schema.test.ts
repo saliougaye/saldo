@@ -16,6 +16,7 @@ describe('schema', () => {
       .values({
         ...meta,
         id: 'settings',
+        periodKind: 'cycle',
         cycleStartDay: 27,
         currency: 'EUR',
         language: 'system',

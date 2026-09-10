@@ -60,7 +60,7 @@ export default function EditCategory() {
                 name: values.name.trim(),
                 categoryIds: [category.id],
                 amount,
-                period: 'cycle',
+                period: 'period',
                 alertThreshold: 90,
                 rollover: false,
                 icon: values.icon,

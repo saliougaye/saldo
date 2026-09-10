@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isLocalDate } from './dates';
 import { CURRENCY_CODES } from './money';
+import { PERIOD_KINDS } from './period';
 
 const id = z.string().min(1);
 /** ISO-8601 instant in UTC (D8). `z.iso.datetime()` rejects local times and offsets by default. */
@@ -31,9 +32,14 @@ export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 /** Thresholds offered by the "Avvisami a" segmented control (§6.18). Any percent is valid. */
 export const BUDGET_ALERT_THRESHOLDS = [75, 90, 100] as const;
 
+export const periodKindSchema = z.enum(PERIOD_KINDS);
+
 export const settingsSchema = z.object({
   ...syncMeta,
   id: z.literal('settings'),
+  /** How the user tracks spending (§5.2); the pay cycle is one kind among four. */
+  periodKind: periodKindSchema,
+  /** Read only when `periodKind === 'cycle'`, and kept so switching back remembers the day. */
   cycleStartDay: dayOfMonth,
   currency: z.enum(CURRENCY_CODES),
   language: z.enum(['system', 'it', 'en']),
@@ -164,12 +170,18 @@ export const recurrenceSchema = z.object({
     .superRefine(refineTransactionShape),
 });
 
+/**
+ * §5.8. `'period'` means the app's own period, whatever kind that is; the other three are
+ * absolute windows, so a budget can be monthly while the app tracks a pay cycle.
+ */
+export const budgetPeriodSchema = z.enum(['period', 'week', 'month', 'year']);
+
 export const budgetSchema = z.object({
   ...syncMeta,
   name: z.string().min(1).max(40),
   categoryIds: z.array(id).min(1),
   amount: positiveMinorUnits,
-  period: z.enum(['cycle', 'week', 'year']),
+  period: budgetPeriodSchema,
   /** Percent of the limit that triggers the alert; null = "Mai". The UI offers
    * `BUDGET_ALERT_THRESHOLDS`, but the domain rule (§5.8) is plain arithmetic on any percentage. */
   alertThreshold: percent.nullable(),
@@ -200,6 +212,7 @@ export const entitySchemas = {
 } as const;
 
 export type EntityName = keyof typeof entitySchemas;
+export type PeriodKindValue = z.infer<typeof periodKindSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
 export type AccountType = z.infer<typeof accountTypeSchema>;
 export type Account = z.infer<typeof accountSchema>;
@@ -209,5 +222,6 @@ export type Tag = z.infer<typeof tagSchema>;
 export type TransactionKind = z.infer<typeof transactionKindSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type Recurrence = z.infer<typeof recurrenceSchema>;
+export type BudgetPeriod = z.infer<typeof budgetPeriodSchema>;
 export type Budget = z.infer<typeof budgetSchema>;
 export type Attachment = z.infer<typeof attachmentSchema>;

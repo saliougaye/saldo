@@ -1,11 +1,11 @@
 import {
-  cycleHistory,
   deltaPercent,
   isWithin,
   mean,
   median,
-  previousCycles,
-  shiftCycle,
+  periodHistory,
+  previousPeriods,
+  shiftPeriod,
   spendingByCategory,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney, formatSignedPercent } from '@saldo/i18n';
@@ -39,7 +39,7 @@ export default function CategoryDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
   const categories = useCategories();
-  const { today, cycleStartDay, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   const category = categories.find((row) => row.id === id);
@@ -55,7 +55,7 @@ export default function CategoryDetail() {
   );
 
   const historyStart =
-    previousCycles(period.range, cycleStartDay, HISTORY_CYCLES).at(-1)?.start ?? period.range.start;
+    previousPeriods(def, period.range, HISTORY_CYCLES).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(historyStart, period.range.end);
 
   const inRange = useMemo(
@@ -74,7 +74,7 @@ export default function CategoryDetail() {
   const bars = useMemo(() => {
     const cycles = [period.range];
     for (let back = 1; back < HISTORY_CYCLES; back += 1) {
-      cycles.push(shiftCycle(period.range, cycleStartDay, -back));
+      cycles.push(shiftPeriod(def, period.range, -back));
     }
     return cycles.reverse().map((cycle) => {
       const amounts = spendingByCategory(rows, cycle, today);
@@ -87,22 +87,22 @@ export default function CategoryDetail() {
         current: cycle.start === period.range.start,
       };
     });
-  }, [rows, period.range, cycleStartDay, today, ids, locale]);
+  }, [rows, period.range, def, today, ids, locale]);
 
   // "Media 6 cicli" of the design: the plain mean of the six columns, current cycle included.
   const average = useMemo(() => mean(bars.map((bar) => bar.amount)) ?? 0, [bars]);
 
   const pastMedian = useMemo(() => {
-    const history = cycleHistory(rows, period.range, cycleStartDay, HISTORY_CYCLES);
+    const history = periodHistory(rows, def, period.range, HISTORY_CYCLES);
     return median(
       history.map((entry) => {
-        const amounts = spendingByCategory(entry.txs, entry.cycle, today);
+        const amounts = spendingByCategory(entry.txs, entry.period, today);
         let spent = 0;
         for (const categoryId of ids) spent += amounts.get(categoryId) ?? 0;
         return spent;
       }),
     );
-  }, [rows, period.range, cycleStartDay, today, ids]);
+  }, [rows, period.range, def, today, ids]);
 
   const childSpend = useMemo(() => {
     const amounts = spendingByCategory(rows, period.range, today);

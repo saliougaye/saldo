@@ -1,4 +1,4 @@
-import type { Transaction } from '@saldo/core';
+import type { PeriodDef, Transaction } from '@saldo/core';
 import {
   applyRecurrenceEdit,
   type RecurrenceEditValues,
@@ -8,8 +8,10 @@ import {
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
 
+/** These tests were written against a pay cycle (§5.2), still one kind among four. */
+const CYCLE_DEF: PeriodDef = { kind: 'cycle', startDay: 27 };
+
 const TODAY = '2026-04-18';
-const CYCLE_START_DAY = 27;
 
 const TEMPLATE = {
   kind: 'expense',
@@ -45,7 +47,7 @@ describe('runMaterialiser', () => {
       endDate: null,
       template: TEMPLATE,
     });
-    const created = runMaterialiser(db, repos, TODAY, CYCLE_START_DAY);
+    const created = runMaterialiser(db, repos, TODAY, CYCLE_DEF);
     // Horizon is 2026-05-26, so Feb, Mar and Apr fire.
     expect(created).toBe(3);
     expect(dates(repos)).toEqual(['2026-02-27', '2026-03-27', '2026-04-27']);
@@ -60,8 +62,8 @@ describe('runMaterialiser', () => {
       endDate: null,
       template: TEMPLATE,
     });
-    runMaterialiser(db, repos, TODAY, CYCLE_START_DAY);
-    expect(runMaterialiser(db, repos, TODAY, CYCLE_START_DAY)).toBe(0);
+    runMaterialiser(db, repos, TODAY, CYCLE_DEF);
+    expect(runMaterialiser(db, repos, TODAY, CYCLE_DEF)).toBe(0);
   });
 
   it('does not resurrect a deleted occurrence', () => {
@@ -73,9 +75,9 @@ describe('runMaterialiser', () => {
       endDate: null,
       template: TEMPLATE,
     });
-    runMaterialiser(db, repos, TODAY, CYCLE_START_DAY);
+    runMaterialiser(db, repos, TODAY, CYCLE_DEF);
     repos.transactions.remove('rec-rent:2026-03-27');
-    expect(runMaterialiser(db, repos, TODAY, CYCLE_START_DAY)).toBe(0);
+    expect(runMaterialiser(db, repos, TODAY, CYCLE_DEF)).toBe(0);
     expect(dates(repos)).toEqual(['2026-02-27', '2026-04-27']);
   });
 
@@ -88,7 +90,7 @@ describe('runMaterialiser', () => {
       template: TEMPLATE,
     });
     repos.recurrences.remove(recurrence.id);
-    expect(runMaterialiser(db, repos, TODAY, CYCLE_START_DAY)).toBe(0);
+    expect(runMaterialiser(db, repos, TODAY, CYCLE_DEF)).toBe(0);
   });
 });
 
@@ -108,7 +110,7 @@ describe('startRecurrence', () => {
       excludeFromTotals: false,
       recurrenceId: null,
     });
-    const recurrence = startRecurrence(db, repos, saved, TODAY, CYCLE_START_DAY);
+    const recurrence = startRecurrence(db, repos, saved, TODAY, CYCLE_DEF);
     const live = repos.transactions.list();
     expect(live.map((tx) => tx.id)).toContain(`${recurrence.id}:2026-04-10`);
     expect(repos.transactions.byId(saved.id)?.deletedAt).not.toBeNull();
@@ -127,7 +129,7 @@ describe('applyRecurrenceEdit', () => {
       endDate: null,
       template: TEMPLATE,
     });
-    runMaterialiser(db, repos, TODAY, CYCLE_START_DAY);
+    runMaterialiser(db, repos, TODAY, CYCLE_DEF);
     const recurrence = repos.recurrences.byId('rec-rent');
     if (recurrence === null) throw new Error('missing recurrence');
     return { db, repos, recurrence };
@@ -149,7 +151,7 @@ describe('applyRecurrenceEdit', () => {
       values: edited,
       date: '2026-03-27',
       today: TODAY,
-      cycleStartDay: CYCLE_START_DAY,
+      def: CYCLE_DEF,
     });
     expect(occurrence(repos, '2026-03-27').amount).toBe(80000);
     expect(occurrence(repos, '2026-02-27').amount).toBe(78000);
@@ -164,7 +166,7 @@ describe('applyRecurrenceEdit', () => {
       values: edited,
       date: '2026-03-27',
       today: TODAY,
-      cycleStartDay: CYCLE_START_DAY,
+      def: CYCLE_DEF,
     });
     expect(repos.transactions.list().every((tx) => tx.amount === 80000)).toBe(true);
     expect(dates(repos)).toEqual(['2026-02-27', '2026-03-27', '2026-04-27']);
@@ -179,7 +181,7 @@ describe('applyRecurrenceEdit', () => {
       values: edited,
       date: '2026-04-27',
       today: TODAY,
-      cycleStartDay: CYCLE_START_DAY,
+      def: CYCLE_DEF,
     });
     expect(repos.recurrences.byId('rec-rent')?.endDate).toBe('2026-04-26');
     const series = repos.recurrences.list();

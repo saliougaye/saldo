@@ -1,4 +1,4 @@
-import type { CurrencyCode } from '@saldo/core';
+import type { CurrencyCode, PeriodKind } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import type { Repositories } from './repositories';
 
@@ -67,6 +67,8 @@ export const PICKABLE_SEED_CATEGORIES = SEED_CATEGORIES.filter(
 );
 
 export interface SeedInput {
+  /** Written straight into `settings`, so it mirrors that row rather than a `PeriodDef`. */
+  periodKind: PeriodKind;
   cycleStartDay: number;
   currency: CurrencyCode;
   language: 'system' | 'it' | 'en';
@@ -91,6 +93,7 @@ export interface SeedInput {
  */
 export function seedFromOnboarding(repos: Repositories, input: SeedInput): void {
   repos.settings.create({
+    periodKind: input.periodKind,
     cycleStartDay: input.cycleStartDay,
     currency: input.currency,
     language: input.language,

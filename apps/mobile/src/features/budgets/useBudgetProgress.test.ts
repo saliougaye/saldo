@@ -1,9 +1,11 @@
-import type { Budget, Category, Transaction } from '@saldo/core';
+import type { Budget, Category, PeriodDef, Transaction } from '@saldo/core';
 import { budgetViews } from './useBudgetProgress';
 
 const CYCLE = { start: '2026-03-27', end: '2026-04-26' };
 const TODAY = '2026-04-18';
 const START_DAY = 27;
+/** These tests were written against a pay cycle (§5.2). */
+const CYCLE_DEF: PeriodDef = { kind: 'cycle', startDay: START_DAY };
 
 function category(id: string, overrides: Partial<Category> = {}): Category {
   return {
@@ -51,7 +53,7 @@ function budget(overrides: Partial<Budget> = {}): Budget {
     name: 'Spesa',
     categoryIds: ['cat-food'],
     amount: 40000,
-    period: 'cycle',
+    period: 'period',
     alertThreshold: 90,
     rollover: false,
     icon: 'cart',
@@ -67,8 +69,8 @@ function view(overrides: Partial<Budget>, transactions: Transaction[]) {
     budgets: [budget(overrides)],
     categories,
     transactions,
-    cycle: CYCLE,
-    cycleStartDay: START_DAY,
+    period: CYCLE,
+    def: CYCLE_DEF,
     today: TODAY,
   });
   if (only === undefined) throw new Error('no view');

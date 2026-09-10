@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "061208fe-49cd-425f-a715-6c37c8dd8882",
+  "id": "deac55d0-56b7-4390-8cd0-e157e9888e30",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -621,6 +621,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": 1
+        },
+        "period_kind": {
+          "name": "period_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "cycle_start_day": {
           "name": "cycle_start_day",

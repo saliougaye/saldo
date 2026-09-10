@@ -40,7 +40,7 @@ export default function NewCategory() {
             name: created.name,
             categoryIds: [created.id],
             amount,
-            period: 'cycle',
+            period: 'period',
             alertThreshold: 90,
             rollover: false,
             icon: created.icon,

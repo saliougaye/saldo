@@ -36,6 +36,7 @@ export default function CategoriesStep() {
     setSaving(true);
     const { minorDigits } = getCurrency(draft.currency);
     seedFromOnboarding(repos, {
+      periodKind: draft.periodKind,
       cycleStartDay: draft.cycleStartDay,
       currency: draft.currency,
       language: 'system',

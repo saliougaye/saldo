@@ -11,7 +11,7 @@ function view(overrides: Partial<BudgetView> = {}): BudgetView {
       name: 'Spesa',
       categoryIds: ['cat-food'],
       amount: 40000,
-      period: 'cycle',
+      period: 'period',
       alertThreshold: 90,
       rollover: false,
       icon: 'cart',

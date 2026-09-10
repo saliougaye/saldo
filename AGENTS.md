@@ -58,6 +58,12 @@ output, not the exit code:
 - The same goes for the test and lint filters in the shell wrapper: run a gate through
   `rtk proxy <command>` (or with `--json`) before believing it.
 
+**After regenerating the mobile migrations**, restart Metro with `--clear` and delete the simulator's
+`Documents/SQLite/saldo.db`. The migrations reach the app through `babel-plugin-inline-import`, and Metro caches that
+transform: without both steps the app applies the *previous* schema and every query against a new column fails. Find
+the file with `xcrun simctl get_app_container booted io.github.saldo.app data` — the booted device is not necessarily
+the one a hard-coded UDID points at.
+
 ## When in doubt
 
 - Spec vs design prototype disagree → **the spec wins** (the prototype fakes data and some behaviours).

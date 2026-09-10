@@ -94,6 +94,7 @@ CREATE TABLE `settings` (
 	`updated_at` text NOT NULL,
 	`deleted_at` text,
 	`sync_state` integer DEFAULT 1 NOT NULL,
+	`period_kind` text NOT NULL,
 	`cycle_start_day` integer NOT NULL,
 	`currency` text NOT NULL,
 	`language` text NOT NULL,

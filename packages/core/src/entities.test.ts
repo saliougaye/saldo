@@ -80,6 +80,7 @@ describe('settingsSchema', () => {
   const settings = {
     ...meta,
     id: 'settings',
+    periodKind: 'cycle',
     cycleStartDay: 27,
     currency: 'EUR',
     language: 'system',
@@ -159,7 +160,7 @@ describe('budgetSchema', () => {
     name: 'Spesa',
     categoryIds: ['cat-groceries'],
     amount: 42000,
-    period: 'cycle',
+    period: 'period',
     alertThreshold: 90,
     rollover: false,
     icon: 'cart',

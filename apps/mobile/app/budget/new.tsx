@@ -31,7 +31,7 @@ export default function NewBudget() {
           amount: amountBufferToMinor(values.buffer, minorDigits),
           period: values.period,
           alertThreshold: values.alertThreshold,
-          rollover: values.period === 'cycle' ? values.rollover : false,
+          rollover: values.period === 'period' ? values.rollover : false,
           icon: first?.icon ?? 'target',
           sortOrder: budgets.length,
         });

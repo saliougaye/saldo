@@ -1,4 +1,3 @@
-import { cycleContaining, shiftCycle } from './cycle';
 import {
   addDays,
   addMonths,
@@ -9,6 +8,7 @@ import {
 } from './dates';
 import type { Recurrence, Transaction } from './entities';
 import { occurrenceId } from './ids';
+import { type PeriodDef, periodContaining, shiftPeriod } from './period';
 
 /**
  * Dates a monthly recurrence fires on, from `startDate` up to `min(endDate, horizonEnd)` (§5.9).
@@ -34,8 +34,8 @@ export function occurrenceDates(
 }
 
 /** How far ahead the materialiser goes: the end of the cycle after the current one (§5.9). */
-export function recurrenceHorizonEnd(today: LocalDate, cycleStartDay: number): LocalDate {
-  return shiftCycle(cycleContaining(today, cycleStartDay), cycleStartDay, 1).end;
+export function recurrenceHorizonEnd(def: PeriodDef, today: LocalDate): LocalDate {
+  return shiftPeriod(def, periodContaining(def, today), 1).end;
 }
 
 /** A scheduled occurrence, ready for the transactions repository. */

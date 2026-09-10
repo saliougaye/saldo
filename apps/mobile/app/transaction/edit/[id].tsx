@@ -20,7 +20,7 @@ export default function EditTransaction() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { repos } = useDatabase();
   const settings = useSettings();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
 
   const [transaction] = useState(() => (id === undefined ? null : repos.transactions.byId(id)));
@@ -67,7 +67,7 @@ export default function EditTransaction() {
         values={values}
         minorDigits={minorDigits}
         today={today}
-        cycleStartDay={cycleStartDay}
+        def={def}
         onDone={() => {
           setScopeOpen(false);
           router.back();

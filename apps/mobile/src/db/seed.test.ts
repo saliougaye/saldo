@@ -3,6 +3,7 @@ import { PICKABLE_SEED_CATEGORIES, SEED_CATEGORIES, seedFromOnboarding } from '.
 import { createTestDatabase } from './testing';
 
 const BASE = {
+  periodKind: 'cycle',
   cycleStartDay: 27,
   currency: 'EUR',
   language: 'it',

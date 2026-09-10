@@ -5,12 +5,13 @@ import {
   budgetRange,
   type Category,
   type Cycle,
-  cycleContaining,
   cycleLength,
   effectiveLimit,
   elapsedDays,
   expandCategoryIds,
   type LocalDate,
+  type PeriodDef,
+  periodContaining,
   spendingByCategory,
   type Transaction,
 } from '@saldo/core';
@@ -29,10 +30,10 @@ export interface BudgetView extends BudgetProgress {
 export interface BudgetProgressInput {
   budgets: readonly Budget[];
   categories: readonly Category[];
-  /** Rows covering the selected cycle *and* the cycles the carry walks back through. */
+  /** Rows covering the selected period *and* the periods the carry walks back through. */
   transactions: readonly Transaction[];
-  cycle: Cycle;
-  cycleStartDay: number;
+  period: Cycle;
+  def: PeriodDef;
   today: LocalDate;
 }
 
@@ -41,13 +42,13 @@ export interface BudgetProgressInput {
  * rows: screens call it inside `useMemo`, and it is testable without a database.
  */
 export function budgetViews(input: BudgetProgressInput): BudgetView[] {
-  const { budgets, categories, transactions, cycle, cycleStartDay, today } = input;
+  const { budgets, categories, transactions, period, def, today } = input;
 
   return budgets.map((budget) => {
-    const range = budgetRange(budget.period, cycle, today);
+    const range = budgetRange(budget.period, period, today);
     const spending = spendingByCategory(transactions, range, today);
 
-    // Rollover only applies to cycle budgets (§5.8); the others ignore the toggle.
+    // Rollover only applies to budgets that follow the app's period (§5.8).
     const ids = expandCategoryIds(budget.categoryIds, categories);
     const spentIn = (target: Cycle): number => {
       const amounts = spendingByCategory(transactions, target, today);
@@ -56,16 +57,15 @@ export function budgetViews(input: BudgetProgressInput): BudgetView[] {
       return total;
     };
     const limitWithCarry =
-      budget.period === 'cycle'
+      budget.period === 'period'
         ? effectiveLimit({
             amount: budget.amount,
-            // The carry walks back to the cycle the budget was created *in*, not to its
-            // creation date, so the ISO timestamp has to be mapped onto a cycle first.
-            createdAtCycleStart: cycleContaining(budget.createdAt.slice(0, 10), cycleStartDay)
-              .start,
-            cycle,
-            cycleStartDay,
-            spentInCycle: spentIn,
+            // The carry walks back to the period the budget was created *in*, not to its
+            // creation date, so the ISO timestamp is mapped onto a period first.
+            createdAtPeriodStart: periodContaining(def, budget.createdAt.slice(0, 10)).start,
+            period,
+            def,
+            spentInPeriod: spentIn,
             rollover: budget.rollover,
           })
         : budget.amount;
