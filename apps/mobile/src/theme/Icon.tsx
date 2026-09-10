@@ -12,6 +12,13 @@ export interface IconProps {
   strokeWidth?: number;
 }
 
+/** Identifies a node by the geometry attribute that distinguishes it within an icon. */
+function nodeKey(node: IconNode): string {
+  return (
+    node.attrs.d ?? `${node.attrs.cx ?? node.attrs.x ?? ''},${node.attrs.cy ?? node.attrs.y ?? ''}`
+  );
+}
+
 function IconElement({ node, color }: { node: IconNode; color: string }) {
   const Element = ELEMENTS[node.tag];
   // The design encodes solid parts as fill="currentColor"; everything else is a stroked outline.
@@ -33,8 +40,9 @@ export function Icon({ name, size = iconDefaults.size, color, strokeWidth }: Ico
       strokeLinecap={iconDefaults.strokeLinecap}
       strokeLinejoin={iconDefaults.strokeLinejoin}
     >
-      {iconNodes[name].map((node, index) => (
-        <IconElement key={`${name}-${index}`} node={node} color={resolved} />
+      {iconNodes[name].map((node) => (
+        // The node list is static data, so its own shape is a stable identity; no index needed.
+        <IconElement key={`${node.tag}:${nodeKey(node)}`} node={node} color={resolved} />
       ))}
     </Svg>
   );

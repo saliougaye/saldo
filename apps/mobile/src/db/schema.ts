@@ -18,6 +18,8 @@ export const settings = sqliteTable(
   'settings',
   {
     ...syncMeta,
+    /** Always the literal `settings`: this table holds one row (§4). */
+    id: text('id').$type<'settings'>().primaryKey(),
     cycleStartDay: integer('cycle_start_day').notNull(),
     currency: text('currency').$type<CurrencyCode>().notNull(),
     language: text('language').$type<'system' | 'it' | 'en'>().notNull(),
