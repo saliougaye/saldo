@@ -1,0 +1,10 @@
+# The image builds from the repository root; everything the build needs is source.
+**/node_modules
+**/.next
+**/.turbo
+**/.expo
+apps/mobile/android
+apps/mobile/ios
+docs/design
+.screenshots
+.git

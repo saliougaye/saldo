@@ -5,6 +5,9 @@ import type { NextConfig } from 'next';
  * TypeScript source (`exports: './src/index.ts'`), so Next has to transpile them itself.
  */
 const nextConfig: NextConfig = {
+  // Next writes its own AGENTS.md/CLAUDE.md into this directory on every dev start, which would
+  // shadow the repository's AGENTS.md for anything under apps/web.
+  agentRules: false,
   output: 'standalone',
   outputFileTracingRoot: `${import.meta.dirname}/../..`,
   transpilePackages: ['@saldo/core', '@saldo/i18n', '@saldo/ui'],

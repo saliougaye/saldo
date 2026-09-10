@@ -4,7 +4,12 @@ import { Pool } from 'pg';
 import { env } from '../env';
 import { schema } from './schema';
 
-const migrationsFolder = new URL('../../../drizzle', import.meta.url).pathname;
+/**
+ * Relative to the working directory, which is `apps/web` both for `pnpm --filter web db:migrate`
+ * and for the Docker entrypoint. It is deliberately not derived from `import.meta.url`: this file
+ * is also bundled to CJS for the image, where that would not resolve.
+ */
+const migrationsFolder = process.env.SALDO_MIGRATIONS_DIR ?? 'drizzle';
 
 async function main(): Promise<void> {
   const pool = new Pool({ connectionString: env().databaseUrl });

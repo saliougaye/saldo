@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/server/db/migrate.ts"
+    "db:migrate": "tsx src/server/db/migrate.ts",
+    "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",
@@ -29,6 +30,7 @@
     "@types/react": "~19.2.18",
     "@types/react-dom": "^19.3.0",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.2",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
