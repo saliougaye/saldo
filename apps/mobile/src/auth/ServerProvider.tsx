@@ -8,15 +8,16 @@ import {
   useState,
 } from 'react';
 import { useDatabase } from '../db/DatabaseProvider';
-import { type ApiClient, createApiClient } from '../net/apiClient';
+import { type ApiClient, ApiClientError, createApiClient } from '../net/apiClient';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
+import { BUILD_SERVER_URL } from './buildServer';
 import { checkServer, type ServerHealth, type SignedInUser, signIn, signOut } from './session';
 import { decideSession } from './sessionState';
 
 export type ServerStatus = 'loading' | 'signed-out' | 'signed-in';
 
 export interface ServerValue {
-  /** Null until a server has been signed in to. */
+  /** The server this build points at (§15); null only when it was built without one. */
   serverUrl: string | null;
   user: SignedInUser | null;
   api: ApiClient | null;
@@ -27,28 +28,29 @@ export interface ServerValue {
   status: ServerStatus;
   sessionExpired: boolean;
   check(url: string): Promise<ServerHealth>;
-  connect(url: string, mode: 'login' | 'register'): Promise<SignedInUser>;
+  connect(mode: 'login' | 'register'): Promise<SignedInUser>;
   disconnect(): Promise<void>;
 }
 
 const ServerContext = createContext<ServerValue | null>(null);
 
 /**
- * Owns the server connection: which server (in `kv`, so it survives restarts), whether there is a
- * session (Better Auth's, in SecureStore), and the API client the sync layer uses.
+ * Owns the server connection: whether there is a session (Better Auth's, in SecureStore) and the
+ * API client the sync layer uses. *Which* server is not state at all — the build decides it
+ * (§15), so there is nothing to store, nothing to forget on sign-out, and nothing to migrate when
+ * a later build points somewhere else.
  */
 export function ServerProvider({ children }: { children: ReactNode }) {
   const { kv } = useDatabase();
-  const [serverUrl, setServerUrl] = useState<string | null>(() => kv.get('serverUrl'));
+  // Fixed for the life of the process, so it appears in no dependency list below.
+  const serverUrl = BUILD_SERVER_URL;
   const [user, setUser] = useState<SignedInUser | null>(null);
-  const [status, setStatus] = useState<ServerStatus>(
-    kv.get('serverUrl') === null ? 'signed-out' : 'loading',
-  );
+  const [status, setStatus] = useState<ServerStatus>(serverUrl === null ? 'signed-out' : 'loading');
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const client = useMemo<ServerAuthClient | null>(
     () => (serverUrl === null ? null : createServerAuthClient(serverUrl)),
-    [serverUrl],
+    [],
   );
 
   const api = useMemo<ApiClient | null>(() => {
@@ -65,7 +67,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
         setUser(null);
       },
     });
-  }, [serverUrl, client]);
+  }, [client]);
 
   // A stored session has to be recognised on boot, not only after a sign-in.
   useEffect(() => {
@@ -115,26 +117,22 @@ export function ServerProvider({ children }: { children: ReactNode }) {
     };
   }, [client]);
 
-  const connect = useCallback(
-    async (url: string, mode: 'login' | 'register') => {
-      const target = createServerAuthClient(url);
-      const signedIn = await signIn({ serverUrl: url, client: target, mode });
-      kv.set('serverUrl', url);
-      setServerUrl(url);
-      setUser(signedIn);
-      setStatus('signed-in');
-      setSessionExpired(false);
-      return signedIn;
-    },
-    [kv],
-  );
+  const connect = useCallback(async (mode: 'login' | 'register') => {
+    // Unreachable from the UI, which hides the buttons; a thrown error beats a silent no-op.
+    if (serverUrl === null) throw new ApiClientError(500, 'no_server', 'No server configured');
+    const target = createServerAuthClient(serverUrl);
+    const signedIn = await signIn({ serverUrl, client: target, mode });
+    setUser(signedIn);
+    setStatus('signed-in');
+    setSessionExpired(false);
+    return signedIn;
+  }, []);
 
   const disconnect = useCallback(async () => {
     if (client !== null) await signOut(client);
-    // §6.30 "Esci": the phone keeps its data and goes back to local-only.
-    kv.remove('serverUrl');
+    // §6.30 "Esci": the phone keeps its data, and the next sign-in starts from an empty cursor
+    // because this account's rows may not be the ones it pulls next.
     kv.remove('syncCursor');
-    setServerUrl(null);
     setUser(null);
     setStatus('signed-out');
     setSessionExpired(false);
@@ -151,7 +149,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       connect,
       disconnect,
     }),
-    [serverUrl, user, api, status, sessionExpired, connect, disconnect],
+    [user, api, status, sessionExpired, connect, disconnect],
   );
 
   return <ServerContext.Provider value={value}>{children}</ServerContext.Provider>;

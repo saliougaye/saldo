@@ -16,6 +16,11 @@ export function normaliseServerUrl(input: string): string | null {
   return `${url.protocol}//${url.host}`;
 }
 
+/** What the user is shown: the host, without a scheme they never typed. */
+export function serverLabel(serverUrl: string): string {
+  return URL.canParse(serverUrl) ? new URL(serverUrl).host : serverUrl;
+}
+
 /** The server page the app opens in a browser session (§9.3 step 3). */
 export function authorizeUrl(
   serverUrl: string,

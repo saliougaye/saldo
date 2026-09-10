@@ -17,6 +17,7 @@ export const en: Messages = {
     archive: 'Archive',
     search: 'Search',
     loading: 'Loading…',
+    retry: 'Try again',
     and: 'and',
   },
   tabs: {
@@ -213,10 +214,10 @@ export const en: Messages = {
   },
   sync: {
     title: 'Server and sync',
-    serverUrl: 'Server address',
-    serverUrlPlaceholder: 'saldo.example.com',
-    verify: 'Verify',
-    verifying: 'Checking…',
+    serverIs: 'Server: {{server}}',
+    verifying: 'Checking the server…',
+    noServerConfigured:
+      'This build has no server configured. Rebuild the app with SALDO_SERVER_URL.',
     notConnected: 'Not connected',
     localOnly: 'Sync is off. Your data stays on this phone.',
     connectedAs: 'Signed in as {{name}}',

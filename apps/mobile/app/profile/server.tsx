@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
+import { serverLabel } from '../../src/auth/link';
 import { useServer } from '../../src/auth/ServerProvider';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
@@ -90,6 +91,11 @@ export default function ServerScreen() {
         <Text size="footnote" color="textMuted" style={{ marginTop: 4 }}>
           {statusLine()}
         </Text>
+        {serverUrl === null ? null : (
+          <Text size="footnote" color="textFaint" style={{ marginTop: 4 }}>
+            {t('sync.serverIs', { server: serverLabel(serverUrl) })}
+          </Text>
+        )}
         {connected ? (
           <Text size="footnote" color="textMuted" style={{ marginTop: 4 }}>
             {counts.pending === 0
@@ -131,10 +137,7 @@ export default function ServerScreen() {
             {sessionExpired ? (
               <ListRow
                 title={t('sync.signIn')}
-                onPress={() => {
-                  if (serverUrl !== null)
-                    void run(async () => void (await connect(serverUrl, 'login')));
-                }}
+                onPress={() => void run(async () => void (await connect('login')))}
               />
             ) : null}
             <ListRow

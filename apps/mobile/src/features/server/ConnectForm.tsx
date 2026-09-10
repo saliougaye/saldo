@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { normaliseServerUrl } from '../../auth/link';
+import { serverLabel } from '../../auth/link';
 import { useServer } from '../../auth/ServerProvider';
 import type { ServerHealth } from '../../auth/session';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
-import { TextField } from '../../components/TextField';
 import { ApiClientError } from '../../net/apiClient';
 import { Text } from '../../theme/Text';
 
@@ -21,16 +20,22 @@ const CODE_KEYS: Record<string, string> = {
 };
 
 /**
- * Server address → "Verifica" → passkey. Shared by onboarding step 0 and §6.30, so the sign-in
- * the app requires and the one Settings offers are the same code, not two copies that drift.
+ * Sign-in to the server this build points at (§9.3 step 1). Shared by onboarding step 0 and
+ * §6.30, so the sign-in the app requires and the one Settings offers are the same code, not two
+ * copies that drift.
+ *
+ * The health check is no longer the user's "Verifica": the address is not in question any more,
+ * so it runs on mount and its only job is to learn whether this server still takes new accounts.
  */
 export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
   const { t } = useTranslation();
-  const { serverUrl, check, connect } = useServer();
-  const [url, setUrl] = useState(serverUrl ?? '');
+  const { serverUrl, connect, check } = useServer();
   const [health, setHealth] = useState<ServerHealth | null>(null);
+  const [checking, setChecking] = useState(serverUrl !== null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // The failure is kept raw and worded at render time, so the probe does not depend on `t` and a
+  // change of language does not restart it.
+  const [failure, setFailure] = useState<unknown>(null);
 
   const describe = (caught: unknown): string => {
     const code = caught instanceof ApiClientError ? caught.code : null;
@@ -39,75 +44,88 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
     return caught instanceof Error ? caught.message : t('sync.unreachable');
   };
 
-  const run = async (action: () => Promise<void>) => {
-    setBusy(true);
-    setError(null);
+  const probe = useCallback(async () => {
+    if (serverUrl === null) return;
+    setChecking(true);
+    setFailure(null);
     try {
-      await action();
+      setHealth(await check(serverUrl));
     } catch (caught) {
-      setError(describe(caught));
+      setFailure(caught);
     } finally {
-      setBusy(false);
+      setChecking(false);
     }
+  }, [serverUrl, check]);
+
+  useEffect(() => {
+    void probe();
+  }, [probe]);
+
+  const signIn = (mode: 'login' | 'register') => () => {
+    setBusy(true);
+    setFailure(null);
+    void (async () => {
+      try {
+        await connect(mode);
+        onConnected?.();
+      } catch (caught) {
+        setFailure(caught);
+      } finally {
+        setBusy(false);
+      }
+    })();
   };
 
-  const signIn = (mode: 'login' | 'register') => () =>
-    run(async () => {
-      await connect(url, mode);
-      onConnected?.();
-    });
+  // A build with no usable SALDO_SERVER_URL cannot sign anyone in, and no button would help.
+  if (serverUrl === null) {
+    return (
+      <Text size="footnote" color="accent">
+        {t('sync.noServerConfigured')}
+      </Text>
+    );
+  }
 
   return (
     <View style={{ gap: 12 }}>
-      <TextField
-        label={t('sync.serverUrl')}
-        placeholder={t('sync.serverUrlPlaceholder')}
-        value={url}
-        onChangeText={(next) => {
-          setUrl(next);
-          setHealth(null);
-        }}
-        autoCapitalize="none"
-        keyboardType="url"
+      <Text size="footnote" color="textMuted">
+        {t('sync.serverIs', { server: serverLabel(serverUrl) })}
+      </Text>
+      {checking || health !== null ? (
+        <Text size="footnote" color="textFaint">
+          {checking ? t('sync.verifying') : t('sync.serverFound', { version: health?.version })}
+        </Text>
+      ) : null}
+
+      {/* Enabled even after a failed probe: the failure may be transient, and the ceremony
+          reports its own error. Disabling the only way forward would be worse. */}
+      <PrimaryButton
+        label={t('sync.signIn')}
+        disabled={busy || checking}
+        onPress={signIn('login')}
       />
-      {health === null ? (
+      {health?.registrationAllowed === true ? (
         <SecondaryButton
-          label={busy ? t('sync.verifying') : t('sync.verify')}
-          disabled={busy || url.trim().length === 0}
-          onPress={() =>
-            run(async () => {
-              const normalised = normaliseServerUrl(url);
-              // A malformed address is not a network failure, and saying so is more useful.
-              if (normalised === null) throw new ApiClientError(400, 'not_saldo', '');
-              const found = await check(normalised);
-              setUrl(normalised);
-              setHealth(found);
-            })
-          }
+          label={t('sync.createAccount')}
+          disabled={busy || checking}
+          onPress={signIn('register')}
         />
-      ) : (
+      ) : null}
+
+      {failure === null ? null : (
         <View style={{ gap: 8 }}>
-          <Text size="footnote" color="textMuted">
-            {t('sync.serverFound', { version: health.version })}
+          <Text size="footnote" color="accent">
+            {describe(failure)}
           </Text>
-          <PrimaryButton label={t('sync.signIn')} disabled={busy} onPress={signIn('login')} />
-          {health.registrationAllowed ? (
-            <SecondaryButton
-              label={t('sync.createAccount')}
-              disabled={busy}
-              onPress={signIn('register')}
-            />
-          ) : null}
-          <Text size="caption" color="textFaint">
-            {t('sync.passkeyNote')}
-          </Text>
+          <SecondaryButton
+            label={t('common.retry')}
+            disabled={checking}
+            onPress={() => void probe()}
+          />
         </View>
       )}
-      {error === null ? null : (
-        <Text size="footnote" color="accent">
-          {error}
-        </Text>
-      )}
+      <Text size="caption" color="textFaint">
+        {t('sync.passkeyNote')}
+      </Text>
     </View>
   );
 }

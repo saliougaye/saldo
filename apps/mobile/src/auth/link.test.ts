@@ -1,4 +1,4 @@
-import { authorizeUrl, callbackParams, normaliseServerUrl } from './link';
+import { authorizeUrl, callbackParams, normaliseServerUrl, serverLabel } from './link';
 
 describe('normaliseServerUrl', () => {
   it('adds https, drops a trailing slash and rejects nonsense', () => {
@@ -43,5 +43,12 @@ describe('callbackParams', () => {
     expect(callbackParams('saldo://auth/callback?ott=abc')).toBeNull();
     expect(callbackParams('saldo://auth/callback?error=denied')).toBeNull();
     expect(callbackParams('not a url')).toBeNull();
+  });
+});
+
+describe('serverLabel', () => {
+  it('shows a server by its host', () => {
+    expect(serverLabel('https://saldo.example.com')).toBe('saldo.example.com');
+    expect(serverLabel('http://localhost:3000')).toBe('localhost:3000');
   });
 });
