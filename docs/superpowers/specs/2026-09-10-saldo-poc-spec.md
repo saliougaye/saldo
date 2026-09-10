@@ -221,7 +221,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 
 | Field | Type | Rules |
 | --- | --- | --- |
-| `frequency` | `monthly` | POC supports monthly ("Ogni mese") only. |
+| `frequency` | `monthly` | POC supports monthly ("Ogni mese") only. The field exists now so that adding `weekly` later is additive — no device migration and no new sync column. |
 | `startDate` | LocalDate | Day of month used for every occurrence, clamped to the month length. |
 | `endDate` | LocalDate \| null | Inclusive. |
 | `template` | object | `{ kind, amount, accountId, toAccountId, categoryId, description, tagIds, excludeFromTotals }`. |
@@ -233,8 +233,8 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `name` | string 1–40 | Default auto-name: 1 cat → name, 2 → "A e B" / "A and B", 3+ → "A +2". |
 | `categoryIds` | id[] ≥1 | Expense categories. A parent id includes its children. A category may belong to **at most one** budget. |
 | `amount` | minor int > 0 | Limit per period. |
-| `period` | `cycle \| week \| year` | Labels: Ogni ciclo, Settimana, Anno. |
-| `alertThreshold` | 75 \| 90 \| 100 \| null | null = "Mai". |
+| `period` | `cycle \| week \| year` | Labels: Ogni ciclo, Settimana, Anno. There is deliberately no `month`: the app's month *is* the cycle (§5.2), and a budget on calendar months would disagree with every other total in the app. Users who want calendar months set `cycleStartDay = 1`. |
+| `alertThreshold` | int 1–100 \| null | Percent of the limit. null = "Mai". The "Avvisami a" control offers `BUDGET_ALERT_THRESHOLDS` (75/90/100), but the stored value is any percentage: the alert rule (§5.8) is arithmetic, and pinning the three UI options into a synced row would make a slider a migration. |
 | `rollover` | boolean | "Porta avanti il residuo". |
 | `icon` | IconName | Default: icon of first category. |
 | `sortOrder` | int | |
@@ -561,6 +561,12 @@ screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, Secondar
 - Entity names: `settings, account, category, tag, transaction, recurrence, budget, attachment`.
 - Order of application doesn't matter for integrity (no FK constraints across synced tables locally; the UI tolerates
   dangling references by showing "—" and repositories filter tombstoned parents).
+- **OPEN — unknown enum values on pull.** The §4 schemas validate closed enums (`frequency`, `period`, `mimeType`,
+  `accountType`, …). A device on a newer app version that writes a value this device doesn't know (`frequency: 'weekly'`)
+  would have that row rejected by the Zod schema on pull, silently losing it while the newer device keeps it — the rows
+  diverge with no conflict to resolve. Decide a policy before the sync phase: reject-and-report, store-as-opaque, or an
+  `apiVersion`/schema-version gate that refuses to sync with a newer peer at all. Whichever it is, prefer widening enums
+  only when a real second value ships. This is why `alertThreshold` is a plain percentage rather than three literals.
 
 ### 8.2 Hybrid logical clock (in `@saldo/core/sync/hlc.ts`)
 
