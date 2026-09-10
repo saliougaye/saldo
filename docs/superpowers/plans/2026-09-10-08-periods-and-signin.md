@@ -571,10 +571,10 @@ sync. The confirm sheet says exactly that.
       docs/hardening to 10.
 - [x] **Step 3:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — reading the output, not the exit code
       (see AGENTS.md).
-- [ ] **Step 4:** On the simulator, with a reseeded database: the period sheet shows the new rows,
+- [x] **Step 4:** On the simulator, with a reseeded database: the period sheet shows the new rows,
       switching to "settimana" reshapes Home and Statistics, and a custom range applies. Screenshot
       each, because that is how the last three UI defects were found.
-- [ ] **Step 5:** Code review, then merge.
+- [x] **Step 5:** Code review, then merge. *Its one finding — a network failure signing the user out — is fixed in `src/auth/sessionState.ts`, with tests.*
 
 ---
 

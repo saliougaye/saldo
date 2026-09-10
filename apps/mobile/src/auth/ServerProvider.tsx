@@ -11,6 +11,7 @@ import { useDatabase } from '../db/DatabaseProvider';
 import { type ApiClient, createApiClient } from '../net/apiClient';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
 import { checkServer, type ServerHealth, type SignedInUser, signIn, signOut } from './session';
+import { decideSession } from './sessionState';
 
 export type ServerStatus = 'loading' | 'signed-out' | 'signed-in';
 
@@ -85,17 +86,28 @@ export function ServerProvider({ children }: { children: ReactNode }) {
         return;
       }
       setStatus('signed-in');
-      const { data, error } = await client.getSession().catch(() => ({ data: null, error: null }));
+      const answer = await client
+        .getSession()
+        .then((result) => ({ kind: 'answered' as const, result }))
+        .catch(() => ({ kind: 'unreachable' as const, result: null }));
       if (cancelled) return;
-      if (data !== null) {
-        setUser({ id: data.user.id, displayName: data.user.name });
-        return;
-      }
-      // A null answer *without* an error is the server rejecting the session; a network failure
-      // leaves the cached session in place.
-      if (error === null) {
+      const decision = decideSession(
+        answer.kind === 'unreachable'
+          ? { kind: 'unreachable' }
+          : {
+              kind: 'answered',
+              hasSession: answer.result.data !== null,
+              hasError: answer.result.error !== null,
+            },
+      );
+      if (decision === 'signed-out') {
         setUser(null);
         setStatus('signed-out');
+        return;
+      }
+      const data = answer.kind === 'answered' ? answer.result.data : null;
+      if (decision === 'signed-in' && data !== null) {
+        setUser({ id: data.user.id, displayName: data.user.name });
       }
     })();
     return () => {

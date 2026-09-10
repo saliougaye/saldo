@@ -291,6 +291,13 @@ it now does. A third thing worth recording: after regenerating the migrations, M
 inlined `.sql`, so the app applied the old schema and the seeder failed on the missing column. `expo start --clear`
 plus deleting the simulator's database file is the fix.
 
+**Review finding, fixed:** reading the stored session caught a thrown network failure as `{ data: null, error: null }`,
+which the next branch read as "the server rejected this session" — so opening the app with no network signed the user
+out of their own offline data, the exact opposite of the comment two lines above it. The decision now lives in
+`src/auth/sessionState.ts` as a pure function with tests, because it decides whether someone gets locked out: only an
+answer *with no session and no error* signs out; no answer at all, or an answer carrying an error, keeps the cached
+session.
+
 **Not verified:** signing in for real (the passkey ceremony needs a platform authenticator), so the screenshots above
 were taken with the sign-in gate bypassed by a temporary probe that was then reverted.
 
