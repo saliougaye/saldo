@@ -39,6 +39,11 @@ export function formatHlc(hlc: Hlc): HlcString {
   return `${wall}-${counter}-${hlc.deviceId}`;
 }
 
+/** Whether a string is a well-formed HLC. Used by the sync protocol schemas. */
+export function isHlc(value: string): boolean {
+  return HLC_RE.test(value);
+}
+
 export function parseHlc(value: HlcString): Hlc {
   const match = HLC_RE.exec(value);
   if (!match) throw new RangeError(`Invalid HLC: ${value}`);

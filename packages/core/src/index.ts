@@ -14,3 +14,5 @@ export * from './recurrence';
 export * from './rollover';
 export * from './stats';
 export * from './sync/hlc';
+export * from './sync/merge';
+export * from './sync/protocol';
