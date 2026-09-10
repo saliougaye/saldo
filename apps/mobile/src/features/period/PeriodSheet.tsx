@@ -1,6 +1,6 @@
 import {
   elapsedDays,
-  periodHistory,
+  periodContaining,
   periodLength,
   previousPeriods,
   summarizePeriod,
@@ -22,12 +22,16 @@ import { CycleStartDaySheet } from './CycleStartDaySheet';
 import { PeriodKindSheet } from './PeriodKindSheet';
 import { usePeriod } from './PeriodProvider';
 
-/** How far back the sheet looks for periods that hold data (§6.15). */
-const LOOKBACK = 12;
+/**
+ * Periods the sheet lists, the selected one included (§6.15). The design shows five rows and then
+ * the ways to change the period: a longer list is unreadable on a phone, and reopening the sheet
+ * on the oldest row walks four more back, so nothing becomes unreachable.
+ */
+const VISIBLE_PERIODS = 5;
 
 /**
- * §6.15, the design's bottom sheet: the periods that contain data, then the three ways to change
- * what a period even is — an arbitrary range, the kind, and (for a pay cycle) its start day.
+ * §6.15, the design's bottom sheet: the last five periods, then the three ways to change what a
+ * period even is — an arbitrary range, the kind, and (for a pay cycle) its start day.
  *
  * The prototype's "not available offline" rows are dropped: everything is local.
  */
@@ -43,16 +47,26 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
   const [rangeOpen, setRangeOpen] = useState(false);
   const [dayOpen, setDayOpen] = useState(false);
 
-  const oldest = previousPeriods(def, period.range, LOOKBACK).at(-1)?.start ?? period.range.start;
-  const rows = useTransactionsInRange(oldest, period.range.end);
+  // An ad-hoc range is not a period, so it cannot anchor the list: the sheet then lists the
+  // periods ending with the one holding today, the same fallback `shift` uses.
+  const ranges = useMemo(() => {
+    const anchor = period.isPeriod ? period.range : periodContaining(def, today);
+    return [anchor, ...previousPeriods(def, anchor, VISIBLE_PERIODS - 1)];
+  }, [period.isPeriod, period.range, def, today]);
+  const oldest = ranges.at(-1)?.start ?? period.range.start;
+  const newest = ranges[0]?.end ?? period.range.end;
+  const rows = useTransactionsInRange(oldest, newest);
 
-  const periods = useMemo(() => {
-    const past = periodHistory(rows, def, period.range, LOOKBACK);
-    return [
-      { period: period.range, txs: rows.filter((tx) => tx.date >= period.range.start) },
-      ...past,
-    ];
-  }, [rows, period.range, def]);
+  // Unlike the baselines of §5.5, an unused period is listed rather than skipped: the list is a
+  // way to navigate, and a missing row would silently shift what the one below it means.
+  const periods = useMemo(
+    () =>
+      ranges.map((range) => ({
+        period: range,
+        txs: rows.filter((tx) => tx.date >= range.start && tx.date <= range.end),
+      })),
+    [ranges, rows],
+  );
 
   return (
     <Sheet visible={visible} onClose={onClose} title={t('period.title')}>
@@ -86,12 +100,6 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
             />
           );
         })}
-        {periods.length === 1 ? (
-          <Text size="footnote" color="textFaint" style={{ paddingVertical: 8 }}>
-            {t('transactions.empty')}
-          </Text>
-        ) : null}
-
         <View
           style={{
             marginTop: 8,
