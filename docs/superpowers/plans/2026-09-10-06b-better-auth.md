@@ -49,13 +49,13 @@ verification and revocation; `sync_rows` keeps pointing at its `user` table.
 - Create: `apps/web/src/server/auth/auth.ts`, `apps/web/src/server/auth/policy.ts`
 - Modify: `apps/web/package.json`, `apps/web/src/server/env.ts`
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```bash
 pnpm --filter web add better-auth @better-auth/passkey @better-auth/expo
 ```
 
-- [ ] **Step 2: Write `apps/web/src/server/auth/policy.ts`**
+- [x] **Step 2: Write `apps/web/src/server/auth/policy.ts`**
 
 Move the `first-user` rule off the old `registration.ts` and onto Better Auth's `user` table:
 
@@ -80,7 +80,7 @@ export async function registrationAllowed(
 }
 ```
 
-- [ ] **Step 3: Write `apps/web/src/server/auth/auth.ts`**
+- [x] **Step 3: Write `apps/web/src/server/auth/auth.ts`**
 
 ```ts
 import { expo } from '@better-auth/expo';
@@ -166,19 +166,19 @@ export function resetAuthForTests(): void {
 }
 ```
 
-- [ ] **Step 4: Rename the secret in `env.ts`**
+- [x] **Step 4: Rename the secret in `env.ts`**
 
 `JWT_SECRET` becomes Better Auth's `secret`. Keep the variable name — every deployment already sets it, and it is
 still exactly "32+ random bytes that sign session material" — but change its type from `Uint8Array` to `string` and
 update `.env.example`'s comment to say "signs session and token material".
 
-- [ ] **Step 5: Verify it constructs**
+- [x] **Step 5: Verify it constructs**
 
 Run: `pnpm --filter web exec tsc --noEmit`
 Expected: clean. If `APIError`'s import path differs, read `better-auth`'s exports (`package.json` → `exports`) and
 fix this plan in the same commit.
 
-- [ ] **Step 6: Commit** — `feat(web): better auth instance with passkey, bearer and one-time-token`
+- [x] **Step 6: Commit** — `feat(web): better auth instance with passkey, bearer and one-time-token`
 
 ---
 
@@ -189,7 +189,7 @@ fix this plan in the same commit.
 - Delete: `apps/web/src/server/db/schema.ts`'s `users`, `passkeys`, `webauthnChallenges`, `authCodes`,
   `refreshTokens`
 
-- [ ] **Step 1: Generate Better Auth's schema**
+- [x] **Step 1: Generate Better Auth's schema**
 
 ```bash
 cd apps/web && pnpm dlx @better-auth/cli@latest generate --config src/server/auth/auth.ts --output src/server/db/authSchema.ts -y
@@ -197,7 +197,7 @@ cd apps/web && pnpm dlx @better-auth/cli@latest generate --config src/server/aut
 
 Read what it produced. Expect `user`, `session`, `account`, `verification` and `passkey` tables.
 
-- [ ] **Step 2: Merge it into `src/server/db/schema.ts`**
+- [x] **Step 2: Merge it into `src/server/db/schema.ts`**
 
 Re-export Better Auth's tables from the one schema module the app already imports, delete the five hand-rolled auth
 tables, and repoint `syncRows.userId` at `user.id`:
@@ -212,7 +212,7 @@ export * from './authSchema';
 
 Note the type change: Better Auth's ids are `text`, not `uuid`.
 
-- [ ] **Step 3: Squash the migrations**
+- [x] **Step 3: Squash the migrations**
 
 ```bash
 rm -rf apps/web/drizzle && pnpm --filter web db:generate
@@ -225,17 +225,17 @@ Then append the sequence again (drizzle-kit does not emit it):
 CREATE SEQUENCE IF NOT EXISTS "sync_seq" AS bigint START 1;
 ```
 
-- [ ] **Step 4: Fix the test harness truncation list**
+- [x] **Step 4: Fix the test harness truncation list**
 
 `apps/web/src/server/test/harness.ts` truncates by name; update it to Better Auth's tables plus `sync_rows`.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `pnpm --filter web test sync`
 Expected: the sync service tests still pass once their user fixtures insert into `user` (Task 4 rewrites the bearer
 fixture).
 
-- [ ] **Step 6: Commit** — `feat(web): better auth schema, squashed migration`
+- [x] **Step 6: Commit** — `feat(web): better auth schema, squashed migration`
 
 ---
 
@@ -248,7 +248,7 @@ fixture).
 - Modify: `apps/web/src/server/http/requireUser.ts`, `apps/web/app/api/health/route.ts`,
   `apps/web/app/api/me/route.ts`
 
-- [ ] **Step 1: Mount Better Auth**
+- [x] **Step 1: Mount Better Auth**
 
 ```ts
 // apps/web/app/api/auth/[...all]/route.ts
@@ -260,7 +260,7 @@ export const runtime = 'nodejs';
 export const { GET, POST } = toNextJsHandler(auth().handler);
 ```
 
-- [ ] **Step 2: Rewrite `requireUser`**
+- [x] **Step 2: Rewrite `requireUser`**
 
 ```ts
 import { ApiError } from './errors';
@@ -285,7 +285,7 @@ export async function requireUser(request: Request): Promise<AuthenticatedUser> 
 Drop the `now: Date` parameter: expiry is Better Auth's business now, and passing a clock we do not use would be a
 lie. Update both call sites (`/api/me`, both sync routes).
 
-- [ ] **Step 3: Delete the hand-rolled auth**
+- [x] **Step 3: Delete the hand-rolled auth**
 
 ```bash
 git rm -r apps/web/app/api/auth/register apps/web/app/api/auth/login apps/web/app/api/auth/token \
@@ -300,9 +300,9 @@ git rm apps/web/src/server/auth/webauthn.ts apps/web/src/server/auth/challenges.
 
 `policy.ts` replaces `registration.ts`; move its two tests over rather than losing the coverage.
 
-- [ ] **Step 4: Health** — keep the shape, sourcing `registrationAllowed` from `policy.ts`.
+- [x] **Step 4: Health** — keep the shape, sourcing `registrationAllowed` from `policy.ts`.
 
-- [ ] **Step 5: Commit** — `feat(web): mount better auth, drop the hand-rolled auth routes`
+- [x] **Step 5: Commit** — `feat(web): mount better auth, drop the hand-rolled auth routes`
 
 ---
 
@@ -313,7 +313,7 @@ git rm apps/web/src/server/auth/webauthn.ts apps/web/src/server/auth/challenges.
   `apps/web/app/api/auth/handoff.test.ts`
 - Modify: `apps/web/app/api/me/route.test.ts`, `apps/web/app/api/sync/push/route.test.ts`
 
-- [ ] **Step 1: A test helper that produces a real signed-in user**
+- [x] **Step 1: A test helper that produces a real signed-in user**
 
 ```ts
 // apps/web/src/server/test/session.ts
@@ -366,10 +366,10 @@ export async function createTestSession(
 Check the generated `authSchema.ts` for the exact column set before writing this; add whatever Better Auth marks
 `notNull`.
 
-- [ ] **Step 2: Point the existing bearer tests at it** — `/api/me` and both sync route tests replace
+- [x] **Step 2: Point the existing bearer tests at it** — `/api/me` and both sync route tests replace
       `issueAccessToken(...)` with `createTestSession(harness.db)`.
 
-- [ ] **Step 3: A test for the handoff** — `apps/web/app/api/auth/handoff.test.ts`:
+- [x] **Step 3: A test for the handoff** — `apps/web/app/api/auth/handoff.test.ts`:
 
 ```ts
 // Generates a one-time token for a session through `auth().api`, verifies it, and asserts:
@@ -381,9 +381,9 @@ Check the generated `authSchema.ts` for the exact column set before writing this
 Use `auth().api.generateOneTimeToken({ headers })` and `auth().api.verifyOneTimeToken({ body: { token } })`, reading
 their exact names off the plugin's types.
 
-- [ ] **Step 4: Run the suite** — `pnpm --filter web test`, everything green.
+- [x] **Step 4: Run the suite** — `pnpm --filter web test`, everything green.
 
-- [ ] **Step 5: Commit** — `test(web): cover the better auth surface`
+- [x] **Step 5: Commit** — `test(web): cover the better auth surface`
 
 ---
 
@@ -393,7 +393,7 @@ their exact names off the plugin's types.
 - Modify: `apps/web/app/auth/mobile/page.tsx`, `apps/web/app/auth/mobile/MobileAuth.tsx`
 - Create: `apps/web/src/client/authClient.ts`
 
-- [ ] **Step 1: The browser client**
+- [x] **Step 1: The browser client**
 
 ```ts
 // apps/web/src/client/authClient.ts
@@ -408,13 +408,13 @@ export const authClient = createAuthClient({
 });
 ```
 
-- [ ] **Step 2: Rewrite the page's parameters**
+- [x] **Step 2: Rewrite the page's parameters**
 
 The page no longer needs `code_challenge`: PKCE was ours, and the handoff is a one-time token now. It keeps
 `redirect_uri` (still allow-listed by scheme, still server-side) and `state` (still echoed back so the app can tell
 its own request from someone else's). Registration is offered only when `registrationAllowed`.
 
-- [ ] **Step 3: Rewrite the ceremonies in `MobileAuth.tsx`**
+- [x] **Step 3: Rewrite the ceremonies in `MobileAuth.tsx`**
 
 ```tsx
 const finish = async () => {
@@ -446,9 +446,9 @@ const register = () => run(async () => {
 
 Read the client plugin's types for the exact option names before writing this.
 
-- [ ] **Step 4: Check the build** — `pnpm --filter web exec next build`, `/auth/mobile` still listed.
+- [x] **Step 4: Check the build** — `pnpm --filter web exec next build`, `/auth/mobile` still listed.
 
-- [ ] **Step 5: Commit** — `feat(web): passkey ceremony page on better auth`
+- [x] **Step 5: Commit** — `feat(web): passkey ceremony page on better auth`
 
 ---
 
@@ -460,7 +460,7 @@ Read the client plugin's types for the exact option names before writing this.
   `apps/mobile/src/auth/tokenStore.ts` (deleted), `apps/mobile/src/auth/pkce.ts` (trimmed)
 - Delete: `apps/mobile/src/net/apiClient.test.ts`'s refresh tests (Better Auth renews sessions itself)
 
-- [ ] **Step 1: Install and configure the client**
+- [x] **Step 1: Install and configure the client**
 
 ```bash
 pnpm --filter mobile add better-auth @better-auth/expo @better-auth/passkey
@@ -493,14 +493,14 @@ export function createServerAuthClient(serverUrl: string) {
 }
 ```
 
-- [ ] **Step 2: Sign-in becomes: open the page, exchange the token**
+- [x] **Step 2: Sign-in becomes: open the page, exchange the token**
 
 `signIn()` keeps its shape — normalise the URL, `checkServer()`, open `openAuthSessionAsync`, check `state` — but the
 callback now carries `ott`, and the exchange is `authClient.oneTimeToken.verify({ token })`, which stores the session
 in SecureStore itself. `pkce.ts` loses `createPkceChallenge` and keeps `normaliseServerUrl`, `authorizeUrl`
 (without `code_challenge`) and `callbackParams` (reading `ott` and `state`); its tests follow.
 
-- [ ] **Step 3: `apiClient` loses the refresh dance**
+- [x] **Step 3: `apiClient` loses the refresh dance**
 
 It keeps the shape the sync client depends on (`get`/`post`/`hasSession`) but takes a `getBearer: () => Promise<string | null>`
 instead of a token store, and on a 401 it reports `session-expired` rather than refreshing: Better Auth renews the
@@ -512,20 +512,20 @@ detection and its single-flight lock are all gone.
       `session`/`connect`/`disconnect` over it, and hands the sync layer a `getBearer()` that reads the stored
       session token.
 
-- [ ] **Step 5: Run the mobile suite** — `pnpm --filter mobile test`.
+- [x] **Step 5: Run the mobile suite** — `pnpm --filter mobile test`.
 
-- [ ] **Step 6: Commit** — `feat(mobile): sign in through better auth`
+- [x] **Step 6: Commit** — `feat(mobile): sign in through better auth`
 
 ---
 
 ## Task 7: Verification
 
-- [ ] **Step 1:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — through `rtk proxy`.
-- [ ] **Step 2:** Real Postgres: migrate, start the dev server, then
+- [x] **Step 1:** `pnpm lint`, `pnpm typecheck`, `pnpm test` — through `rtk proxy`.
+- [x] **Step 2:** Real Postgres: migrate, start the dev server, then
       `curl /api/health`, `curl /api/me` (401), `curl /api/auth/ok` (Better Auth's own probe) and
       `curl -i '/auth/mobile?redirect_uri=saldo://auth/callback&state=x'` — the page must render and carry the CSP.
       A rejected `redirect_uri` must still render "This link is not usable".
-- [ ] **Step 3:** Docs: update `docs/self-hosting.md` (Better Auth replaces the token table; the deep-link note),
+- [x] **Step 3:** Docs: update `docs/self-hosting.md` (Better Auth replaces the token table; the deep-link note),
       the spec §9 (Better Auth's tables and endpoints instead of §9.1's five tables; the handoff instead of §9.3's
       PKCE steps 2–6), and the roadmap's phase 06 status.
 - [ ] **Step 4:** Code review on the branch diff, then merge.
