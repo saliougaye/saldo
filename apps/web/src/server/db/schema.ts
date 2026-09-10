@@ -4,7 +4,9 @@ import {
   boolean,
   customType,
   index,
+  jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -107,10 +109,32 @@ export const refreshTokens = pgTable(
   (table) => [index('refresh_tokens_user_id_idx').on(table.userId)],
 );
 
+export const syncRows = pgTable(
+  'sync_rows',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    entity: text('entity').notNull(),
+    id: text('id').notNull(),
+    /** HLC, compared lexicographically — which is why it is text and not a timestamp. */
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    data: jsonb('data').notNull(),
+    /** From `sync_seq`; the cursor a client pulls from (§8.4). */
+    seq: bigint('seq', { mode: 'number' }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.entity, table.id] }),
+    index('sync_rows_user_seq').on(table.userId, table.seq),
+  ],
+);
+
 export const schema = {
   users,
   passkeys,
   webauthnChallenges,
   authCodes,
   refreshTokens,
+  syncRows,
 };

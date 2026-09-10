@@ -147,6 +147,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@saldo/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@saldo/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@simplewebauthn/browser':
         specifier: ^14.0.0
         version: 14.0.0

@@ -1,3 +1,4 @@
+import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { registrationAllowed } from '../../../src/server/auth/registration';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
@@ -17,6 +18,8 @@ export function GET(): Promise<Response> {
     return Response.json({
       app: 'saldo',
       apiVersion: 1,
+      /** §8.1: the app compares this before it exchanges any row. */
+      schemaVersion: SYNC_SCHEMA_VERSION,
       version: APP_VERSION,
       registrationAllowed: allowed,
     });

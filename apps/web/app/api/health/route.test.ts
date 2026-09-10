@@ -1,3 +1,4 @@
+import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { users } from '../../../src/server/db/schema';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
@@ -24,6 +25,7 @@ describe('GET /api/health', () => {
     await expect(response.json()).resolves.toMatchObject({
       app: 'saldo',
       apiVersion: 1,
+      schemaVersion: SYNC_SCHEMA_VERSION,
       registrationAllowed: true,
     });
   });
