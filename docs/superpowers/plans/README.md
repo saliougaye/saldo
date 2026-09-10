@@ -255,7 +255,26 @@ nothing.
 authenticator; and with it the connected state of §6.30, the scheduler against a real server, and two devices over
 the network. The logic behind all of them is covered by the tests above.
 
-### 08 — Attachments & Import/Export
+### 08 — Generic periods, and one mandatory sign-in
+
+**Plan:** `2026-09-10-08-periods-and-signin.md` · **Spec:** §1.1, §5.2, §5.8, §6.15, §6.29, §8.1
+
+Asked for by the user after 07. The pay cycle stops being *the* period: `PeriodDef` in `@saldo/core` covers month,
+week, cycle and year, the sheet gains the rows the design shows (custom range, period kind, cycle start day), and
+`budget.period` speaks the same vocabulary. And the two ways into the app collapse into one: signing in to the user's
+own server, which becomes required — the app still works offline, what it needs is an account, not a connection.
+
+- Core: `PeriodDef`, `periodContaining`/`shiftPeriod`/`previousPeriods`, and the period-shaped functions
+  (`periodHistory`, `budgetRange`, `budgetCarry`) re-parameterised. Everything that already took a `DateRange` is
+  untouched, which is what keeps this wide but shallow.
+- Schema: `settings.periodKind`, `budget.period: 'period' | 'week' | 'month' | 'year'`, `SYNC_SCHEMA_VERSION` → 2.
+  Regenerated rather than migrated: no instance is deployed and no user exists.
+- Mobile: the period sheet, a period question in onboarding step 1, and step 0 becoming the sign-in.
+
+**Acceptance:** core tests for every kind including the February and leap-year edges and a month budget inside a cycle
+period; the sheet's three new rows work on the simulator; switching kind reshapes Home and Statistics.
+
+### 09 — Attachments & Import/Export
 
 **Spec:** §10, §11, §6.6 (attachments), 6.16 (Allega foto), 6.28, 6.31
 
@@ -267,7 +286,7 @@ the network. The logic behind all of them is covered by the tests above.
 **Acceptance:** export → wipe → restore round-trip is lossless (test); CSV import of a fixture creates the expected
 accounts/categories/tags and skips duplicates on a second run; an attachment added on device A appears on device B.
 
-### 09 — Release docs & hardening
+### 10 — Release docs & hardening
 
 **Spec:** §15, §16 (E2E), §18, §19
 
