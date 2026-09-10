@@ -33,7 +33,8 @@ export interface ServerEnv {
   publicUrl: string;
   rpId: string;
   rpName: string;
-  jwtSecret: Uint8Array;
+  /** Signs session and token material. Better Auth takes it as a string. */
+  secret: string;
   databaseUrl: string;
   storageDir: string;
   registration: RegistrationMode;
@@ -53,7 +54,7 @@ export function readEnv(source: Record<string, string | undefined>): ServerEnv {
     publicUrl: value.PUBLIC_URL.replace(/\/$/, ''),
     rpId: value.WEBAUTHN_RP_ID,
     rpName: value.WEBAUTHN_RP_NAME,
-    jwtSecret: new TextEncoder().encode(value.JWT_SECRET),
+    secret: value.JWT_SECRET,
     databaseUrl: value.DATABASE_URL,
     storageDir: value.STORAGE_DIR,
     registration: value.REGISTRATION,

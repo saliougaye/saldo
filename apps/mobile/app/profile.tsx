@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { useServer } from '../src/auth/ServerProvider';
 import { Card } from '../src/components/Card';
 import { ConfirmDialog } from '../src/components/ConfirmDialog';
 import { ListRow } from '../src/components/ListRow';
@@ -27,6 +28,7 @@ type SheetKind = 'language' | 'theme' | 'currency' | 'cycle' | null;
 
 /** §6.8. The server row lands in phase 07; import/export in phase 08. */
 export default function ProfileScreen() {
+  const { serverUrl, user } = useServer();
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -123,6 +125,17 @@ export default function ProfileScreen() {
 
       <Card padded={false}>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
+          <ListRow
+            title={t('profile.server')}
+            onPress={() => router.push('/profile/server')}
+            trailing={
+              <Text color="textMuted">
+                {serverUrl === null
+                  ? t('sync.notConnected')
+                  : (user?.displayName ?? t('sync.notConnected'))}
+              </Text>
+            }
+          />
           <ListRow title={t('profile.importCsv')} trailing={soon} />
           <ListRow title={t('profile.exportData')} trailing={soon} />
           <ListRow title={t('profile.restoreBackup')} trailing={soon} />

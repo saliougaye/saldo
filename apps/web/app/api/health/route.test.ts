@@ -1,6 +1,7 @@
+import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { users } from '../../../src/server/db/schema';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
+import { createTestSession } from '../../../src/server/test/session';
 import { GET } from './route';
 
 let harness: TestDatabase;
@@ -24,12 +25,13 @@ describe('GET /api/health', () => {
     await expect(response.json()).resolves.toMatchObject({
       app: 'saldo',
       apiVersion: 1,
+      schemaVersion: SYNC_SCHEMA_VERSION,
       registrationAllowed: true,
     });
   });
 
   it('always reports the registration flag', async () => {
-    await harness.db.insert(users).values({ displayName: 'Ada' });
+    await createTestSession(harness.db);
     const body = (await (await GET()).json()) as { registrationAllowed: unknown };
     expect(typeof body.registrationAllowed).toBe('boolean');
   });

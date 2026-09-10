@@ -6,6 +6,8 @@ import type { schema } from '../schema';
 /** `sync_state` values (§7). */
 export const SYNCED = 0;
 export const PENDING = 1;
+/** The server rejected this row (§8.1). Terminal until the row is edited again. */
+export const SYNC_ERROR = 2;
 
 /**
  * Driver-agnostic Drizzle handle. Repositories run against `expo-sqlite` on device and

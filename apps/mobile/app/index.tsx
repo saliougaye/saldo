@@ -18,7 +18,7 @@ export default function Boot() {
   if (!loaded) return <LoadingScreen />;
   if (kv.get('appLockEnabled') === 'true') return <Redirect href="/lock" />;
   if (settings === null || settings.onboardingCompletedAt === null) {
-    return <Redirect href="/cycle-day" />;
+    return <Redirect href="/welcome" />;
   }
   return <Redirect href="/(tabs)" />;
 }

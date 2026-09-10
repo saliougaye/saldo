@@ -1,7 +1,4 @@
-import { eq } from 'drizzle-orm';
-import { verifyAccessToken } from '../auth/tokens';
-import { getDb } from '../db/client';
-import { users } from '../db/schema';
+import { auth } from '../auth/auth';
 import { ApiError } from './errors';
 
 export interface AuthenticatedUser {
@@ -10,17 +7,12 @@ export interface AuthenticatedUser {
 }
 
 /**
- * §14: every bearer route starts here, and every query downstream scopes on the id it returns.
+ * Every bearer route starts here, and every query downstream scopes on the id it returns. The
+ * `bearer` plugin lets `getSession` read the token out of the Authorization header, so this is the
+ * same call a cookie-bearing browser would make — session expiry and revocation are Better Auth's.
  */
-export async function requireUser(request: Request, now: Date): Promise<AuthenticatedUser> {
-  const header = request.headers.get('authorization') ?? '';
-  const [scheme, token] = header.split(' ');
-  const unauthorized = new ApiError(401, 'unauthorized', 'A bearer token is required');
-  if (scheme?.toLowerCase() !== 'bearer' || token === undefined || token.length === 0) {
-    throw unauthorized;
-  }
-  const { userId } = await verifyAccessToken(token, now);
-  const [user] = await getDb().select().from(users).where(eq(users.id, userId));
-  if (user === undefined) throw unauthorized;
-  return { id: user.id, displayName: user.displayName };
+export async function requireUser(request: Request): Promise<AuthenticatedUser> {
+  const session = await auth().api.getSession({ headers: request.headers });
+  if (session === null) throw new ApiError(401, 'unauthorized', 'A bearer token is required');
+  return { id: session.user.id, displayName: session.user.name };
 }

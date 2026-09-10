@@ -13,8 +13,13 @@
     "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.7.4",
+    "@better-auth/passkey": "^1.7.4",
+    "@saldo/core": "workspace:*",
+    "@saldo/i18n": "workspace:*",
     "@simplewebauthn/browser": "^14.0.0",
     "@simplewebauthn/server": "^14.0.1",
+    "better-auth": "^1.7.4",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.12",
     "next": "^16.3.4",

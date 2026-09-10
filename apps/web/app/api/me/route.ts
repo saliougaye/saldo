@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export function GET(request: Request): Promise<Response> {
   return handle(async () => {
-    const user = await requireUser(request, new Date());
+    const user = await requireUser(request);
     return Response.json(user);
   });
 }

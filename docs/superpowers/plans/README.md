@@ -179,15 +179,42 @@ refresh tokens usable *at* their deadline (RFC 7519 says reject on or after `exp
 test that fails against the old code. And the rate limiter bucketed on the **first** `X-Forwarded-For` entry, which is
 client-supplied, so anyone could rotate the header and reset their own bucket; it reads the last hop now.
 
+**Superseded in part by 06b:** the hand-rolled auth described above was replaced by Better Auth at the user's
+request; the sync protocol, the screens and the health probe survive unchanged.
+
 **Not verified:** the manual browser passkey ceremony. It needs a real platform authenticator (Touch ID / Windows
 Hello) and there is no browser automation on this machine, so it is the one acceptance criterion left to the user;
 `docs/self-hosting.md` has the steps. Deviations from the spec, both deliberate: `webauthn_challenges` gained a
 `display_name` column so the register-verify step need not trust a second client-supplied copy of the name, and
 `/api/health` reports `registrationAllowed` so the app can hide "create account".
 
-### 07 — Sync engine
+### 06b — Authentication moved onto Better Auth ✅ done
 
-**Spec:** §8, §6.29 step 0 (welcome/connect), §6.30, §9.3 (mobile side)
+**Plan:** `2026-09-10-06b-better-auth.md` · **Spec:** §9 (rewritten), §18
+
+Asked for by the user after 06 shipped. `better-auth` + `@better-auth/passkey` + `@better-auth/expo` replace the
+hand-written WebAuthn ceremonies, the HS256 access tokens, the refresh chain with reuse detection, the challenge and
+auth-code stores and the token-bucket limiter — **−888 lines net**, four tables gone, eight route handlers gone. Both
+defects the phase 06 review found lived in the code this deleted.
+
+The handoff from the browser ceremony to the app uses Better Auth's `one-time-token` plugin (single use, one minute,
+stored hashed). The Expo plugin's own redirect flow does not apply: reading its client shows it hooks
+`signIn`/`link-social` responses that carry a `redirect`, which a passkey ceremony has none of.
+
+**Verified** against real Postgres 17: the generated schema migrates (6 tables), `/api/health` reports
+`schemaVersion`, `/api/me` is 401, Better Auth answers on its catch-all, the discoverable-login options carry a real
+challenge and no `allowCredentials`, register options refuse a missing display name (400) and — after one account
+exists in `first-user` mode — refuse outright (403) while `/api/health` flips `registrationAllowed` to false. The
+`/auth/mobile` page renders, keeps its CSP, and still rejects a `redirect_uri` outside the allow-list. The one-time
+handoff is covered by tests: single use, unknown token refused, no session refused, and the token is not stored in
+the clear.
+
+**Not verified:** the browser ceremony itself, which needs a real platform authenticator (Touch ID) — still the
+user's to run. **Accepted risk, recorded in §9.3:** the handoff token travels in a `saldo://` URL.
+
+### 07 — Sync engine ✅ done
+
+**Plan:** `2026-09-10-07-sync.md` · **Spec:** §8, §6.29 step 0 (welcome/connect), §6.30, §9.3 (mobile side)
 
 - Core: HLC receive, LWW merge helpers, sync protocol Zod schemas (shared by client and server).
 - Server: `sync_rows`, push/pull services and routes.
@@ -197,6 +224,36 @@ Hello) and there is no browser automation on this machine, so it is the one acce
 
 **Acceptance:** two simulators signed into the same server converge after concurrent offline edits (manual script in the
 plan); core property test showing random interleavings converge; server tests for stale/invalid/pagination.
+
+**Status:** all three met, the first one better than asked. Convergence is proved by `src/sync/convergence.test.ts`:
+two `better-sqlite3` devices and an in-memory server implementing §8.3/§8.4, over six scenarios — independent
+creates, a concurrent edit of the same row, an edit racing a delete in **both** directions, a transaction amount
+corrected on the other device, and nothing left pending afterwards. That is deterministic and runs in CI, which two
+simulators would not be. `packages/core/src/sync/merge.test.ts` adds the property test: 40 seeded interleavings of two
+replicas with drifting wall clocks, plus an order-independence check. The server has tests for applied/stale/invalid,
+the envelope-vs-body disagreement, a clock more than 24h ahead, pagination and per-user scoping.
+
+The review found no data-loss or scoping issue. Its one actionable note — that `applyPull`'s
+`onConflictDoUpdate({ target: table.id })` assumes `id` is each table's primary key, or the apply would insert a
+duplicate instead of overwriting and the devices would diverge — is now an explicit test over all seven tables
+(`src/sync/entities.test.ts`, reading `pragma_table_info`).
+
+The §8.1 decision (schema-version gate) is implemented on both sides and refuses a mismatched peer with
+`schema_too_old`/`schema_too_new`.
+
+Screens verified on the simulator after a native rebuild (three new native modules): the app boots with the sync
+providers mounted, §6.29 step 0 renders with its two ways in, and §6.30 renders its not-connected state. Two flaws
+were caught that way and fixed — "Non connesso" printed twice, and a `justifyContent: 'center'` that could not work
+inside a `ScrollView`.
+
+Push and pull were also exercised against **real Postgres 17** through `curl`, which PGlite does not stand in for on
+the two parts that matter: `nextval('sync_seq')` and the upsert's `setWhere` HLC comparison. An older copy of a row
+came back `stale` and left the stored row untouched, the sequence stayed monotonic, and a second user's pull returned
+nothing.
+
+**Not verified:** signing in for real, which needs the browser passkey ceremony (§9.3) and therefore a platform
+authenticator; and with it the connected state of §6.30, the scheduler against a real server, and two devices over
+the network. The logic behind all of them is covered by the tests above.
 
 ### 08 — Attachments & Import/Export
 
