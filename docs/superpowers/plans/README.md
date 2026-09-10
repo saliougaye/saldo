@@ -187,7 +187,7 @@ Hello) and there is no browser automation on this machine, so it is the one acce
 
 ### 07 — Sync engine
 
-**Spec:** §8, §6.29 step 0 (welcome/connect), §6.30, §9.3 (mobile side)
+**Plan:** `2026-09-10-07-sync.md` · **Spec:** §8, §6.29 step 0 (welcome/connect), §6.30, §9.3 (mobile side)
 
 - Core: HLC receive, LWW merge helpers, sync protocol Zod schemas (shared by client and server).
 - Server: `sync_rows`, push/pull services and routes.
