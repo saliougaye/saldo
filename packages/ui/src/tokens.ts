@@ -1,0 +1,193 @@
+// Design tokens from docs/design/Spese.dc.html lines 14-41 and inline styles.
+// Renderer-agnostic: plain values only, no React / React Native / CSS-in-JS.
+
+export type ThemeName = 'dark' | 'light';
+
+export interface Palette {
+  page: string;
+  bg: string;
+  surface: string;
+  raised: string;
+  border: string;
+  borderStrong: string;
+  text: string;
+  textMuted: string;
+  textFaint: string;
+  accent: string;
+  positive: string;
+  onAccent: string;
+  barGrey: string;
+  track: string;
+  heatmap: readonly [string, string, string, string, string];
+  segments: readonly [string, string, string, string, string];
+  segmentOther: string;
+  scrim: string;
+  dialogScrim: string;
+  shadow: string;
+}
+
+export const palettes: Record<ThemeName, Palette> = {
+  dark: {
+    page: '#050505',
+    bg: '#0A0A0A',
+    surface: '#121212',
+    raised: '#1A1A1A',
+    border: 'rgba(255,255,255,0.07)',
+    borderStrong: 'rgba(255,255,255,0.12)',
+    text: '#EDEDED',
+    textMuted: '#8C8C8C',
+    textFaint: '#5C5C5C',
+    accent: '#E8823C',
+    positive: '#5FBF7F',
+    onAccent: '#0A0A0A',
+    barGrey: '#3A3A3A',
+    track: '#1E1E1E',
+    heatmap: ['#151515', '#333333', '#4F4F4F', '#757575', '#A8A8A8'],
+    segments: ['#E8823C', '#C57036', '#9E5A2C', '#754322', '#4E2E1A'],
+    segmentOther: '#333333',
+    scrim: 'rgba(0,0,0,0.55)',
+    dialogScrim: 'rgba(0,0,0,0.6)',
+    shadow: 'rgba(0,0,0,0.5)',
+  },
+  light: {
+    page: '#E9E9E7',
+    bg: '#FFFFFF',
+    surface: '#FAFAF9',
+    raised: '#F1F1EF',
+    border: 'rgba(0,0,0,0.08)',
+    borderStrong: 'rgba(0,0,0,0.18)',
+    text: '#171717',
+    textMuted: '#6E6E6E',
+    textFaint: '#9A9A9A',
+    accent: '#C4661D',
+    positive: '#2E8A50',
+    onAccent: '#FFFFFF',
+    barGrey: '#C9C9C6',
+    track: '#EDEDEB',
+    heatmap: ['#F0F0EE', '#D8D8D4', '#B2B2AD', '#8A8A85', '#57574F'],
+    segments: ['#C4661D', '#A9581B', '#8C4818', '#6E3915', '#502A11'],
+    segmentOther: '#C9C9C6',
+    scrim: 'rgba(0,0,0,0.55)',
+    dialogScrim: 'rgba(0,0,0,0.6)',
+    shadow: 'rgba(0,0,0,0.5)',
+  },
+};
+
+/** Category and account colours; entities store an index 0-9. */
+export const categoryColors = [
+  '#C57B4E',
+  '#B4894A',
+  '#8F9152',
+  '#63926F',
+  '#4F8D8B',
+  '#5A82A6',
+  '#7A79AC',
+  '#A06FA0',
+  '#AF6B7B',
+  '#8A8A8A',
+] as const;
+
+export const accentOptions = ['#E8823C', '#C7C7C7', '#7C9CC4', '#5FBF7F'] as const;
+
+export const radii = {
+  iconBox: 8,
+  chipSmall: 9,
+  input: 10,
+  toggle: 11,
+  button: 12,
+  card: 14,
+  sheet: 14,
+  dialog: 16,
+  fab: 18,
+  pill: 999,
+} as const;
+
+export const fontFamily = {
+  primary: 'Geist',
+  fallback: 'Inter Tight',
+} as const;
+
+export const fontSize = {
+  caption: 11,
+  footnote: 13,
+  body: 15,
+  headline: 17,
+  amountKey: 22,
+  title: 24,
+  amountMd: 28,
+  amountLg: 32,
+  display: 34,
+  amountXl: 38,
+  hero: 44,
+} as const;
+
+export const fontWeight = {
+  regular: '400',
+  medium: '500',
+  semibold: '600',
+} as const;
+
+/** Letter-spacing in em, as in the design. Convert with `trackingPx`. */
+export const tracking = {
+  tight: -0.01,
+  tighter: -0.02,
+  tightest: -0.03,
+} as const;
+
+export function trackingPx(em: number, size: number): number {
+  return Math.round(em * size * 100) / 100;
+}
+
+export const layout = {
+  screenPaddingX: 16,
+  cardPadding: 16,
+  cardGap: 10,
+  iconBox: 32,
+  iconBoxSmall: 26,
+  headerButton: 34,
+  tabBarHeight: 78,
+  fabSize: 56,
+  fabLift: 16,
+  toastBottom: 92,
+  sheetHandleWidth: 36,
+  sheetHandleHeight: 4,
+  toggleWidth: 38,
+  toggleHeight: 22,
+  toggleKnob: 16,
+  keypadKeyHeight: 52,
+  keypadSaveWidth: 80,
+  progressHeight: 4,
+  paceTickOverhang: 3,
+  minHitTarget: 44,
+} as const;
+
+export const motion = {
+  /** cubic-bezier control points used by sheets, swipes and progress bars */
+  easing: [0.32, 0.72, 0, 1] as const,
+  sheetMs: 280,
+  tallSheetMs: 300,
+  fadeMs: 200,
+  dialogFadeMs: 160,
+  toggleMs: 180,
+  snapBackMs: 240,
+  progressMs: 300,
+  toastMs: 4000,
+  undoToastMs: 5000,
+} as const;
+
+export const gestures = {
+  swipeActionThreshold: 70,
+  swipeMaxTravel: 120,
+  tapSlop: 5,
+} as const;
+
+/** Appends an alpha channel to a `#RRGGBB` colour, e.g. category tints. */
+export function withAlpha(hex: string, alpha: number): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) throw new RangeError(`Expected #RRGGBB colour, got ${hex}`);
+  const clamped = Math.min(1, Math.max(0, alpha));
+  const channel = Math.round(clamped * 255)
+    .toString(16)
+    .padStart(2, '0')
+    .toUpperCase();
+  return `${hex.toUpperCase()}${channel}`;
+}
