@@ -84,7 +84,7 @@ export default function HomeTab() {
   };
 
   return (
-    <Screen>
+    <Screen underTabBar>
       <PeriodHeader />
 
       <Card>

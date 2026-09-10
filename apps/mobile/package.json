@@ -10,7 +10,8 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "generate:demo": "node scripts/generate-demo-data.mjs"
+    "generate:demo": "node scripts/generate-demo-data.mjs",
+    "seed:db": "esbuild scripts/seed-database.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --outfile=.seed-db.cjs --log-level=error && node .seed-db.cjs"
   },
   "dependencies": {
     "@expo-google-fonts/geist": "^0.4.2",
@@ -50,6 +51,7 @@
     "babel-plugin-inline-import": "^3.0.0",
     "better-sqlite3": "^12.11.1",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.2",
     "jest": "^30.5.1",
     "jest-expo": "^57.0.5",
     "react-test-renderer": "^19.3.0"

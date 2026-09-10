@@ -10,7 +10,14 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <TabBar {...props} onFabPress={() => router.push('/transaction/new')} />}
+      tabBar={(props) => (
+        <TabBar
+          {...props}
+          label={(name) => t(`tabs.${name === 'index' ? 'home' : name}`)}
+          fabLabel={t('transactions.newTransaction')}
+          onFabPress={() => router.push('/transaction/new')}
+        />
+      )}
     >
       <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
       <Tabs.Screen name="transactions" options={{ title: t('tabs.transactions') }} />

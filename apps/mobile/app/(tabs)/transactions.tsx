@@ -93,7 +93,7 @@ export default function TransactionsTab() {
   };
 
   return (
-    <Screen scroll={false}>
+    <Screen scroll={false} underTabBar>
       <PeriodHeader />
       <TextField
         label={t('transactions.searchPlaceholder')}

@@ -11,10 +11,26 @@ import { accounts, categories, settings, tags, transactions } from './schema';
  * `enableChangeListener` is on: after a repository write the screen updates with no invalidation.
  * Screens then run `@saldo/core` over these rows inside `useMemo` (§3.2).
  */
-export function useSettings(): Settings | null {
-  const { data } = useLiveQuery(db.select().from(settings).where(eq(settings.id, SETTINGS_ID)));
+export interface SettingsQuery {
+  settings: Settings | null;
+  /**
+   * False until the first query result arrives. `useLiveQuery` starts with an empty array, so a
+   * screen that cannot tell "not loaded yet" from "no row" would route as if onboarding had never
+   * run — and a `<Redirect>` does not undo itself once taken.
+   */
+  loaded: boolean;
+}
+
+export function useSettingsQuery(): SettingsQuery {
+  const { data, updatedAt } = useLiveQuery(
+    db.select().from(settings).where(eq(settings.id, SETTINGS_ID)),
+  );
   const row = data[0];
-  return row === undefined ? null : toEntity(row);
+  return { settings: row === undefined ? null : toEntity(row), loaded: updatedAt !== undefined };
+}
+
+export function useSettings(): Settings | null {
+  return useSettingsQuery().settings;
 }
 
 export function useAccounts(): Account[] {

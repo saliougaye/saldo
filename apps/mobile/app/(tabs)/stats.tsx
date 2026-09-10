@@ -6,7 +6,7 @@ import { Text } from '../../src/theme/Text';
 export default function StatsTab() {
   const { t } = useTranslation();
   return (
-    <Screen>
+    <Screen underTabBar>
       <Text size="display" weight="semibold" tracking="tighter">
         {t('tabs.stats')}
       </Text>
