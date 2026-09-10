@@ -389,6 +389,9 @@ rm apps/mobile/App.tsx apps/mobile/index.ts apps/mobile/app.json
 
 - [ ] **Step 5: Create `apps/mobile/app.config.ts`**
 
+SDK 57 removed `newArchEnabled` and `android.edgeToEdgeEnabled` from `ExpoConfig` — both are now
+always on — so setting either fails the typecheck.
+
 ```ts
 import type { ExpoConfig } from 'expo/config';
 
@@ -403,7 +406,6 @@ const config: ExpoConfig = {
   version: '0.1.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   assetBundlePatterns: ['**/*'],
   ios: {
     bundleIdentifier: bundleId,
@@ -413,8 +415,8 @@ const config: ExpoConfig = {
     },
   },
   android: {
+    // SDK 57 is edge-to-edge by default, so there is no flag to set here.
     package: bundleId,
-    edgeToEdgeEnabled: true,
   },
   plugins: [
     'expo-router',
@@ -448,10 +450,39 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
-config.resolver.disableHierarchicalLookup = true;
+// Hierarchical lookup stays ON. It is disabled in Yarn/npm monorepos where everything is hoisted,
+// but pnpm gives each package its own node_modules, so walking up is exactly how a dependency
+// finds its own dependencies — turning it off makes expo-router fail to resolve
+// @expo/metro-runtime.
+
+// drizzle-kit's expo output imports the migration files as source, so Metro must treat .sql as a
+// source extension (§7).
+config.resolver.sourceExts.push('sql');
 
 module.exports = config;
 ```
+
+Three things here are load-bearing, and each was found by bundling rather than by reading docs:
+
+- **`disableHierarchicalLookup` must stay off.** Every Yarn/npm monorepo guide sets it, because there
+  everything is hoisted to the root. pnpm is the opposite: each package gets its own `node_modules`,
+  so walking up the tree is precisely how a dependency finds *its* dependencies. With it on,
+  `expo-router/entry-classic.js` cannot resolve `@expo/metro-runtime` and the bundle dies at 2 modules.
+- **`.sql` must be a resolver source extension**, because `drizzle-kit`'s expo output imports each
+  migration file directly.
+- **`babel-plugin-inline-import` must inline those `.sql` files** (see the babel step), or Metro
+  reaches them and parses SQL as JavaScript: `SyntaxError: Missing semicolon. (1:6)`.
+
+Verify with a real bundle, not the exit code — `expo export` has been observed to exit 0 on a failed
+bundle:
+
+```bash
+pnpm --filter mobile exec expo export --platform ios --output-dir /tmp/saldo-export
+ls /tmp/saldo-export/_expo/static/js/ios/
+```
+
+Expected: an `entry-*.hbc` of a few MB. An empty directory means the bundle failed; scroll up for
+the resolver error.
 
 - [ ] **Step 7: Create `apps/mobile/babel.config.js`**
 
@@ -459,13 +490,20 @@ module.exports = config;
 module.exports = (api) => {
   api.cache(true);
   return {
-    presets: [['babel-preset-expo', { jsxImportSource: 'react' }]],
-    plugins: ['react-native-worklets/plugin'],
+    presets: ['babel-preset-expo'],
+    plugins: [
+      // drizzle-kit's expo output imports each migration as a .sql file; this inlines it as a
+      // string so Metro does not try to parse SQL as JavaScript (§7).
+      ['inline-import', { extensions: ['.sql'] }],
+      // Reanimated 4 ships its worklets transform here; it must stay last.
+      'react-native-worklets/plugin',
+    ],
   };
 };
 ```
 
-Reanimated 4 ships its worklets plugin as `react-native-worklets/plugin`; it must stay last in the list.
+Install the inline-import plugin: `pnpm --filter mobile add -D babel-plugin-inline-import`.
+Reanimated 4 ships its worklets plugin as `react-native-worklets/plugin`; it must stay last.
 
 - [ ] **Step 8: Create `apps/mobile/tsconfig.json`**
 
