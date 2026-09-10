@@ -78,6 +78,19 @@ describe('auth codes', () => {
     });
   });
 
+  it('rejects a code at the exact expiry instant', async () => {
+    const userId = await seedUser();
+    const { code } = await createAuthCode(
+      harness.db,
+      { userId, codeChallenge: CHALLENGE, redirectUri: 'saldo://auth/callback', state: 's' },
+      T0,
+    );
+    const exactly = new Date(T0.getTime() + CODE_TTL_MS);
+    await expect(consumeAuthCode(harness.db, code, VERIFIER, exactly)).rejects.toMatchObject({
+      code: 'invalid_grant',
+    });
+  });
+
   it('rejects an unknown code', async () => {
     await expect(consumeAuthCode(harness.db, 'nope', VERIFIER, T0)).rejects.toMatchObject({
       code: 'invalid_grant',

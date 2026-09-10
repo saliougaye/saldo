@@ -47,6 +47,14 @@ describe('challenges', () => {
     });
   });
 
+  it('refuses a challenge at the exact expiry instant', async () => {
+    await createChallenge(harness.db, { challenge: 'abc', kind: 'login' }, T0);
+    const exactly = new Date(T0.getTime() + CHALLENGE_TTL_MS);
+    await expect(consumeChallenge(harness.db, 'abc', 'login', exactly)).rejects.toMatchObject({
+      code: 'challenge_expired',
+    });
+  });
+
   it('refuses an expired challenge and clears it', async () => {
     await createChallenge(harness.db, { challenge: 'abc', kind: 'login' }, T0);
     const late = new Date(T0.getTime() + CHALLENGE_TTL_MS + 1);

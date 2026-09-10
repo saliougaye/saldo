@@ -18,10 +18,24 @@ interface Bucket {
  */
 const buckets = new Map<string, Bucket>();
 
+/**
+ * The key the limiter buckets on. It reads the **last** entry of `X-Forwarded-For`, not the first:
+ * a reverse proxy appends the peer it saw, so the last hop is the only value the client could not
+ * choose. Taking the first hop — the usual reading — would let anyone rotate a header and reset
+ * their own bucket, which is a rate limit in name only.
+ *
+ * Behind two or more proxies the last hop is the inner proxy's address and every caller shares one
+ * bucket: that over-limits rather than under-limits, which is the safe direction to be wrong in.
+ */
 export function clientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  if (first !== undefined && first.length > 0) return first;
+  const hops =
+    request.headers
+      .get('x-forwarded-for')
+      ?.split(',')
+      .map((hop) => hop.trim())
+      .filter((hop) => hop.length > 0) ?? [];
+  const last = hops.at(-1);
+  if (last !== undefined) return last;
   const real = request.headers.get('x-real-ip')?.trim();
   if (real !== undefined && real.length > 0) return real;
   return 'unknown';

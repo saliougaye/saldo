@@ -100,8 +100,11 @@ working when that hostname changes.
 
 - Tokens: a 15-minute access JWT plus a rotating refresh token. Presenting a refresh token that was
   already rotated revokes the whole chain, so a stolen token cannot be used for long.
-- The auth endpoints are rate limited to 10 requests per minute per IP. The limiter is in-memory,
-  which means it is **per process**: behind more than one replica each one enforces its own share.
+- The auth endpoints are rate limited to 10 requests per minute per IP. Two caveats: the limiter is
+  in-memory, so it is **per process** (behind more than one replica each enforces its own share),
+  and it buckets on the **last** `X-Forwarded-For` hop — the address your reverse proxy appended.
+  Behind two or more proxies every caller shares one bucket, which over-limits rather than letting
+  a caller reset its own bucket by sending its own header.
 - Auth codes are single-use with a 60 second lifetime, PKCE is mandatory, and the mobile
   `redirect_uri` is allow-listed by scheme.
 - Sign-in errors never say whether an account exists.

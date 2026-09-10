@@ -6,6 +6,7 @@ import {
   ACCESS_TTL_SECONDS,
   issueAccessToken,
   issueRefreshToken,
+  REFRESH_TTL_DAYS,
   revokeRefreshToken,
   rotateRefreshToken,
   verifyAccessToken,
@@ -96,6 +97,15 @@ describe('refresh tokens', () => {
     });
     const late = new Date(T0.getTime() + 200 * 24 * 3600 * 1000);
     await expect(rotateRefreshToken(harness.db, token, late)).rejects.toMatchObject({
+      code: 'invalid_grant',
+    });
+  });
+
+  it('rejects a refresh token at the exact expiry instant', async () => {
+    const userId = await seedUser();
+    const token = await issueRefreshToken(harness.db, { userId, deviceName: 'iPhone' }, T0);
+    const exactly = new Date(T0.getTime() + REFRESH_TTL_DAYS * 24 * 3600 * 1000);
+    await expect(rotateRefreshToken(harness.db, token, exactly)).rejects.toMatchObject({
       code: 'invalid_grant',
     });
   });

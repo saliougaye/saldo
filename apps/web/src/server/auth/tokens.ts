@@ -100,7 +100,8 @@ export async function rotateRefreshToken(
     await revokeChain(db, row.id, now);
     throw invalid;
   }
-  if (row.expiresAt.getTime() < now.getTime()) throw invalid;
+  // Rejected *at* the expiry instant, not after it (RFC 7519's rule for `exp`).
+  if (row.expiresAt.getTime() <= now.getTime()) throw invalid;
 
   const next = await issueRefreshToken(db, { userId: row.userId, deviceName: row.deviceName }, now);
   const [created] = await db

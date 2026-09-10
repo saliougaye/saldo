@@ -37,11 +37,28 @@ describe('enforceRateLimit', () => {
 });
 
 describe('clientIp', () => {
-  it('takes the first hop of x-forwarded-for, else x-real-ip, else a constant', () => {
-    const request = (headers: Record<string, string>) =>
-      new Request('http://localhost/api/x', { headers });
-    expect(clientIp(request({ 'x-forwarded-for': '9.9.9.9, 10.0.0.1' }))).toBe('9.9.9.9');
+  const request = (headers: Record<string, string>) =>
+    new Request('http://localhost/api/x', { headers });
+
+  it('takes the last hop of x-forwarded-for, else x-real-ip, else a constant', () => {
+    expect(clientIp(request({ 'x-forwarded-for': '9.9.9.9' }))).toBe('9.9.9.9');
     expect(clientIp(request({ 'x-real-ip': '9.9.9.9' }))).toBe('9.9.9.9');
     expect(clientIp(request({}))).toBe('unknown');
+  });
+
+  it('ignores hops the caller supplied itself', () => {
+    // A proxy appends what it saw, so 10.0.0.1 is the real peer and the rest is the caller's own
+    // header. Bucketing on the first hop would let it reset its bucket at will.
+    expect(clientIp(request({ 'x-forwarded-for': 'spoofed, 10.0.0.1' }))).toBe('10.0.0.1');
+    expect(clientIp(request({ 'x-forwarded-for': ' , 10.0.0.1 ' }))).toBe('10.0.0.1');
+  });
+
+  it('cannot be reset by rotating the header', () => {
+    for (let i = 0; i < 10; i += 1) {
+      enforceRateLimit(clientIp(request({ 'x-forwarded-for': `spoof-${i}, 10.0.0.1` })), at(0));
+    }
+    expect(() =>
+      enforceRateLimit(clientIp(request({ 'x-forwarded-for': 'spoof-11, 10.0.0.1' })), at(0)),
+    ).toThrow(ApiError);
   });
 });

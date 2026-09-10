@@ -42,7 +42,8 @@ export async function consumeChallenge(
   if (row === undefined) {
     throw new ApiError(400, 'challenge_not_found', 'Unknown or already used challenge');
   }
-  if (row.expiresAt.getTime() < now.getTime()) {
+  // Rejected *at* the expiry instant, not after it: the same convention RFC 7519 sets for `exp`.
+  if (row.expiresAt.getTime() <= now.getTime()) {
     throw new ApiError(400, 'challenge_expired', 'The ceremony took too long, try again');
   }
   return { challenge: row.challenge, displayName: row.displayName };

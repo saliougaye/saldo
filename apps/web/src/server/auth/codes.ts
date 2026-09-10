@@ -78,7 +78,8 @@ export async function consumeAuthCode(
     .where(eq(authCodes.codeHash, sha256(code)));
   const invalid = new ApiError(400, 'invalid_grant', 'The authorization code is not usable');
   if (row === undefined || row.usedAt !== null) throw invalid;
-  if (row.expiresAt.getTime() < now.getTime()) throw invalid;
+  // Rejected *at* the expiry instant, not after it (RFC 7519's rule for `exp`).
+  if (row.expiresAt.getTime() <= now.getTime()) throw invalid;
   if (!equals(row.codeChallenge, sha256(codeVerifier))) throw invalid;
   // Mark used only now, and only if still unused: two concurrent exchanges cannot both win.
   const claimed = await db
