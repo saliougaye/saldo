@@ -17,7 +17,9 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
+import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
@@ -36,6 +38,7 @@ export default function HomeTab() {
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
+  const budgets = useBudgets();
   const { today, cycleStartDay, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -67,6 +70,19 @@ export default function HomeTab() {
   const recent = useMemo(
     () => rows.filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start).slice(0, 5),
     [rows, today, period.range.start],
+  );
+
+  const views = useMemo(
+    () =>
+      budgetViews({
+        budgets,
+        categories,
+        transactions: rows,
+        cycle: period.range,
+        cycleStartDay,
+        today,
+      }),
+    [budgets, categories, rows, period.range, cycleStartDay, today],
   );
 
   const categoryById = useMemo(
@@ -213,6 +229,7 @@ export default function HomeTab() {
       </Card>
 
       <DevTools />
+      <BudgetAlertsGate views={views} />
     </Screen>
   );
 }
