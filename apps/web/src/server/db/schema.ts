@@ -15,7 +15,10 @@ import {
  * drivers disagree on the value they hand back (`Buffer` from `pg`, `Uint8Array` from PGlite), so
  * the codec normalises both to `Uint8Array` — which is also what `@simplewebauthn/server` wants.
  */
-const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({
+// `Uint8Array<ArrayBuffer>` and not a plain `Uint8Array`: that is the exact type
+// `@simplewebauthn/server` takes for a credential public key, and `new Uint8Array(...)` below is
+// what narrows a driver's view of the bytes to it.
+const bytea = customType<{ data: Uint8Array<ArrayBuffer>; driverData: Uint8Array }>({
   dataType() {
     return 'bytea';
   },
