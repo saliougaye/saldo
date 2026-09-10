@@ -1,21 +1,274 @@
+import {
+  categorySpendHistory,
+  committedSpend,
+  cycleHistory,
+  cycleSpendHistory,
+  deltaPercent,
+  isWithin,
+  median,
+  previousCycles,
+  projectEndOfCycle,
+  rollupToParents,
+  shiftCycle,
+  spendingByCategory,
+  summarizePeriod,
+  upcomingExpenses,
+} from '@saldo/core';
+import { formatCycleRange, formatDayMonth, formatMoney, formatSignedPercent } from '@saldo/i18n';
+import type { IconName } from '@saldo/ui';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
+import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { Segmented } from '../../src/components/Segmented';
+import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { PeriodHeader } from '../../src/features/period/PeriodHeader';
+import { usePeriod } from '../../src/features/period/PeriodProvider';
+import { CashflowChart } from '../../src/features/stats/CashflowChart';
+import { SplitBar } from '../../src/features/stats/SplitBar';
+import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
+import { useTheme } from '../../src/theme/ThemeProvider';
+
+/** §5.7 shows six cycles including the current one. */
+const CASHFLOW_CYCLES = 6;
+/** The projection is only offered with at least this many days left (§5.7). */
+const MIN_DAYS_LEFT = 3;
 
 export default function StatsTab() {
+  const theme = useTheme();
+  const router = useRouter();
   const { t } = useTranslation();
+  const locale = useAppLocale();
+  const settings = useSettings();
+  const categories = useCategories();
+  const { today, cycleStartDay, period } = usePeriod();
+  const currency = settings?.currency ?? 'EUR';
+  const [direction, setDirection] = useState<'expense' | 'income'>('expense');
+
+  const historyStart =
+    previousCycles(period.range, cycleStartDay, CASHFLOW_CYCLES).at(-1)?.start ??
+    period.range.start;
+  const rows = useTransactionsInRange(historyStart, period.range.end);
+
+  const summary = useMemo(
+    () => summarizePeriod(rows, period.range, today),
+    [rows, period.range, today],
+  );
+
+  const bars = useMemo(() => {
+    const cycles = [period.range];
+    for (let back = 1; back < CASHFLOW_CYCLES; back += 1) {
+      cycles.push(shiftCycle(period.range, cycleStartDay, -back));
+    }
+    return cycles.reverse().map((cycle) => {
+      const cycleSummary = summarizePeriod(rows, cycle, today);
+      return {
+        key: cycle.start,
+        label: formatDayMonth(cycle.start, locale),
+        income: cycleSummary.income,
+        expenses: cycleSummary.spent,
+        current: cycle.start === period.range.start,
+      };
+    });
+  }, [rows, period.range, cycleStartDay, today, locale]);
+
+  const committed = useMemo(
+    () => committedSpend(rows, period.range, today),
+    [rows, period.range, today],
+  );
+  const discretionary = Math.max(0, summary.spent - committed);
+  const committedPct = summary.spent === 0 ? 0 : Math.round((committed / summary.spent) * 100);
+
+  const cycleMedian = useMemo(() => {
+    const history = cycleHistory(rows, period.range, cycleStartDay, CASHFLOW_CYCLES);
+    return median(cycleSpendHistory(history, today));
+  }, [rows, period.range, cycleStartDay, today]);
+
+  const projection = useMemo(
+    () =>
+      projectEndOfCycle({
+        spent: summary.spent,
+        committed,
+        elapsed: period.elapsed,
+        length: period.length,
+        upcoming: upcomingExpenses(rows, period.range, today),
+      }),
+    [summary.spent, committed, period, rows, today],
+  );
+  const daysLeft = Math.max(0, period.length - period.elapsed);
+  const showProjection = period.isCurrent && daysLeft >= MIN_DAYS_LEFT && cycleMedian !== null;
+
+  const split = useMemo(() => {
+    const amounts = rollupToParents(
+      spendingByCategory(rows, period.range, today, direction),
+      categories,
+    );
+    const history = categorySpendHistory(
+      cycleHistory(rows, period.range, cycleStartDay, CASHFLOW_CYCLES),
+      categories,
+      today,
+    );
+    const total = [...amounts.values()].reduce((sum, value) => sum + value, 0);
+    return {
+      total,
+      rows: [...amounts.entries()]
+        .sort(([, a], [, b]) => b - a)
+        .map(([id, amount]) => {
+          const category = categories.find((candidate) => candidate.id === id);
+          const past = history.map((cycle) => cycle.get(id) ?? 0).filter((value) => value > 0);
+          return {
+            id,
+            amount,
+            name: category?.name ?? '—',
+            icon: (category?.icon ?? 'tag') as IconName,
+            colour: theme.categoryColor(category?.colorIndex ?? 9),
+            delta: deltaPercent(amount, median(past)),
+            share: total === 0 ? 0 : Math.round((amount / total) * 100),
+          };
+        }),
+    };
+  }, [rows, period.range, today, direction, categories, cycleStartDay, theme]);
+
+  // "N transazioni escluse dai totali" (§5.7): in range, already happened, and flagged out.
+  const excluded = useMemo(
+    () =>
+      rows.filter(
+        (tx) =>
+          tx.excludeFromTotals &&
+          tx.kind === direction &&
+          isWithin(period.range, tx.date) &&
+          tx.date <= today,
+      ),
+    [rows, period.range, today, direction],
+  );
+
   return (
     <Screen underTabBar>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('tabs.stats')}
-      </Text>
+      <PeriodHeader />
+
       <Card>
-        <Text color="textMuted">{t('placeholders.statsSoon')}</Text>
-        <Text color="textFaint" size="footnote" style={{ marginTop: 6 }}>
-          {t('placeholders.comingSoon')}
+        <Text weight="medium" tracking="tight">
+          {t('stats.cashflow')}
+        </Text>
+        <View style={{ marginTop: 12 }}>
+          <CashflowChart bars={bars} />
+        </View>
+      </Card>
+
+      <Card>
+        <Text weight="medium" tracking="tight">
+          {t('stats.committed')}
+        </Text>
+        <View style={{ marginTop: 12 }}>
+          <SplitBar
+            segments={[
+              { key: 'committed', amount: committed, colour: theme.palette.barGrey },
+              { key: 'discretionary', amount: discretionary, colour: theme.palette.accent },
+            ]}
+          />
+        </View>
+        <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
+          {t('stats.committedLine', {
+            pct: committedPct,
+            amount: formatMoney(committed, currency, locale),
+          })}
         </Text>
       </Card>
+
+      {showProjection ? (
+        <Card>
+          <Text weight="medium" tracking="tight">
+            {t('stats.projection')}
+          </Text>
+          <AmountText
+            minor={projection}
+            currency={currency}
+            locale={locale}
+            size="amountMd"
+            weight="semibold"
+            tracking="tighter"
+            style={{ marginTop: 4 }}
+          />
+          <Text size="footnote" color="textMuted" style={{ marginTop: 6 }}>
+            {t(
+              projection >= (cycleMedian ?? 0) ? 'stats.projectionAbove' : 'stats.projectionBelow',
+              {
+                amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
+              },
+            )}
+          </Text>
+        </Card>
+      ) : null}
+
+      <Card>
+        <Segmented
+          accessibilityLabel={t('stats.split')}
+          options={[
+            { value: 'expense', label: t('stats.expenses') },
+            { value: 'income', label: t('stats.income') },
+          ]}
+          value={direction}
+          onChange={setDirection}
+        />
+        <AmountText
+          minor={split.total}
+          currency={currency}
+          locale={locale}
+          size="amountMd"
+          weight="semibold"
+          tracking="tighter"
+          style={{ marginTop: 12 }}
+        />
+        <View style={{ marginTop: 10 }}>
+          <SplitBar
+            segments={split.rows.map((row) => ({
+              key: row.id,
+              amount: row.amount,
+              colour: row.colour,
+            }))}
+          />
+        </View>
+        <View style={{ marginTop: 6 }}>
+          {split.rows.length === 0 ? (
+            <Text color="textMuted" style={{ paddingVertical: 12 }}>
+              {t('stats.empty')}
+            </Text>
+          ) : (
+            split.rows.map((row) => (
+              <ListRow
+                key={row.id}
+                title={row.name}
+                subtitle={`${row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)} · ${t('stats.ofTotal', { pct: row.share })}`}
+                leading={<IconBox name={row.icon} colour={row.colour} />}
+                onPress={() => router.push({ pathname: '/category/[id]', params: { id: row.id } })}
+                trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
+              />
+            ))
+          )}
+          {excluded.length === 0 ? null : (
+            <ListRow
+              title={t('stats.excludedRow', { count: excluded.length })}
+              trailing={
+                <AmountText
+                  minor={excluded.reduce((sum, tx) => sum + tx.amount, 0)}
+                  currency={currency}
+                  locale={locale}
+                  color="textMuted"
+                />
+              }
+            />
+          )}
+        </View>
+      </Card>
+
+      <Text size="caption" color="textFaint">
+        {formatCycleRange(period.range, locale)}
+      </Text>
     </Screen>
   );
 }
