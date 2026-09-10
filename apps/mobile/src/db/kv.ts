@@ -7,7 +7,7 @@ import { kv } from './schema';
 export type KvDatabase = Pick<RepositoryDatabase, 'select' | 'insert' | 'delete'>;
 
 /** Device-local keys (§7). Never synced. */
-export type KvKey = 'deviceId' | 'serverUrl' | 'syncCursor' | 'appLockEnabled' | 'hlc' | string;
+export type KvKey = 'deviceId' | 'syncCursor' | 'appLockEnabled' | 'hlc' | string;
 
 export interface KvStore {
   get(key: KvKey): string | null;

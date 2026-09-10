@@ -11,9 +11,9 @@ describe('createKvStore', () => {
 
   it('overwrites an existing key instead of failing', () => {
     const store = createKvStore(createTestDatabase());
-    store.set('serverUrl', 'https://a.example');
-    store.set('serverUrl', 'https://b.example');
-    expect(store.get('serverUrl')).toBe('https://b.example');
+    store.set('syncCursor', '12');
+    store.set('syncCursor', '34');
+    expect(store.get('syncCursor')).toBe('34');
   });
 
   it('stores json values', () => {

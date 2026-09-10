@@ -42,7 +42,7 @@ whether "Crea account" should be offered.
 - Create: `apps/mobile/src/auth/serverConfig.test.ts`
 - Modify: `apps/mobile/app.config.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/auth/serverConfig.test.ts`:
 
@@ -65,12 +65,12 @@ describe('readServerUrl', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter mobile exec jest src/auth/serverConfig.test.ts`
 Expected: FAIL, `Cannot find module './serverConfig'`.
 
-- [ ] **Step 3: Write `serverConfig.ts`**
+- [x] **Step 3: Write `serverConfig.ts`**
 
 ```ts
 import { normaliseServerUrl } from './link';
@@ -88,12 +88,12 @@ export function readServerUrl(extra: unknown): string | null {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `pnpm --filter mobile exec jest src/auth/serverConfig.test.ts`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 5: Put the value in the build**
+- [x] **Step 5: Put the value in the build**
 
 `apps/mobile/app.config.ts`, after the existing `scheme` line:
 
@@ -111,7 +111,7 @@ and inside the config object, after `experiments`:
   },
 ```
 
-- [ ] **Step 6: Write the one module that reads `expo-constants`**
+- [x] **Step 6: Write the one module that reads `expo-constants`**
 
 `apps/mobile/src/auth/buildServer.ts`:
 
@@ -127,7 +127,7 @@ import { readServerUrl } from './serverConfig';
 export const BUILD_SERVER_URL: string | null = readServerUrl(Constants.expoConfig?.extra);
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/mobile/app.config.ts apps/mobile/src/auth/serverConfig.ts \
@@ -143,7 +143,7 @@ git commit -m "feat(mobile): read the server address from the build env"
 - Modify: `apps/mobile/src/auth/ServerProvider.tsx`
 - Modify: `apps/mobile/src/db/kv.ts`
 
-- [ ] **Step 1: Change the provider**
+- [x] **Step 1: Change the provider**
 
 - `import { BUILD_SERVER_URL } from './buildServer';`
 - Replace the `serverUrl` state with the constant:
@@ -175,7 +175,7 @@ git commit -m "feat(mobile): read the server address from the build env"
 - `kv` is still needed by `disconnect`; keep the `useDatabase()` call.
 - Import `ApiClientError` from `../net/apiClient`.
 
-- [ ] **Step 2: Drop the key**
+- [x] **Step 2: Drop the key**
 
 `apps/mobile/src/db/kv.ts`: `KvKey` becomes
 
@@ -185,7 +185,7 @@ export type KvKey = 'deviceId' | 'syncCursor' | 'appLockEnabled' | 'hlc' | strin
 
 and `apps/mobile/src/db/kv.test.ts` uses `'syncCursor'` where it used `'serverUrl'`.
 
-- [ ] **Step 3: Typecheck to find every caller**
+- [x] **Step 3: Typecheck to find every caller**
 
 Run: `pnpm typecheck`
 Expected: errors in `ConnectForm.tsx` and `app/profile/server.tsx` — the callers Task 3 and Task 4 fix.
@@ -197,7 +197,7 @@ Expected: errors in `ConnectForm.tsx` and `app/profile/server.tsx` — the calle
 **Files:**
 - Modify: `apps/mobile/src/features/server/ConnectForm.tsx`
 
-- [ ] **Step 1: Rewrite the component**
+- [x] **Step 1: Rewrite the component**
 
 ```tsx
 import { useCallback, useEffect, useState } from 'react';
@@ -338,7 +338,7 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
 in to, but the failure may be transient and the ceremony reports its own error; disabling the only way forward on a
 cached health check would be worse.
 
-- [ ] **Step 2: Add `serverLabel`**
+- [x] **Step 2: Add `serverLabel`**
 
 In `apps/mobile/src/auth/link.ts`, next to `normaliseServerUrl`:
 
@@ -360,7 +360,7 @@ with a test in `apps/mobile/src/auth/link.test.ts`:
 
 Import it in `ConnectForm` from `../../auth/link`.
 
-- [ ] **Step 3: Run the auth tests**
+- [x] **Step 3: Run the auth tests**
 
 Run: `pnpm --filter mobile exec jest src/auth`
 Expected: PASS.
@@ -372,7 +372,7 @@ Expected: PASS.
 **Files:**
 - Modify: `apps/mobile/app/profile/server.tsx`
 
-- [ ] **Step 1: Show the address on the status card**
+- [x] **Step 1: Show the address on the status card**
 
 Under the status line inside the first `<Card>`:
 
@@ -384,7 +384,7 @@ Under the status line inside the first `<Card>`:
         )}
 ```
 
-- [ ] **Step 2: Fix the expired-session row**
+- [x] **Step 2: Fix the expired-session row**
 
 `connect` no longer takes a URL:
 
@@ -395,9 +395,9 @@ Under the status line inside the first `<Card>`:
               />
 ```
 
-- [ ] **Step 3: Import `serverLabel`** from `../../src/auth/link`.
+- [x] **Step 3: Import `serverLabel`** from `../../src/auth/link`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/mobile/src apps/mobile/app packages/i18n
@@ -411,7 +411,7 @@ git commit -m "feat(mobile): sign in to the server the app was built for"
 **Files:**
 - Modify: `packages/i18n/src/locales/it.ts`, `packages/i18n/src/locales/en.ts`
 
-- [ ] **Step 1: Add, in `sync`**
+- [x] **Step 1: Add, in `sync`**
 
 it:
 ```ts
@@ -426,14 +426,14 @@ en:
       'This build has no server configured. Rebuild the app with SALDO_SERVER_URL.',
 ```
 
-- [ ] **Step 2: Remove the dead keys** `sync.serverUrl` and `sync.serverUrlPlaceholder` (the field is gone) and
+- [x] **Step 2: Remove the dead keys** `sync.serverUrl` and `sync.serverUrlPlaceholder` (the field is gone) and
 `sync.verify` (nothing is verified by hand any more). `sync.verifying` stays: it is the probe's own label.
 
-- [ ] **Step 3: Check `common.retry` exists**; add it to both locales if it does not.
+- [x] **Step 3: Check `common.retry` exists**; add it to both locales if it does not.
 
-- [ ] **Step 4: Update the welcome copy** — `onboarding.welcomeBody` must stop implying an address is typed.
+- [x] **Step 4: Update the welcome copy** — `onboarding.welcomeBody` must stop implying an address is typed.
 
-- [ ] **Step 5: Run the parity test**
+- [x] **Step 5: Run the parity test**
 
 Run: `pnpm --filter @saldo/i18n test`
 Expected: PASS.
@@ -447,7 +447,7 @@ Expected: PASS.
 - Modify: `docs/self-hosting.md`
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: §15 table** gains a row:
+- [x] **Step 1: §15 table** gains a row:
 
 ```
 | `SALDO_SERVER_URL` | — (**required**: the app signs in to this server) |
@@ -455,18 +455,18 @@ Expected: PASS.
 
 and the iOS/Android build steps mention it in their example command lines.
 
-- [ ] **Step 2: §9.3 step 1** becomes: the app knows its server from the build and calls `GET /api/health` on the
+- [x] **Step 2: §9.3 step 1** becomes: the app knows its server from the build and calls `GET /api/health` on the
 sign-in screen; the answer decides whether "Crea account" is offered. Nobody types an address.
 
-- [ ] **Step 3: §6.29 step 0 and §6.30** lose the URL field: step 0 is one screen with one or two buttons; §6.30 shows
+- [x] **Step 3: §6.29 step 0 and §6.30** lose the URL field: step 0 is one screen with one or two buttons; §6.30 shows
 the address as read-only text.
 
-- [ ] **Step 4: `docs/self-hosting.md`** — the server is required, not optional (§6.29), and the address is a build
+- [x] **Step 4: `docs/self-hosting.md`** — the server is required, not optional (§6.29), and the address is a build
 input, not something typed on the phone.
 
-- [ ] **Step 5: Roadmap** — mark 08b done.
+- [x] **Step 5: Roadmap** — mark 08b done.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs
@@ -477,9 +477,9 @@ git commit -m "docs: the mobile app is built for one server"
 
 ### Task 7: Verification
 
-- [ ] **Step 1:** `pnpm lint` — read the output, not the exit code (AGENTS.md).
-- [ ] **Step 2:** `pnpm typecheck` — 5/5.
-- [ ] **Step 3:** `pnpm test` — everything green; the mobile suite gains the `readServerUrl` and `serverLabel` tests.
-- [ ] **Step 4:** Run the app with `SALDO_SERVER_URL` unset and confirm the welcome screen says the build has no
+- [x] **Step 1:** `pnpm lint` — read the output, not the exit code (AGENTS.md).
+- [x] **Step 2:** `pnpm typecheck` — 5/5.
+- [x] **Step 3:** `pnpm test` — everything green; the mobile suite gains the `readServerUrl` and `serverLabel` tests.
+- [x] **Step 4:** Run the app with `SALDO_SERVER_URL` unset and confirm the welcome screen says the build has no
 server, then with it set and confirm the screen offers sign-in without a field.
-- [ ] **Step 5:** `git grep "kv.get('serverUrl')\|kv.set('serverUrl'\|kv.remove('serverUrl')"` returns nothing.
+- [x] **Step 5:** `git grep "kv.get('serverUrl')\|kv.set('serverUrl'\|kv.remove('serverUrl')"` returns nothing.

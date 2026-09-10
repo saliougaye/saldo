@@ -17,6 +17,7 @@ export const it = {
     archive: 'Archivia',
     search: 'Cerca',
     loading: 'Caricamento…',
+    retry: 'Riprova',
     and: 'e',
   },
   tabs: {
@@ -213,10 +214,10 @@ export const it = {
   },
   sync: {
     title: 'Server e sincronizzazione',
-    serverUrl: 'Indirizzo del server',
-    serverUrlPlaceholder: 'saldo.esempio.com',
-    verify: 'Verifica',
-    verifying: 'Controllo…',
+    serverIs: 'Server: {{server}}',
+    verifying: 'Controllo il server…',
+    noServerConfigured:
+      'Questa build non ha un server configurato. Ricostruisci l’app con SALDO_SERVER_URL.',
     notConnected: 'Non connesso',
     localOnly: 'Sincronizzazione spenta. I dati restano su questo telefono.',
     connectedAs: 'Connesso come {{name}}',
