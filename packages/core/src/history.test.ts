@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { APRIL_CYCLE, CATEGORIES, TODAY, tx } from './__tests__/fixtures';
-import { categorySpendHistory, cycleHistory, cycleSpendHistory, HISTORY_WINDOW } from './history';
+import { categorySpendHistory, HISTORY_WINDOW, periodHistory, periodSpendHistory } from './history';
+import type { PeriodDef } from './period';
 import { median } from './stats';
 
-const CYCLE_START_DAY = 27;
+/** The pay cycle these tests were written against (§5.2), now one period kind among four. */
+const CYCLE_DEF: PeriodDef = { kind: 'cycle', startDay: 27 };
 
 /** Two of the six previous cycles have transactions; the rest are empty. */
 function pastTransactions() {
@@ -16,14 +18,14 @@ function pastTransactions() {
   ];
 }
 
-describe('cycleHistory', () => {
+describe('periodHistory', () => {
   it('defaults to the six cycles before the selected one', () => {
     expect(HISTORY_WINDOW).toBe(6);
   });
 
   it('skips cycles without any transaction, most recent first', () => {
-    const history = cycleHistory(pastTransactions(), APRIL_CYCLE, CYCLE_START_DAY);
-    expect(history.map((entry) => entry.cycle)).toEqual([
+    const history = periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE);
+    expect(history.map((entry) => entry.period)).toEqual([
       { start: '2026-02-27', end: '2026-03-26' },
       { start: '2025-12-27', end: '2026-01-26' },
     ]);
@@ -32,17 +34,17 @@ describe('cycleHistory', () => {
   });
 
   it('never includes the selected cycle itself', () => {
-    const history = cycleHistory(
+    const history = periodHistory(
       [tx({ date: TODAY, amount: 999, categoryId: 'cat-groceries' })],
+      CYCLE_DEF,
       APRIL_CYCLE,
-      CYCLE_START_DAY,
     );
     expect(history).toEqual([]);
   });
 
   it('looks back only as far as asked', () => {
-    expect(cycleHistory(pastTransactions(), APRIL_CYCLE, CYCLE_START_DAY, 1)).toHaveLength(1);
-    expect(cycleHistory(pastTransactions(), APRIL_CYCLE, CYCLE_START_DAY, 0)).toEqual([]);
+    expect(periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE, 1)).toHaveLength(1);
+    expect(periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE, 0)).toEqual([]);
   });
 
   it('counts a cycle as used even when nothing in it counts towards totals', () => {
@@ -55,26 +57,26 @@ describe('cycleHistory', () => {
         toAccountId: 'acc-savings',
       }),
     ];
-    expect(cycleHistory(onlyTransfer, APRIL_CYCLE, CYCLE_START_DAY)).toHaveLength(1);
+    expect(periodHistory(onlyTransfer, CYCLE_DEF, APRIL_CYCLE)).toHaveLength(1);
   });
 });
 
-describe('cycleSpendHistory', () => {
+describe('periodSpendHistory', () => {
   it('lists the counted spend of each cycle in the window', () => {
-    const history = cycleHistory(pastTransactions(), APRIL_CYCLE, CYCLE_START_DAY);
-    expect(cycleSpendHistory(history, TODAY)).toEqual([50000, 30000]);
-    expect(median(cycleSpendHistory(history, TODAY))).toBe(40000);
+    const history = periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE);
+    expect(periodSpendHistory(history, TODAY)).toEqual([50000, 30000]);
+    expect(median(periodSpendHistory(history, TODAY))).toBe(40000);
   });
 
   it('is empty without history, so the median is null', () => {
-    expect(cycleSpendHistory([], TODAY)).toEqual([]);
-    expect(median(cycleSpendHistory([], TODAY))).toBeNull();
+    expect(periodSpendHistory([], TODAY)).toEqual([]);
+    expect(median(periodSpendHistory([], TODAY))).toBeNull();
   });
 });
 
 describe('categorySpendHistory', () => {
   it('rolls each cycle up to parent level', () => {
-    const history = cycleHistory(pastTransactions(), APRIL_CYCLE, CYCLE_START_DAY);
+    const history = periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE);
     expect(categorySpendHistory(history, CATEGORIES, TODAY).map(Object.fromEntries)).toEqual([
       { 'cat-groceries': 50000 },
       { 'cat-home': 30000 },

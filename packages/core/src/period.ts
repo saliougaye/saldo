@@ -1,4 +1,3 @@
-import { isoWeekRange, yearRange } from './budgetRanges';
 import {
   assertCycleStartDay,
   cycleContaining,
@@ -34,7 +33,27 @@ export interface PeriodDef {
   startDay: number;
 }
 
-function monthRangeOf(ym: YearMonth): DateRange {
+/** Day of week with Monday as 0, from a `LocalDate` without going through a time zone. */
+function isoWeekday(date: LocalDate): number {
+  const { year, month, day } = parseLocalDate(date);
+  // getUTCDay is Sunday-based; shift so Monday is 0.
+  return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
+}
+
+/** The ISO week (Monday–Sunday) containing `date` (§5.8). */
+export function isoWeekRange(date: LocalDate): DateRange {
+  const start = addDays(date, -isoWeekday(date));
+  return { start, end: addDays(start, 6) };
+}
+
+/** The calendar year containing `date`. */
+export function yearRange(date: LocalDate): DateRange {
+  const { year } = parseLocalDate(date);
+  return { start: makeLocalDate(year, 1, 1), end: makeLocalDate(year, 12, 31) };
+}
+
+/** The calendar month of a year-month pair. */
+export function monthRangeOf(ym: YearMonth): DateRange {
   const next = addMonths(ym, 1);
   return {
     start: makeLocalDate(ym.year, ym.month, 1),

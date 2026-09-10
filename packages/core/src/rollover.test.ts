@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import type { PeriodDef } from './period';
 import { budgetCarry, effectiveLimit } from './rollover';
 
 const START_DAY = 27;
+/** The pay cycle these tests were written against (§5.2). */
+const CYCLE_DEF: PeriodDef = { kind: 'cycle', startDay: START_DAY };
 const APRIL = { start: '2026-03-27', end: '2026-04-26' };
 
 /** Spend per cycle start, as the caller would load it. */
@@ -14,10 +17,10 @@ describe('budgetCarry', () => {
     expect(
       budgetCarry({
         amount: 40000,
-        createdAtCycleStart: APRIL.start,
-        cycle: APRIL,
-        cycleStartDay: START_DAY,
-        spentInCycle: spentBy({}),
+        createdAtPeriodStart: APRIL.start,
+        period: APRIL,
+        def: CYCLE_DEF,
+        spentInPeriod: spentBy({}),
       }),
     ).toBe(0);
   });
@@ -25,10 +28,10 @@ describe('budgetCarry', () => {
   it('carries what the previous cycle left unspent', () => {
     const carry = budgetCarry({
       amount: 40000,
-      createdAtCycleStart: '2026-02-27',
-      cycle: APRIL,
-      cycleStartDay: START_DAY,
-      spentInCycle: spentBy({ '2026-02-27': 30000 }),
+      createdAtPeriodStart: '2026-02-27',
+      period: APRIL,
+      def: CYCLE_DEF,
+      spentInPeriod: spentBy({ '2026-02-27': 30000 }),
     });
     expect(carry).toBe(10000);
   });
@@ -38,10 +41,10 @@ describe('budgetCarry', () => {
     // cycle never contributes to its own carry.
     const carry = budgetCarry({
       amount: 40000,
-      createdAtCycleStart: '2025-12-27',
-      cycle: APRIL,
-      cycleStartDay: START_DAY,
-      spentInCycle: spentBy({ '2025-12-27': 40000, '2026-01-27': 30000, '2026-02-27': 20000 }),
+      createdAtPeriodStart: '2025-12-27',
+      period: APRIL,
+      def: CYCLE_DEF,
+      spentInPeriod: spentBy({ '2025-12-27': 40000, '2026-01-27': 30000, '2026-02-27': 20000 }),
     });
     // Dec: spent the lot → carry 0. Jan: limit 40000, spent 30000 → carry 10000.
     // Feb: limit 50000, spent 20000 → carry 30000.
@@ -51,10 +54,10 @@ describe('budgetCarry', () => {
   it('ignores what the selected cycle itself has spent', () => {
     const carry = budgetCarry({
       amount: 40000,
-      createdAtCycleStart: '2026-02-27',
-      cycle: APRIL,
-      cycleStartDay: START_DAY,
-      spentInCycle: spentBy({ '2026-02-27': 30000, '2026-03-27': 99999 }),
+      createdAtPeriodStart: '2026-02-27',
+      period: APRIL,
+      def: CYCLE_DEF,
+      spentInPeriod: spentBy({ '2026-02-27': 30000, '2026-03-27': 99999 }),
     });
     expect(carry).toBe(10000);
   });
@@ -62,10 +65,10 @@ describe('budgetCarry', () => {
   it('never carries a debt', () => {
     const carry = budgetCarry({
       amount: 40000,
-      createdAtCycleStart: '2026-02-27',
-      cycle: APRIL,
-      cycleStartDay: START_DAY,
-      spentInCycle: spentBy({ '2026-02-27': 90000 }),
+      createdAtPeriodStart: '2026-02-27',
+      period: APRIL,
+      def: CYCLE_DEF,
+      spentInPeriod: spentBy({ '2026-02-27': 90000 }),
     });
     expect(carry).toBe(0);
   });
@@ -74,10 +77,10 @@ describe('budgetCarry', () => {
     expect(
       budgetCarry({
         amount: 40000,
-        createdAtCycleStart: '2026-04-27',
-        cycle: APRIL,
-        cycleStartDay: START_DAY,
-        spentInCycle: spentBy({}),
+        createdAtPeriodStart: '2026-04-27',
+        period: APRIL,
+        def: CYCLE_DEF,
+        spentInPeriod: spentBy({}),
       }),
     ).toBe(0);
   });
@@ -87,10 +90,10 @@ describe('effectiveLimit', () => {
   it('adds the carry only when rollover is on', () => {
     const input = {
       amount: 40000,
-      createdAtCycleStart: '2026-02-27',
-      cycle: APRIL,
-      cycleStartDay: START_DAY,
-      spentInCycle: spentBy({ '2026-02-27': 30000 }),
+      createdAtPeriodStart: '2026-02-27',
+      period: APRIL,
+      def: CYCLE_DEF,
+      spentInPeriod: spentBy({ '2026-02-27': 30000 }),
     };
     expect(effectiveLimit({ ...input, rollover: true })).toBe(50000);
     expect(effectiveLimit({ ...input, rollover: false })).toBe(40000);
