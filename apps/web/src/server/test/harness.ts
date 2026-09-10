@@ -1,0 +1,39 @@
+import { PGlite } from '@electric-sql/pglite';
+import { sql } from 'drizzle-orm';
+import { drizzle, type PgliteDatabase } from 'drizzle-orm/pglite';
+import { migrate } from 'drizzle-orm/pglite/migrator';
+import { setDatabaseForTests } from '../db/client';
+import { schema } from '../db/schema';
+import type { ServerDatabase } from '../db/types';
+
+const migrationsFolder = new URL('../../../drizzle', import.meta.url).pathname;
+
+export interface TestDatabase {
+  db: ServerDatabase;
+  /** Empties every table, keeping the schema — cheaper than a fresh PGlite per test. */
+  reset: () => Promise<void>;
+  close: () => Promise<void>;
+}
+
+/**
+ * An in-memory Postgres for route-handler and service tests (§16). PGlite is real Postgres
+ * compiled to WASM, so the schema, the `bytea` codec and `text[]` behave as they do in production.
+ */
+export async function createTestDatabase(): Promise<TestDatabase> {
+  const client = new PGlite();
+  const db: PgliteDatabase<typeof schema> = drizzle(client, { schema });
+  await migrate(db, { migrationsFolder });
+  setDatabaseForTests(db);
+  return {
+    db,
+    reset: async () => {
+      await db.execute(
+        sql`truncate table refresh_tokens, auth_codes, webauthn_challenges, passkeys, users cascade`,
+      );
+    },
+    close: async () => {
+      setDatabaseForTests(null);
+      await client.close();
+    },
+  };
+}
