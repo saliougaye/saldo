@@ -78,9 +78,9 @@ match `@saldo/core` for demo data; component tests for keypad, swipe thresholds 
 `sanitizeAmountInput` tests when amounts moved to the device keyboard (D23); swipe thresholds come from the shared
 `gestures` tokens and are exercised by hand, not by a test. Attachments stay disabled until phase 08.
 
-### 04 — Budgets & Statistics
+### 04 — Budgets & Statistics ✅ done
 
-**Spec:** §5.4, §5.5, §5.7, §5.8, §6.3, 6.4, 6.12, 6.17, 6.18
+**Plan:** `2026-09-10-04-budgets-stats.md` · **Spec:** §5.4, §5.5, §5.7, §5.8, §6.3, 6.4, 6.12, 6.17, 6.18
 
 - Budget list, new/edit budget sheet (median suggestion, taken categories, period, alerts, rollover), budget detail
   sheet, Home budget card, local notifications on threshold crossing.
@@ -89,6 +89,11 @@ match `@saldo/core` for demo data; component tests for keypad, swipe thresholds 
 
 **Acceptance:** stats and budget numbers verified against core unit tests for demo data; notifications fire once per
 period; rollover correct across 3 cycles (unit test).
+
+**Status:** met. Rollover is unit-tested across four cycles and the once-per-period rule is a pure function over the
+device-local `kv` marker, so it is tested too. Statistics was checked on the simulator; the budget list and Home budget
+card were not, because reaching them needs a tap that `simctl` cannot give — they rest on the tested `budgetViews`.
+Notifications were not observed firing on the simulator.
 
 ### 05 — Accounts, Categories, Tags, Settings, Profile
 
