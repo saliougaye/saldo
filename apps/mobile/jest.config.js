@@ -1,10 +1,19 @@
 /**
- * Two projects: `db` runs the SQLite-backed tests in plain Node (better-sqlite3 is a native
- * module and cannot load in the React Native environment), `app` runs component tests through
- * jest-expo.
+ * Two projects: `db` runs the SQLite-backed tests in plain Node (better-sqlite3 is a native module
+ * and cannot load in the React Native environment); `app` runs component tests through jest-expo.
+ *
+ * The transform patterns are pnpm-aware. Under pnpm every dependency really lives at
+ * `node_modules/.pnpm/<name>@<version>_<hash>/node_modules/<name>/`, so the stock React Native
+ * pattern — which expects the package name straight after `node_modules/` — leaves
+ * `@react-native/jest-preset/jest/setup.js` untransformed and Jest then fails on its ESM syntax.
+ * `@saldo/*` needs no entry: pnpm links workspace packages to `packages/*`, outside node_modules.
  */
-const transformIgnore = [
-  'node_modules/(?!(?:.pnpm/)?(?:(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|react-native-svg|react-native-reanimated|react-native-worklets|react-native-gesture-handler|@gorhom/.*|@saldo/.*)/)',
+const RN_PACKAGES =
+  '(?:@react-native|react-native|expo|@expo|@gorhom|react-navigation|@react-navigation)';
+
+const transformIgnorePatterns = [
+  `/node_modules/\\.pnpm/(?!${RN_PACKAGES}[^/]*/)`,
+  `/node_modules/(?!\\.pnpm/)(?!${RN_PACKAGES}[^/]*/)`,
 ];
 
 module.exports = {
@@ -16,7 +25,7 @@ module.exports = {
       transform: {
         '^.+\\.[jt]sx?$': ['babel-jest', { presets: ['babel-preset-expo'] }],
       },
-      transformIgnorePatterns: transformIgnore,
+      transformIgnorePatterns,
       moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
     },
     {
@@ -24,7 +33,7 @@ module.exports = {
       preset: 'jest-expo',
       testMatch: ['<rootDir>/src/**/*.test.tsx', '<rootDir>/src/i18n/**/*.test.ts'],
       setupFiles: ['<rootDir>/jest.setup.js'],
-      transformIgnorePatterns: transformIgnore,
+      transformIgnorePatterns,
       moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
     },
   ],
