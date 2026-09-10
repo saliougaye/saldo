@@ -1,0 +1,8 @@
+# Automatic HTTPS in front of the Saldo container. WebAuthn requires it (§9.2), so this is the
+# supported way to expose the server on a real domain.
+#
+#   caddy run --config Caddyfile
+saldo.example.com {
+	encode zstd gzip
+	reverse_proxy web:3000
+}

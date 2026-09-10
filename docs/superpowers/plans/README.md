@@ -150,9 +150,9 @@ phases 03–05 had already delivered.
 pushed-screen header screenshotted via a temporary `router.push` probe (`simctl` cannot tap, and a deep link raises a
 system "Open in Saldo?" dialog that itself needs one). Android remains unverified.
 
-### 06 — Server & passkey authentication
+### 06 — Server & passkey authentication ✅ done
 
-**Spec:** §9, §14, §18 · **Can run in parallel with 02–05**
+**Plan:** `2026-09-10-06-server-auth.md` · **Spec:** §9, §14, §18 · **Can run in parallel with 02–05**
 
 - `apps/web` via `create-next-app` (App Router, TS), Drizzle + Postgres schema/migrations, PGlite test harness, docker
   compose + Dockerfile + Caddyfile example.
@@ -161,6 +161,29 @@ system "Open in Saldo?" dialog that itself needs one). Android remains unverifie
 
 **Acceptance:** route-handler tests for every auth path, including PKCE mismatch, expired/used code and refresh reuse;
 manual passkey registration and login in a desktop browser against `http://localhost:3000` succeed.
+
+**Status:** 57 tests, all route handlers called directly with `Request` objects against an in-memory Postgres (PGlite),
+with `@simplewebauthn/server` mocked at its own module boundary as §16 prescribes. Covered: PKCE mismatch (and that a
+wrong verifier does not burn the code), expired and already-used codes, refresh rotation, reuse detection revoking the
+whole chain, unknown-credential and bad-signature logins answering identically, the `redirect_uri` allow-list, the
+registration policy, the rate limit, and the body size cap.
+
+Beyond the plan, verified by hand against **real Postgres 17** (PGlite is not the production driver): migrations,
+`/api/health`, `/api/me` 401, the security headers, the CSP on `/auth/*`, a rejected `redirect_uri` rendering the error
+page, then the full token flow through `curl` — code exchange, bearer `/api/me`, rotation, and a replayed refresh token
+killing the rotated one too. The **Docker image was built and run** against that Postgres: it migrates on start and
+serves, and `registrationAllowed` flips to false after the first account in `first-user` mode.
+
+**Review findings, both fixed here:** every expiry compared `expiresAt < now`, leaving auth codes, challenges and
+refresh tokens usable *at* their deadline (RFC 7519 says reject on or after `exp`) — now `<=`, each with a boundary
+test that fails against the old code. And the rate limiter bucketed on the **first** `X-Forwarded-For` entry, which is
+client-supplied, so anyone could rotate the header and reset their own bucket; it reads the last hop now.
+
+**Not verified:** the manual browser passkey ceremony. It needs a real platform authenticator (Touch ID / Windows
+Hello) and there is no browser automation on this machine, so it is the one acceptance criterion left to the user;
+`docs/self-hosting.md` has the steps. Deviations from the spec, both deliberate: `webauthn_challenges` gained a
+`display_name` column so the register-verify step need not trust a second client-supplied copy of the name, and
+`/api/health` reports `registrationAllowed` so the app can hide "create account".
 
 ### 07 — Sync engine
 

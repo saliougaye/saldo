@@ -662,7 +662,8 @@ so concurrent pushes stay correct without application locks.
 users(id uuid pk, display_name text, created_at timestamptz)
 passkeys(id text pk /* credential id base64url */, user_id uuid fk, public_key bytea, counter bigint,
          transports text[], device_type text, backed_up boolean, created_at timestamptz, last_used_at timestamptz)
-webauthn_challenges(id uuid pk, challenge text, user_id uuid null, kind text /* register|login */, expires_at timestamptz)
+webauthn_challenges(id uuid pk, challenge text, user_id uuid null, kind text /* register|login */,
+                    display_name text null /* pending name of a register ceremony */, expires_at timestamptz)
 auth_codes(code_hash text pk, user_id uuid, code_challenge text, redirect_uri text, expires_at timestamptz, used_at timestamptz null)
 refresh_tokens(id uuid pk, user_id uuid, token_hash text unique, device_name text, created_at, expires_at, revoked_at null, replaced_by uuid null)
 ```
@@ -682,7 +683,8 @@ refresh_tokens(id uuid pk, user_id uuid, token_hash text unique, device_name tex
 
 ### 9.3 Mobile sign-in flow (PKCE + browser session)
 
-1. App: the user enters the server URL → `GET /api/health`. It must return `app: "saldo"` and `apiVersion: 1`.
+1. App: the user enters the server URL → `GET /api/health`. It must return `app: "saldo"` and `apiVersion: 1`; it also
+   returns `registrationAllowed`, which is what decides whether the app and `/auth/mobile` offer "Crea account".
 2. App generates `code_verifier` (43–128 chars random), `code_challenge = base64url(sha256(verifier))`, and `state`
    (`expo-crypto`).
 3. App calls `WebBrowser.openAuthSessionAsync("{server}/auth/mobile?redirect_uri=saldo://auth/callback&code_challenge=…&state=…&mode=login|register", "saldo://auth/callback")`.
