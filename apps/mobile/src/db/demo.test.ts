@@ -1,7 +1,8 @@
+import type { PeriodDef } from '@saldo/core';
 import {
   accountBalances,
-  cycleContaining,
   isWithin,
+  periodContaining,
   spendingByCategory,
   summarizePeriod,
 } from '@saldo/core';
@@ -10,15 +11,17 @@ import { DEMO_ACCOUNTS, DEMO_TRANSACTIONS } from './demoData.generated';
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
 
+/** These tests were written against a pay cycle (§5.2), still one kind among four. */
+const CYCLE_DEF: PeriodDef = { kind: 'cycle', startDay: 27 };
+
 const TODAY = '2026-09-10';
-const CYCLE_START_DAY = 27;
 
 function seed(today = TODAY) {
   const db = createTestDatabase();
   const repos = createRepositories(db, () => '2026-09-10T09:00:00.000Z');
   seedDemoData(repos, {
     today,
-    cycleStartDay: CYCLE_START_DAY,
+    def: CYCLE_DEF,
     translate: (key) => key,
   });
   return repos;
@@ -40,7 +43,7 @@ describe('seedDemoData', () => {
 
   it('shifts the data so the current cycle holds transactions on both sides of today', () => {
     const repos = seed();
-    const cycle = cycleContaining(TODAY, CYCLE_START_DAY);
+    const cycle = periodContaining(CYCLE_DEF, TODAY);
     const inCycle = repos.transactions.list().filter((tx) => isWithin(cycle, tx.date));
     expect(inCycle.length).toBeGreaterThan(20);
     expect(inCycle.some((tx) => tx.date < TODAY)).toBe(true);
@@ -60,7 +63,7 @@ describe('seedDemoData', () => {
 
   it('produces a cycle with income, spending and a committed share', () => {
     const repos = seed();
-    const cycle = cycleContaining(TODAY, CYCLE_START_DAY);
+    const cycle = periodContaining(CYCLE_DEF, TODAY);
     const summary = summarizePeriod(repos.transactions.list(), cycle, TODAY);
     expect(summary.income).toBeGreaterThan(0);
     expect(summary.spent).toBeGreaterThan(0);
@@ -73,7 +76,7 @@ describe('seedDemoData', () => {
 
   it('spreads spending over several categories, so the split bar is not one segment', () => {
     const repos = seed();
-    const cycle = cycleContaining(TODAY, CYCLE_START_DAY);
+    const cycle = periodContaining(CYCLE_DEF, TODAY);
     const spending = spendingByCategory(repos.transactions.list(), cycle, TODAY);
     expect(spending.size).toBeGreaterThan(4);
   });
@@ -87,7 +90,7 @@ describe('seedDemoData', () => {
   it('shifts with the cycle, whatever today is', () => {
     for (const today of ['2026-01-05', '2026-09-10', '2027-02-28'] as const) {
       const repos = seed(today);
-      const cycle = cycleContaining(today, CYCLE_START_DAY);
+      const cycle = periodContaining(CYCLE_DEF, today);
       const inCycle = repos.transactions.list().filter((tx) => isWithin(cycle, tx.date));
       expect(inCycle.length).toBeGreaterThan(20);
     }

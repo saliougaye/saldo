@@ -42,7 +42,7 @@ export default function EditBudget() {
           amount: amountBufferToMinor(values.buffer, minorDigits),
           period: values.period,
           alertThreshold: values.alertThreshold,
-          rollover: values.period === 'cycle' ? values.rollover : false,
+          rollover: values.period === 'period' ? values.rollover : false,
         });
         router.back();
       }}

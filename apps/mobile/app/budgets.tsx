@@ -1,4 +1,4 @@
-import { previousCycles } from '@saldo/core';
+import { previousPeriods } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
@@ -31,12 +31,12 @@ export default function BudgetsScreen() {
   const settings = useSettings();
   const budgets = useBudgets();
   const categories = useCategories();
-  const { today, cycleStartDay, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [openId, setOpenId] = useState<string | null>(null);
 
   const start =
-    previousCycles(period.range, cycleStartDay, CARRY_LOOKBACK).at(-1)?.start ?? period.range.start;
+    previousPeriods(def, period.range, CARRY_LOOKBACK).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(start, period.range.end);
 
   const views = useMemo(
@@ -45,11 +45,11 @@ export default function BudgetsScreen() {
         budgets,
         categories,
         transactions: rows,
-        cycle: period.range,
-        cycleStartDay,
+        period: period.range,
+        def,
         today,
       }),
-    [budgets, categories, rows, period.range, cycleStartDay, today],
+    [budgets, categories, rows, period.range, def, today],
   );
 
   return (

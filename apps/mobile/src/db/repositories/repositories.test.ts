@@ -20,6 +20,7 @@ function setup() {
 }
 
 const SETTINGS_INPUT = {
+  periodKind: 'cycle',
   cycleStartDay: 27,
   currency: 'EUR',
   language: 'system',

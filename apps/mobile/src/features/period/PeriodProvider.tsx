@@ -1,12 +1,11 @@
 import {
   type Cycle,
-  cycleContaining,
-  cycleLength,
   type DateRange,
-  elapsedDays,
-  isWithin,
+  describePeriod,
   type LocalDate,
-  shiftCycle,
+  type PeriodDef,
+  periodContaining,
+  shiftPeriod,
   todayLocal,
 } from '@saldo/core';
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
@@ -14,8 +13,8 @@ import { useSettings } from '../../db/hooks';
 
 export interface Period {
   range: DateRange;
-  /** True for a cycle range, false for a custom one (§6.15). */
-  isCycle: boolean;
+  /** True for a whole period of the user's kind, false for an ad-hoc range (§6.15). */
+  isPeriod: boolean;
   /** True when the range contains today. */
   isCurrent: boolean;
   length: number;
@@ -24,31 +23,27 @@ export interface Period {
 
 export interface PeriodValue {
   today: LocalDate;
-  cycleStartDay: number;
+  /** How the user tracks spending (§5.2). Screens pass this to `@saldo/core`, not a start day. */
+  def: PeriodDef;
   period: Period;
-  /** Moves by whole cycles. On a custom range it first returns to the cycle holding today. */
+  /** Moves by whole periods. On a custom range it first returns to the period holding today. */
   shift: (delta: number) => void;
   setCustomRange: (range: DateRange) => void;
-  goToCycle: (cycle: Cycle) => void;
+  goToPeriod: (period: Cycle) => void;
+  /** Back to the period containing today — what a changed kind or start day has to fall back to. */
+  resetToCurrent: () => void;
 }
 
 /**
- * The selection is stored as *the cycle itself*, not as an offset from today: jumping to an
- * arbitrary cycle from the period sheet then needs no arithmetic on month lengths.
+ * The selection is stored as *the range itself*, not as an offset from today: jumping to an
+ * arbitrary period from the sheet then needs no arithmetic on month lengths.
  */
-type Selection = { kind: 'cycle'; cycle: Cycle } | { kind: 'custom'; range: DateRange };
+type Selection = { kind: 'period'; range: Cycle } | { kind: 'custom'; range: DateRange };
 
 const PeriodContext = createContext<PeriodValue | null>(null);
 
-function describe(range: DateRange, today: LocalDate, isCycle: boolean): Period {
-  return {
-    range,
-    isCycle,
-    isCurrent: isWithin(range, today),
-    length: cycleLength(range),
-    elapsed: elapsedDays(range, today),
-  };
-}
+/** Defaults before settings exist: a calendar month, with the 27th remembered for the cycle kind. */
+const FALLBACK: PeriodDef = { kind: 'month', startDay: 27 };
 
 /**
  * The selected period, shared by Home, Transactions and Statistics (§6.15). `today` is captured
@@ -56,30 +51,35 @@ function describe(range: DateRange, today: LocalDate, isCycle: boolean): Period 
  */
 export function PeriodProvider({ children }: { children: ReactNode }) {
   const settings = useSettings();
-  const cycleStartDay = settings?.cycleStartDay ?? 27;
   const [today] = useState(() => todayLocal());
   const [selection, setSelection] = useState<Selection | null>(null);
 
+  const def = useMemo<PeriodDef>(
+    () =>
+      settings === null
+        ? FALLBACK
+        : { kind: settings.periodKind, startDay: settings.cycleStartDay },
+    [settings],
+  );
+
   const value = useMemo<PeriodValue>(() => {
-    const current = cycleContaining(today, cycleStartDay);
-    // A null selection means "the cycle containing today", which follows a changed start day.
-    const active: Selection = selection ?? { kind: 'cycle', cycle: current };
-    const period =
-      active.kind === 'cycle'
-        ? describe(active.cycle, today, true)
-        : describe(active.range, today, false);
+    const current = periodContaining(def, today);
+    // A null selection means "the period containing today", which follows a changed kind or day.
+    const active: Selection = selection ?? { kind: 'period', range: current };
+    const view = describePeriod(active.range, today);
     return {
       today,
-      cycleStartDay,
-      period,
+      def,
+      period: { ...view, isPeriod: active.kind === 'period' },
       shift: (delta) => {
-        const from = active.kind === 'cycle' ? active.cycle : current;
-        setSelection({ kind: 'cycle', cycle: shiftCycle(from, cycleStartDay, delta) });
+        const from = active.kind === 'period' ? active.range : current;
+        setSelection({ kind: 'period', range: shiftPeriod(def, from, delta) });
       },
       setCustomRange: (range) => setSelection({ kind: 'custom', range }),
-      goToCycle: (cycle) => setSelection({ kind: 'cycle', cycle }),
+      goToPeriod: (range) => setSelection({ kind: 'period', range }),
+      resetToCurrent: () => setSelection(null),
     };
-  }, [cycleStartDay, selection, today]);
+  }, [def, selection, today]);
 
   return <PeriodContext.Provider value={value}>{children}</PeriodContext.Provider>;
 }

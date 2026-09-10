@@ -1,9 +1,9 @@
 import {
   averageSeries,
-  cycleHistory,
   dailyCumulative,
   isUpcoming,
-  previousCycles,
+  periodHistory,
+  previousPeriods,
   summarizePeriod,
 } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
@@ -40,12 +40,11 @@ export default function HomeTab() {
   const settings = useSettings();
   const categories = useCategories();
   const budgets = useBudgets();
-  const { today, cycleStartDay, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   // Load the selected cycle plus the previous six, which is all the baselines need (§7).
-  const historyStart =
-    previousCycles(period.range, cycleStartDay, 6).at(-1)?.start ?? period.range.start;
+  const historyStart = previousPeriods(def, period.range, 6).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(historyStart, period.range.end);
 
   const summary = useMemo(
@@ -57,12 +56,12 @@ export default function HomeTab() {
     [rows, period.range, today],
   );
   const usual = useMemo(() => {
-    const history = cycleHistory(rows, period.range, cycleStartDay, USUAL_CYCLES);
+    const history = periodHistory(rows, def, period.range, USUAL_CYCLES);
     return averageSeries(
-      history.map((entry) => dailyCumulative(entry.txs, entry.cycle, today)),
+      history.map((entry) => dailyCumulative(entry.txs, entry.period, today)),
       Math.max(1, current.length),
     );
-  }, [rows, period.range, cycleStartDay, today, current.length]);
+  }, [rows, period.range, def, today, current.length]);
 
   const upcoming = useMemo(
     () => rows.filter((tx) => isUpcoming(tx, today) && tx.date <= period.range.end),
@@ -79,11 +78,11 @@ export default function HomeTab() {
         budgets,
         categories,
         transactions: rows,
-        cycle: period.range,
-        cycleStartDay,
+        period: period.range,
+        def,
         today,
       }),
-    [budgets, categories, rows, period.range, cycleStartDay, today],
+    [budgets, categories, rows, period.range, def, today],
   );
 
   const categoryById = useMemo(

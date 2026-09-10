@@ -1,15 +1,15 @@
 import {
   categorySpendHistory,
   committedSpend,
-  cycleHistory,
-  cycleSpendHistory,
   deltaPercent,
   isWithin,
   median,
-  previousCycles,
+  periodHistory,
+  periodSpendHistory,
+  previousPeriods,
   projectEndOfCycle,
   rollupToParents,
-  shiftCycle,
+  shiftPeriod,
   spendingByCategory,
   summarizePeriod,
   upcomingExpenses,
@@ -46,13 +46,12 @@ export default function StatsTab() {
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
-  const { today, cycleStartDay, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [direction, setDirection] = useState<'expense' | 'income'>('expense');
 
   const historyStart =
-    previousCycles(period.range, cycleStartDay, CASHFLOW_CYCLES).at(-1)?.start ??
-    period.range.start;
+    previousPeriods(def, period.range, CASHFLOW_CYCLES).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(historyStart, period.range.end);
 
   const summary = useMemo(
@@ -63,7 +62,7 @@ export default function StatsTab() {
   const bars = useMemo(() => {
     const cycles = [period.range];
     for (let back = 1; back < CASHFLOW_CYCLES; back += 1) {
-      cycles.push(shiftCycle(period.range, cycleStartDay, -back));
+      cycles.push(shiftPeriod(def, period.range, -back));
     }
     return cycles.reverse().map((cycle) => {
       const cycleSummary = summarizePeriod(rows, cycle, today);
@@ -75,7 +74,7 @@ export default function StatsTab() {
         current: cycle.start === period.range.start,
       };
     });
-  }, [rows, period.range, cycleStartDay, today, locale]);
+  }, [rows, period.range, def, today, locale]);
 
   const committed = useMemo(
     () => committedSpend(rows, period.range, today),
@@ -85,9 +84,9 @@ export default function StatsTab() {
   const committedPct = summary.spent === 0 ? 0 : Math.round((committed / summary.spent) * 100);
 
   const cycleMedian = useMemo(() => {
-    const history = cycleHistory(rows, period.range, cycleStartDay, CASHFLOW_CYCLES);
-    return median(cycleSpendHistory(history, today));
-  }, [rows, period.range, cycleStartDay, today]);
+    const history = periodHistory(rows, def, period.range, CASHFLOW_CYCLES);
+    return median(periodSpendHistory(history, today));
+  }, [rows, period.range, def, today]);
 
   const projection = useMemo(
     () =>
@@ -109,7 +108,7 @@ export default function StatsTab() {
       categories,
     );
     const history = categorySpendHistory(
-      cycleHistory(rows, period.range, cycleStartDay, CASHFLOW_CYCLES),
+      periodHistory(rows, def, period.range, CASHFLOW_CYCLES),
       categories,
       today,
     );
@@ -132,7 +131,7 @@ export default function StatsTab() {
           };
         }),
     };
-  }, [rows, period.range, today, direction, categories, cycleStartDay, theme]);
+  }, [rows, period.range, today, direction, categories, def, theme]);
 
   // "N transazioni escluse dai totali" (§5.7): in range, already happened, and flagged out.
   const excluded = useMemo(

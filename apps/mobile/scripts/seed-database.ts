@@ -17,7 +17,7 @@
  *
  * The database must already exist, i.e. the app has to have launched once so its migrations ran.
  */
-import { todayLocal } from '@saldo/core';
+import { type PeriodDef, todayLocal } from '@saldo/core';
 import { en } from '@saldo/i18n';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
@@ -42,7 +42,8 @@ const translate = (key: string): string =>
   (en.seed as Record<string, string | undefined>)[key] ?? key;
 
 const today = todayLocal();
-const CYCLE_START_DAY = 27;
+/** The demo fixture is written against a pay cycle (§5.2), which is still one of the kinds. */
+const PERIOD_DEF: PeriodDef = { kind: 'cycle', startDay: 27 };
 
 if (reset) {
   // Hard delete, not tombstones: this is a development fixture, not a user action.
@@ -63,7 +64,8 @@ if (reset) {
 
 if (repos.settings.get() === null) {
   seedFromOnboarding(repos, {
-    cycleStartDay: CYCLE_START_DAY,
+    periodKind: PERIOD_DEF.kind,
+    cycleStartDay: PERIOD_DEF.startDay,
     currency: 'EUR',
     language: 'system',
     theme: 'system',
@@ -75,8 +77,8 @@ if (repos.settings.get() === null) {
   });
   for (const category of repos.categories.list()) repos.categories.remove(category.id);
   for (const account of repos.accounts.list()) repos.accounts.remove(account.id);
-  seedDemoData(repos, { today, cycleStartDay: CYCLE_START_DAY, translate });
-  runMaterialiser(db, repos, today, CYCLE_START_DAY);
+  seedDemoData(repos, { today, def: PERIOD_DEF, translate });
+  runMaterialiser(db, repos, today, PERIOD_DEF);
 }
 
 console.log(

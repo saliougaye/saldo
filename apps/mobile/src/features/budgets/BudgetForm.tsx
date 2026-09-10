@@ -4,9 +4,9 @@ import {
   BUDGET_ALERT_THRESHOLDS,
   type Budget,
   categorySpendHistory,
-  cycleHistory,
   getCurrency,
-  previousCycles,
+  periodHistory,
+  previousPeriods,
   suggestBudgetAmount,
   takenCategoryIds,
 } from '@saldo/core';
@@ -49,7 +49,7 @@ export function emptyBudgetForm(): BudgetFormValues {
     buffer: '',
     categoryIds: [],
     name: '',
-    period: 'cycle',
+    period: 'period',
     alertThreshold: 90,
     rollover: false,
   };
@@ -93,12 +93,12 @@ export function BudgetForm({
   const settings = useSettings();
   const categories = useCategories();
   const budgets = useBudgets();
-  const { today, cycleStartDay, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const { minorDigits } = getCurrency(currency);
 
   const start =
-    previousCycles(period.range, cycleStartDay, HISTORY_CYCLES).at(-1)?.start ?? period.range.start;
+    previousPeriods(def, period.range, HISTORY_CYCLES).at(-1)?.start ?? period.range.start;
   const rows = useTransactionsInRange(start, period.range.end);
 
   const taken = useMemo(
@@ -108,13 +108,13 @@ export function BudgetForm({
 
   const suggestion = useMemo(() => {
     const history = categorySpendHistory(
-      cycleHistory(rows, period.range, cycleStartDay, HISTORY_CYCLES),
+      periodHistory(rows, def, period.range, HISTORY_CYCLES),
       categories,
       today,
     );
     const value = suggestBudgetAmount(history, values.categoryIds, categories);
     return value === null ? null : Math.round(value * (1 + SUGGESTION_HEADROOM));
-  }, [rows, period.range, cycleStartDay, categories, today, values.categoryIds]);
+  }, [rows, period.range, def, categories, today, values.categoryIds]);
 
   const expense = categories.filter(
     (category) =>
@@ -258,7 +258,7 @@ export function BudgetForm({
             <Segmented
               accessibilityLabel={t('budgets.repeats')}
               options={[
-                { value: 'cycle', label: t('budgets.periodCycle') },
+                { value: 'period', label: t('budgets.periodCycle') },
                 { value: 'week', label: t('budgets.periodWeek') },
                 { value: 'year', label: t('budgets.periodYear') },
               ]}
@@ -288,7 +288,7 @@ export function BudgetForm({
               {t('budgets.alertNote')}
             </Text>
           </View>
-          {values.period === 'cycle' ? (
+          {values.period === 'period' ? (
             <View
               style={{
                 flexDirection: 'row',

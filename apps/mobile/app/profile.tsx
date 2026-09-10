@@ -37,7 +37,7 @@ export default function ProfileScreen() {
   const toast = useToast();
   const settings = useSettings();
   const accounts = useAccounts();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [pendingCurrency, setPendingCurrency] = useState<CurrencyCode | null>(null);
   const [lockEnabled, setLockEnabled] = useState(kv.get('appLockEnabled') === 'true');
@@ -161,8 +161,8 @@ export default function ProfileScreen() {
             <ListRow
               title={t('dev.loadDemo')}
               onPress={() => {
-                seedDemoData(repos, { today, cycleStartDay, translate: (key) => t(`seed.${key}`) });
-                runMaterialiser(db, repos, today, cycleStartDay);
+                seedDemoData(repos, { today, def, translate: (key) => t(`seed.${key}`) });
+                runMaterialiser(db, repos, today, def);
                 toast.show(t('dev.demoLoaded'));
               }}
             />

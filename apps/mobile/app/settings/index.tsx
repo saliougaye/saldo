@@ -61,7 +61,7 @@ export default function SettingsScreen() {
           />
           <ListRow
             title={t('settings.reviewOnboarding')}
-            onPress={() => router.push('/cycle-day')}
+            onPress={() => router.push('/period')}
             chevron
           />
         </View>

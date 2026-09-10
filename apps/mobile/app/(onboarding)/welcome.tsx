@@ -20,10 +20,7 @@ export default function Welcome() {
       scroll={false}
       footer={
         <View style={{ gap: 8 }}>
-          <PrimaryButton
-            label={t('onboarding.localOnly')}
-            onPress={() => router.push('/cycle-day')}
-          />
+          <PrimaryButton label={t('onboarding.localOnly')} onPress={() => router.push('/period')} />
           <SecondaryButton
             label={t('onboarding.connectServer')}
             onPress={() => router.push('/profile/server')}

@@ -14,7 +14,7 @@ export default function NewTransaction() {
   const { repos } = useDatabase();
   const settings = useSettings();
   const accounts = useAccounts();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
   const [values, setValues] = useState(() => emptyForm(today, accounts[0]?.id ?? null));
   const [saving, setSaving] = useState(false);
@@ -33,7 +33,7 @@ export default function NewTransaction() {
           recurrenceId: null,
         });
         // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
-        if (values.repeat) startRecurrence(db, repos, created, today, cycleStartDay);
+        if (values.repeat) startRecurrence(db, repos, created, today, def);
         router.back();
       }}
     />

@@ -2,6 +2,7 @@ import type { LocalDate } from '@saldo/core';
 import {
   materializeOccurrences,
   occurrenceId,
+  type PeriodDef,
   planRecurrenceEdit,
   type Recurrence,
   type RecurrenceEditScope,
@@ -36,9 +37,9 @@ export function runMaterialiser(
   db: RepositoryDatabase,
   repos: Repositories,
   today: LocalDate,
-  cycleStartDay: number,
+  def: PeriodDef,
 ): number {
-  const horizonEnd = recurrenceHorizonEnd(today, cycleStartDay);
+  const horizonEnd = recurrenceHorizonEnd(def, today);
   let created = 0;
   for (const recurrence of repos.recurrences.list()) {
     const existing = existingOccurrenceIds(db, recurrence.id);
@@ -70,7 +71,7 @@ export interface ApplyRecurrenceEditInput {
   /** Only "only this" can move a single occurrence to another date. */
   date: LocalDate;
   today: LocalDate;
-  cycleStartDay: number;
+  def: PeriodDef;
 }
 
 /**
@@ -83,7 +84,7 @@ export function applyRecurrenceEdit(
   scope: RecurrenceEditScope,
   input: ApplyRecurrenceEditInput,
 ): void {
-  const { recurrence, occurrence, values, date, today, cycleStartDay } = input;
+  const { recurrence, occurrence, values, date, today, def } = input;
   const occurrences = repos.transactions
     .list()
     .filter((tx) => tx.recurrenceId === recurrence.id)
@@ -122,7 +123,7 @@ export function applyRecurrenceEdit(
         template: values,
       });
       // Materialise the new series immediately so the list does not show a gap.
-      const horizonEnd = recurrenceHorizonEnd(today, cycleStartDay);
+      const horizonEnd = recurrenceHorizonEnd(def, today);
       for (const created2 of materializeOccurrences(created, new Set(), horizonEnd)) {
         repos.transactions.create(created2);
       }
@@ -136,11 +137,9 @@ export function startRecurrence(
   repos: Repositories,
   transaction: Transaction,
   today: LocalDate,
-  cycleStartDay: number,
+  def: PeriodDef,
 ): Recurrence {
-  return db.transaction(() =>
-    startRecurrenceInTransaction(db, repos, transaction, today, cycleStartDay),
-  );
+  return db.transaction(() => startRecurrenceInTransaction(db, repos, transaction, today, def));
 }
 
 function startRecurrenceInTransaction(
@@ -148,7 +147,7 @@ function startRecurrenceInTransaction(
   repos: Repositories,
   transaction: Transaction,
   today: LocalDate,
-  cycleStartDay: number,
+  def: PeriodDef,
 ): Recurrence {
   const recurrence = repos.recurrences.create({
     frequency: 'monthly',
@@ -174,6 +173,6 @@ function startRecurrenceInTransaction(
     id: firstId,
     recurrenceId: recurrence.id,
   });
-  runMaterialiser(db, repos, today, cycleStartDay);
+  runMaterialiser(db, repos, today, def);
   return recurrence;
 }

@@ -14,14 +14,14 @@ import { usePeriod } from './PeriodProvider';
 export function MaterialiserGate({ children }: { children: ReactNode }) {
   const { repos } = useDatabase();
   const settings = useSettings();
-  const { today, cycleStartDay } = usePeriod();
+  const { today, def } = usePeriod();
   const ready = settings !== null && settings.onboardingCompletedAt !== null;
   const lastRun = useRef<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
     const run = () => {
-      runMaterialiser(db, repos, today, cycleStartDay);
+      runMaterialiser(db, repos, today, def);
       lastRun.current = today;
     };
     if (lastRun.current !== today) run();
@@ -30,7 +30,7 @@ export function MaterialiserGate({ children }: { children: ReactNode }) {
     };
     const subscription = AppState.addEventListener('change', onChange);
     return () => subscription.remove();
-  }, [ready, repos, today, cycleStartDay]);
+  }, [ready, repos, today, def]);
 
   return <>{children}</>;
 }
