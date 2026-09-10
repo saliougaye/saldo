@@ -27,7 +27,7 @@ implementation plan in this folder.
 
 ## Phases
 
-### 01 — Foundation ✅ plan written
+### 01 — Foundation ✅ done
 
 **Plan:** `2026-09-10-01-foundation.md` · **Spec:** §2, §3, §4, §5.1–5.8, §5.12, §12, §13
 
@@ -37,9 +37,9 @@ Monorepo tooling (pnpm, Turborepo, TypeScript, Biome, Vitest, CI), plus three pa
 
 **Acceptance:** `pnpm lint && pnpm typecheck && pnpm test` green from a clean clone; no apps yet.
 
-### 02 — Mobile shell & local database
+### 02 — Mobile shell & local database ✅ done
 
-**Spec:** §3.3, §6 (navigation tree, 6.14, 6.29 steps 1–3, 6.32), §7, §12, §13, §15 (`app.config.ts` only)
+**Plan:** `2026-09-10-02-mobile-shell.md` · **Spec:** §3.3, §6 (navigation tree, 6.14, 6.29 steps 1–3, 6.32), §7, §12, §13, §15 (`app.config.ts` only)
 
 - `apps/mobile` via `create-expo-app` (TypeScript, Expo Router), workspace wiring (Metro monorepo config), `app.config.ts`
   with env-driven identity.
@@ -55,6 +55,10 @@ Monorepo tooling (pnpm, Turborepo, TypeScript, Biome, Vitest, CI), plus three pa
 
 **Acceptance:** fresh install → onboarding → tabs visible in dark and light, it and en; data persists across restarts;
 repository unit tests pass; `expo run:android` and `expo run:ios` launch.
+
+**Status:** met on iOS — `expo run:ios` builds and boots into onboarding, both palettes verified on the simulator, 55
+mobile tests green. `expo run:android` is **unverified**: the machine this phase was built on has no Android SDK.
+Recurrences, attachments and the tags/budgets admin screens stay with their own phases.
 
 ### 03 — Transactions & Home
 
