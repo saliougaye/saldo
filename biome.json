@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!docs/design", "!apps/mobile/drizzle", "!apps/mobile/.seed-db.cjs"]
+    "includes": [
+      "**",
+      "!docs/design",
+      "!apps/mobile/drizzle",
+      "!apps/mobile/.seed-db.cjs",
+      "!apps/web/drizzle",
+      "!apps/web/.next",
+      "!apps/web/next-env.d.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
