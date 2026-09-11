@@ -21,6 +21,7 @@ import { Chip } from '../../src/components/Chip';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { SectionDivider } from '../../src/components/SectionDivider';
 import { SkeletonList } from '../../src/components/Skeleton';
 import { TextField } from '../../src/components/TextField';
 import { useToast } from '../../src/components/Toast';
@@ -35,6 +36,7 @@ import {
 } from '../../src/db/hooks';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
+import { AccountFilterSheet } from '../../src/features/transactions/AccountFilterSheet';
 import { SwipeRow } from '../../src/features/transactions/SwipeRow';
 import { TagFilterSheet } from '../../src/features/transactions/TagFilterSheet';
 import { UpcomingRow } from '../../src/features/transactions/UpcomingRow';
@@ -65,6 +67,7 @@ export default function TransactionsTab() {
     accountId === undefined ? EMPTY_FILTERS : { ...EMPTY_FILTERS, accountId },
   );
   const [tagSheetOpen, setTagSheetOpen] = useState(false);
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [upcomingOpen, setUpcomingOpen] = useState(false);
 
@@ -227,17 +230,18 @@ export default function TransactionsTab() {
           chevron
           onPress={() => setTagSheetOpen(true)}
         />
-        {filters.accountId === null ? null : (
-          <Chip
-            label={
-              accounts.find((row) => row.id === filters.accountId)?.name ?? t('accounts.title')
-            }
-            icon="wallet"
-            active
-            onPress={() => set({ accountId: null })}
-            accessibilityLabel={t('transactions.clearAccountFilter')}
-          />
-        )}
+        <Chip
+          label={
+            filters.accountId === null
+              ? t('transactions.account')
+              : (accounts.find((row) => row.id === filters.accountId)?.name ??
+                t('transactions.account'))
+          }
+          icon="wallet"
+          active={filters.accountId !== null}
+          chevron
+          onPress={() => setAccountSheetOpen(true)}
+        />
         <Chip
           label={t('transactions.onlyExcluded')}
           active={filters.onlyExcluded}
@@ -286,11 +290,30 @@ export default function TransactionsTab() {
                 />
               </Animated.View>
             )}
-            {upcomingOpen ? upcomingGroups.map(dayCard) : null}
+            {upcomingOpen ? (
+              <>
+                <SectionDivider label={t('transactions.upcomingSection')} />
+                {upcomingGroups.map(dayCard)}
+              </>
+            ) : null}
+            {upcomingOpen && groups.length > 0 ? (
+              // The toggle row above has scrolled away by the time the future ends; this is what
+              // says the list has gone back to what already happened.
+              <Animated.View entering={appearing} exiting={leaving}>
+                <SectionDivider label={t('transactions.settledSection')} />
+              </Animated.View>
+            ) : null}
             {groups.map(dayCard)}
           </>
         )}
       </ScrollView>
+
+      <AccountFilterSheet
+        visible={accountSheetOpen}
+        onClose={() => setAccountSheetOpen(false)}
+        selected={filters.accountId}
+        onChange={(accountId) => set({ accountId })}
+      />
 
       <TagFilterSheet
         visible={tagSheetOpen}
