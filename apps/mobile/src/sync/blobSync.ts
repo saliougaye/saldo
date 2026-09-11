@@ -63,7 +63,8 @@ async function uploadOne(deps: BlobSyncDeps, row: LocalAttachment): Promise<void
     new Request(intent.url, {
       method: intent.method,
       headers: intent.headers,
-      body: bytes.buffer as ArrayBuffer,
+      // Copied for the same reason as in the API client: `bytes` may be a view.
+      body: new Uint8Array(bytes),
     }),
   );
   if (!response.ok) {

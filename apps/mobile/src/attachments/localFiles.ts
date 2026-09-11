@@ -44,13 +44,14 @@ export interface StoredBytes {
 /**
  * Hex SHA-256 of the bytes themselves — the same digest §10 has the server and the peer check.
  *
- * The array is copied into a buffer of its own rather than handed over as `bytes.buffer`: a
- * `Uint8Array` may be a *view* onto a larger buffer, and passing that buffer would hash whatever
- * else it holds. `bytesSync()` does return such a view.
+ * `Crypto.digest` is typed as taking a `BufferSource`, but the native side accepts **only a typed
+ * array**: an `ArrayBuffer` fails with `NotTypedArrayException`. Copying into a fresh `Uint8Array`
+ * satisfies that and also hashes the right bytes — `bytesSync()` returns a view onto a larger
+ * buffer, and handing over `bytes.buffer` would digest whatever else that buffer holds.
  */
 export async function sha256Of(bytes: Uint8Array): Promise<string> {
-  const exact = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, exact as ArrayBuffer);
+  const exact = new Uint8Array(bytes);
+  const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, exact);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 

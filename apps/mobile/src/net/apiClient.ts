@@ -103,8 +103,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           method: 'PUT',
           credentials: 'omit',
           headers: { ...headers, ...auth },
-          // `Uint8Array<ArrayBufferLike>` is not a `BodyInit`; the buffer behind it is.
-          body: bytes.buffer as ArrayBuffer,
+          // Copied, not `bytes.buffer`: a `Uint8Array` may be a view onto a larger buffer, and
+          // sending that buffer would upload bytes the file does not contain.
+          body: new Uint8Array(bytes),
         }),
       );
       if (response.status === 401) {
