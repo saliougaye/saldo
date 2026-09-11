@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { LOADING_GRACE_MS, useDelayed } from './useDelayed';
+import { LOADING_GRACE_MS, LOADING_MIN_MS, useDelayed } from './useDelayed';
 
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
@@ -29,6 +29,21 @@ describe('useDelayed', () => {
     expect(result.current).toBe(true);
   });
 
+  it('keeps it up long enough to be read once it is up', async () => {
+    const { result, rerender } = await renderHook<boolean, { active: boolean }>(
+      ({ active }) => useDelayed(active),
+      { initialProps: { active: true } },
+    );
+    await act(async () => jest.advanceTimersByTime(LOADING_GRACE_MS));
+    expect(result.current).toBe(true);
+    // The data lands right after the skeleton appeared: it stays for the rest of its minimum.
+    await act(async () => rerender({ active: false }));
+    await act(async () => jest.advanceTimersByTime(LOADING_MIN_MS - 50));
+    expect(result.current).toBe(true);
+    await act(async () => jest.advanceTimersByTime(60));
+    expect(result.current).toBe(false);
+  });
+
   it('puts it away again when the data lands', async () => {
     const { result, rerender } = await renderHook<boolean, { active: boolean }>(
       ({ active }) => useDelayed(active),
@@ -37,6 +52,7 @@ describe('useDelayed', () => {
     await act(async () => jest.advanceTimersByTime(LOADING_GRACE_MS));
     expect(result.current).toBe(true);
     await act(async () => rerender({ active: false }));
+    await act(async () => jest.advanceTimersByTime(LOADING_MIN_MS));
     expect(result.current).toBe(false);
   });
 });

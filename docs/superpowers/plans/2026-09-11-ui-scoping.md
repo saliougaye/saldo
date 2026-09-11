@@ -44,9 +44,16 @@ slide; anything triggered many times a day, which gets `pressMs` opacity/scale a
 hand-written count-up and the skeleton pulse. Nothing is communicated by motion alone — every
 animation above decorates a change already visible in a number, a colour or a label.
 
-**Loading states** came with it: `Skeleton` / `SkeletonRow` / `SkeletonList`, shown through
-`useDelayed` so a query the device answers in a frame never flashes one (180ms grace). The
-transactions list uses them instead of a bare spinner.
+**Loading states** came with it: `Skeleton` / `SkeletonRow` / `SkeletonList`, and `StatsSkeleton`
+shaped like the cards it replaces. `useDelayed` decides when they show: nothing for the first
+120ms, because a local SQLite query usually answers in a frame or two and a skeleton that flashes
+reads as a glitch; and once one is up it stays 320ms, because a skeleton that blinks out after
+30ms is worse than none. On most devices the transactions list therefore shows **no** skeleton —
+that is the query being fast, not the skeleton being broken.
+
+Statistics is the screen that needed it: it reads six cycles, and it used to render its cards
+against an empty array first, so the page laid out short and then grew. It now renders the header
+alone until the first result arrives, and the cards fade in staggered.
 
 **Original brief.**
 

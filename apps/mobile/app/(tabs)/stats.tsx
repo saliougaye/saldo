@@ -20,17 +20,21 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { Segmented } from '../../src/components/Segmented';
-import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useDelayed } from '../../src/components/useDelayed';
+import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { CashflowChart } from '../../src/features/stats/CashflowChart';
 import { SplitBar } from '../../src/features/stats/SplitBar';
+import { StatsSkeleton } from '../../src/features/stats/StatsSkeleton';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -52,7 +56,10 @@ export default function StatsTab() {
 
   const historyStart =
     previousPeriods(def, period.range, CASHFLOW_CYCLES).at(-1)?.start ?? period.range.start;
-  const rows = useTransactionsInRange(historyStart, period.range.end);
+  // The query, not just its rows: this screen reads six cycles, and rendering it against an empty
+  // array first is what made it jump when the data landed.
+  const { rows, loaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  const loading = useDelayed(!loaded);
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -146,136 +153,164 @@ export default function StatsTab() {
     [rows, period.range, today, direction],
   );
 
+  if (!loaded) {
+    return (
+      <Screen underTabBar>
+        <PeriodHeader />
+        {loading ? <StatsSkeleton /> : null}
+      </Screen>
+    );
+  }
+
   return (
     <Screen underTabBar>
       <PeriodHeader />
 
-      <Card>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            gap: 8,
-          }}
-        >
-          <Text weight="medium" tracking="tight">
-            {t('stats.cashflow')}
-          </Text>
-          <Text size="caption" color="textFaint" numberOfLines={1}>
-            {t('stats.lastCycles')}
-          </Text>
-        </View>
-        <View style={{ marginTop: 18 }}>
-          <CashflowChart bars={bars} currency={currency} locale={locale} />
-        </View>
-      </Card>
+      <Animated.View entering={entering(0)}>
+        <Card>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <Text weight="medium" tracking="tight">
+              {t('stats.cashflow')}
+            </Text>
+            <Text size="caption" color="textFaint" numberOfLines={1}>
+              {t('stats.lastCycles')}
+            </Text>
+          </View>
+          <View style={{ marginTop: 18 }}>
+            <CashflowChart bars={bars} currency={currency} locale={locale} />
+          </View>
+        </Card>
+      </Animated.View>
 
-      <Card>
-        <Text weight="medium" tracking="tight">
-          {t('stats.committed')}
-        </Text>
-        <View style={{ marginTop: 12 }}>
-          <SplitBar
-            segments={[
-              { key: 'committed', amount: committed, colour: theme.palette.barGrey },
-              { key: 'discretionary', amount: discretionary, colour: theme.palette.accent },
-            ]}
-          />
-        </View>
-        <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
-          {t('stats.committedLine', {
-            pct: committedPct,
-            amount: formatMoney(committed, currency, locale),
-          })}
-        </Text>
-      </Card>
-
-      {showProjection ? (
+      <Animated.View entering={entering(1)}>
         <Card>
           <Text weight="medium" tracking="tight">
-            {t('stats.projection')}
+            {t('stats.committed')}
           </Text>
+          <View style={{ marginTop: 12 }}>
+            <SplitBar
+              segments={[
+                { key: 'committed', amount: committed, colour: theme.palette.barGrey },
+                { key: 'discretionary', amount: discretionary, colour: theme.palette.accent },
+              ]}
+            />
+          </View>
+          <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
+            {t('stats.committedLine', {
+              pct: committedPct,
+              amount: formatMoney(committed, currency, locale),
+            })}
+          </Text>
+        </Card>
+      </Animated.View>
+
+      {showProjection ? (
+        <Animated.View entering={entering(2)}>
+          <Card>
+            <Text weight="medium" tracking="tight">
+              {t('stats.projection')}
+            </Text>
+            <AmountText
+              minor={projection}
+              currency={currency}
+              locale={locale}
+              size="amountMd"
+              weight="semibold"
+              tracking="tighter"
+              style={{ marginTop: 4 }}
+            />
+            <Text size="footnote" color="textMuted" style={{ marginTop: 6 }}>
+              {t(
+                projection >= (cycleMedian ?? 0)
+                  ? 'stats.projectionAbove'
+                  : 'stats.projectionBelow',
+                {
+                  amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
+                },
+              )}
+            </Text>
+          </Card>
+        </Animated.View>
+      ) : null}
+
+      <Animated.View entering={entering(3)}>
+        <Card>
+          <Segmented
+            accessibilityLabel={t('stats.split')}
+            options={[
+              { value: 'expense', label: t('stats.expenses') },
+              { value: 'income', label: t('stats.income') },
+            ]}
+            value={direction}
+            onChange={setDirection}
+          />
           <AmountText
-            minor={projection}
+            minor={split.total}
             currency={currency}
             locale={locale}
             size="amountMd"
             weight="semibold"
             tracking="tighter"
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 12 }}
           />
-          <Text size="footnote" color="textMuted" style={{ marginTop: 6 }}>
-            {t(
-              projection >= (cycleMedian ?? 0) ? 'stats.projectionAbove' : 'stats.projectionBelow',
-              {
-                amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
-              },
-            )}
-          </Text>
-        </Card>
-      ) : null}
-
-      <Card>
-        <Segmented
-          accessibilityLabel={t('stats.split')}
-          options={[
-            { value: 'expense', label: t('stats.expenses') },
-            { value: 'income', label: t('stats.income') },
-          ]}
-          value={direction}
-          onChange={setDirection}
-        />
-        <AmountText
-          minor={split.total}
-          currency={currency}
-          locale={locale}
-          size="amountMd"
-          weight="semibold"
-          tracking="tighter"
-          style={{ marginTop: 12 }}
-        />
-        <View style={{ marginTop: 10 }}>
-          <SplitBar
-            segments={split.rows.map((row) => ({
-              key: row.id,
-              amount: row.amount,
-              colour: row.colour,
-            }))}
-          />
-        </View>
-        <View style={{ marginTop: 6 }}>
-          {split.rows.length === 0 ? (
-            <Text color="textMuted" style={{ paddingVertical: 12 }}>
-              {t('stats.empty')}
-            </Text>
-          ) : (
-            split.rows.map((row) => (
-              <ListRow
-                key={row.id}
-                title={row.name}
-                subtitle={`${row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)} · ${t('stats.ofTotal', { pct: row.share })}`}
-                leading={<IconBox name={row.icon} colour={row.colour} />}
-                onPress={() => router.push({ pathname: '/category/[id]', params: { id: row.id } })}
-                trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
-              />
-            ))
-          )}
-          {excluded.length === 0 ? null : (
-            <ListRow
-              title={t('stats.excludedRow', { count: excluded.length })}
-              trailing={
-                <AmountText
-                  minor={excluded.reduce((sum, tx) => sum + tx.amount, 0)}
-                  currency={currency}
-                  locale={locale}
-                  color="textMuted"
-                />
-              }
+          <View style={{ marginTop: 10 }}>
+            <SplitBar
+              segments={split.rows.map((row) => ({
+                key: row.id,
+                amount: row.amount,
+                colour: row.colour,
+              }))}
             />
-          )}
-        </View>
-      </Card>
+          </View>
+          <View style={{ marginTop: 6 }}>
+            {split.rows.length === 0 ? (
+              <Text color="textMuted" style={{ paddingVertical: 12 }}>
+                {t('stats.empty')}
+              </Text>
+            ) : (
+              split.rows.map((row) => (
+                // Switching expense/income swaps the whole list; the rows fade rather than snap.
+                <Animated.View
+                  key={row.id}
+                  layout={reflowing}
+                  entering={appearing}
+                  exiting={leaving}
+                >
+                  <ListRow
+                    title={row.name}
+                    subtitle={`${row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)} · ${t('stats.ofTotal', { pct: row.share })}`}
+                    leading={<IconBox name={row.icon} colour={row.colour} />}
+                    onPress={() =>
+                      router.push({ pathname: '/category/[id]', params: { id: row.id } })
+                    }
+                    trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
+                  />
+                </Animated.View>
+              ))
+            )}
+            {excluded.length === 0 ? null : (
+              <ListRow
+                title={t('stats.excludedRow', { count: excluded.length })}
+                trailing={
+                  <AmountText
+                    minor={excluded.reduce((sum, tx) => sum + tx.amount, 0)}
+                    currency={currency}
+                    locale={locale}
+                    color="textMuted"
+                  />
+                }
+              />
+            )}
+          </View>
+        </Card>
+      </Animated.View>
 
       <Text size="caption" color="textFaint">
         {formatCycleRange(period.range, locale, today)}
