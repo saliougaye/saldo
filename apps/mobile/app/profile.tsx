@@ -56,12 +56,6 @@ export default function ProfileScreen() {
     light: t('profile.light'),
   }[settings?.theme ?? 'system'];
 
-  const soon = (
-    <Text size="footnote" color="textFaint">
-      {t('profile.soon')}
-    </Text>
-  );
-
   return (
     <Screen>
       <BackButton />
@@ -136,7 +130,7 @@ export default function ProfileScreen() {
               </Text>
             }
           />
-          <ListRow title={t('profile.importCsv')} trailing={soon} />
+          <ListRow title={t('profile.importCsv')} onPress={() => router.push('/profile/import')} />
           <ListRow title={t('profile.exportData')} onPress={() => router.push('/profile/export')} />
           <ListRow
             title={t('profile.restoreBackup')}
