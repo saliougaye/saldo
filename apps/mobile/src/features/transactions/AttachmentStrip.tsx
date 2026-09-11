@@ -1,7 +1,7 @@
 import { MAX_ATTACHMENTS_PER_TRANSACTION } from '@saldo/core';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import { addAttachment, removeAttachment } from '../../attachments/attachmentService';
@@ -35,28 +35,35 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
   const rows = useAttachments(transactionId);
   const [sourceOpen, setSourceOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Held until the sheet has actually gone: a native picker opened while it is still dismissing
+  // never appears (see `Sheet.onDismissed`).
+  const pending = useRef<(() => Promise<CapturedFile | null>) | null>(null);
   const full = rows.length >= MAX_ATTACHMENTS_PER_TRANSACTION;
 
-  const add = useCallback(
-    (capture: () => Promise<CapturedFile | null>) => () => {
-      setSourceOpen(false);
-      setError(null);
-      void (async () => {
-        try {
-          const captured = await capture();
-          if (captured === null) return;
-          await addAttachment(repos, transactionId, captured);
-        } catch (caught) {
-          setError(
-            caught instanceof AttachmentTooLargeError
-              ? t('attachments.tooLarge')
-              : t('attachments.failed'),
-          );
-        }
-      })();
-    },
-    [repos, transactionId, t],
-  );
+  const choose = (capture: () => Promise<CapturedFile | null>) => () => {
+    pending.current = capture;
+    setError(null);
+    setSourceOpen(false);
+  };
+
+  const runPending = useCallback(() => {
+    const capture = pending.current;
+    pending.current = null;
+    if (capture === null) return;
+    void (async () => {
+      try {
+        const captured = await capture();
+        if (captured === null) return;
+        await addAttachment(repos, transactionId, captured);
+      } catch (caught) {
+        setError(
+          caught instanceof AttachmentTooLargeError
+            ? t('attachments.tooLarge')
+            : t('attachments.failed'),
+        );
+      }
+    })();
+  }, [repos, transactionId, t]);
 
   return (
     <View style={{ gap: 8 }}>
@@ -135,10 +142,18 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
         </Text>
       )}
 
-      <Sheet visible={sourceOpen} onClose={() => setSourceOpen(false)} title={t('attachments.add')}>
-        <ListRow title={t('attachments.camera')} onPress={add(captureFromCamera)} />
-        <ListRow title={t('attachments.library')} onPress={add(captureFromLibrary)} />
-        <ListRow title={t('attachments.document')} onPress={add(captureDocument)} />
+      <Sheet
+        visible={sourceOpen}
+        onClose={() => {
+          pending.current = null;
+          setSourceOpen(false);
+        }}
+        onDismissed={runPending}
+        title={t('attachments.add')}
+      >
+        <ListRow title={t('attachments.camera')} onPress={choose(captureFromCamera)} />
+        <ListRow title={t('attachments.library')} onPress={choose(captureFromLibrary)} />
+        <ListRow title={t('attachments.document')} onPress={choose(captureDocument)} />
       </Sheet>
     </View>
   );

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { type ReactNode, useEffect, useRef } from 'react';
+import { Modal, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
@@ -11,6 +11,14 @@ export interface SheetProps {
   children: ReactNode;
   /** Form sheets take the taller slide-up timing of §13. */
   tall?: boolean;
+  /**
+   * Runs once the sheet has finished going away, not when it was asked to.
+   *
+   * iOS presents one view controller at a time: anything native opened while this modal is still
+   * dismissing — an image picker, a document picker, a share sheet — is silently dropped. Waiting
+   * for this is the difference between a picker that opens and one that does nothing at all.
+   */
+  onDismissed?: () => void;
 }
 
 /**
@@ -18,11 +26,35 @@ export interface SheetProps {
  * works over any screen without a host provider; `@gorhom/bottom-sheet` is reserved for the
  * gesture-driven sheets that need snap points.
  */
-export function Sheet({ visible, onClose, title, children, tall = false }: SheetProps) {
+export function Sheet({
+  visible,
+  onClose,
+  title,
+  children,
+  tall = false,
+  onDismissed,
+}: SheetProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+
+  // `Modal`'s `onDismiss` is iOS-only, so Android is served by watching the flag go false. The
+  // ref keeps the latest callback without making the effect re-run on every render.
+  const dismissed = useRef(onDismissed);
+  dismissed.current = onDismissed;
+  const wasVisible = useRef(visible);
+  useEffect(() => {
+    if (Platform.OS !== 'ios' && wasVisible.current && !visible) dismissed.current?.();
+    wasVisible.current = visible;
+  }, [visible]);
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="close"
