@@ -13,9 +13,20 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   assetBundlePatterns: ['**/*'],
+  /**
+   * Saldo's mark is the raccoon mascot; `docs/design/logo/mascotte/README.md` is its character
+   * sheet. This fallback covers web and anything that ignores the per-platform icons below.
+   */
+  icon: './assets/icon.png',
   ios: {
     bundleIdentifier: bundleId,
     supportsTablet: false,
+    // iOS 18 picks one of the three by appearance. All must be opaque: iOS rejects an alpha channel.
+    icon: {
+      light: './assets/icon.png',
+      dark: './assets/ios-icon-dark.png',
+      tinted: './assets/ios-icon-tinted.png',
+    },
     infoPlist: {
       NSFaceIDUsageDescription: 'Unlock Saldo with Face ID.',
     },
@@ -23,6 +34,16 @@ const config: ExpoConfig = {
   android: {
     // SDK 57 is edge-to-edge by default, so there is no flag to set here.
     package: bundleId,
+    /**
+     * The launcher crops the foreground to its own shape, so the mascot is drawn smaller and
+     * centred here than in `icon.png`, inside the 66/108 safe zone. `monochromeImage` carries
+     * alpha only: Android tints it for themed icons, and the mask reads as the hole in the face.
+     */
+    adaptiveIcon: {
+      foregroundImage: './assets/android-icon-foreground.png',
+      backgroundImage: './assets/android-icon-background.png',
+      monochromeImage: './assets/android-icon-monochrome.png',
+    },
   },
   /**
    * iOS shows these when it asks, so they are localised like any other user-visible string: the
@@ -32,11 +53,33 @@ const config: ExpoConfig = {
     en: './locales/en.json',
     it: './locales/it.json',
   },
+  web: {
+    favicon: './assets/favicon.png',
+  },
   plugins: [
     'expo-router',
     'expo-font',
     'expo-sqlite',
-    'expo-splash-screen',
+    [
+      'expo-splash-screen',
+      {
+        /**
+         * The splash images carry alpha and no background of their own, so the colours below are
+         * the only thing painted behind them: `palettes.light.page` and `palettes.dark.page` from
+         * `packages/ui/src/tokens.ts`, which is what the first screen shows underneath its cards.
+         * The dark mascot is the variant whose ears take the head's grey — the black ones vanish
+         * against `#050505`.
+         */
+        image: './assets/splash-icon.png',
+        imageWidth: 180,
+        resizeMode: 'contain',
+        backgroundColor: '#E9E9E7',
+        dark: {
+          image: './assets/splash-icon-dark.png',
+          backgroundColor: '#050505',
+        },
+      },
+    ],
     'expo-local-authentication',
     [
       'expo-image-picker',
