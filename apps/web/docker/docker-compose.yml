@@ -30,6 +30,8 @@ services:
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?set WEBAUTHN_RP_ID}
       WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Saldo}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      # Without this the server would keep no attachments at all: `none` is the default (§10).
+      ATTACHMENT_STORAGE: ${ATTACHMENT_STORAGE:-fs}
       STORAGE_DIR: /data/attachments
       REGISTRATION: ${REGISTRATION:-first-user}
       APP_REDIRECT_SCHEMES: ${APP_REDIRECT_SCHEMES:-saldo}

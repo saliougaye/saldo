@@ -1,0 +1,64 @@
+# The local development stack: Postgres, and Floci standing in for S3.
+#
+# Run from the repository root:
+#   docker compose -f apps/web/docker/docker-compose.dev.yml up -d
+#
+# The server itself is *not* in here: it runs with `pnpm --filter web dev`, so a change reloads
+# without a rebuild. This file only provides what a server needs to talk to.
+services:
+  postgres:
+    image: postgres:17
+    container_name: saldo-dev-postgres
+    environment:
+      POSTGRES_USER: saldo
+      POSTGRES_PASSWORD: saldo
+      POSTGRES_DB: saldo
+    ports:
+      # 5433 by default: 5432 is very often already taken by another project's database.
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - postgres-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U saldo']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # A Docker named volume is created root-owned, and Floci's entrypoint drops to uid 1001 whatever
+  # `user:` says — so it cannot write its own state directory and refuses to start. This hands the
+  # volume over once, then exits.
+  floci-state:
+    image: busybox:1.37
+    container_name: saldo-dev-floci-state
+    command: ['sh', '-c', 'mkdir -p /var/lib/floci && chown -R 1001:1001 /var/lib/floci']
+    volumes:
+      - floci-dev:/var/lib/floci
+
+  # Floci emulates S3 locally (§10). `latest-compat` is the tag that carries the AWS CLI, which is
+  # what the init script below needs to create the bucket.
+  floci:
+    image: floci/floci:latest-compat
+    container_name: saldo-dev-floci
+    depends_on:
+      floci-state:
+        condition: service_completed_successfully
+    ports:
+      - '${FLOCI_PORT:-4566}:4566'
+    environment:
+      FLOCI_DEFAULT_REGION: us-east-1
+      # Buckets survive `down`/`up`, so an attachment uploaded yesterday is still there today.
+      FLOCI_STORAGE_MODE: persistent
+      FLOCI_STORAGE_PERSISTENT_PATH: /var/lib/floci
+    volumes:
+      - floci-dev:/var/lib/floci
+      # LocalStack-compatible init hook: anything here runs once the emulator is ready.
+      - ./floci-init:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:4566/_localstack/health || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-dev:
+  floci-dev:
