@@ -15,7 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { AmountText } from '../../src/components/AmountText';
+import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
@@ -148,7 +148,7 @@ export default function AccountDetail() {
             ? t('accounts.toRepay')
             : t('accounts.balance')}
         </Text>
-        <AmountText
+        <AnimatedAmount
           minor={account.type === 'credit_card' && balance < 0 ? creditCardDue(balance) : balance}
           currency={currency}
           locale={locale}

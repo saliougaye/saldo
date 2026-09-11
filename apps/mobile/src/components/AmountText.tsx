@@ -1,6 +1,7 @@
 import type { CurrencyCode } from '@saldo/core';
 import { type AppLocale, formatMoneyParts, type SignDisplay } from '@saldo/i18n';
 import { Text as RnText } from 'react-native';
+import { useCountUp } from '../theme/motion';
 import { Text, type TextProps } from '../theme/Text';
 
 export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular'> {
@@ -39,4 +40,15 @@ export function AmountText({
       </RnText>
     </Text>
   );
+}
+
+/**
+ * The same amount, rolling from its previous value to the new one.
+ *
+ * Only for the figure a screen is *about* — the money left in the cycle, an account's balance.
+ * A number that animates tells you it **was** something else, which is exactly what you want to
+ * know after adding a transaction; a list where fifty of them count at once is a slot machine.
+ */
+export function AnimatedAmount({ minor, ...rest }: AmountTextProps) {
+  return <AmountText {...rest} minor={useCountUp(minor)} />;
 }

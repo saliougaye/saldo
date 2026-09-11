@@ -10,7 +10,45 @@ wherever they disagree (AGENTS.md).
 
 ---
 
-## A. Motion
+## A. Motion — ✅ decided and built (2026-09-11)
+
+**Library: `react-native-reanimated` 4**, already installed with its worklets plugin. Layout and
+entering/exiting animations run on the UI thread, so they keep their frames while JavaScript is
+busy applying a sync or a filter — the thing that would otherwise drop frames exactly when the
+list is changing. `LayoutAnimation` was not considered further: crude, and iOS-flaky.
+
+**The scale lives in `@saldo/ui` tokens**, reusing what was there (`fadeMs` 200 for an element,
+`sheetMs` 280 for a screen, `progressMs` 300 for a bar) and adding three: `pressMs` 120 for
+instant feedback, `countMs` 420 for a number rolling, `staggerMs` 40 between siblings. No duration
+is typed into a screen.
+
+**One module, `src/theme/motion.ts`**, exports the four presets everything uses — `entering(i)`,
+`appearing`, `leaving`, `reflowing` — plus `useMotion()` and `useCountUp()`.
+
+**What animates, and why:**
+
+| What | Trigger | Preset | What it says |
+| --- | --- | --- | --- |
+| The **Remaining** figure, an account balance, Totale spendibile | the value changes | `useCountUp` | it *was* something else — the thing you want to know after adding a transaction |
+| Budget and cycle bars | the ratio changes | `withTiming` on `scaleX` | how far it moved, not just where it ended |
+| Transaction rows and day groups | filter, delete, sync | `appearing` / `leaving` / `reflowing` | which rows went, and that the list closed up rather than jumping |
+| Home cards | screen mount | `entering(0…4)`, 40ms apart | order of importance, once per launch |
+| Toast | it arrives | `toastEntering` up from its own edge | where it came from, so a swipe would agree |
+
+**What deliberately does not:** every amount in a list (fifty numbers counting at once is a slot
+machine); tab switches and keyboard-driven actions; the sheets, which keep the platform's own
+slide; anything triggered many times a day, which gets `pressMs` opacity/scale at most.
+
+**Reduced motion** is honoured by construction, not by a check per screen: every preset carries
+`ReduceMotion.System`, so Reanimated jumps to the end state, and `useMotion().reduced` covers the
+hand-written count-up and the skeleton pulse. Nothing is communicated by motion alone — every
+animation above decorates a change already visible in a number, a colour or a label.
+
+**Loading states** came with it: `Skeleton` / `SkeletonRow` / `SkeletonList`, shown through
+`useDelayed` so a query the device answers in a frame never flashes one (180ms grace). The
+transactions list uses them instead of a bare spinner.
+
+**Original brief.**
 
 **Why now.** The app has almost no motion of its own: sheets slide because `Modal` slides, screens
 push because the navigator pushes, and everything else appears instantly. That is not a neutral

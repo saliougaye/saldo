@@ -8,7 +8,9 @@ import {
   useState,
 } from 'react';
 import { Pressable, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { leaving, toastEntering } from '../theme/motion';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -62,7 +64,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             bottom: theme.layout.toastBottom + insets.bottom,
           }}
         >
-          <View
+          <Animated.View
+            entering={toastEntering}
+            exiting={leaving}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -91,7 +95,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 </Text>
               </Pressable>
             )}
-          </View>
+          </Animated.View>
         </View>
       )}
     </ToastContext.Provider>

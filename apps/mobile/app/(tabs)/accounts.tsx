@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
-import { AmountText } from '../../src/components/AmountText';
+import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
@@ -86,7 +86,7 @@ export default function AccountsTab() {
         <Text size="footnote" color="textMuted">
           {t('accounts.spendable')}
         </Text>
-        <AmountText
+        <AnimatedAmount
           minor={spendableTotal(accounts, balances)}
           currency={currency}
           locale={locale}

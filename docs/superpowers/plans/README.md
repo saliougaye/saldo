@@ -418,9 +418,10 @@ small enough to land on its own branch without a plan file of its own.
   shared with the form strip so a PDF and a receipt look the same in both, and a row whose bytes
   this device does not hold says so rather than showing nothing — tapping it opens the viewer,
   which is what fetches them.
-- **Motion.** Still scoped as investigation **A** above — nothing extra to track here. The scope
-  decides what animates; this entry only records that the absence was noticed from use, which is the
-  evidence A was asking for.
+- ✅ **Motion.** Done on 2026-09-11 as investigation **A**, whose write-up now carries the
+  decisions: Reanimated 4, a token scale, four presets in `src/theme/motion.ts`, counting numbers,
+  lists that close up when filtered, staggered Home cards, and skeletons behind a 180ms grace.
+  Reduce Motion is honoured by construction and nothing is said by motion alone.
 - **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
   work does is decide which one was meant (probably both):
   - `TransactionFilters.accountId` exists in `@saldo/core` and `filterTransactions` honours it, but
