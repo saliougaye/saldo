@@ -29,6 +29,12 @@ export interface SyncDeps {
   deviceId: string;
   /** Runs after a successful cycle: pulled recurrences may owe occurrences (§8.5). */
   materialise?: () => void;
+  /**
+   * Moves attachment bytes (§10). Runs **after** the rows, because the server refuses blobs for a
+   * row it has not been pushed, and its failures are swallowed: a blob that will not upload must
+   * not make the whole cycle look broken.
+   */
+  syncBlobs?: () => Promise<void>;
 }
 
 function assertSameSchema(peer: number): void {
@@ -108,5 +114,6 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
   }
 
   deps.materialise?.();
+  await deps.syncBlobs?.().catch(() => undefined);
   return outcome;
 }

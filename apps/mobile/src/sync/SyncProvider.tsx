@@ -1,11 +1,13 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
+import { readBytes, storeBytes } from '../attachments/localFiles';
 import { useServer } from '../auth/ServerProvider';
 import { db } from '../db/client';
 import { createClock } from '../db/clock';
 import { useDatabase } from '../db/DatabaseProvider';
 import { runMaterialiser } from '../db/recurrenceService';
 import { usePeriod } from '../features/period/PeriodProvider';
+import { uploadPendingBlobs } from './blobSync';
 import {
   createScheduler,
   FOREGROUND_INTERVAL_MS,
@@ -47,6 +49,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         deviceId: kv.deviceId(),
         // A pulled recurrence may owe occurrences; the materialiser is idempotent.
         materialise: () => runMaterialiser(db, repos, today, def),
+        syncBlobs: async () => {
+          if (api === null) return;
+          await uploadPendingBlobs({ repos, api, readBytes, storeBytes });
+        },
       }),
     });
   }, [api, kv, repos, today, def]);

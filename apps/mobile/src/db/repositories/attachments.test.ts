@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { attachments } from '../schema';
 import { createTestDatabase } from '../testing';
 import { TooManyAttachmentsError } from './attachments';
-import { createRepositories, type Repositories } from './index';
+import { createRepositories } from './index';
 import { PENDING } from './support';
 
 const CREATED_AT = '2026-04-18T10:00:00.000Z';

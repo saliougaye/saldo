@@ -1,13 +1,16 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { removeAttachment } from '../../src/attachments/attachmentService';
+import { readBytes, storeBytes } from '../../src/attachments/localFiles';
+import { useServer } from '../../src/auth/ServerProvider';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAttachment } from '../../src/db/hooks';
+import { downloadBlob } from '../../src/sync/blobSync';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
 
@@ -24,6 +27,26 @@ export default function AttachmentViewer() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const attachment = useAttachment(id);
   const [confirming, setConfirming] = useState(false);
+  const { api } = useServer();
+  const [fetching, setFetching] = useState(false);
+
+  // §10: the row can arrive from another device long before its bytes do, so opening the viewer is
+  // what asks for them. It runs once per mount and stays quiet when it cannot: offline, or a
+  // server that keeps no attachments, both leave the row exactly as it was.
+  const missing = attachment !== null && attachment.localUri === null;
+  useEffect(() => {
+    if (!missing || api === null) return;
+    let cancelled = false;
+    setFetching(true);
+    void downloadBlob({ repos, api, readBytes, storeBytes }, id)
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setFetching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [missing, api, repos, id]);
 
   const button = (name: 'x' | 'trash', label: string, onPress: () => void) => (
     <Pressable
@@ -68,7 +91,9 @@ export default function AttachmentViewer() {
           <Text color="textMuted">{t('attachments.missing')}</Text>
         ) : attachment.localUri === null ? (
           // The row synced but this device never fetched the bytes, or the server has none.
-          <Text color="textMuted">{t('attachments.notOnThisDevice')}</Text>
+          <Text color="textMuted">
+            {fetching ? t('common.loading') : t('attachments.notOnThisDevice')}
+          </Text>
         ) : attachment.mimeType === 'application/pdf' ? (
           <View style={{ alignItems: 'center', gap: 12 }}>
             <Icon name="archive" size={48} color="#ffffff" />

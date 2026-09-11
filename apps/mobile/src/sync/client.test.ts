@@ -25,6 +25,9 @@ function fakeApi(server: FakeServer): ApiClient {
   let pulls = 0;
   return {
     hasSession: async () => true,
+    // Blobs have their own tests; these fakes only move rows.
+    putBinary: async () => undefined,
+    getBinary: async () => new Uint8Array(),
     post: async (_path, body, schema) => {
       const typed = body as PushBody;
       server.pushes.push(typed);

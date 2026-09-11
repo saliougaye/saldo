@@ -1,8 +1,10 @@
 import { compareSchemaVersion, pushRequestSchema, SYNC_SCHEMA_VERSION } from '@saldo/core';
+import { drainDeletedBlobs, enqueueDeletedBlobs } from '../../../../src/server/attachments/cleanup';
 import { getDb } from '../../../../src/server/db/client';
 import { ApiError, handle } from '../../../../src/server/http/errors';
 import { readJson } from '../../../../src/server/http/json';
 import { requireUser } from '../../../../src/server/http/requireUser';
+import { getStore } from '../../../../src/server/storage';
 import { applyPush } from '../../../../src/server/sync/push';
 
 export const runtime = 'nodejs';
@@ -29,6 +31,18 @@ export function POST(request: Request): Promise<Response> {
     }
 
     const results = await applyPush(getDb(), user.id, body, now);
+
+    // Blob housekeeping rides along with the push, and its failures stay here: a store that is
+    // unreachable must not turn somebody's sync into an error (§10).
+    void (async () => {
+      const store = await getStore();
+      if (store === null) return;
+      await enqueueDeletedBlobs(getDb(), user.id, body.changes, now);
+      await drainDeletedBlobs(getDb(), store, now);
+    })().catch((error: unknown) => {
+      console.error('[saldo] blob cleanup failed', error);
+    });
+
     return Response.json({
       schemaVersion: SYNC_SCHEMA_VERSION,
       serverTime: now.toISOString(),

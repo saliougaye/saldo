@@ -7,6 +7,7 @@ import {
   type Transaction,
   toCsv,
 } from '@saldo/core';
+import { zipSync } from 'fflate';
 import type { Repositories } from '../db/repositories';
 
 /** What an export produced: a file name and its contents, ready to be written and shared. */
@@ -38,8 +39,10 @@ function collect(repos: Repositories) {
     transactions: repos.transactions.list(),
     recurrences: repos.recurrences.list(),
     budgets: repos.budgets.list(),
-    // 09b fills this in; the field exists from the start so adding files is not a format change.
-    attachments: [],
+    attachments: repos.transactions
+      .list()
+      .flatMap((tx) => repos.attachments.listFor(tx.id))
+      .map(({ localUri: _uri, blobState: _state, ...entity }) => entity),
   };
 }
 
@@ -60,6 +63,50 @@ export function buildBackupFile(
     name: `saldo-backup-${options.today}.json`,
     contents: JSON.stringify(backup),
     mimeType: 'application/json',
+  };
+}
+
+/** What a ZIP backup needs from the device: the bytes of each attachment it can still find. */
+export interface AttachmentBytes {
+  id: string;
+  extension: string;
+  bytes: Uint8Array;
+}
+
+export interface ZipExportFile extends Omit<ExportFile, 'contents'> {
+  contents: Uint8Array;
+  /** Attachments whose local file was gone; the backup is complete apart from these. */
+  missing: string[];
+}
+
+/**
+ * §11.1: `backup.json` plus `attachments/{id}.{ext}`, zipped. Attachments this device does not
+ * hold are **listed rather than skipped silently** — a backup that quietly loses a receipt is
+ * worse than one that says which it could not include.
+ */
+export function buildZipBackup(
+  repos: Repositories,
+  options: { today: LocalDate; exportedAt: string; appVersion: string },
+  read: (id: string) => AttachmentBytes | null,
+): ZipExportFile {
+  const backup = buildBackupFile(repos, options);
+  const files: Record<string, Uint8Array> = {
+    'backup.json': new TextEncoder().encode(backup.contents),
+  };
+  const missing: string[] = [];
+  for (const attachment of collect(repos).attachments) {
+    const found = read(attachment.id);
+    if (found === null) {
+      missing.push(attachment.id);
+      continue;
+    }
+    files[`attachments/${found.id}.${found.extension}`] = found.bytes;
+  }
+  return {
+    name: `saldo-backup-${options.today}.zip`,
+    contents: zipSync(files, { level: 6 }),
+    mimeType: 'application/zip',
+    missing,
   };
 }
 

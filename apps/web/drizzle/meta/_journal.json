@@ -8,6 +8,13 @@
       "when": 1789068540553,
       "tag": "0000_white_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789125373275,
+      "tag": "0001_bright_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }
