@@ -24,6 +24,7 @@ module.exports = {
       testMatch: [
         '<rootDir>/src/db/**/*.test.ts',
         '<rootDir>/src/features/**/*.test.ts',
+        '<rootDir>/src/io/**/*.test.ts',
         '<rootDir>/src/net/**/*.test.ts',
         '<rootDir>/src/auth/**/*.test.ts',
         '<rootDir>/src/sync/**/*.test.ts',
