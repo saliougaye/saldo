@@ -29,7 +29,15 @@ describe('GET /api/health', () => {
       apiVersion: 1,
       schemaVersion: SYNC_SCHEMA_VERSION,
       registrationAllowed: true,
+      inviteRequired: false,
     });
+  });
+
+  it('says when a code is needed, so a client can ask for one before the ceremony', async () => {
+    const body = (await (await GET()).json()) as { inviteRequired: unknown };
+    // The test environment runs `REGISTRATION=open`; what matters here is that the field exists
+    // and is a boolean, because §9.5 has the app read it.
+    expect(typeof body.inviteRequired).toBe('boolean');
   });
 
   it('always reports the registration flag', async () => {

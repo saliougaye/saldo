@@ -7,6 +7,7 @@ interface Props {
   redirectUri: string;
   state: string;
   canRegister: boolean;
+  requiresInvite: boolean;
   initialMode: 'login' | 'register';
 }
 
@@ -39,9 +40,16 @@ const input = {
  * The two ceremonies of §9.3, run by Better Auth's passkey client. On success the browser follows
  * the `saldo://` redirect, which is what closes `openAuthSessionAsync` on the app side.
  */
-export function MobileAuth({ redirectUri, state, canRegister, initialMode }: Props) {
+export function MobileAuth({
+  redirectUri,
+  state,
+  canRegister,
+  requiresInvite,
+  initialMode,
+}: Props) {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [displayName, setDisplayName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,9 +91,15 @@ export function MobileAuth({ redirectUri, state, canRegister, initialMode }: Pro
     run(async () => {
       const name = displayName.trim();
       if (name.length === 0) throw new Error('Choose a name first');
-      // `context` is the plugin's passthrough to `resolveUser`, where the registration policy and
-      // the display name are enforced server-side.
-      const { error } = await authClient.passkey.addPasskey({ context: name, createSession: true });
+      const invite = inviteCode.trim();
+      if (requiresInvite && invite.length === 0) throw new Error('Enter your invite code');
+      // `context` is the plugin's passthrough to `resolveUser`, where the registration policy, the
+      // invite and the display name are all enforced server-side. It is one string, so both
+      // fields travel through it as JSON.
+      const { error } = await authClient.passkey.addPasskey({
+        context: JSON.stringify({ name, invite: requiresInvite ? invite : undefined }),
+        createSession: true,
+      });
       if (error !== null) throw new Error(error.message ?? 'Could not create the account');
       await finish();
     });
@@ -98,18 +112,35 @@ export function MobileAuth({ redirectUri, state, canRegister, initialMode }: Pro
       <p style={{ color: '#8C8C8C', margin: 0 }}>
         {mode === 'login'
           ? 'Use the passkey you registered on this server.'
-          : 'Your passkey stays on this device; the server only stores its public key.'}
+          : requiresInvite
+            ? 'Enter the invite code you were sent. Your passkey stays on this device; the server only stores its public key.'
+            : 'Your passkey stays on this device; the server only stores its public key.'}
       </p>
 
       {mode === 'register' ? (
-        <input
-          style={input}
-          placeholder="Your name"
-          value={displayName}
-          maxLength={80}
-          onChange={(event) => setDisplayName(event.target.value)}
-          autoComplete="name"
-        />
+        <>
+          <input
+            style={input}
+            placeholder="Your name"
+            value={displayName}
+            maxLength={80}
+            onChange={(event) => setDisplayName(event.target.value)}
+            autoComplete="name"
+          />
+          {requiresInvite ? (
+            <input
+              style={{ ...input, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.08em' }}
+              placeholder="Invite code"
+              value={inviteCode}
+              maxLength={32}
+              onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-label="Invite code"
+            />
+          ) : null}
+        </>
       ) : null}
 
       <button

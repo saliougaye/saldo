@@ -1,5 +1,5 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
-import { registrationAllowed } from '../../../src/server/auth/policy';
+import { registrationAllowed, registrationRequiresInvite } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { handle } from '../../../src/server/http/errors';
@@ -23,6 +23,12 @@ export function GET(): Promise<Response> {
       schemaVersion: SYNC_SCHEMA_VERSION,
       version: APP_VERSION,
       registrationAllowed: allowed,
+      /**
+       * §9.5: under `REGISTRATION=invite` the form asks for a code. The app does not use this
+       * today — the ceremony runs in the browser, which reads the same flag server-side — but a
+       * client that ever collects the code itself needs to know before it asks.
+       */
+      inviteRequired: registrationRequiresInvite(env().registration),
       /**
        * §10: false is a supported answer, not a fault. The app then keeps attachments on this
        * phone and says so, instead of queueing an upload that could never succeed.
