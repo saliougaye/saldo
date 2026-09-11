@@ -54,15 +54,44 @@ export default function BudgetsScreen() {
 
   return (
     <Screen>
-      <BackButton />
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('budgets.title')}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <BackButton />
+        <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
+          {t('budgets.title')}
+        </Text>
+        {/* Where Categorie and Conti keep theirs. The dashed card below stays for the empty
+            state, where it is the only thing to do on the screen rather than a second "+". */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('budgets.newBudget')}
+          hitSlop={10}
+          onPress={() => router.push('/budget/new')}
+        >
+          <IconBox name="plus" colour={theme.palette.textMuted} small />
+        </Pressable>
+      </View>
 
       {views.length === 0 ? (
-        <Card>
-          <Text color="textMuted">{t('budgets.empty')}</Text>
-        </Card>
+        <>
+          <Card>
+            <Text color="textMuted">{t('budgets.empty')}</Text>
+          </Card>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/budget/new')}
+            style={({ pressed }) => ({
+              borderWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: theme.palette.borderStrong,
+              borderRadius: theme.radii.card,
+              paddingVertical: 18,
+              alignItems: 'center',
+              transform: [{ scale: pressed ? 0.96 : 1 }],
+            })}
+          >
+            <Text color="textMuted">{t('budgets.newBudget')}</Text>
+          </Pressable>
+        </>
       ) : (
         views.map((view) => {
           const category = categories.find((row) => row.id === view.budget.categoryIds[0]);
@@ -111,21 +140,6 @@ export default function BudgetsScreen() {
           );
         })
       )}
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/budget/new')}
-        style={{
-          borderWidth: 1,
-          borderStyle: 'dashed',
-          borderColor: theme.palette.borderStrong,
-          borderRadius: theme.radii.card,
-          paddingVertical: 18,
-          alignItems: 'center',
-        }}
-      >
-        <Text color="textMuted">{t('budgets.newBudget')}</Text>
-      </Pressable>
 
       <BudgetDetailSheet
         visible={openId !== null}

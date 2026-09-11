@@ -6,6 +6,7 @@ import {
   dateChoices,
   emptyForm,
   formFromTransaction,
+  missingForSave,
   type TransactionFormValues,
   tagSuggestions,
   topCategories,
@@ -178,9 +179,9 @@ describe('topCategories', () => {
     );
   });
 
-  it('caps the grid', () => {
+  it('caps the grid at two rows, the "Altro" tile included', () => {
     const many = Array.from({ length: 20 }, (_, index) => category(`c${index}`));
-    expect(topCategories(many, [], 'expense')).toHaveLength(10);
+    expect(topCategories(many, [], 'expense')).toHaveLength(7);
   });
 });
 
@@ -217,5 +218,37 @@ describe('tagSuggestions / canCreateTag', () => {
     expect(canCreateTag(tags, 'vacanza')).toBe(false);
     expect(canCreateTag(tags, '  Vacanza  ')).toBe(false);
     expect(canCreateTag(tags, '   ')).toBe(false);
+  });
+});
+
+describe('missingForSave', () => {
+  const base = emptyForm(TODAY, 'acc-1');
+
+  it('asks for the amount first, because that is where the form starts', () => {
+    expect(missingForSave({ ...base, accountId: null, categoryId: null }, 2)).toBe('amount');
+  });
+
+  it('then the account, then the category', () => {
+    const withAmount = { ...base, buffer: '12', accountId: null };
+    expect(missingForSave(withAmount, 2)).toBe('account');
+    expect(missingForSave({ ...withAmount, accountId: 'acc-1' }, 2)).toBe('category');
+  });
+
+  it('tells a missing destination apart from one that is the source', () => {
+    const transfer = { ...base, kind: 'transfer' as const, buffer: '12', accountId: 'acc-1' };
+    expect(missingForSave(transfer, 2)).toBe('destination');
+    expect(missingForSave({ ...transfer, toAccountId: 'acc-1' }, 2)).toBe('sameAccount');
+    expect(missingForSave({ ...transfer, toAccountId: 'acc-2' }, 2)).toBeNull();
+  });
+
+  it('is silent once there is nothing left to fix', () => {
+    expect(missingForSave({ ...base, buffer: '12', categoryId: 'cat-1' }, 2)).toBeNull();
+  });
+
+  it('agrees with canSave, which is now defined by it', () => {
+    const cases = [base, { ...base, buffer: '12' }, { ...base, buffer: '12', categoryId: 'cat-1' }];
+    for (const values of cases) {
+      expect(canSave(values, 2)).toBe(missingForSave(values, 2) === null);
+    }
   });
 });

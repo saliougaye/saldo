@@ -1,19 +1,14 @@
-import {
-  averageSeries,
-  dailyCumulative,
-  isUpcoming,
-  periodHistory,
-  previousPeriods,
-  summarizePeriod,
-} from '@saldo/core';
+import { isUpcoming, previousPeriods, summarizePeriod } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { AmountText } from '../../src/components/AmountText';
+import Animated from 'react-native-reanimated';
+import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
+import { CardHeader } from '../../src/components/CardHeader';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
@@ -21,16 +16,16 @@ import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
-import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** How many previous cycles the "usual" line averages (§5.6). */
-const USUAL_CYCLES = 3;
+/** §6.1: the card is a heads-up; the rest is one tap away in the transactions list. */
+const UPCOMING_SHOWN = 5;
 
 export default function HomeTab() {
   const theme = useTheme();
@@ -51,22 +46,14 @@ export default function HomeTab() {
     () => summarizePeriod(rows, period.range, today),
     [rows, period.range, today],
   );
-  const current = useMemo(
-    () => dailyCumulative(rows, period.range, today),
-    [rows, period.range, today],
-  );
-  const usual = useMemo(() => {
-    const history = periodHistory(rows, def, period.range, USUAL_CYCLES);
-    return averageSeries(
-      history.map((entry) => dailyCumulative(entry.txs, entry.period, today)),
-      Math.max(1, current.length),
-    );
-  }, [rows, period.range, def, today, current.length]);
-
-  const upcoming = useMemo(
+  // Capped like the recent list: this card says "something is coming", and past five rows it
+  // stops saying that and starts being the transactions list. The header still counts them all,
+  // so the cap never hides how many there are.
+  const upcomingAll = useMemo(
     () => rows.filter((tx) => isUpcoming(tx, today) && tx.date <= period.range.end),
     [rows, today, period.range.end],
   );
+  const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
   const recent = useMemo(
     () => rows.filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start).slice(0, 5),
     [rows, today, period.range.start],
@@ -103,132 +90,129 @@ export default function HomeTab() {
     <Screen underTabBar>
       <PeriodHeader showProfile />
 
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {period.isCurrent ? t('home.remaining') : t('home.leftover')}
-        </Text>
-        <AmountText
-          minor={summary.remaining}
-          currency={currency}
-          locale={locale}
-          size="hero"
-          weight="semibold"
-          tracking="tightest"
-          style={{ marginTop: 2 }}
-        />
-        <View style={{ marginTop: 14 }}>
-          <ProgressBar
-            ratio={summary.ratio}
-            pace={period.isCurrent ? summary.pace : undefined}
-            overPace={summary.overPace}
-          />
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+      <Animated.View entering={entering(0)}>
+        <Card>
           <Text size="footnote" color="textMuted">
-            {`${t('home.income')} ${formatMoney(summary.income, currency, locale)}`}
+            {period.isCurrent ? t('home.remaining') : t('home.leftover')}
           </Text>
-          <Text size="footnote" color="textMuted">
-            {`${t('home.expenses')} ${formatMoney(summary.spent, currency, locale)}`}
-          </Text>
-        </View>
-      </Card>
-
-      <HomeBudgetCard views={views} />
-
-      <Card>
-        <View
-          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}
-        >
-          <Text weight="medium" tracking="tight">
-            {t('home.cycleTrend')}
-          </Text>
-          <AmountText
-            minor={current[current.length - 1] ?? 0}
+          <AnimatedAmount
+            minor={summary.remaining}
             currency={currency}
             locale={locale}
-            weight="medium"
+            size="hero"
+            weight="semibold"
+            tracking="tightest"
+            style={{ marginTop: 2 }}
           />
-        </View>
-        <View style={{ marginTop: 12 }}>
-          <CycleTrendChart current={current} usual={usual} />
-        </View>
-        <Text size="caption" color="textFaint" style={{ marginTop: 8 }}>
-          {t('home.trendFooter', { elapsed: period.elapsed, length: period.length })}
-        </Text>
-      </Card>
-
-      {upcoming.length === 0 ? null : (
-        <Card padded={false}>
-          <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-            <Text weight="medium" tracking="tight">
-              {t('home.upcoming')}
-            </Text>
+          <View style={{ marginTop: 14 }}>
+            <ProgressBar
+              ratio={summary.ratio}
+              pace={period.isCurrent ? summary.pace : undefined}
+              overPace={summary.overPace}
+            />
           </View>
-          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-            {upcoming.map((tx) => {
-              const meta = rowFor(tx.categoryId ?? '');
-              return (
-                <ListRow
-                  key={tx.id}
-                  upcoming
-                  title={tx.description.length > 0 ? tx.description : meta.name}
-                  subtitle={meta.name}
-                  leading={<IconBox name={meta.icon} colour={meta.colour} />}
-                  onPress={() =>
-                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                  }
-                  trailing={
-                    <AmountText
-                      minor={tx.kind === 'income' ? tx.amount : -tx.amount}
-                      currency={currency}
-                      locale={locale}
-                      color="textMuted"
-                    />
-                  }
-                />
-              );
-            })}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+            <Text size="footnote" color="textMuted">
+              {`${t('home.income')} ${formatMoney(summary.income, currency, locale)}`}
+            </Text>
+            <Text size="footnote" color="textMuted">
+              {`${t('home.expenses')} ${formatMoney(summary.spent, currency, locale)}`}
+            </Text>
           </View>
         </Card>
+      </Animated.View>
+
+      {upcomingAll.length === 0 ? null : (
+        <Animated.View entering={entering(1)}>
+          <Card padded={false}>
+            <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
+              <CardHeader
+                title={t('home.upcoming')}
+                status={t('home.upcomingCount', { count: upcomingAll.length })}
+                onPress={() => router.push('/(tabs)/transactions')}
+              />
+            </View>
+            <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+              {upcoming.map((tx) => {
+                const meta = rowFor(tx.categoryId ?? '');
+                return (
+                  <ListRow
+                    key={tx.id}
+                    upcoming
+                    title={tx.description.length > 0 ? tx.description : meta.name}
+                    subtitle={meta.name}
+                    leading={<IconBox name={meta.icon} colour={meta.colour} />}
+                    onPress={() =>
+                      router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                    }
+                    trailing={
+                      <AmountText
+                        minor={tx.kind === 'income' ? tx.amount : -tx.amount}
+                        currency={currency}
+                        locale={locale}
+                        color="textMuted"
+                      />
+                    }
+                  />
+                );
+              })}
+            </View>
+          </Card>
+        </Animated.View>
       )}
 
-      <Card padded={false}>
-        <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-          <Text weight="medium" tracking="tight">
-            {t('home.recent')}
-          </Text>
-        </View>
-        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-          {recent.length === 0 ? (
-            <Text color="textMuted" style={{ paddingVertical: 12 }}>
-              {t('transactions.empty')}
-            </Text>
-          ) : (
-            recent.map((tx) => {
-              const meta = rowFor(tx.categoryId ?? '');
-              return (
-                <ListRow
-                  key={tx.id}
-                  title={tx.description.length > 0 ? tx.description : meta.name}
-                  subtitle={meta.name}
-                  leading={<IconBox name={meta.icon} colour={meta.colour} />}
-                  onPress={() =>
-                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                  }
-                  trailing={
-                    <AmountText
-                      minor={tx.kind === 'income' ? tx.amount : -tx.amount}
-                      currency={currency}
-                      locale={locale}
-                      signDisplay={tx.kind === 'income' ? 'always' : 'negative'}
+      <Animated.View entering={entering(2)}>
+        <HomeBudgetCard views={views} />
+      </Animated.View>
+
+      <Animated.View entering={entering(3)}>
+        <Card padded={false}>
+          <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
+            <CardHeader
+              title={t('home.recent')}
+              status={t('home.allTransactions')}
+              onPress={() => router.push('/(tabs)/transactions')}
+            />
+          </View>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+            {recent.length === 0 ? (
+              <Text color="textMuted" style={{ paddingVertical: 12 }}>
+                {t('transactions.empty')}
+              </Text>
+            ) : (
+              recent.map((tx) => {
+                const meta = rowFor(tx.categoryId ?? '');
+                return (
+                  // A transaction added elsewhere slides this list down rather than snapping it.
+                  <Animated.View
+                    key={tx.id}
+                    layout={reflowing}
+                    entering={appearing}
+                    exiting={leaving}
+                  >
+                    <ListRow
+                      title={tx.description.length > 0 ? tx.description : meta.name}
+                      subtitle={meta.name}
+                      leading={<IconBox name={meta.icon} colour={meta.colour} />}
+                      onPress={() =>
+                        router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                      }
+                      trailing={
+                        <AmountText
+                          minor={tx.kind === 'income' ? tx.amount : -tx.amount}
+                          currency={currency}
+                          locale={locale}
+                          signDisplay={tx.kind === 'income' ? 'always' : 'negative'}
+                        />
+                      }
                     />
-                  }
-                />
-              );
-            })
-          )}
-        </View>
-      </Card>
+                  </Animated.View>
+                );
+              })
+            )}
+          </View>
+        </Card>
+      </Animated.View>
 
       <DevTools />
       <BudgetAlertsGate views={views} />

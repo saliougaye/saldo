@@ -7,7 +7,11 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PrimaryButton } from '../../../src/components/Button';
 import { Screen } from '../../../src/components/Screen';
+import { BackButton } from '../../../src/components/ScreenHeader';
+import { useToast } from '../../../src/components/Toast';
+import { restoreAccount } from '../../../src/db/adminService';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../../src/db/hooks';
 import { AccountForm, accountFormFrom } from '../../../src/features/accounts/AccountForm';
@@ -19,6 +23,7 @@ export default function EditAccount() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
+  const toast = useToast();
   const settings = useSettings();
   const accounts = useAccounts();
   const { today } = usePeriod();
@@ -38,7 +43,33 @@ export default function EditAccount() {
   if (account === undefined || values === null) {
     return (
       <Screen>
+        <BackButton />
         <Text color="textMuted">{t('accounts.empty')}</Text>
+      </Screen>
+    );
+  }
+
+  // Nothing in the app offers this for an archived account any more (§5.6), but a deep link or a
+  // stale back stack can still land here: restoring it is the only thing on offer.
+  if (account.archivedAt !== null) {
+    return (
+      <Screen
+        footer={
+          <PrimaryButton
+            label={t('accounts.restore')}
+            onPress={() => {
+              restoreAccount(repos, account.id);
+              toast.show(t('accounts.restored', { name: account.name }));
+              router.back();
+            }}
+          />
+        }
+      >
+        <BackButton />
+        <Text size="display" weight="semibold" tracking="tighter">
+          {account.name}
+        </Text>
+        <Text color="textMuted">{t('accounts.archivedNote')}</Text>
       </Screen>
     );
   }

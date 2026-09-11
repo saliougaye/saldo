@@ -9,6 +9,11 @@ import { useTheme } from '../theme/ThemeProvider';
 export interface BackButtonProps {
   /** Defaults to `router.back()`; screens that must confirm before leaving pass their own. */
   onPress?: () => void;
+  /**
+   * `x` for a screen presented as a sheet: it is dismissed, not navigated back from, and the two
+   * gestures deserve two different icons.
+   */
+  icon?: 'chevL' | 'x';
 }
 
 /**
@@ -16,7 +21,7 @@ export interface BackButtonProps {
  * the root Stack) because §6 draws its own chrome, so without this a pushed screen has no way back
  * other than the platform swipe gesture.
  */
-export function BackButton({ onPress }: BackButtonProps) {
+export function BackButton({ onPress, icon = 'chevL' }: BackButtonProps) {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -37,7 +42,7 @@ export function BackButton({ onPress }: BackButtonProps) {
         backgroundColor: theme.palette.raised,
       }}
     >
-      <Icon name="chevL" size={16} color={theme.palette.text} />
+      <Icon name={icon} size={16} color={theme.palette.text} />
     </Pressable>
   );
 }
@@ -45,6 +50,8 @@ export function BackButton({ onPress }: BackButtonProps) {
 export interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
+  /** Passed through to the back button; `x` for a screen presented as a sheet. */
+  backIcon?: BackButtonProps['icon'];
   /** Defaults to `router.back()`; forms that must confirm before leaving pass their own. */
   onBack?: () => void;
   /** Actions on the trailing edge (e.g. the reorder toggle in "Categorie"). */
@@ -52,10 +59,10 @@ export interface ScreenHeaderProps {
 }
 
 /** Back button plus the screen title, for the pushed screens whose title is inline (§6.16). */
-export function ScreenHeader({ title, subtitle, onBack, trailing }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, onBack, trailing, backIcon }: ScreenHeaderProps) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <BackButton onPress={onBack} />
+      <BackButton onPress={onBack} icon={backIcon} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text size="headline" weight="semibold" tracking="tight" numberOfLines={1}>
           {title}

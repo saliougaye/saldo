@@ -1,3 +1,4 @@
+import { weekdayOf } from './calendar';
 import {
   assertCycleStartDay,
   cycleContaining,
@@ -33,16 +34,9 @@ export interface PeriodDef {
   startDay: number;
 }
 
-/** Day of week with Monday as 0, from a `LocalDate` without going through a time zone. */
-function isoWeekday(date: LocalDate): number {
-  const { year, month, day } = parseLocalDate(date);
-  // getUTCDay is Sunday-based; shift so Monday is 0.
-  return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
-}
-
 /** The ISO week (Monday–Sunday) containing `date` (§5.8). */
 export function isoWeekRange(date: LocalDate): DateRange {
-  const start = addDays(date, -isoWeekday(date));
+  const start = addDays(date, -weekdayOf(date));
   return { start, end: addDays(start, 6) };
 }
 

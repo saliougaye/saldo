@@ -38,7 +38,15 @@ module.exports = {
     {
       displayName: 'app',
       preset: 'jest-expo',
-      testMatch: ['<rootDir>/src/**/*.test.tsx', '<rootDir>/src/i18n/**/*.test.ts'],
+      // Named directory by directory rather than `src/**/*.test.ts`: the `db` project claims the
+      // rest, and a file matched by both would run twice — once in an environment where
+      // better-sqlite3 cannot load.
+      testMatch: [
+        '<rootDir>/src/**/*.test.tsx',
+        '<rootDir>/src/i18n/**/*.test.ts',
+        '<rootDir>/src/components/**/*.test.ts',
+        '<rootDir>/src/theme/**/*.test.ts',
+      ],
       setupFiles: ['<rootDir>/jest.setup.js'],
       transformIgnorePatterns,
       moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },

@@ -1,3 +1,4 @@
+import type { IconName } from '@saldo/ui';
 import { Pressable, View } from 'react-native';
 import { Icon } from '../theme/Icon';
 import { Text } from '../theme/Text';
@@ -9,6 +10,8 @@ export interface ChipProps {
   onPress?: () => void;
   /** Shown on the right when the chip opens a picker. */
   chevron?: boolean;
+  /** Shown on the left: what the chip is about, at the stroke weight of its label (§13). */
+  icon?: IconName;
   accessibilityLabel?: string;
 }
 
@@ -18,6 +21,7 @@ export function Chip({
   active = false,
   onPress,
   chevron = false,
+  icon,
   accessibilityLabel,
 }: ChipProps) {
   const theme = useTheme();
@@ -28,16 +32,25 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       onPress={onPress}
       hitSlop={8}
-      style={{
+      style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         height: 30,
         paddingHorizontal: 10,
         borderRadius: theme.radii.chipSmall,
         backgroundColor: active ? theme.palette.accent : theme.palette.raised,
-      }}
+        opacity: pressed ? 0.7 : 1,
+        transform: [{ scale: pressed ? 0.96 : 1 }],
+      })}
     >
+      {icon === undefined ? null : (
+        <Icon
+          name={icon}
+          size={13}
+          color={active ? theme.palette.onAccent : theme.palette.textFaint}
+        />
+      )}
       <Text
         size="footnote"
         color={active ? 'onAccent' : 'textMuted'}

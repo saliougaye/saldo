@@ -1,6 +1,5 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
-import { formatLongDate } from '@saldo/i18n';
+import { getCurrency } from '@saldo/core';
+import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +8,7 @@ import { AmountInput } from '../../components/AmountInput';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Chip } from '../../components/Chip';
-import { IconBox } from '../../components/ListRow';
+import { DateSheet } from '../../components/DateSheet';
 import { Screen } from '../../components/Screen';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
@@ -24,14 +23,16 @@ import {
   useTransactionsInRange,
 } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
+import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { AttachmentStrip } from './AttachmentStrip';
+import { CategoryPickerSheet } from './CategoryPickerSheet';
 import {
   canCreateTag,
-  canSave,
   changeKind,
   dateChoices,
+  missingForSave,
   type TransactionFormValues,
   tagSuggestions,
   topCategories,
@@ -55,6 +56,8 @@ export interface TransactionFormProps {
 }
 
 const KINDS = ['expense', 'income', 'transfer'] as const;
+/** Four tiles per row with an 8px gap, as in the design's grid. */
+const TILE_WIDTH = '22.5%';
 
 export function TransactionForm({
   today,
@@ -77,31 +80,39 @@ export function TransactionForm({
   const currency = settings?.currency ?? 'EUR';
   const { minorDigits } = getCurrency(currency);
 
-  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
 
   // Usage counts come from the last year of rows, which is enough to rank categories and tags.
   const recent = useTransactionsInRange('1970-01-01', values.date);
+  // Seven plus the "Altro" tile is two rows: the grid stops being the whole screen, and what it
+  // pushed below the fold — the tags, the attachments — is reachable without scrolling past it.
   const grid = useMemo(
-    () =>
-      showAllCategories
-        ? categories.filter(
-            (category) =>
-              category.direction === (values.kind === 'income' ? 'income' : 'expense') &&
-              category.archivedAt === null,
-          )
-        : topCategories(categories, recent, values.kind),
-    [categories, recent, values.kind, showAllCategories],
+    () => topCategories(categories, recent, values.kind),
+    [categories, recent, values.kind],
   );
+  // A category chosen from the full list is not in the grid, so the grid grows to hold it rather
+  // than showing nothing selected.
+  const selectedOutsideGrid = useMemo(
+    () =>
+      values.categoryId === null || grid.some((category) => category.id === values.categoryId)
+        ? null
+        : (categories.find((category) => category.id === values.categoryId) ?? null),
+    [categories, grid, values.categoryId],
+  );
+  const tiles = selectedOutsideGrid === null ? grid : [selectedOutsideGrid, ...grid.slice(0, 6)];
   const suggestions = useMemo(
     () => tagSuggestions(tags, recent, tagQuery, values.tagIds),
     [tags, recent, tagQuery, values.tagIds],
   );
 
   const liveAccounts = accounts.filter((account) => account.archivedAt === null);
-  const _amount = amountBufferToMinor(values.buffer, minorDigits);
-  const ready = canSave(values, minorDigits);
+  const missing = missingForSave(values, minorDigits);
+  const ready = missing === null;
+  // A form nobody has touched yet is not incomplete, it is empty: saying "enter an amount" before
+  // the first keystroke is nagging, and the disabled button already says the form is not done.
+  const touched = mode === 'edit' || values.buffer.length > 0;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
 
@@ -131,6 +142,13 @@ export function TransactionForm({
     <Screen
       footer={
         <View style={{ gap: 8 }}>
+          {missing === null || !touched ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names
+            // the next thing to fix rather than listing everything that is unfinished.
+            <Text size="footnote" color="textMuted">
+              {t(`txForm.missing_${missing}`)}
+            </Text>
+          )}
           <PrimaryButton
             label={mode === 'new' ? t('txForm.create') : t('txForm.save')}
             disabled={!ready}
@@ -143,7 +161,11 @@ export function TransactionForm({
         </View>
       }
     >
-      <ScreenHeader title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')} />
+      {/* Presented as a sheet (see `app/_layout.tsx`), so it closes rather than goes back. */}
+      <ScreenHeader
+        backIcon="x"
+        title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')}
+      />
 
       <Segmented
         accessibilityLabel={t('txForm.amount')}
@@ -168,74 +190,16 @@ export function TransactionForm({
         </View>
       </Card>
 
-      {values.kind === 'transfer' ? (
-        <Card>
-          <View style={{ gap: 14 }}>
-            {accountRow(t('txForm.from'), values.accountId, (id) => set({ accountId: id }))}
-            {accountRow(t('txForm.to'), values.toAccountId, (id) => set({ toAccountId: id }))}
-          </View>
-        </Card>
-      ) : (
-        <>
-          <Card>
-            <Text size="footnote" color="textMuted">
-              {t('txForm.category')}
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-              {grid.map((category) => {
-                const selected = category.id === values.categoryId;
-                const colour = theme.categoryColor(category.colorIndex);
-                return (
-                  <Pressable
-                    key={category.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={category.name}
-                    onPress={() => set({ categoryId: category.id })}
-                    style={{
-                      width: '22%',
-                      alignItems: 'center',
-                      gap: 5,
-                      paddingVertical: 10,
-                      borderRadius: theme.radii.input,
-                      borderWidth: 1,
-                      borderColor: selected ? theme.palette.borderStrong : 'transparent',
-                      backgroundColor: selected ? theme.tint(colour, 0.14) : 'transparent',
-                    }}
-                  >
-                    <IconBox name={category.icon as IconName} colour={colour} small />
-                    <Text size="caption" numberOfLines={1}>
-                      {category.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-              {showAllCategories ? null : (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setShowAllCategories(true)}
-                  style={{
-                    width: '22%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                  }}
-                >
-                  <Text size="caption" color="accent">
-                    {t('txForm.otherCategory')}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-          </Card>
-          <Card>
-            {accountRow(t('txForm.account'), values.accountId, (id) => set({ accountId: id }))}
-          </Card>
-        </>
-      )}
-
       <Card>
         <View style={{ gap: 14 }}>
+          {values.kind === 'transfer' ? (
+            <>
+              {accountRow(t('txForm.from'), values.accountId, (id) => set({ accountId: id }))}
+              {accountRow(t('txForm.to'), values.toAccountId, (id) => set({ toAccountId: id }))}
+            </>
+          ) : (
+            accountRow(t('txForm.account'), values.accountId, (id) => set({ accountId: id }))
+          )}
           <View style={{ gap: 6 }}>
             <Text size="footnote" color="textMuted">
               {t('txForm.date')}
@@ -250,23 +214,126 @@ export function TransactionForm({
                 />
               ))}
               <Chip
-                label={formatLongDate(values.date, locale)}
+                // Short next to the two shortcut chips, which is all the row has space for; the
+                // year appears only when it is not the current one, and the full date is what
+                // gets announced.
+                label={
+                  values.date.slice(0, 4) === today.slice(0, 4)
+                    ? formatDayMonth(values.date, locale)
+                    : formatLongDate(values.date, locale)
+                }
+                accessibilityLabel={formatLongDate(values.date, locale)}
+                icon="cal"
+                active={!dateChoices(today).some((choice) => choice.date === values.date)}
                 onPress={() => setDatePickerOpen(true)}
                 chevron
               />
             </View>
           </View>
-          <TextField
-            label={t('txForm.description')}
-            placeholder={
-              values.kind === 'income'
-                ? t('txForm.descriptionIncome')
-                : t('txForm.descriptionExpense')
-            }
-            value={values.description}
-            onChangeText={(description) => set({ description })}
-          />
         </View>
+      </Card>
+
+      {values.kind === 'transfer' ? null : (
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+              {t('txForm.category')}
+            </Text>
+            <Text size="caption" color="textFaint">
+              {t('txForm.categoryMostUsed')}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+            {tiles.map((category) => {
+              const selected = category.id === values.categoryId;
+              const colour = theme.categoryColor(category.colorIndex);
+              return (
+                <Pressable
+                  key={category.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={category.name}
+                  onPress={() => set({ categoryId: category.id })}
+                  style={({ pressed }) => ({
+                    width: TILE_WIDTH,
+                    alignItems: 'center',
+                    gap: 5,
+                    transform: [{ scale: pressed ? 0.96 : 1 }],
+                  })}
+                >
+                  <View
+                    style={{
+                      width: '100%',
+                      height: 52,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: theme.radii.input,
+                      borderWidth: 1,
+                      borderColor: selected ? theme.palette.borderStrong : theme.palette.border,
+                      backgroundColor: selected ? theme.tint(colour, 0.18) : theme.palette.raised,
+                    }}
+                  >
+                    <Icon
+                      name={category.icon as IconName}
+                      size={18}
+                      color={selected ? colour : theme.palette.textMuted}
+                    />
+                  </View>
+                  <Text
+                    size="caption"
+                    numberOfLines={1}
+                    color={selected ? 'text' : 'textMuted'}
+                    style={{ textAlign: 'center' }}
+                  >
+                    {category.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('txForm.otherCategory')}
+              onPress={() => setPickerOpen(true)}
+              style={({ pressed }) => ({
+                width: TILE_WIDTH,
+                alignItems: 'center',
+                gap: 5,
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              })}
+            >
+              <View
+                style={{
+                  width: '100%',
+                  height: 52,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: theme.radii.input,
+                  borderWidth: 1,
+                  borderStyle: 'dashed',
+                  borderColor: theme.palette.border,
+                }}
+              >
+                <Icon name="grip" size={18} color={theme.palette.textMuted} />
+              </View>
+              <Text size="caption" color="textMuted" numberOfLines={1}>
+                {t('txForm.otherCategory')}
+              </Text>
+            </Pressable>
+          </View>
+        </Card>
+      )}
+
+      <Card>
+        <TextField
+          label={t('txForm.description')}
+          placeholder={
+            values.kind === 'income'
+              ? t('txForm.descriptionIncome')
+              : t('txForm.descriptionExpense')
+          }
+          value={values.description}
+          onChangeText={(description) => set({ description })}
+        />
       </Card>
 
       <Card>
@@ -352,20 +419,22 @@ export function TransactionForm({
         </View>
       </Card>
 
-      {datePickerOpen ? (
-        <DateTimePicker
-          value={new Date(`${values.date}T12:00:00`)}
-          mode="date"
-          onChange={(_event, selected) => {
-            setDatePickerOpen(false);
-            if (selected === undefined) return;
-            const year = selected.getFullYear();
-            const month = String(selected.getMonth() + 1).padStart(2, '0');
-            const day = String(selected.getDate()).padStart(2, '0');
-            set({ date: `${year}-${month}-${day}` });
-          }}
-        />
-      ) : null}
+      <DateSheet
+        visible={datePickerOpen}
+        value={values.date}
+        today={today}
+        onSelect={(date) => set({ date })}
+        onClose={() => setDatePickerOpen(false)}
+      />
+
+      <CategoryPickerSheet
+        visible={pickerOpen}
+        categories={categories}
+        kind={values.kind}
+        selectedId={values.categoryId}
+        onSelect={(categoryId) => set({ categoryId })}
+        onClose={() => setPickerOpen(false)}
+      />
     </Screen>
   );
 }

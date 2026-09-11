@@ -2,7 +2,6 @@ import {
   amountBufferToMinor,
   autoBudgetName,
   BUDGET_ALERT_THRESHOLDS,
-  type Budget,
   categorySpendHistory,
   getCurrency,
   periodHistory,
@@ -12,7 +11,7 @@ import {
 } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
@@ -22,6 +21,7 @@ import { IconBox } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
+import { Stepper } from '../../components/Stepper';
 import { TextField } from '../../components/TextField';
 import { useToast } from '../../components/Toast';
 import { Toggle } from '../../components/Toggle';
@@ -30,41 +30,12 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { usePeriod } from '../period/PeriodProvider';
+import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
+import { BUDGET_STEPS, budgetStepReady } from './steps';
 
 const HISTORY_CYCLES = 6;
 /** §6.18 footnote: the suggestion is the median plus this much headroom. */
 const SUGGESTION_HEADROOM = 0.12;
-
-export interface BudgetFormValues {
-  buffer: string;
-  categoryIds: string[];
-  name: string;
-  period: Budget['period'];
-  alertThreshold: number | null;
-  rollover: boolean;
-}
-
-export function emptyBudgetForm(): BudgetFormValues {
-  return {
-    buffer: '',
-    categoryIds: [],
-    name: '',
-    period: 'period',
-    alertThreshold: 90,
-    rollover: false,
-  };
-}
-
-export function budgetFormFrom(budget: Budget, minorDigits: 0 | 2 | 3): BudgetFormValues {
-  return {
-    buffer: (budget.amount / 10 ** minorDigits).toString(),
-    categoryIds: [...budget.categoryIds],
-    name: budget.name,
-    period: budget.period,
-    alertThreshold: budget.alertThreshold,
-    rollover: budget.rollover,
-  };
-}
 
 export interface BudgetFormProps {
   values: BudgetFormValues;
@@ -78,6 +49,8 @@ export interface BudgetFormProps {
 }
 
 /** §6.18. Reused for edit. */
+export { type BudgetFormValues, budgetFormFrom, emptyBudgetForm };
+
 export function BudgetForm({
   values,
   onChange,
@@ -89,6 +62,7 @@ export function BudgetForm({
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
+  const [stepIndex, setStepIndex] = useState(0);
   const toast = useToast();
   const settings = useSettings();
   const categories = useCategories();
@@ -133,179 +107,218 @@ export function BudgetForm({
   const amount = amountBufferToMinor(values.buffer, minorDigits);
   const ready = amount > 0 && values.categoryIds.length > 0;
 
+  const amountCard = () => (
+    <Card>
+      <Text size="footnote" color="textMuted">
+        {t('budgets.amount')}
+      </Text>
+      <View style={{ marginTop: 6 }}>
+        <AmountInput
+          buffer={values.buffer}
+          onChange={(buffer) => set({ buffer })}
+          currency={currency}
+          locale={locale}
+          autoFocus={mode === 'new'}
+          doneLabel={t('common.done')}
+        />
+      </View>
+      {suggestion === null ? null : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
+          <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+            {t('budgets.medianHint', { amount: formatMoney(suggestion, currency, locale) })}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => set({ buffer: (suggestion / 10 ** minorDigits).toString() })}
+          >
+            <Text color="accent" weight="medium">
+              {t('budgets.useMedian')}
+            </Text>
+          </Pressable>
+        </View>
+      )}
+      <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+        {t('budgets.footnote')}
+      </Text>
+    </Card>
+  );
+
+  const categoriesCard = () => (
+    <Card>
+      <Text size="footnote" color="textMuted">
+        {t('budgets.categories')}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+        {expense.map((category) => {
+          const selected = values.categoryIds.includes(category.id);
+          const isTaken = taken.has(category.id) && !selected;
+          const colour = theme.categoryColor(category.colorIndex);
+          return (
+            <Pressable
+              key={category.id}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: selected, disabled: isTaken }}
+              onPress={() => {
+                if (isTaken) {
+                  toast.show(t('budgets.taken', { name: category.name }));
+                  return;
+                }
+                set({
+                  categoryIds: selected
+                    ? values.categoryIds.filter((id) => id !== category.id)
+                    : [...values.categoryIds, category.id],
+                });
+              }}
+              style={{
+                width: '47%',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                padding: 10,
+                borderRadius: theme.radii.input,
+                borderWidth: 1,
+                borderColor: selected ? theme.palette.borderStrong : 'transparent',
+                backgroundColor: selected ? theme.tint(colour, 0.14) : theme.palette.raised,
+                opacity: isTaken ? 0.4 : 1,
+              }}
+            >
+              <IconBox name={category.icon as IconName} colour={colour} small />
+              <Text size="footnote" numberOfLines={1} style={{ flex: 1 }}>
+                {category.name}
+              </Text>
+              {isTaken ? (
+                <View
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: theme.palette.textFaint,
+                  }}
+                />
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </Card>
+  );
+
+  const detailsCard = () => (
+    <Card>
+      <View style={{ gap: 14 }}>
+        <TextField
+          label={t('budgets.name')}
+          placeholder={autoName}
+          value={values.name}
+          onChangeText={(name) => set({ name })}
+        />
+        <View style={{ gap: 6 }}>
+          <Text size="footnote" color="textMuted">
+            {t('budgets.repeats')}
+          </Text>
+          <Segmented
+            accessibilityLabel={t('budgets.repeats')}
+            options={[
+              { value: 'period', label: t('budgets.periodCycle') },
+              { value: 'week', label: t('budgets.periodWeek') },
+              { value: 'year', label: t('budgets.periodYear') },
+            ]}
+            value={values.period}
+            onChange={(value) => set({ period: value })}
+          />
+        </View>
+        <View style={{ gap: 6 }}>
+          <Text size="footnote" color="textMuted">
+            {t('budgets.alertAt')}
+          </Text>
+          <Segmented
+            accessibilityLabel={t('budgets.alertAt')}
+            options={[
+              { value: 'never', label: t('budgets.alertNever') },
+              ...BUDGET_ALERT_THRESHOLDS.map((value) => ({
+                value: String(value),
+                label: `${value}%`,
+              })),
+            ]}
+            value={values.alertThreshold === null ? 'never' : String(values.alertThreshold)}
+            onChange={(value) => set({ alertThreshold: value === 'never' ? null : Number(value) })}
+          />
+          <Text size="caption" color="textFaint">
+            {t('budgets.alertNote')}
+          </Text>
+        </View>
+        {values.period === 'period' ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text>{t('budgets.rollover')}</Text>
+            <Toggle
+              value={values.rollover}
+              onChange={(rollover) => set({ rollover })}
+              accessibilityLabel={t('budgets.rollover')}
+            />
+          </View>
+        ) : null}
+      </View>
+    </Card>
+  );
+
+  const step = BUDGET_STEPS[stepIndex] ?? 'details';
+  const stepReady = budgetStepReady(step, values, minorDigits);
+  const submit = () => onSubmit(values.name.trim().length > 0 ? values.name.trim() : autoName);
+
+  if (mode === 'edit') {
+    return (
+      <Screen
+        footer={
+          <View style={{ gap: 8 }}>
+            <PrimaryButton label={t('common.save')} disabled={!ready} onPress={submit} />
+            {onDelete === undefined ? null : (
+              <SecondaryButton label={t('budgets.deleteBudget')} onPress={onDelete} />
+            )}
+          </View>
+        }
+      >
+        <ScreenHeader title={t('budgets.editBudget')} />
+        {amountCard()}
+        {categoriesCard()}
+        {detailsCard()}
+      </Screen>
+    );
+  }
+
   return (
     <Screen
       footer={
-        <View style={{ gap: 8 }}>
-          <PrimaryButton
-            label={mode === 'new' ? t('budgets.create') : t('common.save')}
-            disabled={!ready}
-            onPress={() => onSubmit(values.name.trim().length > 0 ? values.name.trim() : autoName)}
-          />
-          {onDelete === undefined ? null : (
-            <SecondaryButton label={t('budgets.deleteBudget')} onPress={onDelete} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {stepIndex === 0 ? null : (
+            <View style={{ flex: 1 }}>
+              <SecondaryButton
+                label={t('common.back')}
+                onPress={() => setStepIndex(stepIndex - 1)}
+              />
+            </View>
           )}
+          <View style={{ flex: 2 }}>
+            <PrimaryButton
+              label={step === 'details' ? t('budgets.create') : t('common.continue')}
+              disabled={!stepReady}
+              onPress={() => (step === 'details' ? submit() : setStepIndex(stepIndex + 1))}
+            />
+          </View>
         </View>
       }
     >
-      <ScreenHeader title={mode === 'new' ? t('budgets.newBudget') : t('budgets.editBudget')} />
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('budgets.amount')}
-        </Text>
-        <View style={{ marginTop: 6 }}>
-          <AmountInput
-            buffer={values.buffer}
-            onChange={(buffer) => set({ buffer })}
-            currency={currency}
-            locale={locale}
-            autoFocus={mode === 'new'}
-            doneLabel={t('common.done')}
-          />
-        </View>
-        {suggestion === null ? null : (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
-            <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
-              {t('budgets.medianHint', { amount: formatMoney(suggestion, currency, locale) })}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => set({ buffer: (suggestion / 10 ** minorDigits).toString() })}
-            >
-              <Text color="accent" weight="medium">
-                {t('budgets.useMedian')}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-        <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
-          {t('budgets.footnote')}
-        </Text>
-      </Card>
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('budgets.categories')}
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {expense.map((category) => {
-            const selected = values.categoryIds.includes(category.id);
-            const isTaken = taken.has(category.id) && !selected;
-            const colour = theme.categoryColor(category.colorIndex);
-            return (
-              <Pressable
-                key={category.id}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: selected, disabled: isTaken }}
-                onPress={() => {
-                  if (isTaken) {
-                    toast.show(t('budgets.taken', { name: category.name }));
-                    return;
-                  }
-                  set({
-                    categoryIds: selected
-                      ? values.categoryIds.filter((id) => id !== category.id)
-                      : [...values.categoryIds, category.id],
-                  });
-                }}
-                style={{
-                  width: '47%',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: 10,
-                  borderRadius: theme.radii.input,
-                  borderWidth: 1,
-                  borderColor: selected ? theme.palette.borderStrong : 'transparent',
-                  backgroundColor: selected ? theme.tint(colour, 0.14) : theme.palette.raised,
-                  opacity: isTaken ? 0.4 : 1,
-                }}
-              >
-                <IconBox name={category.icon as IconName} colour={colour} small />
-                <Text size="footnote" numberOfLines={1} style={{ flex: 1 }}>
-                  {category.name}
-                </Text>
-                {isTaken ? (
-                  <View
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: theme.palette.textFaint,
-                    }}
-                  />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
-
-      <Card>
-        <View style={{ gap: 14 }}>
-          <TextField
-            label={t('budgets.name')}
-            placeholder={autoName}
-            value={values.name}
-            onChangeText={(name) => set({ name })}
-          />
-          <View style={{ gap: 6 }}>
-            <Text size="footnote" color="textMuted">
-              {t('budgets.repeats')}
-            </Text>
-            <Segmented
-              accessibilityLabel={t('budgets.repeats')}
-              options={[
-                { value: 'period', label: t('budgets.periodCycle') },
-                { value: 'week', label: t('budgets.periodWeek') },
-                { value: 'year', label: t('budgets.periodYear') },
-              ]}
-              value={values.period}
-              onChange={(value) => set({ period: value })}
-            />
-          </View>
-          <View style={{ gap: 6 }}>
-            <Text size="footnote" color="textMuted">
-              {t('budgets.alertAt')}
-            </Text>
-            <Segmented
-              accessibilityLabel={t('budgets.alertAt')}
-              options={[
-                { value: 'never', label: t('budgets.alertNever') },
-                ...BUDGET_ALERT_THRESHOLDS.map((value) => ({
-                  value: String(value),
-                  label: `${value}%`,
-                })),
-              ]}
-              value={values.alertThreshold === null ? 'never' : String(values.alertThreshold)}
-              onChange={(value) =>
-                set({ alertThreshold: value === 'never' ? null : Number(value) })
-              }
-            />
-            <Text size="caption" color="textFaint">
-              {t('budgets.alertNote')}
-            </Text>
-          </View>
-          {values.period === 'period' ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Text>{t('budgets.rollover')}</Text>
-              <Toggle
-                value={values.rollover}
-                onChange={(rollover) => set({ rollover })}
-                accessibilityLabel={t('budgets.rollover')}
-              />
-            </View>
-          ) : null}
-        </View>
-      </Card>
+      <ScreenHeader title={t('budgets.newBudget')} />
+      <Stepper step={stepIndex} total={BUDGET_STEPS.length} label={t(`budgets.step_${step}`)} />
+      {step === 'categories' ? categoriesCard() : null}
+      {step === 'amount' ? amountCard() : null}
+      {step === 'details' ? detailsCard() : null}
     </Screen>
   );
 }

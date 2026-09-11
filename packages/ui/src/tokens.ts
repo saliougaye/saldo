@@ -175,6 +175,15 @@ export const layout = {
 export const motion = {
   /** cubic-bezier control points used by sheets, swipes and progress bars */
   easing: [0.32, 0.72, 0, 1] as const,
+  /**
+   * Instant feedback: a press, a colour, anything the user triggers many times a day. Anything
+   * longer here reads as lag, because the user is looking straight at it when it starts.
+   */
+  pressMs: 120,
+  /** A number rolling from its old value to its new one, long enough to read as a change. */
+  countMs: 420,
+  /** Between staggered siblings. Short: a list that takes a second to arrive is a slow list. */
+  staggerMs: 40,
   sheetMs: 280,
   tallSheetMs: 300,
   fadeMs: 200,

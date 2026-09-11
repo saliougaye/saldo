@@ -10,7 +10,52 @@ wherever they disagree (AGENTS.md).
 
 ---
 
-## A. Motion
+## A. Motion — ✅ decided and built (2026-09-11)
+
+**Library: `react-native-reanimated` 4**, already installed with its worklets plugin. Layout and
+entering/exiting animations run on the UI thread, so they keep their frames while JavaScript is
+busy applying a sync or a filter — the thing that would otherwise drop frames exactly when the
+list is changing. `LayoutAnimation` was not considered further: crude, and iOS-flaky.
+
+**The scale lives in `@saldo/ui` tokens**, reusing what was there (`fadeMs` 200 for an element,
+`sheetMs` 280 for a screen, `progressMs` 300 for a bar) and adding three: `pressMs` 120 for
+instant feedback, `countMs` 420 for a number rolling, `staggerMs` 40 between siblings. No duration
+is typed into a screen.
+
+**One module, `src/theme/motion.ts`**, exports the four presets everything uses — `entering(i)`,
+`appearing`, `leaving`, `reflowing` — plus `useMotion()` and `useCountUp()`.
+
+**What animates, and why:**
+
+| What | Trigger | Preset | What it says |
+| --- | --- | --- | --- |
+| The **Remaining** figure, an account balance, Totale spendibile | the value changes | `useCountUp` | it *was* something else — the thing you want to know after adding a transaction |
+| Budget and cycle bars | the ratio changes | `withTiming` on `scaleX` | how far it moved, not just where it ended |
+| Transaction rows and day groups | filter, delete, sync | `appearing` / `leaving` / `reflowing` | which rows went, and that the list closed up rather than jumping |
+| Home cards | screen mount | `entering(0…4)`, 40ms apart | order of importance, once per launch |
+| Toast | it arrives | `toastEntering` up from its own edge | where it came from, so a swipe would agree |
+
+**What deliberately does not:** every amount in a list (fifty numbers counting at once is a slot
+machine); tab switches and keyboard-driven actions; the sheets, which keep the platform's own
+slide; anything triggered many times a day, which gets `pressMs` opacity/scale at most.
+
+**Reduced motion** is honoured by construction, not by a check per screen: every preset carries
+`ReduceMotion.System`, so Reanimated jumps to the end state, and `useMotion().reduced` covers the
+hand-written count-up and the skeleton pulse. Nothing is communicated by motion alone — every
+animation above decorates a change already visible in a number, a colour or a label.
+
+**Loading states** came with it: `Skeleton` / `SkeletonRow` / `SkeletonList`, and `StatsSkeleton`
+shaped like the cards it replaces. `useDelayed` decides when they show: nothing for the first
+120ms, because a local SQLite query usually answers in a frame or two and a skeleton that flashes
+reads as a glitch; and once one is up it stays 320ms, because a skeleton that blinks out after
+30ms is worse than none. On most devices the transactions list therefore shows **no** skeleton —
+that is the query being fast, not the skeleton being broken.
+
+Statistics is the screen that needed it: it reads six cycles, and it used to render its cards
+against an empty array first, so the page laid out short and then grew. It now renders the header
+alone until the first result arrives, and the cards fade in staggered.
+
+**Original brief.**
 
 **Why now.** The app has almost no motion of its own: sheets slide because `Modal` slides, screens
 push because the navigator pushes, and everything else appears instantly. That is not a neutral
@@ -49,7 +94,23 @@ is nothing slow enough to need them), and anything that depends on gesture-drive
 
 ---
 
-## B. The transaction form (§6.16), new and edit
+## B. The transaction form (§6.16), new and edit — ◐ partly decided (2026-09-11)
+
+Taken now, from the user's own feedback that the category grid was hiding everything under it:
+
+- **Account and date moved above the grid**, in one card. Both are set on nearly every transaction;
+  the grid was three rows tall and pushed them, the tags and the attachments off the screen.
+- **The grid caps at seven** (`topCategories(..., limit = 7)`) plus the "Altro" tile: two rows.
+  "Altro" now opens `CategoryPickerSheet` — the full list, subcategories indented under their
+  parents — instead of expanding the card inline, which is what made the form grow without bound.
+- A category chosen from the picker that is not in the grid is **shown in it anyway**, so the
+  selection is never invisible.
+
+**Still open:** the timed fast path, what a "more" disclosure should hide (`excludeFromTotals`,
+the note), whether recents should be "most used in this period" rather than all-time, and the
+error/save-button rules. The brief below stands for those.
+
+**Original brief.**
 
 **Why now.** It is the screen the app exists for — most sessions are "add a transaction and leave"
 — and it is the one that has grown the most: amount keypad, kind, account, category, date, tags,
@@ -82,7 +143,28 @@ function signature), and a list of what moves or goes.
 
 ---
 
-## C. Date and time entry
+## C. Date and time entry — ✅ decided and built (2026-09-11)
+
+**Decision: drawn, not native.** `@react-native-community/datetimepicker` is gone from the app
+(dependency removed). `src/components/Calendar.tsx` draws the month grid from `@saldo/ui` tokens
+and `monthGrid` in `@saldo/core`; `src/components/DateSheet.tsx` wraps it for a single day, and
+`CustomRangeSheet` uses the same component in its range mode — so there is one calendar, not two.
+
+- **Why drawn.** The platform picker arrives in its own typeface, radii and colours, differs
+  between iOS and Android, and cannot draw a range at all — which meant the period range sheet was
+  already a second, worse date UI. The cost was one component plus its tests.
+- **Shortcuts.** "Oggi" and "Ieri" stay chips on the transaction form (no sheet to open at all for
+  the common case); the sheet repeats "Oggi" so a mis-tap is one tap to undo.
+- **Grid.** Always six rows, so the sheet does not change height between months. The neighbouring
+  months' days are drawn faintly rather than left blank.
+- **Locale.** The week starts where `firstWeekdayFor(locale)` says — Monday for Italian, Sunday for
+  English — and the ISO week the period logic uses (§5.2) is untouched by that display choice.
+- **Time.** Nothing in the picker mentions one: Saldo stores `LocalDate` and no time (D8).
+
+**What is left of C:** nothing blocking. If the drawn calendar needs a year jump (tapping the month
+title) or a swipe between months, that is a follow-up, not a decision.
+
+**Original brief.**
 
 **Why now.** The date row opens a picker that was built to be functional, and dates are entered on
 *every* transaction. The design draws a calendar (lines 1120–1180) that the app does not have.

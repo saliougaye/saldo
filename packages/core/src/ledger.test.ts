@@ -5,6 +5,7 @@ import {
   isUpcoming,
   rollupToParents,
   spendingByCategory,
+  splitUpcoming,
   summarizePeriod,
 } from './ledger';
 
@@ -76,5 +77,44 @@ describe('spendingByCategory / rollupToParents', () => {
       'cat-home': 78000,
       'cat-groceries': 8240,
     });
+  });
+});
+
+describe('splitUpcoming', () => {
+  const row = (id: string, date: string, kind: 'expense' | 'income' = 'expense', amount = 1000) =>
+    ({ id, date, kind, amount }) as const;
+
+  it('puts today on the settled side, tomorrow on the upcoming one', () => {
+    const split = splitUpcoming(
+      [row('a', '2026-09-12'), row('b', '2026-09-11'), row('c', '2026-09-10')],
+      '2026-09-11',
+    );
+    expect(split.upcoming.map((row) => row.id)).toEqual(['a']);
+    expect(split.settled.map((row) => row.id)).toEqual(['b', 'c']);
+  });
+
+  it('keeps the order it was given, so a sorted list stays sorted', () => {
+    const split = splitUpcoming(
+      [row('a', '2026-09-20'), row('b', '2026-09-15'), row('c', '2026-09-05')],
+      '2026-09-11',
+    );
+    expect(split.upcoming.map((row) => row.id)).toEqual(['a', 'b']);
+  });
+
+  it('nets the upcoming rows, income up and expenses down', () => {
+    const split = splitUpcoming(
+      [row('a', '2026-09-20', 'expense', 1500), row('b', '2026-09-21', 'income', 500)],
+      '2026-09-11',
+    );
+    expect(split.upcomingNet).toBe(-1000);
+  });
+
+  it('treats a transfer as money leaving, like every other non-income row', () => {
+    const transfer = { id: 't', date: '2026-09-20', kind: 'transfer', amount: 700 } as const;
+    expect(splitUpcoming([transfer], '2026-09-11').upcomingNet).toBe(-700);
+  });
+
+  it('is empty on both sides for no rows, and nets zero', () => {
+    expect(splitUpcoming([], '2026-09-11')).toEqual({ upcoming: [], settled: [], upcomingNet: 0 });
   });
 });

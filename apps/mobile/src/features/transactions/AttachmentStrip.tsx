@@ -1,5 +1,4 @@
 import { MAX_ATTACHMENTS_PER_TRANSACTION } from '@saldo/core';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +11,7 @@ import {
   captureFromLibrary,
 } from '../../attachments/capture';
 import { AttachmentTooLargeError } from '../../attachments/localFiles';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ListRow } from '../../components/ListRow';
 import { Sheet } from '../../components/Sheet';
 import { useRepositories } from '../../db/DatabaseProvider';
@@ -19,6 +19,7 @@ import { useAttachments } from '../../db/hooks';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { AttachmentTile } from './AttachmentTile';
 
 const TILE = 72;
 
@@ -34,6 +35,7 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
   const repos = useRepositories();
   const rows = useAttachments(transactionId);
   const [sourceOpen, setSourceOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Held until the sheet has actually gone: a native picker opened while it is still dismissing
   // never appears (see `Sheet.onDismissed`).
@@ -84,38 +86,14 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {rows.map((row) => (
-            <Pressable
+            <AttachmentTile
               key={row.id}
-              accessibilityRole="button"
-              accessibilityLabel={t('attachments.open')}
+              row={row}
+              width={TILE}
+              height={TILE}
               onPress={() => router.push({ pathname: '/attachment/[id]', params: { id: row.id } })}
-              onLongPress={() => removeAttachment(repos, row.id)}
-              style={{
-                width: TILE,
-                height: TILE,
-                borderRadius: theme.radii.card,
-                overflow: 'hidden',
-                backgroundColor: theme.palette.raised,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {row.mimeType === 'application/pdf' || row.localUri === null ? (
-                // No local bytes yet means another device added it and this one has not fetched
-                // it — an inbox tile, not a broken image.
-                <Icon
-                  name={row.localUri === null ? 'inbox' : 'archive'}
-                  size={22}
-                  color={theme.palette.textMuted}
-                />
-              ) : (
-                <Image
-                  source={{ uri: row.localUri }}
-                  contentFit="cover"
-                  style={{ width: TILE, height: TILE }}
-                />
-              )}
-            </Pressable>
+              onLongPress={() => setPendingDelete(row.id)}
+            />
           ))}
 
           {full ? null : (
@@ -123,16 +101,17 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
               accessibilityRole="button"
               accessibilityLabel={t('attachments.add')}
               onPress={() => setSourceOpen(true)}
-              style={{
+              style={({ pressed }) => ({
                 width: TILE,
                 height: TILE,
-                borderRadius: theme.radii.card,
+                borderRadius: theme.radii.input,
                 borderWidth: 1,
                 borderStyle: 'dashed',
                 borderColor: theme.palette.border,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              })}
             >
               <Icon name="plus" size={20} color={theme.palette.textMuted} />
             </Pressable>
@@ -145,6 +124,19 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
           {error}
         </Text>
       )}
+
+      <ConfirmDialog
+        visible={pendingDelete !== null}
+        title={t('attachments.deleteTitle')}
+        body={t('attachments.deleteBody')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          if (pendingDelete !== null) removeAttachment(repos, pendingDelete);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
 
       <Sheet
         visible={sourceOpen}

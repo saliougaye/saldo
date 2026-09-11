@@ -125,6 +125,22 @@ export function useTransactionsInRangeQuery(start: LocalDate, end: LocalDate): T
   return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
 }
 
+/**
+ * One transaction, live. The detail screen used a plain repository read, so a row edited by a sync
+ * while the screen was open kept showing what it said when it opened (§3.3).
+ */
+export function useTransaction(id: string): Transaction | null {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(transactions)
+      .where(and(eq(transactions.id, id), isNull(transactions.deletedAt))),
+    [id],
+  );
+  const row = data[0];
+  return row === undefined ? null : toEntity(row);
+}
+
 export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transaction[] {
   return useTransactionsInRangeQuery(start, end).rows;
 }

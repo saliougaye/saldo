@@ -1,6 +1,7 @@
 import { cycleLength, type DateRange, elapsedDays, isWithin } from './cycle';
 import type { LocalDate } from './dates';
 import type { Category, Transaction } from './entities';
+import type { MinorUnits } from './money';
 
 /** The transaction fields that calculations need. */
 export type LedgerTx = Pick<
@@ -104,4 +105,38 @@ export function rollupToParents(
     totals.set(key, (totals.get(key) ?? 0) + amount);
   }
   return totals;
+}
+
+export interface UpcomingSplit<T> {
+  /** Dated after `today`: scheduled, not yet history. */
+  upcoming: T[];
+  /** Today or earlier: what actually happened. */
+  settled: T[];
+  /** Signed sum of the upcoming rows, income positive and everything else negative. */
+  upcomingNet: MinorUnits;
+}
+
+/**
+ * Splits a period's rows into what has happened and what is still to come (§5.12).
+ *
+ * The transaction list shows the settled ones and folds the rest behind a single row: a list that
+ * opens on next week's rent reads as a list of things you did, which is what makes a materialised
+ * recurrence look like a mistake. The sum travels with the split because the row that stands in
+ * for them has to say how much they are worth.
+ */
+export function splitUpcoming<T extends Pick<LedgerTx, 'date' | 'kind' | 'amount'>>(
+  txs: readonly T[],
+  today: LocalDate,
+): UpcomingSplit<T> {
+  const upcoming: T[] = [];
+  const settled: T[] = [];
+  for (const tx of txs) {
+    if (isUpcoming(tx, today)) upcoming.push(tx);
+    else settled.push(tx);
+  }
+  const upcomingNet = upcoming.reduce(
+    (sum, tx) => sum + (tx.kind === 'income' ? tx.amount : -tx.amount),
+    0,
+  );
+  return { upcoming, settled, upcomingNet };
 }

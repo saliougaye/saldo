@@ -1,6 +1,8 @@
 import { type IconNode, parseIconMarkup } from './iconNodes';
 
-// Copied verbatim from docs/design/Spese.dc.html lines 1726-1799 (object `P`).
+// Copied verbatim from docs/design/Spese.dc.html lines 1726-1799 (object `P`), plus the icons
+// noted below, taken from Lucide — the same set the design's own icons come from (24×24, stroke
+// 1.5, round caps and joins), for affordances the prototype never drew.
 export const iconMarkup = {
   house:
     '<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/>',
@@ -33,6 +35,13 @@ export const iconMarkup = {
   chevL: '<path d="m14.5 18-6-6 6-6"/>',
   chevR: '<path d="m9.5 18 6-6-6-6"/>',
   chevD: '<path d="m6 9.5 6 6 6-6"/>',
+  /**
+   * Lucide `chevrons-up-down`, kept at its own geometry rather than redrawn: the design has no
+   * affordance for "this label opens a picker", and a plain down chevron would have been the
+   * third chevron in a header that already has ‹ and ›. Two arrows read as a selector, not as
+   * navigation.
+   */
+  chevUD: '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
   search: '<circle cx="10.5" cy="10.5" r="7.5"/><path d="m21 21-4.3-4.3"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
