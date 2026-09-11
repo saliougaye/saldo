@@ -1,6 +1,8 @@
 import { amountBufferToMinor, getCurrency } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useToast } from '../../src/components/Toast';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useBudgets, useCategories, useSettings } from '../../src/db/hooks';
 import {
@@ -11,6 +13,8 @@ import {
 
 export default function NewBudget() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const toast = useToast();
   const repos = useRepositories();
   const settings = useSettings();
   const categories = useCategories();
@@ -35,6 +39,7 @@ export default function NewBudget() {
           icon: first?.icon ?? 'target',
           sortOrder: budgets.length,
         });
+        toast.show(t('budgets.created'));
         router.back();
       }}
     />

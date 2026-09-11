@@ -1,7 +1,9 @@
 import { getCurrency, newId } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { removeAttachment } from '../../src/attachments/attachmentService';
+import { useToast } from '../../src/components/Toast';
 import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../src/db/hooks';
@@ -12,6 +14,8 @@ import { emptyForm, toTransactionInput } from '../../src/features/transactions/u
 
 export default function NewTransaction() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const toast = useToast();
   const { repos } = useDatabase();
   const settings = useSettings();
   const accounts = useAccounts();
@@ -54,6 +58,7 @@ export default function NewTransaction() {
         });
         // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
         if (values.repeat) startRecurrence(db, repos, created, today, def);
+        toast.show(t('transactions.created'));
         router.back();
       }}
     />
