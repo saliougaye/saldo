@@ -404,6 +404,10 @@ export const en: Messages = {
     netWorth: 'Net worth',
     archived: 'Archived accounts',
     restore: 'Restore',
+    archivedNote:
+      'They stay in your net worth and in past transactions, but no longer show up among your accounts.',
+    archivedEmpty: 'No archived accounts',
+    restored: '“{{name}}” restored',
     newAccount: 'New account',
     editAccount: 'Edit account',
     name: 'Name',

@@ -406,6 +406,10 @@ export const it = {
     netWorth: 'Patrimonio complessivo',
     archived: 'Conti archiviati',
     restore: 'Ripristina',
+    archivedNote:
+      'Restano nel patrimonio complessivo e nelle transazioni passate, ma non li vedi più tra i conti.',
+    archivedEmpty: 'Nessun conto archiviato',
+    restored: '«{{name}}» ripristinato',
     newAccount: 'Nuovo conto',
     editAccount: 'Modifica conto',
     name: 'Nome',

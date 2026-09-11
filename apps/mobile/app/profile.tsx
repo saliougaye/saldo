@@ -119,7 +119,7 @@ export default function ProfileScreen() {
             title={t('profile.archivedAccounts')}
             leading={lead('archive')}
             trailing={<Text color="textMuted">{String(archived)}</Text>}
-            onPress={() => router.push('/(tabs)/accounts')}
+            onPress={() => router.push('/settings/archived-accounts')}
             chevron
           />
           <ListRow
