@@ -4,6 +4,7 @@ import {
   COMMON_CURRENCY_CODES,
   CURRENCY_CODES,
   CURRENCY_TABLE,
+  formatMinorUnits,
   getCurrency,
   maxIntegerDigits,
   minorToAmountBuffer,
@@ -161,5 +162,16 @@ describe('parseDecimalAmount', () => {
     expect(parseDecimalAmount('', '.', 2)).toBeNull();
     expect(parseDecimalAmount('1-2', '.', 2)).toBeNull();
     expect(parseDecimalAmount('-0,00', ',', 2)).toBe(0);
+  });
+});
+
+describe('formatMinorUnits', () => {
+  it('keeps every decimal place, with no grouping and no symbol', () => {
+    expect(formatMinorUnits(4500, 2)).toBe('45.00');
+    expect(formatMinorUnits(123_456_789, 2)).toBe('1234567.89');
+    expect(formatMinorUnits(-99, 2)).toBe('-0.99');
+    expect(formatMinorUnits(0, 2)).toBe('0.00');
+    expect(formatMinorUnits(1200, 0)).toBe('1200');
+    expect(formatMinorUnits(1234, 3)).toBe('1.234');
   });
 });

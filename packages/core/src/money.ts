@@ -72,6 +72,23 @@ export function minorToAmountBuffer(minor: MinorUnits, minorDigits: MinorDigits)
 }
 
 /**
+ * `12345` → `123.45`: always `minorDigits` decimals, a `.` separator, no grouping and no symbol.
+ * This is the machine-readable form of §11.2, the one a spreadsheet and a re-import both accept —
+ * unlike `minorToAmountBuffer`, which drops trailing zeros because a keypad buffer must.
+ */
+export function formatMinorUnits(minor: MinorUnits, minorDigits: MinorDigits): string {
+  const scale = 10 ** minorDigits;
+  const negative = minor < 0;
+  const abs = Math.abs(Math.trunc(minor));
+  const integer = Math.floor(abs / scale);
+  const body =
+    minorDigits === 0
+      ? String(integer)
+      : `${integer}.${String(abs % scale).padStart(minorDigits, '0')}`;
+  return negative ? `-${body}` : body;
+}
+
+/**
  * Parses a human-entered or CSV amount such as `1.842,60 €`, `-1,234.56` or `¥1,200`.
  * Everything that is not a digit, sign or separator is dropped, so any currency symbol
  * or code may surround the number. Rounds half up to the currency scale.
