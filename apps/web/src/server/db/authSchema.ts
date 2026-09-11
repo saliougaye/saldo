@@ -12,6 +12,12 @@ export const user = pgTable('user', {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  // Declared by better-auth's `admin` plugin (§9.5). `role` is `admin` for the account that
+  // installed the server and `user` for every account an invite let in.
+  role: text('role'),
+  banned: boolean('banned').default(false),
+  banReason: text('ban_reason'),
+  banExpires: timestamp('ban_expires'),
 });
 
 export const session = pgTable(
@@ -29,6 +35,9 @@ export const session = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    // Declared by better-auth's `admin` plugin. Saldo never impersonates; the column exists
+    // because the plugin's adapter reads it.
+    impersonatedBy: text('impersonated_by'),
   },
   (table) => [index('session_userId_idx').on(table.userId)],
 );

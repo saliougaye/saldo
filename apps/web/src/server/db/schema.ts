@@ -51,6 +51,35 @@ export const deletedBlobs = pgTable(
   ],
 );
 
+/**
+ * §9.5. One row per invite the owner has minted. The code itself is **never** stored — only its
+ * sha-256 — so a database backup cannot be turned into an account.
+ *
+ * Nothing is ever deleted: a used or revoked invite stays as the record of who was let in and
+ * when, which is the only audit trail a passkey-only server has.
+ */
+export const invites = pgTable(
+  'invites',
+  {
+    id: text('id').primaryKey(),
+    /** sha-256 hex of the normalised code. Unique, so a collision surfaces as an error. */
+    codeHash: text('code_hash').notNull().unique(),
+    /** What the owner wrote to remember who this was for. Never shown to the person invited. */
+    label: text('label'),
+    /**
+     * Null for an invite minted by the CLI, which runs with no session — and the first invite on
+     * a fresh server is always one of those, because no account exists yet to mint it.
+     */
+    createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    usedBy: text('used_by').references(() => user.id, { onDelete: 'set null' }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (table) => [index('invites_created_at').on(table.createdAt)],
+);
+
 export const schema = {
   user,
   session,
@@ -59,4 +88,5 @@ export const schema = {
   passkey,
   syncRows,
   deletedBlobs,
+  invites,
 };
