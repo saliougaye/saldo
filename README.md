@@ -45,9 +45,9 @@ pnpm install
 docker compose -f apps/web/docker/docker-compose.dev.yml up -d
 ```
 
-Postgres on **5433** — 5432 is usually already taken by some other project — and
-[Floci](https://github.com/floci-io/floci) on 4566 standing in for S3, with the attachment bucket
-created for you. The server is deliberately *not* in there: it runs from source so a change
+Postgres on 5432 and [Floci](https://github.com/floci-io/floci) on 4566, standing in for S3 with the
+attachment bucket created for you. `POSTGRES_PORT` moves the database if something else already
+holds that port — match `DATABASE_URL` to it. The server is deliberately *not* in there: it runs from source so a change
 reloads without a rebuild.
 
 ### Step 2 — the server

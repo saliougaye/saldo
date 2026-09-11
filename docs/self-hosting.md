@@ -90,8 +90,8 @@ without a rebuild.
 3001 — and then `PUBLIC_URL` no longer matches the origin the browser sees, so the passkey ceremony
 fails with an opaque WebAuthn error. Free the port, or set `PUBLIC_URL` to the one it chose.
 
-Postgres is published on **5433**, not 5432, because 5432 is usually already taken by some other
-project's database; `POSTGRES_PORT` overrides it. Floci listens on 4566 and creates the
+Postgres is published on 5432, and `POSTGRES_PORT` moves it when another project already holds
+that port — `DATABASE_URL` has to follow. Floci listens on 4566 and creates the
 `saldo-attachments` bucket on startup through
 `apps/web/docker/floci-init/01-create-bucket.sh`.
 
