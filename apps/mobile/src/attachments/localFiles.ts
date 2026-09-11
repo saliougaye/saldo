@@ -41,19 +41,26 @@ export interface StoredBytes {
   sha256: string;
 }
 
-/** Hex SHA-256 of the bytes themselves — the same digest §10 has the server and the peer check. */
+/**
+ * Hex SHA-256 of the bytes themselves — the same digest §10 has the server and the peer check.
+ *
+ * The array is copied into a buffer of its own rather than handed over as `bytes.buffer`: a
+ * `Uint8Array` may be a *view* onto a larger buffer, and passing that buffer would hash whatever
+ * else it holds. `bytesSync()` does return such a view.
+ */
 export async function sha256Of(bytes: Uint8Array): Promise<string> {
-  // `Uint8Array<ArrayBufferLike>` is not a `BufferSource`; the buffer behind it is.
-  const digest = await Crypto.digest(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    bytes.buffer as ArrayBuffer,
-  );
+  const exact = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, exact as ArrayBuffer);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
  * Copies bytes into this app's attachment directory under the id they will keep, and measures
  * them. The size is checked *after* compression, because compression is what decides it.
+ *
+ * The hash is computed **before** anything is written: a failure here used to leave the file on
+ * disk with no row pointing at it, because the caller's cleanup only covers what happens after
+ * this function returns.
  */
 export async function storeBytes(
   id: string,
@@ -63,11 +70,12 @@ export async function storeBytes(
   if (bytes.byteLength > MAX_ATTACHMENT_BYTES) {
     throw new AttachmentTooLargeError(bytes.byteLength);
   }
+  const sha256 = await sha256Of(bytes);
   const target = fileFor(id, mimeType);
   if (target.exists) target.delete();
   target.create();
   target.write(bytes);
-  return { uri: target.uri, byteSize: bytes.byteLength, sha256: await sha256Of(bytes) };
+  return { uri: target.uri, byteSize: bytes.byteLength, sha256 };
 }
 
 /** Reads a stored attachment back, or null when this device does not have its bytes. */

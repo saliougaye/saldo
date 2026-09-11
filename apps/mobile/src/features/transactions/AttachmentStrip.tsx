@@ -56,11 +56,15 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
         if (captured === null) return;
         await addAttachment(repos, transactionId, captured);
       } catch (caught) {
-        setError(
-          caught instanceof AttachmentTooLargeError
-            ? t('attachments.tooLarge')
-            : t('attachments.failed'),
-        );
+        if (caught instanceof AttachmentTooLargeError) {
+          setError(t('attachments.tooLarge'));
+          return;
+        }
+        // The reason, not just the fact: a bare "it could not be attached" is what made this take
+        // a database inspection to diagnose the first time.
+        const reason = caught instanceof Error ? caught.message : String(caught);
+        setError(`${t('attachments.failed')} — ${reason}`);
+        console.error('[saldo] attachment failed', caught);
       }
     })();
   }, [repos, transactionId, t]);
