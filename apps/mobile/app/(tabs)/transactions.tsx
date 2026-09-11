@@ -4,11 +4,12 @@ import {
   filterTransactions,
   groupByDay,
   hasActiveFilters,
+  splitUpcoming,
   type TransactionFilters,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
@@ -36,6 +37,7 @@ import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SwipeRow } from '../../src/features/transactions/SwipeRow';
 import { TagFilterSheet } from '../../src/features/transactions/TagFilterSheet';
+import { UpcomingRow } from '../../src/features/transactions/UpcomingRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { appearing, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
@@ -55,9 +57,16 @@ export default function TransactionsTab() {
   const { today, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
-  const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
+  // An account arrives as a route param — from "Ultime transazioni" on an account, which is the
+  // one place that asks for this list *about something*. It seeds the filter rather than opening a
+  // different screen, so clearing it leaves you in the list you are already reading.
+  const { accountId } = useLocalSearchParams<{ accountId?: string }>();
+  const [filters, setFilters] = useState<TransactionFilters>(() =>
+    accountId === undefined ? EMPTY_FILTERS : { ...EMPTY_FILTERS, accountId },
+  );
   const [tagSheetOpen, setTagSheetOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+  const [upcomingOpen, setUpcomingOpen] = useState(false);
 
   const { rows, loaded } = useTransactionsInRangeQuery(period.range.start, period.range.end);
   const slow = useDelayed(!loaded);
@@ -73,14 +82,98 @@ export default function TransactionsTab() {
     };
   }, [accounts, categories]);
 
-  const groups = useMemo(
-    () => groupByDay(filterTransactions(rows, filters, lookup)),
+  const filtered = useMemo(
+    () => filterTransactions(rows, filters, lookup),
     [rows, filters, lookup],
   );
+  // §5.12: the list is what happened. What is still to come is folded behind one row, because a
+  // list that opens on next week's rent reads as a list of things you already did.
+  const { upcoming, settled, upcomingNet } = useMemo(
+    () => splitUpcoming(filtered, today),
+    [filtered, today],
+  );
+  const groups = useMemo(() => groupByDay(settled), [settled]);
+  const upcomingGroups = useMemo(() => groupByDay(upcoming), [upcoming]);
 
   const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
+  );
+
+  /** One day of the list. Shared by the settled groups and the upcoming ones behind the fold. */
+  const dayCard = (group: ReturnType<typeof groupByDay>[number]) => (
+    // The whole day closes up when its last transaction is filtered out or deleted.
+    <Animated.View key={group.date} layout={reflowing} entering={appearing} exiting={leaving}>
+      <Card padded={false}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            padding: theme.layout.cardPadding,
+            paddingBottom: 4,
+          }}
+        >
+          <Text size="footnote" color="textMuted">
+            {formatDayMonth(group.date, locale)}
+          </Text>
+          <Text size="footnote" color="textMuted" tabular>
+            {formatMoney(group.expenseTotal, currency, locale)}
+          </Text>
+        </View>
+        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+          {group.items.map((tx) => {
+            const category = categoryById.get(tx.categoryId ?? '');
+            const colour = theme.categoryColor(category?.colorIndex ?? 9);
+            const name = category?.name ?? t(`kinds.${tx.kind}`);
+            const rowTags = tags.filter((tag) => tx.tagIds.includes(tag.id));
+            return (
+              <Animated.View key={tx.id} layout={reflowing} entering={appearing} exiting={leaving}>
+                <SwipeRow
+                  editLabel={t('common.edit')}
+                  deleteLabel={t('common.delete')}
+                  onPress={() =>
+                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                  }
+                  onEdit={() =>
+                    router.push({
+                      pathname: '/transaction/edit/[id]',
+                      params: { id: tx.id },
+                    })
+                  }
+                  onDelete={() =>
+                    setPendingDelete({
+                      id: tx.id,
+                      name: tx.description.length > 0 ? tx.description : name,
+                    })
+                  }
+                >
+                  <ListRow
+                    title={tx.description.length > 0 ? tx.description : name}
+                    subtitle={
+                      filters.tagIds.length > 0 && rowTags.length > 0
+                        ? rowTags.map((tag) => tag.name).join(' · ')
+                        : name
+                    }
+                    leading={
+                      <IconBox name={(category?.icon ?? 'swap') as IconName} colour={colour} />
+                    }
+                    upcoming={tx.date > today}
+                    trailing={
+                      <AmountText
+                        minor={tx.kind === 'income' ? tx.amount : -tx.amount}
+                        currency={currency}
+                        locale={locale}
+                        signDisplay={tx.kind === 'income' ? 'always' : 'negative'}
+                      />
+                    }
+                  />
+                </SwipeRow>
+              </Animated.View>
+            );
+          })}
+        </View>
+      </Card>
+    </Animated.View>
   );
 
   const set = (patch: Partial<TransactionFilters>) => setFilters({ ...filters, ...patch });
@@ -134,6 +227,17 @@ export default function TransactionsTab() {
           chevron
           onPress={() => setTagSheetOpen(true)}
         />
+        {filters.accountId === null ? null : (
+          <Chip
+            label={
+              accounts.find((row) => row.id === filters.accountId)?.name ?? t('accounts.title')
+            }
+            icon="wallet"
+            active
+            onPress={() => set({ accountId: null })}
+            accessibilityLabel={t('transactions.clearAccountFilter')}
+          />
+        )}
         <Chip
           label={t('transactions.onlyExcluded')}
           active={filters.onlyExcluded}
@@ -152,7 +256,7 @@ export default function TransactionsTab() {
           slow ? (
             <SkeletonList rows={5} label={t('common.loading')} />
           ) : null
-        ) : groups.length === 0 ? (
+        ) : groups.length === 0 && upcoming.length === 0 ? (
           <Animated.View entering={appearing}>
             <Card>
               <Text color="textMuted">
@@ -169,93 +273,22 @@ export default function TransactionsTab() {
             </Card>
           </Animated.View>
         ) : (
-          groups.map((group) => (
-            // The whole day closes up when its last transaction is filtered out or deleted.
-            <Animated.View
-              key={group.date}
-              layout={reflowing}
-              entering={appearing}
-              exiting={leaving}
-            >
-              <Card padded={false}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    padding: theme.layout.cardPadding,
-                    paddingBottom: 4,
-                  }}
-                >
-                  <Text size="footnote" color="textMuted">
-                    {formatDayMonth(group.date, locale)}
-                  </Text>
-                  <Text size="footnote" color="textMuted" tabular>
-                    {formatMoney(group.expenseTotal, currency, locale)}
-                  </Text>
-                </View>
-                <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-                  {group.items.map((tx) => {
-                    const category = categoryById.get(tx.categoryId ?? '');
-                    const colour = theme.categoryColor(category?.colorIndex ?? 9);
-                    const name = category?.name ?? t(`kinds.${tx.kind}`);
-                    const rowTags = tags.filter((tag) => tx.tagIds.includes(tag.id));
-                    return (
-                      <Animated.View
-                        key={tx.id}
-                        layout={reflowing}
-                        entering={appearing}
-                        exiting={leaving}
-                      >
-                        <SwipeRow
-                          editLabel={t('common.edit')}
-                          deleteLabel={t('common.delete')}
-                          onPress={() =>
-                            router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                          }
-                          onEdit={() =>
-                            router.push({
-                              pathname: '/transaction/edit/[id]',
-                              params: { id: tx.id },
-                            })
-                          }
-                          onDelete={() =>
-                            setPendingDelete({
-                              id: tx.id,
-                              name: tx.description.length > 0 ? tx.description : name,
-                            })
-                          }
-                        >
-                          <ListRow
-                            title={tx.description.length > 0 ? tx.description : name}
-                            subtitle={
-                              filters.tagIds.length > 0 && rowTags.length > 0
-                                ? rowTags.map((tag) => tag.name).join(' · ')
-                                : name
-                            }
-                            leading={
-                              <IconBox
-                                name={(category?.icon ?? 'swap') as IconName}
-                                colour={colour}
-                              />
-                            }
-                            upcoming={tx.date > today}
-                            trailing={
-                              <AmountText
-                                minor={tx.kind === 'income' ? tx.amount : -tx.amount}
-                                currency={currency}
-                                locale={locale}
-                                signDisplay={tx.kind === 'income' ? 'always' : 'negative'}
-                              />
-                            }
-                          />
-                        </SwipeRow>
-                      </Animated.View>
-                    );
-                  })}
-                </View>
-              </Card>
-            </Animated.View>
-          ))
+          <>
+            {upcoming.length === 0 ? null : (
+              <Animated.View layout={reflowing} entering={appearing} exiting={leaving}>
+                <UpcomingRow
+                  count={upcoming.length}
+                  net={upcomingNet}
+                  currency={currency}
+                  locale={locale}
+                  open={upcomingOpen}
+                  onToggle={() => setUpcomingOpen(!upcomingOpen)}
+                />
+              </Animated.View>
+            )}
+            {upcomingOpen ? upcomingGroups.map(dayCard) : null}
+            {groups.map(dayCard)}
+          </>
         )}
       </ScrollView>
 

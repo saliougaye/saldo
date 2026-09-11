@@ -441,9 +441,9 @@ small enough to land on its own branch without a plan file of its own.
   Decide before building; it belongs with the form-architecture investigation.
 - **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
   work does is decide which one was meant (probably both):
-  - `TransactionFilters.accountId` exists in `@saldo/core` and `filterTransactions` honours it, but
-    **no screen ever sets it** — the Transactions tab offers expense/income/tags/excluded and no
-    account chip. The field is dead weight until a chip or sheet fills it.
+  - ✅ `TransactionFilters.accountId` is now set: an account's "Ultime transazioni" opens the list
+    filtered to it, and the filter shows as a chip that clears. What is left is reaching the same
+    filter from the list itself, without starting on an account.
   - **Transfers cannot be listed.** `direction` is `all | expense | income`, and a transfer is
     neither, so it is hidden by both filters and reachable only by scrolling `all`. Deciding whether
     `direction` gains a `transfer` value (or transfers get their own chip) is the same change.

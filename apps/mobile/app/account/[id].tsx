@@ -18,6 +18,7 @@ import { View } from 'react-native';
 import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
+import { CardHeader } from '../../src/components/CardHeader';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
@@ -223,9 +224,16 @@ export default function AccountDetail() {
 
       <Card padded={false}>
         <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-          <Text weight="medium" tracking="tight">
-            {t('accounts.lastTransactions')}
-          </Text>
+          <CardHeader
+            title={t('accounts.lastTransactions')}
+            status={t('home.allTransactions')}
+            onPress={() =>
+              router.push({
+                pathname: '/(tabs)/transactions',
+                params: { accountId: account.id },
+              })
+            }
+          />
         </View>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
           {recent.length === 0 ? (
