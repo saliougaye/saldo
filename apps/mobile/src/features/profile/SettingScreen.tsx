@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Card } from '../../components/Card';
 import { ListRow } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
-import { ScreenHeader } from '../../components/ScreenHeader';
+import { BackButton } from '../../components/ScreenHeader';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -11,32 +11,40 @@ import { useTheme } from '../../theme/ThemeProvider';
 /**
  * The frame every profile setting shares (§6.8).
  *
- * These were bottom sheets; they are pushed screens now, like Categorie and Tag. A sheet is for a
- * choice you make and forget — the ones here have a footnote to read, a grid of 31 days, or a
- * confirmation behind them, and half of that was hidden under the fold of a sheet.
+ * These were bottom sheets; they are pushed screens now, like Categorie and Tag — and they carry
+ * the same chrome those two do: back button, a `display` title, and a muted line saying what
+ * changing the setting does. A sheet is for a choice you make and forget; the ones here have a
+ * footnote to read, a grid of days, or a confirmation behind them.
  */
 export function SettingScreen({
   title,
-  footnote,
+  subtitle,
+  card = true,
   children,
 }: {
   title: string;
-  footnote?: string;
+  /** The line under the title, as on Tag and Categorie: what changing this actually does. */
+  subtitle?: string;
+  /** Off for a setting that is not a list of rows, such as the day grid of the cycle. */
+  card?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
   return (
     <Screen>
-      <ScreenHeader title={title} />
-      <Card padded={false}>
-        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
-          {children}
-        </View>
-      </Card>
-      {footnote === undefined ? null : (
-        <Text size="caption" color="textFaint">
-          {footnote}
-        </Text>
+      <BackButton />
+      <Text size="display" weight="semibold" tracking="tighter">
+        {title}
+      </Text>
+      {subtitle === undefined ? null : <Text color="textMuted">{subtitle}</Text>}
+      {card ? (
+        <Card padded={false}>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
+            {children}
+          </View>
+        </Card>
+      ) : (
+        children
       )}
     </Screen>
   );

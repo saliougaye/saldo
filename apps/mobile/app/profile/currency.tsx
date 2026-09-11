@@ -22,7 +22,7 @@ export default function CurrencySetting() {
   const [pending, setPending] = useState<CurrencyCode | null>(null);
 
   return (
-    <SettingScreen title={t('profile.currency')}>
+    <SettingScreen title={t('profile.currency')} subtitle={t('profile.currencyConfirmBody')}>
       {COMMON_CURRENCY_CODES.map((code) => (
         <OptionRow
           key={code}

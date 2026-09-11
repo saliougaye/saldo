@@ -13,7 +13,7 @@ export default function LanguageSetting() {
   const current = settings?.language ?? 'system';
 
   return (
-    <SettingScreen title={t('profile.language')}>
+    <SettingScreen title={t('profile.language')} subtitle={t('profile.systemFollows')}>
       {LANGUAGES.map((value) => (
         <OptionRow
           key={value}

@@ -476,6 +476,9 @@ export const en: Messages = {
   profile: {
     title: 'Profile',
     cycleStart: 'Cycle start',
+    systemFollows: '“System” follows the phone settings.',
+    cyclePreview: 'The current cycle',
+    cycleDay: 'Day {{day}}',
     currency: 'Currency',
     language: 'Language',
     theme: 'Theme',

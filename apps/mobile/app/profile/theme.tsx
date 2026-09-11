@@ -13,7 +13,7 @@ export default function ThemeSetting() {
   const current = settings?.theme ?? 'system';
 
   return (
-    <SettingScreen title={t('profile.theme')}>
+    <SettingScreen title={t('profile.theme')} subtitle={t('profile.systemFollows')}>
       {THEMES.map((value) => (
         <OptionRow
           key={value}
