@@ -42,7 +42,7 @@ adds no table.
 
 **Files:** `apps/web/src/server/storage/types.ts`, `fsStore.ts`, `fsStore.test.ts`
 
-- [ ] **Step 1: Write `types.ts`**
+- [x] **Step 1: Write `types.ts`**
 
 ```ts
 /** `{userId}/{attachmentId}` — the user's id is in the key so a bucket is one flat namespace. */
@@ -78,15 +78,15 @@ export interface AttachmentStore {
 `put` and `get` take a `Uint8Array` rather than a stream: the cap is 10 MB, every driver's SDK accepts bytes, and a
 stream would have to be buffered to verify the hash anyway.
 
-- [ ] **Step 2: Tests for `fsStore`** — round-trip a small payload; `get` and `head` return null for a key that was
+- [x] **Step 2: Tests for `fsStore`** — round-trip a small payload; `get` and `head` return null for a key that was
 never written; `delete` is idempotent; a key containing `..` is refused (path traversal); two users' keys do not
 collide.
 
-- [ ] **Step 3: Write `fsStore.ts`** — `put` writes `${dir}/${key}.tmp` then renames, so a crash never leaves a
+- [x] **Step 3: Write `fsStore.ts`** — `put` writes `${dir}/${key}.tmp` then renames, so a crash never leaves a
 half-written blob a `head` would accept. `mkdir` the user's directory first. Refuse any key that does not match
 `/^[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/`. No `presignPut`/`presignGet`: a disk has no URLs.
 
-- [ ] **Step 4: Run the tests. Commit.**
+- [x] **Step 4: Run the tests. Commit.**
 
 ---
 
@@ -94,13 +94,13 @@ half-written blob a `head` would accept. `mkdir` the user's directory first. Ref
 
 **Files:** `apps/web/src/server/env.ts`, `env.test.ts`, `apps/web/.env.example`
 
-- [ ] **Step 1: Tests first.** `ATTACHMENT_STORAGE` defaults to `none`; `fs` without `STORAGE_DIR` fails with a
+- [x] **Step 1: Tests first.** `ATTACHMENT_STORAGE` defaults to `none`; `fs` without `STORAGE_DIR` fails with a
 message naming the variable; `s3` without a bucket fails; `s3` with bucket, region and credentials parses, and
 `S3_ENDPOINT`/`S3_FORCE_PATH_STYLE` are optional; `vercel-blob` requires `BLOB_READ_WRITE_TOKEN`; `none` requires
 nothing. **`STORAGE_DIR` stops being required**, which is the point: today it is, and a Vercel deployment has no
 disk to point it at.
 
-- [ ] **Step 2: Implement** with a discriminated union so the driver config is typed:
+- [x] **Step 2: Implement** with a discriminated union so the driver config is typed:
 
 ```ts
 export type AttachmentStorageConfig =
@@ -113,10 +113,10 @@ export type AttachmentStorageConfig =
 
 validated with `superRefine` so each missing variable is reported by name.
 
-- [ ] **Step 3: Update `.env.example`** with every variable, commented by driver, and `ATTACHMENT_STORAGE=none` as
+- [x] **Step 3: Update `.env.example`** with every variable, commented by driver, and `ATTACHMENT_STORAGE=none` as
 the default. **Never commit real credentials** (AGENTS.md).
 
-- [ ] **Step 4: Commit.**
+- [x] **Step 4: Commit.**
 
 ---
 
@@ -124,23 +124,23 @@ the default. **Never commit real credentials** (AGENTS.md).
 
 **Files:** `s3Store.ts`, `vercelBlobStore.ts`, `index.ts`
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```bash
 pnpm --filter web add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @vercel/blob
 ```
 
-- [ ] **Step 2: `s3Store.ts`** — the client is built inside the factory behind
+- [x] **Step 2: `s3Store.ts`** — the client is built inside the factory behind
 `const { S3Client } = await import('@aws-sdk/client-s3')`, so a disk deployment never loads it. `presignPut` signs a
 `PutObjectCommand` with `ContentLength` and `ContentType` pinned (a URL that would accept any size is a bucket-sized
 hole), 5 minutes. `presignGet` signs a `GetObjectCommand`, 5 minutes. `head` is `HeadObjectCommand`, mapping a 404 to
 null.
 
-- [ ] **Step 3: `vercelBlobStore.ts`** — `put`/`get`/`delete` through `@vercel/blob`. Its uploads are presigned
+- [x] **Step 3: `vercelBlobStore.ts`** — `put`/`get`/`delete` through `@vercel/blob`. Its uploads are presigned
 through a *client token*, so `presignPut` returns the upload URL with the token in the headers; keep `expiresIn`
 short.
 
-- [ ] **Step 4: `index.ts`**
+- [x] **Step 4: `index.ts`**
 
 ```ts
 let cached: AttachmentStore | null | undefined;
@@ -149,11 +149,11 @@ let cached: AttachmentStore | null | undefined;
 export async function getStore(): Promise<AttachmentStore | null> { … }
 ```
 
-- [ ] **Step 5: Tests.** The S3 and Vercel drivers are not exercised against a real bucket; what *is* tested is the
+- [x] **Step 5: Tests.** The S3 and Vercel drivers are not exercised against a real bucket; what *is* tested is the
 selection (`getStore` returns null for `none`, the right `name` otherwise) and that `objectKey` and the key
 validation are shared. Say so in the plan and in the phase notes rather than implying coverage that does not exist.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ---
 
@@ -161,12 +161,12 @@ validation are shared. Say so in the plan and in the phase notes rather than imp
 
 **Files:** `apps/web/app/api/health/route.ts`, `apps/mobile/src/auth/session.ts`
 
-- [ ] **Step 1:** add `attachmentsEnabled: (await getStore()) !== null` to the payload.
+- [x] **Step 1:** add `attachmentsEnabled: (await getStore()) !== null` to the payload.
 
-- [ ] **Step 2:** the mobile `healthSchema` gains `attachmentsEnabled: z.boolean().default(false)` — a default, not a
+- [x] **Step 2:** the mobile `healthSchema` gains `attachmentsEnabled: z.boolean().default(false)` — a default, not a
 requirement, so an older server stays readable.
 
-- [ ] **Step 3:** a route test asserting both values. Commit.
+- [x] **Step 3:** a route test asserting both values. Commit.
 
 ---
 
@@ -174,7 +174,7 @@ requirement, so an older server stays readable.
 
 **Files:** `apps/web/app/api/attachments/[id]/upload-intent/route.ts`, `[id]/route.ts`, `[id]/complete/route.ts`
 
-- [ ] **Step 1: `upload-intent`** — `POST`, authenticated. Body `{ size: number; mimeType: string }`.
+- [x] **Step 1: `upload-intent`** — `POST`, authenticated. Body `{ size: number; mimeType: string }`.
   - 404 when no live `attachment` row with that id belongs to the user. **The row must be pushed first**, and this
     is what enforces it: bytes for a row the server does not know are refused.
   - 409 `no_storage` when `getStore()` is null.
@@ -182,44 +182,42 @@ requirement, so an older server stays readable.
   - 415 when `mimeType` disagrees with the row's.
   - Then `{ mode: 'presigned', … }` if the store presigns, else `{ mode: 'direct' }`.
 
-- [ ] **Step 2: `PUT /api/attachments/{id}`** — the direct mode. Same checks, plus: read the body, verify its length
+- [x] **Step 2: `PUT /api/attachments/{id}`** — the direct mode. Same checks, plus: read the body, verify its length
 and its SHA-256 against the row (`X-Content-SHA256` must match both the header and the row's `sha256`), then `put`.
 204.
 
-- [ ] **Step 3: `POST /api/attachments/{id}/complete`** — the presigned mode. `head` the key: if it is absent or its
+- [x] **Step 3: `POST /api/attachments/{id}/complete`** — the presigned mode. `head` the key: if it is absent or its
 size disagrees with the row, 409 `not_uploaded`, and the client retries. The server cannot verify the hash of bytes
 it never saw — that is the trade for presigning, and the downloader verifies instead.
 
-- [ ] **Step 4: Tests** against PGlite with an in-memory store: every refusal above, and the happy path for both
+- [x] **Step 4: Tests** against PGlite with an in-memory store: every refusal above, and the happy path for both
 modes. A second user's id must never reach another's blob.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ---
 
-### Task 6: Download and cleanup
+### Task 6: Download
 
-**Files:** `apps/web/app/api/attachments/[id]/route.ts`, `apps/web/src/server/attachments/cleanup.ts`
+**Files:** `apps/web/app/api/attachments/[id]/route.ts`
 
-- [ ] **Step 1: `GET /api/attachments/{id}`** — 404 unless the row is the user's, then either a 302 to
+- [x] **Step 1: `GET /api/attachments/{id}`** — 404 unless the row is the user's, then either a 302 to
 `presignGet(key)` or the bytes with `Content-Type` and `Content-Length`. Never `Content-Disposition: attachment`
 with a filename from user input.
 
-- [ ] **Step 2: `cleanup.ts`** — `deleteOrphanedBlobs(db, store, now)`: for every `attachment` row of any user
-tombstoned more than 7 days ago, delete its blob. Tested with the in-memory store: a row tombstoned yesterday is
-left alone, one tombstoned ten days ago is deleted, and deleting a blob that is already gone does not throw.
+- [x] **Step 2: Commit.**
 
-- [ ] **Step 3: Call it from the push route**, after the rows are applied, ignoring its failures: a cleanup that
-throws must not fail somebody's sync.
-
-- [ ] **Step 4: Commit.**
+**Blob cleanup moved to 09b-3.** The plan had it scanning tombstoned rows on every push, which is wrong: the rows
+are tombstones and stay forever, so every push would re-delete every blob ever deleted — one network call per row
+per push on S3. It needs a persistent work queue (a row written when a tombstone arrives, removed once its blob is
+gone), which belongs with the upload queue of 09b-3 rather than here.
 
 ---
 
 ### Task 7: Verification
 
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` — read the output, not the exit code. Tests run under **Node 22**.
-- [ ] `pnpm --filter web build` — the dynamic imports must not break `next build`.
-- [ ] Update `docs/self-hosting.md`: the storage choice, with a worked example for a disk and for R2.
-- [ ] State plainly what is **not** verified: no test touches a real S3 bucket or Vercel Blob; the drivers are
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` — read the output, not the exit code. Tests run under **Node 22**.
+- [x] `pnpm --filter web build` — the dynamic imports must not break `next build`.
+- [x] Update `docs/self-hosting.md`: the storage choice, with a worked example for a disk and for R2.
+- [x] State plainly what is **not** verified: no test touches a real S3 bucket or Vercel Blob; the drivers are
   exercised through their interface and their selection only.

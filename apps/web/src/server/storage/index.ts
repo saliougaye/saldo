@@ -38,3 +38,11 @@ export function getStore(): Promise<AttachmentStore | null> {
 export function resetStoreCache(): void {
   cached = null;
 }
+
+/**
+ * Installs a store directly, for tests that need one this environment cannot build — a presigning
+ * store without a bucket to sign against. Production code never calls it.
+ */
+export function setStoreForTesting(store: AttachmentStore | null): void {
+  cached = Promise.resolve(store);
+}

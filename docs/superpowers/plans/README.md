@@ -344,12 +344,14 @@ Backblaze come for free), `vercel-blob` and `none`. Presigned uploads are requir
 request body caps at ~4.5 MB against a 10 MB attachment. `ATTACHMENT_STORAGE=none` is supported and is the default —
 attachments stay on the phone, the row still syncs, and `/api/health` says so. Big enough to run in three parts:
 
-- **09b-1 — Server storage.** The interface, the four drivers, the env, `attachmentsEnabled` in `/api/health`, the
-  upload-intent / direct / complete / download routes, and the tombstone cleanup.
+- **09b-1 — Server storage** ✅. The interface, the four drivers, the env, `attachmentsEnabled` in `/api/health`, and
+  the upload-intent / direct / complete / download routes.
 - **09b-2 — On the phone.** Capture, compress (≤2000px, JPEG 0.8, EXIF stripped), the local file store, the
   attachments table with its device-local `blobState`, thumbnails, the viewer (§6.28) and the transaction form rows.
-- **09b-3 — Blob sync and the ZIP backup.** The upload queue (only after the row has been pushed) and on-demand
-  download, then the `fflate` backup that carries the files, which 09a left for this phase.
+- **09b-3 — Blob sync, cleanup and the ZIP backup.** The upload queue (only after the row has been pushed) and
+  on-demand download; the server-side deletion queue for tombstoned blobs (a scan on every push would re-delete
+  every blob ever deleted, since tombstones are forever); then the `fflate` backup that carries the files, which 09a
+  left for this phase.
 
 *Acceptance:* an attachment added on device A appears on device B; with `ATTACHMENT_STORAGE=none` the same
 attachment stays local and the app says so rather than failing.
