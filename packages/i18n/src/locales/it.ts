@@ -451,14 +451,10 @@ export const it = {
     empty: 'Nessun tag',
   },
   settings: {
-    title: 'Impostazioni',
     categories: 'Categorie',
     tags: 'Tag',
-    cycle: 'Ciclo',
     cycleFootnote: 'Cambiarlo raggruppa solo le transazioni. Niente si sposta.',
     cycleValue: 'dal {{day}}',
-    currency: 'Valuta',
-    newAccount: 'Nuovo conto',
     reviewOnboarding: 'Rivedi la configurazione iniziale',
   },
   profile: {

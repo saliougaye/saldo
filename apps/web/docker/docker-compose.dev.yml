@@ -19,8 +19,7 @@ services:
       POSTGRES_PASSWORD: saldo
       POSTGRES_DB: saldo
     ports:
-      # 5433 by default: 5432 is very often already taken by another project's database.
-      - '${POSTGRES_PORT:-5433}:5432'
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres-dev:/var/lib/postgresql/data
     healthcheck:

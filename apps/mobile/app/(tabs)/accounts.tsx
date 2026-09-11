@@ -70,9 +70,9 @@ export default function AccountsTab() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('settings.title')}
+          accessibilityLabel={t('profile.title')}
           hitSlop={10}
-          onPress={() => router.push('/settings')}
+          onPress={() => router.push('/profile')}
         >
           <IconBox name="settings" colour={theme.palette.textMuted} small />
         </Pressable>

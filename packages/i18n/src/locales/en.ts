@@ -449,14 +449,10 @@ export const en: Messages = {
     empty: 'No tags',
   },
   settings: {
-    title: 'Settings',
     categories: 'Categories',
     tags: 'Tags',
-    cycle: 'Cycle',
     cycleFootnote: 'Changing this only regroups your transactions. Nothing moves.',
     cycleValue: 'from the {{day}}',
-    currency: 'Currency',
-    newAccount: 'New account',
     reviewOnboarding: 'Review the initial setup',
   },
   profile: {
