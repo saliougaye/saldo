@@ -4,6 +4,9 @@ import {
   canSave,
   changeKind,
   dateChoices,
+  detailsAreEmpty,
+  detailsOpenInitially,
+  detailsSummary,
   emptyForm,
   formFromTransaction,
   missingForSave,
@@ -250,5 +253,46 @@ describe('missingForSave', () => {
     for (const values of cases) {
       expect(canSave(values, 2)).toBe(missingForSave(values, 2) === null);
     }
+  });
+});
+
+describe('the details disclosure', () => {
+  const base = emptyForm(TODAY, 'acc-1');
+
+  it('counts what it is holding', () => {
+    const summary = detailsSummary(
+      { ...base, tagIds: ['t1', 't2'], repeat: true, excludeFromTotals: false },
+      3,
+    );
+    expect(summary).toEqual({ tags: 2, attachments: 3, repeat: true, excludeFromTotals: false });
+  });
+
+  it('is empty when nothing in it is set', () => {
+    expect(detailsAreEmpty(detailsSummary(base, 0))).toBe(true);
+  });
+
+  it('is not empty when only the exclude switch is on', () => {
+    expect(detailsAreEmpty(detailsSummary({ ...base, excludeFromTotals: true }, 0))).toBe(false);
+  });
+
+  it('is not empty when only an attachment is there', () => {
+    expect(detailsAreEmpty(detailsSummary(base, 1))).toBe(false);
+  });
+
+  it('starts closed on a new transaction, which has nothing in it', () => {
+    expect(detailsOpenInitially('new', detailsSummary(base, 0))).toBe(false);
+  });
+
+  it('stays closed on a new transaction even if a default put something in it', () => {
+    // A "repeat this" entry point could pre-set the switch; the form still has to fit.
+    expect(detailsOpenInitially('new', detailsSummary({ ...base, repeat: true }, 0))).toBe(false);
+  });
+
+  it('opens on an edit that has something in it, which is what you came back for', () => {
+    expect(detailsOpenInitially('edit', detailsSummary({ ...base, tagIds: ['t1'] }, 0))).toBe(true);
+  });
+
+  it('stays closed on an edit with nothing in it', () => {
+    expect(detailsOpenInitially('edit', detailsSummary(base, 0))).toBe(false);
   });
 });
