@@ -110,7 +110,8 @@ export function buildAuthOptions() {
             }
             try {
               // §9.5: the first account on the instance is the admin, and under `invite` it can
-              // only exist because somebody with shell access minted its code.
+              // only exist because somebody with shell access minted its code. Every later one is
+              // a member.
               const role = await roleForNewUser(db);
               const created = await ctx.context.internalAdapter.createUser(
                 {
@@ -123,9 +124,10 @@ export function buildAuthOptions() {
                 // string, and "passkey" is what actually created this user.
                 { method: 'passkey' },
               );
-              if (role === ADMIN_ROLE) {
-                await db.update(user).set({ role }).where(eq(user.id, created.id));
-              }
+              // Written unconditionally, admin or member: `createUser` leaves the column NULL, and
+              // a role that is only implied by its absence is a trap for the next query that reads
+              // it. Every account says out loud what it is.
+              await db.update(user).set({ role }).where(eq(user.id, created.id));
               return { userId: created.id };
             } catch (error) {
               // The account was not created, so the code was not really used: give it back rather
