@@ -101,7 +101,11 @@ function usableWhere(codeHash: string, now: Date) {
  * fingerprint. It deliberately does not say *why* a code is no good — unknown, spent, revoked and
  * expired are one answer to the caller, so the form cannot be used to probe the table.
  */
-export async function inviteIsUsable(db: ServerDatabase, code: string, now: Date): Promise<boolean> {
+export async function inviteIsUsable(
+  db: ServerDatabase,
+  code: string,
+  now: Date,
+): Promise<boolean> {
   const [row] = await db
     .select({ id: invites.id })
     .from(invites)

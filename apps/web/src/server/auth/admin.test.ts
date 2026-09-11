@@ -63,7 +63,10 @@ describe('revokeUser', () => {
     expect(row?.banReason).toBe('left');
     // Better Auth's own ban check only runs when a **new** session is created, so an existing
     // bearer has to be killed by removing the row it names.
-    const sessions = await harness.db.select().from(session).where(eq(session.userId, member.userId));
+    const sessions = await harness.db
+      .select()
+      .from(session)
+      .where(eq(session.userId, member.userId));
     expect(sessions).toHaveLength(0);
   });
 

@@ -26,7 +26,9 @@ describe('normaliseInviteCode', () => {
   });
 
   it('drops anything that is not a symbol, so punctuation cannot change the answer', () => {
-    expect(normaliseInviteCode('7GQ4/XM2B.PDVT_9NKS')).toBe(normaliseInviteCode('7GQ4XM2BPDVT9NKS'));
+    expect(normaliseInviteCode('7GQ4/XM2B.PDVT_9NKS')).toBe(
+      normaliseInviteCode('7GQ4XM2BPDVT9NKS'),
+    );
   });
 });
 

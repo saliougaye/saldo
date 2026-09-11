@@ -11,7 +11,9 @@ describe('registration context', () => {
   });
 
   it('trims the name and reports an empty one as empty', () => {
-    expect(readRegistrationContext(encodeRegistrationContext({ name: '  Ada  ' })).name).toBe('Ada');
+    expect(readRegistrationContext(encodeRegistrationContext({ name: '  Ada  ' })).name).toBe(
+      'Ada',
+    );
     expect(readRegistrationContext(encodeRegistrationContext({ name: '   ' })).name).toBe('');
   });
 

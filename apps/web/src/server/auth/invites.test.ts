@@ -205,7 +205,7 @@ describe('listInvites', () => {
       createdBy: null,
       now: NOW,
     });
-    const expired = await createInvite(harness.db, {
+    await createInvite(harness.db, {
       label: 'expired',
       ttlDays: 1,
       createdBy: null,
