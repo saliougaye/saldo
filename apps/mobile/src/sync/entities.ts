@@ -1,6 +1,7 @@
 import type { EntityName } from '@saldo/core';
 import {
   accounts,
+  attachments,
   budgets,
   categories,
   recurrences,
@@ -9,10 +10,7 @@ import {
   transactions,
 } from '../db/schema';
 
-/**
- * Entity name (the wire vocabulary of §8.1) to local table. `attachment` is absent on purpose:
- * phase 08 owns it, and the server already accepts the name, so nothing here changes when it lands.
- */
+/** Entity name (the wire vocabulary of §8.1) to local table. */
 export const SYNCED_TABLES = {
   settings,
   account: accounts,
@@ -21,7 +19,17 @@ export const SYNCED_TABLES = {
   transaction: transactions,
   recurrence: recurrences,
   budget: budgets,
+  attachment: attachments,
 } as const;
+
+/**
+ * Columns that exist only on this device and must never reach the wire (§10): where the file sits
+ * in this app's sandbox, and whether *this* device has uploaded it. Neither means anything to
+ * another device, and the path is a detail of an installation nobody else should learn.
+ */
+export const LOCAL_ONLY_COLUMNS: Partial<Record<SyncedEntityName, readonly string[]>> = {
+  attachment: ['localUri', 'blobState'],
+};
 
 export type SyncedEntityName = keyof typeof SYNCED_TABLES;
 

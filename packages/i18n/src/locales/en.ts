@@ -212,6 +212,22 @@ export const en: Messages = {
     noSubcategory: 'No subcategory',
     empty: 'No data in this period',
   },
+  attachments: {
+    add: 'Add an attachment',
+    camera: 'Take a photo',
+    library: 'Choose from the library',
+    document: 'Choose a PDF',
+    open: 'Open attachment',
+    count: '{{count}} of {{max}}',
+    tooLarge: 'File too large (max 10 MB)',
+    failed: 'It could not be attached',
+    missing: 'This attachment is gone',
+    notOnThisDevice: 'Not available on this phone',
+    pdf: 'PDF document',
+    deleteTitle: 'Delete this attachment?',
+    deleteBody: 'It disappears from all your devices.',
+    localOnly: 'It stays on this phone: the server keeps no attachments.',
+  },
   csvImport: {
     title: 'Import CSV',
     pickBody:

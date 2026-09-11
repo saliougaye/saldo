@@ -212,6 +212,22 @@ export const it = {
     noSubcategory: 'Senza sottocategoria',
     empty: 'Nessun dato in questo periodo',
   },
+  attachments: {
+    add: 'Aggiungi allegato',
+    camera: 'Scatta una foto',
+    library: 'Scegli dalla galleria',
+    document: 'Scegli un PDF',
+    open: 'Apri allegato',
+    count: '{{count}} di {{max}}',
+    tooLarge: 'File troppo grande (max 10 MB)',
+    failed: 'Non sono riuscito ad allegarlo',
+    missing: 'Questo allegato non c’è più',
+    notOnThisDevice: 'Non disponibile su questo telefono',
+    pdf: 'Documento PDF',
+    deleteTitle: 'Eliminare l’allegato?',
+    deleteBody: 'Sparisce da tutti i tuoi dispositivi.',
+    localOnly: 'Resta solo su questo telefono: il server non conserva allegati.',
+  },
   csvImport: {
     title: 'Importa CSV',
     pickBody:

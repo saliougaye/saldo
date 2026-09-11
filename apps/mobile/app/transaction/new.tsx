@@ -1,6 +1,7 @@
-import { getCurrency } from '@saldo/core';
+import { getCurrency, newId } from '@saldo/core';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { removeAttachment } from '../../src/attachments/attachmentService';
 import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../src/db/hooks';
@@ -18,17 +19,36 @@ export default function NewTransaction() {
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
   const [values, setValues] = useState(() => emptyForm(today, accounts[0]?.id ?? null));
   const [saving, setSaving] = useState(false);
+  const savedRef = useRef(false);
+  // Generated here rather than by the repository: an attachment picked before the first save needs
+  // a transaction to belong to (§10).
+  const [transactionId] = useState(() => newId());
+
+  // Leaving without saving would otherwise strand any attachment already taken against that id.
+  useEffect(
+    () => () => {
+      if (!savedRef.current) {
+        for (const row of repos.attachments.listFor(transactionId)) {
+          removeAttachment(repos, row.id);
+        }
+      }
+    },
+    [repos, transactionId],
+  );
 
   return (
     <TransactionForm
       today={today}
+      transactionId={transactionId}
       values={values}
       onChange={setValues}
       mode="new"
       submitting={saving}
       onSubmit={() => {
         setSaving(true);
+        savedRef.current = true;
         const created = repos.transactions.create({
+          id: transactionId,
           ...toTransactionInput(values, minorDigits),
           recurrenceId: null,
         });

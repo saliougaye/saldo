@@ -1,6 +1,7 @@
 import { createClock } from '../clock';
 import { createKvStore } from '../kv';
 import { createAccountsRepository } from './accounts';
+import { createAttachmentsRepository } from './attachments';
 import { createBudgetsRepository } from './budgets';
 import { createCategoriesRepository } from './categories';
 import { createRecurrencesRepository } from './recurrences';
@@ -10,6 +11,7 @@ import { createTagsRepository } from './tags';
 import { createTransactionsRepository } from './transactions';
 
 export * from './accounts';
+export * from './attachments';
 export * from './budgets';
 export * from './categories';
 export * from './recurrences';
@@ -26,12 +28,10 @@ export interface Repositories {
   tags: ReturnType<typeof createTagsRepository>;
   budgets: ReturnType<typeof createBudgetsRepository>;
   recurrences: ReturnType<typeof createRecurrencesRepository>;
+  attachments: ReturnType<typeof createAttachmentsRepository>;
 }
 
-/**
- * Builds every repository over one database handle and one clock. Attachments get theirs in
- * phase 08, which owns them.
- */
+/** Builds every repository over one database handle and one clock. */
 export function createRepositories(db: RepositoryDatabase, nowIso?: () => string): Repositories {
   const clock = createClock(createKvStore(db));
   const context: RepositoryContext = nowIso === undefined ? { db, clock } : { db, clock, nowIso };
@@ -43,5 +43,6 @@ export function createRepositories(db: RepositoryDatabase, nowIso?: () => string
     tags: createTagsRepository(context),
     budgets: createBudgetsRepository(context),
     recurrences: createRecurrencesRepository(context),
+    attachments: createAttachmentsRepository(context),
   };
 }

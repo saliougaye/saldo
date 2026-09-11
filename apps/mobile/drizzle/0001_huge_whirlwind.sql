@@ -1,0 +1,1 @@
+ALTER TABLE `attachments` ADD `blob_state` text DEFAULT 'local_only' NOT NULL;

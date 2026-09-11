@@ -2,6 +2,7 @@ import { getCurrency } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { removeAttachment } from '../../../src/attachments/attachmentService';
 import { Screen } from '../../../src/components/Screen';
 import { useDatabase } from '../../../src/db/DatabaseProvider';
 import { useSettings } from '../../../src/db/hooks';
@@ -51,11 +52,17 @@ export default function EditTransaction() {
     <>
       <TransactionForm
         today={today}
+        transactionId={transaction.id}
         values={values}
         onChange={setValues}
         mode="edit"
         onSubmit={save}
         onDelete={() => {
+          // The attachments go with it: their rows become tombstones so every device drops them,
+          // and this device's files go now (§10).
+          for (const row of repos.attachments.listFor(transaction.id)) {
+            removeAttachment(repos, row.id);
+          }
           repos.transactions.remove(transaction.id);
           router.back();
         }}
