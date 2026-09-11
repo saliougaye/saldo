@@ -22,7 +22,8 @@ import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { archiveAccount } from '../../src/db/adminService';
+import { useToast } from '../../src/components/Toast';
+import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
@@ -42,6 +43,7 @@ export default function AccountDetail() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
+  const toast = useToast();
   const settings = useSettings();
   const accounts = useAccounts();
   const { today, def } = usePeriod();
@@ -85,6 +87,10 @@ export default function AccountDetail() {
     );
   }
 
+  // An archived account is history: §5.6 keeps its rows and its balance, and the only thing left
+  // to do with it is bring it back. Editing, transferring and archiving again are all hidden
+  // rather than disabled — a row of dead buttons is worse than no row.
+  const archived = account.archivedAt !== null;
   const balance = balances.get(account.id) ?? 0;
   const first = series[0] ?? 0;
   const delta = deltaPercent(balance, first === 0 ? null : first);
@@ -93,28 +99,45 @@ export default function AccountDetail() {
     <Screen
       footer={
         <View style={{ gap: 8 }}>
-          <PrimaryButton
-            label={t('accounts.transferTo')}
-            onPress={() => router.push('/transaction/new')}
-          />
-          <SecondaryButton
-            label={t('common.edit')}
-            onPress={() =>
-              router.push({ pathname: '/account/edit/[id]', params: { id: account.id } })
-            }
-          />
+          {archived ? (
+            <PrimaryButton
+              label={t('accounts.restore')}
+              onPress={() => {
+                restoreAccount(repos, account.id);
+                toast.show(t('accounts.restored', { name: account.name }));
+              }}
+            />
+          ) : (
+            <>
+              <PrimaryButton
+                label={t('accounts.transferTo')}
+                onPress={() => router.push('/transaction/new')}
+              />
+              <SecondaryButton
+                label={t('common.edit')}
+                onPress={() =>
+                  router.push({ pathname: '/account/edit/[id]', params: { id: account.id } })
+                }
+              />
+            </>
+          )}
         </View>
       }
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <BackButton />
-        <IconBox name={account.icon as IconName} colour={theme.categoryColor(account.colorIndex)} />
+        <IconBox
+          name={account.icon as IconName}
+          colour={archived ? theme.palette.textFaint : theme.categoryColor(account.colorIndex)}
+        />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text size="headline" weight="semibold" tracking="tight" numberOfLines={1}>
             {account.name}
           </Text>
-          <Text size="caption" color="textMuted">
-            {account.institution ?? t(`accountTypes.${account.type}`)}
+          <Text size="caption" color={archived ? 'textFaint' : 'textMuted'}>
+            {archived
+              ? t('accounts.archivedBadge')
+              : (account.institution ?? t(`accountTypes.${account.type}`))}
           </Text>
         </View>
       </View>
@@ -231,7 +254,9 @@ export default function AccountDetail() {
         </View>
       </Card>
 
-      <SecondaryButton label={t('accounts.archive')} onPress={() => setConfirmArchive(true)} />
+      {archived ? null : (
+        <SecondaryButton label={t('accounts.archive')} onPress={() => setConfirmArchive(true)} />
+      )}
       <Text size="caption" color="textFaint">
         {formatMoney(balance, currency, locale)}
       </Text>
@@ -245,6 +270,7 @@ export default function AccountDetail() {
         onConfirm={() => {
           archiveAccount(repos, account.id, new Date().toISOString());
           setConfirmArchive(false);
+          toast.show(t('accounts.archivedToast', { name: account.name }));
           router.back();
         }}
         onCancel={() => setConfirmArchive(false)}

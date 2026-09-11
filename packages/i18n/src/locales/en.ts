@@ -404,6 +404,8 @@ export const en: Messages = {
     netWorth: 'Net worth',
     archived: 'Archived accounts',
     restore: 'Restore',
+    archivedBadge: 'Archived',
+    archivedToast: '“{{name}}” archived',
     archivedNote:
       'They stay in your net worth and in past transactions, but no longer show up among your accounts.',
     archivedEmpty: 'No archived accounts',

@@ -2,7 +2,7 @@ import { accountBalances, netWorth, spendableTotal } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
@@ -10,8 +10,6 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
-import { restoreAccount } from '../../src/db/adminService';
-import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -26,12 +24,10 @@ export default function AccountsTab() {
   const router = useRouter();
   const { t } = useTranslation();
   const locale = useAppLocale();
-  const repos = useRepositories();
   const settings = useSettings();
   const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
-  const [archivedOpen, setArchivedOpen] = useState(false);
 
   // A balance covers the whole history, so the range is deliberately unbounded (§5.3).
   const rows = useTransactionsInRange('1970-01-01', today);
@@ -134,40 +130,18 @@ export default function AccountsTab() {
       </Card>
 
       {archived.length === 0 ? null : (
+        // One door, not two: the accordion used to open here and the Profile row opened a screen,
+        // and the two showed the same list with different actions. This row leads to the screen.
         <Card padded={false}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setArchivedOpen(!archivedOpen)}
-            style={{ padding: theme.layout.cardPadding }}
-          >
-            <Text color="textMuted">
-              {t('accounts.archived_other', { count: archived.length })}
-            </Text>
-          </Pressable>
-          {archivedOpen ? (
-            <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-              {archived.map((account) => (
-                <ListRow
-                  key={account.id}
-                  title={account.name}
-                  leading={
-                    <IconBox name={account.icon as IconName} colour={theme.palette.textFaint} />
-                  }
-                  trailing={
-                    <Pressable
-                      accessibilityRole="button"
-                      hitSlop={8}
-                      onPress={() => restoreAccount(repos, account.id)}
-                    >
-                      <Text size="footnote" color="accent">
-                        {t('accounts.restore')}
-                      </Text>
-                    </Pressable>
-                  }
-                />
-              ))}
-            </View>
-          ) : null}
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+            <ListRow
+              title={t('accounts.archived')}
+              leading={<IconBox name="archive" colour={theme.palette.textFaint} small />}
+              trailing={<Text color="textMuted">{String(archived.length)}</Text>}
+              onPress={() => router.push('/settings/archived-accounts')}
+              chevron
+            />
+          </View>
         </Card>
       )}
 
