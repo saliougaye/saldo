@@ -35,6 +35,9 @@ export default function CategoriesStep() {
   const finish = () => {
     setSaving(true);
     const { minorDigits } = getCurrency(draft.currency);
+    // The return value is deliberately ignored: false means a sync delivered the account's own
+    // settings while the user was stepping through onboarding, and those rows win (§8.3). Either
+    // way the app is ready, so the destination is the same.
     seedFromOnboarding(repos, {
       periodKind: draft.periodKind,
       cycleStartDay: draft.cycleStartDay,

@@ -15,6 +15,15 @@ export type SyncStatus =
   | { kind: 'error'; code: string; message: string; retryAt: number }
   | { kind: 'session-expired' };
 
+/**
+ * True once the first cycle has finished, however it finished. Boot waits for this before deciding
+ * that a signed-in device needs onboarding (§6.29): the account's own settings row may still be
+ * on its way down, and seeding over it fails on the `settings.id` unique constraint.
+ */
+export function hasSyncSettled(status: SyncStatus): boolean {
+  return status.kind === 'idle' ? status.lastSyncAt !== null : status.kind !== 'syncing';
+}
+
 export interface Scheduler {
   /** Runs a cycle unless one is already running, in which case it joins it. */
   syncNow(): Promise<SyncOutcome | null>;

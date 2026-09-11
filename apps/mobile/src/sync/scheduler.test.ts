@@ -1,5 +1,11 @@
 import { ApiClientError } from '../net/apiClient';
-import { BACKOFF_MS, createScheduler, type SyncStatus, WRITE_DEBOUNCE_MS } from './scheduler';
+import {
+  BACKOFF_MS,
+  createScheduler,
+  hasSyncSettled,
+  type SyncStatus,
+  WRITE_DEBOUNCE_MS,
+} from './scheduler';
 
 /** A deferred promise, so a test can hold a cycle open and start a second one. */
 function deferred<T>() {
@@ -125,5 +131,20 @@ describe('createScheduler', () => {
     scheduler.stop();
     await expect(scheduler.syncNow()).resolves.toBeNull();
     expect(seen).toEqual([]);
+  });
+});
+
+describe('hasSyncSettled', () => {
+  it('is false before the first cycle and while one runs', () => {
+    expect(hasSyncSettled({ kind: 'idle', lastSyncAt: null })).toBe(false);
+    expect(hasSyncSettled({ kind: 'syncing' })).toBe(false);
+  });
+
+  it('is true once a cycle has finished, failed or lost the session', () => {
+    expect(hasSyncSettled({ kind: 'idle', lastSyncAt: 1 })).toBe(true);
+    expect(hasSyncSettled({ kind: 'error', code: 'network_error', message: 'x', retryAt: 1 })).toBe(
+      true,
+    );
+    expect(hasSyncSettled({ kind: 'session-expired' })).toBe(true);
   });
 });

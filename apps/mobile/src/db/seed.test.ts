@@ -48,6 +48,24 @@ describe('seedFromOnboarding', () => {
     expect(account?.includeInSpendable).toBe(true);
   });
 
+  it('writes nothing when a sync already delivered the account settings', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => BASE.completedAt);
+    repos.settings.create({
+      periodKind: 'month',
+      cycleStartDay: 1,
+      currency: 'EUR',
+      language: 'system',
+      theme: 'system',
+      onboardingCompletedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    expect(seedFromOnboarding(repos, { ...BASE, selectedCategoryKeys: ['groceries'] })).toBe(false);
+    expect(repos.settings.get()?.cycleStartDay).toBe(1);
+    expect(repos.accounts.list()).toHaveLength(0);
+    expect(repos.categories.list()).toHaveLength(0);
+  });
+
   it('creates the hidden income categories even when nothing is selected', () => {
     const names = seed([])
       .categories.list()

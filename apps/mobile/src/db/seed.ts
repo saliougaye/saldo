@@ -90,8 +90,14 @@ export interface SeedInput {
  * Writes what onboarding collected: the settings singleton, the first account, and the selected
  * categories with their children (§4.2, §6.29). Every write goes through a repository, so each row
  * is validated and stamped.
+ *
+ * Returns false and writes nothing when the account already has settings: a first sync can land
+ * while the user is still stepping through onboarding, and the account's own rows win over a
+ * second set of seed data (§8.3). Inserting anyway broke on `UNIQUE constraint failed: settings.id`.
  */
-export function seedFromOnboarding(repos: Repositories, input: SeedInput): void {
+export function seedFromOnboarding(repos: Repositories, input: SeedInput): boolean {
+  if (repos.settings.get() !== null) return false;
+
   repos.settings.create({
     periodKind: input.periodKind,
     cycleStartDay: input.cycleStartDay,
@@ -141,4 +147,5 @@ export function seedFromOnboarding(repos: Repositories, input: SeedInput): void 
       });
     }
   }
+  return true;
 }
