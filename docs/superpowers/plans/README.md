@@ -338,10 +338,21 @@ of §11.2.
 preset. **Unblocked:** the user supplied a real export on 2026-09-11; the format is written up in §11.3 and the
 anonymised fixture is `packages/core/src/io/__fixtures__/spendee.csv`.
 
-**09b — Attachments** ⏸ *on hold at the user's request* ("per gli allegati dobbiamo discutere"). Capture, compress,
-store, thumbnails, viewer, blob upload/download queue + server routes + cleanup, then the ZIP backup (`fflate`) that
-carries the files.
-*Acceptance:* an attachment added on device A appears on device B.
+**09b — Attachments.** Discussed and settled on 2026-09-11: **where the blobs live is the server's business**, not
+the app's, so `apps/web` owns an `AttachmentStore` interface with `fs`, `s3` (configurable endpoint, so R2/MinIO/
+Backblaze come for free), `vercel-blob` and `none`. Presigned uploads are required, not optional: a serverless
+request body caps at ~4.5 MB against a 10 MB attachment. `ATTACHMENT_STORAGE=none` is supported and is the default —
+attachments stay on the phone, the row still syncs, and `/api/health` says so. Big enough to run in three parts:
+
+- **09b-1 — Server storage.** The interface, the four drivers, the env, `attachmentsEnabled` in `/api/health`, the
+  upload-intent / direct / complete / download routes, and the tombstone cleanup.
+- **09b-2 — On the phone.** Capture, compress (≤2000px, JPEG 0.8, EXIF stripped), the local file store, the
+  attachments table with its device-local `blobState`, thumbnails, the viewer (§6.28) and the transaction form rows.
+- **09b-3 — Blob sync and the ZIP backup.** The upload queue (only after the row has been pushed) and on-demand
+  download, then the `fflate` backup that carries the files, which 09a left for this phase.
+
+*Acceptance:* an attachment added on device A appears on device B; with `ATTACHMENT_STORAGE=none` the same
+attachment stays local and the app says so rather than failing.
 *Acceptance:* importing a fixture creates the expected accounts/categories/tags and skips duplicates on a second run.
 
 ### 10 — Access control: who is allowed in 🔜 queued

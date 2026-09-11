@@ -727,7 +727,13 @@ Notes that follow from using the library:
 | `WEBAUTHN_RP_NAME` | `Saldo` | |
 | `JWT_SECRET` | 32+ random bytes base64 | Better Auth's `secret`: signs session and handoff material. |
 | `DATABASE_URL` | `postgres://…` | |
-| `STORAGE_DIR` | `/data/attachments` | Blob storage root. |
+| `ATTACHMENT_STORAGE` | `none` | `none` \| `fs` \| `s3` \| `vercel-blob` (§10). |
+| `STORAGE_DIR` | `/data/attachments` | Blob root. Required by, and only read by, `fs`. |
+| `S3_BUCKET`, `S3_REGION` | | Required by `s3`. |
+| `S3_ENDPOINT` | `https://…r2.cloudflarestorage.com` | Optional: what makes R2, MinIO, Backblaze and Hetzner work. |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | | Required by `s3`. |
+| `S3_FORCE_PATH_STYLE` | `true` | Needed by MinIO and some S3 clones. |
+| `BLOB_READ_WRITE_TOKEN` | | Required by `vercel-blob`; Vercel injects it. |
 | `REGISTRATION` | `first-user` | `open` \| `first-user` (only when no users exist) \| `closed`. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma list of allowed custom schemes for mobile redirects. |
 
@@ -780,16 +786,50 @@ Documented only. Android: Credential Manager (`react-native-passkey`) + `/.well-
 - **Local store:** `${documentDirectory}attachments/{id}.{jpg|png|pdf}`. The sha256 is computed with `expo-crypto`
   (`digest` on the file bytes).
 - **Limits:** max 5 attachments per transaction.
+- **Where the blobs live is the server's business, not the app's.** `apps/web` owns an `AttachmentStore` interface
+  and picks an implementation from `ATTACHMENT_STORAGE`: `fs` (self-hosting on a disk), `s3` (with a configurable
+  endpoint, so Cloudflare R2, MinIO, Backblaze and Hetzner come for free), `vercel-blob`, or `none`. Adding a backend
+  is a file in `apps/web`; the app is never rebuilt for it.
+
+  ```ts
+  interface AttachmentStore {
+    put(key, bytes, meta): Promise<void>;
+    get(key): Promise<ReadableStream | null>;
+    delete(key): Promise<void>;
+    /** Only stores that can hand out direct URLs implement these. */
+    presignPut?(key, meta): Promise<PresignedTarget>;
+    presignGet?(key): Promise<string>;
+  }
+  ```
+
+  **Presigning is not an optimisation, it is a requirement**: a serverless function caps its request body at ~4.5 MB
+  while an attachment may be 10 MB, so a proxied upload cannot work on Vercel. The client therefore never assumes:
+  it asks, and the server answers with the mode it can serve.
+
+- **`ATTACHMENT_STORAGE=none` is a supported configuration**, and the default. Attachments still work: they are
+  captured, compressed and kept on the phone, the row syncs like any other, and another device shows the attachment
+  as "not available on this device". `/api/health` reports `attachmentsEnabled`, so the app says so instead of
+  failing an upload nobody could have prevented.
+
 - **Row sync:** attachment metadata syncs like any entity. Blob transfer is separate:
-  - Upload queue: rows with `blobState ∈ {local_only, failed}` after their metadata has been pushed →
-    `PUT /api/attachments/{id}` with a raw body, `Content-Type`, and `X-Content-SHA256` header. The server verifies
-    ownership (the attachment row exists for the user), size ≤ 10 MB, and hash → writes `STORAGE_DIR/{userId}/{id}` atomically
-    (temp file + rename) → `204`.
-  - Download: on demand when the viewer/thumbnail needs a `remote_only` blob → `GET /api/attachments/{id}` (bearer),
-    with streaming. Cache to the local store and verify the hash.
+  - Upload queue: rows with `blobState ∈ {local_only, failed}` **after their metadata has been pushed** — the server
+    must already know the row the bytes belong to. The client asks
+    `POST /api/attachments/{id}/upload-intent` → `{ mode: 'direct' }` or
+    `{ mode: 'presigned', url, method, headers }`, then either `PUT /api/attachments/{id}` (raw body,
+    `Content-Type`, `X-Content-SHA256`) or the presigned URL followed by
+    `POST /api/attachments/{id}/complete`. The server verifies ownership and size either way; with a presigned
+    upload it never sees the bytes, so **the hash is verified by whoever downloads them** against the `sha256`
+    already carried by the row.
+  - Download: on demand when the viewer or a thumbnail needs a blob this device does not have →
+    `GET /api/attachments/{id}` (bearer), which streams or redirects to a presigned URL. Cache locally and verify
+    the hash before trusting it.
+  - `blobState` (`local_only` | `synced` | `failed`) is a **device-local column** and is deliberately absent from
+    `attachmentSchema`: if it synced, a second device would inherit the belief that it holds a file it has never
+    seen.
   - Deleting a transaction tombstones its attachments. The server deletes blobs of tombstoned attachments in a
-    periodic cleanup (on each push, for rows tombstoned > 7 days ago). The client deletes local files after the
-    tombstone syncs (or immediately in local-only mode).
+    periodic cleanup (on each push, for rows tombstoned > 7 days ago), late enough for other devices to have
+    converged. The client deletes local files after the tombstone syncs (or immediately when there is no server
+    storage).
 - Thumbnails: `expo-image` with `contentFit="cover"`. PDFs show a document icon tile.
 
 ---
