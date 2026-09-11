@@ -408,6 +408,29 @@ decision and a short scope, and the work that follows gets its own plan. Written
 Order, if done in order: C, then B, then A — date entry lives inside the form, and motion is worth
 scoping once the screens it animates have stopped moving. None of them blocks 10 or 11.
 
+### Backlog from hands-on use 🔜 queued
+
+Small things the user hit while using the app on 2026-09-11. None of them blocks 10 or 11; each is
+small enough to land on its own branch without a plan file of its own.
+
+- **Attachments are invisible on the transaction detail screen.** `AttachmentStrip` is mounted only
+  by `TransactionForm` (new and edit), so `app/transaction/[id].tsx` — the screen you land on from
+  the list — shows the amount, account, category, tags and note but never says the transaction has a
+  receipt attached. Add a read-only strip there, opening `app/attachment/[id]` on tap, and decide
+  what it shows for a row whose bytes this device does not hold yet (`localUri === null`): a
+  placeholder that downloads on tap, rather than nothing.
+- **Motion.** Already scoped as investigation **A** above — nothing extra to track here. The scope
+  decides what animates; this entry only records that the absence was noticed from use, which is the
+  evidence A was asking for.
+- **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
+  work does is decide which one was meant (probably both):
+  - `TransactionFilters.accountId` exists in `@saldo/core` and `filterTransactions` honours it, but
+    **no screen ever sets it** — the Transactions tab offers expense/income/tags/excluded and no
+    account chip. The field is dead weight until a chip or sheet fills it.
+  - **Transfers cannot be listed.** `direction` is `all | expense | income`, and a transfer is
+    neither, so it is hidden by both filters and reachable only by scrolling `all`. Deciding whether
+    `direction` gains a `transfer` value (or transfers get their own chip) is the same change.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)
