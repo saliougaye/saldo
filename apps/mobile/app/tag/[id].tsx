@@ -2,11 +2,10 @@ import { rollupToParents, spendingByCategory } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
-import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
@@ -20,7 +19,7 @@ import {
 } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
-import { TagEditSheet } from '../../src/features/tags/TagEditSheet';
+import { TagEditCard } from '../../src/features/tags/TagEditCard';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
@@ -39,7 +38,6 @@ export default function TagView() {
   const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
-  const [editOpen, setEditOpen] = useState(false);
 
   const rows = useTransactionsInRange('1970-01-01', today);
   const tag = tags.find((candidate) => candidate.id === id);
@@ -86,9 +84,7 @@ export default function TagView() {
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   return (
-    <Screen
-      footer={<SecondaryButton label={t('tags.editTag')} onPress={() => setEditOpen(true)} />}
-    >
+    <Screen>
       <ScreenHeader title={tag.name} />
       <Text size="footnote" color="textMuted">
         {t('tags.total')}
@@ -173,15 +169,8 @@ export default function TagView() {
         {formatMoney(total, currency, locale)}
       </Text>
 
-      <TagEditSheet
-        visible={editOpen}
-        onClose={() => setEditOpen(false)}
-        tag={tag}
-        onDeleted={() => {
-          setEditOpen(false);
-          router.back();
-        }}
-      />
+      {/* Last: the screen reads as what the tag *is*, then what you can do to it. */}
+      <TagEditCard tag={tag} onDeleted={() => router.back()} />
     </Screen>
   );
 }
