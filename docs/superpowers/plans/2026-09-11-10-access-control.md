@@ -136,7 +136,7 @@ describe('normaliseInviteCode', () => {
 
   it('folds the symbols that get misread', () => {
     // O→0, I→1, L→1, U→V: a code read off a screen works whatever the reader assumed.
-    expect(normaliseInviteCode('O1IL-UUUU-0000-1111')).toBe('01110VVVV00001111');
+    expect(normaliseInviteCode('O1IL-UUUU-0000-1111')).toBe('0111VVVV00001111');
   });
 
   it('drops anything that is not a symbol, so punctuation cannot change the answer', () => {
@@ -163,9 +163,8 @@ describe('hashInviteCode', () => {
 });
 ```
 
-Note the third `normaliseInviteCode` expectation: `'O1IL-UUUU-0000-1111'` folds to `01110VVVV00001111`, which is 17
-symbols, because `normalise` does not care about length — it only canonicalises. Length is the database's problem:
-an unknown hash is refused like any other.
+Note that `normalise` does not care about length — it only canonicalises, one symbol in for one symbol out. Length
+is the database's problem: a hash that matches nothing is refused like any other.
 
 - [ ] **Step 2: Run it and watch it fail**
 
