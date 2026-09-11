@@ -328,7 +328,7 @@ server corretto."
 Split into three, and reordered at the user's request — export first, because the Spendee CSV sample the import
 preset needs has not arrived yet ("sto aspettando che mi arrivi un export, parti dalla feature di export").
 
-**09a — Export & restore.** Core `io/`: backup schema, CSV serialise, both pure and fully unit-tested. Mobile: JSON
+**09a — Export & restore** ✅ (plan: `2026-09-11-09a-export-and-restore.md`). Core `io/`: backup schema, CSV serialise, both pure and fully unit-tested. Mobile: JSON
 backup export, CSV export (current period or everything), restore with validation and the "replaces everything on
 this phone" confirmation, sharing through `expo-sharing`. No attachments yet: the ZIP variant waits for 09b.
 *Acceptance:* export → wipe → restore round-trip is lossless (test); the CSV opens in a spreadsheet with the columns
