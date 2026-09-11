@@ -389,6 +389,25 @@ a revoked user's bearer stops working and their rows stop syncing; the whole flo
 **Acceptance:** a person following only the docs on a clean machine produces an installed APK and an iOS build connected to a
 self-hosted server.
 
+### UI scoping — motion, the transaction form, date entry 🔜 queued
+
+Asked for by the user on 2026-09-11. Three **investigations**, not implementations: each ends in a
+decision and a short scope, and the work that follows gets its own plan. Written up in
+`2026-09-11-ui-scoping.md`.
+
+- **A. Motion.** The app has no motion of its own — §13 covers colour, type and radii and says
+  nothing about timing. Decide where animation carries meaning, one timing scale as `@saldo/ui`
+  tokens, the library, and the reduced-motion rule.
+- **B. The transaction form (§6.16).** The screen the app exists for, assembled row by row across
+  phases and never looked at whole. Decide the fast path, the field order, what a disclosure hides,
+  and the "recently used" rule — as a core function, not screen logic.
+- **C. Date entry.** Every transaction has a date and the design draws a calendar the app does not
+  have. Decide native picker versus drawn calendar (and say why, because it will not be revisited
+  cheaply), the today/yesterday shortcuts, and how `CustomRangeSheet` reuses the same component.
+
+Order, if done in order: C, then B, then A — date entry lives inside the form, and motion is worth
+scoping once the screens it animates have stopped moving. None of them blocks 10 or 11.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)
