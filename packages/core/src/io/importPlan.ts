@@ -19,14 +19,21 @@ export interface PlannedTransaction {
   /** Always positive; the kind carries the sign. */
   amount: MinorUnits;
   accountName: string;
-  categoryName: string | null;
+  categoryName: string;
   description: string;
   note: string | null;
   tagNames: string[];
   fingerprint: string;
 }
 
-export type ImportErrorReason = 'date' | 'amount' | 'type' | 'currency' | 'account' | 'columns';
+export type ImportErrorReason =
+  | 'date'
+  | 'amount'
+  | 'type'
+  | 'currency'
+  | 'account'
+  | 'category'
+  | 'columns';
 
 export interface ImportRowError {
   rowNumber: number;
@@ -195,6 +202,16 @@ export function planImport(
       return;
     }
 
+    const rawCategory = cell(row, mapping.columns.category);
+    const categoryName =
+      rawCategory !== null && rawCategory !== '' ? rawCategory : mapping.defaultCategoryName;
+    // Every expense and income has a category (§4), so an empty cell with no fallback is a row
+    // the importer cannot write — saying so beats inventing a category nobody asked for.
+    if (categoryName === null || categoryName === '') {
+      fail('category', rawCategory ?? '');
+      return;
+    }
+
     const description = cell(row, mapping.columns.description) ?? '';
     const amount = Math.abs(signed);
     // The fingerprint is computed *before* anything is registered as "to create": resolving a
@@ -207,7 +224,6 @@ export function planImport(
     }
     seen.add(fingerprint);
 
-    const rawCategory = cell(row, mapping.columns.category);
     const rawTags = cell(row, mapping.columns.tags);
     const note = cell(row, mapping.columns.note);
 
@@ -217,8 +233,7 @@ export function planImport(
       kind,
       amount,
       accountName: accounts.resolve(accountName),
-      categoryName:
-        rawCategory === null || rawCategory === '' ? null : categories[kind].resolve(rawCategory),
+      categoryName: categories[kind].resolve(categoryName),
       description,
       note: note === null || note === '' ? null : note,
       tagNames:

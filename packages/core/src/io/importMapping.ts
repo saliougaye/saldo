@@ -29,6 +29,11 @@ export interface ImportMapping {
   tagSeparator: string;
   /** Used when there is no account column, or its cell is empty. */
   defaultAccountName: string | null;
+  /**
+   * Same, for the category. Every expense and income needs one (§4), so a row whose cell is empty
+   * is an error unless this says what to file it under.
+   */
+  defaultCategoryName: string | null;
 }
 
 export type PresetName = 'saldo' | 'spendee' | 'generic';
@@ -102,6 +107,7 @@ function presetFor(headers: readonly string[], name: PresetName): ImportMapping 
       typeValues: { expense: ['expense'], income: ['income'] },
       tagSeparator: '|',
       defaultAccountName: null,
+      defaultCategoryName: null,
     };
   }
   if (name === 'spendee') {
@@ -126,6 +132,7 @@ function presetFor(headers: readonly string[], name: PresetName): ImportMapping 
       typeValues: { expense: ['expense'], income: ['income'] },
       tagSeparator: ',',
       defaultAccountName: null,
+      defaultCategoryName: null,
     };
   }
   return {
@@ -136,6 +143,7 @@ function presetFor(headers: readonly string[], name: PresetName): ImportMapping 
     typeValues: { expense: ['expense', 'spesa', 'uscita'], income: ['income', 'entrata'] },
     tagSeparator: ',',
     defaultAccountName: null,
+    defaultCategoryName: null,
   };
 }
 

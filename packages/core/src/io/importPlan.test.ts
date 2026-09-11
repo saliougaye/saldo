@@ -237,6 +237,19 @@ describe('planImport, rows it refuses', () => {
     });
   });
 
+  it('reports a row with no category, since every expense needs one', () => {
+    const plan = planImport([row({ 3: '' })], spendee(), context());
+    expect(plan.errors).toEqual([{ rowNumber: 1, reason: 'category', value: '' }]);
+  });
+
+  it('files a row with no category under the fallback when there is one', () => {
+    const mapping = { ...spendee(), defaultCategoryName: 'Altro' };
+    const plan = planImport([row({ 3: '' })], mapping, context());
+    expect(plan.errors).toEqual([]);
+    expect(plan.transactions[0]?.categoryName).toBe('Altro');
+    expect(plan.newCategories).toEqual([{ name: 'Altro', direction: 'expense' }]);
+  });
+
   it('reports a row that is too short for its mapping', () => {
     const plan = planImport([['2026-08-12']], spendee(), context());
     expect(plan.errors[0]).toMatchObject({ rowNumber: 1, reason: 'columns' });
@@ -265,6 +278,7 @@ describe('planImport, other shapes', () => {
     dateFormat: 'dmy',
     decimalSeparator: ',',
     defaultAccountName: 'Contanti',
+    defaultCategoryName: 'Altro',
   });
 
   it('reads day-first dates and a comma decimal separator, with the sign giving the kind', () => {
@@ -282,6 +296,7 @@ describe('planImport, other shapes', () => {
       amount: 123_456,
       kind: 'expense',
       accountName: 'Contanti',
+      categoryName: 'Altro',
     });
     expect(plan.transactions[1]).toMatchObject({
       date: '2026-05-01',
