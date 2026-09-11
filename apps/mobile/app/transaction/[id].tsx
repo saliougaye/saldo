@@ -59,24 +59,51 @@ export default function TransactionDetail() {
   const toAccount = accounts.find((row) => row.id === transaction.toAccountId);
   const rowTags = tags.filter((tag) => transaction.tagIds.includes(tag.id));
 
-  const row = (label: string, value: ReactNode, first = false) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 16,
-        minHeight: theme.layout.minHitTarget,
-        paddingVertical: 13,
-        borderTopWidth: first ? 0 : 1,
-        borderTopColor: theme.palette.border,
-      }}
-    >
-      <Text size="footnote" color="textMuted">
-        {label}
-      </Text>
-      <View style={{ flex: 1, alignItems: 'flex-end' }}>{value}</View>
-    </View>
-  );
+  const row = (
+    label: string,
+    value: ReactNode,
+    options: { first?: boolean; onPress?: () => void } = {},
+  ) => {
+    const { first = false, onPress } = options;
+    const content = (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 16,
+          minHeight: theme.layout.minHitTarget,
+          paddingVertical: 13,
+          borderTopWidth: first ? 0 : 1,
+          borderTopColor: theme.palette.border,
+        }}
+      >
+        <Text size="footnote" color="textMuted">
+          {label}
+        </Text>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>{value}</View>
+        {/* The chevron is the static cue that the row leads somewhere; the tap alone is not. */}
+        {onPress === undefined ? null : (
+          <Icon name="chevR" size={14} color={theme.palette.textFaint} />
+        )}
+      </View>
+    );
+    if (onPress === undefined) return content;
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        onPress={onPress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+      >
+        {content}
+      </Pressable>
+    );
+  };
+
+  const openAccount = (accountId: string | null) =>
+    accountId === null
+      ? undefined
+      : () => router.push({ pathname: '/account/[id]', params: { id: accountId } });
 
   return (
     <Screen>
@@ -131,17 +158,17 @@ export default function TransactionDetail() {
       </View>
 
       <View style={{ marginTop: 12 }}>
-        {transaction.kind === 'transfer'
-          ? row(
-              t('transactions.detailAccount'),
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text>{account?.name ?? '—'}</Text>
-                <Text color="textFaint">→</Text>
-                <Text>{toAccount?.name ?? '—'}</Text>
-              </View>,
-              true,
-            )
-          : null}
+        {transaction.kind === 'transfer' ? (
+          <>
+            {row(t('txForm.from'), <Text>{account?.name ?? '—'}</Text>, {
+              first: true,
+              onPress: openAccount(transaction.accountId),
+            })}
+            {row(t('txForm.to'), <Text>{toAccount?.name ?? '—'}</Text>, {
+              onPress: openAccount(transaction.toAccountId),
+            })}
+          </>
+        ) : null}
         {transaction.kind === 'transfer'
           ? null
           : row(
@@ -157,11 +184,20 @@ export default function TransactionDetail() {
                 />
                 <Text>{category?.name ?? '—'}</Text>
               </View>,
-              true,
+              {
+                first: true,
+                onPress:
+                  category === undefined
+                    ? undefined
+                    : () =>
+                        router.push({ pathname: '/category/[id]', params: { id: category.id } }),
+              },
             )}
         {transaction.kind === 'transfer'
           ? null
-          : row(t('transactions.detailAccount'), <Text>{account?.name ?? '—'}</Text>)}
+          : row(t('transactions.detailAccount'), <Text>{account?.name ?? '—'}</Text>, {
+              onPress: openAccount(transaction.accountId),
+            })}
         {row(
           t('transactions.detailDate'),
           <Text tabular>{formatLongDate(transaction.date, locale)}</Text>,
