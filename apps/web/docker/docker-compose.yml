@@ -1,5 +1,10 @@
+# Self-hosting: the server, built into an image, and its database. This is the file you deploy.
+#
 # Run from the repository root:
 #   docker compose -f apps/web/docker/docker-compose.yml up -d --build
+#
+# For *developing* Saldo, use docker-compose.dev.yml instead: it brings up what the server talks to
+# and leaves the server itself to `pnpm --filter web dev`, so a change reloads without a rebuild.
 services:
   postgres:
     image: postgres:17
@@ -30,6 +35,8 @@ services:
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?set WEBAUTHN_RP_ID}
       WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Saldo}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      # Without this the server would keep no attachments at all: `none` is the default (§10).
+      ATTACHMENT_STORAGE: ${ATTACHMENT_STORAGE:-fs}
       STORAGE_DIR: /data/attachments
       REGISTRATION: ${REGISTRATION:-first-user}
       APP_REDIRECT_SCHEMES: ${APP_REDIRECT_SCHEMES:-saldo}

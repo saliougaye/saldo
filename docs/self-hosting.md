@@ -70,11 +70,11 @@ for, and `registrationAllowed` is what decides whether it offers "create account
 
 ## Local development
 
+One compose file brings up everything the server talks to — Postgres, and
+[Floci](https://github.com/floci-io/floci) standing in for S3:
+
 ```bash
-# Postgres. Use another host port if 5432 is busy, and match DATABASE_URL to it.
-docker run --rm -d --name saldo-pg \
-  -e POSTGRES_USER=saldo -e POSTGRES_PASSWORD=saldo -e POSTGRES_DB=saldo \
-  -p 5432:5432 postgres:17
+docker compose -f apps/web/docker/docker-compose.dev.yml up -d
 
 cp apps/web/.env.example apps/web/.env
 # then fill JWT_SECRET with: openssl rand -base64 48
@@ -83,8 +83,26 @@ pnpm --filter web db:migrate
 pnpm --filter web dev          # http://localhost:3000
 ```
 
+The server itself is deliberately **not** in that file: it runs from source so a change reloads
+without a rebuild.
+
+**Watch the port it actually binds.** If something else already holds 3000, Next quietly starts on
+3001 — and then `PUBLIC_URL` no longer matches the origin the browser sees, so the passkey ceremony
+fails with an opaque WebAuthn error. Free the port, or set `PUBLIC_URL` to the one it chose.
+
+Postgres is published on **5433**, not 5432, because 5432 is usually already taken by some other
+project's database; `POSTGRES_PORT` overrides it. Floci listens on 4566 and creates the
+`saldo-attachments` bucket on startup through
+`apps/web/docker/floci-init/01-create-bucket.sh`.
+
+To develop against S3 rather than a disk, uncomment the `s3` block in `.env` — it is already filled
+in with what Floci serves (`test`/`test`, `us-east-1`, path-style). The attachment upload then
+takes the same presigned route it would take against a real bucket, which is the part worth
+exercising locally: it is the one a proxied upload would never reach.
+
 `pnpm --filter web test` runs the route-handler tests against an in-memory Postgres (PGlite), so
-they need no running database.
+they need no running database. The S3 driver has its own integration test that runs against Floci
+when it is up and **skips itself** when it is not.
 
 ### Testing from a phone
 
@@ -126,6 +144,10 @@ S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 S3_ACCESS_KEY_ID=…
 S3_SECRET_ACCESS_KEY=…
 ```
+
+Deleting a transaction does not delete its attachment bytes straight away: the row becomes a
+tombstone, the server notes the blob in a small queue, and the bytes go a week later — late enough
+for a phone that has been offline to hear about the deletion first.
 
 **A caveat about Vercel Blob:** every object in a Blob store is readable by anyone who has its URL —
 the product has no private mode. Saldo gives each object a random pathname and never hands those

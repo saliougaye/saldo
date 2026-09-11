@@ -30,6 +30,27 @@ export const syncRows = pgTable(
   ],
 );
 
+/**
+ * Blobs whose row was tombstoned and whose bytes are still in the store (§10). A queue rather than
+ * a scan: tombstones live forever, so "every attachment deleted more than 7 days ago" would grow
+ * without bound and re-delete the same objects on every push.
+ */
+export const deletedBlobs = pgTable(
+  'deleted_blobs',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    attachmentId: text('attachment_id').notNull(),
+    /** When the tombstone arrived; the blob is kept for a week so every device can converge. */
+    tombstonedAt: timestamp('tombstoned_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.attachmentId] }),
+    index('deleted_blobs_due').on(table.tombstonedAt),
+  ],
+);
+
 export const schema = {
   user,
   session,
@@ -37,4 +58,5 @@ export const schema = {
   verification,
   passkey,
   syncRows,
+  deletedBlobs,
 };

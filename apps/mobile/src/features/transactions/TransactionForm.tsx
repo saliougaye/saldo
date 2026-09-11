@@ -26,6 +26,7 @@ import {
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { AttachmentStrip } from './AttachmentStrip';
 import {
   canCreateTag,
   canSave,
@@ -39,6 +40,11 @@ import {
 export interface TransactionFormProps {
   /** Captured once by the caller so every screen agrees on the calendar day (§3.2). */
   today: string;
+  /**
+   * The id the transaction has or will have. Attachments need it before the row exists, so a new
+   * transaction gets its id from the screen rather than from the repository (§10).
+   */
+  transactionId: string;
   values: TransactionFormValues;
   onChange: (values: TransactionFormValues) => void;
   /** Edit mode opens with the keypad closed and a full-width save button (§6.16). */
@@ -52,6 +58,7 @@ const KINDS = ['expense', 'income', 'transfer'] as const;
 
 export function TransactionForm({
   today,
+  transactionId,
   values,
   onChange,
   mode,
@@ -312,14 +319,7 @@ export function TransactionForm({
 
       <Card>
         <View style={{ gap: 14 }}>
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <Text>{t('txForm.attachments')}</Text>
-            <Text size="footnote" color="textFaint">
-              {t('txForm.attachmentsSoon')}
-            </Text>
-          </View>
+          <AttachmentStrip transactionId={transactionId} />
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >

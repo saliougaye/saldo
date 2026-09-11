@@ -3,9 +3,10 @@ import { createTestDatabase } from '../db/testing';
 import { SYNCED_ENTITY_NAMES, SYNCED_TABLES } from './entities';
 
 describe('the synced table registry', () => {
-  it('covers every entity the wire protocol names except attachment', () => {
+  it('covers every entity the wire protocol names', () => {
     expect(SYNCED_ENTITY_NAMES.sort()).toEqual([
       'account',
+      'attachment',
       'budget',
       'category',
       'recurrence',

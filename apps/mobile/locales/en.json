@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo uses the camera to photograph a receipt and attach it to a transaction.",
+  "NSPhotoLibraryUsageDescription": "Saldo needs your photos so you can attach a receipt you have already taken.",
+  "NSFaceIDUsageDescription": "Unlock Saldo with Face ID."
+}

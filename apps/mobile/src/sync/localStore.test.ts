@@ -164,10 +164,35 @@ describe('applyPull', () => {
     expect(clock.now() > '999999999999999-0000-device-b').toBe(true);
   });
 
-  it('ignores an entity this version does not sync', () => {
+  it('never puts a device-local column of an attachment on the wire', () => {
+    const { db, repos } = createTestContext();
+    repos.attachments.create({
+      transactionId: 'tx-1',
+      mimeType: 'image/jpeg',
+      byteSize: 1024,
+      sha256: 'a'.repeat(64),
+      width: 100,
+      height: 100,
+      localUri: 'file:///attachments/att-1.jpg',
+    });
+    const change = pendingChanges(db, 50).find((entry) => entry.entity === 'attachment');
+    expect(change).toBeDefined();
+    // `localUri` is a path inside this installation's sandbox and `blobState` is this device's
+    // own upload progress; neither means anything to another device (§10).
+    expect(change?.data).not.toHaveProperty('localUri');
+    expect(change?.data).not.toHaveProperty('blobState');
+    expect(change?.data).toMatchObject({ sha256: 'a'.repeat(64), byteSize: 1024 });
+  });
+
+  it('ignores an entity this version does not know', () => {
     const { db, kv, clock } = createTestContext();
-    const attachment = { ...pulled({ id: 'att-1', seq: 4 }), entity: 'attachment' as const };
-    expect(applyPull({ db, kv, clock, changes: [attachment], nextSince: 4 })).toMatchObject({
+    // A server one version ahead may send something this app has never heard of; skipping it and
+    // still moving the cursor is what keeps the pull from stalling forever on that row.
+    const unknown = {
+      ...pulled({ id: 'thing-1', seq: 4 }),
+      entity: 'invention' as unknown as 'tag',
+    };
+    expect(applyPull({ db, kv, clock, changes: [unknown], nextSince: 4 })).toMatchObject({
       skipped: 1,
     });
     expect(kv.get('syncCursor')).toBe('4');

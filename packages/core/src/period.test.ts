@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canShiftPeriod,
   currentPeriod,
   describePeriod,
   isPeriodKind,
@@ -151,5 +152,41 @@ describe('isPeriodKind', () => {
     expect([...PERIOD_KINDS]).toEqual(['month', 'week', 'cycle', 'year']);
     expect(isPeriodKind('month')).toBe(true);
     expect(isPeriodKind('fortnight')).toBe(false);
+  });
+});
+
+describe('canShiftPeriod', () => {
+  const cycle: PeriodDef = { kind: 'cycle', startDay: 27 };
+  const today = '2026-09-11';
+  const current = periodContaining(cycle, today);
+
+  it('always allows going back: that is history, and it happened', () => {
+    expect(canShiftPeriod(cycle, current, -1, today)).toBe(true);
+    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, -12), -1, today)).toBe(true);
+  });
+
+  it('allows the next period, where the materialiser has already put occurrences', () => {
+    expect(canShiftPeriod(cycle, current, 1, today)).toBe(true);
+  });
+
+  it('stops at the one after this one', () => {
+    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, 1), 1, today)).toBe(false);
+    expect(canShiftPeriod(cycle, current, 2, today)).toBe(false);
+  });
+
+  it('lets a browse from the past walk forward to that same limit', () => {
+    const past = shiftPeriod(cycle, current, -6);
+    expect(canShiftPeriod(cycle, past, 1, today)).toBe(true);
+    expect(canShiftPeriod(cycle, past, 7, today)).toBe(true);
+    expect(canShiftPeriod(cycle, past, 8, today)).toBe(false);
+  });
+
+  it('holds for every period kind', () => {
+    for (const kind of ['month', 'week', 'year'] as const) {
+      const def: PeriodDef = { kind, startDay: 1 };
+      const now = periodContaining(def, today);
+      expect(canShiftPeriod(def, now, 1, today)).toBe(true);
+      expect(canShiftPeriod(def, now, 2, today)).toBe(false);
+    }
   });
 });

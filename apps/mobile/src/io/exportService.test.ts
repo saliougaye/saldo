@@ -1,7 +1,14 @@
 import { readBackup } from '@saldo/core';
+import { unzipSync } from 'fflate';
 import { createRepositories, type Repositories } from '../db/repositories';
 import { createTestDatabase } from '../db/testing';
-import { buildBackupFile, buildCsvFile, NothingToExportError } from './exportService';
+import {
+  type AttachmentBytes,
+  buildBackupFile,
+  buildCsvFile,
+  buildZipBackup,
+  NothingToExportError,
+} from './exportService';
 
 const CREATED_AT = '2026-04-18T10:00:00.000Z';
 const STAMP = { today: '2026-09-11' as const, exportedAt: CREATED_AT, appVersion: '0.1.0' };
@@ -128,5 +135,64 @@ describe('buildCsvFile', () => {
       range: { start: '2026-01-01', end: '2026-01-31' },
     });
     expect(file.contents.trimEnd().split('\r\n')).toHaveLength(1);
+  });
+});
+
+describe('buildZipBackup', () => {
+  const attach = (repos: Repositories, transactionId: string, id: string) =>
+    repos.attachments.create({
+      id,
+      transactionId,
+      mimeType: 'image/jpeg',
+      byteSize: 3,
+      sha256: 'a'.repeat(64),
+      width: 10,
+      height: 10,
+      localUri: `file:///${id}.jpg`,
+    });
+
+  const read = (id: string): AttachmentBytes => ({
+    id,
+    extension: 'jpg',
+    bytes: new Uint8Array([1, 2, 3]),
+  });
+
+  it('carries backup.json and one file per attachment', () => {
+    const repos = setup();
+    const { inside } = seed(repos);
+    attach(repos, inside.id, 'att-1');
+    attach(repos, inside.id, 'att-2');
+
+    const zip = buildZipBackup(repos, STAMP, read);
+    expect(zip.name).toBe('saldo-backup-2026-09-11.zip');
+    expect(zip.missing).toEqual([]);
+
+    const entries = unzipSync(zip.contents);
+    expect(Object.keys(entries).sort()).toEqual([
+      'attachments/att-1.jpg',
+      'attachments/att-2.jpg',
+      'backup.json',
+    ]);
+    const parsed = readBackup(new TextDecoder().decode(entries['backup.json']));
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(parsed.backup.data.attachments).toHaveLength(2);
+  });
+
+  it('names the attachments it could not find instead of losing them quietly', () => {
+    const repos = setup();
+    const { inside } = seed(repos);
+    attach(repos, inside.id, 'att-1');
+
+    const zip = buildZipBackup(repos, STAMP, () => null);
+    expect(zip.missing).toEqual(['att-1']);
+    expect(Object.keys(unzipSync(zip.contents))).toEqual(['backup.json']);
+  });
+
+  it('is just backup.json when there are no attachments', () => {
+    const repos = setup();
+    seed(repos);
+    expect(Object.keys(unzipSync(buildZipBackup(repos, STAMP, read).contents))).toEqual([
+      'backup.json',
+    ]);
   });
 });

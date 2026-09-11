@@ -4,9 +4,11 @@ import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
+import { unzipSync } from 'fflate';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { extensionFor, fileFor, readBytes } from '../../src/attachments/localFiles';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { ListRow } from '../../src/components/ListRow';
@@ -21,6 +23,7 @@ import { usePeriod } from '../../src/features/period/PeriodProvider';
 import {
   buildBackupFile,
   buildCsvFile,
+  buildZipBackup,
   type ExportFile,
   NothingToExportError,
 } from '../../src/io/exportService';
@@ -43,7 +46,11 @@ export default function ExportScreen() {
   const clock = useMemo(() => createClock(kv), [kv]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ text: string; rows: number } | null>(null);
+  const [pending, setPending] = useState<{
+    text: string;
+    rows: number;
+    files: Record<string, Uint8Array>;
+  } | null>(null);
 
   const describe = (caught: unknown): string => {
     if (caught instanceof NothingToExportError) return t('io.nothingToExport');
@@ -51,7 +58,9 @@ export default function ExportScreen() {
   };
 
   /** The cache, not the documents directory: a file already shared is not the app's own data. */
-  const share = async (file: ExportFile) => {
+  const share = async (
+    file: ExportFile | { name: string; contents: Uint8Array; mimeType: string },
+  ) => {
     const target = new File(Paths.cache, file.name);
     if (target.exists) target.delete();
     target.create();
@@ -69,19 +78,20 @@ export default function ExportScreen() {
     appVersion: Application.nativeApplicationVersion ?? '0.1.0',
   });
 
-  const run = (build: () => ExportFile) => () => {
-    setBusy(true);
-    setError(null);
-    void (async () => {
-      try {
-        await share(build());
-      } catch (caught) {
-        setError(describe(caught));
-      } finally {
-        setBusy(false);
-      }
-    })();
-  };
+  const run =
+    (build: () => ExportFile | { name: string; contents: Uint8Array; mimeType: string }) => () => {
+      setBusy(true);
+      setError(null);
+      void (async () => {
+        try {
+          await share(build());
+        } catch (caught) {
+          setError(describe(caught));
+        } finally {
+          setBusy(false);
+        }
+      })();
+    };
 
   const pick = () => {
     setBusy(true);
@@ -89,13 +99,23 @@ export default function ExportScreen() {
     void (async () => {
       try {
         const picked = await DocumentPicker.getDocumentAsync({
-          type: ['application/json', '*/*'],
+          type: ['application/json', 'application/zip', '*/*'],
           copyToCacheDirectory: true,
         });
         if (picked.canceled) return;
         const asset = picked.assets[0];
         if (asset === undefined) return;
-        const text = await new File(asset.uri).text();
+        const raw = new File(asset.uri).bytesSync();
+        // A ZIP starts with "PK"; sniffing beats trusting a filename or a MIME type the picker
+        // guessed, and the two backup shapes are otherwise indistinguishable to the user.
+        const isZip = raw[0] === 0x50 && raw[1] === 0x4b;
+        const files = isZip ? unzipSync(raw) : {};
+        const json = files['backup.json'];
+        if (isZip && json === undefined) {
+          setError(t('io.restore_not-a-backup'));
+          return;
+        }
+        const text = new TextDecoder().decode(json ?? raw);
         const result = readBackup(text);
         if (!result.ok) {
           setError(
@@ -115,7 +135,7 @@ export default function ExportScreen() {
           recurrences.length +
           transactions.length +
           budgets.length;
-        setPending({ text, rows });
+        setPending({ text, rows, files });
       } catch (caught) {
         setError(describe(caught));
       } finally {
@@ -141,6 +161,18 @@ export default function ExportScreen() {
       backup: result.backup,
       now: new Date().toISOString(),
     });
+    // The files come after the rows, and only for attachments the backup actually carried: a row
+    // whose bytes are missing is one this device fetches later, not a broken restore.
+    for (const attachment of result.backup.data.attachments) {
+      const bytes =
+        chosen.files[`attachments/${attachment.id}.${extensionFor(attachment.mimeType)}`];
+      if (bytes === undefined) continue;
+      const target = fileFor(attachment.id, attachment.mimeType);
+      if (target.exists) target.delete();
+      target.create();
+      target.write(bytes);
+      repos.attachments.setLocalUri(attachment.id, target.uri);
+    }
     toast.show(t('io.restored', { count: outcome.restored }));
     // Settings, accounts and categories all changed underneath every screen, so go back through
     // the boot router rather than leaving stale lists behind.
@@ -160,6 +192,30 @@ export default function ExportScreen() {
             title={t('io.backupJson')}
             subtitle={t('io.backupJsonHint')}
             onPress={busy ? undefined : run(() => buildBackupFile(repos, stamp()))}
+          />
+          <ListRow
+            title={t('io.backupZip')}
+            subtitle={t('io.backupZipHint')}
+            onPress={
+              busy
+                ? undefined
+                : run(() => {
+                    const zip = buildZipBackup(repos, stamp(), (id) => {
+                      const row = repos.attachments.byId(id);
+                      const bytes =
+                        row?.localUri === undefined || row.localUri === null
+                          ? null
+                          : readBytes(row.localUri);
+                      return bytes === null || row === null
+                        ? null
+                        : { id, extension: extensionFor(row.mimeType), bytes };
+                    });
+                    if (zip.missing.length > 0) {
+                      toast.show(t('io.zipMissing', { count: zip.missing.length }));
+                    }
+                    return zip;
+                  })
+            }
           />
           <ListRow
             title={t('io.csvPeriod')}

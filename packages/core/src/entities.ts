@@ -29,6 +29,9 @@ const syncMeta = {
 
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
+/** §10. Enforced by the repository, not only by the screen. */
+export const MAX_ATTACHMENTS_PER_TRANSACTION = 5;
+
 /** Thresholds offered by the "Avvisami a" segmented control (§6.18). Any percent is valid. */
 export const BUDGET_ALERT_THRESHOLDS = [75, 90, 100] as const;
 

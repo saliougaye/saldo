@@ -10,6 +10,7 @@ import type { KvStore } from '../db/kv';
 import { PENDING, type RepositoryDatabase, SYNC_ERROR, SYNCED } from '../db/repositories/support';
 import {
   isSyncedEntity,
+  LOCAL_ONLY_COLUMNS,
   SYNCED_ENTITY_NAMES,
   SYNCED_TABLES,
   type SyncedEntityName,
@@ -40,6 +41,7 @@ export function pendingChanges(db: RepositoryDatabase, limit: number): SyncChang
       .all() as (SyncRow & Record<string, unknown>)[];
     for (const row of rows) {
       const { syncState: _ignored, ...data } = row;
+      for (const column of LOCAL_ONLY_COLUMNS[entity] ?? []) delete data[column];
       changes.push({
         entity,
         id: row.id,

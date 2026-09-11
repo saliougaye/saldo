@@ -101,7 +101,7 @@ export default function HomeTab() {
 
   return (
     <Screen underTabBar>
-      <PeriodHeader />
+      <PeriodHeader showProfile />
 
       <Card>
         <Text size="footnote" color="textMuted">

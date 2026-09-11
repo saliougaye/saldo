@@ -14,6 +14,10 @@ export class ApiClientError extends Error {
 export interface ApiClient {
   get<T>(path: string, schema: z.ZodType<T>): Promise<T>;
   post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promise<T>;
+  /** Raw bytes up, with no JSON in either direction: attachment blobs (§10). */
+  putBinary(path: string, bytes: Uint8Array, headers: Record<string, string>): Promise<void>;
+  /** Raw bytes down. Follows the redirect a presigning store answers with. */
+  getBinary(path: string): Promise<Uint8Array>;
   /** Whether a session is stored for this server. */
   hasSession(): Promise<boolean>;
 }
@@ -90,6 +94,41 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         },
         schema,
       ),
+
+    async putBinary(path, bytes, headers) {
+      const auth = await options.getAuthHeaders();
+      if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
+      const response = await fetchImpl(
+        new Request(`${base}${path}`, {
+          method: 'PUT',
+          credentials: 'omit',
+          headers: { ...headers, ...auth },
+          // Copied, not `bytes.buffer`: a `Uint8Array` may be a view onto a larger buffer, and
+          // sending that buffer would upload bytes the file does not contain.
+          body: new Uint8Array(bytes),
+        }),
+      );
+      if (response.status === 401) {
+        options.onSessionExpired?.();
+        throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
+      }
+      if (!response.ok) throw await readError(response);
+    },
+
+    async getBinary(path) {
+      const auth = await options.getAuthHeaders();
+      if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
+      const response = await fetchImpl(
+        new Request(`${base}${path}`, { method: 'GET', credentials: 'omit', headers: auth }),
+      );
+      if (response.status === 401) {
+        options.onSessionExpired?.();
+        throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
+      }
+      if (!response.ok) throw await readError(response);
+      return new Uint8Array(await response.arrayBuffer());
+    },
+
     hasSession: async () => (await options.getAuthHeaders()) !== null,
   };
 }

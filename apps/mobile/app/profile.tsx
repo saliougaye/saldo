@@ -114,6 +114,11 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(tabs)/accounts')}
             chevron
           />
+          <ListRow
+            title={t('settings.reviewOnboarding')}
+            onPress={() => router.push('/period')}
+            chevron
+          />
         </View>
       </Card>
 

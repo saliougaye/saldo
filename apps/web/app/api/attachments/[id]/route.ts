@@ -69,8 +69,9 @@ export function GET(
     if (bytes === null) {
       throw new ApiError(404, 'not_uploaded', 'The bytes of this attachment are not here');
     }
-    // `Uint8Array<ArrayBufferLike>` is not a `BodyInit`; its buffer is.
-    return new Response(bytes.buffer as ArrayBuffer, {
+    // Copied rather than `bytes.buffer`: a store may hand back a view onto a larger buffer, and
+    // that buffer would then be served as if it were the file.
+    return new Response(new Uint8Array(bytes), {
       status: 200,
       headers: {
         // No Content-Disposition: the filename would be user input, and nothing here needs one.

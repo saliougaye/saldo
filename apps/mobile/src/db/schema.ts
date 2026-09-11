@@ -144,6 +144,15 @@ export const attachments = sqliteTable(
     height: integer('height'),
     /** Local cache path; device-only, never pushed. */
     localUri: text('local_uri'),
+    /**
+     * Whether this device's copy of the bytes has reached the server (§10). Device-local on
+     * purpose: if it synced, a second device would inherit the belief that it holds a file it has
+     * never seen.
+     */
+    blobState: text('blob_state')
+      .$type<'local_only' | 'synced' | 'failed'>()
+      .notNull()
+      .default('local_only'),
   },
   (table) => [
     index('attachments_transaction').on(table.transactionId),

@@ -90,6 +90,9 @@ type MemoryServer = ReturnType<typeof createMemoryServer>;
 function apiFor(server: MemoryServer): ApiClient {
   return {
     hasSession: async () => true,
+    // Blobs have their own tests; these fakes only move rows.
+    putBinary: async () => undefined,
+    getBinary: async () => new Uint8Array(),
     post: async (_path, body, schema) => schema.parse(server.push(body as PushBody)),
     get: async (path, schema) => {
       const url = new URL(path, 'http://server.invalid');
