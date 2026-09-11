@@ -1,5 +1,7 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { resetEnvCache } from '../../../src/server/env';
+import { resetStoreCache } from '../../../src/server/storage';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
 import { createTestSession } from '../../../src/server/test/session';
 import { GET } from './route';
@@ -34,5 +36,26 @@ describe('GET /api/health', () => {
     await createTestSession(harness.db);
     const body = (await (await GET()).json()) as { registrationAllowed: unknown };
     expect(typeof body.registrationAllowed).toBe('boolean');
+  });
+
+  it('says attachments are off when the server keeps none (§10)', async () => {
+    const body = (await (await GET()).json()) as { attachmentsEnabled: unknown };
+    expect(body.attachmentsEnabled).toBe(false);
+  });
+
+  it('says attachments are on once a store is configured', async () => {
+    resetEnvCache();
+    resetStoreCache();
+    process.env.ATTACHMENT_STORAGE = 'fs';
+    process.env.STORAGE_DIR = '/tmp/saldo-health-blobs';
+    try {
+      const body = (await (await GET()).json()) as { attachmentsEnabled: unknown };
+      expect(body.attachmentsEnabled).toBe(true);
+    } finally {
+      delete process.env.ATTACHMENT_STORAGE;
+      delete process.env.STORAGE_DIR;
+      resetEnvCache();
+      resetStoreCache();
+    }
   });
 });

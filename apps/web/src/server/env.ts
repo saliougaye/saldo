@@ -63,10 +63,7 @@ const schema = z.object({
 });
 
 /** Reports every variable the chosen driver needs and did not get, by name. */
-function requireFor(
-  value: z.infer<typeof schema>,
-  ctx: z.RefinementCtx,
-): void {
+function requireFor(value: z.infer<typeof schema>, ctx: z.RefinementCtx): void {
   const missing = (name: string) => {
     ctx.addIssue({
       code: 'custom',

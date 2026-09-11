@@ -64,9 +64,9 @@ describe('attachment storage', () => {
   });
 
   it('asks fs for a directory, by name', () => {
-    expect(() => readEnv({ ...complete, ATTACHMENT_STORAGE: 'fs', STORAGE_DIR: undefined })).toThrow(
-      /STORAGE_DIR/,
-    );
+    expect(() =>
+      readEnv({ ...complete, ATTACHMENT_STORAGE: 'fs', STORAGE_DIR: undefined }),
+    ).toThrow(/STORAGE_DIR/);
     expect(
       readEnv({ ...complete, ATTACHMENT_STORAGE: 'fs', STORAGE_DIR: '/data/blobs' })
         .attachmentStorage,

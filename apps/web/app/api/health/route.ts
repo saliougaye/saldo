@@ -3,6 +3,7 @@ import { registrationAllowed } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { handle } from '../../../src/server/http/errors';
+import { getStore } from '../../../src/server/storage';
 import { APP_VERSION } from '../../../src/server/version';
 
 export const runtime = 'nodejs';
@@ -22,6 +23,11 @@ export function GET(): Promise<Response> {
       schemaVersion: SYNC_SCHEMA_VERSION,
       version: APP_VERSION,
       registrationAllowed: allowed,
+      /**
+       * §10: false is a supported answer, not a fault. The app then keeps attachments on this
+       * phone and says so, instead of queueing an upload that could never succeed.
+       */
+      attachmentsEnabled: (await getStore()) !== null,
     });
   });
 }
