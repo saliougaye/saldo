@@ -17,6 +17,7 @@ import { Toggle } from '../../components/Toggle';
 import { useRepositories } from '../../db/DatabaseProvider';
 import {
   useAccounts,
+  useAttachments,
   useCategories,
   useSettings,
   useTags,
@@ -32,6 +33,8 @@ import {
   canCreateTag,
   changeKind,
   dateChoices,
+  detailsOpenInitially,
+  detailsSummary,
   missingForSave,
   type TransactionFormValues,
   tagSuggestions,
@@ -83,6 +86,10 @@ export function TransactionForm({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
+  const attachments = useAttachments(transactionId);
+  const summary = detailsSummary(values, attachments.length);
+  // Only the initial state: after the first tap the user's choice wins, not the data's.
+  const [detailsOpen, setDetailsOpen] = useState(() => detailsOpenInitially(mode, summary));
 
   // Usage counts come from the last year of rows, which is enough to rank categories and tags.
   const recent = useTransactionsInRange('1970-01-01', values.date);
@@ -115,6 +122,15 @@ export function TransactionForm({
   const touched = mode === 'edit' || values.buffer.length > 0;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
+
+  const summaryParts = [
+    summary.tags > 0 ? t('txForm.detailsTags', { count: summary.tags }) : null,
+    summary.attachments > 0 ? t('txForm.detailsAttachments', { count: summary.attachments }) : null,
+    summary.repeat ? t('txForm.repeat') : null,
+    summary.excludeFromTotals ? t('txForm.exclude') : null,
+  ].filter((part): part is string => part !== null);
+  const summaryLabel =
+    summaryParts.length === 0 ? t('txForm.detailsNone') : summaryParts.join(' · ');
 
   const accountRow = (label: string, selectedId: string | null, onSelect: (id: string) => void) => (
     <View style={{ gap: 6 }}>
@@ -338,68 +354,91 @@ export function TransactionForm({
         />
       </Card>
 
+      {/*
+        The four fields below are the ones that are rarely touched, and together they were ~340pt
+        of form under the fold — on `new`, with the keypad up, everything from the category grid
+        down was invisible at the moment the form opened. Collapsed, the frequent fields fit in one
+        screen; the summary line is what keeps a collapsed field from becoming an invisible one.
+      */}
       <Card>
-        <View style={{ gap: 10 }}>
-          <TextField
-            label={t('transactions.tags')}
-            placeholder={t('txForm.tagsPlaceholder')}
-            value={tagQuery}
-            onChangeText={setTagQuery}
-          />
-          {values.tagIds.length === 0 ? null : (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {values.tagIds.map((id) => {
-                const tag = tags.find((candidate) => candidate.id === id);
-                return (
-                  <Chip
-                    key={id}
-                    label={tag?.name ?? id}
-                    active
-                    onPress={() => set({ tagIds: values.tagIds.filter((value) => value !== id) })}
-                  />
-                );
-              })}
-            </View>
-          )}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-            {suggestions.map((tag) => (
-              <Chip
-                key={tag.id}
-                label={tag.name}
-                onPress={() => {
-                  set({ tagIds: [...values.tagIds, tag.id] });
-                  setTagQuery('');
-                }}
-              />
-            ))}
-            {canCreateTag(tags, tagQuery) ? (
-              <Chip
-                label={t('txForm.createTag', { name: tagQuery.trim() })}
-                onPress={() => {
-                  const created = repos.tags.create({ name: tagQuery.trim() });
-                  set({ tagIds: [...values.tagIds, created.id] });
-                  setTagQuery('');
-                }}
-              />
-            ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: detailsOpen }}
+          accessibilityLabel={t('txForm.details')}
+          accessibilityHint={summaryLabel}
+          onPress={() => setDetailsOpen(!detailsOpen)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            minHeight: theme.layout.minHitTarget,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text>{t('txForm.details')}</Text>
+            <Text size="footnote" color="textMuted" numberOfLines={1}>
+              {summaryLabel}
+            </Text>
           </View>
-        </View>
-      </Card>
+          {/* One icon, rotated per state, rather than two assets. */}
+          <View style={{ transform: [{ rotate: detailsOpen ? '180deg' : '0deg' }] }}>
+            <Icon name="chevD" size={16} color={theme.palette.textFaint} />
+          </View>
+        </Pressable>
 
-      <Card>
-        <View style={{ gap: 14 }}>
-          <AttachmentStrip transactionId={transactionId} />
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <Text>{t('txForm.repeat')}</Text>
-            <Toggle
-              value={values.repeat}
-              onChange={(repeat) => set({ repeat })}
-              accessibilityLabel={t('txForm.repeat')}
-            />
-          </View>
-          <View>
+        {detailsOpen ? (
+          <View style={{ gap: 14, marginTop: 14 }}>
+            <View style={{ gap: 10 }}>
+              <TextField
+                label={t('transactions.tags')}
+                placeholder={t('txForm.tagsPlaceholder')}
+                value={tagQuery}
+                onChangeText={setTagQuery}
+              />
+              {values.tagIds.length === 0 ? null : (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {values.tagIds.map((id) => {
+                    const tag = tags.find((candidate) => candidate.id === id);
+                    return (
+                      <Chip
+                        key={id}
+                        label={tag?.name ?? id}
+                        active
+                        onPress={() =>
+                          set({ tagIds: values.tagIds.filter((value) => value !== id) })
+                        }
+                      />
+                    );
+                  })}
+                </View>
+              )}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {suggestions.map((tag) => (
+                  <Chip
+                    key={tag.id}
+                    label={tag.name}
+                    onPress={() => {
+                      set({ tagIds: [...values.tagIds, tag.id] });
+                      setTagQuery('');
+                    }}
+                  />
+                ))}
+                {canCreateTag(tags, tagQuery) ? (
+                  <Chip
+                    label={t('txForm.createTag', { name: tagQuery.trim() })}
+                    onPress={() => {
+                      const created = repos.tags.create({ name: tagQuery.trim() });
+                      set({ tagIds: [...values.tagIds, created.id] });
+                      setTagQuery('');
+                    }}
+                  />
+                ) : null}
+              </View>
+            </View>
+
+            <AttachmentStrip transactionId={transactionId} />
+
             <View
               style={{
                 flexDirection: 'row',
@@ -407,18 +446,35 @@ export function TransactionForm({
                 justifyContent: 'space-between',
               }}
             >
-              <Text>{t('txForm.exclude')}</Text>
+              <Text>{t('txForm.repeat')}</Text>
               <Toggle
-                value={values.excludeFromTotals}
-                onChange={(excludeFromTotals) => set({ excludeFromTotals })}
-                accessibilityLabel={t('txForm.exclude')}
+                value={values.repeat}
+                onChange={(repeat) => set({ repeat })}
+                accessibilityLabel={t('txForm.repeat')}
               />
             </View>
-            <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
-              {t('txForm.excludeNote')}
-            </Text>
+
+            <View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text>{t('txForm.exclude')}</Text>
+                <Toggle
+                  value={values.excludeFromTotals}
+                  onChange={(excludeFromTotals) => set({ excludeFromTotals })}
+                  accessibilityLabel={t('txForm.exclude')}
+                />
+              </View>
+              <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+                {t('txForm.excludeNote')}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : null}
       </Card>
 
       <DateSheet
