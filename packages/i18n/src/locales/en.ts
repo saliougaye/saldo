@@ -123,6 +123,7 @@ export const en: Messages = {
     detailAccount: 'Account',
     detailDate: 'Date',
     detailNote: 'Note',
+    detailAttachments: 'Attachments',
   },
   txForm: {
     newTitle: 'New transaction',
@@ -148,6 +149,10 @@ export const en: Messages = {
     attachmentsSoon: 'Soon',
     save: 'Save',
     create: 'Add',
+  },
+  calendar: {
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
   },
   period: {
     kind: 'Period type',

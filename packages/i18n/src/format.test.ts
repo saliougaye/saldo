@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  firstWeekdayFor,
   formatCycleRange,
   formatDayMonth,
   formatLongDate,
   formatMajor,
   formatMoney,
   formatMoneyParts,
+  formatMonthYear,
   formatPeriodTick,
   formatSignedPercent,
   resolveLocale,
+  weekdayLabels,
 } from './format';
 
 describe('resolveLocale', () => {
@@ -142,5 +145,22 @@ describe('formatMajor', () => {
   it('has no sign at zero', () => {
     expect(formatMajor(0, 'EUR', 'it')).toBe('0');
     expect(formatMajor(-4, 'EUR', 'it')).toBe('0');
+  });
+});
+
+describe('calendar labels', () => {
+  it('starts the week where the locale does', () => {
+    expect(firstWeekdayFor('it')).toBe('monday');
+    expect(firstWeekdayFor('en')).toBe('sunday');
+  });
+
+  it('rotates the column headings with it', () => {
+    expect(weekdayLabels('it', 'monday')).toEqual(['L', 'M', 'M', 'G', 'V', 'S', 'D']);
+    expect(weekdayLabels('en', 'sunday')).toEqual(['S', 'M', 'T', 'W', 'T', 'F', 'S']);
+  });
+
+  it('names the month over the grid', () => {
+    expect(formatMonthYear({ year: 2026, month: 4 }, 'it')).toBe('aprile 2026');
+    expect(formatMonthYear({ year: 2026, month: 4 }, 'en')).toBe('April 2026');
   });
 });

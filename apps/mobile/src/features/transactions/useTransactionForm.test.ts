@@ -178,9 +178,9 @@ describe('topCategories', () => {
     );
   });
 
-  it('caps the grid', () => {
+  it('caps the grid at two rows, the "Altro" tile included', () => {
     const many = Array.from({ length: 20 }, (_, index) => category(`c${index}`));
-    expect(topCategories(many, [], 'expense')).toHaveLength(10);
+    expect(topCategories(many, [], 'expense')).toHaveLength(7);
   });
 });
 

@@ -413,13 +413,12 @@ scoping once the screens it animates have stopped moving. None of them blocks 10
 Small things the user hit while using the app on 2026-09-11. None of them blocks 10 or 11; each is
 small enough to land on its own branch without a plan file of its own.
 
-- **Attachments are invisible on the transaction detail screen.** `AttachmentStrip` is mounted only
-  by `TransactionForm` (new and edit), so `app/transaction/[id].tsx` — the screen you land on from
-  the list — shows the amount, account, category, tags and note but never says the transaction has a
-  receipt attached. Add a read-only strip there, opening `app/attachment/[id]` on tap, and decide
-  what it shows for a row whose bytes this device does not hold yet (`localUri === null`): a
-  placeholder that downloads on tap, rather than nothing.
-- **Motion.** Already scoped as investigation **A** above — nothing extra to track here. The scope
+- ✅ **Attachments are invisible on the transaction detail screen.** Done on 2026-09-11:
+  `app/transaction/[id].tsx` draws the 96×124 receipt tiles §6.6 asks for, `AttachmentTile` is
+  shared with the form strip so a PDF and a receipt look the same in both, and a row whose bytes
+  this device does not hold says so rather than showing nothing — tapping it opens the viewer,
+  which is what fetches them.
+- **Motion.** Still scoped as investigation **A** above — nothing extra to track here. The scope
   decides what animates; this entry only records that the absence was noticed from use, which is the
   evidence A was asking for.
 - **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the

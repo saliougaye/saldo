@@ -1,10 +1,12 @@
 import {
   type CurrencyCode,
   type DateRange,
+  type FirstWeekday,
   getCurrency,
   type LocalDate,
   type PeriodKind,
   parseLocalDate,
+  type YearMonth,
 } from '@saldo/core';
 
 export const SUPPORTED_LOCALES = ['it', 'en'] as const;
@@ -209,4 +211,31 @@ export function formatMajor(
   if (units > 0) return signDisplay === 'always' ? `+${digits}` : digits;
   if (units < 0) return `${MINUS}${digits}`;
   return '0';
+}
+
+/** Monday-first, because that is the order `weekdayOf` counts in; the reorder happens below. */
+const WEEKDAYS_SHORT: Record<AppLocale, readonly string[]> = {
+  it: ['L', 'M', 'M', 'G', 'V', 'S', 'D'],
+  en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+};
+
+/**
+ * Where the week starts for a locale. Italian calendars start on Monday, English-language ones on
+ * Sunday; this is a **display** choice and never moves the ISO week the period logic uses (§5.2).
+ */
+export function firstWeekdayFor(locale: AppLocale): FirstWeekday {
+  return locale === 'it' ? 'monday' : 'sunday';
+}
+
+/** The seven column headings of a calendar, already in the order that calendar draws them. */
+export function weekdayLabels(locale: AppLocale, firstWeekday: FirstWeekday): readonly string[] {
+  const names = WEEKDAYS_SHORT[locale];
+  if (firstWeekday === 'monday') return names;
+  const sunday = names[6] ?? '';
+  return [sunday, ...names.slice(0, 6)];
+}
+
+/** it `aprile 2026`, en `April 2026`: the title over a month grid. */
+export function formatMonthYear(ym: YearMonth, locale: AppLocale): string {
+  return `${monthName(MONTHS_LONG, locale, ym.month)} ${ym.year}`;
 }

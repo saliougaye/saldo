@@ -49,7 +49,23 @@ is nothing slow enough to need them), and anything that depends on gesture-drive
 
 ---
 
-## B. The transaction form (§6.16), new and edit
+## B. The transaction form (§6.16), new and edit — ◐ partly decided (2026-09-11)
+
+Taken now, from the user's own feedback that the category grid was hiding everything under it:
+
+- **Account and date moved above the grid**, in one card. Both are set on nearly every transaction;
+  the grid was three rows tall and pushed them, the tags and the attachments off the screen.
+- **The grid caps at seven** (`topCategories(..., limit = 7)`) plus the "Altro" tile: two rows.
+  "Altro" now opens `CategoryPickerSheet` — the full list, subcategories indented under their
+  parents — instead of expanding the card inline, which is what made the form grow without bound.
+- A category chosen from the picker that is not in the grid is **shown in it anyway**, so the
+  selection is never invisible.
+
+**Still open:** the timed fast path, what a "more" disclosure should hide (`excludeFromTotals`,
+the note), whether recents should be "most used in this period" rather than all-time, and the
+error/save-button rules. The brief below stands for those.
+
+**Original brief.**
 
 **Why now.** It is the screen the app exists for — most sessions are "add a transaction and leave"
 — and it is the one that has grown the most: amount keypad, kind, account, category, date, tags,
@@ -82,7 +98,28 @@ function signature), and a list of what moves or goes.
 
 ---
 
-## C. Date and time entry
+## C. Date and time entry — ✅ decided and built (2026-09-11)
+
+**Decision: drawn, not native.** `@react-native-community/datetimepicker` is gone from the app
+(dependency removed). `src/components/Calendar.tsx` draws the month grid from `@saldo/ui` tokens
+and `monthGrid` in `@saldo/core`; `src/components/DateSheet.tsx` wraps it for a single day, and
+`CustomRangeSheet` uses the same component in its range mode — so there is one calendar, not two.
+
+- **Why drawn.** The platform picker arrives in its own typeface, radii and colours, differs
+  between iOS and Android, and cannot draw a range at all — which meant the period range sheet was
+  already a second, worse date UI. The cost was one component plus its tests.
+- **Shortcuts.** "Oggi" and "Ieri" stay chips on the transaction form (no sheet to open at all for
+  the common case); the sheet repeats "Oggi" so a mis-tap is one tap to undo.
+- **Grid.** Always six rows, so the sheet does not change height between months. The neighbouring
+  months' days are drawn faintly rather than left blank.
+- **Locale.** The week starts where `firstWeekdayFor(locale)` says — Monday for Italian, Sunday for
+  English — and the ISO week the period logic uses (§5.2) is untouched by that display choice.
+- **Time.** Nothing in the picker mentions one: Saldo stores `LocalDate` and no time (D8).
+
+**What is left of C:** nothing blocking. If the drawn calendar needs a year jump (tapping the month
+title) or a swipe between months, that is a follow-up, not a decision.
+
+**Original brief.**
 
 **Why now.** The date row opens a picker that was built to be functional, and dates are entered on
 *every* transaction. The design draws a calendar (lines 1120–1180) that the app does not have.

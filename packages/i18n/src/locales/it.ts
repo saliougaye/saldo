@@ -123,6 +123,7 @@ export const it = {
     detailAccount: 'Conto',
     detailDate: 'Data',
     detailNote: 'Nota',
+    detailAttachments: 'Allegati',
   },
   txForm: {
     newTitle: 'Nuova transazione',
@@ -148,6 +149,10 @@ export const it = {
     attachmentsSoon: 'Presto',
     save: 'Salva',
     create: 'Aggiungi',
+  },
+  calendar: {
+    previousMonth: 'Mese precedente',
+    nextMonth: 'Mese successivo',
   },
   period: {
     kind: 'Tipo di periodo',

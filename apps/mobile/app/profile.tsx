@@ -1,5 +1,6 @@
 import { COMMON_CURRENCY_CODES, type CurrencyCode, getCurrency } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
+import type { IconName } from '@saldo/ui';
 import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { Pressable, View } from 'react-native';
 import { useServer } from '../src/auth/ServerProvider';
 import { Card } from '../src/components/Card';
 import { ConfirmDialog } from '../src/components/ConfirmDialog';
-import { ListRow } from '../src/components/ListRow';
+import { IconBox, ListRow } from '../src/components/ListRow';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
 import { Sheet } from '../src/components/Sheet';
@@ -45,6 +46,10 @@ export default function ProfileScreen() {
   const currency = settings?.currency ?? 'EUR';
   const archived = accounts.filter((account) => account.archivedAt !== null).length;
 
+  // Every list elsewhere in the app leads with an icon box; the profile was the one screen of
+  // plain text rows, which is what made it read as a different app (§13).
+  const lead = (name: IconName) => <IconBox name={name} colour={theme.palette.textMuted} small />;
+
   const languageLabel = {
     system: t('profile.system'),
     it: t('profile.italian'),
@@ -67,6 +72,7 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
           <ListRow
             title={t('profile.cycleStart')}
+            leading={lead('cal')}
             trailing={
               <Text color="textMuted">
                 {t('settings.cycleValue', { day: settings?.cycleStartDay ?? 27 })}
@@ -77,18 +83,21 @@ export default function ProfileScreen() {
           />
           <ListRow
             title={t('profile.currency')}
+            leading={lead('coins')}
             trailing={<Text color="textMuted">{currency}</Text>}
             onPress={() => setSheet('currency')}
             chevron
           />
           <ListRow
             title={t('profile.language')}
+            leading={lead('book')}
             trailing={<Text color="textMuted">{languageLabel}</Text>}
             onPress={() => setSheet('language')}
             chevron
           />
           <ListRow
             title={t('profile.theme')}
+            leading={lead('bulb')}
             trailing={<Text color="textMuted">{themeLabel}</Text>}
             onPress={() => setSheet('theme')}
             chevron
@@ -100,22 +109,26 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
           <ListRow
             title={t('settings.categories')}
+            leading={lead('grip')}
             onPress={() => router.push('/settings/categories')}
             chevron
           />
           <ListRow
             title={t('settings.tags')}
+            leading={lead('tag')}
             onPress={() => router.push('/settings/tags')}
             chevron
           />
           <ListRow
             title={t('profile.archivedAccounts')}
+            leading={lead('archive')}
             trailing={<Text color="textMuted">{String(archived)}</Text>}
             onPress={() => router.push('/(tabs)/accounts')}
             chevron
           />
           <ListRow
             title={t('settings.reviewOnboarding')}
+            leading={lead('wrench')}
             onPress={() => router.push('/period')}
             chevron
           />
@@ -126,7 +139,9 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
           <ListRow
             title={t('profile.server')}
+            leading={lead('wifi')}
             onPress={() => router.push('/profile/server')}
+            chevron
             trailing={
               <Text color="textMuted">
                 {serverUrl === null
@@ -135,14 +150,27 @@ export default function ProfileScreen() {
               </Text>
             }
           />
-          <ListRow title={t('profile.importCsv')} onPress={() => router.push('/profile/import')} />
-          <ListRow title={t('profile.exportData')} onPress={() => router.push('/profile/export')} />
+          <ListRow
+            title={t('profile.importCsv')}
+            leading={lead('arrowDL')}
+            onPress={() => router.push('/profile/import')}
+            chevron
+          />
+          <ListRow
+            title={t('profile.exportData')}
+            leading={lead('arrowUR')}
+            onPress={() => router.push('/profile/export')}
+            chevron
+          />
           <ListRow
             title={t('profile.restoreBackup')}
+            leading={lead('inbox')}
             onPress={() => router.push('/profile/export')}
+            chevron
           />
           <ListRow
             title={t('profile.appLock')}
+            leading={lead('key')}
             trailing={
               <Toggle
                 value={lockEnabled}
@@ -162,6 +190,7 @@ export default function ProfileScreen() {
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
             <ListRow
               title={t('dev.loadDemo')}
+              leading={lead('zap')}
               onPress={() => {
                 seedDemoData(repos, { today, def, translate: (key) => t(`seed.${key}`) });
                 runMaterialiser(db, repos, today, def);

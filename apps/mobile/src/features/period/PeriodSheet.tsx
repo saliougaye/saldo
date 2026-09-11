@@ -150,6 +150,7 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
       <CustomRangeSheet
         visible={rangeOpen}
         initial={period.range}
+        today={today}
         onApply={(range) => {
           setCustomRange(range);
           onClose();

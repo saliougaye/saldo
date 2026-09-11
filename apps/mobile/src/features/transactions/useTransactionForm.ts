@@ -109,14 +109,18 @@ export function dateChoices(today: LocalDate): { key: 'today' | 'yesterday'; dat
 }
 
 /**
- * The category grid shows the ten most-used categories of the right direction, then "Altro" opens
- * the full picker (§6.16). Usage is counted over the rows the screen already loaded.
+ * The category grid shows the most-used categories of the right direction, then "Altro" opens the
+ * full picker (§6.16). Usage is counted over the rows the screen already loaded.
+ *
+ * Seven, not the ten the spec names: with the "Altro" tile that is two rows of four, and the grid
+ * stops pushing the date, the tags and the attachments off the screen. Everything it drops is one
+ * tap away in the picker, which also holds the subcategories the grid never showed.
  */
 export function topCategories(
   categories: readonly Category[],
   transactions: readonly Pick<Transaction, 'categoryId'>[],
   kind: TransactionKind,
-  limit = 10,
+  limit = 7,
 ): Category[] {
   const direction = kind === 'income' ? 'income' : 'expense';
   const usage = new Map<string, number>();
