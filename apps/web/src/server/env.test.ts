@@ -56,3 +56,72 @@ describe('readEnv', () => {
     );
   });
 });
+
+describe('attachment storage', () => {
+  it('defaults to none, and then asks for nothing', () => {
+    const { STORAGE_DIR: _dropped, ...withoutStorage } = complete;
+    expect(readEnv(withoutStorage).attachmentStorage).toEqual({ kind: 'none' });
+  });
+
+  it('asks fs for a directory, by name', () => {
+    expect(() =>
+      readEnv({ ...complete, ATTACHMENT_STORAGE: 'fs', STORAGE_DIR: undefined }),
+    ).toThrow(/STORAGE_DIR/);
+    expect(
+      readEnv({ ...complete, ATTACHMENT_STORAGE: 'fs', STORAGE_DIR: '/data/blobs' })
+        .attachmentStorage,
+    ).toEqual({ kind: 'fs', dir: '/data/blobs' });
+  });
+
+  it('asks s3 for a bucket, a region and credentials', () => {
+    expect(() => readEnv({ ...complete, ATTACHMENT_STORAGE: 's3' })).toThrow(/S3_BUCKET/);
+    const s3 = {
+      ...complete,
+      ATTACHMENT_STORAGE: 's3',
+      S3_BUCKET: 'saldo',
+      S3_REGION: 'auto',
+      S3_ACCESS_KEY_ID: 'key',
+      S3_SECRET_ACCESS_KEY: 'secret',
+    };
+    expect(readEnv(s3).attachmentStorage).toEqual({
+      kind: 's3',
+      bucket: 'saldo',
+      region: 'auto',
+      endpoint: null,
+      accessKeyId: 'key',
+      secretAccessKey: 'secret',
+      forcePathStyle: false,
+    });
+  });
+
+  it('takes the endpoint and path style that make R2 and MinIO work', () => {
+    const config = readEnv({
+      ...complete,
+      ATTACHMENT_STORAGE: 's3',
+      S3_BUCKET: 'saldo',
+      S3_REGION: 'auto',
+      S3_ACCESS_KEY_ID: 'key',
+      S3_SECRET_ACCESS_KEY: 'secret',
+      S3_ENDPOINT: 'https://account.r2.cloudflarestorage.com',
+      S3_FORCE_PATH_STYLE: 'true',
+    }).attachmentStorage;
+    expect(config).toMatchObject({
+      endpoint: 'https://account.r2.cloudflarestorage.com',
+      forcePathStyle: true,
+    });
+  });
+
+  it('asks vercel-blob for its token', () => {
+    expect(() => readEnv({ ...complete, ATTACHMENT_STORAGE: 'vercel-blob' })).toThrow(
+      /BLOB_READ_WRITE_TOKEN/,
+    );
+    expect(
+      readEnv({ ...complete, ATTACHMENT_STORAGE: 'vercel-blob', BLOB_READ_WRITE_TOKEN: 'tok' })
+        .attachmentStorage,
+    ).toEqual({ kind: 'vercel-blob', token: 'tok' });
+  });
+
+  it('refuses a storage kind it does not know', () => {
+    expect(() => readEnv({ ...complete, ATTACHMENT_STORAGE: 'dropbox' })).toThrow();
+  });
+});

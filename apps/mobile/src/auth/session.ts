@@ -11,6 +11,8 @@ export const healthSchema = z.object({
   schemaVersion: z.number(),
   version: z.string(),
   registrationAllowed: z.boolean(),
+  /** §10. Defaulted rather than required, so a server from before this field stays readable. */
+  attachmentsEnabled: z.boolean().default(false),
 });
 
 export type ServerHealth = z.infer<typeof healthSchema>;

@@ -100,6 +100,39 @@ Then start the server with `PUBLIC_URL=https://<tunnel-hostname>` and
 `WEBAUTHN_RP_ID=<tunnel-hostname>`. Passkeys created against a temporary tunnel hostname stop
 working when that hostname changes.
 
+## Attachments
+
+Receipts and photos are optional, and where their bytes live is your choice — `ATTACHMENT_STORAGE`:
+
+| Value | What you also set | Notes |
+| --- | --- | --- |
+| `none` (default) | — | Attachments stay on the phone. They are still captured and their rows still sync, so another device shows them as unavailable rather than missing. |
+| `fs` | `STORAGE_DIR` | A directory on the server. Back it up with the database. Not for Vercel: its filesystem is wiped on every deploy. |
+| `s3` | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, optionally `S3_ENDPOINT` and `S3_FORCE_PATH_STYLE` | Amazon S3, and through `S3_ENDPOINT` also Cloudflare R2, MinIO, Backblaze B2 and Hetzner. |
+| `vercel-blob` | `BLOB_READ_WRITE_TOKEN` | Vercel injects the token. Note the caveat below. |
+
+Uploads take the shortest route the store allows: with S3 the phone uploads straight to the bucket
+through a URL the server signs for that one object, its exact size and its exact type. That is not
+an optimisation — a serverless function caps its request body well below the 10 MB an attachment
+may reach, so a proxied upload would simply fail there.
+
+Cloudflare R2, as an example:
+
+```bash
+ATTACHMENT_STORAGE=s3
+S3_BUCKET=saldo
+S3_REGION=auto
+S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+S3_ACCESS_KEY_ID=…
+S3_SECRET_ACCESS_KEY=…
+```
+
+**A caveat about Vercel Blob:** every object in a Blob store is readable by anyone who has its URL —
+the product has no private mode. Saldo gives each object a random pathname and never hands those
+URLs to a client (downloads are proxied by the server, which checks who is asking), so a receipt is
+not discoverable. But if a URL ever leaks, it works. If that matters to you, use `s3`, where the
+server signs a URL that expires in five minutes.
+
 ## Security notes
 
 - Authentication is [Better Auth](https://better-auth.com) with its passkey plugin: it owns accounts,
