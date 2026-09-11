@@ -141,3 +141,30 @@ export function describePeriod(range: DateRange, today: LocalDate): PeriodView {
     length: periodLength(range),
   };
 }
+
+/**
+ * How far forward the period navigation goes (§6.15).
+ *
+ * Not zero: recurrences are materialised to the end of the *next* period (§5.9), and a
+ * transaction can be entered with a future date, so the period after this one holds rows the user
+ * put there and expects to find. Everything beyond it is empty by construction — no spending has
+ * happened, no budget has moved — and a screen that can scroll forever into nothing is a way to
+ * get lost, not a feature.
+ */
+export const MAX_PERIODS_AHEAD = 1;
+
+/**
+ * Whether the navigation may move `delta` periods from `range`. Backwards is always allowed: that
+ * is history, and it exists.
+ */
+export function canShiftPeriod(
+  def: PeriodDef,
+  range: DateRange,
+  delta: number,
+  today: LocalDate,
+): boolean {
+  if (delta <= 0) return true;
+  const target = shiftPeriod(def, range, delta);
+  const limit = shiftPeriod(def, periodContaining(def, today), MAX_PERIODS_AHEAD);
+  return target.start <= limit.start;
+}
