@@ -1,13 +1,13 @@
 import type { Category } from '@saldo/core';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Sheet } from '../../components/Sheet';
-import { archiveCategory, categoryUsage } from '../../db/adminService';
+import { archiveCategory } from '../../db/adminService';
 import { db } from '../../db/client';
 import { useRepositories } from '../../db/DatabaseProvider';
-import { useCategories } from '../../db/hooks';
+import { useCategories, useCategoryUsage } from '../../db/hooks';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -33,9 +33,12 @@ export function ArchiveCategorySheet({
   const { t } = useTranslation();
   const repos = useRepositories();
   const categories = useCategories();
+  const usage = useCategoryUsage();
   const [target, setTarget] = useState<string | null>(null);
 
-  const uses = useMemo(() => categoryUsage(db, category.id), [category.id]);
+  // The same count the admin list shows (§5.11). It used to be read once from its own query, so a
+  // category the list called empty could open a sheet saying a transaction used it.
+  const uses = usage.get(category.id) ?? 0;
   const targets = categories.filter(
     (candidate) =>
       candidate.id !== category.id &&

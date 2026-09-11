@@ -1,4 +1,11 @@
-import { addDays, diffDays, type LocalDate, type PeriodDef, periodContaining } from '@saldo/core';
+import {
+  addDays,
+  type Category,
+  diffDays,
+  type LocalDate,
+  type PeriodDef,
+  periodContaining,
+} from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import {
   DEMO_ACCOUNTS,
@@ -37,31 +44,58 @@ function dateShift(today: LocalDate, def: PeriodDef): number {
  * §8.1 already requires the UI to tolerate a dangling reference.
  */
 export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
+  // Idempotent twice over, because the row that calls it is an ordinary list row in Profile and
+  // nothing stops a second tap. It used to create the whole §4.2 catalogue unconditionally, so a
+  // second tap meant a second "Spesa", "Supermercato" and "Panetteria" — with every transaction
+  // hanging off the first set and each later copy reading "0 voci". The categories admin then
+  // looked broken, and it was not.
+  //
+  //  - Nothing at all happens once the demo transactions are in.
+  //  - The categories are matched to the ones onboarding already wrote, rather than added beside
+  //    them, so loading the demo on a real (if empty) install stays a no-op for the tree.
+  if (repos.transactions.list().length > 0) return;
+
   const shift = dateShift(input.today, input.def);
 
+  const existing = repos.categories.list();
+  const match = (name: string, direction: Category['direction'], parentId: string | null) =>
+    existing.find(
+      (category) =>
+        category.name === name &&
+        category.direction === direction &&
+        category.parentId === parentId &&
+        category.archivedAt === null,
+    );
+
   const categoryIdByKey = new Map<string, string>();
-  let sortOrder = 0;
+  let sortOrder = existing.length;
   for (const category of SEED_CATEGORIES) {
-    const parent = repos.categories.create({
-      name: input.translate(category.nameKey),
-      direction: category.direction,
-      parentId: null,
-      icon: category.icon,
-      colorIndex: category.colorIndex,
-      archivedAt: null,
-      sortOrder: sortOrder++,
-    });
-    categoryIdByKey.set(category.nameKey, parent.id);
-    for (const child of category.children ?? []) {
-      const created = repos.categories.create({
-        name: input.translate(child.nameKey),
+    const parentName = input.translate(category.nameKey);
+    const parent =
+      match(parentName, category.direction, null) ??
+      repos.categories.create({
+        name: parentName,
         direction: category.direction,
-        parentId: parent.id,
-        icon: child.icon,
-        colorIndex: child.colorIndex,
+        parentId: null,
+        icon: category.icon,
+        colorIndex: category.colorIndex,
         archivedAt: null,
         sortOrder: sortOrder++,
       });
+    categoryIdByKey.set(category.nameKey, parent.id);
+    for (const child of category.children ?? []) {
+      const childName = input.translate(child.nameKey);
+      const created =
+        match(childName, category.direction, parent.id) ??
+        repos.categories.create({
+          name: childName,
+          direction: category.direction,
+          parentId: parent.id,
+          icon: child.icon,
+          colorIndex: child.colorIndex,
+          archivedAt: null,
+          sortOrder: sortOrder++,
+        });
       categoryIdByKey.set(child.nameKey, created.id);
     }
   }

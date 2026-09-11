@@ -15,6 +15,12 @@ export interface ListRowProps {
   chevron?: boolean;
   /** Scheduled rows get the 2px left border and a muted amount (§5.12). */
   upcoming?: boolean;
+  /**
+   * How many lines the subtitle may take. One everywhere the subtitle is a short attribute — a
+   * bank, a date, an account type — and two where it lists things and truncating it would lose the
+   * point, as the children on a category row do.
+   */
+  subtitleLines?: number;
 }
 
 export function ListRow({
@@ -25,6 +31,7 @@ export function ListRow({
   onPress,
   chevron = false,
   upcoming = false,
+  subtitleLines = 1,
 }: ListRowProps) {
   const theme = useTheme();
   const content = (
@@ -35,16 +42,23 @@ export function ListRow({
         gap: 12,
         minHeight: theme.layout.minHitTarget,
         paddingVertical: 8,
-        paddingLeft: upcoming ? 10 : 0,
-        borderLeftWidth: upcoming ? 2 : 0,
-        borderLeftColor: theme.palette.borderStrong,
+        paddingStart: upcoming ? 10 : 0,
+        borderStartWidth: upcoming ? 2 : 0,
+        borderStartColor: theme.palette.borderStrong,
       }}
     >
       {leading}
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text numberOfLines={1}>{title}</Text>
         {subtitle === undefined ? null : (
-          <Text size="footnote" color="textMuted" numberOfLines={1}>
+          <Text
+            size="footnote"
+            color="textMuted"
+            numberOfLines={subtitleLines}
+            // A subtitle that wraps needs room between its lines; the single-line case is
+            // unaffected, since line-height only shows up once there are two.
+            style={subtitleLines > 1 ? { lineHeight: 18 } : undefined}
+          >
             {subtitle}
           </Text>
         )}

@@ -371,8 +371,13 @@ Let `today = todayLocal()`.
 
 - `spendingByCategory(range)` → Map `categoryId → amount` over counted expenses (`income` variant for income).
 - `rollupToParents` merges children into their parent. Splits, budgets and Home use parent-level totals. Category
-  detail shows the children breakdown ("Sottocategorie", only when ≥2 children have spend; transactions directly on
-  the parent appear as "Senza sottocategoria").
+  detail shows the children breakdown ("Sottocategorie": **every live child, whether it spent or not**, plus any
+  archived child that still spent in the period, sorted by amount desc; transactions directly on the parent appear as
+  "Senza sottocategoria"). The card is hidden only when the category has no children at all.
+  - *Was "only when ≥2 children have spend".* That is the right rule for a split — one segment is not a split — but
+    this card is also the **only way to reach a subcategory**: "Ripartizione" rolls it into its parent and the
+    Categorie list names it without linking it. Under the old rule a parent with one spending child hid that child
+    from every screen, and the only route left to it was opening one of its own transactions.
 - Split bar ("Ripartizione"): all parents sorted by amount desc, with each segment coloured by `categoryColors[colorIndex]`.
   Home/Tag views that show a limited list use the top 5 plus an "Altre categorie" segment coloured `segmentOther`.
 
@@ -410,6 +415,13 @@ Let `today = todayLocal()`.
 - **Ripartizione:** Uscite/Entrate toggle, total, split bar, rows with colour dot, name, delta vs usual, % of total, amount.
   Tapping a row opens category detail. A trailing row "N transazioni escluse dai totali · amount" opens the transaction
   list filtered to excluded (`onlyExcluded`) for that direction.
+- **Tag:** a **ranking** of the cycle's tagged expenses — tag name, "N transazioni", amount — top 5, then "Tutti i tag"
+  → the tag list. Tapping a tag opens the tag view (all dates, §5.10). Below it, "N voci senza tag · {amount}" and, from
+  two tags up, the note that a transaction with several tags counts in each.
+  **Never a split bar, a pie or a % of total:** tags are neither exclusive nor exhaustive, so the amounts overshoot the
+  cycle's spend and still miss the untagged rows. `spendingByTag` returns the untagged total precisely so the card can
+  say what it leaves out. This is the *reading* entry point for tags; the one in Profilo is for *managing* them
+  (rename, merge, delete), and a trip four taps deep inside the settings was a trip nobody found.
 - **Category detail:** total, delta line, "Ultimi 6 cicli" bars (5 previous + current in accent), median label,
   "Media 6 cicli", sub-category split, and cycle transactions sorted by amount desc.
 
@@ -461,8 +473,11 @@ Let `today = todayLocal()`.
 - **Merge into another tag:** replace the source id with the target id in every transaction's `tagIds` (dedupe), then tombstone
   the source.
 - **Delete:** remove the id from all transactions, then tombstone. Confirm inline: "Eliminare «X»? Le transazioni restano."
-- **Tag view:** a tag spans all dates (the period selector doesn't apply). Shows total expenses, "N transazioni · first –
-  last date", split by category, and all transactions ascending by date.
+- **Tag view:** a tag spans all dates (the period selector doesn't apply). Shows total expenses, the line "Tutte le date,
+  fuori dal periodo selezionato", "N transazioni · first – last date", split by category, and all transactions ascending
+  by date. The scope line is not decoration: the screen is reached from a card that *is* scoped to one cycle (§5.7), and
+  two totals that disagree without saying why read as a bug.
+- **Reached from:** the Tag card on Statistiche, a tag chip on a transaction, or Profilo → Gestisci i tag.
 - Transactions list: when a tag filter is active, rows show their tags joined by " · ".
 
 ### 5.11 Categories admin
@@ -484,6 +499,13 @@ Let `today = todayLocal()`.
   when active. **Transfers match neither direction chip**: they move money between the user's own accounts and §5.3
   keeps them out of every total, so "Solo uscite" shows real spending only. They stay visible with no direction filter,
   and the Conto chip still matches both legs. In the POC, Conto/Categoria open pickers (a bottom sheet list) rather than cycling as in the prototype.
+- **Filtered total:** with any filter on, one line above the list — "N voci · {expenses} di uscite" (plus
+  ", {income} di entrate" when the filtered rows contain any). It sums `totalsOf(settled)`, which counts rows flagged
+  `excludeFromTotals` **on purpose**: "Solo escluse" exists, and a total that answers 0 for the rows on screen reads as
+  a bug. Transfers count towards N but land in neither amount. This is how a tag is measured inside the current cycle;
+  the all-dates figure is the tag view (§5.10).
+- **Tag chip label:** one selected tag shows its name, several show "N tag", none shows "Tag" — the total below it is
+  meaningless if the chip cannot say what it is a total *of*.
 - **Swipe row:** drag right > 70px → edit; drag left > 70px → delete dialog; max travel 120px; release below threshold
   snaps back (240ms, easing `cubic-bezier(0.32,0.72,0,1)`); tap (< 5px) → detail. Background reveals "Modifica"
   (left) and "Elimina" (right, accent), with opacity `min(1, |dx|/70)`. Use Reanimated + Gesture Handler.
@@ -540,7 +562,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.10 | **Account detail** | 729–804 | Edit, archive (confirm toast), icon/name/kind, balance, delta over last 8 months, sparkline of month-end balances over 8 months (labels first/last month), credit card box, cycle income/expense tiles, "Trasferisci verso un altro conto" → new transfer sheet, last 6 transactions. |
 | 6.11 | **Tag view** | 807–857 | §5.10. |
 | 6.12 | **Category detail** | 859–934 | §5.7. |
-| 6.13 | **Tag admin** | 936–957 | List with count; tap → Modifica tag sheet. Footnote copy from design. |
+| 6.13 | **Tag admin** | 936–957 | List with count; tap → Modifica tag sheet. Footnote copy from design. Reached from Profilo as **"Gestisci i tag"**: reading what a tag cost belongs to Statistiche (§5.7), this screen is for renaming, merging and deleting. |
 | 6.14 | **Tab bar + FAB** | 961–975 | Height 78 + bottom inset; FAB 56×56, radius 18, accent, raised −16px. FAB opens new transaction sheet. |
 | 6.15 | **Period sheet** | 981–1009 | Lists the last five periods ending with the selected one (current first, with a check on the selected one; sub "in corso, giorno X di Y" or "{expenses} di uscite"); then **Periodo personalizzato** (date range picker, `start <= end`), **Tipo di periodo** (mese / settimana / ciclo di stipendio / anno → writes `settings.periodKind`) and, under the cycle kind only, **Giorno di inizio ciclo**. Remove the prototype's "non disponibile offline" rows (everything is local). | **Forward navigation stops one period after the current one** (`canShiftPeriod`): that far there are materialised recurrences (§5.9) and any future-dated transaction the user entered, and past it every screen is empty by construction. The › arrow greys out rather than opening nothing. A custom range is not bound by this: asking for a future window is explicit.
 | 6.16 | **New/Edit transaction sheet** | 1011–1174 | Kind segmented (Uscita/Entrata/Trasferimento); amount display (tap reopens keypad in edit mode); category grid 4 cols (**top 7** by usage + "Altro" → full picker incl. subcategories; seven plus the tile is two rows, which is what keeps the account, the date and the tags above the fold — ten was three rows and hid them); account chips (non-archived) **and** the date row **above** the category grid, since both are set on nearly every transaction and the grid used to bury them; transfer Da/A pickers; date chips Oggi/Ieri + Saldo's own calendar sheet (not the platform picker); Descrizione (placeholder "Dove"/"Da chi"); Tag input with suggestions, create, selected chips; **Allega foto** (action sheet: Scatta foto / Scegli dalla libreria / Scegli file PDF; shows count badge + thumbnails); Ripeti toggle; Escludi dai totali toggle + footnote; Elimina (edit only). The amount is a `decimal-pad` field styled as the big amount, focused automatically on a new transaction (D23); there is no in-app keypad and no separate save column. Save is disabled until amount > 0, an account is chosen, a non-transfer has a category and a transfer has a different destination. |

@@ -11,10 +11,17 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
-import { useCategories, useSettings, useTags, useTransactionsInRange } from '../../src/db/hooks';
+import {
+  useAccounts,
+  useCategories,
+  useSettings,
+  useTags,
+  useTransactionsInRange,
+} from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
 import { TagEditSheet } from '../../src/features/tags/TagEditSheet';
+import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -29,6 +36,7 @@ export default function TagView() {
   const settings = useSettings();
   const tags = useTags();
   const categories = useCategories();
+  const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [editOpen, setEditOpen] = useState(false);
@@ -93,6 +101,11 @@ export default function TagView() {
         weight="semibold"
         tracking="tightest"
       />
+      {/* Statistics reaches this screen from a card that is scoped to one cycle; this total is not.
+          Saying so is what keeps the two numbers from reading as a contradiction (§5.10). */}
+      <Text size="footnote" color="textFaint">
+        {t('tags.allDates')}
+      </Text>
       {tagged.length === 0 ? null : (
         <Text color="textMuted">
           {t('tags.range', {
@@ -123,21 +136,36 @@ export default function TagView() {
 
       <Card padded={false}>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
-          {tagged.map((tx) => (
-            <ListRow
-              key={tx.id}
-              title={tx.description.length > 0 ? tx.description : t(`kinds.${tx.kind}`)}
-              subtitle={formatDayMonth(tx.date, locale)}
-              onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })}
-              trailing={
-                <AmountText
-                  minor={tx.kind === 'income' ? tx.amount : -tx.amount}
-                  currency={currency}
-                  locale={locale}
-                />
-              }
-            />
-          ))}
+          {tagged.map((tx) => {
+            // A tag is not an account, so a transfer listed here carries no sign: it moved money
+            // between the user's own accounts and this screen totals neither of them.
+            const rowMeta = transactionRow(tx, {
+              category: () => undefined,
+              accountName: (accountId) =>
+                accounts.find((account) => account.id === accountId)?.name ?? '',
+              kindLabel: (kind) => t(`kinds.${kind}`),
+              viewpointAccountId: null,
+            });
+            return (
+              <ListRow
+                key={tx.id}
+                title={rowMeta.title}
+                subtitle={formatDayMonth(tx.date, locale)}
+                onPress={() =>
+                  router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                }
+                trailing={
+                  <AmountText
+                    minor={rowMeta.amount.minor}
+                    currency={currency}
+                    locale={locale}
+                    signDisplay={rowMeta.amount.signDisplay}
+                    color={rowMeta.amount.muted ? 'textMuted' : undefined}
+                  />
+                }
+              />
+            );
+          })}
         </View>
       </Card>
 

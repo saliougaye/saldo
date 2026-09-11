@@ -4,9 +4,12 @@ import {
   countsInTotals,
   isUpcoming,
   rollupToParents,
+  signedAmount,
   spendingByCategory,
+  spendingByTag,
   splitUpcoming,
   summarizePeriod,
+  totalsOf,
 } from './ledger';
 
 describe('isUpcoming / countsInTotals', () => {
@@ -116,5 +119,133 @@ describe('splitUpcoming', () => {
 
   it('is empty on both sides for no rows, and nets zero', () => {
     expect(splitUpcoming([], '2026-09-11')).toEqual({ upcoming: [], settled: [], upcomingNet: 0 });
+  });
+});
+
+describe('spendingByTag', () => {
+  const tagged = () => [
+    tx({ date: '2026-03-28', amount: 5000, tagIds: ['tag-rome', 'tag-trip'] }),
+    tx({ date: '2026-04-02', amount: 3000, tagIds: ['tag-rome'] }),
+    tx({ date: '2026-04-03', amount: 1200, tagIds: [] }),
+    tx({ date: '2026-04-05', amount: 900, tagIds: ['tag-rome'], excludeFromTotals: true }),
+    tx({ date: '2026-04-20', amount: 4000, tagIds: ['tag-rome'] }),
+    tx({ date: '2026-03-20', amount: 7000, tagIds: ['tag-rome'] }),
+    tx({
+      date: '2026-04-04',
+      amount: 2500,
+      kind: 'income',
+      categoryId: 'cat-salary',
+      tagIds: ['tag-rome'],
+    }),
+  ];
+
+  it('ranks tags by counted spend, descending', () => {
+    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
+    expect(tags).toEqual([
+      { tagId: 'tag-rome', amount: 8000, count: 2 },
+      { tagId: 'tag-trip', amount: 5000, count: 1 },
+    ]);
+  });
+
+  it('counts a two-tag transaction in both, so the tags overshoot the period spend', () => {
+    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
+    const sum = tags.reduce((total, row) => total + row.amount, 0);
+    const { spent } = summarizePeriod(tagged(), APRIL_CYCLE, TODAY);
+    expect(sum).toBeGreaterThan(spent);
+  });
+
+  it('reports what carries no tag at all, so the ranking can say what it leaves out', () => {
+    const spending = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
+    expect(spending.untagged).toBe(1200);
+    expect(spending.untaggedCount).toBe(1);
+  });
+
+  it('sums income when asked', () => {
+    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY, 'income');
+    expect(tags).toEqual([{ tagId: 'tag-rome', amount: 2500, count: 1 }]);
+  });
+
+  it('breaks ties on the tag id, so the order never depends on input order', () => {
+    const txs = [
+      tx({ date: '2026-04-02', amount: 1000, tagIds: ['tag-b'] }),
+      tx({ date: '2026-04-02', amount: 1000, tagIds: ['tag-a'] }),
+    ];
+    expect(spendingByTag(txs, APRIL_CYCLE, TODAY).tags.map((row) => row.tagId)).toEqual([
+      'tag-a',
+      'tag-b',
+    ]);
+  });
+
+  it('is empty for no rows', () => {
+    expect(spendingByTag([], APRIL_CYCLE, TODAY)).toEqual({
+      tags: [],
+      untagged: 0,
+      untaggedCount: 0,
+    });
+  });
+});
+
+describe('totalsOf', () => {
+  it('adds up what the list shows, expenses and income apart', () => {
+    const totals = totalsOf([
+      tx({ date: '2026-04-02', amount: 3000 }),
+      tx({ date: '2026-04-03', amount: 1200 }),
+      tx({ date: '2026-04-04', amount: 9000, kind: 'income', categoryId: 'cat-salary' }),
+    ]);
+    expect(totals).toEqual({ expense: 4200, income: 9000, count: 3 });
+  });
+
+  it('counts rows the totals normally drop, because the list is showing them on purpose', () => {
+    const totals = totalsOf([tx({ date: '2026-04-02', amount: 3000, excludeFromTotals: true })]);
+    expect(totals).toEqual({ expense: 3000, income: 0, count: 1 });
+  });
+
+  it('leaves transfers out of both sides but still counts them', () => {
+    const totals = totalsOf([
+      tx({ date: '2026-04-01', amount: 50000, kind: 'transfer', categoryId: null }),
+      tx({ date: '2026-04-02', amount: 3000 }),
+    ]);
+    expect(totals).toEqual({ expense: 3000, income: 0, count: 2 });
+  });
+
+  it('is zero for no rows', () => {
+    expect(totalsOf([])).toEqual({ expense: 0, income: 0, count: 0 });
+  });
+});
+
+describe('signedAmount', () => {
+  it('signs an expense down and an income up whatever the viewpoint', () => {
+    const expense = tx({ date: TODAY, amount: 1500 });
+    const income = tx({ date: TODAY, amount: 9000, kind: 'income', categoryId: 'cat-salary' });
+    expect(signedAmount(expense, null)).toBe(-1500);
+    expect(signedAmount(expense, 'acc-card')).toBe(-1500);
+    expect(signedAmount(income, null)).toBe(9000);
+    expect(signedAmount(income, 'acc-checking')).toBe(9000);
+  });
+
+  it('gives a transfer no sign when no account is the viewpoint', () => {
+    const transfer = tx({
+      date: TODAY,
+      amount: 50000,
+      kind: 'transfer',
+      categoryId: null,
+      accountId: 'acc-checking',
+      toAccountId: 'acc-savings',
+    });
+    expect(signedAmount(transfer, null)).toBeNull();
+  });
+
+  it('signs a transfer by the leg the viewpoint account is on', () => {
+    const transfer = tx({
+      date: TODAY,
+      amount: 50000,
+      kind: 'transfer',
+      categoryId: null,
+      accountId: 'acc-checking',
+      toAccountId: 'acc-savings',
+    });
+    expect(signedAmount(transfer, 'acc-checking')).toBe(-50000);
+    expect(signedAmount(transfer, 'acc-savings')).toBe(50000);
+    expect(signedAmount(transfer, 'acc-card')).toBeNull();
   });
 });

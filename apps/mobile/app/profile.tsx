@@ -110,7 +110,7 @@ export default function ProfileScreen() {
             chevron
           />
           <ListRow
-            title={t('settings.tags')}
+            title={t('settings.manageTags')}
             leading={lead('tag')}
             onPress={() => router.push('/settings/tags')}
             chevron

@@ -82,4 +82,27 @@ describe('SpendHistoryChart', () => {
     expect(screen.getByText('372')).toBeTruthy();
     expect(screen.getByText('420')).toBeTruthy();
   });
+
+  it('paints every column in the category colour and explains the two strengths', async () => {
+    await render(
+      <Host>
+        <SpendHistoryChart
+          bars={[
+            { key: 'a', label: 'Feb 27', amount: 37_210, current: false },
+            { key: 'b', label: 'Mar 27', amount: 42_000, current: true },
+          ]}
+          currency="EUR"
+          locale="en"
+          colour="#63926F"
+        />
+      </Host>,
+    );
+    expect(screen.getByText('Current cycle')).toBeTruthy();
+    expect(screen.getByText('Closed cycles')).toBeTruthy();
+    const tree = JSON.stringify(screen.toJSON());
+    // The running cycle is opaque, the closed ones and the tracks are the same hue, faded.
+    expect(tree).toContain('#63926F');
+    expect(tree).toContain('#63926F66');
+    expect(tree).toContain('#63926F1A');
+  });
 });

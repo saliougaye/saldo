@@ -3,6 +3,7 @@ import { tx } from './__tests__/fixtures';
 import {
   EMPTY_FILTERS,
   type FilterLookup,
+  filtersFromParams,
   filterTransactions,
   groupByDay,
   hasActiveFilters,
@@ -88,6 +89,12 @@ describe('filterTransactions', () => {
     expect(ids({ query: 'conto corrente' })).toEqual(['salary', 'transfer']);
   });
 
+  it('searches the destination account of a transfer', () => {
+    // Without it a transfer is unreachable from the name of the account it landed in, which is
+    // usually the account the user is thinking of.
+    expect(ids({ query: 'carta' })).toEqual(['coffee', 'market', 'transfer', 'excluded']);
+  });
+
   it('hides transfers from both directions, since they are neither', () => {
     expect(ids({ direction: 'income' })).toEqual(['salary']);
     expect(ids({ direction: 'expense' })).toEqual(['coffee', 'market', 'excluded']);
@@ -115,5 +122,33 @@ describe('groupByDay', () => {
       ['2026-04-17', ['salary', 'transfer'], 0],
       ['2026-04-16', ['excluded'], 0],
     ]);
+  });
+});
+
+describe('filtersFromParams', () => {
+  it('opens the whole list when nothing was asked for', () => {
+    expect(filtersFromParams({})).toEqual(EMPTY_FILTERS);
+  });
+
+  it('seeds the account, the direction and the excluded flag', () => {
+    expect(
+      filtersFromParams({ accountId: 'acc-1', direction: 'expense', onlyExcluded: '1' }),
+    ).toEqual({ ...EMPTY_FILTERS, accountId: 'acc-1', direction: 'expense', onlyExcluded: true });
+  });
+
+  it('drops a direction it does not recognise rather than guessing one', () => {
+    expect(filtersFromParams({ direction: 'transfer' }).direction).toBe('all');
+    expect(filtersFromParams({ direction: '' }).direction).toBe('all');
+  });
+
+  it('reads a blank param as absent, which is how a spent one comes back', () => {
+    expect(filtersFromParams({ accountId: '', direction: '', onlyExcluded: '' })).toEqual(
+      EMPTY_FILTERS,
+    );
+  });
+
+  it('treats any value other than the flag itself as not excluded', () => {
+    expect(filtersFromParams({ onlyExcluded: '0' }).onlyExcluded).toBe(false);
+    expect(filtersFromParams({}).onlyExcluded).toBe(false);
   });
 });

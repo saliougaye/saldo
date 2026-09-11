@@ -36,6 +36,26 @@ export function countsInTotals(
   return tx.kind !== 'transfer' && !tx.excludeFromTotals && !isUpcoming(tx, today);
 }
 
+/**
+ * The amount as a row should render it, signed from the viewpoint of one account.
+ *
+ * A transfer has no sign of its own: it moves money between the user's own accounts and §5.3 keeps
+ * it out of every total, so a global list that prints "−50,00" claims an expense that never
+ * happened. Read from one of its two accounts it does have a direction, and `null` says the caller
+ * should render the figure unsigned.
+ */
+export function signedAmount(
+  tx: Pick<LedgerTx, 'kind' | 'amount' | 'accountId' | 'toAccountId'>,
+  viewpointAccountId: string | null,
+): MinorUnits | null {
+  if (tx.kind === 'income') return tx.amount;
+  if (tx.kind === 'expense') return -tx.amount;
+  if (viewpointAccountId === null) return null;
+  if (tx.toAccountId === viewpointAccountId) return tx.amount;
+  if (tx.accountId === viewpointAccountId) return -tx.amount;
+  return null;
+}
+
 export interface PeriodSummary {
   income: number;
   spent: number;
@@ -93,6 +113,62 @@ export function spendingByCategory(
   return totals;
 }
 
+export interface TagTotal {
+  tagId: string;
+  amount: MinorUnits;
+  /** How many counted transactions carry the tag. */
+  count: number;
+}
+
+export interface TagSpending {
+  /**
+   * Counted amount per tag, descending, ties broken on the id so the order never depends on the
+   * order the rows arrived in.
+   */
+  tags: TagTotal[];
+  /** Counted amount of the rows carrying no tag at all. */
+  untagged: MinorUnits;
+  untaggedCount: number;
+}
+
+/**
+ * Counted amounts per tag (§5.10).
+ *
+ * Tags are neither exclusive nor exhaustive: a transaction can carry several, and most carry none.
+ * A row with two tags is therefore counted in both, and `tags` overshoots the period's spend while
+ * missing everything in `untagged`. That is why this returns a **ranking** and why nothing built on
+ * it may draw a share of a whole — a split bar or a pie over these numbers would be arithmetically
+ * false. `untagged` travels with the ranking so the screen can say what it leaves out.
+ */
+export function spendingByTag(
+  txs: readonly LedgerTx[],
+  range: DateRange,
+  today: LocalDate,
+  kind: 'expense' | 'income' = 'expense',
+): TagSpending {
+  const totals = new Map<string, TagTotal>();
+  let untagged = 0;
+  let untaggedCount = 0;
+  for (const tx of txs) {
+    if (tx.kind !== kind || !isWithin(range, tx.date) || !countsInTotals(tx, today)) continue;
+    if (tx.tagIds.length === 0) {
+      untagged += tx.amount;
+      untaggedCount += 1;
+      continue;
+    }
+    for (const tagId of new Set(tx.tagIds)) {
+      const current = totals.get(tagId);
+      if (current === undefined) totals.set(tagId, { tagId, amount: tx.amount, count: 1 });
+      else
+        totals.set(tagId, { tagId, amount: current.amount + tx.amount, count: current.count + 1 });
+    }
+  }
+  const tags = [...totals.values()].sort(
+    (a, b) => b.amount - a.amount || a.tagId.localeCompare(b.tagId),
+  );
+  return { tags, untagged, untaggedCount };
+}
+
 /** Merges child category amounts into their parent. Categories are one level deep (§4). */
 export function rollupToParents(
   amounts: ReadonlyMap<string, number>,
@@ -105,6 +181,31 @@ export function rollupToParents(
     totals.set(key, (totals.get(key) ?? 0) + amount);
   }
   return totals;
+}
+
+export interface ListTotals {
+  expense: MinorUnits;
+  income: MinorUnits;
+  /** Every row handed in, transfers included. */
+  count: number;
+}
+
+/**
+ * What a list of rows adds up to, for the line above a filtered transaction list.
+ *
+ * Unlike `summarizePeriod` this counts rows flagged `excludeFromTotals`: the list is showing them
+ * because someone asked for them — the "Solo escluse" filter exists — and a total that answers 0
+ * for the rows on screen reads as a bug. Transfers move money rather than spend it, so they land
+ * in neither side while still being counted.
+ */
+export function totalsOf(txs: readonly LedgerTx[]): ListTotals {
+  let expense = 0;
+  let income = 0;
+  for (const tx of txs) {
+    if (tx.kind === 'income') income += tx.amount;
+    else if (tx.kind === 'expense') expense += tx.amount;
+  }
+  return { expense, income, count: txs.length };
 }
 
 export interface UpcomingSplit<T> {

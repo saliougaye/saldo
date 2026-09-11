@@ -48,6 +48,9 @@ module.exports = {
         '<rootDir>/src/theme/**/*.test.ts',
       ],
       setupFiles: ['<rootDir>/jest.setup.js'],
+      // Lets a component `import Animated` — see the file for why it is ours and not the one
+      // Worklets ships.
+      resolver: '<rootDir>/jest.resolver.js',
       transformIgnorePatterns,
       moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
     },

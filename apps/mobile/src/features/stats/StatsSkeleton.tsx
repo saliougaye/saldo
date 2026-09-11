@@ -34,17 +34,6 @@ export function StatsSkeleton() {
       </Card>
 
       <Card>
-        <Skeleton width={110} />
-        <View style={{ marginTop: 12 }}>
-          <Skeleton width="100%" height={theme.layout.progressHeight * 2} />
-        </View>
-        <View style={{ marginTop: 10, gap: 6 }}>
-          <Skeleton width="90%" height={10} />
-          <Skeleton width="60%" height={10} />
-        </View>
-      </Card>
-
-      <Card>
         <Skeleton width="100%" height={theme.layout.headerButton} radius={theme.radii.input} />
         <View style={{ marginTop: 12 }}>
           <Skeleton width={140} height={20} />
@@ -56,6 +45,17 @@ export function StatsSkeleton() {
           <SkeletonRow />
           <SkeletonRow />
           <SkeletonRow />
+        </View>
+      </Card>
+
+      <Card>
+        <Skeleton width={110} />
+        <View style={{ marginTop: 12 }}>
+          <Skeleton width="100%" height={theme.layout.progressHeight * 2} />
+        </View>
+        <View style={{ marginTop: 10, gap: 6 }}>
+          <Skeleton width="90%" height={10} />
+          <Skeleton width="60%" height={10} />
         </View>
       </Card>
     </View>

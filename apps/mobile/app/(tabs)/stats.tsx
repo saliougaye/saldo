@@ -16,28 +16,31 @@ import {
   summarizePeriod,
   upcomingExpenses,
 } from '@saldo/core';
-import { formatCycleRange, formatMoney, formatPeriodTick, formatSignedPercent } from '@saldo/i18n';
+import { formatCycleRange, formatMoney, formatPeriodTick } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
-import { IconBox, ListRow } from '../../src/components/ListRow';
+import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { Segmented } from '../../src/components/Segmented';
+import { Sheet } from '../../src/components/Sheet';
 import { useDelayed } from '../../src/components/useDelayed';
 import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { CashflowChart } from '../../src/features/stats/CashflowChart';
+import { CategorySplitRows } from '../../src/features/stats/CategorySplitRows';
 import { SplitBar } from '../../src/features/stats/SplitBar';
 import { StatsSkeleton } from '../../src/features/stats/StatsSkeleton';
+import { TagSpendCard } from '../../src/features/stats/TagSpendCard';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
-import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
+import { entering } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -47,6 +50,14 @@ const CASHFLOW_CYCLES = 6;
 const USUAL_CYCLES = 3;
 /** The projection is only offered with at least this many days left (§5.7). */
 const MIN_DAYS_LEFT = 3;
+/**
+ * Categories shown in the card before the rest move to the sheet.
+ *
+ * The split bar keeps every category, so the proportions stay honest at 8px tall; it is the rows
+ * that grow without bound, and a card whose height depends on how many categories someone happens
+ * to have is a card nobody scrolls past.
+ */
+const CARD_CATEGORIES = 3;
 
 export default function StatsTab() {
   const theme = useTheme();
@@ -58,6 +69,12 @@ export default function StatsTab() {
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [direction, setDirection] = useState<'expense' | 'income'>('expense');
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // Pushing the category while the sheet is still dismissing leaves the modal on top of it, so the
+  // tap is parked here and spent once the sheet has actually gone.
+  const [pending, setPending] = useState<string | null>(null);
+
+  const openCategory = (id: string) => router.push({ pathname: '/category/[id]', params: { id } });
 
   const historyStart =
     previousPeriods(def, period.range, CASHFLOW_CYCLES).at(-1)?.start ?? period.range.start;
@@ -209,85 +226,6 @@ export default function StatsTab() {
 
       <Animated.View entering={entering(1)}>
         <Card>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-            }}
-          >
-            <Text weight="medium" tracking="tight">
-              {t('stats.cycleTrend')}
-            </Text>
-            <AmountText
-              minor={current[current.length - 1] ?? 0}
-              currency={currency}
-              locale={locale}
-              weight="medium"
-            />
-          </View>
-          <View style={{ marginTop: 12 }}>
-            <CycleTrendChart current={current} usual={usual} />
-          </View>
-          <Text size="caption" color="textFaint" style={{ marginTop: 8 }}>
-            {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
-          </Text>
-        </Card>
-      </Animated.View>
-
-      <Animated.View entering={entering(2)}>
-        <Card>
-          <Text weight="medium" tracking="tight">
-            {t('stats.committed')}
-          </Text>
-          <View style={{ marginTop: 12 }}>
-            <SplitBar
-              segments={[
-                { key: 'committed', amount: committed, colour: theme.palette.barGrey },
-                { key: 'discretionary', amount: discretionary, colour: theme.palette.accent },
-              ]}
-            />
-          </View>
-          <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
-            {t('stats.committedLine', {
-              pct: committedPct,
-              amount: formatMoney(committed, currency, locale),
-            })}
-          </Text>
-        </Card>
-      </Animated.View>
-
-      {showProjection ? (
-        <Animated.View entering={entering(3)}>
-          <Card>
-            <Text weight="medium" tracking="tight">
-              {t('stats.projection')}
-            </Text>
-            <AmountText
-              minor={projection}
-              currency={currency}
-              locale={locale}
-              size="amountMd"
-              weight="semibold"
-              tracking="tighter"
-              style={{ marginTop: 4 }}
-            />
-            <Text size="footnote" color="textMuted" style={{ marginTop: 6 }}>
-              {t(
-                projection >= (cycleMedian ?? 0)
-                  ? 'stats.projectionAbove'
-                  : 'stats.projectionBelow',
-                {
-                  amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
-                },
-              )}
-            </Text>
-          </Card>
-        </Animated.View>
-      ) : null}
-
-      <Animated.View entering={entering(3)}>
-        <Card>
           <Segmented
             accessibilityLabel={t('stats.split')}
             options={[
@@ -321,46 +259,173 @@ export default function StatsTab() {
                 {t('stats.empty')}
               </Text>
             ) : (
-              split.rows.map((row) => (
-                // Switching expense/income swaps the whole list; the rows fade rather than snap.
-                <Animated.View
-                  key={row.id}
-                  layout={reflowing}
-                  entering={appearing}
-                  exiting={leaving}
-                >
-                  <ListRow
-                    title={row.name}
-                    subtitle={`${row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)} · ${t('stats.ofTotal', { pct: row.share })}`}
-                    leading={<IconBox name={row.icon} colour={row.colour} />}
-                    onPress={() =>
-                      router.push({ pathname: '/category/[id]', params: { id: row.id } })
-                    }
-                    trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
-                  />
-                </Animated.View>
-              ))
-            )}
-            {excluded.length === 0 ? null : (
-              <ListRow
-                title={t('stats.excludedRow', { count: excluded.length })}
-                trailing={
-                  <AmountText
-                    minor={excluded.reduce((sum, tx) => sum + tx.amount, 0)}
-                    currency={currency}
-                    locale={locale}
-                    color="textMuted"
-                  />
-                }
+              <CategorySplitRows
+                rows={split.rows.slice(0, CARD_CATEGORIES)}
+                currency={currency}
+                locale={locale}
+                onPress={openCategory}
               />
+            )}
+            {split.rows.length > CARD_CATEGORIES ? (
+              <ListRow
+                title={t('stats.seeAll', { count: split.rows.length })}
+                chevron
+                onPress={() => setSheetOpen(true)}
+              />
+            ) : null}
+            {/* A note, not an action: at row weight it read as loud as "see all", which is the
+                one thing in this card worth tapping. Same treatment as the untagged line — it
+                still opens the list it counts (§5.7), it just stops announcing it. */}
+            {excluded.length === 0 ? null : (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  router.push({
+                    pathname: '/(tabs)/transactions',
+                    params: { direction, onlyExcluded: '1' },
+                  })
+                }
+                // Padding would make it look like a row again, so the tap area grows outwards
+                // instead: ~16px of text plus 8 above and below clears the 44px target.
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ paddingVertical: 6, marginTop: 2 }}
+              >
+                <Text size="footnote" color="textMuted">
+                  {t('stats.excludedRow', {
+                    count: excluded.length,
+                    amount: formatMoney(
+                      excluded.reduce((sum, tx) => sum + tx.amount, 0),
+                      currency,
+                      locale,
+                    ),
+                  })}
+                </Text>
+              </Pressable>
             )}
           </View>
         </Card>
       </Animated.View>
 
+      {/* Tags read next to the category split, not from Profile: a trip is the one thing here that
+          is not shaped like a cycle, and it used to be four taps deep inside the settings. */}
+      <Animated.View entering={entering(2)}>
+        <TagSpendCard
+          rows={rows}
+          range={period.range}
+          today={today}
+          currency={currency}
+          locale={locale}
+        />
+      </Animated.View>
+
+      <Animated.View entering={entering(3)}>
+        <Card>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'baseline',
+            }}
+          >
+            <Text weight="medium" tracking="tight">
+              {t('stats.cycleTrend')}
+            </Text>
+            <AmountText
+              minor={current[current.length - 1] ?? 0}
+              currency={currency}
+              locale={locale}
+              weight="medium"
+            />
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <CycleTrendChart current={current} usual={usual} />
+          </View>
+          <Text size="caption" color="textFaint" style={{ marginTop: 8 }}>
+            {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
+          </Text>
+        </Card>
+      </Animated.View>
+
+      <Animated.View entering={entering(4)}>
+        <Card>
+          <Text weight="medium" tracking="tight">
+            {t('stats.committed')}
+          </Text>
+          <View style={{ marginTop: 12 }}>
+            <SplitBar
+              segments={[
+                { key: 'committed', amount: committed, colour: theme.palette.barGrey },
+                { key: 'discretionary', amount: discretionary, colour: theme.palette.accent },
+              ]}
+            />
+          </View>
+          <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
+            {t('stats.committedLine', {
+              pct: committedPct,
+              amount: formatMoney(committed, currency, locale),
+            })}
+          </Text>
+        </Card>
+      </Animated.View>
+
+      {showProjection ? (
+        <Animated.View entering={entering(5)}>
+          <Card>
+            <Text weight="medium" tracking="tight">
+              {t('stats.projection')}
+            </Text>
+            <AmountText
+              minor={projection}
+              currency={currency}
+              locale={locale}
+              size="amountMd"
+              weight="semibold"
+              tracking="tighter"
+              style={{ marginTop: 4 }}
+            />
+            <Text size="footnote" color="textMuted" style={{ marginTop: 6 }}>
+              {t(
+                projection >= (cycleMedian ?? 0)
+                  ? 'stats.projectionAbove'
+                  : 'stats.projectionBelow',
+                {
+                  amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
+                },
+              )}
+            </Text>
+          </Card>
+        </Animated.View>
+      ) : null}
+
       <Text size="caption" color="textFaint">
         {formatCycleRange(period.range, locale, today)}
       </Text>
+
+      <Sheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={t('stats.split')}
+        tall
+        onDismissed={() => {
+          if (pending === null) return;
+          openCategory(pending);
+          setPending(null);
+        }}
+      >
+        <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+          <View>
+            <CategorySplitRows
+              rows={split.rows}
+              currency={currency}
+              locale={locale}
+              onPress={(id) => {
+                setPending(id);
+                setSheetOpen(false);
+              }}
+            />
+          </View>
+        </ScrollView>
+      </Sheet>
     </Screen>
   );
 }

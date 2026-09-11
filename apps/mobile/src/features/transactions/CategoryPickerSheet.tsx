@@ -1,4 +1,5 @@
 import type { Category, TransactionKind } from '@saldo/core';
+import { childCategories, topLevelCategories } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,20 +9,18 @@ import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
 
-/** Parents first, each followed by its own children, so the list reads as the tree it is (§5.11). */
+/**
+ * Parents first, each followed by its own children, so the list reads as the tree it is (§5.11).
+ *
+ * The filtering and the ordering come from `@saldo/core`, which is where the admin list reads them
+ * too: the two used to sort and indent the same tree by their own rules and disagree about it.
+ */
 function ordered(categories: readonly Category[], kind: TransactionKind): Category[] {
   const direction = kind === 'income' ? 'income' : 'expense';
-  const live = categories.filter(
-    (category) => category.direction === direction && category.archivedAt === null,
-  );
-  const bySort = (a: Category, b: Category) => a.sortOrder - b.sortOrder;
-  return live
-    .filter((category) => category.parentId === null)
-    .sort(bySort)
-    .flatMap((parent) => [
-      parent,
-      ...live.filter((child) => child.parentId === parent.id).sort(bySort),
-    ]);
+  return topLevelCategories(categories, direction).flatMap((parent) => [
+    parent,
+    ...childCategories(categories, parent.id),
+  ]);
 }
 
 /**
@@ -53,7 +52,7 @@ export function CategoryPickerSheet({
       <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
         <View>
           {rows.map((category) => (
-            <View key={category.id} style={{ paddingLeft: category.parentId === null ? 0 : 16 }}>
+            <View key={category.id} style={{ paddingStart: category.parentId === null ? 0 : 16 }}>
               <ListRow
                 title={category.name}
                 leading={

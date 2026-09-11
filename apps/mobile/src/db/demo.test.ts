@@ -87,6 +87,43 @@ describe('seedDemoData', () => {
     expect(excluded).toHaveLength(DEMO_TRANSACTIONS.filter((tx) => tx.excluded).length);
   });
 
+  // The Profile row is an ordinary list row and a second tap used to duplicate the whole category
+  // catalogue, which is what made the admin list show three "Spesa" with the transactions on the
+  // first one only.
+  it('does nothing on a second run', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => '2026-09-10T09:00:00.000Z');
+    const load = () =>
+      seedDemoData(repos, { today: TODAY, def: CYCLE_DEF, translate: (key) => key });
+    load();
+    const categories = repos.categories.list().length;
+    load();
+    load();
+    expect(repos.categories.list()).toHaveLength(categories);
+    expect(repos.accounts.list()).toHaveLength(DEMO_ACCOUNTS.length);
+    expect(repos.transactions.list()).toHaveLength(DEMO_TRANSACTIONS.length);
+  });
+
+  it('reuses the categories onboarding already wrote instead of adding a second set', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => '2026-09-10T09:00:00.000Z');
+    const existing = repos.categories.create({
+      name: 'groceries',
+      direction: 'expense',
+      parentId: null,
+      icon: 'cart',
+      colorIndex: 0,
+      archivedAt: null,
+      sortOrder: 0,
+    });
+    seedDemoData(repos, { today: TODAY, def: CYCLE_DEF, translate: (key) => key });
+    const groceries = repos.categories
+      .list()
+      .filter((row) => row.name === 'groceries' && row.parentId === null);
+    expect(groceries).toHaveLength(1);
+    expect(groceries[0]?.id).toBe(existing.id);
+  });
+
   it('shifts with the cycle, whatever today is', () => {
     for (const today of ['2026-01-05', '2026-09-10', '2027-02-28'] as const) {
       const repos = seed(today);

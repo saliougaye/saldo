@@ -29,6 +29,7 @@ import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
+import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -241,23 +242,38 @@ export default function AccountDetail() {
               {t('transactions.empty')}
             </Text>
           ) : (
-            recent.map((tx) => (
-              <ListRow
-                key={tx.id}
-                title={tx.description.length > 0 ? tx.description : t(`kinds.${tx.kind}`)}
-                subtitle={formatDayMonth(tx.date, locale)}
-                onPress={() =>
-                  router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                }
-                trailing={
-                  <AmountText
-                    minor={tx.kind === 'income' ? tx.amount : -tx.amount}
-                    currency={currency}
-                    locale={locale}
-                  />
-                }
-              />
-            ))
+            recent.map((tx) => {
+              // This screen *is* an account, so a transfer here has a direction: money landing in
+              // it reads "+", money leaving it "−". The date stays the second line, since every
+              // row on this card belongs to the same account.
+              const row = transactionRow(tx, {
+                // This card has no category column: a non-transfer row keeps reading
+                // "description, else kind", exactly as before.
+                category: () => undefined,
+                accountName: (accountId) =>
+                  accounts.find((candidate) => candidate.id === accountId)?.name ?? '',
+                kindLabel: (kind) => t(`kinds.${kind}`),
+                viewpointAccountId: account.id,
+              });
+              return (
+                <ListRow
+                  key={tx.id}
+                  title={row.title}
+                  subtitle={formatDayMonth(tx.date, locale)}
+                  onPress={() =>
+                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                  }
+                  trailing={
+                    <AmountText
+                      minor={row.amount.minor}
+                      currency={currency}
+                      locale={locale}
+                      signDisplay={row.amount.signDisplay}
+                    />
+                  }
+                />
+              );
+            })
           )}
         </View>
       </Card>

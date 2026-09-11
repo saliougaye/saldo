@@ -22,6 +22,31 @@ export const EMPTY_FILTERS: TransactionFilters = {
   onlyExcluded: false,
 };
 
+/** Route params that link into the transaction list, as the router hands them over: strings. */
+export interface FilterParams {
+  accountId?: string | undefined;
+  direction?: string | undefined;
+  onlyExcluded?: string | undefined;
+}
+
+/**
+ * The filters a link into the transaction list asks for (§5.7, and "Ultime transazioni" on an
+ * account).
+ *
+ * Anything unrecognised is dropped rather than guessed: a stale or hand-edited link should open the
+ * whole list, never a silently wrong slice of it that reads like the full picture.
+ */
+export function filtersFromParams(params: FilterParams): TransactionFilters {
+  return {
+    ...EMPTY_FILTERS,
+    ...(params.accountId ? { accountId: params.accountId } : {}),
+    ...(params.direction === 'expense' || params.direction === 'income'
+      ? { direction: params.direction }
+      : {}),
+    onlyExcluded: params.onlyExcluded === '1',
+  };
+}
+
 export interface FilterLookup {
   accountName(accountId: string): string;
   categoryName(categoryId: string): string;
@@ -81,6 +106,8 @@ export function filterTransactions<T extends LedgerTx>(
           tx.description,
           tx.categoryId === null ? '' : lookup.categoryName(tx.categoryId),
           lookup.accountName(tx.accountId),
+          // A transfer is usually remembered by where the money landed, not where it left.
+          tx.toAccountId === null ? '' : lookup.accountName(tx.toAccountId),
         ].join(' '),
       );
       if (!haystack.includes(query)) return false;

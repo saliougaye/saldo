@@ -1,6 +1,5 @@
 import { isUpcoming, previousPeriods, summarizePeriod } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
-import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,13 +11,23 @@ import { CardHeader } from '../../src/components/CardHeader';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import {
+  useAccounts,
+  useBudgets,
+  useCategories,
+  useSettings,
+  useTransactionsInRange,
+} from '../../src/db/hooks';
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
+import {
+  type TransactionRowDeps,
+  transactionRow,
+} from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
@@ -34,6 +43,7 @@ export default function HomeTab() {
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
+  const accounts = useAccounts();
   const budgets = useBudgets();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
@@ -77,14 +87,18 @@ export default function HomeTab() {
     [categories],
   );
 
-  const rowFor = (id: string) => {
-    const category = categoryById.get(id);
-    return {
-      icon: (category?.icon ?? 'tag') as IconName,
-      colour: theme.categoryColor(category?.colorIndex ?? 9),
-      name: category?.name ?? '—',
-    };
-  };
+  // Home is not about one account, so a transfer here carries no sign: it moved nothing Home
+  // measures. The shared presenter is also what stops a transfer rendering as "—" (it has no
+  // category by contract, §4).
+  const rowDeps = useMemo<TransactionRowDeps>(
+    () => ({
+      category: (id) => categoryById.get(id),
+      accountName: (id) => accounts.find((account) => account.id === id)?.name ?? '',
+      kindLabel: (kind) => t(`kinds.${kind}`),
+      viewpointAccountId: null,
+    }),
+    [categoryById, accounts, t],
+  );
 
   return (
     <Screen underTabBar>
@@ -134,22 +148,25 @@ export default function HomeTab() {
             </View>
             <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
               {upcoming.map((tx) => {
-                const meta = rowFor(tx.categoryId ?? '');
+                const row = transactionRow(tx, rowDeps);
                 return (
                   <ListRow
                     key={tx.id}
                     upcoming
-                    title={tx.description.length > 0 ? tx.description : meta.name}
-                    subtitle={meta.name}
-                    leading={<IconBox name={meta.icon} colour={meta.colour} />}
+                    title={row.title}
+                    subtitle={row.subtitle}
+                    leading={
+                      <IconBox name={row.icon} colour={theme.categoryColor(row.colorIndex)} />
+                    }
                     onPress={() =>
                       router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
                     }
                     trailing={
                       <AmountText
-                        minor={tx.kind === 'income' ? tx.amount : -tx.amount}
+                        minor={row.amount.minor}
                         currency={currency}
                         locale={locale}
+                        signDisplay={row.amount.signDisplay}
                         color="textMuted"
                       />
                     }
@@ -181,7 +198,7 @@ export default function HomeTab() {
               </Text>
             ) : (
               recent.map((tx) => {
-                const meta = rowFor(tx.categoryId ?? '');
+                const row = transactionRow(tx, rowDeps);
                 return (
                   // A transaction added elsewhere slides this list down rather than snapping it.
                   <Animated.View
@@ -191,18 +208,21 @@ export default function HomeTab() {
                     exiting={leaving}
                   >
                     <ListRow
-                      title={tx.description.length > 0 ? tx.description : meta.name}
-                      subtitle={meta.name}
-                      leading={<IconBox name={meta.icon} colour={meta.colour} />}
+                      title={row.title}
+                      subtitle={row.subtitle}
+                      leading={
+                        <IconBox name={row.icon} colour={theme.categoryColor(row.colorIndex)} />
+                      }
                       onPress={() =>
                         router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
                       }
                       trailing={
                         <AmountText
-                          minor={tx.kind === 'income' ? tx.amount : -tx.amount}
+                          minor={row.amount.minor}
                           currency={currency}
                           locale={locale}
-                          signDisplay={tx.kind === 'income' ? 'always' : 'negative'}
+                          signDisplay={row.amount.signDisplay}
+                          color={row.amount.muted ? 'textMuted' : undefined}
                         />
                       }
                     />

@@ -1,6 +1,6 @@
 import type { Account, Budget, Category, LocalDate, Settings, Tag, Transaction } from '@saldo/core';
 import { SETTINGS_ID } from '@saldo/core';
-import { and, asc, desc, eq, gte, isNull, lte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from './client';
 import type { LocalAttachment } from './repositories/attachments';
@@ -54,6 +54,30 @@ export function useCategories(): Category[] {
       .orderBy(asc(categories.sortOrder), asc(categories.name)),
   );
   return data.map(toEntity);
+}
+
+/**
+ * How many live transactions point at each category, over the whole history (§5.11).
+ *
+ * Counted in SQL rather than by loading every transaction ever written into JavaScript, and
+ * deliberately unbounded in time: a category used only by a scheduled transaction is in use, and a
+ * list that said "0 entries" next to an archive sheet saying "1 transaction uses this category"
+ * was two answers to one question. Fold the children in with `rollUpCategoryUsage`.
+ */
+export function useCategoryUsage(): Map<string, number> {
+  const { data } = useLiveQuery(
+    db
+      .select({ categoryId: transactions.categoryId, uses: count() })
+      .from(transactions)
+      .where(isNull(transactions.deletedAt))
+      .groupBy(transactions.categoryId),
+  );
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    if (row.categoryId === null) continue;
+    counts.set(row.categoryId, row.uses);
+  }
+  return counts;
 }
 
 /** The live attachments of one transaction, oldest first (§10). */

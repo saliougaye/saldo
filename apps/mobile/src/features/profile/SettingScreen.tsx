@@ -20,6 +20,7 @@ export function SettingScreen({
   title,
   subtitle,
   card = true,
+  trailing,
   children,
 }: {
   title: string;
@@ -27,15 +28,24 @@ export function SettingScreen({
   subtitle?: string;
   /** Off for a setting that is not a list of rows, such as the day grid of the cycle. */
   card?: boolean;
+  /**
+   * Actions on the title's trailing edge — "+" and "Riordina" on Categorie. They sit on the title
+   * row, where the Accounts tab already puts its own, rather than on the back button's line: the
+   * back button is navigation and these are about the list underneath.
+   */
+  trailing?: ReactNode;
   children: ReactNode;
 }) {
   const theme = useTheme();
   return (
     <Screen>
       <BackButton />
-      <Text size="display" weight="semibold" tracking="tighter">
-        {title}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
+          {title}
+        </Text>
+        {trailing}
+      </View>
       {subtitle === undefined ? null : <Text color="textMuted">{subtitle}</Text>}
       {card ? (
         <Card padded={false}>
