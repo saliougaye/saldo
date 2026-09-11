@@ -113,7 +113,23 @@ export default function RootLayout() {
             <DatabaseProvider>
               <SettingsScopedProviders>
                 <Ready>
-                  <Stack screenOptions={{ headerShown: false }} />
+                  <Stack screenOptions={{ headerShown: false }}>
+                    {/*
+                      §6.16 draws the transaction form as a sheet over whatever you were looking
+                      at, and the design is right about why: you are adding a transaction *to* the
+                      list or the cycle you can still see behind it, and a swipe down is a cheaper
+                      "never mind" than finding a back button.
+
+                      A modal route rather than our own `Modal`: the form already opens sheets of
+                      its own — the calendar, the category picker, the attachment source — and
+                      stacking those inside a `Modal` is what broke the image picker before.
+                    */}
+                    <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
+                    <Stack.Screen
+                      name="transaction/edit/[id]"
+                      options={{ presentation: 'modal' }}
+                    />
+                  </Stack>
                 </Ready>
               </SettingsScopedProviders>
             </DatabaseProvider>

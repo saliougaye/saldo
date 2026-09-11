@@ -1,4 +1,4 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import { getCurrency } from '@saldo/core';
 import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
@@ -30,9 +30,9 @@ import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
 import {
   canCreateTag,
-  canSave,
   changeKind,
   dateChoices,
+  missingForSave,
   type TransactionFormValues,
   tagSuggestions,
   topCategories,
@@ -108,8 +108,11 @@ export function TransactionForm({
   );
 
   const liveAccounts = accounts.filter((account) => account.archivedAt === null);
-  const _amount = amountBufferToMinor(values.buffer, minorDigits);
-  const ready = canSave(values, minorDigits);
+  const missing = missingForSave(values, minorDigits);
+  const ready = missing === null;
+  // A form nobody has touched yet is not incomplete, it is empty: saying "enter an amount" before
+  // the first keystroke is nagging, and the disabled button already says the form is not done.
+  const touched = mode === 'edit' || values.buffer.length > 0;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
 
@@ -139,6 +142,13 @@ export function TransactionForm({
     <Screen
       footer={
         <View style={{ gap: 8 }}>
+          {missing === null || !touched ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names
+            // the next thing to fix rather than listing everything that is unfinished.
+            <Text size="footnote" color="textMuted">
+              {t(`txForm.missing_${missing}`)}
+            </Text>
+          )}
           <PrimaryButton
             label={mode === 'new' ? t('txForm.create') : t('txForm.save')}
             disabled={!ready}
@@ -151,7 +161,11 @@ export function TransactionForm({
         </View>
       }
     >
-      <ScreenHeader title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')} />
+      {/* Presented as a sheet (see `app/_layout.tsx`), so it closes rather than goes back. */}
+      <ScreenHeader
+        backIcon="x"
+        title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')}
+      />
 
       <Segmented
         accessibilityLabel={t('txForm.amount')}
@@ -221,9 +235,14 @@ export function TransactionForm({
 
       {values.kind === 'transfer' ? null : (
         <Card>
-          <Text size="footnote" color="textMuted">
-            {t('txForm.category')}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+              {t('txForm.category')}
+            </Text>
+            <Text size="caption" color="textFaint">
+              {t('txForm.categoryMostUsed')}
+            </Text>
+          </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
             {tiles.map((category) => {
               const selected = category.id === values.categoryId;

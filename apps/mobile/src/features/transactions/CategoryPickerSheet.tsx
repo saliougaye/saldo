@@ -49,7 +49,7 @@ export function CategoryPickerSheet({
   const rows = useMemo(() => ordered(categories, kind), [categories, kind]);
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('txForm.category')} tall>
+    <Sheet visible={visible} onClose={onClose} title={t('txForm.allCategories')} tall>
       <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
         <View>
           {rows.map((category) => (

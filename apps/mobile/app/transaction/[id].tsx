@@ -9,13 +9,13 @@ import { Chip } from '../../src/components/Chip';
 import { IconBox } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { useRepositories } from '../../src/db/DatabaseProvider';
 import {
   useAccounts,
   useAttachments,
   useCategories,
   useSettings,
   useTags,
+  useTransaction,
 } from '../../src/db/hooks';
 import { AttachmentTile } from '../../src/features/transactions/AttachmentTile';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -37,14 +37,13 @@ export default function TransactionDetail() {
   const { t } = useTranslation();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const repos = useRepositories();
   const settings = useSettings();
   const categories = useCategories();
   const accounts = useAccounts();
   const tags = useTags();
   const attachments = useAttachments(id ?? '');
 
-  const transaction = id === undefined ? null : repos.transactions.byId(id);
+  const transaction = useTransaction(id ?? '');
   if (transaction === null) {
     return (
       <Screen>

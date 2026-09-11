@@ -11,6 +11,7 @@ import {
   captureFromLibrary,
 } from '../../attachments/capture';
 import { AttachmentTooLargeError } from '../../attachments/localFiles';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ListRow } from '../../components/ListRow';
 import { Sheet } from '../../components/Sheet';
 import { useRepositories } from '../../db/DatabaseProvider';
@@ -34,6 +35,7 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
   const repos = useRepositories();
   const rows = useAttachments(transactionId);
   const [sourceOpen, setSourceOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Held until the sheet has actually gone: a native picker opened while it is still dismissing
   // never appears (see `Sheet.onDismissed`).
@@ -90,7 +92,7 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
               width={TILE}
               height={TILE}
               onPress={() => router.push({ pathname: '/attachment/[id]', params: { id: row.id } })}
-              onLongPress={() => removeAttachment(repos, row.id)}
+              onLongPress={() => setPendingDelete(row.id)}
             />
           ))}
 
@@ -122,6 +124,19 @@ export function AttachmentStrip({ transactionId }: { transactionId: string }) {
           {error}
         </Text>
       )}
+
+      <ConfirmDialog
+        visible={pendingDelete !== null}
+        title={t('attachments.deleteTitle')}
+        body={t('attachments.deleteBody')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          if (pendingDelete !== null) removeAttachment(repos, pendingDelete);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
 
       <Sheet
         visible={sourceOpen}

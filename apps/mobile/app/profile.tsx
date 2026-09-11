@@ -161,7 +161,7 @@ export default function ProfileScreen() {
           <ListRow
             title={t('profile.restoreBackup')}
             leading={lead('inbox')}
-            onPress={() => router.push('/profile/export')}
+            onPress={() => router.push('/profile/restore')}
             chevron
           />
           <ListRow
