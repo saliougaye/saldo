@@ -8,6 +8,7 @@ export * from './entities';
 export * from './filters';
 export * from './history';
 export * from './ids';
+export * from './io';
 export * from './ledger';
 export * from './money';
 export * from './period';

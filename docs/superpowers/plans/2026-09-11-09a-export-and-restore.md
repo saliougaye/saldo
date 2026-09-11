@@ -40,7 +40,7 @@ there is no ZIP yet. The envelope has the field from the start, so 09b adds file
 **Files:**
 - Create: `packages/core/src/io/backup.ts`, `packages/core/src/io/backup.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -133,12 +133,12 @@ describe('readBackup', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @saldo/core exec vitest run src/io/backup.test.ts`
 Expected: FAIL, cannot resolve `./backup`.
 
-- [ ] **Step 3: Write `backup.ts`**
+- [x] **Step 3: Write `backup.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -250,12 +250,12 @@ function singular(collection: string): string {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `pnpm --filter @saldo/core exec vitest run src/io/backup.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/io
@@ -269,7 +269,7 @@ git commit -m "feat(core): backup envelope with per-row validation"
 **Files:**
 - Create: `packages/core/src/io/csv.ts`, `packages/core/src/io/csv.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Cover, at minimum:
 - the header row of §11.2, in order;
@@ -302,9 +302,9 @@ describe('toCsv', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail.**
+- [x] **Step 2: Run it and watch it fail.**
 
-- [ ] **Step 3: Write `csv.ts`**
+- [x] **Step 3: Write `csv.ts`**
 
 ```ts
 import type { Account, Category, Tag, Transaction } from '../entities';
@@ -386,7 +386,7 @@ export function csvRows(
 If `formatMinorUnits` (plain `12345` → `123.45`, no grouping, no symbol) does not exist in `money.ts`, add it there
 with its own test rather than formatting inline: money formatting belongs in one place.
 
-- [ ] **Step 4: Run the tests, then export the module.**
+- [x] **Step 4: Run the tests, then export the module.**
 
 `packages/core/src/io/index.ts`:
 ```ts
@@ -395,7 +395,7 @@ export * from './csv';
 ```
 and add `export * from './io';` to `packages/core/src/index.ts`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src
@@ -410,13 +410,13 @@ git commit -m "feat(core): CSV export of transactions"
 - Create: `apps/mobile/src/io/exportService.ts`
 - Modify: `apps/mobile/package.json` (`expo-sharing`, `expo-file-system`, `expo-document-picker`)
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```bash
 pnpm --filter mobile exec npx expo install expo-sharing expo-file-system expo-document-picker
 ```
 
-- [ ] **Step 2: Write the service**
+- [x] **Step 2: Write the service**
 
 It exposes two functions, both taking the repositories and returning the path they wrote:
 
@@ -435,7 +435,7 @@ export async function exportCsv(
 - Rows come from the repositories' `list()`, which already excludes tombstones.
 - Sharing is the caller's job (the screen), so the service stays testable.
 
-- [ ] **Step 3: Commit.**
+- [x] **Step 3: Commit.**
 
 ---
 
@@ -444,7 +444,7 @@ export async function exportCsv(
 **Files:**
 - Create: `apps/mobile/src/io/restoreService.ts`
 
-- [ ] **Step 1: Write `applyRestore`**
+- [x] **Step 1: Write `applyRestore`**
 
 ```ts
 export function applyRestore(
@@ -461,13 +461,13 @@ export function applyRestore(
 - Settings are updated, not inserted: the row id is fixed (`'settings'`).
 - Order matters for foreign keys: accounts → categories → tags → recurrences → transactions → budgets.
 
-- [ ] **Step 2: Test it against better-sqlite3**
+- [x] **Step 2: Test it against better-sqlite3**
 
 `apps/mobile/src/io/restoreService.test.ts`, in the `db` jest project: seed two accounts and a transaction, build a
 backup of a *different* shape, restore it, and assert the old rows are tombstones and the new ones are present with
 `syncState = PENDING`.
 
-- [ ] **Step 3: Commit.**
+- [x] **Step 3: Commit.**
 
 ---
 
@@ -477,28 +477,28 @@ backup of a *different* shape, restore it, and assert the old rows are tombstone
 - Create: `apps/mobile/app/profile/export.tsx`
 - Modify: `apps/mobile/app/profile.tsx`
 
-- [ ] **Step 1: Export screen** — a Card with three rows: "Backup completo (JSON)", "Transazioni del periodo (CSV)",
+- [x] **Step 1: Export screen** — a Card with three rows: "Backup completo (JSON)", "Transazioni del periodo (CSV)",
 "Tutte le transazioni (CSV)". Each writes its file, then `Sharing.shareAsync(path)`. Errors show in a `Text` with
 `color="accent"`, successes in a toast.
 
-- [ ] **Step 2: Restore** — a row on the same screen: `DocumentPicker.getDocumentAsync({ type: 'application/json' })`
+- [x] **Step 2: Restore** — a row on the same screen: `DocumentPicker.getDocumentAsync({ type: 'application/json' })`
 → read → `readBackup` → on failure show the reason and, for `invalid`, "N righe non valide" → on success a
 `ConfirmDialog` whose body says it replaces everything on this phone → `applyRestore` → toast with the count →
 `router.replace('/')`.
 
-- [ ] **Step 3: Wire the profile rows** — "Esporta dati" and "Ripristina backup" navigate to `/profile/export`
+- [x] **Step 3: Wire the profile rows** — "Esporta dati" and "Ripristina backup" navigate to `/profile/export`
 instead of showing the "soon" badge. "Importa CSV" keeps its badge: that is 09c.
 
-- [ ] **Step 4: Strings** in both locales.
+- [x] **Step 4: Strings** in both locales.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ---
 
 ### Task 6: Verification
 
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` — read the output, not the exit code.
-- [ ] Round-trip test (the roadmap's acceptance): export a backup from a seeded database, wipe it, restore, and
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` — read the output, not the exit code.
+- [x] Round-trip test (the roadmap's acceptance): export a backup from a seeded database, wipe it, restore, and
   assert every entity matches what was exported.
-- [ ] On the simulator: export a CSV and check the file opens with the columns of §11.2.
-- [ ] Update the roadmap: 09a done.
+- [x] On the simulator: export a CSV and check the file opens with the columns of §11.2.
+- [x] Update the roadmap: 09a done.

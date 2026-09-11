@@ -137,8 +137,11 @@ export default function ProfileScreen() {
             }
           />
           <ListRow title={t('profile.importCsv')} trailing={soon} />
-          <ListRow title={t('profile.exportData')} trailing={soon} />
-          <ListRow title={t('profile.restoreBackup')} trailing={soon} />
+          <ListRow title={t('profile.exportData')} onPress={() => router.push('/profile/export')} />
+          <ListRow
+            title={t('profile.restoreBackup')}
+            onPress={() => router.push('/profile/export')}
+          />
           <ListRow
             title={t('profile.appLock')}
             trailing={
