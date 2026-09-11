@@ -1,11 +1,4 @@
-import {
-  averageSeries,
-  dailyCumulative,
-  isUpcoming,
-  periodHistory,
-  previousPeriods,
-  summarizePeriod,
-} from '@saldo/core';
+import { isUpcoming, previousPeriods, summarizePeriod } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
@@ -15,6 +8,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
+import { CardHeader } from '../../src/components/CardHeader';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
@@ -22,7 +16,6 @@ import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
-import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -31,8 +24,8 @@ import { appearing, entering, leaving, reflowing } from '../../src/theme/motion'
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** How many previous cycles the "usual" line averages (§5.6). */
-const USUAL_CYCLES = 3;
+/** §6.1: the card is a heads-up; the rest is one tap away in the transactions list. */
+const UPCOMING_SHOWN = 5;
 
 export default function HomeTab() {
   const theme = useTheme();
@@ -53,22 +46,14 @@ export default function HomeTab() {
     () => summarizePeriod(rows, period.range, today),
     [rows, period.range, today],
   );
-  const current = useMemo(
-    () => dailyCumulative(rows, period.range, today),
-    [rows, period.range, today],
-  );
-  const usual = useMemo(() => {
-    const history = periodHistory(rows, def, period.range, USUAL_CYCLES);
-    return averageSeries(
-      history.map((entry) => dailyCumulative(entry.txs, entry.period, today)),
-      Math.max(1, current.length),
-    );
-  }, [rows, period.range, def, today, current.length]);
-
-  const upcoming = useMemo(
+  // Capped like the recent list: this card says "something is coming", and past five rows it
+  // stops saying that and starts being the transactions list. The header still counts them all,
+  // so the cap never hides how many there are.
+  const upcomingAll = useMemo(
     () => rows.filter((tx) => isUpcoming(tx, today) && tx.date <= period.range.end),
     [rows, today, period.range.end],
   );
+  const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
   const recent = useMemo(
     () => rows.filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start).slice(0, 5),
     [rows, today, period.range.start],
@@ -137,45 +122,15 @@ export default function HomeTab() {
         </Card>
       </Animated.View>
 
-      <Animated.View entering={entering(1)}>
-        <HomeBudgetCard views={views} />
-      </Animated.View>
-
-      <Animated.View entering={entering(2)}>
-        <Card>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-            }}
-          >
-            <Text weight="medium" tracking="tight">
-              {t('home.cycleTrend')}
-            </Text>
-            <AmountText
-              minor={current[current.length - 1] ?? 0}
-              currency={currency}
-              locale={locale}
-              weight="medium"
-            />
-          </View>
-          <View style={{ marginTop: 12 }}>
-            <CycleTrendChart current={current} usual={usual} />
-          </View>
-          <Text size="caption" color="textFaint" style={{ marginTop: 8 }}>
-            {t('home.trendFooter', { elapsed: period.elapsed, length: period.length })}
-          </Text>
-        </Card>
-      </Animated.View>
-
-      {upcoming.length === 0 ? null : (
-        <Animated.View entering={entering(3)}>
+      {upcomingAll.length === 0 ? null : (
+        <Animated.View entering={entering(1)}>
           <Card padded={false}>
             <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-              <Text weight="medium" tracking="tight">
-                {t('home.upcoming')}
-              </Text>
+              <CardHeader
+                title={t('home.upcoming')}
+                status={t('home.upcomingCount', { count: upcomingAll.length })}
+                onPress={() => router.push('/(tabs)/transactions')}
+              />
             </View>
             <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
               {upcoming.map((tx) => {
@@ -206,12 +161,18 @@ export default function HomeTab() {
         </Animated.View>
       )}
 
-      <Animated.View entering={entering(4)}>
+      <Animated.View entering={entering(2)}>
+        <HomeBudgetCard views={views} />
+      </Animated.View>
+
+      <Animated.View entering={entering(3)}>
         <Card padded={false}>
           <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-            <Text weight="medium" tracking="tight">
-              {t('home.recent')}
-            </Text>
+            <CardHeader
+              title={t('home.recent')}
+              status={t('home.allTransactions')}
+              onPress={() => router.push('/(tabs)/transactions')}
+            />
           </View>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
             {recent.length === 0 ? (

@@ -2,8 +2,9 @@ import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { Card } from '../../components/Card';
+import { CardHeader } from '../../components/CardHeader';
 import { IconBox } from '../../components/ListRow';
 import { ProgressBar } from '../../components/ProgressBar';
 import { useCategories, useSettings } from '../../db/hooks';
@@ -31,16 +32,14 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
 
   return (
     <Card>
-      <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}
-      >
-        <Text weight="medium" tracking="tight">
-          {t('home.budget')}
-        </Text>
-        <Text size="footnote" color={overPace > 0 ? 'accent' : 'textMuted'}>
-          {overPace > 0 ? t('budgets.overPace', { count: overPace }) : t('budgets.withinLimits')}
-        </Text>
-      </View>
+      <CardHeader
+        title={t('home.budget')}
+        status={
+          overPace > 0 ? t('budgets.overPace', { count: overPace }) : t('budgets.withinLimits')
+        }
+        statusTone={overPace > 0 ? 'accent' : 'muted'}
+        onPress={() => router.push('/budgets')}
+      />
 
       <View style={{ gap: 12, marginTop: 12 }}>
         {top.map((view) => {
@@ -67,16 +66,6 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
           );
         })}
       </View>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/budgets')}
-        style={{ marginTop: 12 }}
-      >
-        <Text size="footnote" color="accent">
-          {t('home.allBudgets')}
-        </Text>
-      </Pressable>
     </Card>
   );
 }

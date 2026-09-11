@@ -202,6 +202,8 @@ export const it = {
     demoLoaded: 'Dati demo caricati',
   },
   stats: {
+    cycleTrend: 'Andamento del ciclo',
+    trendFooter: 'Giorno {{elapsed}} di {{length}} · media dei 3 cicli precedenti in grigio',
     title: 'Statistiche',
     cashflow: 'Flussi',
     committed: 'Quota impegnata',
@@ -411,6 +413,8 @@ export const it = {
   accounts: {
     title: 'Conti',
     spendable: 'Totale spendibile',
+    spendableNote:
+      'Solo i conti che hai marcato come disponibili: risparmi e investimenti restano fuori.',
     savings: 'Risparmi e investimenti',
     netWorth: 'Patrimonio complessivo',
     archived: 'Conti archiviati',
@@ -530,9 +534,9 @@ export const it = {
     income: 'Entrate',
     expenses: 'Uscite',
     budget: 'Budget',
-    allBudgets: 'Tutti i budget',
-    cycleTrend: 'Andamento del ciclo',
     upcoming: 'In arrivo',
+    upcomingCount_one: '{{count}} voce',
+    upcomingCount_other: '{{count}} voci',
     recent: 'Ultime transazioni',
     allTransactions: 'Tutte le transazioni',
     dayOf: 'giorno {{elapsed}} di {{length}}',
@@ -542,7 +546,6 @@ export const it = {
     withinLimits: 'nei limiti',
     vsUsualAbove: '+{{amount}} rispetto al solito',
     vsUsualBelow: '−{{amount}} rispetto al solito',
-    trendFooter: 'Giorno {{elapsed}} di {{length}} · media dei 3 cicli precedenti in grigio',
   },
 };
 

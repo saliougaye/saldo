@@ -202,6 +202,8 @@ export const en: Messages = {
     demoLoaded: 'Demo data loaded',
   },
   stats: {
+    cycleTrend: 'Cycle trend',
+    trendFooter: 'Day {{elapsed}} of {{length}} · average of the previous 3 cycles in grey',
     title: 'Statistics',
     cashflow: 'Cashflow',
     committed: 'Committed share',
@@ -409,6 +411,7 @@ export const en: Messages = {
   accounts: {
     title: 'Accounts',
     spendable: 'Spendable total',
+    spendableNote: 'Only the accounts you marked as available: savings and investments stay out.',
     savings: 'Savings and investments',
     netWorth: 'Net worth',
     archived: 'Archived accounts',
@@ -528,9 +531,9 @@ export const en: Messages = {
     income: 'Income',
     expenses: 'Expenses',
     budget: 'Budget',
-    allBudgets: 'All budgets',
-    cycleTrend: 'Cycle trend',
     upcoming: 'Upcoming',
+    upcomingCount_one: '{{count}} entry',
+    upcomingCount_other: '{{count}} entries',
     recent: 'Recent transactions',
     allTransactions: 'All transactions',
     dayOf: 'day {{elapsed}} of {{length}}',
@@ -540,6 +543,5 @@ export const en: Messages = {
     withinLimits: 'within limits',
     vsUsualAbove: '+{{amount}} vs usual',
     vsUsualBelow: '−{{amount}} vs usual',
-    trendFooter: 'Day {{elapsed}} of {{length}} · average of the previous 3 cycles in grey',
   },
 };

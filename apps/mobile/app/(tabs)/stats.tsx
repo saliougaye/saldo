@@ -1,6 +1,8 @@
 import {
+  averageSeries,
   categorySpendHistory,
   committedSpend,
+  dailyCumulative,
   deltaPercent,
   isWithin,
   median,
@@ -28,6 +30,7 @@ import { Screen } from '../../src/components/Screen';
 import { Segmented } from '../../src/components/Segmented';
 import { useDelayed } from '../../src/components/useDelayed';
 import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { CashflowChart } from '../../src/features/stats/CashflowChart';
@@ -40,6 +43,8 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 
 /** §5.7 shows six cycles including the current one. */
 const CASHFLOW_CYCLES = 6;
+/** "Il solito" on the cycle-trend chart is the average of this many previous cycles (§5.6). */
+const USUAL_CYCLES = 3;
 /** The projection is only offered with at least this many days left (§5.7). */
 const MIN_DAYS_LEFT = 3;
 
@@ -65,6 +70,19 @@ export default function StatsTab() {
     () => summarizePeriod(rows, period.range, today),
     [rows, period.range, today],
   );
+  // §5.6 moved here from Home: it is the one card that is read rather than glanced at, and it
+  // belongs next to the six cycles it is a close-up of.
+  const current = useMemo(
+    () => dailyCumulative(rows, period.range, today),
+    [rows, period.range, today],
+  );
+  const usual = useMemo(() => {
+    const history = periodHistory(rows, def, period.range, USUAL_CYCLES);
+    return averageSeries(
+      history.map((entry) => dailyCumulative(entry.txs, entry.period, today)),
+      Math.max(1, current.length),
+    );
+  }, [rows, period.range, def, today, current.length]);
 
   const bars = useMemo(() => {
     const cycles = [period.range];
@@ -191,6 +209,34 @@ export default function StatsTab() {
 
       <Animated.View entering={entering(1)}>
         <Card>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'baseline',
+            }}
+          >
+            <Text weight="medium" tracking="tight">
+              {t('stats.cycleTrend')}
+            </Text>
+            <AmountText
+              minor={current[current.length - 1] ?? 0}
+              currency={currency}
+              locale={locale}
+              weight="medium"
+            />
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <CycleTrendChart current={current} usual={usual} />
+          </View>
+          <Text size="caption" color="textFaint" style={{ marginTop: 8 }}>
+            {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
+          </Text>
+        </Card>
+      </Animated.View>
+
+      <Animated.View entering={entering(2)}>
+        <Card>
           <Text weight="medium" tracking="tight">
             {t('stats.committed')}
           </Text>
@@ -212,7 +258,7 @@ export default function StatsTab() {
       </Animated.View>
 
       {showProjection ? (
-        <Animated.View entering={entering(2)}>
+        <Animated.View entering={entering(3)}>
           <Card>
             <Text weight="medium" tracking="tight">
               {t('stats.projection')}

@@ -76,16 +76,40 @@ export default function AccountsTab() {
 
       <Card>
         <Text size="footnote" color="textMuted">
-          {t('accounts.spendable')}
+          {t('accounts.netWorth')}
         </Text>
         <AnimatedAmount
-          minor={spendableTotal(accounts, balances)}
+          minor={netWorth(accounts, balances)}
           currency={currency}
           locale={locale}
           size="hero"
           weight="semibold"
           tracking="tightest"
         />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            gap: 8,
+            marginTop: 14,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: theme.palette.border,
+          }}
+        >
+          <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+            {t('accounts.spendable')}
+          </Text>
+          <AmountText
+            minor={spendableTotal(accounts, balances)}
+            currency={currency}
+            locale={locale}
+            weight="medium"
+          />
+        </View>
+        <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+          {t('accounts.spendableNote')}
+        </Text>
       </Card>
 
       {spendable.length + others.length === 0 ? null : (
@@ -106,20 +130,6 @@ export default function AccountsTab() {
           </Card>
         </>
       )}
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('accounts.netWorth')}
-        </Text>
-        <AmountText
-          minor={netWorth(accounts, balances)}
-          currency={currency}
-          locale={locale}
-          size="amountMd"
-          weight="semibold"
-          tracking="tighter"
-        />
-      </Card>
 
       {archived.length === 0 ? null : (
         // One door, not two: the accordion used to open here and the Profile row opened a screen,

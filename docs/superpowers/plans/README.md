@@ -432,6 +432,13 @@ small enough to land on its own branch without a plan file of its own.
   decisions: Reanimated 4, a token scale, four presets in `src/theme/motion.ts`, counting numbers,
   lists that close up when filtered, staggered Home cards, and skeletons behind a 180ms grace.
   Reduce Motion is honoured by construction and nothing is said by motion alone.
+- **The categories list needs a better shape.** Asked for on 2026-09-11. Today every row weighs the
+  same — a category with 200 transactions and one with none differ only by a small "N usi" — the
+  parent/child tree is carried by a 32px indent alone, and a row leads only to *edit*, never to the
+  category detail that already exists and shows what was spent. Three directions to choose between:
+  a grid of coloured tiles (loses counts and hierarchy), a list with a relative-usage bar inside the
+  row (ranks visually, adds nothing new), or parents as collapsible sections holding their children.
+  Decide before building; it belongs with the form-architecture investigation.
 - **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
   work does is decide which one was meant (probably both):
   - `TransactionFilters.accountId` exists in `@saldo/core` and `filterTransactions` honours it, but
