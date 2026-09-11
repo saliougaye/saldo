@@ -389,6 +389,16 @@ a revoked user's bearer stops working and their rows stop syncing; the whole flo
 **Acceptance:** a person following only the docs on a clean machine produces an installed APK and an iOS build connected to a
 self-hosted server.
 
+### Form architecture — how the app asks for things 🔜 queued
+
+Asked for by the user on 2026-09-11, written up in `2026-09-11-form-architecture.md`. Every
+create/edit screen is a flat column of cards with a pinned button, and what does not fit is
+invisible: no scroll cue, and a footer that looks like the end of the form. The investigation
+decides, per form (transaction, budget, account, category, tag), whether it stays flat, becomes
+multi-step, becomes a list of rows opening their own pickers, or simply carries fewer fields — and
+it holds the transaction form apart on purpose, because there the cost that matters is taps per
+entry, not fields per screen.
+
 ### UI scoping — motion, the transaction form, date entry 🔜 queued
 
 Asked for by the user on 2026-09-11. Three **investigations**, not implementations: each ends in a
