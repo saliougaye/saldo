@@ -17,18 +17,29 @@ devices when it can. Build it yourself, sideload it, own your data.
 | `packages/i18n` | Italian and English catalogs, formatters |
 | `docs/` | Design reference, spec, implementation plans |
 
-## Running it locally
+## Development
 
-**Node 22**, not newer: `better-sqlite3` ships a native module built for that ABI, and the mobile
-test suite will not load under Node 24 or 26. `.nvmrc` says so — `fnm use` or `nvm use` picks it up.
-You also need pnpm 10, Docker, and Xcode (or Android Studio) for the app itself.
+Everything below assumes the repository root as the working directory.
+
+### Requirements
+
+| | |
+| --- | --- |
+| Node 22 | Pinned in `.nvmrc` |
+| pnpm 10 | `corepack enable` if you do not have it |
+| Docker | For Postgres and the S3 emulator |
+| Xcode 16+ / Android Studio | Only to run the app on a simulator or a device |
+
+**Node 22, not newer.** `better-sqlite3` ships a native module built for that ABI, so under Node 24
+or 26 the mobile test suite fails to load it — with an error about `NODE_MODULE_VERSION` that says
+nothing about your change. `fnm use` or `nvm use` reads the pin.
 
 ```bash
 fnm use && node --version   # v22.x
 pnpm install
 ```
 
-### 1. What the server talks to
+### Step 1 — what the server talks to
 
 ```bash
 docker compose -f apps/web/docker/docker-compose.dev.yml up -d
@@ -39,7 +50,7 @@ Postgres on **5433** — 5432 is usually already taken by some other project —
 created for you. The server is deliberately *not* in there: it runs from source so a change
 reloads without a rebuild.
 
-### 2. The server
+### Step 2 — the server
 
 ```bash
 cp apps/web/.env.example apps/web/.env
@@ -57,7 +68,7 @@ stay on the phone. To store them on the server, uncomment either the `fs` line o
 > ceremony then fails with an opaque WebAuthn error because `PUBLIC_URL` names the wrong origin.
 > Free the port, or set `PUBLIC_URL` to the one it picked.
 
-### 3. The app
+### Step 3 — the app
 
 The server address is baked into the build, so it goes on the command line rather than in a file:
 
@@ -79,15 +90,33 @@ On first run the app offers "Create account": `REGISTRATION=first-user` lets exa
 The passkey ceremony needs a platform authenticator — on the simulator, enrol Face ID first
 (Features → Face ID → Enrolled).
 
+### Step 4 — stop
+
+```bash
+docker compose -f apps/web/docker/docker-compose.dev.yml down     # add -v to drop the data
+```
+
 ### Checks
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
+pnpm lint        # Biome. Read the output: it can exit 0 while reporting errors
+pnpm typecheck   # tsc --noEmit in every package
+pnpm test        # vitest and jest, per package
 ```
 
-Contributors and coding agents: start with [AGENTS.md](AGENTS.md).
+Targeted runs: `pnpm --filter @saldo/core test`, `pnpm --filter mobile exec jest src/io`,
+`pnpm --filter web exec vitest run src/server/sync`.
+
+The S3 driver has an integration test that runs against Floci when step 1 is up, and skips itself
+when it is not — so `pnpm test` is honest either way, and that driver is only really exercised with
+the stack running.
+
+### Layout of a change
+
+Business rules go in `packages/core` as pure functions with tests; screens and route handlers load
+data, call core, and render. Strings go through `packages/i18n` in both locales, colours and radii
+through `packages/ui`. Contributors and coding agents: start with [AGENTS.md](AGENTS.md), which is
+the full set.
 
 ## Self-hosting
 
