@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo usa la fotocamera per fotografare uno scontrino e allegarlo a una transazione.",
+  "NSPhotoLibraryUsageDescription": "Saldo accede alle tue foto per allegare uno scontrino che hai già fotografato.",
+  "NSFaceIDUsageDescription": "Sblocca Saldo con Face ID."
+}

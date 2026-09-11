@@ -77,9 +77,10 @@ cd apps/mobile
 SALDO_SERVER_URL=http://localhost:3000 npx expo run:ios      # or run:android
 ```
 
-Afterwards `npx expo start` is enough for JavaScript changes. Two things need the full rebuild
-above: a **new native module**, and a **new migration** — for which you also delete the simulator's
-database, because Metro caches the inlined SQL:
+Afterwards `npx expo start` is enough for JavaScript changes. Three things need the full rebuild
+above: a **new native module**, a change to **`app.config.ts`** (permissions, scheme, bundle id —
+they live in `Info.plist`, not in the bundle), and a **new migration** — for which you also delete
+the simulator's database, because Metro caches the inlined SQL:
 
 ```bash
 xcrun simctl get_app_container booted io.github.saldo.app data

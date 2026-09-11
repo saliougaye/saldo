@@ -24,12 +24,32 @@ const config: ExpoConfig = {
     // SDK 57 is edge-to-edge by default, so there is no flag to set here.
     package: bundleId,
   },
+  /**
+   * iOS shows these when it asks, so they are localised like any other user-visible string: the
+   * `infoPlist` values below are the fallback, and these files override them per language.
+   */
+  locales: {
+    en: './locales/en.json',
+    it: './locales/it.json',
+  },
   plugins: [
     'expo-router',
     'expo-font',
     'expo-sqlite',
     'expo-splash-screen',
     'expo-local-authentication',
+    [
+      'expo-image-picker',
+      {
+        photosPermission:
+          'Saldo needs your photos so you can attach a receipt you have already taken.',
+        cameraPermission:
+          'Saldo uses the camera to photograph a receipt and attach it to a transaction.',
+        // Saldo records no audio. `false` also blocks RECORD_AUDIO on Android, which the plugin
+        // would otherwise add for video capture we never use.
+        microphonePermission: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
