@@ -1,12 +1,13 @@
 import { type Category, minorToAmountBuffer } from '@saldo/core';
-import { categoryColors, categoryIconGroups, ICON_NAMES, type IconName } from '@saldo/ui';
-import { useMemo, useState } from 'react';
+import { categoryIconGroups, type IconName } from '@saldo/ui';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
+import { AppearanceSheet } from '../../components/AppearanceSheet';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { IconBox } from '../../components/ListRow';
+import { IconBox, ListRow } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
@@ -17,6 +18,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { ParentPickerSheet } from './ParentPickerSheet';
 
 export interface CategoryFormValues {
   name: string;
@@ -67,7 +69,7 @@ export interface CategoryFormProps {
   onArchive?: () => void;
 }
 
-/** §6.19. */
+/** §6.19. Same shape for new and edit: only `autoFocus` and the archive button differ. */
 export function CategoryForm({
   values,
   onChange,
@@ -82,8 +84,10 @@ export function CategoryForm({
   const settings = useSettings();
   const categories = useCategories();
   const currency = settings?.currency ?? 'EUR';
-  const [iconQuery, setIconQuery] = useState('');
   const set = (patch: Partial<CategoryFormValues>) => onChange({ ...values, ...patch });
+
+  const [sheet, setSheet] = useState<'none' | 'appearance' | 'parent'>('none');
+  const close = () => setSheet('none');
 
   // A child cannot have children (§4), so the parent picker disappears once one exists.
   const hasChildren = categories.some((category) => category.parentId === editingCategoryId);
@@ -94,12 +98,11 @@ export function CategoryForm({
       category.archivedAt === null &&
       category.id !== editingCategoryId,
   );
-
-  const searchResults = useMemo(() => {
-    const query = iconQuery.trim().toLowerCase();
-    if (query.length === 0) return null;
-    return ICON_NAMES.filter((name) => name.toLowerCase().includes(query));
-  }, [iconQuery]);
+  const parentName =
+    values.parentId === null
+      ? t('categories.noParent')
+      : (parents.find((category) => category.id === values.parentId)?.name ??
+        t('categories.noParent'));
 
   const colour = theme.categoryColor(values.colorIndex);
   const ready = values.name.trim().length > 0;
@@ -119,13 +122,36 @@ export function CategoryForm({
         title={mode === 'new' ? t('categories.newCategory') : t('categories.editCategory')}
       />
 
+      {/*
+        The preview is the control. It already drew the result — the icon in its colour next to the
+        name — so it is the obvious thing to tap for it, and tapping it is what keeps the whole icon
+        library (six groups plus a search field, the tallest block in the app) off a form that also
+        has to hold a colour, a parent and a budget. Those three used to sit under it, unseen.
+      */}
       <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.appearance')}
+          onPress={() => setSheet('appearance')}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            minHeight: theme.layout.minHitTarget,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
           <IconBox name={values.icon} colour={colour} />
-          <Text weight="medium" style={{ flex: 1 }} numberOfLines={1}>
-            {values.name.length > 0 ? values.name : t('categories.name')}
-          </Text>
-        </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text weight="medium" numberOfLines={1}>
+              {values.name.length > 0 ? values.name : t('categories.name')}
+            </Text>
+            <Text size="footnote" color="textMuted">
+              {t('common.appearance')}
+            </Text>
+          </View>
+          <Icon name="chevR" size={16} color={theme.palette.textFaint} />
+        </Pressable>
       </Card>
 
       <Card>
@@ -150,93 +176,15 @@ export function CategoryForm({
         </View>
       </Card>
 
-      <Card>
-        <TextField
-          label={t('categories.iconSearch')}
-          value={iconQuery}
-          onChangeText={setIconQuery}
-        />
-        {searchResults === null ? (
-          <View style={{ gap: 12, marginTop: 12 }}>
-            {categoryIconGroups.map((group) => (
-              <View key={group.key} style={{ gap: 6 }}>
-                <Text size="caption" color="textFaint">
-                  {t(`iconGroups.${group.key}`)}
-                </Text>
-                <IconGrid
-                  names={group.icons}
-                  selected={values.icon}
-                  colour={colour}
-                  onSelect={(icon) => set({ icon })}
-                />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={{ marginTop: 12 }}>
-            <IconGrid
-              names={searchResults}
-              selected={values.icon}
-              colour={colour}
-              onSelect={(icon) => set({ icon })}
-            />
-          </View>
-        )}
-      </Card>
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('categories.colour')}
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {categoryColors.map((swatch, index) => (
-            <Pressable
-              key={swatch}
-              accessibilityRole="button"
-              accessibilityState={{ selected: index === values.colorIndex }}
-              accessibilityLabel={swatch}
-              onPress={() => set({ colorIndex: index })}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: swatch,
-                borderWidth: index === values.colorIndex ? 2 : 0,
-                borderColor: theme.palette.text,
-              }}
-            />
-          ))}
-        </View>
-      </Card>
-
       {hasChildren ? null : (
-        <Card>
-          <Text size="footnote" color="textMuted">
-            {t('categories.parent')}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {[{ id: null, name: t('categories.noParent') }, ...parents].map((option) => {
-              const selected = option.id === values.parentId;
-              return (
-                <Pressable
-                  key={option.id ?? 'none'}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  onPress={() => set({ parentId: option.id })}
-                  style={{
-                    paddingHorizontal: 10,
-                    height: 30,
-                    justifyContent: 'center',
-                    borderRadius: theme.radii.chipSmall,
-                    backgroundColor: selected ? theme.palette.accent : theme.palette.raised,
-                  }}
-                >
-                  <Text size="footnote" color={selected ? 'onAccent' : 'text'}>
-                    {option.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
+        <Card padded={false}>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+            <ListRow
+              title={t('categories.parent')}
+              subtitle={parentName}
+              onPress={() => setSheet('parent')}
+              chevron
+            />
           </View>
         </Card>
       )}
@@ -266,46 +214,24 @@ export function CategoryForm({
           ) : null}
         </Card>
       )}
-    </Screen>
-  );
-}
 
-function IconGrid({
-  names,
-  selected,
-  colour,
-  onSelect,
-}: {
-  names: readonly IconName[];
-  selected: IconName;
-  colour: string;
-  onSelect: (name: IconName) => void;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      {names.map((name) => {
-        const isSelected = name === selected;
-        return (
-          <Pressable
-            key={name}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={name}
-            onPress={() => onSelect(name)}
-            style={{
-              width: 36,
-              height: 36,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: theme.radii.iconBox,
-              backgroundColor: isSelected ? theme.tint(colour, 0.18) : theme.palette.raised,
-            }}
-          >
-            <Icon name={name} size={18} color={isSelected ? colour : theme.palette.textMuted} />
-          </Pressable>
-        );
-      })}
-    </View>
+      <AppearanceSheet
+        visible={sheet === 'appearance'}
+        onClose={close}
+        colorIndex={values.colorIndex}
+        icon={values.icon}
+        groups={categoryIconGroups}
+        searchable
+        onChange={({ colorIndex, icon }) => set({ colorIndex, icon })}
+      />
+
+      <ParentPickerSheet
+        visible={sheet === 'parent'}
+        onClose={close}
+        parents={parents}
+        selectedId={values.parentId}
+        onSelect={(parentId) => set({ parentId })}
+      />
+    </Screen>
   );
 }
