@@ -334,12 +334,14 @@ this phone" confirmation, sharing through `expo-sharing`. No attachments yet: th
 *Acceptance:* export → wipe → restore round-trip is lossless (test); the CSV opens in a spreadsheet with the columns
 of §11.2.
 
-**09b — Attachments.** Capture/compress/store, thumbnails, viewer, blob upload/download queue + server routes +
-cleanup. Then the ZIP backup (`fflate`) that carries the files.
-*Acceptance:* an attachment added on device A appears on device B.
-
 **09c — CSV import.** Wizard with generic mapping, duplicate fingerprints, import planner (pure), and the Spendee
-preset — **blocked on a real Spendee CSV sample** (AGENTS.md forbids guessing the format).
+preset. **Unblocked:** the user supplied a real export on 2026-09-11; the format is written up in §11.3 and the
+anonymised fixture is `packages/core/src/io/__fixtures__/spendee.csv`.
+
+**09b — Attachments** ⏸ *on hold at the user's request* ("per gli allegati dobbiamo discutere"). Capture, compress,
+store, thumbnails, viewer, blob upload/download queue + server routes + cleanup, then the ZIP backup (`fflate`) that
+carries the files.
+*Acceptance:* an attachment added on device A appears on device B.
 *Acceptance:* importing a fixture creates the expected accounts/categories/tags and skips duplicates on a second run.
 
 ### 10 — Access control: who is allowed in 🔜 queued

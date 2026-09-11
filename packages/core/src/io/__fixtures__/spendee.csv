@@ -1,0 +1,12 @@
+Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
+2026-08-12T16:23:13+00:00,"My Money",Expense,Travel,-5.00000000,EUR,"aperitivo ",Banca🏦,"A Person"
+2026-08-12T16:23:37+00:00,"My Money",Expense,Other,-70.00000000,EUR,"swap contanti ",Banca🏦,"A Person"
+2026-08-12T16:23:58+00:00,"My Money",Income,"Money Back",70.00000000,EUR,"rimborso swap","Contanti 💵","A Person"
+2026-08-14T16:25:00+00:00,"My Money",Expense,"Family & Personal",-26.19000000,EUR,"Groceries supermercato",Banca🏦,"A Person"
+2026-08-15T07:03:01+00:00,"My Money",Expense,Subscriptions,-13.99000000,EUR,"Streaming ","Carta 💳","A Person"
+2026-08-16T16:30:17+00:00,"My Money",Expense,Travel,-3.90000000,EUR,autostrada,Banca🏦,"A Person"
+2026-08-23T07:22:42+00:00,"My Money",Expense,"Food & Drink",-21.00000000,EUR,sushi,"Contanti 💵","A Person"
+2026-08-28T06:46:39+00:00,"My Money",Income,Salary,1234.00000000,EUR,"Stipendio",Banca🏦,"A Person"
+2026-09-02T22:15:32+00:00,"My Money",Expense,"Bills, Fees & Subscriptions",-9.99000000,EUR,"Telefono","Carta 💳","A Person"
+2026-09-06T22:35:12+00:00,"My Money",Expense,Entertainment,-24.61000000,EUR,"Concerto",,"A Person"
+2026-09-10T08:37:50+00:00,"My Money",Expense,"Sport & Hobbies",-10.00000000,EUR,"Iscrizione palestra","Contanti 💵","A Person"

@@ -861,13 +861,30 @@ Rules:
   when the preset exposes them (see below).
 - All inserts happen in a single SQLite transaction; any exception rolls back.
 
-**Spendee preset:** Spendee exports CSV per wallet with headers similar to
-`Date,Wallet,Type,Category name,Amount,Currency,Note,Labels,Author`. **This must be verified against a real Spendee
-export before finalising** (ask the user for a sample and add it, anonymised, as a test fixture under
-`packages/core/src/io/__fixtures__/spendee.csv`). Expected mapping: Date → ISO datetime → local date;
-Wallet → account; Type `Expense`/`Income`/`Transfer` → kind (transfers become expense/income pairs unless the pair
-can be matched by same timestamp + opposite amount across wallets, in which case create one `transfer`);
-Category name → category; Amount → signed decimal `.`; Note → description; Labels → tags (comma-separated).
+**Spendee preset** — verified against a real export (2026-09-10, 54 rows), anonymised as
+`packages/core/src/io/__fixtures__/spendee.csv`. The file is:
+
+```
+Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
+2026-08-12T16:23:13+00:00,"My Money",Expense,Travel,-5.00000000,EUR,"aperitivo ",Banca🏦,"A Person"
+```
+
+- **No BOM, `\n` endings, `,` separator**, RFC 4180 quoting (only the fields that need it are quoted, and
+  `Category name` is quoted in the header because of its space).
+- `Date`: ISO-8601 **with an offset**. The first 10 characters are already the local date in that offset, so the
+  import takes them verbatim — converting to the device's zone would move evening transactions to the next day.
+- `Amount`: signed, `.` separator, **8 decimal places**. Parsed as a decimal string into minor units; never through
+  a float (`-0.99000000 * 100` is not `-99`).
+- `Type`: `Expense` and `Income` are what the sample contains. **`Transfer` was not observed**, so the importer does
+  not guess: an unknown `Type` becomes a row error naming the value, and transfer pairing stays out of the POC.
+- `Category name`: flat, no `Parent > Child` (one value contains a comma, hence the quoting). Created in the
+  direction of the row's `Type`.
+- `Note` → description (trailing spaces trimmed). `Author` is ignored. `Currency` ≠ settings currency → row error.
+- `Labels` → tags, and they may be empty or carry emoji. **They can also be where the account really lives**: in the
+  sample every row has the same `Wallet` ("My Money") while `Labels` holds `Banca🏦` / `Contanti 💵` / `Carta 💳`.
+  The preset therefore proposes `Wallet` → account and `Labels` → tags, and the mapping step (3) must let the user
+  point **account** at `Labels` instead, with a default account for the rows whose cell is empty.
+- The label separator is unknown: no sampled row has two. It is an option in step 3, defaulting to `,`.
 
 ---
 
