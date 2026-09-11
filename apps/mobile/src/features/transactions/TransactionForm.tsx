@@ -140,6 +140,8 @@ export function TransactionForm({
 
   return (
     <Screen
+      // Presented as a sheet, so the top inset belongs to the card behind it, not to this screen.
+      sheet
       footer={
         <View style={{ gap: 8 }}>
           {missing === null || !touched ? null : (

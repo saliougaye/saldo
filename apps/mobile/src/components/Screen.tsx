@@ -16,15 +16,26 @@ export interface ScreenProps {
    * into. Push screens and onboarding have no tab bar, so they leave this off.
    */
   underTabBar?: boolean;
+  /**
+   * A screen presented as a sheet (`presentation: 'modal'`) already starts below the status bar,
+   * so the device's top inset would be dead space above the header — it uses a plain gap instead.
+   */
+  sheet?: boolean;
 }
 
 /** Screen frame: theme background, safe-area insets and the §6 horizontal padding. */
-export function Screen({ children, scroll = true, footer, underTabBar = false }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = true,
+  footer,
+  underTabBar = false,
+  sheet = false,
+}: ScreenProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const padding = {
     paddingHorizontal: theme.layout.screenPaddingX,
-    paddingTop: insets.top + 8,
+    paddingTop: sheet ? 12 : insets.top + 8,
   };
   const tabBarSpace = underTabBar ? theme.layout.fabLift : 0;
   const bottomSpace = 24 + tabBarSpace;
