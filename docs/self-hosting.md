@@ -127,6 +127,10 @@ S3_ACCESS_KEY_ID=…
 S3_SECRET_ACCESS_KEY=…
 ```
 
+Deleting a transaction does not delete its attachment bytes straight away: the row becomes a
+tombstone, the server notes the blob in a small queue, and the bytes go a week later — late enough
+for a phone that has been offline to hear about the deletion first.
+
 **A caveat about Vercel Blob:** every object in a Blob store is readable by anyone who has its URL —
 the product has no private mode. Saldo gives each object a random pathname and never hands those
 URLs to a client (downloads are proxied by the server, which checks who is asking), so a receipt is
