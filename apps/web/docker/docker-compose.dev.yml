@@ -1,4 +1,9 @@
-# The local development stack: Postgres, and Floci standing in for S3.
+# Developing Saldo: Postgres, and Floci standing in for S3.
+#
+# This is not the file you deploy — that one is docker-compose.yml next to it, which builds the
+# server into an image. The two are kept apart on purpose: a deployment has no business running an
+# AWS emulator, and a development database has no business being reachable only from inside a
+# Docker network.
 #
 # Run from the repository root:
 #   docker compose -f apps/web/docker/docker-compose.dev.yml up -d

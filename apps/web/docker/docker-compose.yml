@@ -1,5 +1,10 @@
+# Self-hosting: the server, built into an image, and its database. This is the file you deploy.
+#
 # Run from the repository root:
 #   docker compose -f apps/web/docker/docker-compose.yml up -d --build
+#
+# For *developing* Saldo, use docker-compose.dev.yml instead: it brings up what the server talks to
+# and leaves the server itself to `pnpm --filter web dev`, so a change reloads without a rebuild.
 services:
   postgres:
     image: postgres:17
