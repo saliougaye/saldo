@@ -120,6 +120,24 @@ export default function ImportScreen() {
     }
   };
 
+  /** "1 conto, 3 categorie e 2 etichette": only what there is, and counted properly. */
+  const willCreate = (current: ImportPlan): string | null => {
+    const parts = [
+      current.newAccounts.length > 0
+        ? t('csvImport.willCreateAccounts', { count: current.newAccounts.length })
+        : null,
+      current.newCategories.length > 0
+        ? t('csvImport.willCreateCategories', { count: current.newCategories.length })
+        : null,
+      current.newTags.length > 0
+        ? t('csvImport.willCreateTags', { count: current.newTags.length })
+        : null,
+    ].filter((part): part is string => part !== null);
+    if (parts.length === 0) return null;
+    const last = parts.pop() ?? '';
+    return parts.length === 0 ? last : `${parts.join(', ')} ${t('common.and')} ${last}`;
+  };
+
   const columnName = (index: number | null): string =>
     index === null ? t('csvImport.noColumn') : (file?.headers[index] ?? String(index));
 
@@ -211,15 +229,11 @@ export default function ImportScreen() {
                 errors: plan.errors.length,
               })}
             </Text>
-            {plan.newAccounts.length + plan.newCategories.length + plan.newTags.length > 0 ? (
+            {willCreate(plan) === null ? null : (
               <Text size="footnote" color="textMuted" style={{ marginTop: 8 }}>
-                {t('csvImport.willCreate', {
-                  accounts: plan.newAccounts.length,
-                  categories: plan.newCategories.length,
-                  tags: plan.newTags.length,
-                })}
+                {t('csvImport.willCreate', { what: willCreate(plan) })}
               </Text>
-            ) : null}
+            )}
           </Card>
 
           {plan.errors.length > 0 ? (
