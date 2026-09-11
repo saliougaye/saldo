@@ -334,7 +334,7 @@ this phone" confirmation, sharing through `expo-sharing`. No attachments yet: th
 *Acceptance:* export → wipe → restore round-trip is lossless (test); the CSV opens in a spreadsheet with the columns
 of §11.2.
 
-**09c — CSV import.** Wizard with generic mapping, duplicate fingerprints, import planner (pure), and the Spendee
+**09c — CSV import** ✅ (plan: `2026-09-11-09c-csv-import.md`). Wizard with generic mapping, duplicate fingerprints, import planner (pure), and the Spendee
 preset. **Unblocked:** the user supplied a real export on 2026-09-11; the format is written up in §11.3 and the
 anonymised fixture is `packages/core/src/io/__fixtures__/spendee.csv`.
 

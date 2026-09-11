@@ -837,8 +837,9 @@ date,type,amount,currency,account,to_account,category,parent_category,descriptio
 
 Wizard steps (screens in `profile/import`):
 
-1. **File:** `expo-document-picker` (`text/csv`, `text/comma-separated-values`, `*/*` fallback). Parse with PapaParse
-   (auto-detect delimiter `,` `;` `\t`; strip BOM).
+1. **File:** `expo-document-picker` (`text/csv`, `text/comma-separated-values`, `*/*` fallback). Parsed by
+   `@saldo/core/io`'s own `parseCsv` (auto-detects `,` `;` `\t` outside quotes, strips a BOM, accepts `\n` and
+   `\r\n`) rather than PapaParse: the rules are the ones `toCsv` already writes, and `@saldo/core` imports nothing.
 2. **Preset detection:** match headers to a preset: `saldo` (own export, auto-mapped), `spendee`, else `generic`.
 3. **Mapping** (generic, or to confirm a preset): required `date`, `amount`; optional `type`, `account`, `category`,
    `description`, `note`, `tags`, `currency`. Options: date format (`YYYY-MM-DD`, `DD/MM/YYYY`, `MM/DD/YYYY`,
@@ -850,15 +851,17 @@ Wizard steps (screens in `profile/import`):
 
 Rules:
 
-- Unknown category names create **expense/income top-level** categories (icon `tag`, colour 9). A category column in
-  the form `Parent > Child` or `Parent/Child` creates the hierarchy.
+- Unknown category names create **expense/income top-level** categories (icon `tag`, colour 9), in the direction of
+  the row, so "Money Back" as income and an expense category of the same name can coexist. Every expense and income
+  needs a category (§4), so a row whose cell is empty is an error unless the mapping names a **default category** —
+  the same shape as the default account. (`Parent > Child` hierarchies are not in the POC: no sampled file uses one.)
 - Unknown accounts are created as `checking`, `openingBalance 0`, `includeInSpendable true`.
 - Currency column values ≠ settings currency → row error "Valuta diversa ({code})" (no conversion).
 - **Duplicate fingerprint:** `date | amountMinor | kind | normalize(description) | accountName`. `normalize` =
   lowercase, accent-stripped, collapsed whitespace. Skip rows whose fingerprint already exists (in DB or earlier in
   the same file).
-- Transfers are not detected by the generic importer (they come in as expense/income). Spendee transfers are mapped
-  when the preset exposes them (see below).
+- Transfers are not imported at all. The real Spendee export contains only `Expense` and `Income`, so an unknown
+  `Type` is reported as a row error naming the value rather than guessed at.
 - All inserts happen in a single SQLite transaction; any exception rolls back.
 
 **Spendee preset** — verified against a real export (2026-09-10, 54 rows), anonymised as
