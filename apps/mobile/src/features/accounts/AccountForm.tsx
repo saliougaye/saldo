@@ -4,23 +4,25 @@ import {
   minorToAmountBuffer,
   openingBalanceForCurrent,
 } from '@saldo/core';
-import { accountIconOptions, categoryColors, type IconName } from '@saldo/ui';
+import { accountIconOptions, type IconName } from '@saldo/ui';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
+import { AppearanceSheet } from '../../components/AppearanceSheet';
 import { PrimaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { DayOfMonthSheet } from '../../components/DayOfMonthSheet';
+import { IconBox, ListRow } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { TextField } from '../../components/TextField';
 import { Toggle } from '../../components/Toggle';
 import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
-import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-
-const TYPES = ['cash', 'checking', 'credit_card', 'savings', 'investment'] as const;
+import { AccountTypeSheet } from './AccountTypeSheet';
 
 export interface AccountFormValues {
   name: string;
@@ -97,7 +99,7 @@ export interface AccountFormProps {
   onSubmit: () => void;
 }
 
-/** §6.22. */
+/** §6.22. Same shape for new and edit: two required fields is not a wizard. */
 export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormProps) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -106,6 +108,11 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
   const currency = settings?.currency ?? 'EUR';
   const set = (patch: Partial<AccountFormValues>) => onChange({ ...values, ...patch });
   const ready = values.name.trim().length > 0;
+  const colour = theme.categoryColor(values.colorIndex);
+
+  const [sheet, setSheet] = useState<'none' | 'type' | 'appearance' | 'close' | 'charge'>('none');
+  const close = () => setSheet('none');
+  const day = (value: number | null) => (value === null ? t('categories.noParent') : String(value));
 
   return (
     <Screen
@@ -136,119 +143,51 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
             value={values.name}
             onChangeText={(name) => set({ name })}
           />
+          {/* Typing, not choosing: it stays inline. */}
           <TextField
             label={t('accounts.institution')}
             value={values.institution}
             onChangeText={(institution) => set({ institution })}
           />
-          <View style={{ gap: 6 }}>
-            <Text size="footnote" color="textMuted">
-              {t('accounts.type')}
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {TYPES.map((type) => {
-                const selected = type === values.type;
-                return (
-                  <Pressable
-                    key={type}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    onPress={() => set({ type })}
-                    style={{
-                      width: '31%',
-                      height: 38,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: theme.radii.chipSmall,
-                      backgroundColor: selected ? theme.palette.accent : theme.palette.raised,
-                    }}
-                  >
-                    <Text size="caption" color={selected ? 'onAccent' : 'text'} numberOfLines={1}>
-                      {t(`accountTypes.${type}`)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
         </View>
       </Card>
 
-      {values.type === 'credit_card' ? (
-        <Card>
-          <View style={{ gap: 14 }}>
-            <DayPicker
-              label={t('accounts.creditCloseDay')}
-              value={values.creditCloseDay}
-              onChange={(creditCloseDay) => set({ creditCloseDay })}
-            />
-            <DayPicker
-              label={t('accounts.creditChargeDay')}
-              value={values.creditChargeDay}
-              onChange={(creditChargeDay) => set({ creditChargeDay })}
-            />
-          </View>
-        </Card>
-      ) : null}
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('accounts.colour')}
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {categoryColors.map((colour, index) => (
-            <Pressable
-              key={colour}
-              accessibilityRole="button"
-              accessibilityState={{ selected: index === values.colorIndex }}
-              accessibilityLabel={colour}
-              onPress={() => set({ colorIndex: index })}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: colour,
-                borderWidth: index === values.colorIndex ? 2 : 0,
-                borderColor: theme.palette.text,
-              }}
-            />
-          ))}
-        </View>
-
-        <Text size="footnote" color="textMuted" style={{ marginTop: 14 }}>
-          {t('accounts.icon')}
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {accountIconOptions.map((name) => {
-            const selected = name === values.icon;
-            return (
-              <Pressable
-                key={name}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={name}
-                onPress={() => set({ icon: name })}
-                style={{
-                  width: 38,
-                  height: 38,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: theme.radii.iconBox,
-                  backgroundColor: selected
-                    ? theme.tint(theme.categoryColor(values.colorIndex), 0.18)
-                    : theme.palette.raised,
-                }}
-              >
-                <Icon
-                  name={name}
-                  size={18}
-                  color={
-                    selected ? theme.categoryColor(values.colorIndex) : theme.palette.textMuted
-                  }
-                />
-              </Pressable>
-            );
-          })}
+      {/*
+        The rows below each open a sheet. They used to be wrapping grids — five type tiles, twelve
+        swatches, eight icons and two 28-day grids — which is around 400pt of picker sitting above
+        `includeInSpendable`, the switch that decides whether the account counts towards Totale
+        spendibile. The most consequential control on the screen was under the most decorative one.
+      */}
+      <Card padded={false}>
+        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+          <ListRow
+            title={t('accounts.type')}
+            subtitle={t(`accountTypes.${values.type}`)}
+            onPress={() => setSheet('type')}
+            chevron
+          />
+          <ListRow
+            title={t('common.appearance')}
+            leading={<IconBox name={values.icon} colour={colour} />}
+            onPress={() => setSheet('appearance')}
+            chevron
+          />
+          {values.type === 'credit_card' ? (
+            <>
+              <ListRow
+                title={t('accounts.creditCloseDay')}
+                subtitle={day(values.creditCloseDay)}
+                onPress={() => setSheet('close')}
+                chevron
+              />
+              <ListRow
+                title={t('accounts.creditChargeDay')}
+                subtitle={day(values.creditChargeDay)}
+                onPress={() => setSheet('charge')}
+                chevron
+              />
+            </>
+          ) : null}
         </View>
       </Card>
 
@@ -267,52 +206,38 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
           {t('accounts.includeNote')}
         </Text>
       </Card>
-    </Screen>
-  );
-}
 
-/** Credit-card days are 1–28 so every month has them (§4). */
-function DayPicker({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (value: number) => void;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={{ gap: 6 }}>
-      <Text size="footnote" color="textMuted">
-        {label}
-      </Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-        {Array.from({ length: 28 }, (_, index) => index + 1).map((day) => {
-          const selected = day === value;
-          return (
-            <Pressable
-              key={day}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              accessibilityLabel={String(day)}
-              onPress={() => onChange(day)}
-              style={{
-                width: 30,
-                height: 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: theme.radii.chipSmall,
-                backgroundColor: selected ? theme.palette.accent : theme.palette.raised,
-              }}
-            >
-              <Text size="caption" tabular color={selected ? 'onAccent' : 'text'}>
-                {day}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
+      <AccountTypeSheet
+        visible={sheet === 'type'}
+        onClose={close}
+        value={values.type}
+        onSelect={(type) => set({ type })}
+      />
+
+      <AppearanceSheet
+        visible={sheet === 'appearance'}
+        onClose={close}
+        colorIndex={values.colorIndex}
+        icon={values.icon}
+        groups={[{ key: 'accounts', icons: accountIconOptions }]}
+        onChange={({ colorIndex, icon }) => set({ colorIndex, icon })}
+      />
+
+      <DayOfMonthSheet
+        visible={sheet === 'close'}
+        onClose={close}
+        title={t('accounts.creditCloseDay')}
+        value={values.creditCloseDay}
+        onSelect={(creditCloseDay) => set({ creditCloseDay })}
+      />
+
+      <DayOfMonthSheet
+        visible={sheet === 'charge'}
+        onClose={close}
+        title={t('accounts.creditChargeDay')}
+        value={values.creditChargeDay}
+        onSelect={(creditChargeDay) => set({ creditChargeDay })}
+      />
+    </Screen>
   );
 }
