@@ -95,11 +95,17 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
         accessibilityRole="button"
         accessibilityLabel={t('period.title')}
         onPress={() => setSheetOpen(true)}
-        style={{ flex: 1, minWidth: 0 }}
+        style={({ pressed }) => ({ flex: 1, minWidth: 0, opacity: pressed ? 0.6 : 1 })}
       >
-        <Text weight="medium" tracking="tight" numberOfLines={1}>
-          {label}
-        </Text>
+        {/* What says the period is a control. Two arrows rather than one: the ‹ › buttons beside
+            it already use single chevrons to *move* the period, and a third one pointing down
+            would have read as more of the same. This is the shape a picker has. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Text weight="medium" tracking="tight" numberOfLines={1} style={{ flexShrink: 1 }}>
+            {label}
+          </Text>
+          <Icon name="chevUD" size={14} color={theme.palette.textFaint} />
+        </View>
         <Text size="caption" color="textMuted">
           {subtitle}
         </Text>
