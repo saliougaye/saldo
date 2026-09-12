@@ -3,6 +3,7 @@ import {
   type BalancePreview,
   getCurrency,
   transferBalancePreview,
+  transferOverdrawsSource,
 } from '@saldo/core';
 import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
@@ -155,7 +156,13 @@ export function TransactionForm({
   );
 
   const liveAccounts = accounts.filter((account) => account.archivedAt === null);
-  const missing = missingForSave(values, minorDigits);
+  // A transfer may not take out more than the source holds. The archived accounts are in `accounts`
+  // on purpose: an account can be archived while a transaction out of it is still open for editing.
+  const overdrawn = transferOverdrawsSource(
+    accounts.find((account) => account.id === values.accountId),
+    transferPreview.from,
+  );
+  const missing = missingForSave(values, minorDigits, overdrawn);
   const ready = missing === null;
   // A form nobody has touched yet is not incomplete, it is empty: saying "enter an amount" before
   // the first keystroke is nagging, and the disabled button already says the form is not done.
@@ -255,7 +262,9 @@ export function TransactionForm({
             // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names
             // the next thing to fix rather than listing everything that is unfinished.
             <Text size="footnote" color="textMuted">
-              {t(`txForm.missing_${missing}`)}
+              {t(`txForm.missing_${missing}`, {
+                available: money(transferPreview.from?.now ?? 0),
+              })}
             </Text>
           )}
           <PrimaryButton

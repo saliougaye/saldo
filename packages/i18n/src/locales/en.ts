@@ -159,6 +159,7 @@ export const en: Messages = {
     missing_category: 'Choose the category.',
     missing_destination: 'Choose the destination account.',
     missing_sameAccount: 'The destination account must be a different one.',
+    missing_insufficientFunds: 'The source account only holds {{available}}.',
     otherCategory: 'Other',
     account: 'Account',
     from: 'From',

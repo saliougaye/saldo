@@ -56,7 +56,13 @@ export function formFromTransaction(
 }
 
 /** What a form is still missing, in the order the screen asks for it. */
-export type MissingField = 'amount' | 'account' | 'category' | 'destination' | 'sameAccount';
+export type MissingField =
+  | 'amount'
+  | 'account'
+  | 'category'
+  | 'destination'
+  | 'sameAccount'
+  | 'insufficientFunds';
 
 /**
  * §6.16: save is disabled until the amount is above zero, an account is chosen, a non-transfer has
@@ -64,11 +70,15 @@ export type MissingField = 'amount' | 'account' | 'category' | 'destination' | '
  * so the screen can name it instead of leaving a dead button to be puzzled over.
  *
  * Order matters: it is the order of the form, so the answer is always the next thing to fix rather
- * than the last one checked.
+ * than the last one checked. `overdrawn` comes last because it is the only one that depends on the
+ * ledger rather than on the form, and it can only be judged once both accounts are settled — it is
+ * `transferOverdrawsSource` run over the screen's balances, and defaults to false so a caller with
+ * no balances at hand still gets the field rules.
  */
 export function missingForSave(
   values: TransactionFormValues,
   minorDigits: MinorDigits,
+  overdrawn = false,
 ): MissingField | null {
   if (amountBufferToMinor(values.buffer, minorDigits) <= 0) return 'amount';
   if (values.accountId === null) return 'account';
@@ -76,13 +86,18 @@ export function missingForSave(
     if (values.toAccountId === null) return 'destination';
     // Named apart from a missing destination: the fix is different, and so is the sentence.
     if (values.toAccountId === values.accountId) return 'sameAccount';
+    if (overdrawn) return 'insufficientFunds';
     return null;
   }
   return values.categoryId === null ? 'category' : null;
 }
 
-export function canSave(values: TransactionFormValues, minorDigits: MinorDigits): boolean {
-  return missingForSave(values, minorDigits) === null;
+export function canSave(
+  values: TransactionFormValues,
+  minorDigits: MinorDigits,
+  overdrawn = false,
+): boolean {
+  return missingForSave(values, minorDigits, overdrawn) === null;
 }
 
 /**

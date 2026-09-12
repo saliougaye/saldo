@@ -159,6 +159,7 @@ export const it = {
     missing_category: 'Scegli la categoria.',
     missing_destination: 'Scegli il conto di destinazione.',
     missing_sameAccount: 'Il conto di destinazione deve essere diverso.',
+    missing_insufficientFunds: 'Sul conto di partenza ci sono solo {{available}}.',
     otherCategory: 'Altro',
     account: 'Conto',
     from: 'Da',

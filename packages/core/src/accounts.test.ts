@@ -8,6 +8,7 @@ import {
   nextCreditChargeDate,
   spendableTotal,
   transferBalancePreview,
+  transferOverdrawsSource,
 } from './accounts';
 
 describe('accountBalances', () => {
@@ -162,5 +163,35 @@ describe('transferBalancePreview', () => {
       fromAccountId: 'acc-ghost',
     });
     expect(preview.from).toBeNull();
+  });
+});
+
+describe('transferOverdrawsSource', () => {
+  const checking = { type: 'checking' } as const;
+
+  it('catches a transfer that takes the account below zero', () => {
+    expect(transferOverdrawsSource(checking, { now: 5000, after: -1000 })).toBe(true);
+  });
+
+  it('lets through a transfer the account can cover, down to the last cent', () => {
+    expect(transferOverdrawsSource(checking, { now: 5000, after: 0 })).toBe(false);
+    expect(transferOverdrawsSource(checking, { now: 5000, after: 1 })).toBe(false);
+  });
+
+  it('exempts a credit card, whose balance is negative by design', () => {
+    expect(transferOverdrawsSource({ type: 'credit_card' }, { now: -5000, after: -6000 })).toBe(
+      false,
+    );
+  });
+
+  it('does not block a transfer that moves nothing yet', () => {
+    // A future-dated transfer out of an account that is already in the red: `after === now`, so
+    // this transfer is not what put it there.
+    expect(transferOverdrawsSource(checking, { now: -5000, after: -5000 })).toBe(false);
+  });
+
+  it('has no opinion without a source account or a preview', () => {
+    expect(transferOverdrawsSource(undefined, { now: 5000, after: -1000 })).toBe(false);
+    expect(transferOverdrawsSource(checking, null)).toBe(false);
   });
 });

@@ -248,6 +248,25 @@ describe('missingForSave', () => {
     expect(missingForSave({ ...base, buffer: '12', categoryId: 'cat-1' }, 2)).toBeNull();
   });
 
+  it('blocks a transfer the source account cannot cover, last of all', () => {
+    const transfer = {
+      ...base,
+      kind: 'transfer' as const,
+      buffer: '12',
+      accountId: 'acc-1',
+      toAccountId: 'acc-2',
+    };
+    expect(missingForSave(transfer, 2, true)).toBe('insufficientFunds');
+    expect(canSave(transfer, 2, true)).toBe(false);
+    // Still last: a form that is not a valid transfer yet names the field, not the funds.
+    expect(missingForSave({ ...transfer, toAccountId: null }, 2, true)).toBe('destination');
+    expect(missingForSave({ ...transfer, buffer: '' }, 2, true)).toBe('amount');
+  });
+
+  it('never blocks a non-transfer on funds', () => {
+    expect(missingForSave({ ...base, buffer: '12', categoryId: 'cat-1' }, 2, true)).toBeNull();
+  });
+
   it('agrees with canSave, which is now defined by it', () => {
     const cases = [base, { ...base, buffer: '12' }, { ...base, buffer: '12', categoryId: 'cat-1' }];
     for (const values of cases) {

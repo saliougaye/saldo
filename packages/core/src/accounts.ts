@@ -175,3 +175,26 @@ export function transferBalancePreview(
   };
   return { from: preview(draft.fromAccountId), to: preview(draft.toAccountId) };
 }
+
+/**
+ * Whether a transfer takes out more than the source account holds.
+ *
+ * Spec §6.16 lists what blocks save and says nothing about funds; this is the rule the app adds on
+ * top, so the three cases it deliberately lets through are worth naming:
+ *
+ * - **A credit card holds debt, not money.** Its balance is negative by design (§5.3), so "more
+ *   than there is" means nothing on one, and money leaving a card is a cash advance — a real thing
+ *   to record. Cards are exempt.
+ * - **A transfer that changes nothing cannot overdraw anything.** A future-dated one is not in the
+ *   balance yet (`after === now`), and an account that is already in the red stays saveable for
+ *   anything that does not deepen it.
+ * - **The destination is never checked.** Money arriving cannot overdraw an account.
+ */
+export function transferOverdrawsSource(
+  source: Pick<AccountRef, 'type'> | undefined,
+  preview: BalancePreview | null,
+): boolean {
+  if (source === undefined || preview === null) return false;
+  if (source.type === 'credit_card') return false;
+  return preview.after < 0 && preview.after < preview.now;
+}
