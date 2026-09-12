@@ -5,8 +5,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { deleteAllAttachmentFiles } from '../src/attachments/localFiles';
 import { useServer } from '../src/auth/ServerProvider';
 import { Card } from '../src/components/Card';
+import { ConfirmDialog } from '../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../src/components/ListRow';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
@@ -17,6 +19,7 @@ import { useDatabase } from '../src/db/DatabaseProvider';
 import { seedDemoData } from '../src/db/demo';
 import { useAccounts, useSettings } from '../src/db/hooks';
 import { runMaterialiser } from '../src/db/recurrenceService';
+import { wipeDevice } from '../src/db/wipe';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
@@ -26,7 +29,7 @@ import { useTheme } from '../src/theme/ThemeProvider';
  * Categorie and Tag already went, and the only place a footnote or a confirmation has room.
  */
 export default function ProfileScreen() {
-  const { serverUrl, user } = useServer();
+  const { serverUrl, user, disconnect } = useServer();
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -36,6 +39,7 @@ export default function ProfileScreen() {
   const accounts = useAccounts();
   const { today, def } = usePeriod();
   const [lockEnabled, setLockEnabled] = useState(kv.get('appLockEnabled') === 'true');
+  const [resetOpen, setResetOpen] = useState(false);
 
   const currency = settings?.currency ?? 'EUR';
   const archived = accounts.filter((account) => account.archivedAt !== null).length;
@@ -193,9 +197,38 @@ export default function ProfileScreen() {
                 toast.show(t('dev.demoLoaded'));
               }}
             />
+            <ListRow
+              title={t('dev.resetDevice')}
+              leading={lead('trash')}
+              onPress={() => setResetOpen(true)}
+            />
           </View>
         </Card>
       ) : null}
+
+      <ConfirmDialog
+        visible={resetOpen}
+        title={t('dev.resetTitle')}
+        body={t('dev.resetBody')}
+        confirmLabel={t('dev.resetConfirm')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          setResetOpen(false);
+          void (async () => {
+            /**
+             * Sign out **first**, while the session still exists: the token has to be handed back
+             * to the server, and the scheduler has to stop before the rows under it disappear.
+             * Then the bytes, then the rows — and the boot router takes it from there, because a
+             * database with no settings row is what onboarding means (§6.29).
+             */
+            await disconnect();
+            deleteAllAttachmentFiles();
+            wipeDevice(db);
+            router.replace('/');
+          })();
+        }}
+        onCancel={() => setResetOpen(false)}
+      />
 
       <Text size="caption" color="textFaint">
         {t('profile.version', { version: Application.nativeApplicationVersion ?? '0.1.0' })}

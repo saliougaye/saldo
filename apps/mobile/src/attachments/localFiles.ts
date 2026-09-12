@@ -90,3 +90,15 @@ export function deleteFile(uri: string | null): void {
   const file = new File(uri);
   if (file.exists) file.delete();
 }
+
+/**
+ * Removes every attachment this device holds, directory and all. Used by the device reset, where
+ * dropping the `attachments` rows is not enough: the bytes are on the filesystem, so without this
+ * a wiped phone would keep megabytes of receipts belonging to a transaction that no longer exists.
+ *
+ * `directory()` recreates the folder on the next capture, so there is nothing to put back.
+ */
+export function deleteAllAttachmentFiles(): void {
+  const dir = new Directory(Paths.document, 'attachments');
+  if (dir.exists) dir.delete();
+}

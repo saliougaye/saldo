@@ -223,6 +223,12 @@ export const en: Messages = {
   dev: {
     loadDemo: 'Load demo data',
     demoLoaded: 'Demo data loaded',
+    resetDevice: 'Reset this phone',
+    resetTitle: 'Reset this phone?',
+    resetBody:
+      'Deletes all local data and signs out. Anything already synced stays on the server; anything not yet sent is lost.',
+    resetConfirm: 'Reset',
+    resetDone: 'Phone reset',
   },
   stats: {
     cycleTrend: 'Cycle trend',

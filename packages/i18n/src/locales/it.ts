@@ -223,6 +223,12 @@ export const it = {
   dev: {
     loadDemo: 'Carica dati demo',
     demoLoaded: 'Dati demo caricati',
+    resetDevice: 'Azzera questo telefono',
+    resetTitle: 'Azzerare questo telefono?',
+    resetBody:
+      'Cancella tutti i dati locali ed esce dal server. I dati già sincronizzati restano sul server; quelli non ancora inviati si perdono.',
+    resetConfirm: 'Azzera',
+    resetDone: 'Telefono azzerato',
   },
   stats: {
     cycleTrend: 'Andamento del ciclo',
