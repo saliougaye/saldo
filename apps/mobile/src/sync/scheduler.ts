@@ -25,6 +25,12 @@ export function hasSyncSettled(status: SyncStatus): boolean {
 }
 
 export interface Scheduler {
+  /**
+   * Undoes `stop`. React mounts an effect twice in development — run, clean up, run — and the
+   * cleanup stops this scheduler while the second run reuses the same memoised instance, so a stop
+   * that could not be undone would make every later cycle a silent no-op.
+   */
+  start(): void;
   /** Runs a cycle unless one is already running, in which case it joins it. */
   syncNow(): Promise<SyncOutcome | null>;
   /** Coalesces bursts of local writes into one cycle (§8.5). */
@@ -68,10 +74,22 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
   };
 
   const cycle = async (): Promise<SyncOutcome | null> => {
-    const deps = options.deps();
-    if (deps === null) return null;
-    publish({ kind: 'syncing' });
     try {
+      /**
+       * Inside the `try`, and this matters more than it looks: assembling the dependencies reads
+       * the device id out of SQLite and builds a clock, either of which can throw. Outside, a
+       * throw here escaped as a rejected promise that every caller discards with `void` — no
+       * status, no log, and `hasSyncSettled` false forever, which parks the boot screen on a
+       * spinner that nothing will ever clear.
+       */
+      const deps = options.deps();
+      if (deps === null) {
+        // Nothing to sync with. Still a finished cycle: saying so is what lets the boot router
+        // stop waiting.
+        publish({ kind: 'idle', lastSyncAt: now() });
+        return null;
+      }
+      publish({ kind: 'syncing' });
       const outcome = await runCycle(deps);
       failures = 0;
       publish({ kind: 'idle', lastSyncAt: now() });
@@ -91,6 +109,9 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
   };
 
   const scheduler: Scheduler = {
+    start() {
+      stopped = false;
+    },
     syncNow() {
       if (stopped) return Promise.resolve(null);
       inFlight ??= cycle().finally(() => {

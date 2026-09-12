@@ -68,6 +68,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setStatus(IDLE);
       return;
     }
+    // React mounts this twice in development, and the cleanup below stops the scheduler; the
+    // instance is memoised, so without this the second mount would hold a permanently stopped one.
+    scheduler.start();
     log('sync', 'scheduler armed, running the first cycle');
     const unsubscribe = scheduler.subscribe((next) => {
       // Every transition, because the boot router blocks on this status and a cycle that never
@@ -75,7 +78,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       log('sync', `status: ${next.kind}`, next.kind === 'error' ? { code: next.code } : undefined);
       setStatus(next);
     });
-    void scheduler.syncNow();
+    scheduler.syncNow().catch((error: unknown) => {
+      // The cycle publishes its own failures, so reaching here means something escaped even that.
+      // It used to be discarded silently, which is how a dead cycle looked like a slow one.
+      log('sync', 'the first cycle threw outside the cycle', { error: String(error) });
+    });
     const interval = setInterval(() => {
       if (AppState.currentState === 'active') void scheduler.syncNow();
     }, FOREGROUND_INTERVAL_MS);
