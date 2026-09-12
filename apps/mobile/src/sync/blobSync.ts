@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { LocalAttachment, Repositories } from '../db/repositories';
+import { log, ms, shortId } from '../log';
 import { type ApiClient, ApiClientError } from '../net/apiClient';
 
 /** §10: what the server answers when asked where to put the bytes. */
@@ -49,6 +50,7 @@ async function uploadOne(deps: BlobSyncDeps, row: LocalAttachment): Promise<void
     { size: row.byteSize, mimeType: row.mimeType },
     uploadIntentSchema,
   );
+  log('blobs', `uploading ${shortId(row.id)} ${row.byteSize} bytes via ${intent.mode}`);
 
   if (intent.mode === 'direct') {
     await deps.api.putBinary(`/api/attachments/${row.id}`, bytes, {
@@ -81,7 +83,11 @@ async function uploadOne(deps: BlobSyncDeps, row: LocalAttachment): Promise<void
  */
 export async function uploadPendingBlobs(deps: BlobSyncDeps): Promise<BlobSyncOutcome> {
   const outcome: BlobSyncOutcome = { uploaded: 0, failed: 0, noStorage: false };
-  for (const row of deps.repos.attachments.pendingUploads(MAX_BLOBS_PER_CYCLE)) {
+  const startedAt = Date.now();
+  const pending = deps.repos.attachments.pendingUploads(MAX_BLOBS_PER_CYCLE);
+  if (pending.length === 0) return outcome;
+  log('blobs', `${pending.length} attachments to send`);
+  for (const row of pending) {
     try {
       await uploadOne(deps, row);
       deps.repos.attachments.setBlobState(row.id, 'synced');
@@ -91,17 +97,24 @@ export async function uploadPendingBlobs(deps: BlobSyncDeps): Promise<BlobSyncOu
       if (code === 'no_storage') {
         // Not a failure of this row: the server keeps no attachments at all, so every other row
         // would fail the same way. Leave them local and stop.
+        log('blobs', 'this server keeps no attachments, the bytes stay on the phone');
         outcome.noStorage = true;
         break;
       }
       if (code === 'not_found') {
         // The row has not been pushed yet; the next cycle pushes it and this one retries then.
+        log('blobs', `${shortId(row.id)} has no row on the server yet, retrying next cycle`);
         break;
       }
+      log('blobs', `${shortId(row.id)} failed to upload`, {
+        code: code ?? 'unknown',
+        error: String(error),
+      });
       deps.repos.attachments.setBlobState(row.id, 'failed');
       outcome.failed += 1;
     }
   }
+  log('blobs', `upload pass finished in ${ms(startedAt)}`, { ...outcome });
   return outcome;
 }
 
@@ -112,13 +125,24 @@ export async function uploadPendingBlobs(deps: BlobSyncDeps): Promise<BlobSyncOu
  */
 export async function downloadBlob(deps: BlobSyncDeps, id: string): Promise<boolean> {
   const row = deps.repos.attachments.byId(id);
-  if (row === null || row.localUri !== null) return false;
+  if (row === null || row.localUri !== null) {
+    log('blobs', `no download for ${shortId(id)}`, {
+      reason: row === null ? 'no such row' : 'already on this device',
+    });
+    return false;
+  }
+  const startedAt = Date.now();
   const bytes = await deps.api.getBinary(`/api/attachments/${id}`);
   const stored = await deps.storeBytes(id, row.mimeType, bytes);
   if (stored.sha256 !== row.sha256) {
     // Whatever came back is not what this attachment is. Keep nothing rather than cache a lie.
+    log('blobs', `${shortId(id)} came back with the wrong hash`, {
+      expected: row.sha256.slice(0, 8),
+      got: stored.sha256.slice(0, 8),
+    });
     throw new ApiClientError(422, 'hash_mismatch', 'The downloaded bytes do not match the row');
   }
   deps.repos.attachments.setLocalUri(id, stored.uri);
+  log('blobs', `${shortId(id)} downloaded, ${bytes.length} bytes in ${ms(startedAt)}`);
   return true;
 }

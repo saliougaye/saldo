@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authClient } from '../../../src/client/authClient';
+import { log } from '../../../src/client/log';
 
 interface Props {
   redirectUri: string;
@@ -54,17 +55,42 @@ export function MobileAuth({
   const [error, setError] = useState<string | null>(null);
 
   /**
+   * The two lines that explain most failed ceremonies before anything is clicked: WebAuthn needs a
+   * secure context, and a browser without a platform authenticator cannot run it at all. Both look
+   * like "the button does nothing" from the phone.
+   */
+  useEffect(() => {
+    log('auth', 'the sign-in page is ready', {
+      mode: initialMode,
+      canRegister,
+      requiresInvite,
+      redirectScheme: redirectUri.split(':')[0],
+      secureContext: window.isSecureContext,
+      webauthn: typeof window.PublicKeyCredential !== 'undefined',
+      origin: window.location.origin,
+    });
+  }, [initialMode, canRegister, requiresInvite, redirectUri]);
+
+  /**
    * The ceremony leaves this browser holding a session. The app cannot read it, so a one-time
    * token is minted and travels back in the deep link: single use, one minute, stored hashed.
    */
   const finish = async () => {
+    log('auth', 'the ceremony left a session here, minting the handoff token');
     const { data, error } = await authClient.oneTimeToken.generate();
     if (error !== null || data === null) {
+      log('auth', 'the server would not mint a handoff token', {
+        status: error?.status,
+        message: error?.message,
+      });
       throw new Error(error?.message ?? 'Could not finish sign-in');
     }
     const url = new URL(redirectUri);
     url.searchParams.set('ott', data.token);
     url.searchParams.set('state', state);
+    // The scheme only. The whole point of the token is that nothing but the app ever reads it, and
+    // a console is somewhere it would be readable.
+    log('auth', `handing back to ${url.protocol}//${url.host}${url.pathname}`);
     window.location.href = url.toString();
   };
 
@@ -74,6 +100,12 @@ export function MobileAuth({
     try {
       await action();
     } catch (caught) {
+      // The message shown on screen is short by design; the thrown value is not, and a cancelled
+      // authenticator prompt (`NotAllowedError`) is only distinguishable here.
+      log('auth', 'the ceremony ended in an error', {
+        name: caught instanceof Error ? caught.name : typeof caught,
+        message: caught instanceof Error ? caught.message : String(caught),
+      });
       setError(caught instanceof Error ? caught.message : 'Something went wrong');
     } finally {
       setBusy(false);
@@ -82,8 +114,15 @@ export function MobileAuth({
 
   const login = () =>
     run(async () => {
+      log('auth', 'asking the browser for a passkey');
       const { error } = await authClient.signIn.passkey();
-      if (error !== null) throw new Error(error.message ?? 'Could not sign you in');
+      if (error !== null) {
+        log('auth', 'the passkey ceremony failed', {
+          status: error.status,
+          code: 'code' in error ? error.code : undefined,
+        });
+        throw new Error(error.message ?? 'Could not sign you in');
+      }
       await finish();
     });
 
@@ -96,11 +135,20 @@ export function MobileAuth({
       // `context` is the plugin's passthrough to `resolveUser`, where the registration policy, the
       // invite and the display name are all enforced server-side. It is one string, so both
       // fields travel through it as JSON.
+      log('auth', 'creating a passkey for a new account', { withInvite: requiresInvite });
       const { error } = await authClient.passkey.addPasskey({
         context: JSON.stringify({ name, invite: requiresInvite ? invite : undefined }),
         createSession: true,
       });
-      if (error !== null) throw new Error(error.message ?? 'Could not create the account');
+      if (error !== null) {
+        // The registration policy answers here — a closed server, a spent invite, a name the
+        // server refused — and the screen shows only the sentence, not which rule said no.
+        log('auth', 'the server refused the registration', {
+          status: error.status,
+          code: 'code' in error ? error.code : undefined,
+        });
+        throw new Error(error.message ?? 'Could not create the account');
+      }
       await finish();
     });
 

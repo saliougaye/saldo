@@ -3,6 +3,7 @@ import { validateRedirectUri } from '../../../src/server/auth/redirect';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { ApiError } from '../../../src/server/http/errors';
+import { log } from '../../../src/server/log';
 import { MobileAuth } from './MobileAuth';
 
 export const runtime = 'nodejs';
@@ -40,17 +41,32 @@ export default async function MobileAuthPage({
   const redirectUri = params.redirect_uri ?? '';
   const state = params.state ?? '';
   if (redirectUri === '' || state === '') {
+    log('auth', 'a sign-in link arrived without a redirect or a state');
     return <Problem message="It is missing the redirect or the state." />;
   }
   try {
     validateRedirectUri(redirectUri, env().appRedirectSchemes);
   } catch (error) {
+    // The one rejection a self-hoster hits by configuration rather than by mistake: a build whose
+    // scheme is not in APP_REDIRECT_SCHEMES gets here and the phone only sees a dead page.
+    log(
+      'auth',
+      `a sign-in link was refused: ${redirectUri.split(':')[0]} is not an allowed scheme`,
+      {
+        allowed: env().appRedirectSchemes,
+      },
+    );
     const message =
       error instanceof ApiError ? error.message : 'The redirect target is not allowed.';
     return <Problem message={message} />;
   }
 
   const canRegister = await registrationAllowed(getDb(), env().registration);
+  log('auth', 'serving the sign-in page', {
+    registration: env().registration,
+    canRegister,
+    requiresInvite: registrationRequiresInvite(env().registration),
+  });
   return (
     <MobileAuth
       redirectUri={redirectUri}

@@ -7,8 +7,16 @@
  * ids — short prefixes, never a token, never an invite code, but still not something to leave
  * printing on somebody's phone.
  */
+
+/**
+ * Read once, and defensively: `__DEV__` is a global the React Native bundler defines, and the
+ * database tests run this code in plain Node, where it does not exist. Touching it there would
+ * throw a `ReferenceError` from a logging line, which is the least useful way to fail a test.
+ */
+const enabled: boolean = typeof __DEV__ === 'undefined' ? false : __DEV__;
+
 export function log(scope: string, message: string, detail?: Record<string, unknown>): void {
-  if (!__DEV__) return;
+  if (!enabled) return;
   if (detail === undefined) console.log(`[saldo:${scope}] ${message}`);
   else console.log(`[saldo:${scope}] ${message}`, detail);
 }
@@ -16,4 +24,9 @@ export function log(scope: string, message: string, detail?: Record<string, unkn
 /** Enough of an id to follow it across lines, not enough to be worth writing down. */
 export function shortId(id: string | null | undefined): string {
   return id === null || id === undefined ? 'none' : id.slice(0, 8);
+}
+
+/** How long a step took, as a line fragment. */
+export function ms(startedAt: number): string {
+  return `${Date.now() - startedAt}ms`;
 }

@@ -1,3 +1,5 @@
+import { log } from '../log';
+
 /** §14 error format: `{ "error": { "code", "message" } }` with a real status code. */
 export class ApiError extends Error {
   constructor(
@@ -23,7 +25,12 @@ export class ApiError extends Error {
  */
 export function handle(fn: () => Promise<Response>): Promise<Response> {
   return fn().catch((error: unknown) => {
-    if (error instanceof ApiError) return error.toResponse();
+    if (error instanceof ApiError) {
+      // Every refusal this server makes passes through here. The app only ever shows the message,
+      // so without this line a 401 loop and a 409 schema mismatch look the same from the server.
+      log('http', `refused with ${error.status} ${error.code}`, { message: error.message });
+      return error.toResponse();
+    }
     console.error('[saldo] unhandled route error', error);
     return new ApiError(500, 'internal_error', 'Unexpected server error').toResponse();
   });
