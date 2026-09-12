@@ -1,4 +1,5 @@
 import {
+  type DateRange,
   elapsedDays,
   periodContaining,
   periodLength,
@@ -46,6 +47,10 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
   const [kindOpen, setKindOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
   const [dayOpen, setDayOpen] = useState(false);
+  // The range the user picked, held until its sheet has finished going away. Closing this sheet in
+  // the same frame leaves two stacked `Modal`s dismissing at once, and iOS ends that with a screen
+  // that still draws but takes no touches at all — the app looks frozen (see `Sheet.onDismissed`).
+  const [appliedRange, setAppliedRange] = useState<DateRange | null>(null);
 
   // An ad-hoc range is not a period, so it cannot anchor the list: the sheet then lists the
   // periods ending with the one holding today, the same fallback `shift` uses.
@@ -151,11 +156,14 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
         visible={rangeOpen}
         initial={period.range}
         today={today}
-        onApply={(range) => {
-          setCustomRange(range);
+        onApply={setAppliedRange}
+        onClose={() => setRangeOpen(false)}
+        onDismissed={() => {
+          if (appliedRange === null) return;
+          setCustomRange(appliedRange);
+          setAppliedRange(null);
           onClose();
         }}
-        onClose={() => setRangeOpen(false)}
       />
     </Sheet>
   );

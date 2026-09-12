@@ -8,13 +8,18 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../../src/components/Button';
+import { LoadingScreen } from '../../../src/components/LoadingScreen';
 import { Screen } from '../../../src/components/Screen';
 import { BackButton } from '../../../src/components/ScreenHeader';
 import { useToast } from '../../../src/components/Toast';
 import { restoreAccount } from '../../../src/db/adminService';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
-import { useAccounts, useSettings, useTransactionsInRange } from '../../../src/db/hooks';
-import { AccountForm, accountFormFrom } from '../../../src/features/accounts/AccountForm';
+import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../../src/db/hooks';
+import {
+  AccountForm,
+  type AccountFormValues,
+  accountFormFrom,
+} from '../../../src/features/accounts/AccountForm';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
 import { Text } from '../../../src/theme/Text';
 
@@ -25,10 +30,11 @@ export default function EditAccount() {
   const repos = useRepositories();
   const toast = useToast();
   const settings = useSettings();
-  const accounts = useAccounts();
+  const { accounts, loaded: accountsLoaded } = useAccountsQuery();
   const { today } = usePeriod();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
-  const rows = useTransactionsInRange('1970-01-01', today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  const loaded = accountsLoaded && rowsLoaded;
 
   const account = accounts.find((candidate) => candidate.id === id);
   const balance = useMemo(
@@ -36,9 +42,18 @@ export default function EditAccount() {
       account === undefined ? 0 : (accountBalances(accounts, rows, today).get(account.id) ?? 0),
     [account, accounts, rows, today],
   );
-  const [values, setValues] = useState(() =>
-    account === undefined ? null : accountFormFrom(account, balance, minorDigits),
+  // The form follows the account until the user types, and only then becomes their draft. Seeding
+  // it in a `useState` initialiser read the live queries on the first render, where they are still
+  // empty: the screen decided the account did not exist and then had no way to change its mind.
+  const [edited, setEdited] = useState<AccountFormValues | null>(null);
+  const values = useMemo(
+    () =>
+      edited ??
+      (!loaded || account === undefined ? null : accountFormFrom(account, balance, minorDigits)),
+    [edited, loaded, account, balance, minorDigits],
   );
+
+  if (!loaded) return <LoadingScreen />;
 
   if (account === undefined || values === null) {
     return (
@@ -77,7 +92,7 @@ export default function EditAccount() {
   return (
     <AccountForm
       values={values}
-      onChange={setValues}
+      onChange={setEdited}
       mode="edit"
       onSubmit={() => {
         repos.accounts.update(account.id, {

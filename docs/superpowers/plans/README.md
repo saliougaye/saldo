@@ -458,15 +458,20 @@ The two shapes sharing could take, kept here so the choice is not re-derived:
 **Acceptance:** a person following only the docs on a clean machine produces an installed APK and an iOS build connected to a
 self-hosted server.
 
-### Form architecture — how the app asks for things 🔜 queued
+### Form architecture — how the app asks for things ✅ done
 
-Asked for by the user on 2026-09-11, written up in `2026-09-11-form-architecture.md`. Every
-create/edit screen is a flat column of cards with a pinned button, and what does not fit is
-invisible: no scroll cue, and a footer that looks like the end of the form. The investigation
-decides, per form (transaction, budget, account, category, tag), whether it stays flat, becomes
-multi-step, becomes a list of rows opening their own pickers, or simply carries fewer fields — and
-it holds the transaction form apart on purpose, because there the cost that matters is taps per
-entry, not fields per screen.
+Asked for by the user on 2026-09-11. The investigation is `2026-09-11-form-architecture.md`; it
+decided, per form (transaction, budget, account, category, tag), whether the screen stays flat,
+becomes multi-step, becomes a list of rows opening their own pickers, or carries fewer fields, and
+it held the transaction form apart on purpose — there the cost that matters is taps per entry, not
+fields per screen.
+
+Implemented by `2026-09-11-10-form-ui.md`, all steps including the device checks: `Screen` fades its
+content into the footer instead of cutting it on a hard edge and keeps the save button and the taps
+above the keyboard; the transaction form keeps its five frequent fields on the first screen with the
+other four behind one disclosure; the account and category forms are three cards with their pickers
+behind rows, sharing one colour-and-icon sheet; the tag editor is a card on the tag screen rather
+than a sheet over it.
 
 ### UI scoping — motion, the transaction form, date entry 🔜 queued
 
@@ -501,13 +506,11 @@ small enough to land on its own branch without a plan file of its own.
   decisions: Reanimated 4, a token scale, four presets in `src/theme/motion.ts`, counting numbers,
   lists that close up when filtered, staggered Home cards, and skeletons behind a 180ms grace.
   Reduce Motion is honoured by construction and nothing is said by motion alone.
-- **The categories list needs a better shape.** Asked for on 2026-09-11. Today every row weighs the
-  same — a category with 200 transactions and one with none differ only by a small "N usi" — the
-  parent/child tree is carried by a 32px indent alone, and a row leads only to *edit*, never to the
-  category detail that already exists and shows what was spent. Three directions to choose between:
-  a grid of coloured tiles (loses counts and hierarchy), a list with a relative-usage bar inside the
-  row (ranks visually, adds nothing new), or parents as collapsible sections holding their children.
-  Decide before building; it belongs with the form-architecture investigation.
+- ✅ **The categories list needs a better shape.** Done: `app/settings/categories.tsx` draws one
+  row per top-level category instead of a tree carried by a 32px indent — the children live behind
+  the row, usage rolls up into the parent (`rollUpCategoryUsage`), and the row leads to the category
+  detail that shows what was spent, not only to *edit*. Archiving stays the only way out, with the
+  option of moving the rows.
 - **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
   work does is decide which one was meant (probably both):
   - ✅ `TransactionFilters.accountId` is now set, both ways: an account's "Ultime transazioni"

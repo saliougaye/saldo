@@ -9,6 +9,7 @@ import {
 import type { Clock } from '../db/clock';
 import type { KvStore } from '../db/kv';
 import type { RepositoryDatabase } from '../db/repositories/support';
+import { log, ms, shortId } from '../log';
 import { type ApiClient, ApiClientError } from '../net/apiClient';
 import { isSyncedEntity } from './entities';
 import { applyPull, markInvalid, markPushed, pendingChanges } from './localStore';
@@ -57,10 +58,13 @@ function assertSameSchema(peer: number): void {
  */
 export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
   const outcome: SyncOutcome = { pushed: 0, stale: 0, invalid: 0, pulled: 0, errors: 0 };
+  const startedAt = Date.now();
+  log('sync', 'cycle started', { device: shortId(deps.deviceId) });
 
   for (;;) {
     const batch = pendingChanges(deps.db, MAX_CHANGES_PER_PUSH);
     if (batch.length === 0) break;
+    log('sync', `pushing ${batch.length} changes`);
     const response = await deps.api.post(
       '/api/sync/push',
       { schemaVersion: SYNC_SCHEMA_VERSION, deviceId: deps.deviceId, changes: batch },
@@ -85,8 +89,18 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
       if (result.status === 'stale') outcome.stale += 1;
       else outcome.pushed += 1;
     }
+    log('sync', `the server acknowledged ${acknowledged} of ${batch.length}`, {
+      pushed: outcome.pushed,
+      stale: outcome.stale,
+      invalid: outcome.invalid,
+    });
     // Nothing acknowledged means nothing moved; looping again would spin forever on the same batch.
-    if (acknowledged === 0) break;
+    if (acknowledged === 0) {
+      // Worth a line of its own: it is the one exit that leaves rows pending with no error to show
+      // for it, so a device that never converges looks identical to one with nothing to send.
+      log('sync', 'nothing was acknowledged, stopping the push');
+      break;
+    }
   }
 
   let since = Number.parseInt(deps.kv.get('syncCursor') ?? '0', 10);
@@ -97,6 +111,10 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
       pullResponseSchema,
     );
     assertSameSchema(page.schemaVersion);
+    log('sync', `pulled ${page.changes.length} changes from cursor ${since}`, {
+      nextSince: page.nextSince,
+      hasMore: page.hasMore,
+    });
     if (page.changes.length > 0) {
       const applied = applyPull({
         db: deps.db,
@@ -107,6 +125,9 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
       });
       outcome.pulled += applied.applied;
       outcome.errors += applied.errors;
+      // A row the server sent and this device could not write. Silent otherwise: the cycle still
+      // succeeds, and the missing row only shows up as a screen that disagrees with another phone.
+      if (applied.errors > 0) log('sync', `${applied.errors} pulled rows could not be applied`);
     }
     // Guard against a server that keeps saying `hasMore` without moving the cursor.
     if (!page.hasMore || page.nextSince <= since) break;
@@ -114,6 +135,11 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
   }
 
   deps.materialise?.();
-  await deps.syncBlobs?.().catch(() => undefined);
+  await deps.syncBlobs?.().catch((error: unknown) => {
+    // Swallowed on purpose (see `syncBlobs`), which is exactly why it needs saying out loud: the
+    // cycle will report success with the bytes still on the phone.
+    log('sync', 'the blob pass failed and the cycle carried on', { error: String(error) });
+  });
+  log('sync', `cycle finished in ${ms(startedAt)}`, { ...outcome });
   return outcome;
 }

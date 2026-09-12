@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { log, ms } from '../log';
 
 export class ApiClientError extends Error {
   constructor(
@@ -59,8 +60,13 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const base = options.serverUrl.replace(/\/$/, '');
 
   const send = async <T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<T> => {
+    const method = init.method ?? 'GET';
+    const startedAt = Date.now();
     const auth = await options.getAuthHeaders();
-    if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
+    if (auth === null) {
+      log('net', `${method} ${path} not sent: no session on this device`);
+      throw new ApiClientError(401, 'no_session', 'Not signed in');
+    }
     const response = await fetchImpl(
       new Request(`${base}${path}`, {
         ...init,
@@ -68,15 +74,35 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         credentials: 'omit',
         headers: { ...(init.headers as Record<string, string> | undefined), ...auth },
       }),
-    );
+    ).catch((error: unknown) => {
+      // The one failure that carries no status: wrong address, no DNS, nothing listening. Upstream
+      // it turns into `network_error`, which does not say which of those it was.
+      log('net', `${method} ${path} never answered after ${ms(startedAt)}`, {
+        server: base,
+        error: String(error),
+      });
+      throw error;
+    });
+    log('net', `${method} ${path} → ${response.status} in ${ms(startedAt)}`);
     if (response.status === 401) {
       options.onSessionExpired?.();
       throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
     }
-    if (!response.ok) throw await readError(response);
+    if (!response.ok) {
+      const failure = await readError(response);
+      log('net', `${method} ${path} refused`, { code: failure.code, message: failure.message });
+      throw failure;
+    }
     const payload: unknown = await response.json();
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
+      // Worth the issue list: a response the app cannot read is almost always a server speaking a
+      // different version, and the field that changed is the whole answer.
+      log('net', `${method} ${path} answered something this app cannot read`, {
+        issues: parsed.error.issues.map(
+          (issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`,
+        ),
+      });
       throw new ApiClientError(502, 'bad_response', 'The server sent an unexpected response');
     }
     return parsed.data;
@@ -96,6 +122,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       ),
 
     async putBinary(path, bytes, headers) {
+      const startedAt = Date.now();
       const auth = await options.getAuthHeaders();
       if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
       const response = await fetchImpl(
@@ -108,14 +135,20 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           body: new Uint8Array(bytes),
         }),
       );
+      log('net', `PUT ${path} ${bytes.length} bytes → ${response.status} in ${ms(startedAt)}`);
       if (response.status === 401) {
         options.onSessionExpired?.();
         throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
       }
-      if (!response.ok) throw await readError(response);
+      if (!response.ok) {
+        const failure = await readError(response);
+        log('net', `PUT ${path} refused`, { code: failure.code, message: failure.message });
+        throw failure;
+      }
     },
 
     async getBinary(path) {
+      const startedAt = Date.now();
       const auth = await options.getAuthHeaders();
       if (auth === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
       const response = await fetchImpl(
@@ -125,8 +158,14 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         options.onSessionExpired?.();
         throw new ApiClientError(401, 'session_expired', 'Sign in again to keep syncing');
       }
-      if (!response.ok) throw await readError(response);
-      return new Uint8Array(await response.arrayBuffer());
+      if (!response.ok) {
+        const failure = await readError(response);
+        log('net', `GET ${path} refused`, { code: failure.code, message: failure.message });
+        throw failure;
+      }
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      log('net', `GET ${path} → ${bytes.length} bytes in ${ms(startedAt)}`);
+      return bytes;
     },
 
     hasSession: async () => (await options.getAuthHeaders()) !== null,

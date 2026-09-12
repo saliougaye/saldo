@@ -1,8 +1,9 @@
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { createContext, type ReactNode, useContext, useMemo } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import migrations from '../../drizzle/migrations';
 import { LoadingScreen } from '../components/LoadingScreen';
+import { log } from '../log';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 import { db } from './client';
@@ -49,6 +50,17 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     () => ({ repos: createRepositories(db), kv: createKvStore(db) }),
     [],
   );
+  /**
+   * The migration count is the point of this line. Metro caches the inlined `.sql` imports, so an
+   * app can run the *previous* schema against a build that has one more migration in it, and every
+   * query on the new column then fails somewhere far away from here.
+   */
+  useEffect(() => {
+    const known = Object.keys(migrations.migrations).length;
+    if (error) log('db', `migrations failed, ${known} in this bundle`, { error: error.message });
+    else if (success) log('db', `database ready, ${known} migrations in this bundle`);
+    else log('db', `applying migrations, ${known} in this bundle`);
+  }, [success, error]);
   if (error) return <CenteredMessage title="Saldo" body={error.message} />;
   if (!success) return <LoadingScreen />;
   return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;

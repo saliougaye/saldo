@@ -34,15 +34,29 @@ export function useSettings(): Settings | null {
   return useSettingsQuery().settings;
 }
 
-export function useAccounts(): Account[] {
-  const { data } = useLiveQuery(
+export interface AccountsQuery {
+  accounts: Account[];
+  /**
+   * False until the first query result arrives. Same trap as `SettingsQuery.loaded`: a screen that
+   * reads an empty list as "no such account" answers before the query has run, and a form seeded
+   * from that answer never un-seeds itself.
+   */
+  loaded: boolean;
+}
+
+export function useAccountsQuery(): AccountsQuery {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(accounts)
       .where(isNull(accounts.deletedAt))
       .orderBy(asc(accounts.sortOrder), asc(accounts.name)),
   );
-  return data.map(toEntity);
+  return { accounts: data.map(toEntity), loaded: updatedAt !== undefined };
+}
+
+export function useAccounts(): Account[] {
+  return useAccountsQuery().accounts;
 }
 
 export function useCategories(): Category[] {
