@@ -756,7 +756,7 @@ Notes that follow from using the library:
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | | Required by `s3`. |
 | `S3_FORCE_PATH_STYLE` | `true` | Needed by MinIO and some S3 clones. |
 | `BLOB_READ_WRITE_TOKEN` | | Required by `vercel-blob`; Vercel injects it. |
-| `REGISTRATION` | `first-user` | `open` \| `first-user` (only when no users exist) \| `closed`. |
+| `REGISTRATION` | `invite` | `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma list of allowed custom schemes for mobile redirects. |
 
 ### 9.3 Mobile sign-in flow (browser ceremony + one-time-token handoff)
@@ -797,6 +797,48 @@ Rate limiting is Better Auth's (`rateLimit: { window: 60, max: 20 }`), and is pe
 Documented only. Android: Credential Manager (`react-native-passkey`) + `/.well-known/assetlinks.json` served by
 `apps/web` (the SHA-256 of the user's signing key is configurable via env). iOS: Associated Domains `webcredentials:` +
 `/.well-known/apple-app-site-association`; requires a paid Apple Developer account.
+
+### 9.5 Access control: invites and revocation
+
+`REGISTRATION=invite` is the mode a shared instance runs in. Under it **no account is created
+without a single-use code** — not even the first, which is what makes "the first account" and "the
+person who installed the server" the same person rather than a race.
+
+**The invite.** 16 symbols of Crockford's base32 (`I`, `L`, `O` and `U` are absent; a reader's
+substitutions are folded on the way in), formatted `XXXX-XXXX-XXXX-XXXX` — 80 bits. The `invites`
+table stores its **sha-256**, a label, who minted it, a TTL (7 days by default, 90 at most) and
+what became of it. A code is shown exactly once, by the thing that mints it, and cannot be
+recovered from the server afterwards.
+
+The ceremony touches it twice. `resolveUser` **checks** the code before WebAuthn starts, so a bad
+code costs nobody a fingerprint and an abandoned ceremony costs nobody their invite;
+`afterVerification` **burns** it with a single conditional `UPDATE`, so two people racing on one
+code produce exactly one account. If writing the account then fails, the burn is released.
+Unknown, spent, revoked and expired all answer `invalid_invite`: the form cannot be used to learn
+which codes exist.
+
+**Roles.** Better Auth's `admin` plugin supplies the columns (`user.role`, `user.banned`,
+`user.ban_reason`, `user.ban_expires`, `session.impersonated_by`). The first account on the
+instance is written with `admin`, every later one with `user`. `requireAdmin` answers 401 without a
+session and 403 with the wrong account. Saldo calls none of the plugin's own endpoints.
+
+**Revocation** keeps the account and everything it wrote: the ban flag stops any new session, and
+deleting the session rows kills the bearer already in hand. The plugin's own check runs only when a
+session is *created*, so `requireUser` tests the flag on every authenticated request — which is
+what makes "a revoked account stops syncing" true at once rather than eventually. Deleting an
+account instead is irreversible and takes its `sync_rows` with it, by foreign key.
+
+**Routes** (all admin-only): `POST /api/invites` mints, `GET /api/invites` lists (never a code),
+`DELETE /api/invites/{id}` revokes. `/api/health` reports `inviteRequired`.
+
+**CLI**, run on the server against `DATABASE_URL`, and the only thing that works when no account
+exists: `pnpm --filter web invite new|list|revoke` and
+`pnpm --filter web user list|revoke|restore|promote|delete`. `user promote` is the way back in if
+the owner loses the phone holding the only admin passkey.
+
+**Upgrading an instance that predates this section:** accounts created before it have `role = NULL`
+and are therefore not admins. Run `pnpm --filter web user promote <id>` once, against the account
+that should own the server.
 
 ---
 

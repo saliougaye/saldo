@@ -359,24 +359,53 @@ real bucket, and the two-device journey needs two devices — what is covered is
 (`blobSync`, the routes, the cleanup queue) against a real filesystem store.
 *Acceptance:* importing a fixture creates the expected accounts/categories/tags and skips duplicates on a second run.
 
-### 10 — Access control: who is allowed in 🔜 queued
+### 10 — Access control: who is allowed in ✅ done
+
+**Plan:** `2026-09-11-10-access-control.md` · **Spec:** §9.2, §9.5
 
 Asked for by the user: "dare la possibilità di scegliere chi può accedere all'app per non avere malintenzionati."
 
-Today `REGISTRATION` (§9.2) is all-or-nothing: `open`, `first-user`, or `closed`. Once it is closed the owner cannot
-let a second person in without redeploying, and while it is open anyone who can reach the server can create an
-account. Accounts are passkey-only and carry no email, so the natural mechanism is an **invite**:
+`REGISTRATION` gains `invite`, under which **no account exists without a single-use code — the first
+one included**. That first code is minted by a CLI on the server, which is what makes the owner the
+owner rather than whoever reached the URL first; `first-user` left the door open until somebody
+walked through it. Roles and revocation are Better Auth's `admin` plugin (the same "let the library
+do auth" decision as 06b); the invites are ours — sha-256 of a 16-symbol Crockford code, checked in
+`resolveUser` before the WebAuthn ceremony starts and burned in `afterVerification` by a conditional
+`UPDATE`, with the burn released if writing the account then fails.
 
-- The owner mints a single-use invite (an admin page or a CLI on `apps/web`), with a TTL and an optional label.
-- "Crea account" asks for the invite code; the server validates and burns it inside the same ceremony that creates
-  the user, so a failed registration does not consume it.
-- The owner can list accounts and revoke one; deleting a user cascades to their `sync_rows` (the foreign key already
-  does this).
-- `REGISTRATION` gains `invite` alongside the three existing values, and `/api/health` keeps reporting whether
-  registration is possible so the app knows whether to offer the button at all.
+The app grew **no screen** this phase, by the user's decision: the code is typed into `/auth/mobile`,
+which the server serves, so `apps/mobile` is untouched. Minting from the app is a later, thin layer
+over routes that already exist and are tested.
 
-**Acceptance:** an invite works exactly once; an expired or unknown code is refused without telling the caller which;
-a revoked user's bearer stops working and their rows stop syncing; the whole flow has route-handler tests.
+**Acceptance:** all four met.
+- *An invite works exactly once* — `invites.test.ts`, including two burns racing under `Promise.all`,
+  of which exactly one returns an id.
+- *An expired or unknown code is refused without telling the caller which* — unknown, spent, revoked
+  and expired share one predicate and one `invalid_invite` answer; `registrationGate.test.ts` asserts
+  the four errors are byte-identical by comparing them as an array.
+- *A revoked user's bearer stops working and their rows stop syncing* — `app/api/access.test.ts`.
+  Two writes are needed and both are tested: Better Auth's ban check only runs when a session is
+  **created**, so `revokeUser` also deletes the session rows and `requireUser` re-reads the flag on
+  every authenticated request.
+- *Route-handler tests for the whole flow* — `app/api/invites/invites.test.ts` covers mint, list and
+  revoke, each with its 401 and its 403.
+
+**Verified beyond the tests**, against the real Postgres 17 dev stack and over HTTP, because PGlite
+does not stand in for the `pg` driver the registration hooks and the CLI actually use: migrations
+apply; `/api/health` reports `inviteRequired:true`; `/auth/mobile?mode=register` renders the code
+field and the login mode does not; an unknown code and a revoked code both answer 403
+`invalid_invite`; a **valid** code returns real registration options **and is still `active`
+afterwards**, which is the abandoned-ceremony invariant; and the CLI walks
+`invite new --label … --days 3` → `list` (`active`) → `revoke` → `list` (`revoked`), plus
+`user list`. Flags reach the scripts without a `--` separator.
+
+**Not verified:** the ceremony itself — `afterVerification`, and with it the burn, the release on
+failure and the first-account-becomes-admin rule — needs a signed attestation from a real platform
+authenticator (Touch ID), which no phase since 06 has been able to drive. Those paths rest on the
+unit tests for `burnInvite`, `releaseInvite` and `roleForNewUser`.
+
+**Upgrade note:** an account created before this phase has `role = NULL` and is therefore not an
+admin. `pnpm --filter web user promote <id>` is the one-off fix, and it is in `docs/self-hosting.md`.
 
 ### 11 — Release docs & hardening
 
