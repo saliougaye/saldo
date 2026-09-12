@@ -395,6 +395,7 @@ export const it = {
     signOutTitle: 'Uscire da questo server?',
     signOutBody:
       'I dati restano su questo telefono. La sincronizzazione si fermerà finché non rientri.',
+    firstSync: 'Scarico i tuoi dati\u2026',
     foreignDataTitle: 'Dati di un altro account',
     foreignDataBody_one:
       'Questo telefono contiene dati di un altro account e vanno cancellati per entrare. {{count}} modifica non ancora inviata andrà persa; tutto il resto resta sul server di quell\u2019account.',

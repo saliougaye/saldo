@@ -11,6 +11,7 @@ import { deleteAllAttachmentFiles } from '../attachments/localFiles';
 import { db } from '../db/client';
 import { useDatabase } from '../db/DatabaseProvider';
 import { hasLocalData, wipeDevice } from '../db/wipe';
+import { log, shortId } from '../log';
 import { type ApiClient, ApiClientError, createApiClient } from '../net/apiClient';
 import { pendingCount } from '../sync/localStore';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
@@ -96,10 +97,12 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       const cookie = await client.getCookie().catch(() => null);
       if (cancelled) return;
       if (cookie === null || cookie.length === 0) {
+        log('auth', 'no stored session on this device');
         setUser(null);
         setStatus('signed-out');
         return;
       }
+      log('auth', 'stored session found, asking the server about it');
       setStatus('signed-in');
       const answer = await client
         .getSession()
@@ -115,6 +118,10 @@ export function ServerProvider({ children }: { children: ReactNode }) {
               hasError: answer.result.error !== null,
             },
       );
+      log('auth', 'the server answered about the stored session', {
+        answer: answer.kind,
+        decision,
+      });
       if (decision === 'signed-out') {
         setUser(null);
         setStatus('signed-out');
@@ -138,7 +145,9 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       // Unreachable from the UI, which hides the buttons; a thrown error beats a silent no-op.
       if (serverUrl === null) throw new ApiClientError(500, 'no_server', 'No server configured');
       const target = createServerAuthClient(serverUrl);
+      log('auth', 'opening the ceremony', { mode });
       const signedIn = await signIn({ serverUrl, client: target, mode });
+      log('auth', 'ceremony finished', { account: shortId(signedIn.id) });
 
       /**
        * Everything below happens **before** `setUser`, and that ordering is the point: nothing on
@@ -146,10 +155,19 @@ export function ServerProvider({ children }: { children: ReactNode }) {
        * user appears and that cycle would push this device's pending rows into whichever account
        * has just signed in. The question has to be settled while there is still no session.
        */
-      const verdict = ownershipVerdict(kv.get(DEVICE_ACCOUNT_KEY), signedIn.id, hasLocalData(db));
+      const stored = kv.get(DEVICE_ACCOUNT_KEY);
+      const verdict = ownershipVerdict(stored, signedIn.id, hasLocalData(db));
+      log('auth', 'whose data is on this phone', {
+        stored: shortId(stored),
+        incoming: shortId(signedIn.id),
+        verdict,
+      });
       if (verdict === 'foreign-data') {
-        const accepted = (await confirmForeignData?.(pendingCount(db))) ?? false;
+        const pending = pendingCount(db);
+        log('auth', 'asking before deleting another account data', { pending });
+        const accepted = (await confirmForeignData?.(pending)) ?? false;
         if (!accepted) {
+          log('auth', 'refused, signing the new account back out');
           // The ceremony has already succeeded, so there is a session to give back. Saying no here
           // must leave the phone exactly as it was found.
           await signOut(target);
@@ -159,12 +177,16 @@ export function ServerProvider({ children }: { children: ReactNode }) {
             'This phone holds another account data',
           );
         }
+        log('auth', 'deleting the attachment files');
         deleteAllAttachmentFiles();
+        log('auth', 'emptying the database');
         wipeDevice(db);
+        log('auth', 'phone is clear');
       }
       // After the wipe, never before: `wipeDevice` empties `kv` too.
       kv.set(DEVICE_ACCOUNT_KEY, signedIn.id);
 
+      log('auth', 'installing the session, sync can start now');
       setUser(signedIn);
       setStatus('signed-in');
       setSessionExpired(false);

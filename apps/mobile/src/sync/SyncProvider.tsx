@@ -7,6 +7,7 @@ import { createClock } from '../db/clock';
 import { useDatabase } from '../db/DatabaseProvider';
 import { runMaterialiser } from '../db/recurrenceService';
 import { usePeriod } from '../features/period/PeriodProvider';
+import { log } from '../log';
 import { uploadPendingBlobs } from './blobSync';
 import {
   createScheduler,
@@ -60,10 +61,20 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // No scheduler means local-only; no user means signed out, and a cycle would only 401.
     if (scheduler === null || user === null) {
+      log('sync', 'no cycle to run', {
+        scheduler: scheduler === null ? 'none' : 'ready',
+        signedIn: user !== null,
+      });
       setStatus(IDLE);
       return;
     }
-    const unsubscribe = scheduler.subscribe(setStatus);
+    log('sync', 'scheduler armed, running the first cycle');
+    const unsubscribe = scheduler.subscribe((next) => {
+      // Every transition, because the boot router blocks on this status and a cycle that never
+      // leaves `syncing` is the difference between a slow start and a permanent spinner.
+      log('sync', `status: ${next.kind}`, next.kind === 'error' ? { code: next.code } : undefined);
+      setStatus(next);
+    });
     void scheduler.syncNow();
     const interval = setInterval(() => {
       if (AppState.currentState === 'active') void scheduler.syncNow();
@@ -72,6 +83,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       if (next === 'active') void scheduler.syncNow();
     });
     return () => {
+      // Worth seeing: if this prints repeatedly without a cycle finishing in between, the
+      // scheduler is being rebuilt and no cycle will ever settle.
+      log('sync', 'scheduler torn down');
       unsubscribe();
       clearInterval(interval);
       appState.remove();
