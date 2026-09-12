@@ -22,12 +22,18 @@ export function CustomRangeSheet({
   today,
   onApply,
   onClose,
+  onDismissed,
 }: {
   visible: boolean;
   initial: DateRange;
   today: LocalDate;
   onApply: (range: DateRange) => void;
   onClose: () => void;
+  /**
+   * Forwarded to `Sheet`. This sheet sits on top of another one, so whoever opened it has to wait
+   * for this callback before closing itself — see `PeriodSheet`.
+   */
+  onDismissed?: () => void;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -75,7 +81,13 @@ export function CustomRangeSheet({
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('period.custom')} tall>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={t('period.custom')}
+      tall
+      onDismissed={onDismissed}
+    >
       <View style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {end(t('period.customFrom'), range.start, 'start')}
