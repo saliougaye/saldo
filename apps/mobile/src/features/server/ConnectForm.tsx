@@ -5,6 +5,7 @@ import { serverLabel } from '../../auth/link';
 import { useServer } from '../../auth/ServerProvider';
 import type { ServerHealth } from '../../auth/session';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ApiClientError } from '../../net/apiClient';
 import { Text } from '../../theme/Text';
 
@@ -17,6 +18,7 @@ const CODE_KEYS: Record<string, string> = {
   schema_too_new: 'sync.schemaTooNew',
   registration_closed: 'sync.registrationClosed',
   display_name_required: 'sync.nameRequired',
+  foreign_device_data: 'sync.foreignDeviceData',
 };
 
 /**
@@ -36,6 +38,15 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
   // The failure is kept raw and worded at render time, so the probe does not depend on `t` and a
   // change of language does not restart it.
   const [failure, setFailure] = useState<unknown>(null);
+  /**
+   * Open only while `connect` is waiting for an answer about another account's data. It holds the
+   * `resolve` of the promise it handed out, which is what lets a dialog answer a question asked
+   * deep inside the sign-in — and why it must be resolved on both buttons, never dropped.
+   */
+  const [foreignData, setForeignData] = useState<{
+    pending: number;
+    decide: (accepted: boolean) => void;
+  } | null>(null);
 
   const describe = (caught: unknown): string => {
     const code = caught instanceof ApiClientError ? caught.code : null;
@@ -66,7 +77,13 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
     setFailure(null);
     void (async () => {
       try {
-        await connect(mode);
+        await connect(
+          mode,
+          (pending) =>
+            new Promise<boolean>((resolve) => {
+              setForeignData({ pending, decide: resolve });
+            }),
+        );
         onConnected?.();
       } catch (caught) {
         setFailure(caught);
@@ -74,6 +91,11 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
         setBusy(false);
       }
     })();
+  };
+
+  const answerForeignData = (accepted: boolean) => () => {
+    foreignData?.decide(accepted);
+    setForeignData(null);
   };
 
   // A build with no usable SALDO_SERVER_URL cannot sign anyone in, and no button would help.
@@ -126,6 +148,16 @@ export function ConnectForm({ onConnected }: { onConnected?: () => void }) {
       <Text size="caption" color="textFaint">
         {t('sync.passkeyNote')}
       </Text>
+
+      <ConfirmDialog
+        visible={foreignData !== null}
+        title={t('sync.foreignDataTitle')}
+        body={t('sync.foreignDataBody', { count: foreignData?.pending ?? 0 })}
+        confirmLabel={t('sync.foreignDataConfirm')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={answerForeignData(true)}
+        onCancel={answerForeignData(false)}
+      />
     </View>
   );
 }

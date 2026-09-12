@@ -395,6 +395,13 @@ export const it = {
     signOutTitle: 'Uscire da questo server?',
     signOutBody:
       'I dati restano su questo telefono. La sincronizzazione si fermerà finché non rientri.',
+    foreignDataTitle: 'Dati di un altro account',
+    foreignDataBody_one:
+      'Questo telefono contiene dati di un altro account e vanno cancellati per entrare. {{count}} modifica non ancora inviata andrà persa; tutto il resto resta sul server di quell\u2019account.',
+    foreignDataBody_other:
+      'Questo telefono contiene dati di un altro account e vanno cancellati per entrare. {{count}} modifiche non ancora inviate andranno perse; tutto il resto resta sul server di quell\u2019account.',
+    foreignDataConfirm: 'Cancella ed entra',
+    foreignDeviceData: 'Accesso annullato: i dati su questo telefono sono di un altro account.',
     pending_one: '{{count}} modifica da sincronizzare',
     pending_other: '{{count}} modifiche da sincronizzare',
     rejected_one: '{{count}} modifica rifiutata dal server',

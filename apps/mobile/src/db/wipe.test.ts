@@ -1,7 +1,7 @@
 import type { Account, Settings } from '@saldo/core';
 import { schema } from './schema';
 import { createTestContext, type TestContext } from './testing';
-import { wipeDevice } from './wipe';
+import { hasLocalData, wipeDevice } from './wipe';
 
 const SETTINGS_INPUT = {
   periodKind: 'cycle',
@@ -43,6 +43,31 @@ function totalRows(context: TestContext): number {
     0,
   );
 }
+
+describe('hasLocalData', () => {
+  it('is false on a fresh install and true once anything is written', () => {
+    const context = createTestContext();
+    expect(hasLocalData(context.db)).toBe(false);
+    context.repos.tags.create({ name: 'Trasloco' });
+    expect(hasLocalData(context.db)).toBe(true);
+  });
+
+  it('ignores the device keys, which every install has', () => {
+    const context = createTestContext();
+    context.kv.deviceId();
+    context.kv.set('syncCursor', '42');
+    // `kv` says who this *device* is, never whose data it holds — counting it would make every
+    // phone look occupied.
+    expect(hasLocalData(context.db)).toBe(false);
+  });
+
+  it('is false again after a wipe', () => {
+    const context = createTestContext();
+    fill(context);
+    wipeDevice(context.db);
+    expect(hasLocalData(context.db)).toBe(false);
+  });
+});
 
 describe('wipeDevice', () => {
   it('empties every table, the device-local ones included', () => {

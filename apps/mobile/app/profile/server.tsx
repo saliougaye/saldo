@@ -24,6 +24,7 @@ const CODE_KEYS: Record<string, string> = {
   schema_too_old: 'sync.schemaTooOld',
   schema_too_new: 'sync.schemaTooNew',
   registration_closed: 'sync.registrationClosed',
+  foreign_device_data: 'sync.foreignDeviceData',
 };
 
 /** §6.30. */

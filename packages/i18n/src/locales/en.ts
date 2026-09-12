@@ -394,6 +394,13 @@ export const en: Messages = {
     signOut: 'Sign out',
     signOutTitle: 'Sign out of this server?',
     signOutBody: 'Your data stays on this phone. Sync stops until you sign in again.',
+    foreignDataTitle: 'Another account\u2019s data',
+    foreignDataBody_one:
+      'This phone holds another account\u2019s data, which has to be deleted before you can sign in. {{count}} change that was never sent will be lost; everything else stays on that account\u2019s server.',
+    foreignDataBody_other:
+      'This phone holds another account\u2019s data, which has to be deleted before you can sign in. {{count}} changes that were never sent will be lost; everything else stays on that account\u2019s server.',
+    foreignDataConfirm: 'Delete and sign in',
+    foreignDeviceData: 'Sign-in cancelled: the data on this phone belongs to another account.',
     pending_one: '{{count}} change waiting to sync',
     pending_other: '{{count}} changes waiting to sync',
     rejected_one: '{{count}} change the server rejected',

@@ -7,10 +7,15 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { deleteAllAttachmentFiles } from '../attachments/localFiles';
+import { db } from '../db/client';
 import { useDatabase } from '../db/DatabaseProvider';
+import { hasLocalData, wipeDevice } from '../db/wipe';
 import { type ApiClient, ApiClientError, createApiClient } from '../net/apiClient';
+import { pendingCount } from '../sync/localStore';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
 import { BUILD_SERVER_URL } from './buildServer';
+import { DEVICE_ACCOUNT_KEY, ownershipVerdict } from './deviceOwner';
 import { checkServer, type ServerHealth, type SignedInUser, signIn, signOut } from './session';
 import { decideSession } from './sessionState';
 
@@ -28,7 +33,15 @@ export interface ServerValue {
   status: ServerStatus;
   sessionExpired: boolean;
   check(url: string): Promise<ServerHealth>;
-  connect(mode: 'login' | 'register'): Promise<SignedInUser>;
+  /**
+   * `confirmForeignData` is asked only when this phone holds rows belonging to a **different**
+   * account, and is asked before the session is installed — see `ownershipVerdict`. Answering no
+   * signs the new account straight back out and leaves the data alone.
+   */
+  connect(
+    mode: 'login' | 'register',
+    confirmForeignData?: (pending: number) => Promise<boolean>,
+  ): Promise<SignedInUser>;
   disconnect(): Promise<void>;
 }
 
@@ -117,16 +130,48 @@ export function ServerProvider({ children }: { children: ReactNode }) {
     };
   }, [client]);
 
-  const connect = useCallback(async (mode: 'login' | 'register') => {
-    // Unreachable from the UI, which hides the buttons; a thrown error beats a silent no-op.
-    if (serverUrl === null) throw new ApiClientError(500, 'no_server', 'No server configured');
-    const target = createServerAuthClient(serverUrl);
-    const signedIn = await signIn({ serverUrl, client: target, mode });
-    setUser(signedIn);
-    setStatus('signed-in');
-    setSessionExpired(false);
-    return signedIn;
-  }, []);
+  const connect = useCallback(
+    async (
+      mode: 'login' | 'register',
+      confirmForeignData?: (pending: number) => Promise<boolean>,
+    ) => {
+      // Unreachable from the UI, which hides the buttons; a thrown error beats a silent no-op.
+      if (serverUrl === null) throw new ApiClientError(500, 'no_server', 'No server configured');
+      const target = createServerAuthClient(serverUrl);
+      const signedIn = await signIn({ serverUrl, client: target, mode });
+
+      /**
+       * Everything below happens **before** `setUser`, and that ordering is the point: nothing on
+       * the phone records which account wrote a row, so `SyncProvider` starts a cycle the moment a
+       * user appears and that cycle would push this device's pending rows into whichever account
+       * has just signed in. The question has to be settled while there is still no session.
+       */
+      const verdict = ownershipVerdict(kv.get(DEVICE_ACCOUNT_KEY), signedIn.id, hasLocalData(db));
+      if (verdict === 'foreign-data') {
+        const accepted = (await confirmForeignData?.(pendingCount(db))) ?? false;
+        if (!accepted) {
+          // The ceremony has already succeeded, so there is a session to give back. Saying no here
+          // must leave the phone exactly as it was found.
+          await signOut(target);
+          throw new ApiClientError(
+            409,
+            'foreign_device_data',
+            'This phone holds another account data',
+          );
+        }
+        deleteAllAttachmentFiles();
+        wipeDevice(db);
+      }
+      // After the wipe, never before: `wipeDevice` empties `kv` too.
+      kv.set(DEVICE_ACCOUNT_KEY, signedIn.id);
+
+      setUser(signedIn);
+      setStatus('signed-in');
+      setSessionExpired(false);
+      return signedIn;
+    },
+    [kv],
+  );
 
   const disconnect = useCallback(async () => {
     if (client !== null) await signOut(client);

@@ -418,6 +418,35 @@ admin. `pnpm --filter web user promote <id>` is the one-off fix, and it is in `d
 The same rule is why a newly invited member does not inherit such an instance: they are not its
 earliest account.
 
+### 10b — Whose data is on this phone 🩹 stopgap
+
+Found by the user while testing phase 10: creating a second account on a phone that already holds
+data shows the first account's transactions — and pushes the ones still `PENDING` into the second
+account's rows. Nothing on the device records who wrote a row (`pendingChanges` selects on
+`sync_state` alone), so there is no way to show two accounts apart.
+
+`kv.accountId` now records which account the rows belong to, written at sign-in and wiped with
+everything else by a reset. `ownershipVerdict` compares it with the account signing in, and the two
+cases that need no question — a device that has never recorded one, and a device with no rows —
+answer `keep`. A different account on a phone that holds rows asks before it proceeds, saying how
+many changes were never sent, and signs straight back out if the answer is no. The check runs
+**before** the session is installed, because `SyncProvider` starts a cycle the moment a user
+appears.
+
+**This is a stopgap and is labelled one.** The proper fix is scoping the local rows, and the
+decision recorded on 2026-09-12 is not to write it yet: what the rows would be scoped *by* is not
+the account. Sharing a ledger between people needs an owning entity on the server — `sync_rows` is
+keyed `(user_id, entity, id)` and the pull is `where user_id = ?` — and that entity, not the
+account, is what the phone would key on. Scoping by account now is work to redo under another name.
+
+The two shapes sharing could take, kept here so the choice is not re-derived:
+- **Two people, one account.** Each registers a passkey on the same user. The server already works
+  this way; what is missing is a way to add a passkey to an existing account, since `resolveUser`
+  always mints a new user and `addPasskey` wants a session. Needs no local scoping at all.
+- **Two accounts, shared data.** An owning entity (household, space), a membership table, the pull
+  scoped to the spaces a user belongs to, and a rule for what happens to rows when somebody leaves.
+  The LWW merge already tolerates more writers.
+
 ### 11 — Release docs & hardening
 
 **Spec:** §15, §16 (E2E), §18, §19

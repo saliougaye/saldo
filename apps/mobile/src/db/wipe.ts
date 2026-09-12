@@ -1,5 +1,5 @@
 import type { RepositoryDatabase } from './repositories/support';
-import { schema } from './schema';
+import { schema, syncedTables } from './schema';
 
 /**
  * Returns the device to the state a fresh install is in: every synced entity gone, and every
@@ -17,6 +17,19 @@ import { schema } from './schema';
  * The attachment *files* are not its business — they live on the filesystem, not in SQLite, and
  * are removed by `deleteAllAttachmentFiles`. Both are needed to leave nothing behind.
  */
+/**
+ * Whether this phone is holding anything at all. Used before signing an account in: a device with
+ * no rows has nothing that could belong to somebody else, and nothing worth asking about.
+ *
+ * `kv` is not counted. It holds the device's own identity, which every install has and which says
+ * nothing about whose data this is.
+ */
+export function hasLocalData(db: RepositoryDatabase): boolean {
+  return Object.values(syncedTables).some(
+    (table) => db.select().from(table).limit(1).all().length > 0,
+  );
+}
+
 export function wipeDevice(db: RepositoryDatabase): void {
   db.transaction((tx) => {
     for (const table of Object.values(schema)) tx.delete(table).run();
