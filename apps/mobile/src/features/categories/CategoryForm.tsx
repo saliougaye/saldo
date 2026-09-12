@@ -59,6 +59,15 @@ export function categoryFormFrom(
   };
 }
 
+/**
+ * What the form is still waiting for, or `null` when nothing is. Only the name is required (§6.19):
+ * the direction, the icon and the colour all start from a default, so the footer can name the one
+ * thing that is missing instead of leaving the button grey and unexplained.
+ */
+export function categoryMissingForSave(values: CategoryFormValues): 'name' | null {
+  return values.name.trim().length > 0 ? null : 'name';
+}
+
 export interface CategoryFormProps {
   values: CategoryFormValues;
   onChange: (values: CategoryFormValues) => void;
@@ -105,13 +114,19 @@ export function CategoryForm({
         t('categories.noParent'));
 
   const colour = theme.categoryColor(values.colorIndex);
-  const ready = values.name.trim().length > 0;
+  const missing = categoryMissingForSave(values);
 
   return (
     <Screen
       footer={
         <View style={{ gap: 8 }}>
-          <PrimaryButton label={t('common.save')} disabled={!ready} onPress={onSubmit} />
+          {missing === null ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one.
+            <Text size="footnote" color="textMuted">
+              {t(`categories.missing_${missing}`)}
+            </Text>
+          )}
+          <PrimaryButton label={t('common.save')} disabled={missing !== null} onPress={onSubmit} />
           {onArchive === undefined ? null : (
             <SecondaryButton label={t('categories.archive')} onPress={onArchive} />
           )}

@@ -72,4 +72,16 @@ describe('AccountForm', () => {
     expect(screen.getByText('Statement closes on')).toBeTruthy();
     expect(screen.getByText('Charged on')).toBeTruthy();
   });
+
+  it('says what it is waiting for instead of only greying the button out', async () => {
+    await renderForm();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByText('Enter a name to save.')).toBeTruthy();
+  });
+
+  it('drops the line once the name is there', async () => {
+    await renderForm({ ...emptyAccountForm(), name: 'Conto corrente' });
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.queryByText('Enter a name to save.')).toBeNull();
+  });
 });

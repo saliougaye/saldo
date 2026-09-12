@@ -92,6 +92,15 @@ export function openingBalanceFrom(
   });
 }
 
+/**
+ * What the form is still waiting for, or `null` when nothing is. The name is the only thing an
+ * account cannot be saved without (§6.22) — a balance of zero is a balance — so the footer names it
+ * rather than leaving the button grey and unexplained.
+ */
+export function accountMissingForSave(values: AccountFormValues): 'name' | null {
+  return values.name.trim().length > 0 ? null : 'name';
+}
+
 export interface AccountFormProps {
   values: AccountFormValues;
   onChange: (values: AccountFormValues) => void;
@@ -107,7 +116,7 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
   const settings = useSettings();
   const currency = settings?.currency ?? 'EUR';
   const set = (patch: Partial<AccountFormValues>) => onChange({ ...values, ...patch });
-  const ready = values.name.trim().length > 0;
+  const missing = accountMissingForSave(values);
   const colour = theme.categoryColor(values.colorIndex);
 
   const [sheet, setSheet] = useState<'none' | 'type' | 'appearance' | 'close' | 'charge'>('none');
@@ -116,7 +125,17 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
 
   return (
     <Screen
-      footer={<PrimaryButton label={t('common.save')} disabled={!ready} onPress={onSubmit} />}
+      footer={
+        <View style={{ gap: 8 }}>
+          {missing === null ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one.
+            <Text size="footnote" color="textMuted">
+              {t(`accounts.missing_${missing}`)}
+            </Text>
+          )}
+          <PrimaryButton label={t('common.save')} disabled={missing !== null} onPress={onSubmit} />
+        </View>
+      }
     >
       <ScreenHeader title={mode === 'new' ? t('accounts.newAccount') : t('accounts.editAccount')} />
 

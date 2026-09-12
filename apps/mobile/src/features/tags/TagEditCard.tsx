@@ -13,6 +13,11 @@ import { useTags } from '../../db/hooks';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 
+/** What the rename is waiting for, or `null` when nothing is: a tag is only its name (§5.10). */
+export function tagMissingForSave(name: string): 'name' | null {
+  return name.trim().length > 0 ? null : 'name';
+}
+
 export interface TagEditCardProps {
   tag: Pick<Tag, 'id' | 'name'>;
   /** Called after a merge or a delete, when there is no tag left to show. */
@@ -35,7 +40,7 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const others = tags.filter((candidate) => candidate.id !== tag.id);
-  const ready = name.trim().length > 0;
+  const missing = tagMissingForSave(name);
 
   return (
     <Card>
@@ -78,9 +83,15 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
         )}
 
         <View style={{ gap: 8 }}>
+          {missing === null ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one.
+            <Text size="footnote" color="textMuted">
+              {t(`tags.missing_${missing}`)}
+            </Text>
+          )}
           <PrimaryButton
             label={t('common.save')}
-            disabled={!ready}
+            disabled={missing !== null}
             onPress={() => renameTag(repos, tag.id, name.trim())}
           />
           <SecondaryButton label={t('tags.delete')} onPress={() => setConfirmDelete(true)} />

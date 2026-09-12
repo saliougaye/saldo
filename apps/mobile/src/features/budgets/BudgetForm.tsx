@@ -1,5 +1,4 @@
 import {
-  amountBufferToMinor,
   autoBudgetName,
   BUDGET_ALERT_THRESHOLDS,
   categorySpendHistory,
@@ -31,7 +30,7 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { usePeriod } from '../period/PeriodProvider';
 import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
-import { BUDGET_STEPS, budgetStepReady } from './steps';
+import { BUDGET_STEPS, budgetStepMissing } from './steps';
 
 const HISTORY_CYCLES = 6;
 /** §6.18 footnote: the suggestion is the median plus this much headroom. */
@@ -104,8 +103,6 @@ export function BudgetForm({
     t('common.and'),
   );
   const set = (patch: Partial<BudgetFormValues>) => onChange({ ...values, ...patch });
-  const amount = amountBufferToMinor(values.buffer, minorDigits);
-  const ready = amount > 0 && values.categoryIds.length > 0;
 
   const amountCard = () => (
     <Card>
@@ -269,15 +266,27 @@ export function BudgetForm({
   );
 
   const step = BUDGET_STEPS[stepIndex] ?? 'details';
-  const stepReady = budgetStepReady(step, values, minorDigits);
+  // One gate for both shapes: an edit is one page, and one page asks for everything the last step
+  // of the wizard does.
+  const missing = budgetStepMissing(mode === 'edit' ? 'details' : step, values, minorDigits);
   const submit = () => onSubmit(values.name.trim().length > 0 ? values.name.trim() : autoName);
+
+  // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names the next
+  // thing to fix rather than listing everything that is unfinished.
+  const missingLine = () =>
+    missing === null ? null : (
+      <Text size="footnote" color="textMuted">
+        {t(`budgets.missing_${missing}`)}
+      </Text>
+    );
 
   if (mode === 'edit') {
     return (
       <Screen
         footer={
           <View style={{ gap: 8 }}>
-            <PrimaryButton label={t('common.save')} disabled={!ready} onPress={submit} />
+            {missingLine()}
+            <PrimaryButton label={t('common.save')} disabled={missing !== null} onPress={submit} />
             {onDelete === undefined ? null : (
               <SecondaryButton label={t('budgets.deleteBudget')} onPress={onDelete} />
             )}
@@ -295,21 +304,24 @@ export function BudgetForm({
   return (
     <Screen
       footer={
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {stepIndex === 0 ? null : (
-            <View style={{ flex: 1 }}>
-              <SecondaryButton
-                label={t('common.back')}
-                onPress={() => setStepIndex(stepIndex - 1)}
+        <View style={{ gap: 8 }}>
+          {missingLine()}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {stepIndex === 0 ? null : (
+              <View style={{ flex: 1 }}>
+                <SecondaryButton
+                  label={t('common.back')}
+                  onPress={() => setStepIndex(stepIndex - 1)}
+                />
+              </View>
+            )}
+            <View style={{ flex: 2 }}>
+              <PrimaryButton
+                label={step === 'details' ? t('budgets.create') : t('common.continue')}
+                disabled={missing !== null}
+                onPress={() => (step === 'details' ? submit() : setStepIndex(stepIndex + 1))}
               />
             </View>
-          )}
-          <View style={{ flex: 2 }}>
-            <PrimaryButton
-              label={step === 'details' ? t('budgets.create') : t('common.continue')}
-              disabled={!stepReady}
-              onPress={() => (step === 'details' ? submit() : setStepIndex(stepIndex + 1))}
-            />
           </View>
         </View>
       }
