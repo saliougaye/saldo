@@ -2,6 +2,7 @@ import {
   amountBufferToMinor,
   type BalancePreview,
   getCurrency,
+  topCategories,
   transferBalancePreview,
   transferOverdrawsSource,
 } from '@saldo/core';
@@ -45,7 +46,6 @@ import {
   missingForSave,
   type TransactionFormValues,
   tagSuggestions,
-  topCategories,
 } from './useTransactionForm';
 
 export interface TransactionFormProps {
@@ -136,9 +136,12 @@ export function TransactionForm({
   );
   // Seven plus the "Altro" tile is two rows: the grid stops being the whole screen, and what it
   // pushed below the fold — the tags, the attachments — is reachable without scrolling past it.
+  // The recents window is anchored on today rather than on the transaction's date: what the thumb
+  // reaches for is the same whether the receipt being typed up is from this morning or last month.
+  // `recent` still hides the rows after that date, so nothing ranks an entry by its own future.
   const grid = useMemo(
-    () => topCategories(categories, recent, values.kind),
-    [categories, recent, values.kind],
+    () => topCategories(categories, recent, values.kind, { today }),
+    [categories, recent, values.kind, today],
   );
   // A category chosen from the full list is not in the grid, so the grid grows to hold it rather
   // than showing nothing selected.

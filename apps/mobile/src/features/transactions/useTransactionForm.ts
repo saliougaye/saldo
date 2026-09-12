@@ -1,7 +1,6 @@
 import {
   addDays,
   amountBufferToMinor,
-  type Category,
   type LocalDate,
   type MinorDigits,
   minorToAmountBuffer,
@@ -138,35 +137,6 @@ export function dateChoices(today: LocalDate): { key: 'today' | 'yesterday'; dat
     { key: 'today', date: today },
     { key: 'yesterday', date: addDays(today, -1) },
   ];
-}
-
-/**
- * The category grid shows the most-used categories of the right direction, then "Altro" opens the
- * full picker (§6.16). Usage is counted over the rows the screen already loaded.
- *
- * Seven, not the ten the spec names: with the "Altro" tile that is two rows of four, and the grid
- * stops pushing the date, the tags and the attachments off the screen. Everything it drops is one
- * tap away in the picker, which also holds the subcategories the grid never showed.
- */
-export function topCategories(
-  categories: readonly Category[],
-  transactions: readonly Pick<Transaction, 'categoryId'>[],
-  kind: TransactionKind,
-  limit = 7,
-): Category[] {
-  const direction = kind === 'income' ? 'income' : 'expense';
-  const usage = new Map<string, number>();
-  for (const tx of transactions) {
-    if (tx.categoryId === null) continue;
-    usage.set(tx.categoryId, (usage.get(tx.categoryId) ?? 0) + 1);
-  }
-  return categories
-    .filter((category) => category.direction === direction && category.archivedAt === null)
-    .sort((a, b) => {
-      const diff = (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0);
-      return diff !== 0 ? diff : a.sortOrder - b.sortOrder;
-    })
-    .slice(0, limit);
 }
 
 /** Tag suggestions for the inline input: name match first, then usage (§5.10). */
