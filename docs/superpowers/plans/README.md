@@ -404,8 +404,19 @@ failure and the first-account-becomes-admin rule — needs a signed attestation 
 authenticator (Touch ID), which no phase since 06 has been able to drive. Those paths rest on the
 unit tests for `burnInvite`, `releaseInvite` and `roleForNewUser`.
 
+**Review findings, both fixed here.** The first-account-is-the-admin rule was a read-then-write:
+two ceremonies finishing together both saw an empty `user` table and both became admin. Moving the
+count after the insert would have been worse — both would have seen two rows and **neither** would
+have become the owner — so the claim now runs under an advisory lock and asks "is the earliest
+account mine", an answer that does not depend on when it is asked. And Better Auth's `admin` plugin
+serves its own endpoints from the `/api/auth` catch-all, which nothing tested: an anonymous caller,
+a member and a revoked admin are all refused `admin/list-users` and `admin/create-user`, and that is
+pinned by `app/api/auth/adminPlugin.test.ts`.
+
 **Upgrade note:** an account created before this phase has `role = NULL` and is therefore not an
 admin. `pnpm --filter web user promote <id>` is the one-off fix, and it is in `docs/self-hosting.md`.
+The same rule is why a newly invited member does not inherit such an instance: they are not its
+earliest account.
 
 ### 11 — Release docs & hardening
 
