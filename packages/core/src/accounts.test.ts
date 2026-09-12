@@ -7,6 +7,7 @@ import {
   netWorth,
   nextCreditChargeDate,
   spendableTotal,
+  transferBalancePreview,
 } from './accounts';
 
 describe('accountBalances', () => {
@@ -94,5 +95,72 @@ describe('credit card', () => {
 describe('APRIL_CYCLE fixture', () => {
   it('is the design prototype cycle', () => {
     expect(APRIL_CYCLE).toEqual({ start: '2026-03-27', end: '2026-04-26' });
+  });
+});
+
+describe('transferBalancePreview', () => {
+  const draft = {
+    id: 'draft',
+    amount: 50000,
+    date: TODAY,
+    fromAccountId: 'acc-checking',
+    toAccountId: 'acc-savings',
+  };
+
+  it('takes the amount off the source and puts it on the destination', () => {
+    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, draft);
+    expect(preview.from).toEqual({ now: 603000, after: 553000 });
+    expect(preview.to).toEqual({ now: 1050000, after: 1100000 });
+  });
+
+  it('has nothing to say about an account that is not chosen yet', () => {
+    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
+      ...draft,
+      toAccountId: null,
+    });
+    // The pair is incomplete, so no money moves: the source still shows what it holds.
+    expect(preview.from).toEqual({ now: 603000, after: 603000 });
+    expect(preview.to).toBeNull();
+  });
+
+  it('moves nothing while the amount is still empty', () => {
+    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
+      ...draft,
+      amount: 0,
+    });
+    expect(preview.from).toEqual({ now: 603000, after: 603000 });
+    expect(preview.to).toEqual({ now: 1050000, after: 1050000 });
+  });
+
+  it('does not count the row being edited twice', () => {
+    const rows = aprilTransactions();
+    const saved = rows.find((tx) => tx.kind === 'transfer');
+    expect(saved).toBeDefined();
+    if (saved === undefined) return;
+    // The saved transfer already moved 50000; raising it to 60000 must move 10000 more, not 60000.
+    const preview = transferBalancePreview(ACCOUNTS, rows, TODAY, {
+      ...draft,
+      id: saved.id,
+      amount: 60000,
+    });
+    expect(preview.from).toEqual({ now: 603000, after: 593000 });
+    expect(preview.to).toEqual({ now: 1050000, after: 1060000 });
+  });
+
+  it('leaves the balances alone for a transfer dated in the future', () => {
+    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
+      ...draft,
+      date: '2026-04-30',
+    });
+    expect(preview.from).toEqual({ now: 603000, after: 603000 });
+    expect(preview.to).toEqual({ now: 1050000, after: 1050000 });
+  });
+
+  it('reports nothing for an account it does not know', () => {
+    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
+      ...draft,
+      fromAccountId: 'acc-ghost',
+    });
+    expect(preview.from).toBeNull();
   });
 });

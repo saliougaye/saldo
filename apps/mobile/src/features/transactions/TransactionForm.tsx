@@ -1,10 +1,16 @@
-import { getCurrency } from '@saldo/core';
-import { formatDayMonth, formatLongDate } from '@saldo/i18n';
+import {
+  amountBufferToMinor,
+  type BalancePreview,
+  getCurrency,
+  transferBalancePreview,
+} from '@saldo/core';
+import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
+import { AmountText } from '../../components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Chip } from '../../components/Chip';
@@ -91,8 +97,42 @@ export function TransactionForm({
   // Only the initial state: after the first tap the user's choice wins, not the data's.
   const [detailsOpen, setDetailsOpen] = useState(() => detailsOpenInitially(mode, summary));
 
-  // Usage counts come from the last year of rows, which is enough to rank categories and tags.
-  const recent = useTransactionsInRange('1970-01-01', values.date);
+  // One read serves two questions: how often a category is used up to the transaction's date, and
+  // what the accounts hold today. A back-dated transaction still needs today's balances, and a
+  // future-dated one still ranks categories on its own date, so the query covers the later of the
+  // two and each consumer cuts from there.
+  const history = useTransactionsInRange('1970-01-01', values.date > today ? values.date : today);
+  const recent = useMemo(
+    () => history.filter((tx) => tx.date <= values.date),
+    [history, values.date],
+  );
+
+  // §6.16: "have I got the money there" is the question a transfer asks, and the balances live one
+  // screen away. Only for transfers — an expense form that priced every account would be noise.
+  const transferPreview = useMemo(
+    () =>
+      values.kind === 'transfer'
+        ? transferBalancePreview(accounts, history, today, {
+            id: transactionId,
+            amount: amountBufferToMinor(values.buffer, minorDigits),
+            date: values.date,
+            fromAccountId: values.accountId,
+            toAccountId: values.toAccountId,
+          })
+        : { from: null, to: null },
+    [
+      accounts,
+      history,
+      today,
+      transactionId,
+      minorDigits,
+      values.kind,
+      values.buffer,
+      values.date,
+      values.accountId,
+      values.toAccountId,
+    ],
+  );
   // Seven plus the "Altro" tile is two rows: the grid stops being the whole screen, and what it
   // pushed below the fold — the tags, the attachments — is reachable without scrolling past it.
   const grid = useMemo(
@@ -132,7 +172,57 @@ export function TransactionForm({
   const summaryLabel =
     summaryParts.length === 0 ? t('txForm.detailsNone') : summaryParts.join(' · ');
 
-  const accountRow = (label: string, selectedId: string | null, onSelect: (id: string) => void) => (
+  const money = (minor: number) => formatMoney(minor, currency, locale);
+
+  /**
+   * The chosen account's balance, and what this transfer leaves it at. The arrow appears only when
+   * the draft actually moves something: an incomplete pair or a future date prints one figure, so
+   * the line never shows the same number twice.
+   */
+  const balanceLine = (preview: BalancePreview) => {
+    const changes = preview.after !== preview.now;
+    return (
+      <View
+        accessible
+        accessibilityLabel={
+          changes
+            ? t('txForm.balanceAfter', { now: money(preview.now), after: money(preview.after) })
+            : t('txForm.balanceNow', { now: money(preview.now) })
+        }
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+      >
+        <Text size="caption" color="textFaint">
+          {t('txForm.balance')}
+        </Text>
+        <AmountText
+          size="caption"
+          color={changes ? 'textFaint' : 'textMuted'}
+          minor={preview.now}
+          currency={currency}
+          locale={locale}
+        />
+        {changes ? (
+          <>
+            <Icon name="chevR" size={11} color={theme.palette.textFaint} />
+            <AmountText
+              size="caption"
+              color="textMuted"
+              minor={preview.after}
+              currency={currency}
+              locale={locale}
+            />
+          </>
+        ) : null}
+      </View>
+    );
+  };
+
+  const accountRow = (
+    label: string,
+    selectedId: string | null,
+    onSelect: (id: string) => void,
+    preview: BalancePreview | null = null,
+  ) => (
     <View style={{ gap: 6 }}>
       <Text size="footnote" color="textMuted">
         {label}
@@ -151,6 +241,7 @@ export function TransactionForm({
           />
         ))}
       </ScrollView>
+      {preview === null ? null : balanceLine(preview)}
     </View>
   );
 
@@ -212,8 +303,18 @@ export function TransactionForm({
         <View style={{ gap: 14 }}>
           {values.kind === 'transfer' ? (
             <>
-              {accountRow(t('txForm.from'), values.accountId, (id) => set({ accountId: id }))}
-              {accountRow(t('txForm.to'), values.toAccountId, (id) => set({ toAccountId: id }))}
+              {accountRow(
+                t('txForm.from'),
+                values.accountId,
+                (id) => set({ accountId: id }),
+                transferPreview.from,
+              )}
+              {accountRow(
+                t('txForm.to'),
+                values.toAccountId,
+                (id) => set({ toAccountId: id }),
+                transferPreview.to,
+              )}
             </>
           ) : (
             accountRow(t('txForm.account'), values.accountId, (id) => set({ accountId: id }))

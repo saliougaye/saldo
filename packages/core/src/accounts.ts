@@ -114,3 +114,64 @@ export function nextCreditChargeDate(chargeDay: number, today: LocalDate): Local
   const next = addMonths({ year, month }, 1);
   return inMonth(next.year, next.month);
 }
+
+/** A transfer the form is holding but has not written yet (§6.16). */
+export interface TransferDraft {
+  /** The id the row has or will have, so re-editing a transfer does not count the saved one twice. */
+  id: string;
+  amount: MinorUnits;
+  date: LocalDate;
+  fromAccountId: string | null;
+  toAccountId: string | null;
+}
+
+/** An account's balance as it stands, and as a draft would leave it. */
+export interface BalancePreview {
+  now: MinorUnits;
+  after: MinorUnits;
+}
+
+/**
+ * What the two accounts of a transfer hold now, and what they would hold once it is saved (§6.16).
+ *
+ * "Have I got the money there" is the question a transfer form asks and never answered: the
+ * balances live one screen away, and the amount is typed before the accounts are picked. Both
+ * sides are `null` until an account is chosen, and `now === after` whenever the draft moves
+ * nothing yet — an incomplete pair, a zero amount, a date still in the future — so the screen can
+ * print one figure instead of an arrow between two identical ones.
+ *
+ * The draft is run through `accountBalances` rather than added by hand, so the future-dated and
+ * archived-account rules stay in one place.
+ */
+export function transferBalancePreview(
+  accounts: readonly AccountRef[],
+  txs: readonly LedgerTx[],
+  today: LocalDate,
+  draft: TransferDraft,
+): { from: BalancePreview | null; to: BalancePreview | null } {
+  const now = accountBalances(accounts, txs, today);
+  const pending = txs.filter((tx) => tx.id !== draft.id);
+  if (draft.fromAccountId !== null && draft.toAccountId !== null && draft.amount > 0) {
+    pending.push({
+      id: draft.id,
+      kind: 'transfer',
+      amount: draft.amount,
+      date: draft.date,
+      accountId: draft.fromAccountId,
+      toAccountId: draft.toAccountId,
+      categoryId: null,
+      tagIds: [],
+      excludeFromTotals: false,
+      recurrenceId: null,
+      description: '',
+    });
+  }
+  const after = accountBalances(accounts, pending, today);
+  const preview = (accountId: string | null): BalancePreview | null => {
+    if (accountId === null) return null;
+    const current = now.get(accountId);
+    if (current === undefined) return null;
+    return { now: current, after: after.get(accountId) ?? current };
+  };
+  return { from: preview(draft.fromAccountId), to: preview(draft.toAccountId) };
+}
