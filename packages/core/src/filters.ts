@@ -6,8 +6,12 @@ export interface TransactionFilters {
   accountId: string | null;
   /** Matches the category itself or its children. */
   categoryId: string | null;
-  /** "Solo uscite" / "Solo entrate". Transfers are neither, so both hide them. */
-  direction: 'all' | 'expense' | 'income';
+  /**
+   * "Solo uscite" / "Solo entrate" / "Solo trasferimenti". A transfer is neither an expense nor an
+   * income, so the first two hide it — which is why it needs a value of its own rather than being
+   * reachable only by clearing the filter.
+   */
+  direction: 'all' | 'expense' | 'income' | 'transfer';
   /** Matches transactions having any of these tags. */
   tagIds: readonly string[];
   onlyExcluded: boolean;
@@ -40,7 +44,9 @@ export function filtersFromParams(params: FilterParams): TransactionFilters {
   return {
     ...EMPTY_FILTERS,
     ...(params.accountId ? { accountId: params.accountId } : {}),
-    ...(params.direction === 'expense' || params.direction === 'income'
+    ...(params.direction === 'expense' ||
+    params.direction === 'income' ||
+    params.direction === 'transfer'
       ? { direction: params.direction }
       : {}),
     onlyExcluded: params.onlyExcluded === '1',

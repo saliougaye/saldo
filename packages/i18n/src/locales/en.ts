@@ -117,6 +117,7 @@ export const en: Messages = {
     filteredTotalMixed_other: '{{count}} transactions · {{spent}} spent, {{income}} in',
     onlyExpenses: 'Expenses only',
     onlyIncome: 'Income only',
+    onlyTransfers: 'Transfers only',
     onlyExcluded: 'Excluded only',
     noResults: 'No results',
     resetFilters: 'Reset filters',

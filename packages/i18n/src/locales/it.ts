@@ -117,6 +117,7 @@ export const it = {
     filteredTotalMixed_other: '{{count}} voci · {{spent}} di uscite, {{income}} di entrate',
     onlyExpenses: 'Solo uscite',
     onlyIncome: 'Solo entrate',
+    onlyTransfers: 'Solo trasferimenti',
     onlyExcluded: 'Solo escluse',
     noResults: 'Nessun risultato',
     resetFilters: 'Azzera filtri',
