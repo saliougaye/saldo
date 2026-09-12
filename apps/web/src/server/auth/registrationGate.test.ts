@@ -2,7 +2,6 @@ import { APIError } from 'better-auth/api';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { resetEnvCache } from '../env';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
-import { createTestSession } from '../test/session';
 import { auth, resetAuthForTests } from './auth';
 import { burnInvite, createInvite, inviteIsUsable, revokeInvite } from './invites';
 import { encodeRegistrationContext } from './registrationContext';
@@ -15,7 +14,7 @@ import { encodeRegistrationContext } from './registrationContext';
  *
  * `afterVerification` — the burn, and the first-account-becomes-admin rule — cannot be reached
  * this way: it needs a signed attestation from a real authenticator. It is covered by unit tests
- * on `burnInvite` and `roleForNewUser` instead.
+ * on `burnInvite` and `claimRoleForNewUser` instead.
  */
 
 let harness: TestDatabase;
@@ -120,9 +119,7 @@ describe('the registration gate, on a server that runs on invitation', () => {
       createdBy: null,
       now,
     });
-    // `used_by` names a real account, so somebody has to have spent it.
-    const marco = await createTestSession(harness.db, 'Marco', 'user');
-    await burnInvite(harness.db, spent.code, marco.userId, now);
+    await burnInvite(harness.db, spent.code, now);
 
     const revoked = await createInvite(harness.db, {
       label: null,

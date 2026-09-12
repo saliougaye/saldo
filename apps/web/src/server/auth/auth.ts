@@ -9,7 +9,7 @@ import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
 import { ADMIN_ROLE, claimRoleForNewUser, MEMBER_ROLE } from './admin';
-import { burnInvite, inviteIsUsable, releaseInvite } from './invites';
+import { attributeInvite, burnInvite, inviteIsUsable, releaseInvite } from './invites';
 import { registrationAllowed, registrationRequiresInvite } from './policy';
 import { readRegistrationContext } from './registrationContext';
 
@@ -99,7 +99,7 @@ export function buildAuthOptions() {
              */
             let burnedInviteId: string | null = null;
             if (requiresInvite) {
-              burnedInviteId = await burnInvite(db, invite ?? '', resolved.id, new Date());
+              burnedInviteId = await burnInvite(db, invite ?? '', new Date());
               if (burnedInviteId === null) {
                 throw new APIError('FORBIDDEN', {
                   code: 'invalid_invite',
@@ -128,6 +128,10 @@ export function buildAuthOptions() {
                * cannot both win, and cannot both lose either.
                */
               await claimRoleForNewUser(db, created.id);
+              // Now that the row exists, the invite can say whose it was. Last, and on purpose:
+              // `used_by` points at `user`, and it is a record rather than a decision, so nothing
+              // above this line waits on it.
+              if (burnedInviteId !== null) await attributeInvite(db, burnedInviteId, created.id);
               return { userId: created.id };
             } catch (error) {
               // The account was not created, so the code was not really used: give it back rather

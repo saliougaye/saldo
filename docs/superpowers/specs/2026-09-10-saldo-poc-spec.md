@@ -814,6 +814,13 @@ The ceremony touches it twice. `resolveUser` **checks** the code before WebAuthn
 code costs nobody a fingerprint and an abandoned ceremony costs nobody their invite;
 `afterVerification` **burns** it with a single conditional `UPDATE`, so two people racing on one
 code produce exactly one account. If writing the account then fails, the burn is released.
+
+The burn writes `used_at` and nothing else. It runs before the account exists — that is the whole
+point of the ordering — and `used_by` carries a foreign key to `user`, so naming somebody there
+would refuse every registration on an empty instance, the one registration that has to work.
+`attributeInvite` fills the name in after the row exists, and is deliberately not load-bearing: if
+it never runs, the invite is still spent and the account still exists, and the owner sees a used
+invite with nobody's name on it.
 Unknown, spent, revoked and expired all answer `invalid_invite`: the form cannot be used to learn
 which codes exist.
 

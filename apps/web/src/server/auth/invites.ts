@@ -117,19 +117,37 @@ export async function inviteIsUsable(
  * Spends the invite, returning its id, or null if there was nothing to spend. One conditional
  * `UPDATE`: Postgres locks the matching row, so of two ceremonies racing on one code exactly one
  * gets a row back. Reading first and writing after would let both of them in.
+ *
+ * It sets `used_at` and **not** `used_by`, because it runs before the account exists — that is the
+ * whole point of the ordering, and `used_by` has a foreign key to `user`, so naming somebody here
+ * would refuse every registration on an empty instance. `attributeInvite` fills the name in once
+ * there is a row to point at. What makes the invite spent is `used_at`, which `usableWhere` reads
+ * and this statement writes: the code is dead the instant this returns, attributed or not.
  */
 export async function burnInvite(
   db: ServerDatabase,
   code: string,
-  userId: string,
   now: Date,
 ): Promise<string | null> {
   const [row] = await db
     .update(invites)
-    .set({ usedAt: now, usedBy: userId })
+    .set({ usedAt: now })
     .where(usableWhere(hashInviteCode(code), now))
     .returning({ id: invites.id });
   return row?.id ?? null;
+}
+
+/**
+ * Records which account a spent invite let in. Deliberately separate from the burn and deliberately
+ * not load-bearing: if it never runs, the invite is still spent and the account still exists — the
+ * owner just sees a used invite with nobody's name on it.
+ */
+export async function attributeInvite(
+  db: ServerDatabase,
+  id: string,
+  userId: string,
+): Promise<void> {
+  await db.update(invites).set({ usedBy: userId }).where(eq(invites.id, id));
 }
 
 /**
