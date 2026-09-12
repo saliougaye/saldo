@@ -106,9 +106,14 @@ Taken now, from the user's own feedback that the category grid was hiding everyt
 - A category chosen from the picker that is not in the grid is **shown in it anyway**, so the
   selection is never invisible.
 
-**Still open:** the timed fast path, what a "more" disclosure should hide (`excludeFromTotals`,
-the note), whether recents should be "most used in this period" rather than all-time, and the
-error/save-button rules. The brief below stands for those.
+**Deferred by the user on 2026-09-13:** the timed fast path (question 1 of the brief). The form
+was already reordered around the two fields every transaction sets, and counting taps was to
+confirm that, not to change it — so it is not worth doing on its own. Reopen it if entry starts
+feeling slow.
+
+**Still open:** what a "more" disclosure should hide (`excludeFromTotals`, the note), whether
+recents should be "most used in this period" rather than all-time, and the error/save-button
+rules. The brief below stands for those.
 
 **Original brief.**
 
