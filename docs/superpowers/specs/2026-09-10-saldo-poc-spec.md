@@ -819,8 +819,19 @@ which codes exist.
 
 **Roles.** Better Auth's `admin` plugin supplies the columns (`user.role`, `user.banned`,
 `user.ban_reason`, `user.ban_expires`, `session.impersonated_by`). The first account on the
-instance is written with `admin`, every later one with `user`. `requireAdmin` answers 401 without a
-session and 403 with the wrong account. Saldo calls none of the plugin's own endpoints.
+instance is written with `admin`, every later one with `user`. Which account that is gets decided
+under an advisory lock by "is the earliest account mine", not by the table being empty: two
+ceremonies finishing together would otherwise both become the owner, or — if the question were
+asked after the rows were written — neither would. `requireAdmin` answers 401 without a session and
+403 with the wrong account.
+
+Saldo calls none of the plugin's own endpoints, but they are served from the `/api/auth` catch-all
+and so are part of the surface. They are gated by the plugin's own role check, which
+`app/api/auth/adminPlugin.test.ts` pins: an anonymous caller, a member and a **revoked** admin are
+all refused `admin/list-users` and `admin/create-user`, and the account `create-user` would have
+written does not appear. An admin can still use them, and `create-user` would then make an account
+with no invite and no row in `invites` — which is not an escalation, since an admin can mint a code
+anyway, but it is the one way into the instance that leaves no trace in the invite table.
 
 **Revocation** keeps the account and everything it wrote: the ban flag stops any new session, and
 deleting the session rows kills the bearer already in hand. The plugin's own check runs only when a

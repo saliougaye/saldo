@@ -5,11 +5,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError } from 'better-auth/api';
 import { nextCookies } from 'better-auth/next-js';
 import { admin, bearer, oneTimeToken } from 'better-auth/plugins';
-import { eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
-import { schema, user } from '../db/schema';
+import { schema } from '../db/schema';
 import { env } from '../env';
-import { ADMIN_ROLE, MEMBER_ROLE, roleForNewUser } from './admin';
+import { ADMIN_ROLE, claimRoleForNewUser, MEMBER_ROLE } from './admin';
 import { burnInvite, inviteIsUsable, releaseInvite } from './invites';
 import { registrationAllowed, registrationRequiresInvite } from './policy';
 import { readRegistrationContext } from './registrationContext';
@@ -109,10 +108,6 @@ export function buildAuthOptions() {
               }
             }
             try {
-              // §9.5: the first account on the instance is the admin, and under `invite` it can
-              // only exist because somebody with shell access minted its code. Every later one is
-              // a member.
-              const role = await roleForNewUser(db);
               const created = await ctx.context.internalAdapter.createUser(
                 {
                   id: resolved.id,
@@ -124,10 +119,15 @@ export function buildAuthOptions() {
                 // string, and "passkey" is what actually created this user.
                 { method: 'passkey' },
               );
-              // Written unconditionally, admin or member: `createUser` leaves the column NULL, and
-              // a role that is only implied by its absence is a trap for the next query that reads
-              // it. Every account says out loud what it is.
-              await db.update(user).set({ role }).where(eq(user.id, created.id));
+              /**
+               * §9.5: the first account on the instance is the admin, and under `invite` it can
+               * only exist because somebody with shell access minted its code. Every later one is
+               * a member. This runs **after** the row exists, because the claim is decided by
+               * "is the earliest account mine" rather than by the table being empty — see
+               * `claimRoleForNewUser`, which takes a lock so two ceremonies finishing together
+               * cannot both win, and cannot both lose either.
+               */
+              await claimRoleForNewUser(db, created.id);
               return { userId: created.id };
             } catch (error) {
               // The account was not created, so the code was not really used: give it back rather

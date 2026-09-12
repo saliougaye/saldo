@@ -19,13 +19,51 @@ export interface AccountSummary {
 }
 
 /**
- * §9.5. The first account on the instance is the admin. Under `REGISTRATION=invite` that account
- * can only be created with a code minted by the CLI, so "the first account" and "whoever installed
- * this server" are the same person by construction — there is no race to win.
+ * An arbitrary constant, and the only advisory lock this application takes. Its whole job is to
+ * make the "who is the owner" question and its answer one indivisible step.
  */
-export async function roleForNewUser(db: ServerDatabase): Promise<string> {
-  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(user);
-  return (row?.count ?? 0) === 0 ? ADMIN_ROLE : MEMBER_ROLE;
+const OWNER_CLAIM_LOCK = 0x5a1d_0001;
+
+/**
+ * §9.5. The first account on the instance is the admin; every later one is a member. Called with
+ * the account row already written, and it is what writes that account's `role`.
+ *
+ * Two things make this safe against two ceremonies finishing at the same instant, and both are
+ * needed:
+ *
+ * - The **advisory lock** serialises the whole claim. Counting rows outside a lock is not enough
+ *   in either direction: counting *before* the insert lets both racers see an empty table and
+ *   both become admin, and counting *after* it lets both see two rows and **neither** become
+ *   admin, which would leave the instance with no owner at all.
+ * - The rule is **"is the earliest account mine"**, not "is the table empty". The answer does not
+ *   depend on when this runs relative to the other insert, so whichever racer takes the lock
+ *   second sees the admin the first one wrote and settles for being a member.
+ *
+ * It also answers correctly on an instance that predates roles: there, the oldest account is
+ * somebody else's and carries `NULL`, so a newly invited member does not inherit the server.
+ * Such an instance has no admin until `promoteUser` gives it one — see `docs/self-hosting.md`.
+ */
+export async function claimRoleForNewUser(db: ServerDatabase, userId: string): Promise<string> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${OWNER_CLAIM_LOCK})`);
+    const [firstEver] = await tx
+      .select({ id: user.id })
+      .from(user)
+      // `id` breaks a tie: two accounts written in the same millisecond must still order the same
+      // way for both of the racers asking.
+      .orderBy(asc(user.createdAt), asc(user.id))
+      .limit(1);
+    const [existingAdmin] = await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.role, ADMIN_ROLE))
+      .limit(1);
+    const role = existingAdmin === undefined && firstEver?.id === userId ? ADMIN_ROLE : MEMBER_ROLE;
+    // Written whichever it is: `createUser` leaves the column NULL, and a role that is only
+    // implied by its absence is a trap for the next query that reads it.
+    await tx.update(user).set({ role }).where(eq(user.id, userId));
+    return role;
+  });
 }
 
 /** A revoked account is not an admin, whatever its role says. */
