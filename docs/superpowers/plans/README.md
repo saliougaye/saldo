@@ -447,9 +447,16 @@ The two shapes sharing could take, kept here so the choice is not re-derived:
   scoped to the spaces a user belongs to, and a rule for what happens to rows when somebody leaves.
   The LWW merge already tolerates more writers.
 
-### 11 — Release docs & hardening
+### 11 — Release docs & hardening 🚧 planned
 
-**Spec:** §15, §16 (E2E), §18, §19
+**Plan:** `2026-09-13-11-release-and-hardening.md` · **Spec:** §15, §16 (E2E), §18, §19
+
+Ten tasks, in an order chosen so the cheap gates come first: the repository goes green (`pnpm lint` fails on 26
+accessibility errors in the icon generators, so CI is red and every later check is unreadable), then the two §18 items
+that were never built — the CSV export escaping formulas, and a privacy overlay so the app switcher photographs a
+cover rather than the balances — then the accessibility sweep, then the measured answer to §19.4 at 20k rows, then the
+release plumbing: the signing config plugin, `build:android`, the two build documents, the README, CONTRIBUTING and
+the Maestro flows.
 
 - `docs/building-android.md`, `docs/building-ios.md`, `docs/self-hosting.md`, README (features, screenshots, quick start),
   CONTRIBUTING, release-signing config plugin, `build:android` script, Maestro flows, privacy overlay, accessibility
@@ -492,7 +499,11 @@ decision and a short scope, and the work that follows gets its own plan. Written
 Order, if done in order: C, then B, then A — date entry lives inside the form, and motion is worth
 scoping once the screens it animates have stopped moving. None of them blocks 10 or 11.
 
-### Backlog from hands-on use 🔜 queued
+### Backlog from hands-on use 🚧 planned
+
+**Plan:** `2026-09-13-11z-backlog-cleanup.md`, which closes the transfers bullet below, moves the recents rule into
+`@saldo/core` on a 90-day window, gives every form a reason when it will not save, and corrects the §B entry that
+still describes the shipped "Dettagli" disclosure as pending. Independent of phase 11 in both directions.
 
 Small things the user hit while using the app on 2026-09-11. None of them blocks 10 or 11; each is
 small enough to land on its own branch without a plan file of its own.
