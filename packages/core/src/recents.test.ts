@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { addDays } from './dates';
 import type { Category, Transaction } from './entities';
-import { topCategories } from './recents';
+import { RECENTS_WINDOW_DAYS, topCategories } from './recents';
 
 const TODAY = '2026-09-13';
+/** The oldest date still inside the window, and the newest one outside it. */
+const OLDEST_INSIDE = addDays(TODAY, -RECENTS_WINDOW_DAYS);
+const NEWEST_OUTSIDE = addDays(TODAY, -(RECENTS_WINDOW_DAYS + 1));
+const LONG_AGO = '2024-01-10';
 
 function category(id: string, overrides: Partial<Category> = {}): Category {
   return {
@@ -26,32 +31,54 @@ const use = (categoryId: string, date: string): Pick<Transaction, 'categoryId' |
   date,
 });
 
+const times = (count: number, categoryId: string, date: string) =>
+  Array.from({ length: count }, () => use(categoryId, date));
+
 describe('topCategories', () => {
+  // `current` is first by hand and `old-favourite` second, so every ranking below that puts
+  // `old-favourite` on top can only have got there by counting, never by the manual order.
   const categories = [
-    category('old-favourite', { sortOrder: 0 }),
-    category('current', { sortOrder: 1 }),
+    category('current', { sortOrder: 0 }),
+    category('old-favourite', { sortOrder: 1 }),
     category('salary', { direction: 'income', sortOrder: 2 }),
   ];
 
   it('orders by usage, then by the manual order', () => {
-    const usage = [use('current', TODAY), use('current', TODAY), use('old-favourite', TODAY)];
-    expect(topCategories(categories, usage, 'expense', { today: TODAY }).map((c) => c.id)).toEqual([
+    expect(topCategories(categories, [], 'expense', { today: TODAY }).map((c) => c.id)).toEqual([
       'current',
       'old-favourite',
+    ]);
+    const usage = [...times(2, 'old-favourite', TODAY), use('current', TODAY)];
+    expect(topCategories(categories, usage, 'expense', { today: TODAY }).map((c) => c.id)).toEqual([
+      'old-favourite',
+      'current',
     ]);
   });
 
   it('ranks a category used inside the window above one used only before it', () => {
-    const usage = [
-      ...Array.from({ length: 20 }, () => use('old-favourite', '2024-01-10')),
-      ...Array.from({ length: 5 }, () => use('current', '2026-09-01')),
-    ];
+    const usage = [...times(20, 'old-favourite', LONG_AGO), ...times(5, 'current', '2026-09-01')];
     const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
     expect(ranked[0]?.id).toBe('current');
   });
 
   it('falls back to all of history when the window is nearly empty', () => {
-    const usage = Array.from({ length: 20 }, () => use('old-favourite', '2024-01-10'));
+    const usage = times(20, 'old-favourite', LONG_AGO);
+    const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
+    expect(ranked[0]?.id).toBe('old-favourite');
+  });
+
+  it('counts a transaction dated exactly at the far edge of the window', () => {
+    const usage = [...times(20, 'old-favourite', LONG_AGO), ...times(5, 'current', OLDEST_INSIDE)];
+    const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
+    expect(ranked[0]?.id).toBe('current');
+  });
+
+  it('leaves out a transaction dated one day beyond the window', () => {
+    const usage = [
+      ...times(20, 'old-favourite', LONG_AGO),
+      ...times(5, 'current', NEWEST_OUTSIDE),
+    ];
+    // Nothing is inside the window any more, so the fallback ranks all of history instead.
     const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
     expect(ranked[0]?.id).toBe('old-favourite');
   });
@@ -73,7 +100,9 @@ describe('topCategories', () => {
   });
 
   it('ignores the transfers that carry no category', () => {
-    const usage = [{ categoryId: null, date: TODAY }, use('current', TODAY)];
-    expect(topCategories(categories, usage, 'expense', { today: TODAY })[0]?.id).toBe('current');
+    const usage = [{ categoryId: null, date: TODAY }, ...times(2, 'old-favourite', TODAY)];
+    expect(topCategories(categories, usage, 'expense', { today: TODAY })[0]?.id).toBe(
+      'old-favourite',
+    );
   });
 });
