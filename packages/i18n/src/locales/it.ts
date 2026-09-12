@@ -396,6 +396,9 @@ export const it = {
     signOutBody:
       'I dati restano su questo telefono. La sincronizzazione si fermerà finché non rientri.',
     firstSync: 'Scarico i tuoi dati\u2026',
+    unreachableTitle: 'Server non raggiungibile',
+    unreachableBody:
+      'Non riesco a chiedere al server cosa contiene questo account, quindi non ti faccio ricominciare da capo: i tuoi dati potrebbero essere l\u00e0.',
     foreignDataTitle: 'Dati di un altro account',
     foreignDataBody_one:
       'Questo telefono contiene dati di un altro account e vanno cancellati per entrare. {{count}} modifica non ancora inviata andrà persa; tutto il resto resta sul server di quell\u2019account.',

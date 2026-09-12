@@ -27,6 +27,7 @@ module.exports = {
         '<rootDir>/src/io/**/*.test.ts',
         '<rootDir>/src/net/**/*.test.ts',
         '<rootDir>/src/auth/**/*.test.ts',
+        '<rootDir>/src/boot/**/*.test.ts',
         '<rootDir>/src/sync/**/*.test.ts',
       ],
       transform: {

@@ -395,6 +395,9 @@ export const en: Messages = {
     signOutTitle: 'Sign out of this server?',
     signOutBody: 'Your data stays on this phone. Sync stops until you sign in again.',
     firstSync: 'Fetching your data\u2026',
+    unreachableTitle: 'Cannot reach the server',
+    unreachableBody:
+      'Your account cannot be asked what it holds, so you are not being sent back to the start: your data may be waiting there.',
     foreignDataTitle: 'Another account\u2019s data',
     foreignDataBody_one:
       'This phone holds another account\u2019s data, which has to be deleted before you can sign in. {{count}} change that was never sent will be lost; everything else stays on that account\u2019s server.',
