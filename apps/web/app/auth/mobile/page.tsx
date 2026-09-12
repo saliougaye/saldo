@@ -1,4 +1,4 @@
-import { registrationAllowed } from '../../../src/server/auth/policy';
+import { registrationAllowed, registrationRequiresInvite } from '../../../src/server/auth/policy';
 import { validateRedirectUri } from '../../../src/server/auth/redirect';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
@@ -56,6 +56,7 @@ export default async function MobileAuthPage({
       redirectUri={redirectUri}
       state={state}
       canRegister={canRegister}
+      requiresInvite={registrationRequiresInvite(env().registration)}
       initialMode={params.mode === 'register' && canRegister ? 'register' : 'login'}
     />
   );

@@ -24,15 +24,17 @@ app, and nobody types an address on the phone (§15 of the spec, and `docs/build
 | `JWT_SECRET` | 32+ random bytes, base64 | Signs access tokens. `openssl rand -base64 48`. |
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | |
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
-| `REGISTRATION` | `first-user` | `open`, `first-user` (allowed only while no account exists) or `closed`. |
+| `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. |
 
 Two things to know before you start:
 
 - **Changing `WEBAUTHN_RP_ID` invalidates every existing passkey.** A credential is bound to the
   relying party it was created for. Pick the hostname you intend to keep.
-- Leave `REGISTRATION=first-user` for the first sign-up, then set it to `closed`. With `open`,
-  anyone who can reach the server can create an account.
+- Use `REGISTRATION=invite`. Nothing creates an account without a single-use code, so there is no
+  window during which a stranger who finds your URL can register — you mint your own code on the
+  server before you sign in for the first time. With `open`, anyone who can reach the server can
+  create an account; `first-user` leaves the door open until somebody walks through it.
 
 ## Run it with Docker
 
@@ -62,11 +64,58 @@ WEB_PORT=3007 docker compose -f apps/web/docker/docker-compose.yml up -d
 
 ```bash
 curl -s https://saldo.example.com/api/health
-# {"app":"saldo","apiVersion":1,"version":"0.1.0","registrationAllowed":true}
+# {"app":"saldo","apiVersion":1,"schemaVersion":1,"version":"0.1.0",
+#  "registrationAllowed":true,"inviteRequired":true,"attachmentsEnabled":false}
 ```
 
 `app` and `apiVersion` are what the mobile app looks for when it reaches the server it was built
-for, and `registrationAllowed` is what decides whether it offers "create account".
+for, and `registrationAllowed` is what decides whether it offers "create account". `inviteRequired` says whether
+that form will also ask for a code.
+
+## Letting people in
+
+Under `REGISTRATION=invite` every account needs a code, including yours. Mint the first one on the
+server, before you have signed in at all:
+
+```bash
+# Docker
+docker compose exec web pnpm --filter web invite new --label "me"
+# or, from a checkout
+pnpm --filter web invite new --label "me"
+```
+
+The code is printed once — the server keeps only its hash — and looks like `HNWF-SWHY-JM3T-ETQZ`.
+Open the app, choose **Create account**, and enter it. That first account becomes the admin.
+
+To invite somebody else, mint another code and send it to them:
+
+```bash
+pnpm --filter web invite new --label "Marco" --days 3
+pnpm --filter web invite list
+pnpm --filter web invite revoke <id>     # withdraw one that has not been used
+```
+
+To manage the accounts themselves:
+
+```bash
+pnpm --filter web user list
+pnpm --filter web user revoke <id> --reason "left the household"
+pnpm --filter web user restore <id>
+pnpm --filter web user promote <id>      # make them an admin too
+pnpm --filter web user delete  <id>      # irreversible: takes their synced data with it
+```
+
+`revoke` takes effect at once: the account's sessions are deleted and its bearer stops being
+accepted, so the phone keeps its local data but syncs nothing more. `promote` is the way back in if
+you lose the phone holding the only admin passkey — run it against a second account you control.
+
+**Upgrading an existing instance.** An account created before invites existed has no role, so it is
+not an admin and cannot mint anything from the app. Give it one, once:
+
+```bash
+pnpm --filter web user list              # find the id
+pnpm --filter web user promote <id>
+```
 
 ## Local development
 

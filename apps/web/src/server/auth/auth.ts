@@ -4,11 +4,14 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError } from 'better-auth/api';
 import { nextCookies } from 'better-auth/next-js';
-import { bearer, oneTimeToken } from 'better-auth/plugins';
+import { admin, bearer, oneTimeToken } from 'better-auth/plugins';
 import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
-import { registrationAllowed } from './policy';
+import { ADMIN_ROLE, claimRoleForNewUser, MEMBER_ROLE } from './admin';
+import { burnInvite, inviteIsUsable, releaseInvite } from './invites';
+import { registrationAllowed, registrationRequiresInvite } from './policy';
+import { readRegistrationContext } from './registrationContext';
 
 /** The handoff token lives just long enough to travel one deep link. */
 const ONE_TIME_TOKEN_MINUTES = 1;
@@ -20,6 +23,7 @@ const ONE_TIME_TOKEN_MINUTES = 1;
 export function buildAuthOptions() {
   const { publicUrl, rpId, rpName, appRedirectSchemes, registration, secret } = env();
   const db = getDb();
+  const requiresInvite = registrationRequiresInvite(registration);
   return {
     appName: 'Saldo',
     baseURL: publicUrl,
@@ -43,6 +47,9 @@ export function buildAuthOptions() {
            * Runs before the ceremony: it decides the WebAuthn user handle and is where the
            * registration policy is enforced. No row is written yet — the account is created in
            * `afterVerification`, so a ceremony the user abandons leaves nothing behind.
+           *
+           * The invite is only **checked** here, never spent, for the same reason: an abandoned
+           * ceremony must not cost the person their code.
            */
           resolveUser: async ({ context }) => {
             if (!(await registrationAllowed(db, registration))) {
@@ -51,11 +58,19 @@ export function buildAuthOptions() {
                 message: 'This server is not accepting new accounts',
               });
             }
-            const name = (context ?? '').trim();
+            const { name, invite } = readRegistrationContext(context);
             if (name.length === 0) {
               throw new APIError('BAD_REQUEST', {
                 code: 'display_name_required',
                 message: 'Choose a name first',
+              });
+            }
+            if (requiresInvite && !(await inviteIsUsable(db, invite ?? '', new Date()))) {
+              // One answer for unknown, spent, revoked and expired: the form must not be usable
+              // to find out which codes exist.
+              throw new APIError('FORBIDDEN', {
+                code: 'invalid_invite',
+                message: 'That invite code is not valid',
               });
             }
             return { id: crypto.randomUUID(), name };
@@ -68,28 +83,62 @@ export function buildAuthOptions() {
            * no email, so it gets a synthetic address in `.invalid`: RFC 2606 reserves that TLD, so
            * the value can never route anywhere.
            */
-          afterVerification: async ({ ctx, user: resolved }) => {
+          afterVerification: async ({ ctx, context, user: resolved }) => {
             if (!(await registrationAllowed(db, registration))) {
               throw new APIError('FORBIDDEN', {
                 code: 'registration_closed',
                 message: 'This server is not accepting new accounts',
               });
             }
-            const created = await ctx.context.internalAdapter.createUser(
-              {
-                id: resolved.id,
-                name: resolved.name,
-                email: `${resolved.id}@passkey.saldo.invalid`,
-                emailVerified: false,
-              },
-              // The provisioning source Better Auth records for the account; `method` is an open
-              // string, and "passkey" is what actually created this user.
-              { method: 'passkey' },
-            );
-            return { userId: created.id };
+            const { invite } = readRegistrationContext(context);
+            /**
+             * Spend the code **before** writing the account. Two ceremonies holding the same code
+             * reach this line together; the burn is a conditional UPDATE, so exactly one of them
+             * gets an id and the other is refused. Doing it the other way round would create both
+             * accounts and then refuse one of them, leaving an orphan.
+             */
+            let burnedInviteId: string | null = null;
+            if (requiresInvite) {
+              burnedInviteId = await burnInvite(db, invite ?? '', resolved.id, new Date());
+              if (burnedInviteId === null) {
+                throw new APIError('FORBIDDEN', {
+                  code: 'invalid_invite',
+                  message: 'That invite code is not valid',
+                });
+              }
+            }
+            try {
+              const created = await ctx.context.internalAdapter.createUser(
+                {
+                  id: resolved.id,
+                  name: resolved.name,
+                  email: `${resolved.id}@passkey.saldo.invalid`,
+                  emailVerified: false,
+                },
+                // The provisioning source Better Auth records for the account; `method` is an open
+                // string, and "passkey" is what actually created this user.
+                { method: 'passkey' },
+              );
+              /**
+               * §9.5: the first account on the instance is the admin, and under `invite` it can
+               * only exist because somebody with shell access minted its code. Every later one is
+               * a member. This runs **after** the row exists, because the claim is decided by
+               * "is the earliest account mine" rather than by the table being empty — see
+               * `claimRoleForNewUser`, which takes a lock so two ceremonies finishing together
+               * cannot both win, and cannot both lose either.
+               */
+              await claimRoleForNewUser(db, created.id);
+              return { userId: created.id };
+            } catch (error) {
+              // The account was not created, so the code was not really used: give it back rather
+              // than leave the person holding one that never worked.
+              if (burnedInviteId !== null) await releaseInvite(db, burnedInviteId);
+              throw error;
+            }
           },
         },
       }),
+      admin({ defaultRole: MEMBER_ROLE, adminRoles: [ADMIN_ROLE] }),
       bearer(),
       oneTimeToken({ expiresIn: ONE_TIME_TOKEN_MINUTES, storeToken: 'hashed' }),
       expo(),

@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
-import { syncRows } from './schema';
+import { invites, syncRows, user } from './schema';
 
 let harness: TestDatabase;
 
@@ -59,5 +59,47 @@ describe('schema', () => {
     const rows = await db.select().from(syncRows).where(eq(syncRows.id, 'tag-1'));
     // Same row id, two owners, no collision: the key is (user_id, entity, id).
     expect(rows).toHaveLength(2);
+  });
+});
+
+describe('invites', () => {
+  it('round-trips an invite and keeps its lifecycle columns', async () => {
+    const { db } = harness;
+    const { userId } = await createTestSession(db);
+    await db.insert(invites).values({
+      id: 'invite-1',
+      codeHash: 'a'.repeat(64),
+      label: 'Marco',
+      createdBy: userId,
+      createdAt: new Date('2026-09-11T09:00:00.000Z'),
+      expiresAt: new Date('2026-09-18T09:00:00.000Z'),
+      usedAt: null,
+      usedBy: null,
+      revokedAt: null,
+    });
+    const [row] = await db.select().from(invites).where(eq(invites.id, 'invite-1'));
+    expect(row?.label).toBe('Marco');
+    expect(row?.expiresAt.toISOString()).toBe('2026-09-18T09:00:00.000Z');
+    expect(row?.usedAt).toBeNull();
+  });
+
+  it('keeps the invite when the account that minted it is deleted', async () => {
+    const { db } = harness;
+    const { userId } = await createTestSession(db);
+    await db.insert(invites).values({
+      id: 'invite-2',
+      codeHash: 'b'.repeat(64),
+      label: null,
+      createdBy: userId,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 1000),
+      usedAt: null,
+      usedBy: null,
+      revokedAt: null,
+    });
+    await db.delete(user).where(eq(user.id, userId));
+    const [row] = await db.select().from(invites).where(eq(invites.id, 'invite-2'));
+    // `set null`, not `cascade`: removing an account must not erase the record of who it invited.
+    expect(row?.createdBy).toBeNull();
   });
 });

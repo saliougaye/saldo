@@ -16,6 +16,7 @@ export interface TestSession {
 export async function createTestSession(
   db: ServerDatabase,
   displayName = 'Ada',
+  role: 'admin' | 'user' = 'user',
 ): Promise<TestSession> {
   const id = crypto.randomUUID();
   const [created] = await db
@@ -26,6 +27,8 @@ export async function createTestSession(
       // Passkey-only accounts carry a synthetic address in the reserved `.invalid` TLD.
       email: `${id}@passkey.saldo.invalid`,
       emailVerified: false,
+      role,
+      banned: false,
     })
     .returning();
   if (created === undefined) throw new Error('insert returned no row');

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const REGISTRATION_MODES = ['open', 'first-user', 'closed'] as const;
+export const REGISTRATION_MODES = ['open', 'first-user', 'closed', 'invite'] as const;
 export type RegistrationMode = (typeof REGISTRATION_MODES)[number];
 
 /** Where attachment blobs live (§10). `none` is supported: they stay on the phone. */
