@@ -528,9 +528,10 @@ small enough to land on its own branch without a plan file of its own.
     opens the list filtered to it, and the list has its own account chip opening a single-select
     sheet (archived accounts included — filtering to one you no longer use is exactly when you
     reach for this).
-  - **Transfers cannot be listed.** `direction` is `all | expense | income`, and a transfer is
-    neither, so it is hidden by both filters and reachable only by scrolling `all`. Deciding whether
-    `direction` gains a `transfer` value (or transfers get their own chip) is the same change.
+  - ✅ **Transfers can be listed.** `direction` gained a `transfer` value and the list a "Solo
+    trasferimenti" chip, sharing the `swap` icon the transfer row already uses. The
+    "N trasferimenti nascosti" note stays quiet under it, since that chip shows them rather than
+    hiding them.
 
 ## Future (not POC)
 
