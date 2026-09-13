@@ -3,6 +3,7 @@ import {
   type Category,
   diffDays,
   type LocalDate,
+  occurrenceId,
   type PeriodDef,
   periodContaining,
 } from '@saldo/core';
@@ -13,6 +14,7 @@ import {
   DEMO_REFERENCE_CYCLE,
   DEMO_TAGS,
   DEMO_TRANSACTIONS,
+  type DemoTransaction,
 } from './demoData.generated';
 import type { Repositories } from './repositories';
 import { SEED_CATEGORIES } from './seed';
@@ -39,9 +41,20 @@ function dateShift(today: LocalDate, def: PeriodDef): number {
  * language; accounts get an opening balance chosen so their computed balance matches the
  * prototype's.
  *
- * Recurring transactions carry a synthetic `recurrenceId` so the committed share of §5.7 is not
- * flat, but the `Recurrence` rows themselves arrive with phase 03, which owns that repository.
- * §8.1 already requires the UI to tolerate a dangling reference.
+ * Recurring transactions carry a real `recurrenceId`, not just a label: every description that
+ * repeats across months becomes one `recurrences` row, so the committed share of §5.7 is not flat
+ * *and* `EditTransaction`'s scope sheet finds a recurrence to look up instead of the `null`
+ * `RecurrenceScopeSheet` returns for a dangling id (§8.1 only requires the UI to tolerate that
+ * case, not that this fixture create it).
+ *
+ * Each row is anchored on its group's most recent occurrence (`startDate === endDate`, the day
+ * that occurrence carries the deterministic `occurrenceId`), because the app runs the materialiser
+ * right after seeding and again on every open: with the window pinned to a single day that already
+ * has its expected row, there is nothing left to generate. A wider window would let the
+ * materialiser regenerate real bill dates, which — unlike the app's fixed day-of-month recurrences
+ * — jump around from month to month in the prototype's data (Vodafone lands on the 13th one month
+ * and the 15th the next), so it would invent extra, wrongly-dated transactions instead of
+ * recognising the ones already here.
  */
 export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
   // Idempotent twice over, because the row that calls it is an ordinary list row in Profile and
@@ -131,14 +144,67 @@ export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
     accountIdByName.set(account.name, created.id);
   });
 
+  // One recurrence per repeated description (the label the prototype gives the same bill in
+  // consecutive months), anchored on the group's latest occurrence — see the note above for why
+  // the window is exactly that one day.
+  const recurringGroups = new Map<string, DemoTransaction[]>();
+  for (const tx of DEMO_TRANSACTIONS) {
+    if (!tx.recurring) continue;
+    const group = recurringGroups.get(tx.description) ?? [];
+    group.push(tx);
+    recurringGroups.set(tx.description, group);
+  }
+
+  const recurrenceIdByDescription = new Map<string, string>();
+  const anchorDateByDescription = new Map<string, LocalDate>();
+  for (const [description, group] of recurringGroups) {
+    const anchor = [...group]
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+      .at(-1);
+    const accountId = anchor === undefined ? undefined : accountIdByName.get(anchor.account);
+    const categoryId = anchor === undefined ? undefined : categoryIdByKey.get(anchor.categoryKey);
+    if (anchor === undefined || accountId === undefined || categoryId === undefined) continue;
+    const anchorDate = addDays(anchor.date, shift);
+    const recurrence = repos.recurrences.create({
+      frequency: 'monthly',
+      startDate: anchorDate,
+      endDate: anchorDate,
+      template: {
+        kind: anchor.kind,
+        amount: anchor.amount,
+        accountId,
+        toAccountId: null,
+        categoryId,
+        description: anchor.description,
+        tagIds: anchor.tags.flatMap((name) => {
+          const id = tagIdByName.get(name);
+          return id === undefined ? [] : [id];
+        }),
+        excludeFromTotals: anchor.excluded,
+      },
+    });
+    recurrenceIdByDescription.set(description, recurrence.id);
+    anchorDateByDescription.set(description, anchorDate);
+  }
+
   for (const tx of DEMO_TRANSACTIONS) {
     const accountId = accountIdByName.get(tx.account);
     const categoryId = categoryIdByKey.get(tx.categoryKey);
     if (accountId === undefined || categoryId === undefined) continue;
+    const recurrenceId = tx.recurring
+      ? (recurrenceIdByDescription.get(tx.description) ?? null)
+      : null;
+    const date = addDays(tx.date, shift);
+    // The anchor occurrence must carry the id the materialiser expects for it, or the very first
+    // run after seeding creates a second row on the same date instead of recognising this one.
+    const isAnchorOccurrence =
+      recurrenceId !== null && date === anchorDateByDescription.get(tx.description);
     repos.transactions.create({
+      id:
+        isAnchorOccurrence && recurrenceId !== null ? occurrenceId(recurrenceId, date) : undefined,
       kind: tx.kind,
       amount: tx.amount,
-      date: addDays(tx.date, shift),
+      date,
       accountId,
       toAccountId: null,
       categoryId,
@@ -149,7 +215,7 @@ export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
         return id === undefined ? [] : [id];
       }),
       excludeFromTotals: tx.excluded,
-      recurrenceId: tx.recurring ? `demo-recurrence:${tx.description}` : null,
+      recurrenceId,
     });
   }
 
