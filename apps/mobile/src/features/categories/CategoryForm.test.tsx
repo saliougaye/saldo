@@ -66,4 +66,16 @@ describe('CategoryForm', () => {
     await renderForm({ ...emptyCategoryForm(), direction: 'income' });
     expect(screen.queryByLabelText('Monthly budget')).toBeNull();
   });
+
+  it('says what it is waiting for instead of only greying the button out', async () => {
+    await renderForm();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByText('Enter a name to save.')).toBeTruthy();
+  });
+
+  it('drops the line once the name is there', async () => {
+    await renderForm({ ...emptyCategoryForm(), name: 'Spesa' });
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.queryByText('Enter a name to save.')).toBeNull();
+  });
 });

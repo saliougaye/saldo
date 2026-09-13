@@ -59,15 +59,17 @@ describe('TagEditCard', () => {
     expect(mockRename).toHaveBeenCalledWith({}, 'a', 'Trip');
   });
 
-  it('will not save a name that is only whitespace', async () => {
+  it('will not save a name that is only whitespace, and says so', async () => {
     await render(
       <Host>
         <TagEditCard tag={tag} onDeleted={jest.fn()} />
       </Host>,
     );
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.queryByText('Enter a name to save.')).toBeNull();
     fireEvent.changeText(screen.getByLabelText('Name'), '   ');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled());
+    expect(screen.getByText('Enter a name to save.')).toBeTruthy();
   });
 
   it('does not offer to merge a tag into itself', async () => {

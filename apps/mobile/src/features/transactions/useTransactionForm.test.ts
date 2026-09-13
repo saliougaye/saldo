@@ -1,4 +1,4 @@
-import type { Category, Transaction } from '@saldo/core';
+import type { Transaction } from '@saldo/core';
 import {
   canCreateTag,
   canSave,
@@ -12,28 +12,10 @@ import {
   missingForSave,
   type TransactionFormValues,
   tagSuggestions,
-  topCategories,
   toTransactionInput,
 } from './useTransactionForm';
 
 const TODAY = '2026-04-18';
-
-function category(id: string, overrides: Partial<Category> = {}): Category {
-  return {
-    id,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '001775000000000-0000-dev',
-    deletedAt: null,
-    name: id,
-    direction: 'expense',
-    parentId: null,
-    icon: 'cart',
-    colorIndex: 0,
-    archivedAt: null,
-    sortOrder: 0,
-    ...overrides,
-  };
-}
 
 const valid: TransactionFormValues = {
   ...emptyForm(TODAY, 'acc-1'),
@@ -149,42 +131,6 @@ describe('dateChoices', () => {
       { key: 'today', date: '2026-04-18' },
       { key: 'yesterday', date: '2026-04-17' },
     ]);
-  });
-});
-
-describe('topCategories', () => {
-  const categories = [
-    category('cat-rare', { sortOrder: 0 }),
-    category('cat-often', { sortOrder: 1 }),
-    category('cat-income', { direction: 'income', sortOrder: 2 }),
-    category('cat-archived', { archivedAt: '2026-01-01T00:00:00.000Z', sortOrder: 3 }),
-  ];
-  const usage = [
-    { categoryId: 'cat-often' },
-    { categoryId: 'cat-often' },
-    { categoryId: 'cat-rare' },
-  ];
-
-  it('orders by usage, then by the manual order', () => {
-    expect(topCategories(categories, usage, 'expense').map((c) => c.id)).toEqual([
-      'cat-often',
-      'cat-rare',
-    ]);
-  });
-
-  it('shows income categories for income', () => {
-    expect(topCategories(categories, usage, 'income').map((c) => c.id)).toEqual(['cat-income']);
-  });
-
-  it('hides archived categories', () => {
-    expect(topCategories(categories, usage, 'expense').map((c) => c.id)).not.toContain(
-      'cat-archived',
-    );
-  });
-
-  it('caps the grid at two rows, the "Altro" tile included', () => {
-    const many = Array.from({ length: 20 }, (_, index) => category(`c${index}`));
-    expect(topCategories(many, [], 'expense')).toHaveLength(7);
   });
 });
 

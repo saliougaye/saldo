@@ -100,6 +100,10 @@ describe('filterTransactions', () => {
     expect(ids({ direction: 'expense' })).toEqual(['coffee', 'market', 'excluded']);
   });
 
+  it('lists only transfers when the direction says so', () => {
+    expect(ids({ direction: 'transfer' })).toEqual(['transfer']);
+  });
+
   it('filters by account on either side of a transfer', () => {
     expect(ids({ accountId: 'acc-checking' })).toEqual(['salary', 'transfer']);
   });
@@ -136,8 +140,12 @@ describe('filtersFromParams', () => {
     ).toEqual({ ...EMPTY_FILTERS, accountId: 'acc-1', direction: 'expense', onlyExcluded: true });
   });
 
+  it('reads transfer out of a link, like the other two directions', () => {
+    expect(filtersFromParams({ direction: 'transfer' }).direction).toBe('transfer');
+  });
+
   it('drops a direction it does not recognise rather than guessing one', () => {
-    expect(filtersFromParams({ direction: 'transfer' }).direction).toBe('all');
+    expect(filtersFromParams({ direction: 'refund' }).direction).toBe('all');
     expect(filtersFromParams({ direction: '' }).direction).toBe('all');
   });
 

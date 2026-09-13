@@ -139,9 +139,10 @@ export default function TransactionsTab() {
   );
 
   // "Solo uscite"/"Solo entrate" drop transfers on purpose (§5.12), which is why the list can seem
-  // to lose them. Count what the chip is hiding so the screen can say so instead.
+  // to lose them. Count what the chip is hiding so the screen can say so instead. "Solo
+  // trasferimenti" shows transfers rather than hiding them, so it has nothing to report here.
   const hiddenTransfers = useMemo(() => {
-    if (filters.direction === 'all') return 0;
+    if (filters.direction === 'all' || filters.direction === 'transfer') return 0;
     return filterTransactions(rows, { ...filters, direction: 'all' }, lookup).filter(
       (tx) => tx.kind === 'transfer',
     ).length;
@@ -262,6 +263,12 @@ export default function TransactionsTab() {
           icon="arrowDL"
           active={filters.direction === 'income'}
           onPress={() => set({ direction: filters.direction === 'income' ? 'all' : 'income' })}
+        />
+        <Chip
+          label={t('transactions.onlyTransfers')}
+          icon="swap"
+          active={filters.direction === 'transfer'}
+          onPress={() => set({ direction: filters.direction === 'transfer' ? 'all' : 'transfer' })}
         />
         <Chip
           // One tag is named, several are counted: a chip that always reads "Tag" cannot say which

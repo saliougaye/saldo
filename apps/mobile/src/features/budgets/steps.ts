@@ -11,15 +11,32 @@ import type { BudgetFormValues } from './budgetFormValues';
 export const BUDGET_STEPS = ['categories', 'amount', 'details'] as const;
 export type BudgetStep = (typeof BUDGET_STEPS)[number];
 
+/** What a budget still needs, named so the footer can say it rather than only greying the button. */
+export type BudgetMissing = 'categories' | 'amount';
+
+/**
+ * What the step the user is on is waiting for, or `null` when it lets them move on.
+ *
+ * The order is the wizard's own, so on the last step — which submits, and therefore repeats both
+ * conditions, since a back-and-forth must not leave a budget that can be created with no amount —
+ * the answer is the earlier question rather than the last one checked.
+ */
+export function budgetStepMissing(
+  step: BudgetStep,
+  values: BudgetFormValues,
+  minorDigits: MinorDigits,
+): BudgetMissing | null {
+  const hasAmount = amountBufferToMinor(values.buffer, minorDigits) > 0;
+  if (step === 'amount') return hasAmount ? null : 'amount';
+  if (values.categoryIds.length === 0) return 'categories';
+  return step === 'details' && !hasAmount ? 'amount' : null;
+}
+
 /** Whether the step the user is on lets them move to the next one. */
 export function budgetStepReady(
   step: BudgetStep,
   values: BudgetFormValues,
   minorDigits: MinorDigits,
 ): boolean {
-  if (step === 'categories') return values.categoryIds.length > 0;
-  if (step === 'amount') return amountBufferToMinor(values.buffer, minorDigits) > 0;
-  // The last step submits, so it repeats both conditions: a back-and-forth must not leave a
-  // budget that can be created with no amount.
-  return values.categoryIds.length > 0 && amountBufferToMinor(values.buffer, minorDigits) > 0;
+  return budgetStepMissing(step, values, minorDigits) === null;
 }

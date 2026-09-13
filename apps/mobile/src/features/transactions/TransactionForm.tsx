@@ -2,6 +2,7 @@ import {
   amountBufferToMinor,
   type BalancePreview,
   getCurrency,
+  topCategories,
   transferBalancePreview,
   transferOverdrawsSource,
 } from '@saldo/core';
@@ -45,7 +46,6 @@ import {
   missingForSave,
   type TransactionFormValues,
   tagSuggestions,
-  topCategories,
 } from './useTransactionForm';
 
 export interface TransactionFormProps {
@@ -98,15 +98,21 @@ export function TransactionForm({
   // Only the initial state: after the first tap the user's choice wins, not the data's.
   const [detailsOpen, setDetailsOpen] = useState(() => detailsOpenInitially(mode, summary));
 
-  // One read serves two questions: how often a category is used up to the transaction's date, and
-  // what the accounts hold today. A back-dated transaction still needs today's balances, and a
-  // future-dated one still ranks categories on its own date, so the query covers the later of the
-  // two and each consumer cuts from there.
+  // One read serves three questions, each of which cuts a different slice from it: what the
+  // accounts hold today, which tags this transaction's own past suggests, and which categories are
+  // in current use. A back-dated transaction still needs today's balances and a future-dated one
+  // still needs its own, so the query covers the later of the two.
   const history = useTransactionsInRange('1970-01-01', values.date > today ? values.date : today);
+  // Capped at the transaction's date: a suggestion drawn from rows the transaction predates would
+  // be a suggestion from its future.
   const recent = useMemo(
     () => history.filter((tx) => tx.date <= values.date),
     [history, values.date],
   );
+  // Capped at today instead, because the category tiles are ranked on a window that ends today.
+  // Cutting at `values.date` as well would leave a receipt typed up three months late with an
+  // empty window and no recents at all, when what it wants is exactly the ones in current use.
+  const upToToday = useMemo(() => history.filter((tx) => tx.date <= today), [history, today]);
 
   // §6.16: "have I got the money there" is the question a transfer asks, and the balances live one
   // screen away. Only for transfers — an expense form that priced every account would be noise.
@@ -136,9 +142,11 @@ export function TransactionForm({
   );
   // Seven plus the "Altro" tile is two rows: the grid stops being the whole screen, and what it
   // pushed below the fold — the tags, the attachments — is reachable without scrolling past it.
+  // Ranked on `upToToday`, not on `recent`: what the thumb reaches for is the same whether the
+  // receipt being typed up is from this morning or from last month.
   const grid = useMemo(
-    () => topCategories(categories, recent, values.kind),
-    [categories, recent, values.kind],
+    () => topCategories(categories, upToToday, values.kind, { today }),
+    [categories, upToToday, values.kind, today],
   );
   // A category chosen from the full list is not in the grid, so the grid grows to hold it rather
   // than showing nothing selected.
@@ -164,9 +172,6 @@ export function TransactionForm({
   );
   const missing = missingForSave(values, minorDigits, overdrawn);
   const ready = missing === null;
-  // A form nobody has touched yet is not incomplete, it is empty: saying "enter an amount" before
-  // the first keystroke is nagging, and the disabled button already says the form is not done.
-  const touched = mode === 'edit' || values.buffer.length > 0;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
 
@@ -258,9 +263,13 @@ export function TransactionForm({
       sheet
       footer={
         <View style={{ gap: 8 }}>
-          {missing === null || !touched ? null : (
+          {missing === null ? null : (
             // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names
             // the next thing to fix rather than listing everything that is unfinished.
+            //
+            // Shown from the first render, with no "has the user typed yet" gate: every form in the
+            // app follows the one rule that a disabled button is never silent, and an untouched form
+            // is exactly when the button is greyest and the reason least guessable.
             <Text size="footnote" color="textMuted">
               {t(`txForm.missing_${missing}`, {
                 available: money(transferPreview.from?.now ?? 0),

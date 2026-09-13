@@ -94,7 +94,7 @@ is nothing slow enough to need them), and anything that depends on gesture-drive
 
 ---
 
-## B. The transaction form (§6.16), new and edit — ◐ partly decided (2026-09-11)
+## B. The transaction form (§6.16), new and edit — ✅ decided (2026-09-13)
 
 Taken now, from the user's own feedback that the category grid was hiding everything under it:
 
@@ -111,9 +111,28 @@ was already reordered around the two fields every transaction sets, and counting
 confirm that, not to change it — so it is not worth doing on its own. Reopen it if entry starts
 feeling slow.
 
-**Still open:** what a "more" disclosure should hide (`excludeFromTotals`, the note), whether
-recents should be "most used in this period" rather than all-time, and the error/save-button
-rules. The brief below stands for those.
+**The disclosure.** "Dettagli" holds tags, attachments, repeat and `excludeFromTotals` — the four
+rarely-touched fields that together pushed the frequent ones off the screen. The description stays
+outside it: it is typed on most transactions. `detailsSummary` counts what is inside, so a *set*
+value stays readable without opening anything — the only thing that makes collapsing safe — and
+`detailsOpenInitially` opens it on an edit that has something in it, because edit is random access
+and the field you came back for is the one already filled
+(`apps/mobile/src/features/transactions/useTransactionForm.ts`).
+
+**Recents** (2026-09-13). The rule moved to `packages/core/src/recents.ts`, where AGENTS.md says
+business rules live, and stopped counting since 1970: it ranks on the **last 90 days**, falling back
+to all of history when fewer than five rows sit inside that window, so a fresh install is not ranked
+on an almost-empty sample. Recency alone (last used first) was rejected — it moves the tiles under
+the thumb between one entry and the next. The window is anchored on **today**, and the form feeds it
+a slice cut at today (`upToToday`) rather than the one cut at the entry's own date: a receipt typed
+up three months late wants the categories in current use, not an empty window.
+
+**Errors and the save button** (2026-09-13). One rule, every form: a primary button is never
+silently disabled. It is disabled *and* a muted line under it names the next thing missing —
+`missingForSave` for transactions, `budgetStepMissing` for budgets, one `*.missing_name` key each
+for accounts, categories and tags. The line shows from the first render, with no "has the user typed
+yet" gate: an untouched form is exactly when the button is greyest and the reason least guessable.
+Inline field errors were rejected as a second, competing pattern in an app that already has one.
 
 **Original brief.**
 
