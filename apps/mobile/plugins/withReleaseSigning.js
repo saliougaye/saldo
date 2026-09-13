@@ -26,10 +26,17 @@ const { withAppBuildGradle } = require('expo/config-plugins');
  * Keep it and its passwords backed up: Android identifies an app by its signing key, so losing it
  * means every phone that already has Saldo must uninstall before it can take an update.
  *
- * A machine without those four properties still builds. `hasProperty` leaves the release config
- * empty, so Gradle signs nothing and writes `app-release-unsigned.apk`; `assembleDebug` never looks
- * at this config at all. CI never signs and a contributor has no keystore, and neither should have
- * to care.
+ * **A machine without those four properties still builds.** Both the config's contents and the
+ * assignment below are guarded by the same `hasProperty` check, so such a machine is left on
+ * `signingConfigs.debug` and gets the stock React Native behaviour — `assembleRelease` succeeds and
+ * produces a debug-signed `app-release.apk`. Setting `signingConfigs.release` unconditionally does
+ * not work: an empty signing config passes Gradle's configuration phase and then fails at
+ * packaging with `SigningConfig "release" is missing required property "storeFile"`, which would
+ * mean CI and any contributor without a keystore could not run `assembleRelease` at all.
+ *
+ * Falling back is not silent — Gradle prints a warning naming the missing properties, because a
+ * debug-signed release APK is exactly what this plugin exists to stop you handing to someone.
+ * `docs/building-android.md` shows how to confirm with `apksigner` which key actually signed it.
  */
 
 const SIGNING_CONFIG = `
@@ -40,8 +47,20 @@ const SIGNING_CONFIG = `
                 storePassword SALDO_UPLOAD_STORE_PASSWORD
                 keyAlias SALDO_UPLOAD_KEY_ALIAS
                 keyPassword SALDO_UPLOAD_KEY_PASSWORD
+            } else {
+                project.logger.warn('Saldo: no SALDO_UPLOAD_STORE_FILE property, so this release ' +
+                    'build is signed with the shared Android debug key. It is fine for testing and ' +
+                    'must not be given to anyone. See docs/building-android.md.')
             }
         }`;
+
+/**
+ * Guarded on the same property as the config's contents. An empty `signingConfigs.release` is only
+ * rejected when Gradle gets to packaging, so assigning it unconditionally breaks `assembleRelease`
+ * on every machine that has no keystore.
+ */
+const RELEASE_SIGNING_CONFIG_EXPRESSION =
+  "project.hasProperty('SALDO_UPLOAD_STORE_FILE') ? signingConfigs.release : signingConfigs.debug";
 
 /**
  * The template declares `signingConfigs.debug` first, so this appends ours after the opening brace.
@@ -55,7 +74,7 @@ const SIGNING_CONFIGS_BLOCK = /signingConfigs \{/;
  * above `release {`, so it is already behind the cursor and cannot match.
  */
 const RELEASE_SIGNING_CONFIG =
-  /(buildTypes \{[\s\S]*?release \{[\s\S]*?signingConfig signingConfigs\.)debug/;
+  /(buildTypes \{[\s\S]*?release \{[\s\S]*?signingConfig )signingConfigs\.debug/;
 
 /**
  * Rewrites once and complains loudly if the template moved under us. A silent miss here is the bad
@@ -91,7 +110,7 @@ function withReleaseSigning(config) {
     contents = replaceOrThrow(
       contents,
       RELEASE_SIGNING_CONFIG,
-      '$1release',
+      `$1${RELEASE_SIGNING_CONFIG_EXPRESSION}`,
       "the release build type's `signingConfig`",
     );
 

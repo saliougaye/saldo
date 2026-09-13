@@ -86,9 +86,20 @@ password waiting to be pushed.
 
 A config plugin, `apps/mobile/plugins/withReleaseSigning.js`, reads those four and wires up
 `signingConfigs.release` each time the project is regenerated — which it has to do every time,
-because the generated project is thrown away and rewritten by each build. Gradle will not package a
-release build until it can find them; the error it gives when it cannot is in
-[when it goes wrong](#when-it-goes-wrong).
+because the generated project is thrown away and rewritten by each build.
+
+If it cannot find them the build still finishes, because a machine with no keystore — CI, or someone
+who only wants to check that the app compiles — must still be able to run `assembleRelease`. What it
+produces is signed with the debug key instead, and it says so:
+
+```
+Saldo: no SALDO_UPLOAD_STORE_FILE property, so this release build is signed with the shared
+Android debug key. It is fine for testing and must not be given to anyone.
+```
+
+That line is easy to lose in Gradle's output, so if the APK is going anywhere near another person,
+check the signature rather than trusting that you read the log:
+[check that it is really signed](#check-that-it-is-really-signed).
 
 ## Build it
 
@@ -174,11 +185,15 @@ when Gradle embeds the JavaScript bundle, not only by the prebuild, so a shell t
 one half and not the other produces exactly this. Put it in front of
 `pnpm --filter mobile build:android` and run the two halves as one command.
 
-**`SigningConfig "release" is missing required property "storeFile"`**, from
-`:app:packageRelease`. Gradle got as far as packaging and then found no keystore: the four
-`SALDO_UPLOAD_*` properties were not there. Check that they are in `~/.gradle/gradle.properties` —
-the file in your home directory, not one inside the repository — that none of the four names is
-misspelled, and that `SALDO_UPLOAD_STORE_FILE` is an absolute path to a file that exists.
+**The build succeeded, but `apksigner` says `CN=Android Debug`.** Gradle never saw your properties,
+so it fell back to the debug key and printed the warning above. The fallback keys off
+`SALDO_UPLOAD_STORE_FILE` alone, so a typo in exactly that name is the likeliest cause. Check that
+all four are in `~/.gradle/gradle.properties` — the file in your home directory, not one inside the
+repository — that none of the names is misspelled, and that `SALDO_UPLOAD_STORE_FILE` is an absolute
+path to a file that exists. From `apps/mobile/android`,
+`./gradlew -q :app:properties | grep SALDO_UPLOAD_STORE_FILE` shows you whether Gradle loaded it at
+all. Grep for that one name rather than the whole prefix: the task prints property values, and the
+other three are your passwords.
 
 **`INSTALL_FAILED_UPDATE_INCOMPATIBLE`**, or "App not installed" on the phone. Saldo is already
 installed under this application id, signed with a different key — often a debug build, or an APK
