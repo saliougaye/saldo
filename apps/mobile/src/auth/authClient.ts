@@ -1,7 +1,9 @@
 import { expoClient } from '@better-auth/expo/client';
 import { oneTimeTokenClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
+import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import { readScheme } from './serverConfig';
 
 export type ServerAuthClient = ReturnType<typeof createServerAuthClient>;
 
@@ -14,7 +16,9 @@ export function createServerAuthClient(serverUrl: string) {
     baseURL: serverUrl,
     plugins: [
       expoClient({
-        scheme: 'saldo',
+        // §15: the scheme this build actually registered (`SALDO_SCHEME`), not a fixed `saldo://`
+        // — the same manifest read `buildServer.ts` uses for `BUILD_REDIRECT_URI`.
+        scheme: readScheme(Constants.expoConfig),
         storagePrefix: `saldo_${serverUrl.replace(/[^A-Za-z0-9]/g, '_')}`,
         storage: SecureStore,
       }),
