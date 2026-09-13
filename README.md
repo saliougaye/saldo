@@ -6,6 +6,59 @@ devices when it can. Build it yourself, sideload it, own your data.
 
 > Status: proof of concept in progress. See the [roadmap](docs/superpowers/plans/README.md).
 
+## Screenshots
+
+| Home | Transactions | Statistics | Budgets |
+| --- | --- | --- | --- |
+| ![Home: what is left in the current period, the cycle trend, upcoming and recent transactions](docs/screenshots/home.png) | ![Transactions: the list for the period, with search, filter chips and day totals](docs/screenshots/transactions.png) | ![Statistics: cashflow per period, the committed share, the end-of-period projection and the split by category](docs/screenshots/statistics.png) | ![Budgets: one card per budget with the amount spent, the pace and the days left](docs/screenshots/budgets.png) |
+
+## What it does
+
+**Money in and out.** Expenses, income and transfers between your own accounts. Categories with
+sub-categories, tags, notes, and photo or PDF attachments on a transaction. Recurring entries, which
+you can edit for one occurrence, for this one and the following, or for all of them.
+
+**Periods you choose.** A calendar month, a week, a pay cycle starting on the day you get paid, a
+year, or a range you pick by hand. Home, the transactions list, statistics and budgets all follow the
+period you are looking at.
+
+**Budgets.** One or more categories, an amount, a period, an alert at a percentage you set, and
+optional rollover so what you did not spend carries into the next period.
+
+**Statistics.** Cashflow over the last six periods, how much of the period was already committed,
+an end-of-period projection, and the split by category and by tag with the change against previous
+periods.
+
+**Accounts.** As many as you keep, including credit cards, with balances, a sparkline per account and
+archiving for the ones you have closed.
+
+**Your data stays yours.** Export everything as JSON, or with the attachments as a ZIP; export
+transactions as CSV, for the period or for all of history; restore a backup onto a phone. Import a
+CSV from another app, with a preset for Spendee exports, a column mapping for everything else, and
+duplicate detection so a second run does not double your history.
+
+**On the phone.** Italian and English, light and dark following the system, a currency you choose,
+and a biometric app lock.
+
+**Across your devices.** Sign in with a passkey to your own server, then every device that signs into
+the same account converges — offline edits included, merged last-write-wins.
+
+## Quick start
+
+1. **Run the server** on a machine with an HTTPS domain, and mint yourself an invite code — see
+   [docs/self-hosting.md](docs/self-hosting.md).
+2. **Build the app** yourself, with your server's address baked in — see
+   [docs/building-android.md](docs/building-android.md) or [docs/building-ios.md](docs/building-ios.md).
+3. **Create your account** in the app with the invite code and a passkey; after that it works offline
+   and syncs when it can.
+
+## What it is not
+
+There is no cloud service to sign up to and no account on anybody else's server: if you do not run a
+server, there is nothing to sign in to. Nothing is reported anywhere — no telemetry, no analytics, no
+crash reporting. The app does not connect to your bank; you enter transactions, or import them from a
+CSV. And there is no App Store or Play Store build: you build it and sideload it yourself.
+
 ## Repository
 
 | Path | What |
