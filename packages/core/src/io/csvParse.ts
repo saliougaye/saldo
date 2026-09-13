@@ -44,9 +44,12 @@ function detectDelimiter(text: string): CsvDelimiter {
  * can have added. `'90s playlist` and `l'estate` are somebody's text and are left alone. The one
  * cell this cannot tell apart is a description genuinely beginning with `'=`, which loses its
  * apostrophe: the cheaper mistake, since the other one corrupts every guarded cell we wrote.
+ *
+ * This character class is the one in `textCell` (`csv.ts`) and has to stay it: a character the
+ * export guards and this does not is an apostrophe the user never typed and never gets back.
  */
 function unguard(value: string): string {
-  return /^'[=+\-@\t\r]/.test(value) ? value.slice(1) : value;
+  return /^'[=+\-@\t\r\n]/.test(value) ? value.slice(1) : value;
 }
 
 /**

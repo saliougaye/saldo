@@ -207,10 +207,15 @@ describe('formula injection', () => {
     expect(row[10]).toBe("'@SUM(A1:A9)");
   });
 
-  it('prefixes a cell hidden behind a leading tab or carriage return', () => {
+  it('prefixes a cell hidden behind a leading tab, carriage return or line feed', () => {
     const row = csvRows([{ ...expense, description: '\t=1+1', note: '\r-1' }], context)[1] ?? [];
     expect(row[8]).toBe("'\t=1+1");
     expect(row[9]).toBe("'\r-1");
+    // A note pasted with a blank line in front: `field()` quotes it either way, and a quoted
+    // formula is still a formula.
+    const pasted = csvRows([{ ...expense, description: '\n=1+1' }], context)[1] ?? [];
+    expect(pasted[8]).toBe("'\n=1+1");
+    expect(toCsv([pasted])).toContain('"\'\n=1+1"');
   });
 
   it('leaves the amount alone, because a minus there is a sign and not a formula', () => {

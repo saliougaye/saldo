@@ -89,6 +89,12 @@ describe('formula guard', () => {
     expect(parseCsv('a\n"\'=Caffè, e brioche"').rows[1]).toEqual(['=Caffè, e brioche']);
   });
 
+  it('drops it in front of a tab, a carriage return or a line feed', () => {
+    expect(parseCsv('a\n"\'\t=1+1"').rows[1]).toEqual(['\t=1+1']);
+    expect(parseCsv('a\n"\'\r-1"').rows[1]).toEqual(['\r-1']);
+    expect(parseCsv('a\n"\'\n=1+1"').rows[1]).toEqual(['\n=1+1']);
+  });
+
   it('keeps an apostrophe that is part of the text', () => {
     expect(parseCsv("a,b\n'90s playlist,l'estate").rows[1]).toEqual(["'90s playlist", "l'estate"]);
   });
