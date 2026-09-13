@@ -532,6 +532,14 @@ small enough to land on its own branch without a plan file of its own.
     trasferimenti" chip, sharing the `swap` icon the transfer row already uses. The
     "N trasferimenti nascosti" note stays quiet under it, since that chip shows them rather than
     hiding them.
+- **The icon picker announces raw library identifiers.** Found in the phase 11 accessibility
+  sweep and deliberately left. `AppearanceSheet`'s icon grid labels each tile with its own name —
+  `piggy`, `grip`, `chevUD` — so VoiceOver reads English identifiers in an Italian app. The
+  palette beside it was fixed in the same sweep because ten colour names are a bounded piece of
+  content; roughly a hundred icon names are not, and machine-translating nouns for glyphs would
+  be worse than the present state, because it would look finished. Left for whoever can name them
+  properly: one `icons.<name>` entry per `ICON_NAMES` member in both catalogues, with the grid
+  reading ``t(`icons.${name}`)`` the way the swatches now read ``t(`colors.${name}`)``.
 
 ## Future (not POC)
 
