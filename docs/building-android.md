@@ -145,9 +145,16 @@ Signer #1 certificate DN: CN=Saldo, OU=, O=, L=, ST=, C=IT
 Signer #1 certificate SHA-256 digest: f7da5723d0690488e8e37029585675dfb0c6c5f97bf3b77d8af1220c359b5e88
 ```
 
-If instead you see `CN=Android Debug, O=Android, C=US`, the build fell back to the debug key that
-ships with the React Native template — the same key, with the same published password, that is on
-every machine in the world. Do not hand that APK to anybody.
+If instead you see this, the build fell back to the debug key that ships with the React Native
+template — the same key, with the same published password, that is on every machine in the world:
+
+```
+Signer #1 certificate DN: CN=Android Debug, OU=Android, O=Unknown, L=Unknown, ST=Unknown, C=US
+```
+
+It means Gradle never found your four `SALDO_UPLOAD_*` properties; it will have said so during the
+build. Do not hand that APK to anybody — see
+[when it goes wrong](#when-it-goes-wrong).
 
 `keytool -printcert -jarfile` answers "Not a signed jar file" here, and that is not a problem with
 the APK. The build signs with APK Signature Scheme v2 and does not add the older JAR signature that
