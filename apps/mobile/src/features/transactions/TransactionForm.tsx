@@ -172,9 +172,6 @@ export function TransactionForm({
   );
   const missing = missingForSave(values, minorDigits, overdrawn);
   const ready = missing === null;
-  // A form nobody has touched yet is not incomplete, it is empty: saying "enter an amount" before
-  // the first keystroke is nagging, and the disabled button already says the form is not done.
-  const touched = mode === 'edit' || values.buffer.length > 0;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
 
@@ -266,9 +263,13 @@ export function TransactionForm({
       sheet
       footer={
         <View style={{ gap: 8 }}>
-          {missing === null || !touched ? null : (
+          {missing === null ? null : (
             // Not an error — nothing is wrong yet — so it is a muted line, not a red one. It names
             // the next thing to fix rather than listing everything that is unfinished.
+            //
+            // Shown from the first render, with no "has the user typed yet" gate: every form in the
+            // app follows the one rule that a disabled button is never silent, and an untouched form
+            // is exactly when the button is greyest and the reason least guessable.
             <Text size="footnote" color="textMuted">
               {t(`txForm.missing_${missing}`, {
                 available: money(transferPreview.from?.now ?? 0),

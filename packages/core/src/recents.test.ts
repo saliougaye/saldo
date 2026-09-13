@@ -74,10 +74,7 @@ describe('topCategories', () => {
   });
 
   it('leaves out a transaction dated one day beyond the window', () => {
-    const usage = [
-      ...times(20, 'old-favourite', LONG_AGO),
-      ...times(5, 'current', NEWEST_OUTSIDE),
-    ];
+    const usage = [...times(20, 'old-favourite', LONG_AGO), ...times(5, 'current', NEWEST_OUTSIDE)];
     // Nothing is inside the window any more, so the fallback ranks all of history instead.
     const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
     expect(ranked[0]?.id).toBe('old-favourite');
