@@ -100,6 +100,12 @@ const config: ExpoConfig = {
      * documents the `~/.gradle/gradle.properties` entries it reads.
      */
     './plugins/withReleaseSigning',
+    /**
+     * `locales` above is iOS's permission-prompt channel, but Expo writes it into Android resources
+     * too, where Lint fails the release build over translations the default locale never declares.
+     * This declares them. See the file for why the alternatives are worse.
+     */
+    './plugins/withAndroidLocaleDefaults',
   ],
   experiments: {
     typedRoutes: true,
