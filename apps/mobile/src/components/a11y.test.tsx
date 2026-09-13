@@ -4,6 +4,7 @@ import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Insets, StyleSheet } from 'react-native';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import { SwipeRow } from '../features/transactions/SwipeRow';
 import { createI18n } from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { AmountInput } from './AmountInput';
@@ -382,5 +383,53 @@ describe('AmountInput', () => {
     // default, and one wrapped round a field swallows the field whole.
     expect(screen.getByLabelText('Amount')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Amount' })).toBeNull();
+  });
+});
+
+describe('SwipeRow', () => {
+  async function showRow() {
+    const handlers = { onPress: jest.fn(), onEdit: jest.fn(), onDelete: jest.fn() };
+    await render(
+      <Host>
+        <SwipeRow {...handlers} editLabel="Edit" deleteLabel="Delete">
+          <ListRow title="Groceries" subtitle="Revolut" />
+        </SwipeRow>
+      </Host>,
+    );
+    return { ...handlers, row: screen.getByRole('button', { name: /Groceries/ }) };
+  }
+
+  it('is a control, not a paragraph: the tap lives in a gesture nothing else can see', async () => {
+    const { row } = await showRow();
+    expect(row).toBeTruthy();
+    expect(row.props.accessible).toBe(true);
+  });
+
+  it('offers edit and delete, which are otherwise a drag and nothing else', async () => {
+    const { row, onEdit, onDelete } = await showRow();
+    expect(row.props.accessibilityActions).toEqual(
+      expect.arrayContaining([
+        { name: 'edit', label: 'Edit' },
+        { name: 'delete', label: 'Delete' },
+      ]),
+    );
+    row.props.onAccessibilityAction({ nativeEvent: { actionName: 'edit' } });
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    row.props.onAccessibilityAction({ nativeEvent: { actionName: 'delete' } });
+    expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the transaction when activated', async () => {
+    const { row, onPress } = await showRow();
+    row.props.onAccessibilityAction({ nativeEvent: { actionName: 'activate' } });
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the reveal behind it out of the way', async () => {
+    await showRow();
+    // "Edit" and "Delete" are drawn under the row and only surface mid-drag. They are the
+    // actions above, said twice — and the second time with no way to reach them.
+    expect(screen.queryByText('Edit')).toBeNull();
+    expect(screen.queryByText('Delete')).toBeNull();
   });
 });
