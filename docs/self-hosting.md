@@ -204,6 +204,42 @@ URLs to a client (downloads are proxied by the server, which checks who is askin
 not discoverable. But if a URL ever leaks, it works. If that matters to you, use `s3`, where the
 server signs a URL that expires in five minutes.
 
+## Limits
+
+**How many transactions one household can hold.** The app reads a whole date range out of SQLite
+and folds it in memory — no aggregation happens in SQL. That puts a ceiling on the number of rows
+an account can carry before a screen takes visibly long to draw, so we measured it rather than
+guessed:
+
+| Fold | Where you see it | 5k rows | 20k rows | 50k rows |
+| --- | --- | --- | --- | --- |
+| `accountBalances` | Accounts tab, account detail | 0.3ms | 1.9ms | 9.3ms |
+| `summarizePeriod` | Home header, Statistics | 0.1ms | 0.6ms | 2.2ms |
+| `spendingByCategory` | Statistics, budgets | 0.2ms | 0.4ms | 2.5ms |
+| `spendingByTag` | Statistics tag ranking | 0.2ms | 1.0ms | 2.6ms |
+| `dailyCumulative` | Home and Statistics chart | 0.2ms | 0.7ms | 2.8ms |
+| `monthEndBalances` (8 months) | Account sparkline | 1.1ms | 5.2ms | 43.4ms |
+| `periodHistory` (6 periods) | Statistics baselines | 0.4ms | 2.8ms | 19.8ms |
+| `categorySpendHistory` | Statistics baselines | 0.1ms | 0.3ms | 1.1ms |
+| `budgetProgress` (8 budgets) | Budgets tab | 0.0ms | 0.0ms | 0.0ms |
+| **Statistics screen, every fold it runs** | | **1.1ms** | **4.7ms** | **49.4ms** |
+
+**What this means for you:** 20k transactions is comfortable — the busiest screen spends under 5ms
+on arithmetic — and 50k still finishes a screen's worth of folding in well under a tenth of a
+second. 20k rows is roughly fifteen years of a household recording four transactions a day, so in
+practice you will not reach it. Past 50k the thing that degrades first is memory rather than
+arithmetic: the whole range is held as objects, and the 50k figures above vary run to run because
+of garbage collection.
+
+**Read those numbers as a floor, not a prediction.** They come from
+`pnpm --filter mobile measure:perf <rows>`, which runs the calculations in Node on a development
+Mac with no database and no rendering in the way. A phone runs them under Hermes, which is slower,
+and has a screen to draw as well — so assume a device is materially slower than this table, by a
+factor nobody here has measured on real hardware. What the table does establish is that the
+*arithmetic* has room to spare: if a screen ever feels slow, look at the SQLite query or at the
+render before blaming the sums. The heaviest fold is the account sparkline, which walks the whole
+ledger once per point drawn.
+
 ## Security notes
 
 - Authentication is [Better Auth](https://better-auth.com) with its passkey plugin: it owns accounts,

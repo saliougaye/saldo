@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "generate:demo": "node scripts/generate-demo-data.mjs",
-    "seed:db": "esbuild scripts/seed-database.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --outfile=.seed-db.cjs --log-level=error && node .seed-db.cjs"
+    "seed:db": "esbuild scripts/seed-database.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --outfile=.seed-db.cjs --log-level=error && node .seed-db.cjs",
+    "measure:perf": "esbuild scripts/measure-performance.ts --bundle --platform=node --format=cjs --outfile=.measure-perf.cjs --log-level=error && node .measure-perf.cjs"
   },
   "dependencies": {
     "@better-auth/expo": "^1.7.4",

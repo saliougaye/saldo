@@ -646,7 +646,7 @@ regresses it, this script is how you find out.
 - Create: `apps/mobile/scripts/measure-performance.ts`
 - Modify: `apps/mobile/package.json` (a `measure:perf` script)
 
-- [ ] **Step 1: Write the harness**
+- [x] **Step 1: Write the harness**
 
 Create `apps/mobile/scripts/measure-performance.ts`:
 
@@ -738,7 +738,7 @@ exports for "balances per account", "income and expense over a range" and "spend
 above must match the Zod schemas in `packages/core/src/entities.ts` field for field (TypeScript will say so). Fix the
 script to the codebase, not the codebase to the script.
 
-- [ ] **Step 2: Add the script**
+- [x] **Step 2: Add the script**
 
 In `apps/mobile/package.json`, next to `seed:db`:
 
@@ -748,7 +748,7 @@ In `apps/mobile/package.json`, next to `seed:db`:
 
 and add `.measure-perf.cjs` to `apps/mobile/.gitignore`, next to the existing `.seed-db.cjs` entry.
 
-- [ ] **Step 3: Run it at three sizes**
+- [x] **Step 3: Run it at three sizes**
 
 ```bash
 rtk proxy pnpm --filter mobile measure:perf 5000
@@ -759,7 +759,7 @@ rtk proxy pnpm --filter mobile measure:perf 50000
 Expected: three tables of three numbers. **Write them into this plan** under a "Result" heading — the point of the
 task is the record, not the run.
 
-- [ ] **Step 4: Take the decision and write it down**
+- [x] **Step 4: Take the decision and write it down**
 
 The threshold that matters is one frame's worth of budget on a mid-range phone, and a screen that folds three of these
 per render has about **100ms** before it is noticeable. Judge against the 20k column:
@@ -772,12 +772,109 @@ per render has about **100ms** before it is noticeable. Judge against the 20k co
 Append the numbers and the verdict to `docs/self-hosting.md` under a short "Limits" heading, because it is the person
 running a server for a household who needs to know.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/scripts apps/mobile/package.json apps/mobile/.gitignore docs/self-hosting.md docs/superpowers/plans/2026-09-13-11-release-and-hardening.md
 rtk git commit -m "chore(mobile): measure what the in-memory aggregates cost at 20k rows"
 ```
+
+
+### Result
+
+Run on 2026-09-13, Node v22.13.1 on darwin/arm64, via
+`pnpm --filter mobile measure:perf <rows>`. Medians of five runs after one warm-up.
+
+The harness measures nine folds, not three: the three the task named plus the Home/Statistics
+chart series (`dailyCumulative`), the account sparkline (`monthEndBalances`), the §5.5 baselines
+(`periodHistory`, `categorySpendHistory`), the §5.10 tag ranking (`spendingByTag`) and budget
+progress — the point was to cover what a screen actually waits for. The last line runs everything
+`app/(tabs)/stats.tsx` folds per render, which is the heaviest screen in the app. The import list
+sketched in Step 1 above was wrong in every name (`periodTotals`, `categoryTotals`,
+`Category.colour`, numeric `createdAt`); the script follows `packages/core/src/index.ts` and
+`entities.ts` instead, as Step 1 said it should.
+
+```
+5000 transactions over 730 days, 5 accounts, 40 categories, 8 budgets
+period: 2026-09-01..2026-09-30 (30 days), today 2026-09-13, node v22.13.1 on darwin/arm64
+
+accountBalances            Accounts tab, account detail    0.3ms
+summarizePeriod            Home header, Statistics         0.1ms
+spendingByCategory         Statistics, budgets             0.2ms
+spendingByTag              Statistics tag ranking (§5.10)  0.2ms
+dailyCumulative            Home/Statistics chart series    0.2ms
+monthEndBalances x8        Account sparkline               1.1ms
+periodHistory x6           Statistics baselines (§5.5)     0.4ms
+categorySpendHistory       Statistics baselines (§5.5)     0.1ms
+budgetProgress x8          Budgets tab                     0.0ms
+— Statistics screen total  every fold above that it runs   1.1ms
+```
+
+```
+20000 transactions over 730 days, 5 accounts, 40 categories, 8 budgets
+period: 2026-09-01..2026-09-30 (30 days), today 2026-09-13, node v22.13.1 on darwin/arm64
+
+accountBalances            Accounts tab, account detail    1.9ms
+summarizePeriod            Home header, Statistics         0.6ms
+spendingByCategory         Statistics, budgets             0.4ms
+spendingByTag              Statistics tag ranking (§5.10)  1.0ms
+dailyCumulative            Home/Statistics chart series    0.7ms
+monthEndBalances x8        Account sparkline               5.2ms
+periodHistory x6           Statistics baselines (§5.5)     2.8ms
+categorySpendHistory       Statistics baselines (§5.5)     0.3ms
+budgetProgress x8          Budgets tab                     0.0ms
+— Statistics screen total  every fold above that it runs   4.7ms
+```
+
+```
+50000 transactions over 730 days, 5 accounts, 40 categories, 8 budgets
+period: 2026-09-01..2026-09-30 (30 days), today 2026-09-13, node v22.13.1 on darwin/arm64
+
+accountBalances            Accounts tab, account detail    9.3ms
+summarizePeriod            Home header, Statistics         2.2ms
+spendingByCategory         Statistics, budgets             2.5ms
+spendingByTag              Statistics tag ranking (§5.10)  2.6ms
+dailyCumulative            Home/Statistics chart series    2.8ms
+monthEndBalances x8        Account sparkline               43.4ms
+periodHistory x6           Statistics baselines (§5.5)     19.8ms
+categorySpendHistory       Statistics baselines (§5.5)     1.1ms
+budgetProgress x8          Budgets tab                     0.0ms
+— Statistics screen total  every fold above that it runs   49.4ms
+```
+
+**Verdict on §19.4: 20k rows is fine in memory. No code changed, and no SQL follow-up is opened.**
+
+The 20k column comes to **4.7ms** for the whole Statistics screen and **7.1ms** for the account
+detail (`accountBalances` + `monthEndBalances`) — an order of magnitude under the 100ms the task
+set as the threshold. The ceiling is not 20k either: the heaviest screen at 50k was 49.4ms, still
+under it.
+
+**What dominates:** `monthEndBalances`, by a wide margin — 5.2ms of the 20k column and 43.4ms of
+the 50k one. It walks the whole ledger once per sparkline point, so it is O(rows × months) where
+everything else is O(rows); at 8 points that is eight full passes. `periodHistory` is second, at
+six `filter` passes plus the arrays they allocate. Both are obvious to fix (one pass, bucketing by
+month; one pass, bucketing by period) — **and neither was touched**, because they are nowhere near
+slow enough to justify changing working code. Noted here so that whoever does hit a limit knows
+where to look first.
+
+**A note on the 50k column's stability.** Two runs of the same fixture gave `monthEndBalances`
+24.5ms and 43.4ms — the higher figure is recorded above, deliberately. At that size the fixture is
+tens of megabytes of objects and the variance is GC, not arithmetic, which is itself part of the
+answer: the first thing to go wrong past ~50k rows is memory pressure, not the sums. The 5k and
+20k columns were stable across runs.
+
+**And on the composite line.** At 20k it reads 4.7ms while its parts add up to about 5.8ms. It is
+timed last, so every function it calls is already hot and inlined by then. Read it as the optimistic
+end of what that screen costs, and the individual rows as the pessimistic end; the verdict does not
+turn on the difference.
+
+**The caveat that belongs with the number.** This is Node's JIT on a development Mac, with no
+SQLite and no rendering in the way. The app runs the same functions under Hermes on a phone, which
+is slower, while also drawing a screen. Treat the table as a floor — "it cannot be faster than
+this" — not as a device prediction; quoting a device figure needs a device measurement, which this
+phase did not do. What the table does settle is that the *arithmetic* is not the risk: if a screen
+stutters, the cost is in the query or the render, and rewriting these folds as SQL would be the
+wrong fix confidently applied.
 
 ---
 
