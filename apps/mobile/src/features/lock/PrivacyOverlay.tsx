@@ -29,8 +29,18 @@ function isPhotographed(status: AppStateStatus | null): boolean {
  * the handler rather than captured, so turning the lock on takes effect at the next status change
  * without a remount.
  *
- * An overlay rather than `expo-screen-capture`: `preventScreenCaptureAsync` sets `FLAG_SECURE` on
- * Android, which also blocks the user's own screenshots of an app they attach receipts to.
+ * An overlay rather than `expo-screen-capture` or a native snapshot hook: `preventScreenCaptureAsync`
+ * sets `FLAG_SECURE` on Android, which also blocks the user's *own* screenshots — wrong for an app
+ * you attach receipt photos in and may want to screenshot out of. The decision is settled; the two
+ * gaps it leaves are known and bounded:
+ *
+ * - A `Modal` is its own native window, so an overlay in the tree behind it does not reach it. Each
+ *   window therefore mounts its own cover: the root layout for the app, and the two transaction
+ *   routes for theirs, which are the screens with an amount on them. The remaining `Modal`s — the
+ *   category picker, the calendar, the colour and icon grids — carry category names and dates
+ *   rather than balances, and are open only while a finger is on them.
+ * - `ToastProvider` renders its toast after `{children}`, so a toast caught in flight sits above
+ *   the cover. It carries a message ("Transaction deleted"), not figures.
  */
 export function PrivacyOverlay() {
   const { kv } = useDatabase();
