@@ -46,7 +46,7 @@ your shell's environment does not reach. There is a step below for that.
 | `SALDO_SERVER_URL` | — (**required**) | The server this build signs in to, e.g. `saldo.example.com`. A bare hostname gets `https://`; spell out `http://` only for a `localhost` you are developing against. Give it an origin, not a URL — a path is rejected. A build without a usable value installs and runs, but its sign-in screen can do nothing except say so. |
 | `SALDO_BUNDLE_ID` | `io.github.saldo.app` | The bundle identifier. **You have to change this** — see below. |
 | `SALDO_APP_NAME` | `Saldo` | The name under the home-screen icon, and the name of the generated Xcode project. |
-| `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app, and which the server must allow through `APP_REDIRECT_SCHEMES`. **Leave it alone.** The app asks the browser to come back to `saldo://auth/callback` whatever you set here, so a different scheme is registered and then never used, and sign-in never completes. |
+| `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app; the app asks to come back to `<scheme>://auth/callback`. **Changing it is two changes, not one:** the server refuses a redirect whose scheme is not in its `APP_REDIRECT_SCHEMES` (see [self-hosting](./self-hosting.md#configuration)), and the sign-in fails with `invalid_redirect_uri`. Worth changing when another app on the same phone already claims `saldo://`. |
 
 ## Generate the Xcode project
 

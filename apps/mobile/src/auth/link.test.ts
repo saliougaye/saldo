@@ -1,4 +1,4 @@
-import { authorizeUrl, callbackParams, normaliseServerUrl, serverLabel } from './link';
+import { authorizeUrl, callbackParams, normaliseServerUrl, redirectUri, serverLabel } from './link';
 
 describe('normaliseServerUrl', () => {
   it('adds https, drops a trailing slash and rejects nonsense', () => {
@@ -12,6 +12,14 @@ describe('normaliseServerUrl', () => {
 
   it('refuses a URL with a path, which would break every endpoint below it', () => {
     expect(normaliseServerUrl('https://saldo.example.com/app')).toBeNull();
+  });
+});
+
+describe('redirectUri', () => {
+  it('is built from the scheme this build registered, not from a fixed one', () => {
+    expect(redirectUri('saldo')).toBe('saldo://auth/callback');
+    // A fork that sets `SALDO_SCHEME=mymoney` registers `mymoney://` and must be sent back there.
+    expect(redirectUri('mymoney')).toBe('mymoney://auth/callback');
   });
 });
 

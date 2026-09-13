@@ -44,7 +44,7 @@ the build command and both readings see them.
 | `SALDO_SERVER_URL` | — (**required**) | The server this build signs in to, e.g. `saldo.example.com`. A bare hostname gets `https://`; spell out `http://` only for a `localhost` you are developing against. Give it an origin, not a URL — a path is rejected. A build without a usable value installs and runs, but its sign-in screen can do nothing except say so. |
 | `SALDO_APP_NAME` | `Saldo` | The name under the launcher icon. |
 | `SALDO_BUNDLE_ID` | `io.github.saldo.app` | The Android application id. **A fork must change this** — it is the app's identity on the device, and two apps cannot share one. `com.example.saldo` is the shape. |
-| `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app, and which the server must allow through `APP_REDIRECT_SCHEMES`. **Leave it alone.** The app asks the browser to come back to `saldo://auth/callback` whatever you set here, so a different scheme is registered and then never used, and sign-in never completes. |
+| `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app; the app asks to come back to `<scheme>://auth/callback`. **Changing it is two changes, not one:** the server refuses a redirect whose scheme is not in its `APP_REDIRECT_SCHEMES` (see [self-hosting](./self-hosting.md#configuration)), and the sign-in fails with `invalid_redirect_uri`. Worth changing when another app on the same phone already claims `saldo://`. |
 
 ## Make a keystore
 

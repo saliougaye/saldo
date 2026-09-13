@@ -4,7 +4,8 @@ import { z } from 'zod';
 import { log, ms, shortId } from '../log';
 import { ApiClientError } from '../net/apiClient';
 import type { ServerAuthClient } from './authClient';
-import { authorizeUrl, callbackParams, REDIRECT_URI } from './link';
+import { BUILD_REDIRECT_URI } from './buildServer';
+import { authorizeUrl, callbackParams } from './link';
 
 export const healthSchema = z.object({
   app: z.literal('saldo'),
@@ -67,12 +68,12 @@ export async function signIn(options: {
   const state = randomState();
   const startedAt = Date.now();
   const url = authorizeUrl(options.serverUrl, {
-    redirectUri: REDIRECT_URI,
+    redirectUri: BUILD_REDIRECT_URI,
     state,
     mode: options.mode,
   });
   log('auth', `opening the browser at ${url}`);
-  const result = await WebBrowser.openAuthSessionAsync(url, REDIRECT_URI);
+  const result = await WebBrowser.openAuthSessionAsync(url, BUILD_REDIRECT_URI);
   // `dismiss` (the sheet was swiped away) and `cancel` both arrive here, and they are the two
   // outcomes a user reports as "nothing happened".
   log('auth', `the browser closed with "${result.type}" after ${ms(startedAt)}`);

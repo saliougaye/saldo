@@ -26,7 +26,7 @@ app, and nobody types an address on the phone. Once this server is up, build the
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | |
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
 | `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
-| `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. |
+| `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
 
 Two things to know before you start:
 
@@ -248,9 +248,11 @@ ledger once per point drawn.
   credential rather than an access/refresh pair.
 - Signing in on the phone runs the passkey ceremony on this server's `/auth/mobile` page — WebAuthn
   needs a browser — and the session is handed to the app through a **single-use, one-minute** token
-  in a `saldo://` link. Another app on the phone can register that scheme, so the narrow window is
-  a real (accepted) exposure; closing it properly needs a verified app link
-  (`webcredentials:` / `assetlinks.json`), which requires a paid Apple Developer account.
+  in a link to the app's own URL scheme (`saldo://`, unless the build set `SALDO_SCHEME` — which
+  this server must then allow through `APP_REDIRECT_SCHEMES`). Another app on the phone can register
+  that scheme, so the narrow window is a real (accepted) exposure; closing it properly needs a
+  verified app link (`webcredentials:` / `assetlinks.json`), which requires a paid Apple Developer
+  account.
 - The auth endpoints are rate limited by Better Auth (20 requests per minute). Like any in-memory
   limiter it is **per process**: behind more than one replica each enforces its own share.
 - The mobile `redirect_uri` is allow-listed by scheme, server-side, before a ceremony can start.
