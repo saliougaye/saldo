@@ -17,6 +17,22 @@ import { readRegistrationContext } from './registrationContext';
 const ONE_TIME_TOKEN_MINUTES = 1;
 
 /**
+ * §18. There is no refresh token — phase 06b replaced that design with one opaque, server-revocable
+ * session token in the OS keychain/keystore — so this number *is* "how long before you have to sign
+ * in again", with nothing behind it to renew silently.
+ *
+ * The thing this defends against is a lost or stolen phone, and the actual control for that is
+ * `revokeUser`: it deletes the session row outright, so a revoked device is refused on its very
+ * next request, at any time, regardless of this number. Given that, a short expiry buys little
+ * safety and costs real harm — Saldo works offline, and a session that lapses mid-trip locks its
+ * owner out of *their own already-downloaded data* until they can reach this server again. So the
+ * session is long and sliding: it renews on every use, at most this often, and only a stretch with
+ * *no* contact with the server longer than the expiry forces a fresh passkey ceremony.
+ */
+const SESSION_UPDATE_AGE_DAYS = 14;
+const SESSION_EXPIRES_IN_DAYS = 180;
+
+/**
  * The options, separate from the instance, because `@better-auth/cli` needs a module that exports
  * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
  */
@@ -32,6 +48,10 @@ export function buildAuthOptions() {
     database: drizzleAdapter(db, { provider: 'pg', schema }),
     // A passkey is the only credential: no weaker path to the same account.
     emailAndPassword: { enabled: false },
+    session: {
+      expiresIn: 60 * 60 * 24 * SESSION_EXPIRES_IN_DAYS,
+      updateAge: 60 * 60 * 24 * SESSION_UPDATE_AGE_DAYS,
+    },
     // The app talks to `saldo://`; every allowed scheme comes from §9.2's env var.
     trustedOrigins: appRedirectSchemes.flatMap((scheme) => [`${scheme}://`, `${scheme}://*`]),
     // §18: sliding, in-memory (see the note on `rateLimit.storage` in `docs/self-hosting.md` — a

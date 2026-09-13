@@ -1177,13 +1177,22 @@ CI (`.github/workflows/ci.yml`): pnpm install (frozen lockfile), `pnpm lint`, `p
 
 ## 18. Security & privacy checklist
 
-- No telemetry, analytics or third-party network calls from the app except the user-configured server (and, in the future, the
-  user-configured AI provider).
-- Tokens in the keychain/keystore; the refresh token is rotated and reuse is detected.
+- No telemetry, analytics or third-party network calls from the app except the server this build was configured for
+  (`SALDO_SERVER_URL` at build time — §15 — not an address typed on the phone) and, in the future, the user-configured
+  AI provider.
+- One opaque session token in the keychain/keystore (Expo SecureStore), not an access/refresh pair: phase 06b replaced
+  the original OAuth-style design with Better Auth passkeys, and there is no refresh token to rotate or detect reuse
+  of. The session is sliding — it renews on use, at most once every 14 days — and lapses after 180 days with no
+  contact with the server at all. The control that actually matters for a lost or stolen phone is server-side:
+  `revokeUser` deletes the session row outright, which is refused on that device's very next request, at any time,
+  independent of the expiry above.
 - Server: parameterised queries only (Drizzle), Zod validation on every body, per-user scoping on every query
   (`user_id = requireUser().id`), body size limits (sync 5 MB, attachments 10 MB), auth rate limiting, secure headers
   (`X-Content-Type-Options`, `Referrer-Policy`, CSP on auth pages), and no user enumeration in auth errors.
-- `redirect_uri` allow-listed by scheme. PKCE is mandatory, auth codes are single-use, and the TTL is 60s.
+- `redirect_uri` allow-listed by scheme. There is no OAuth code grant, so no PKCE: the handoff is a Better Auth
+  one-time token, minted in the browser once the passkey ceremony succeeds, stored hashed, single-use, with a 60s
+  TTL, and bound to the attempt that requested it by a client-generated `state` the app verifies before it will
+  exchange the token.
 - CSV import treats every cell as text. The CSV export prefixes cells starting with `= + - @` with `'` (formula
   injection) **except** the numeric `amount` column.
 - App lock hides content in the app switcher (`expo-screen-capture` / privacy overlay on `AppState` inactive).
