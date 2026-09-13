@@ -26,6 +26,8 @@ export interface ListRowProps {
    * point, as the children on a category row do.
    */
   subtitleLines?: number;
+  /** For the end-to-end flows in `apps/mobile/maestro`, whose labels are translated. */
+  testID?: string;
 }
 
 export function ListRow({
@@ -38,10 +40,12 @@ export function ListRow({
   upcoming = false,
   selected,
   subtitleLines = 1,
+  testID,
 }: ListRowProps) {
   const theme = useTheme();
   const content = (
     <View
+      testID={onPress === undefined ? testID : undefined}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -76,6 +80,7 @@ export function ListRow({
   if (onPress === undefined) return content;
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={onPress}

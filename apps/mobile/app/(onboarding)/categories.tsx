@@ -58,7 +58,16 @@ export default function CategoriesStep() {
   };
 
   return (
-    <Screen footer={<PrimaryButton label={t('common.start')} loading={saving} onPress={finish} />}>
+    <Screen
+      footer={
+        <PrimaryButton
+          testID="onboarding-start"
+          label={t('common.start')}
+          loading={saving}
+          onPress={finish}
+        />
+      }
+    >
       <BackButton />
       <ProgressBar ratio={1} />
       <Text size="caption" color="textFaint">

@@ -1,0 +1,118 @@
+# §16's second end-to-end flow: editing one occurrence of a recurring transaction with "Questa e le
+# successive" replaces the future occurrences and leaves the past ones alone (§5.9 / §6.21).
+#
+# THE STATE THE DEVICE MUST BE IN
+# -------------------------------
+#  * The app is installed and signed in, and onboarding has been completed, i.e. launching it lands
+#    on the tabs. Sign-in is a passkey ceremony Maestro cannot drive — see the header of
+#    `onboarding-and-first-expense.yaml`, which has the full story.
+#  * Any account will do, empty or not: this flow creates the series it edits.
+#
+# WHY IT CREATES ITS OWN DATA INSTEAD OF USING THE SEEDER
+# ------------------------------------------------------
+# `pnpm --filter mobile seed:db <path-to-saldo.db> [--reset]` (the script is
+# `apps/mobile/scripts/seed-database.ts`) writes onboarding settings plus the demo fixture straight
+# into an existing database file — the app has to have launched once so its migrations ran, and the
+# file is found with `xcrun simctl get_app_container booted io.github.saldo.app data`.
+#
+# But its recurring rows are only half recurring. `seedDemoData` stamps a synthetic
+# `recurrenceId: 'demo-recurrence:<description>'` on them and creates no row in `recurrences`
+# (`apps/mobile/src/db/demo.ts`), and `RecurrenceScopeSheet` renders nothing at all when the
+# recurrence behind an occurrence cannot be found. Saving a seeded "recurring" transaction
+# therefore opens no sheet. There is no seed command that produces a real series; the only thing
+# that creates one is "Ripeti" in the form, which is what this flow uses — and which gets
+# `startRecurrence` and the materialiser covered into the bargain.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`; a fork built with that
+# variable set has a different one.
+appId: io.github.saldo.app
+name: Edit a recurring transaction, this one and the following ones
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 30000
+
+# 1. A monthly series, dated today. Saving with "Ripeti" on turns the row into the first occurrence
+#    of a new recurrence and materialises the rest up to the end of the period after this one.
+- tapOn:
+    id: "tab-fab"
+- tapOn:
+    id: "txform-amount"
+- inputText: "200"
+# See the note in `onboarding-and-first-expense.yaml`: the category grid is content, not footer.
+- hideKeyboard
+- tapOn:
+    id: "txform-category-0"
+- tapOn:
+    id: "txform-description"
+- inputText: "Maestro rent"
+- hideKeyboard
+# "Ripeti" lives inside the collapsed "Dettagli" disclosure, below the fold on most screens.
+- scrollUntilVisible:
+    element:
+      id: "txform-details"
+    direction: DOWN
+- tapOn:
+    id: "txform-details"
+- scrollUntilVisible:
+    element:
+      id: "txform-repeat"
+    direction: DOWN
+- tapOn:
+    id: "txform-repeat"
+- tapOn:
+    id: "txform-submit"
+
+# Home, "Ultime transazioni": today's occurrence. Text, but text this flow typed.
+- assertVisible: "Maestro rent"
+
+# 2. The next occurrence is a month out, so it is in the next period, and the list folds everything
+#    dated after today behind one row (§5.12) — hence the disclosure tap.
+- tapOn:
+    id: "tab-transactions"
+- tapOn:
+    id: "period-next"
+- tapOn:
+    id: "transactions-upcoming"
+- scrollUntilVisible:
+    element: "Maestro rent"
+    direction: DOWN
+
+# 3. Open that future occurrence and rename it. The description is what changes, not the amount:
+#    it is the one field whose new value can be asserted without knowing the device's locale.
+- tapOn: "Maestro rent"
+- tapOn:
+    id: "transaction-edit"
+- tapOn:
+    id: "txform-description"
+- eraseText
+- inputText: "Maestro moved"
+- tapOn:
+    id: "txform-submit"
+
+# 4. Saving an occurrence asks which occurrences the edit is for. If this assertion fails, the
+#    sheet did not open — which is what a missing `recurrences` row looks like.
+- assertVisible:
+    id: "recurrence-scope-this-and-following"
+- tapOn:
+    id: "recurrence-scope-this-and-following"
+
+# 5. The sheet closes the screen behind it, which leaves the detail of an occurrence that has just
+#    been tombstoned. Back out of it to the list, still on the next period.
+- tapOn:
+    id: "back-button"
+# The future occurrence carries the new description...
+- assertVisible: "Maestro moved"
+# ...and the old one is gone rather than sitting beside it. Weaker than the line above — a row far
+# enough down the list would also be "not visible" — but the failure it is here to catch is a
+# duplicate in the same day card, which would be right next to it.
+- assertNotVisible: "Maestro rent"
+
+# 6. The occurrence that already happened is untouched: still there, still called what it was.
+- tapOn:
+    id: "period-previous"
+- scrollUntilVisible:
+    element: "Maestro rent"
+    direction: DOWN

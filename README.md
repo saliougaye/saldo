@@ -165,6 +165,11 @@ The S3 driver has an integration test that runs against Floci when step 1 is up,
 when it is not — so `pnpm test` is honest either way, and that driver is only really exercised with
 the stack running.
 
+Two end-to-end flows live in `apps/mobile/maestro/`: `maestro test apps/mobile/maestro/`, with
+[Maestro](https://maestro.mobile.dev) installed and the app already on a device. Each file's header
+says which state that device has to be in, because the passkey sign-in is not something a flow can
+drive.
+
 ### Layout of a change
 
 Business rules go in `packages/core` as pure functions with tests; screens and route handlers load

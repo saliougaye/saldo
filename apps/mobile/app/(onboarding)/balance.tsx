@@ -28,6 +28,7 @@ export default function BalanceStep() {
     <Screen
       footer={
         <PrimaryButton
+          testID="onboarding-balance-continue"
           label={t('common.continue')}
           onPress={() => {
             setDraft({ balanceBuffer: buffer, currency });
@@ -52,6 +53,7 @@ export default function BalanceStep() {
         </Text>
         <View style={{ marginTop: 6 }}>
           <AmountInput
+            testID="onboarding-balance-amount"
             buffer={buffer}
             onChange={setBuffer}
             currency={currency}

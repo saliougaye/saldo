@@ -26,6 +26,7 @@ export default function AccountDetailsStep() {
     <Screen
       footer={
         <PrimaryButton
+          testID="onboarding-account-continue"
           label={t('common.continue')}
           onPress={() => {
             setDraft({ accountName: name.trim(), accountType: type });
@@ -47,6 +48,7 @@ export default function AccountDetailsStep() {
       <Card>
         <View style={{ gap: 14 }}>
           <TextField
+            testID="onboarding-account-name"
             label={t('onboarding.accountName')}
             placeholder={t('onboarding.accountNamePlaceholder')}
             value={name}

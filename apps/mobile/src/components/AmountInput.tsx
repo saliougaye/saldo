@@ -22,6 +22,8 @@ export interface AmountInputProps {
   /** Label for the accessory bar's dismiss button. */
   doneLabel: string;
   onDone?: () => void;
+  /** Identifier for the field itself, so an end-to-end flow can aim at it (`apps/mobile/maestro`). */
+  testID?: string;
 }
 
 /**
@@ -44,6 +46,7 @@ export function AmountInput({
   label,
   doneLabel,
   onDone,
+  testID,
 }: AmountInputProps) {
   const theme = useTheme();
   const input = useRef<TextInput>(null);
@@ -65,6 +68,7 @@ export function AmountInput({
         ) : null}
         <TextInput
           ref={input}
+          testID={testID}
           accessibilityLabel={label}
           value={buffer.replace('.', separator)}
           onChangeText={(text) => onChange(sanitizeAmountInput(text, minorDigits))}

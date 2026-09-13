@@ -277,6 +277,7 @@ export function TransactionForm({
             </Text>
           )}
           <PrimaryButton
+            testID="txform-submit"
             label={mode === 'new' ? t('txForm.create') : t('txForm.save')}
             disabled={!ready}
             loading={submitting}
@@ -307,6 +308,7 @@ export function TransactionForm({
         </Text>
         <View style={{ marginTop: 6 }}>
           <AmountInput
+            testID="txform-amount"
             buffer={values.buffer}
             onChange={(buffer: string) => set({ buffer })}
             currency={currency}
@@ -382,12 +384,15 @@ export function TransactionForm({
             </Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-            {tiles.map((category) => {
+            {tiles.map((category, index) => {
               const selected = category.id === values.categoryId;
               const colour = theme.categoryColor(category.colorIndex);
               return (
                 <Pressable
                   key={category.id}
+                  // By position, not by id: the ids are random, and the end-to-end flows in
+                  // `apps/mobile/maestro` need *a* category rather than a particular one.
+                  testID={`txform-category-${index}`}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   accessibilityLabel={category.name}
@@ -463,6 +468,7 @@ export function TransactionForm({
 
       <Card>
         <TextField
+          testID="txform-description"
           label={t('txForm.description')}
           placeholder={
             values.kind === 'income'
@@ -482,6 +488,7 @@ export function TransactionForm({
       */}
       <Card>
         <Pressable
+          testID="txform-details"
           accessibilityRole="button"
           accessibilityState={{ expanded: detailsOpen }}
           accessibilityLabel={t('txForm.details')}
@@ -568,6 +575,7 @@ export function TransactionForm({
             >
               <Text>{t('txForm.repeat')}</Text>
               <Toggle
+                testID="txform-repeat"
                 value={values.repeat}
                 onChange={(repeat) => set({ repeat })}
                 accessibilityLabel={t('txForm.repeat')}

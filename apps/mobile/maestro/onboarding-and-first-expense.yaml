@@ -1,0 +1,101 @@
+# §16's first end-to-end flow: onboarding -> add an expense -> Home shows it.
+#
+# WHAT THIS FLOW CANNOT DO
+# ------------------------
+# §6.29 step 0 is sign-in, and sign-in is a passkey ceremony: `ConnectForm` hands off to a browser
+# and to the platform authenticator, neither of which Maestro drives. So this flow does not start
+# from a fresh install. It starts one screen later, at step 1 of 4, and everything before that is
+# done by hand once.
+#
+# THE STATE THE DEVICE MUST BE IN
+# -------------------------------
+#  * The app is installed (`SALDO_SERVER_URL=… npx expo run:ios`, see README "Step 3").
+#  * It is signed in to a **brand new** account — one whose server holds no settings row yet.
+#  * It is therefore sitting on onboarding step 1 when launched: `decideBoot` only returns
+#    `onboarding` once a sync cycle has come back and brought no settings
+#    (`apps/mobile/src/boot/decide.ts:75-95`).
+#
+# How to get there: launch the app, tap "Create account" on the welcome screen, finish the passkey
+# ceremony yourself (on the simulator, Features -> Face ID -> Enrolled first), and stop when
+# "Passo 1 di 4" / "Step 1 of 4" appears. To run the flow a second time, delete the device's
+# database — the session lives in the keychain and survives it:
+#
+#   xcrun simctl get_app_container booted io.github.saldo.app data
+#   rm -f "<that path>/Documents/SQLite/saldo.db"
+#
+# That only works while the account is still empty on the server. Once onboarding has completed
+# once, the first sync brings the settings back and the app goes straight to the tabs, so a second
+# run needs a second account (`REGISTRATION=first-user` allows exactly one — see docs/self-hosting).
+#
+# There is deliberately no `clearState`: on iOS Maestro implements it by reinstalling the app, and
+# on Android by `pm clear`. Either one throws the session away, and this flow cannot sign back in.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one — change it here to match.
+appId: io.github.saldo.app
+name: Onboarding, then a first expense on Home
+---
+- launchApp
+
+# Step 1 of 4 — how you track spending. The month is already selected (`INITIAL.periodKind` in
+# `src/features/onboarding/state.tsx`), so there is nothing to choose. The wait is long because a
+# freshly signed-in device shows the "first sync" spinner until a cycle comes back.
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-period-continue"
+    timeout: 30000
+- tapOn:
+    id: "onboarding-period-continue"
+
+# Step 2 of 4 — the first account. The field is autofocused, and the button is in the pinned
+# footer, which `Screen` keeps above the keyboard on both platforms.
+- tapOn:
+    id: "onboarding-account-name"
+- inputText: "Maestro account"
+- tapOn:
+    id: "onboarding-account-continue"
+
+# Step 3 of 4 — opening balance. 1000 in an EUR account's buffer is 10,00 €; nothing asserts on it.
+- tapOn:
+    id: "onboarding-balance-amount"
+- inputText: "1000"
+- tapOn:
+    id: "onboarding-balance-continue"
+
+# Step 4 of 4 — the category grid, every tile selected by default. "Inizia" writes settings, the
+# account and the categories, then replaces the route with the tabs.
+- tapOn:
+    id: "onboarding-start"
+
+# The tabs. The FAB is part of the tab bar, so it is here on every tab (§6.14).
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+- tapOn:
+    id: "tab-fab"
+
+# The form opens as a sheet with the amount field autofocused (§6.16).
+#
+# `hideKeyboard` is not decoration: the category grid is content, not footer, and on a small screen
+# its first row sits about where the keyboard starts. If this flow ever fails on the tile below,
+# this is the line to suspect — on iOS Maestro hides the keyboard by swiping, and a swipe over a
+# form that scrolls can move the form instead.
+- tapOn:
+    id: "txform-amount"
+- inputText: "12.50"
+- hideKeyboard
+# Whichever category the grid ranks first; an expense cannot be saved without one.
+- tapOn:
+    id: "txform-category-0"
+- tapOn:
+    id: "txform-description"
+- inputText: "Maestro coffee"
+- hideKeyboard
+- tapOn:
+    id: "txform-submit"
+
+# Back on Home, in "Ultime transazioni". The description is what the row is titled with when it has
+# one, and it is text this flow typed rather than a translated label — which is the only reason a
+# text selector is safe here.
+- assertVisible: "Maestro coffee"

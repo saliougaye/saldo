@@ -36,6 +36,7 @@ export default function PeriodStep() {
     <Screen
       footer={
         <PrimaryButton
+          testID="onboarding-period-continue"
           label={t('common.continue')}
           onPress={() => {
             setDraft({ periodKind: kind, cycleStartDay: day });

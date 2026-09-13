@@ -42,6 +42,7 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
     const allowed = canShift(direction);
     return (
       <Pressable
+        testID={direction === -1 ? 'period-previous' : 'period-next'}
         accessibilityRole="button"
         accessibilityLabel={direction === -1 ? t('period.previous') : t('period.next')}
         accessibilityState={{ disabled: !allowed }}

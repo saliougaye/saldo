@@ -29,6 +29,7 @@ export function BackButton({ onPress, icon = 'chevL' }: BackButtonProps) {
   if (onPress === undefined && !router.canGoBack()) return null;
   return (
     <Pressable
+      testID="back-button"
       accessibilityRole="button"
       accessibilityLabel={t('common.back')}
       hitSlop={10}

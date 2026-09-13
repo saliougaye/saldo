@@ -21,10 +21,13 @@ export function Toggle({
   value,
   onChange,
   accessibilityLabel,
+  testID,
 }: {
   value: boolean;
   onChange: (value: boolean) => void;
   accessibilityLabel: string;
+  /** For the end-to-end flows in `apps/mobile/maestro`, whose labels are translated. */
+  testID?: string;
 }) {
   const theme = useTheme();
   const { reduced } = useMotion();
@@ -55,6 +58,7 @@ export function Toggle({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={accessibilityLabel}
