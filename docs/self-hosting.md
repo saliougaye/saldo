@@ -5,7 +5,8 @@ thing it asks for. Everything after that is local-first — the app works offlin
 if the server is down — and the server is what gives you multi-device sync and attachment backup.
 
 The app is **built for one server**: you set `SALDO_SERVER_URL` when you build the APK or the iOS
-app, and nobody types an address on the phone (§15 of the spec, and `docs/building-*.md`).
+app, and nobody types an address on the phone. Once this server is up, build the app against it —
+[for Android](./building-android.md) or [for iOS](./building-ios.md).
 
 ## What you need
 
