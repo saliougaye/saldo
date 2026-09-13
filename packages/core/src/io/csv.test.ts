@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Account, Category, Tag, Transaction } from '../entities';
 import { csvRows, toCsv } from './csv';
+import { parseCsv } from './csvParse';
+import { detectPreset, mappingFor } from './importMapping';
+import { planImport } from './importPlan';
 
 const meta = {
   createdAt: '2026-09-01T10:00:00.000Z',
@@ -182,5 +185,85 @@ describe('csvRows', () => {
     const row = csvRows([orphan], context)[1];
     expect(row?.[4]).toBe('');
     expect(row?.[6]).toBe('');
+  });
+});
+
+describe('formula injection', () => {
+  const hostile = {
+    currency: 'EUR' as const,
+    accounts: [{ ...carta, name: '=HYPERLINK("http://evil","click")' }],
+    categories: [],
+    tags: [{ ...vacanza, name: '@SUM(A1:A9)' }],
+  };
+
+  it('prefixes a cell that starts with =, +, - or @ with an apostrophe', () => {
+    const rows = csvRows(
+      [{ ...expense, accountId: 'acc-1', description: '+1 caffè', tagIds: ['tag-1'] }],
+      hostile,
+    );
+    const row = rows[1] ?? [];
+    expect(row[4]).toBe('\'=HYPERLINK("http://evil","click")');
+    expect(row[8]).toBe("'+1 caffè");
+    expect(row[10]).toBe("'@SUM(A1:A9)");
+  });
+
+  it('prefixes a cell hidden behind a leading tab, carriage return or line feed', () => {
+    const row = csvRows([{ ...expense, description: '\t=1+1', note: '\r-1' }], context)[1] ?? [];
+    expect(row[8]).toBe("'\t=1+1");
+    expect(row[9]).toBe("'\r-1");
+    // A note pasted with a blank line in front: `field()` quotes it either way, and a quoted
+    // formula is still a formula.
+    const pasted = csvRows([{ ...expense, description: '\n=1+1' }], context)[1] ?? [];
+    expect(pasted[8]).toBe("'\n=1+1");
+    expect(toCsv([pasted])).toContain('"\'\n=1+1"');
+  });
+
+  it('leaves the amount alone, because a minus there is a sign and not a formula', () => {
+    expect(csvRows([{ ...expense, amount: 1250 }], context)[1]?.[2]).toBe('12.50');
+    // Amounts are stored positive (the type column carries the sign), but if one ever reaches the
+    // column negative it must still be a number to the spreadsheet.
+    expect(csvRows([{ ...expense, amount: -1250 }], context)[1]?.[2]).toBe('-12.50');
+  });
+
+  it('leaves an ordinary cell untouched', () => {
+    expect(csvRows([{ ...expense, description: 'Caffè' }], context)[1]?.[8]).toBe('Caffè');
+  });
+
+  it('both prefixes and quotes a description that starts with = and holds a comma', () => {
+    const rows = csvRows([{ ...expense, description: '=Caffè, e brioche' }], context);
+    expect(toCsv(rows).split('\r\n')[1]).toContain(',"\'=Caffè, e brioche",');
+  });
+});
+
+describe('export → import round-trip', () => {
+  /** Writes the file the export writes, then reads it back the way the import screen does. */
+  const reimport = (transaction: Transaction) => {
+    const parsed = parseCsv(toCsv(csvRows([transaction], context)));
+    const headers = parsed.rows[0] ?? [];
+    return planImport(parsed.rows.slice(1), mappingFor(headers, detectPreset(headers)), {
+      ...context,
+      existingFingerprints: new Set<string>(),
+    });
+  };
+
+  it('gives back the text the user typed, guard apostrophe and all', () => {
+    const plan = reimport({
+      ...expense,
+      description: '=SUM(A1:A9)',
+      note: '@casa',
+      tagIds: ['tag-1'],
+    });
+    expect(plan.errors).toEqual([]);
+    const planned = plan.transactions[0];
+    expect(planned?.description).toBe('=SUM(A1:A9)');
+    expect(planned?.note).toBe('@casa');
+    expect(planned?.tagNames).toEqual(['Vacanza']);
+    expect(plan.newAccounts).toEqual([]);
+    expect(plan.newTags).toEqual([]);
+  });
+
+  it('keeps a description that genuinely begins with an apostrophe', () => {
+    const plan = reimport({ ...expense, description: "'90s playlist" });
+    expect(plan.transactions[0]?.description).toBe("'90s playlist");
   });
 });

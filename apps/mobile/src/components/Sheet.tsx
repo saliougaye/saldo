@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../theme/Text';
@@ -36,6 +37,7 @@ export function Sheet({
 }: SheetProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   // `Modal`'s `onDismiss` is iOS-only, so Android is served by watching the flag go false. The
   // ref keeps the latest callback without making the effect re-run on every render.
@@ -57,7 +59,7 @@ export function Sheet({
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="close"
+        accessibilityLabel={t('common.close')}
         onPress={onClose}
         style={{ flex: 1, backgroundColor: theme.palette.scrim }}
       />

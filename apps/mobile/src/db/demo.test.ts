@@ -8,6 +8,7 @@ import {
 } from '@saldo/core';
 import { seedDemoData } from './demo';
 import { DEMO_ACCOUNTS, DEMO_TRANSACTIONS } from './demoData.generated';
+import { runMaterialiser } from './recurrenceService';
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
 
@@ -131,5 +132,33 @@ describe('seedDemoData', () => {
       const inCycle = repos.transactions.list().filter((tx) => isWithin(cycle, tx.date));
       expect(inCycle.length).toBeGreaterThan(20);
     }
+  });
+
+  // A transaction's `recurrenceId` used to be a synthetic `demo-recurrence:<description>` string
+  // with no backing row: EditTransaction would open RecurrenceScopeSheet, which looks the id up,
+  // finds nothing, returns null, and the sheet silently fails to appear. Every recurring
+  // transaction must point at a real `recurrences` row.
+  it('never points a transaction at a recurrence that does not exist', () => {
+    const repos = seed();
+    const recurrenceIds = new Set(repos.recurrences.list().map((recurrence) => recurrence.id));
+    const recurring = repos.transactions.list().filter((tx) => tx.recurrenceId !== null);
+    expect(recurring.length).toBeGreaterThan(0);
+    for (const tx of recurring) {
+      expect(recurrenceIds.has(tx.recurrenceId as string)).toBe(true);
+    }
+  });
+
+  // The seeded recurrences are windowed to their own anchor date (`startDate === endDate`)
+  // precisely so this holds: the app runs the materialiser right after seeding (DevTools) and on
+  // every open (MaterialiserGate), and it must not invent extra transactions on top of the
+  // curated fixture.
+  it('leaves the materialiser with nothing to generate', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => '2026-09-10T09:00:00.000Z');
+    seedDemoData(repos, { today: TODAY, def: CYCLE_DEF, translate: (key) => key });
+    const before = repos.transactions.list().length;
+    const created = runMaterialiser(db, repos, TODAY, CYCLE_DEF);
+    expect(created).toBe(0);
+    expect(repos.transactions.list()).toHaveLength(before);
   });
 });

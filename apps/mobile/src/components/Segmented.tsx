@@ -41,6 +41,9 @@ export function Segmented<T extends string>({
             key={option.value}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
+            // The segments are 36pt tall and sit shoulder to shoulder, so only the top and bottom
+            // can grow; 4 each way reaches the floor without either one stealing its neighbour.
+            hitSlop={{ top: 4, bottom: 4 }}
             onPress={() => onChange(option.value)}
             style={{
               flex: 1,

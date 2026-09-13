@@ -44,7 +44,9 @@ export function CardHeader({ title, status, statusTone = 'muted', onPress }: Car
       // The status belongs to the name: "Budget, 2 oltre il ritmo" is what the row is about.
       accessibilityLabel={status === undefined ? title : `${title}, ${status}`}
       onPress={onPress}
-      hitSlop={6}
+      // One line of body text is ~18pt tall; 13 above and below clears the 44pt target. The
+      // sides stay narrow so the slop does not reach past the card's own padding.
+      hitSlop={{ top: 13, bottom: 13, left: 6, right: 6 }}
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
       {content}

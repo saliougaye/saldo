@@ -32,6 +32,29 @@ export function toCsv(rows: readonly (readonly string[])[]): string {
   return `﻿${rows.map((row) => row.map(field).join(',')).join('\r\n')}\r\n`;
 }
 
+/**
+ * §18. A spreadsheet reads a cell starting with `=`, `+`, `-` or `@` as a formula, and a
+ * description or a tag is somebody else's text — a shared export is enough for that to matter. The
+ * apostrophe makes the cell text again, and `parseCsv` takes it back off, so re-importing our own
+ * file returns the text that was typed. The tab, the carriage return and the line feed are here
+ * because some spreadsheets strip leading whitespace before deciding what the cell is — and a
+ * pasted note beginning with a blank line is the ordinary way that happens. RFC 4180 quoting is
+ * not the protection: `"\n=1+1"` is a perfectly quoted formula.
+ *
+ * The full-width look-alikes OWASP also lists (`＝` `＋` `－` `＠`) are deliberately left out: no
+ * current Excel, LibreOffice or Sheets build was found that evaluates them, so prefixing them
+ * would only put a stray apostrophe in front of legitimate text. Add them the day one does.
+ *
+ * Not applied to `amount`: there a leading `-` is a minus sign, and quoting it would stop every
+ * spreadsheet reading the column as a number. Every other column this touches is user-typed.
+ *
+ * `unguard` in `csvParse.ts` is the exact inverse of this set — the two move together or the
+ * round-trip stops holding.
+ */
+function textCell(value: string): string {
+  return /^[=+\-@\t\r\n]/.test(value) ? `'${value}` : value;
+}
+
 export interface CsvContext {
   currency: CurrencyCode;
   accounts: readonly Account[];
@@ -62,16 +85,18 @@ export function csvRows(transactions: readonly Transaction[], context: CsvContex
       // the `type` column to do — so there is nothing to convert here.
       formatMinorUnits(tx.amount, minorDigits),
       context.currency,
-      accountName.get(tx.accountId) ?? '',
-      tx.toAccountId === null ? '' : (accountName.get(tx.toAccountId) ?? ''),
-      own?.name ?? '',
-      parent?.name ?? '',
-      tx.description,
-      tx.note ?? '',
-      tx.tagIds
-        .map((id) => tagName.get(id) ?? '')
-        .filter((name) => name !== '')
-        .join('|'),
+      textCell(accountName.get(tx.accountId) ?? ''),
+      textCell(tx.toAccountId === null ? '' : (accountName.get(tx.toAccountId) ?? '')),
+      textCell(own?.name ?? ''),
+      textCell(parent?.name ?? ''),
+      textCell(tx.description),
+      textCell(tx.note ?? ''),
+      textCell(
+        tx.tagIds
+          .map((id) => tagName.get(id) ?? '')
+          .filter((name) => name !== '')
+          .join('|'),
+      ),
       String(tx.excludeFromTotals),
       String(tx.recurrenceId !== null),
       tx.id,

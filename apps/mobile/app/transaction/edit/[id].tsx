@@ -8,6 +8,7 @@ import { Screen } from '../../../src/components/Screen';
 import { useToast } from '../../../src/components/Toast';
 import { useDatabase } from '../../../src/db/DatabaseProvider';
 import { useSettings } from '../../../src/db/hooks';
+import { PrivacyOverlay } from '../../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
 import { RecurrenceScopeSheet } from '../../../src/features/transactions/RecurrenceScopeSheet';
 import { TransactionForm } from '../../../src/features/transactions/TransactionForm';
@@ -110,6 +111,8 @@ export default function EditTransaction() {
         onConfirm={remove}
         onCancel={() => setConfirmingDelete(false)}
       />
+      {/* A modal route is its own native window, which the root layout's cover cannot reach. */}
+      <PrivacyOverlay />
     </>
   );
 }

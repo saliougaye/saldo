@@ -110,6 +110,7 @@ export default function TransactionDetail() {
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <BackButton />
         <Pressable
+          testID="transaction-edit"
           accessibilityRole="button"
           onPress={() =>
             router.push({ pathname: '/transaction/edit/[id]', params: { id: transaction.id } })

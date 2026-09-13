@@ -72,6 +72,9 @@ export function ArchiveCategorySheet({
                   key={candidate.id}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
+                  // 30pt chips: the height is what falls short. 7 each way reaches 44, meeting
+                  // the row above in the 6pt gap — a near miss lands on a chip, not on nothing.
+                  hitSlop={{ top: 7, bottom: 7, left: 3, right: 3 }}
                   onPress={() => setTarget(selected ? null : candidate.id)}
                   style={{
                     paddingHorizontal: 10,

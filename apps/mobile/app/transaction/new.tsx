@@ -8,6 +8,7 @@ import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../src/db/hooks';
 import { startRecurrence } from '../../src/db/recurrenceService';
+import { PrivacyOverlay } from '../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
 import { emptyForm, toTransactionInput } from '../../src/features/transactions/useTransactionForm';
@@ -41,26 +42,30 @@ export default function NewTransaction() {
   );
 
   return (
-    <TransactionForm
-      today={today}
-      transactionId={transactionId}
-      values={values}
-      onChange={setValues}
-      mode="new"
-      submitting={saving}
-      onSubmit={() => {
-        setSaving(true);
-        savedRef.current = true;
-        const created = repos.transactions.create({
-          id: transactionId,
-          ...toTransactionInput(values, minorDigits),
-          recurrenceId: null,
-        });
-        // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
-        if (values.repeat) startRecurrence(db, repos, created, today, def);
-        toast.show(t('transactions.created'));
-        router.back();
-      }}
-    />
+    <>
+      <TransactionForm
+        today={today}
+        transactionId={transactionId}
+        values={values}
+        onChange={setValues}
+        mode="new"
+        submitting={saving}
+        onSubmit={() => {
+          setSaving(true);
+          savedRef.current = true;
+          const created = repos.transactions.create({
+            id: transactionId,
+            ...toTransactionInput(values, minorDigits),
+            recurrenceId: null,
+          });
+          // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
+          if (values.repeat) startRecurrence(db, repos, created, today, def);
+          toast.show(t('transactions.created'));
+          router.back();
+        }}
+      />
+      {/* A modal route is its own native window, which the root layout's cover cannot reach. */}
+      <PrivacyOverlay />
+    </>
   );
 }

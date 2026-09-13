@@ -41,6 +41,7 @@ export function TabBar({ state, navigation, onFabPress, label, fabLabel }: TabBa
     return (
       <Pressable
         key={route.key}
+        testID={`tab-${route.name}`}
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
         onPress={() => navigation.navigate(route.name)}
@@ -72,6 +73,7 @@ export function TabBar({ state, navigation, onFabPress, label, fabLabel }: TabBa
       {state.routes.slice(0, half).map(renderTab)}
       <View style={{ width: theme.layout.fabSize + 16, alignItems: 'center' }}>
         <Pressable
+          testID="tab-fab"
           accessibilityRole="button"
           accessibilityLabel={fabLabel}
           onPress={onFabPress}

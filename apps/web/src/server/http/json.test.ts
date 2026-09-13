@@ -39,6 +39,30 @@ describe('readJson', () => {
       status: 413,
     });
   });
+
+  it('rejects a declared Content-Length over the cap before reading the body', async () => {
+    // The body itself is small and valid; only the declared length lies. Rejecting anyway shows
+    // the header is checked before `request.text()` ever runs.
+    const request = new Request('http://localhost/api/x', {
+      method: 'POST',
+      body: '{"name":"Ada"}',
+      headers: { 'content-type': 'application/json', 'content-length': '999999' },
+    });
+    await expect(readJson(request, schema, 64)).rejects.toMatchObject({
+      code: 'payload_too_large',
+      status: 413,
+    });
+  });
+
+  it('still rejects an oversized body with no Content-Length header (the backstop)', async () => {
+    const big = JSON.stringify({ name: 'x'.repeat(200) });
+    const request = post(big);
+    expect(request.headers.get('content-length')).toBeNull();
+    await expect(readJson(request, schema, 64)).rejects.toMatchObject({
+      code: 'payload_too_large',
+      status: 413,
+    });
+  });
 });
 
 describe('ApiError', () => {

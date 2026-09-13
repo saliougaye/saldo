@@ -18,8 +18,9 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# bundled dev scripts (scripts/seed-database.ts)
+# bundled dev scripts (scripts/seed-database.ts, scripts/measure-performance.ts)
 .seed-db.cjs
+.measure-perf.cjs
 
 # Metro
 .metro-health-check*

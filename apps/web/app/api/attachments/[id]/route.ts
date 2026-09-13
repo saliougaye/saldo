@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { requireAttachment } from '../../../../src/server/attachments/row';
 import { getDb } from '../../../../src/server/db/client';
+import { rejectByContentLength } from '../../../../src/server/http/bodyLimit';
 import { ApiError, handle } from '../../../../src/server/http/errors';
 import { requireUser } from '../../../../src/server/http/requireUser';
 import { getStore, objectKey } from '../../../../src/server/storage';
@@ -23,6 +24,9 @@ export function PUT(
       throw new ApiError(409, 'no_storage', 'This server keeps no attachments');
     }
 
+    // The row is the declared size, so a `Content-Length` above it can already never match — refuse
+    // it before buffering rather than after, same bound as `readJson`.
+    rejectByContentLength(request, row.byteSize);
     const bytes = new Uint8Array(await request.arrayBuffer());
     if (bytes.byteLength !== row.byteSize) {
       throw new ApiError(413, 'size_mismatch', 'The body is not the size this attachment declared');

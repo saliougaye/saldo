@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { type AccessibilityActionEvent, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -67,6 +67,10 @@ export function SwipeRow({
   return (
     <View>
       <View
+        // The reveal is the same two actions the rotor carries below, drawn for the finger that
+        // is dragging. Announcing it as well would name every row three times.
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
         style={{
           position: 'absolute',
           left: 0,
@@ -94,7 +98,26 @@ export function SwipeRow({
         </Animated.View>
       </View>
       <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
-        <Animated.View style={[{ backgroundColor: theme.palette.surface }, rowStyle]}>
+        <Animated.View
+          // Everything this row does lives in a gesture: the tap that opens it and the two drags.
+          // A gesture is not an element, so without this the row is a paragraph of text that
+          // announces an amount and leads nowhere — and edit and delete do not exist at all.
+          // The name is the text inside: the payee, the account and the amount, read in one go.
+          accessible
+          accessibilityRole="button"
+          accessibilityActions={[
+            { name: 'activate' },
+            { name: 'edit', label: editLabel },
+            { name: 'delete', label: deleteLabel },
+          ]}
+          onAccessibilityAction={(event: AccessibilityActionEvent) => {
+            const { actionName } = event.nativeEvent;
+            if (actionName === 'edit') onEdit();
+            else if (actionName === 'delete') onDelete();
+            else onPress();
+          }}
+          style={[{ backgroundColor: theme.palette.surface }, rowStyle]}
+        >
           {children}
         </Animated.View>
       </GestureDetector>

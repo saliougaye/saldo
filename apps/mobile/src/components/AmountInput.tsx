@@ -17,9 +17,13 @@ export interface AmountInputProps {
   currency: CurrencyCode;
   locale: AppLocale;
   autoFocus?: boolean;
+  /** What the field holds — "Amount", "Balance" — which is also what a screen reader announces. */
+  label: string;
   /** Label for the accessory bar's dismiss button. */
   doneLabel: string;
   onDone?: () => void;
+  /** Identifier for the field itself, so an end-to-end flow can aim at it (`apps/mobile/maestro`). */
+  testID?: string;
 }
 
 /**
@@ -39,8 +43,10 @@ export function AmountInput({
   currency,
   locale,
   autoFocus = false,
+  label,
   doneLabel,
   onDone,
+  testID,
 }: AmountInputProps) {
   const theme = useTheme();
   const input = useRef<TextInput>(null);
@@ -50,7 +56,10 @@ export function AmountInput({
   const separator = locale === 'it' ? ',' : '.';
 
   return (
-    <Pressable accessibilityRole="button" onPress={() => input.current?.focus()}>
+    // Tapping beside the digits focuses them, which is a convenience for a pointing finger and
+    // nothing more: a `Pressable` is accessible by default, and one wrapped round a field hides
+    // the field from assistive technology entirely.
+    <Pressable accessible={false} onPress={() => input.current?.focus()}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
         {parts.symbolPosition === 'prefix' ? (
           <Text size="amountXl" weight="semibold" color="textFaint">
@@ -59,7 +68,8 @@ export function AmountInput({
         ) : null}
         <TextInput
           ref={input}
-          accessibilityLabel={doneLabel}
+          testID={testID}
+          accessibilityLabel={label}
           value={buffer.replace('.', separator)}
           onChangeText={(text) => onChange(sanitizeAmountInput(text, minorDigits))}
           keyboardType="decimal-pad"
@@ -99,7 +109,8 @@ export function AmountInput({
           >
             <Pressable
               accessibilityRole="button"
-              hitSlop={10}
+              // One line of body text in a thin accessory bar: the slop is the whole target.
+              hitSlop={{ top: 13, bottom: 13, left: 13, right: 13 }}
               onPress={() => {
                 input.current?.blur();
                 onDone?.();

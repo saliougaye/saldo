@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAttachment } from '../../../../../src/server/attachments/row';
 import { getDb } from '../../../../../src/server/db/client';
 import { ApiError, handle } from '../../../../../src/server/http/errors';
+import { readJson } from '../../../../../src/server/http/json';
 import { requireUser } from '../../../../../src/server/http/requireUser';
 import { getStore, objectKey } from '../../../../../src/server/storage';
 
@@ -13,6 +14,10 @@ const bodySchema = z.object({
   size: z.number().int().positive().max(MAX_ATTACHMENT_BYTES),
   mimeType: z.string().min(1),
 });
+
+// The body is `{ size, mimeType }` and nothing else ever grows it: 1 KB leaves room for a very
+// long MIME type and still keeps this route out of the "arbitrary body" class the other two were in.
+const MAX_BODY_BYTES = 1024;
 
 /**
  * §10, the first half of an upload: the client asks *where* to put the bytes and the server
@@ -27,18 +32,15 @@ export function POST(
   return handle(async () => {
     const user = await requireUser(request);
     const { id } = await context.params;
-    const parsed = bodySchema.safeParse(await request.json().catch(() => null));
-    if (!parsed.success) {
-      throw new ApiError(400, 'invalid_body', 'size and mimeType are required');
-    }
+    const body = await readJson(request, bodySchema, MAX_BODY_BYTES);
 
     const row = await requireAttachment(getDb(), user.id, id);
     // The row is the authority on what this attachment is: an intent that disagrees with it would
     // put bytes behind a hash and a size nobody will ever match.
-    if (parsed.data.size !== row.byteSize) {
+    if (body.size !== row.byteSize) {
       throw new ApiError(413, 'size_mismatch', 'That is not the size this attachment declared');
     }
-    if (parsed.data.mimeType !== row.mimeType) {
+    if (body.mimeType !== row.mimeType) {
       throw new ApiError(415, 'type_mismatch', 'That is not the type this attachment declared');
     }
 

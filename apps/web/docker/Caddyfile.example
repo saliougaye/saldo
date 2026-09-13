@@ -2,6 +2,13 @@
 # supported way to expose the server on a real domain.
 #
 #   caddy run --config Caddyfile
+#
+# `reverse_proxy` appends this proxy's view of the caller to `X-Forwarded-For` rather than
+# replacing it — so a caller who sends its own copy of that header arrives with two addresses in
+# it, and the server's auth rate limiting cannot tell which one is real. Set `TRUSTED_PROXIES` (see
+# `apps/web/.env.example`) to this Caddy instance's address on the network it shares with `web`, so
+# it can be told apart from whatever the caller sent. Leaving it unset shares one rate-limit bucket
+# across every caller of this Caddyfile.
 saldo.example.com {
 	encode zstd gzip
 	reverse_proxy web:3000

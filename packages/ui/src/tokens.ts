@@ -95,6 +95,27 @@ export const categoryColors = [
 ] as const;
 
 /**
+ * The i18n key under `colors.*` for each swatch above, in the same order — a picker whose whole
+ * job is choosing by appearance cannot offer ten hex codes to anyone who cannot see them.
+ *
+ * Each name says what the colour *is*, never what it is for. A user puts the orange on groceries
+ * and the next user puts it on the car, so "Spesa" would be wrong for almost everybody by their
+ * second account.
+ */
+export const categoryColorNames = [
+  'terracotta',
+  'ochre',
+  'olive',
+  'sage',
+  'teal',
+  'denim',
+  'periwinkle',
+  'mauve',
+  'dustyRose',
+  'grey',
+] as const;
+
+/**
  * Accent choices offered in Profile. The neutral grey is the default (see the `accent` tokens);
  * the design's orange and the blue/green options remain available.
  */

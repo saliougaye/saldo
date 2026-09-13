@@ -447,20 +447,47 @@ The two shapes sharing could take, kept here so the choice is not re-derived:
   scoped to the spaces a user belongs to, and a rule for what happens to rows when somebody leaves.
   The LWW merge already tolerates more writers.
 
-### 11 — Release docs & hardening 🚧 planned
+### 11 — Release docs & hardening ◐ built, awaiting the hardware half
 
 **Plan:** `2026-09-13-11-release-and-hardening.md` · **Spec:** §15, §16 (E2E), §18, §19
 
-Ten tasks, in an order chosen so the cheap gates come first: the repository goes green (`pnpm lint` fails on 26
-accessibility errors in the icon generators, so CI is red and every later check is unreadable), then the two §18 items
-that were never built — the CSV export escaping formulas, and a privacy overlay so the app switcher photographs a
-cover rather than the balances — then the accessibility sweep, then the measured answer to §19.4 at 20k rows, then the
-release plumbing: the signing config plugin, `build:android`, the two build documents, the README, CONTRIBUTING and
-the Maestro flows.
+**Done and verifiable without a device.** The repository is green again — `pnpm lint` was failing on 26 accessibility
+errors in the icon generators, so CI was red and every later check in the phase would have been unreadable. The two
+§18 items that had never been built now exist: the CSV export prefixes the formula characters (and `csvParse` strips
+the prefix back off, so a re-import is lossless), and a privacy overlay covers the app switcher snapshot — in the root
+tree *and* in the two modal routes, because those are their own native windows and the transaction form is the screen
+with an amount on it. The accessibility sweep covered every tappable control in 76 files; the two worst finds were an
+`AmountInput` wrapper that swallowed the amount field entirely from VoiceOver, and a transaction row with no role, no
+name and two drag actions unreachable without them. §19.4 is answered with numbers rather than an opinion.
 
-- `docs/building-android.md`, `docs/building-ios.md`, `docs/self-hosting.md`, README (features, screenshots, quick start),
-  CONTRIBUTING, release-signing config plugin, `build:android` script, Maestro flows, privacy overlay, accessibility
-  pass (labels, hit areas, reduce motion), performance check with 20k generated transactions.
+**§19.4, answered.** 20k transactions is comfortable in memory: the heaviest screen spends **4.7ms** folding, against
+a ~100ms budget. `monthEndBalances` dominates (5.2ms at 20k, 43.4ms at 50k) because it walks the whole ledger once per
+sparkline point. Nothing moves into SQL. Read the table in `docs/self-hosting.md` as a floor: it is Node on a
+development Mac with no database and no rendering in the way, not Hermes on a phone.
+
+**`build:android` works end to end, proved by running it.** Three defects had to be fixed first, all found by
+following the new documents rather than by reading them: `babel-preset-expo` was named in `babel.config.js` but only
+installed transitively, `lintVitalRelease` failed on iOS permission strings that the `locales` block had leaked into
+Android resources, and the signing plugin made a keyless `assembleRelease` impossible — the opposite of what its own
+comment promised. `./gradlew :app:signingReport` had made that last one look fine; a report is not a build.
+
+**Security audit against §18: no Critical.** Every route authenticates, validates with Zod and scopes by user. Three
+Important findings were fixed here — body limits that measured after buffering (and one route with no limit at all),
+auth rate limiting that collapsed into a single shared bucket behind the Caddy config this repo ships, and an
+unconfigured session lifetime. **Three §18 lines were stale rather than unmet** and now describe what shipped: there
+is no refresh token to rotate, no PKCE (phase 06b replaced the code grant with a hashed, single-use, 60s one-time
+token), and the server address is a build input, not something typed on the phone.
+
+**Not verified, and not tickable from here.** The acceptance criterion is half met: an APK builds and is signed with a
+real key, but nobody has installed one on a phone. Outstanding, all needing hardware or hands:
+
+- installing the APK on a device, and the iOS path in full — Xcode signing, a Personal Team, Developer Mode
+- the passkey ceremony, still undriven since phase 06; with it, the `SALDO_SCHEME` round trip
+- VoiceOver over the app, and the largest Dynamic Type setting
+- the app-switcher cover as the OS actually photographs it
+- the two Maestro flows, never executed. Their author's own estimate of first-run success is ~50% and ~35%; the
+  selectors are `testID`-addressed and justified line by line, the risk is the gestures around the keyboard
+- README screenshots, which do not exist yet: the four links are correct and will resolve the moment they land
 
 **Acceptance:** a person following only the docs on a clean machine produces an installed APK and an iOS build connected to a
 self-hosted server.
@@ -532,6 +559,14 @@ small enough to land on its own branch without a plan file of its own.
     trasferimenti" chip, sharing the `swap` icon the transfer row already uses. The
     "N trasferimenti nascosti" note stays quiet under it, since that chip shows them rather than
     hiding them.
+- **The icon picker announces raw library identifiers.** Found in the phase 11 accessibility
+  sweep and deliberately left. `AppearanceSheet`'s icon grid labels each tile with its own name —
+  `piggy`, `grip`, `chevUD` — so VoiceOver reads English identifiers in an Italian app. The
+  palette beside it was fixed in the same sweep because ten colour names are a bounded piece of
+  content; roughly a hundred icon names are not, and machine-translating nouns for glyphs would
+  be worse than the present state, because it would look finished. Left for whoever can name them
+  properly: one `icons.<name>` entry per `ICON_NAMES` member in both catalogues, with the grid
+  reading ``t(`icons.${name}`)`` the way the swatches now read ``t(`colors.${name}`)``.
 
 ## Future (not POC)
 

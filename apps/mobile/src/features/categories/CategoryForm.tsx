@@ -223,6 +223,7 @@ export function CategoryForm({
                 onChange={(budgetBuffer) => set({ budgetBuffer })}
                 currency={currency}
                 locale={locale}
+                label={t('categories.monthlyBudget')}
                 doneLabel={t('common.done')}
               />
             </View>

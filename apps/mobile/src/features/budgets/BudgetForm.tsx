@@ -116,6 +116,7 @@ export function BudgetForm({
           currency={currency}
           locale={locale}
           autoFocus={mode === 'new'}
+          label={t('budgets.amount')}
           doneLabel={t('common.done')}
         />
       </View>
@@ -126,7 +127,7 @@ export function BudgetForm({
           </Text>
           <Pressable
             accessibilityRole="button"
-            hitSlop={8}
+            hitSlop={{ top: 13, bottom: 13, left: 8, right: 8 }}
             onPress={() => set({ buffer: (suggestion / 10 ** minorDigits).toString() })}
           >
             <Text color="accent" weight="medium">

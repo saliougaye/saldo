@@ -79,6 +79,7 @@ export function OptionRow({
     <ListRow
       title={label}
       leading={leading}
+      selected={selected}
       onPress={onPress}
       trailing={
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

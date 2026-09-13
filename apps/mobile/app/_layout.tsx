@@ -18,6 +18,7 @@ import { LoadingScreen } from '../src/components/LoadingScreen';
 import { ToastProvider } from '../src/components/Toast';
 import { DatabaseProvider } from '../src/db/DatabaseProvider';
 import { useSettings } from '../src/db/hooks';
+import { PrivacyOverlay } from '../src/features/lock/PrivacyOverlay';
 import { MaterialiserGate } from '../src/features/period/MaterialiserGate';
 import { PeriodProvider } from '../src/features/period/PeriodProvider';
 import { createI18n } from '../src/i18n';
@@ -130,6 +131,8 @@ export default function RootLayout() {
                       options={{ presentation: 'modal' }}
                     />
                   </Stack>
+                  {/* Last child of `Ready`, so the cover draws over every screen (§18). */}
+                  <PrivacyOverlay />
                 </Ready>
               </SettingsScopedProviders>
             </DatabaseProvider>

@@ -112,6 +112,7 @@ export function RecurrenceScopeSheet({
           return (
             <ListRow
               key={scope}
+              testID={`recurrence-scope-${scope}`}
               title={t(KEYS[scope].title)}
               subtitle={t(KEYS[scope].note, { count })}
               onPress={() => apply(scope)}

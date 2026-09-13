@@ -1,4 +1,3 @@
-import { categoryColors } from '@saldo/ui';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
@@ -52,14 +51,14 @@ describe('CategoryForm', () => {
   it('keeps the icon library and the swatches off the form', async () => {
     await renderForm();
     expect(screen.queryByLabelText('pizza')).toBeNull();
-    expect(screen.queryByLabelText(categoryColors[0])).toBeNull();
+    expect(screen.queryByLabelText('Terracotta')).toBeNull();
   });
 
   it('opens them from the preview, which is what shows the result', async () => {
     await renderForm();
     await userEvent.press(screen.getByLabelText('Appearance'));
     expect(screen.getByLabelText('pizza')).toBeTruthy();
-    expect(screen.getByLabelText(categoryColors[0])).toBeTruthy();
+    expect(screen.getByLabelText('Terracotta')).toBeTruthy();
   });
 
   it('offers no monthly budget on an income category, which has nothing to cap', async () => {

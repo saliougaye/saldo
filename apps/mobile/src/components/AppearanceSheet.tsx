@@ -1,4 +1,4 @@
-import { categoryColors, ICON_NAMES, type IconName } from '@saldo/ui';
+import { categoryColorNames, ICON_NAMES, type IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -56,18 +56,23 @@ export function AppearanceSheet({
   return (
     <Sheet visible={visible} onClose={onClose} title={t('common.appearance')} tall>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {categoryColors.map((swatch, index) => (
+        {/* The names, not the hexes: walking them is what guarantees every swatch has one. */}
+        {categoryColorNames.map((name, index) => (
           <Pressable
-            key={swatch}
+            key={name}
             accessibilityRole="button"
             accessibilityState={{ selected: index === colorIndex }}
-            accessibilityLabel={swatch}
+            accessibilityLabel={t(`colors.${name}`)}
+            // 30pt swatches 8 apart cannot reach 44 without their slop meeting in the gap, so
+            // it meets there: a tap between two swatches picks one of them rather than nothing,
+            // and picking the wrong colour costs one more tap.
+            hitSlop={7}
             onPress={() => onChange({ colorIndex: index, icon })}
             style={{
               width: 30,
               height: 30,
               borderRadius: 15,
-              backgroundColor: swatch,
+              backgroundColor: theme.categoryColor(index),
               borderWidth: index === colorIndex ? 2 : 0,
               borderColor: theme.palette.text,
             }}
@@ -133,6 +138,8 @@ function IconGrid({
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={name}
+            // 36pt tiles, 6 apart: 4 each way, on the same reasoning as the swatches above.
+            hitSlop={4}
             onPress={() => onSelect(name)}
             style={({ pressed }) => ({
               width: 36,

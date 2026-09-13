@@ -50,6 +50,7 @@ export function UpcomingRow({
   return (
     <Card padded={false}>
       <Pressable
+        testID="transactions-upcoming"
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         accessibilityLabel={t('transactions.upcoming')}

@@ -31,6 +31,8 @@ export function DayOfMonthSheet({
               accessibilityRole="button"
               accessibilityState={{ selected }}
               accessibilityLabel={String(day)}
+              // 38pt keys, 6 apart: 3 each way reaches 44 without reaching the next day.
+              hitSlop={3}
               onPress={() => {
                 onSelect(day);
                 onClose();

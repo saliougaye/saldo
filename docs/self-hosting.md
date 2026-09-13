@@ -5,7 +5,8 @@ thing it asks for. Everything after that is local-first — the app works offlin
 if the server is down — and the server is what gives you multi-device sync and attachment backup.
 
 The app is **built for one server**: you set `SALDO_SERVER_URL` when you build the APK or the iOS
-app, and nobody types an address on the phone (§15 of the spec, and `docs/building-*.md`).
+app, and nobody types an address on the phone. Once this server is up, build the app against it —
+[for Android](./building-android.md) or [for iOS](./building-ios.md).
 
 ## What you need
 
@@ -25,7 +26,8 @@ app, and nobody types an address on the phone (§15 of the spec, and `docs/build
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | |
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
 | `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
-| `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. |
+| `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
+| `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
 
 Two things to know before you start:
 
@@ -204,6 +206,42 @@ URLs to a client (downloads are proxied by the server, which checks who is askin
 not discoverable. But if a URL ever leaks, it works. If that matters to you, use `s3`, where the
 server signs a URL that expires in five minutes.
 
+## Limits
+
+**How many transactions one household can hold.** The app reads a whole date range out of SQLite
+and folds it in memory — no aggregation happens in SQL. That puts a ceiling on the number of rows
+an account can carry before a screen takes visibly long to draw, so we measured it rather than
+guessed:
+
+| Fold | Where you see it | 5k rows | 20k rows | 50k rows |
+| --- | --- | --- | --- | --- |
+| `accountBalances` | Accounts tab, account detail | 0.3ms | 1.9ms | 9.3ms |
+| `summarizePeriod` | Home header, Statistics | 0.1ms | 0.6ms | 2.2ms |
+| `spendingByCategory` | Statistics, budgets | 0.2ms | 0.4ms | 2.5ms |
+| `spendingByTag` | Statistics tag ranking | 0.2ms | 1.0ms | 2.6ms |
+| `dailyCumulative` | Home and Statistics chart | 0.2ms | 0.7ms | 2.8ms |
+| `monthEndBalances` (8 months) | Account sparkline | 1.1ms | 5.2ms | 43.4ms |
+| `periodHistory` (6 periods) | Statistics baselines | 0.4ms | 2.8ms | 19.8ms |
+| `categorySpendHistory` | Statistics baselines | 0.1ms | 0.3ms | 1.1ms |
+| `budgetProgress` (8 budgets) | Budgets tab | 0.0ms | 0.0ms | 0.0ms |
+| **Statistics screen, every fold it runs** | | **1.1ms** | **4.7ms** | **49.4ms** |
+
+**What this means for you:** 20k transactions is comfortable — the busiest screen spends under 5ms
+on arithmetic — and 50k still finishes a screen's worth of folding in well under a tenth of a
+second. 20k rows is roughly fifteen years of a household recording four transactions a day, so in
+practice you will not reach it. Past 50k the thing that degrades first is memory rather than
+arithmetic: the whole range is held as objects, and the 50k figures above vary run to run because
+of garbage collection.
+
+**Read those numbers as a floor, not a prediction.** They come from
+`pnpm --filter mobile measure:perf <rows>`, which runs the calculations in Node on a development
+Mac with no database and no rendering in the way. A phone runs them under Hermes, which is slower,
+and has a screen to draw as well — so assume a device is materially slower than this table, by a
+factor nobody here has measured on real hardware. What the table does establish is that the
+*arithmetic* has room to spare: if a screen ever feels slow, look at the SQLite query or at the
+render before blaming the sums. The heaviest fold is the account sparkline, which walks the whole
+ledger once per point drawn.
+
 ## Security notes
 
 - Authentication is [Better Auth](https://better-auth.com) with its passkey plugin: it owns accounts,
@@ -211,11 +249,25 @@ server signs a URL that expires in five minutes.
   credential rather than an access/refresh pair.
 - Signing in on the phone runs the passkey ceremony on this server's `/auth/mobile` page — WebAuthn
   needs a browser — and the session is handed to the app through a **single-use, one-minute** token
-  in a `saldo://` link. Another app on the phone can register that scheme, so the narrow window is
-  a real (accepted) exposure; closing it properly needs a verified app link
-  (`webcredentials:` / `assetlinks.json`), which requires a paid Apple Developer account.
-- The auth endpoints are rate limited by Better Auth (20 requests per minute). Like any in-memory
-  limiter it is **per process**: behind more than one replica each enforces its own share.
+  in a link to the app's own URL scheme (`saldo://`, unless the build set `SALDO_SCHEME` — which
+  this server must then allow through `APP_REDIRECT_SCHEMES`). Another app on the phone can register
+  that scheme, so the narrow window is a real (accepted) exposure; closing it properly needs a
+  verified app link (`webcredentials:` / `assetlinks.json`), which requires a paid Apple Developer
+  account.
+- The auth endpoints are rate limited by Better Auth (20 requests per minute, and a stricter 3 per
+  10 seconds on `/sign-in`, `/sign-up` and the password/email-change routes). It keys on the
+  caller's IP, resolved from `X-Forwarded-For` — which only trusts a single-value header unless
+  `TRUSTED_PROXIES` names the reverse proxy in front of this server (see the Configuration table
+  above and `apps/web/docker/Caddyfile.example`). Left unset behind a real reverse proxy, every
+  caller resolves to no IP and shares one bucket, so a single attacker can starve everyone else's
+  `/sign-in` attempts.
+- **That limiter's storage is in-memory, and stays that way — this repository does not implement a
+  shared store.** It is correct for the one-container `docker-compose.yml` this repo ships. It is
+  wrong the moment you run more than one replica, or deploy to Vercel: each process (each replica,
+  each serverless invocation) counts requests only against its own memory, so the effective limit
+  multiplies by however many of those there are, silently. Better Auth accepts a
+  `rateLimit.storage: 'secondary-storage'` for exactly this case; wiring one up is outside this
+  repo's scope.
 - The mobile `redirect_uri` is allow-listed by scheme, server-side, before a ceremony can start.
 - Login is discoverable-credential only: no identifier is asked for, so sign-in cannot be used to
   find out whether an account exists.

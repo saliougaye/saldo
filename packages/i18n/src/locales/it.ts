@@ -594,6 +594,19 @@ export const it = {
     currencyConfirmScale:
       '{{before}} diventerà {{after}}. Gli importi vengono riformattati, non convertiti.',
   },
+  /** I nomi delle pastiglie di colore: che colore è, non a che cosa serve. */
+  colors: {
+    terracotta: 'Terracotta',
+    ochre: 'Ocra',
+    olive: 'Oliva',
+    sage: 'Salvia',
+    teal: 'Ottanio',
+    denim: 'Denim',
+    periwinkle: 'Pervinca',
+    mauve: 'Malva',
+    dustyRose: 'Rosa antico',
+    grey: 'Grigio',
+  },
   iconGroups: {
     home: 'Casa',
     transport: 'Trasporti',

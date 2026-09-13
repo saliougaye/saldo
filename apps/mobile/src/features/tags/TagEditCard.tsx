@@ -62,6 +62,8 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
                 <Pressable
                   key={other.id}
                   accessibilityRole="button"
+                  // 30pt chips, as in `ArchiveCategorySheet`, and short by the same 14.
+                  hitSlop={{ top: 7, bottom: 7, left: 3, right: 3 }}
                   onPress={() => {
                     mergeTags(db, repos, tag.id, other.id);
                     onDeleted();

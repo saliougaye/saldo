@@ -1,4 +1,15 @@
-export const REDIRECT_URI = 'saldo://auth/callback';
+/**
+ * Where the server sends the finished sign-in (§9.3 step 5). The scheme is not fixed: it is the one
+ * this build registered with the operating system, which `SALDO_SCHEME` decides (§15). Hard-coding
+ * `saldo` here would break every fork that renames it — the browser would hand the callback to a
+ * scheme the app no longer owns, and sign-in would stall with nothing to show for it.
+ *
+ * Whatever the scheme is, the server must also list it in `APP_REDIRECT_SCHEMES` (§18), or it
+ * refuses the redirect with `invalid_redirect_uri`.
+ */
+export function redirectUri(scheme: string): string {
+  return `${scheme}://auth/callback`;
+}
 
 /**
  * What the user typed, turned into an origin. A bare hostname gets `https://`, because that is the

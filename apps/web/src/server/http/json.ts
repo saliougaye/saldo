@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { rejectByContentLength } from './bodyLimit';
 import { ApiError } from './errors';
 
 /** 64 KB is far more than any auth body needs; sync raises its own cap in phase 07. */
@@ -9,6 +10,8 @@ export async function readJson<T>(
   schema: z.ZodType<T>,
   maxBytes: number = DEFAULT_MAX_BYTES,
 ): Promise<T> {
+  // The bound: a declared size over the cap is refused before `request.text()` buffers anything.
+  rejectByContentLength(request, maxBytes);
   const text = await request.text();
   if (Buffer.byteLength(text, 'utf8') > maxBytes) {
     throw new ApiError(413, 'payload_too_large', `Body must be at most ${maxBytes} bytes`);

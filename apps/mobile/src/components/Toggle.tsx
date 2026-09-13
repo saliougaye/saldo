@@ -21,10 +21,13 @@ export function Toggle({
   value,
   onChange,
   accessibilityLabel,
+  testID,
 }: {
   value: boolean;
   onChange: (value: boolean) => void;
   accessibilityLabel: string;
+  /** For the end-to-end flows in `apps/mobile/maestro`, whose labels are translated. */
+  testID?: string;
 }) {
   const theme = useTheme();
   const { reduced } = useMotion();
@@ -55,10 +58,12 @@ export function Toggle({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={accessibilityLabel}
-      hitSlop={10}
+      // The track is 22pt tall: 11 each side is what carries it to the 44pt floor.
+      hitSlop={11}
       onPress={() => onChange(!value)}
     >
       <Animated.View
