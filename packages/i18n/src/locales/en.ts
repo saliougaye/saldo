@@ -591,6 +591,19 @@ export const en: Messages = {
     currencyConfirmScale:
       '{{before}} will read as {{after}}. Amounts are reformatted, not converted.',
   },
+  /** What each swatch is, not what it is for. */
+  colors: {
+    terracotta: 'Terracotta',
+    ochre: 'Ochre',
+    olive: 'Olive',
+    sage: 'Sage',
+    teal: 'Teal',
+    denim: 'Denim',
+    periwinkle: 'Periwinkle',
+    mauve: 'Mauve',
+    dustyRose: 'Dusty rose',
+    grey: 'Grey',
+  },
   iconGroups: {
     home: 'Home',
     transport: 'Transport',

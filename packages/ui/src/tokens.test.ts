@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoryColors, palettes, trackingPx, withAlpha } from './tokens';
+import { categoryColorNames, categoryColors, palettes, trackingPx, withAlpha } from './tokens';
 
 function luminance(hex: string): number {
   const channels = [1, 3, 5].map(
@@ -65,6 +65,12 @@ describe('palettes', () => {
 describe('categoryColors', () => {
   it('has ten swatches', () => {
     expect(categoryColors).toHaveLength(10);
+  });
+
+  it('names every one of them', () => {
+    // An unnamed swatch is announced as a hex code, which is the state this list exists to end.
+    expect(categoryColorNames).toHaveLength(categoryColors.length);
+    expect(new Set(categoryColorNames).size).toBe(categoryColorNames.length);
   });
 });
 

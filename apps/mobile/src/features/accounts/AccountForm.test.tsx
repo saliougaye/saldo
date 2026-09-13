@@ -1,4 +1,3 @@
-import { categoryColors } from '@saldo/ui';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
@@ -50,14 +49,14 @@ function renderForm(values = emptyAccountForm()) {
 describe('AccountForm', () => {
   it('keeps the colour and icon grids off the form', async () => {
     await renderForm();
-    expect(screen.queryByLabelText(categoryColors[0])).toBeNull();
+    expect(screen.queryByLabelText('Terracotta')).toBeNull();
     expect(screen.queryByLabelText('piggy')).toBeNull();
   });
 
   it('opens them from the appearance row', async () => {
     await renderForm();
     await userEvent.press(screen.getByText('Appearance'));
-    expect(screen.getByLabelText(categoryColors[0])).toBeTruthy();
+    expect(screen.getByLabelText('Terracotta')).toBeTruthy();
     expect(screen.getByLabelText('piggy')).toBeTruthy();
   });
 

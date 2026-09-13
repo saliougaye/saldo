@@ -1,4 +1,3 @@
-import { categoryColors } from '@saldo/ui';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
@@ -46,7 +45,9 @@ describe('AppearanceSheet', () => {
         />
       </Host>,
     );
-    await userEvent.press(screen.getByLabelText(categoryColors[3]));
+    // The name, spelled out: a swatch queried through the same key the sheet renders would
+    // still match if the key were missing from the catalogue entirely.
+    await userEvent.press(screen.getByLabelText('Sage'));
     expect(onChange).toHaveBeenCalledWith({ colorIndex: 3, icon: 'landmark' });
   });
 
