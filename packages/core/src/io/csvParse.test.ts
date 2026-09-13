@@ -74,3 +74,22 @@ describe('parseCsv', () => {
     expect(rows[1]?.[7]).toBe('Banca🏦');
   });
 });
+
+describe('formula guard', () => {
+  it('drops the apostrophe a formula guard put in front of =, +, - or @', () => {
+    expect(parseCsv("a,b,c,d\n'=SUM(A1),'+39 333,'-1,'@casa").rows[1]).toEqual([
+      '=SUM(A1)',
+      '+39 333',
+      '-1',
+      '@casa',
+    ]);
+  });
+
+  it('drops it inside a quoted field too', () => {
+    expect(parseCsv('a\n"\'=Caffè, e brioche"').rows[1]).toEqual(['=Caffè, e brioche']);
+  });
+
+  it('keeps an apostrophe that is part of the text', () => {
+    expect(parseCsv("a,b\n'90s playlist,l'estate").rows[1]).toEqual(["'90s playlist", "l'estate"]);
+  });
+});
