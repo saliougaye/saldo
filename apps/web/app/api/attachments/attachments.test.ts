@@ -183,6 +183,34 @@ describe('POST /api/attachments/:id/upload-intent', () => {
     });
     expect((await intent(anonymous, params())).status).toBe(401);
   });
+
+  it('refuses a declared Content-Length over its 1 KB cap, before reading the body', async () => {
+    await seedRow(session.userId);
+    // The body itself is a perfectly valid intent; only the declared length lies. If this were
+    // read anyway, the request would succeed — so a 413 here proves the header was checked first.
+    const oversized = new Request('https://saldo.example.com/api/attachments/att-1', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${session.token}`,
+        'content-length': '999999',
+      },
+      body: JSON.stringify({ size: BYTES.byteLength, mimeType: 'image/jpeg' }),
+    });
+    const response = await intent(oversized, params());
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: 'payload_too_large' } });
+  });
+
+  it('still refuses an oversized body with no Content-Length header (the backstop)', async () => {
+    await seedRow(session.userId);
+    const big = request(
+      JSON.stringify({ size: BYTES.byteLength, mimeType: `image/${'x'.repeat(2000)}` }),
+    );
+    expect(big.headers.get('content-length')).toBeNull();
+    const response = await intent(big, params());
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: 'payload_too_large' } });
+  });
 });
 
 describe('PUT /api/attachments/:id', () => {
@@ -206,6 +234,32 @@ describe('PUT /api/attachments/:id', () => {
     await seedRow(session.userId);
     const response = await PUT(request(new Uint8Array([1, 2, 3]), 'PUT'), params());
     expect(response.status).toBe(413);
+  });
+
+  it("refuses a declared Content-Length over the row's size, before reading the body", async () => {
+    await seedRow(session.userId);
+    // A body that would otherwise be accepted; only the declared length is a lie. A 413 here means
+    // the header was checked before the bytes were.
+    const oversized = new Request('https://saldo.example.com/api/attachments/att-1', {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${session.token}`,
+        'content-length': String(BYTES.byteLength + 1_000_000),
+      },
+      body: BYTES,
+    });
+    const response = await PUT(oversized, params());
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: 'payload_too_large' } });
+  });
+
+  it('still refuses an oversized body with no Content-Length header (the backstop)', async () => {
+    await seedRow(session.userId);
+    const big = request(new Uint8Array(BYTES.byteLength + 1).fill(9), 'PUT');
+    expect(big.headers.get('content-length')).toBeNull();
+    const response = await PUT(big, params());
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: 'size_mismatch' } });
   });
 
   it('refuses bytes for a tombstoned row', async () => {
