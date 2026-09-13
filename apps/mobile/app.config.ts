@@ -93,6 +93,13 @@ const config: ExpoConfig = {
         microphonePermission: false,
       },
     ],
+    /**
+     * Ours, not a package: a relative path is how Expo finds a plugin that lives in the repo. It
+     * points the release build type at a key of your own instead of the template's shared debug
+     * one, on every prebuild, because `android/` is regenerated and never committed. The file
+     * documents the `~/.gradle/gradle.properties` entries it reads.
+     */
+    './plugins/withReleaseSigning',
   ],
   experiments: {
     typedRoutes: true,
