@@ -8,9 +8,13 @@ devices when it can. Build it yourself, sideload it, own your data.
 
 ## Screenshots
 
-| Home | Transactions | Statistics | Budgets |
-| --- | --- | --- | --- |
-| ![Home: what is left in the current period, the cycle trend, upcoming and recent transactions](docs/screenshots/home.png) | ![Transactions: the list for the period, with search, filter chips and day totals](docs/screenshots/transactions.png) | ![Statistics: cashflow per period, the committed share, the end-of-period projection and the split by category](docs/screenshots/statistics.png) | ![Budgets: one card per budget with the amount spent, the pace and the days left](docs/screenshots/budgets.png) |
+| Home | Transactions | Statistics |
+| --- | --- | --- |
+| ![Home: what is left to spend in the current period, what is still coming, and how each budget is doing](docs/screenshots/home.png) | ![Transactions: the list for the period, with search, filter chips and day totals](docs/screenshots/transactions.png) | ![Statistics: cashflow over the last six periods, and where the money went by category](docs/screenshots/statistics.png) |
+
+| Budgets | Accounts | Adding a transaction |
+| --- | --- | --- |
+| ![Budgets: one card per budget with the amount spent, the pace and the days left](docs/screenshots/budgets.png) | ![Accounts: net worth, the spendable total, and one row per account, with savings and investments kept apart](docs/screenshots/accounts.png) | ![New transaction: expense, income or transfer; the amount keypad, account and date chips, the categories you use most, and a line naming what the form is still waiting for](docs/screenshots/new-transaction.png) |
 
 ## What it does
 
