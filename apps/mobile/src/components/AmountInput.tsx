@@ -105,7 +105,8 @@ export function AmountInput({
           >
             <Pressable
               accessibilityRole="button"
-              hitSlop={10}
+              // One line of body text in a thin accessory bar: the slop is the whole target.
+              hitSlop={{ top: 13, bottom: 13, left: 13, right: 13 }}
               onPress={() => {
                 input.current?.blur();
                 onDone?.();

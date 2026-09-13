@@ -16,6 +16,11 @@ export interface ListRowProps {
   /** Scheduled rows get the 2px left border and a muted amount (§5.12). */
   upcoming?: boolean;
   /**
+   * One of a set of choices, and this is the chosen one. The check the pickers draw beside it is
+   * a picture; this is the same thing said out loud.
+   */
+  selected?: boolean;
+  /**
    * How many lines the subtitle may take. One everywhere the subtitle is a short attribute — a
    * bank, a date, an account type — and two where it lists things and truncating it would lose the
    * point, as the children on a category row do.
@@ -31,6 +36,7 @@ export function ListRow({
   onPress,
   chevron = false,
   upcoming = false,
+  selected,
   subtitleLines = 1,
 }: ListRowProps) {
   const theme = useTheme();
@@ -69,7 +75,11 @@ export function ListRow({
   );
   if (onPress === undefined) return content;
   return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={selected === undefined ? undefined : { selected }}
+      onPress={onPress}
+    >
       {content}
     </Pressable>
   );

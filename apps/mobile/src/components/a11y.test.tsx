@@ -246,6 +246,21 @@ describe('ListRow', () => {
   it('is big enough to hit', async () => {
     expect(touchTarget(await showRow()).height).toBeGreaterThanOrEqual(MIN);
   });
+
+  it('says which of a set of choices it is, where the check is only drawn', async () => {
+    await render(
+      <Host>
+        <ListRow title="Italiano" selected onPress={jest.fn()} />
+        <ListRow title="English" selected={false} onPress={jest.fn()} />
+      </Host>,
+    );
+    expect(screen.getByRole('button', { name: 'Italiano' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: true }),
+    );
+    expect(screen.getByRole('button', { name: 'English' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: false }),
+    );
+  });
 });
 
 describe('CardHeader', () => {
