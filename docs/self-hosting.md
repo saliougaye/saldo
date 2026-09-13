@@ -27,6 +27,7 @@ app, and nobody types an address on the phone. Once this server is up, build the
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
 | `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
+| `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
 
 Two things to know before you start:
 
@@ -253,8 +254,20 @@ ledger once per point drawn.
   that scheme, so the narrow window is a real (accepted) exposure; closing it properly needs a
   verified app link (`webcredentials:` / `assetlinks.json`), which requires a paid Apple Developer
   account.
-- The auth endpoints are rate limited by Better Auth (20 requests per minute). Like any in-memory
-  limiter it is **per process**: behind more than one replica each enforces its own share.
+- The auth endpoints are rate limited by Better Auth (20 requests per minute, and a stricter 3 per
+  10 seconds on `/sign-in`, `/sign-up` and the password/email-change routes). It keys on the
+  caller's IP, resolved from `X-Forwarded-For` — which only trusts a single-value header unless
+  `TRUSTED_PROXIES` names the reverse proxy in front of this server (see the Configuration table
+  above and `apps/web/docker/Caddyfile.example`). Left unset behind a real reverse proxy, every
+  caller resolves to no IP and shares one bucket, so a single attacker can starve everyone else's
+  `/sign-in` attempts.
+- **That limiter's storage is in-memory, and stays that way — this repository does not implement a
+  shared store.** It is correct for the one-container `docker-compose.yml` this repo ships. It is
+  wrong the moment you run more than one replica, or deploy to Vercel: each process (each replica,
+  each serverless invocation) counts requests only against its own memory, so the effective limit
+  multiplies by however many of those there are, silently. Better Auth accepts a
+  `rateLimit.storage: 'secondary-storage'` for exactly this case; wiring one up is outside this
+  repo's scope.
 - The mobile `redirect_uri` is allow-listed by scheme, server-side, before a ceremony can start.
 - Login is discoverable-credential only: no identifier is asked for, so sign-in cannot be used to
   find out whether an account exists.

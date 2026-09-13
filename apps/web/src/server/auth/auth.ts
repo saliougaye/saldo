@@ -21,7 +21,8 @@ const ONE_TIME_TOKEN_MINUTES = 1;
  * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
  */
 export function buildAuthOptions() {
-  const { publicUrl, rpId, rpName, appRedirectSchemes, registration, secret } = env();
+  const { publicUrl, rpId, rpName, appRedirectSchemes, registration, secret, trustedProxies } =
+    env();
   const db = getDb();
   const requiresInvite = registrationRequiresInvite(registration);
   return {
@@ -33,7 +34,25 @@ export function buildAuthOptions() {
     emailAndPassword: { enabled: false },
     // The app talks to `saldo://`; every allowed scheme comes from §9.2's env var.
     trustedOrigins: appRedirectSchemes.flatMap((scheme) => [`${scheme}://`, `${scheme}://*`]),
+    // §18: sliding, in-memory (see the note on `rateLimit.storage` in `docs/self-hosting.md` — a
+    // second replica or a Vercel deployment gets its own bucket, silently raising the real limit).
     rateLimit: { enabled: true, window: 60, max: 20 },
+    advanced: {
+      ipAddress: {
+        ipAddressHeaders: ['x-forwarded-for'],
+        /**
+         * Without this, `getIPFromHeader` trusts `x-forwarded-for` only when it holds exactly one
+         * address. Caddy's `reverse_proxy` (docker/Caddyfile.example) *appends* the connecting
+         * peer rather than replacing the header, so a request that already carries its own
+         * `X-Forwarded-For` — trivial for any caller to send — arrives with two, resolves to no
+         * IP, and every caller then shares the one `no-trusted-ip|<path>` bucket: on `/sign-in*`
+         * that is 3 requests per 10s for the entire server, so one attacker can lock everyone out.
+         * `TRUSTED_PROXIES` names the reverse proxy so the real, right-most address can be told
+         * apart from whatever the caller put in front of it.
+         */
+        trustedProxies,
+      },
+    },
     plugins: [
       passkey({
         rpID: rpId,

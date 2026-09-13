@@ -45,6 +45,11 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   REGISTRATION: z.enum(REGISTRATION_MODES).default('first-user'),
   APP_REDIRECT_SCHEMES: z.string().default('saldo'),
+  // Rate limiting keys on the caller's IP (§18). Better Auth resolves that from `X-Forwarded-For`,
+  // which only holds one address it can trust unless it also knows which addresses are *its own*
+  // reverse proxy — everything else in that header is whatever the caller sent. Empty means "no
+  // reverse proxy", the same as a bare `pnpm --filter web dev`.
+  TRUSTED_PROXIES: z.string().default(''),
   // Attachment storage (§10). Only the chosen driver's variables are required, so a deployment on
   // a disk is not asked for an S3 bucket and one on Vercel is not asked for a directory it has no
   // way to keep.
@@ -116,6 +121,7 @@ export interface ServerEnv {
   attachmentStorage: AttachmentStorageConfig;
   registration: RegistrationMode;
   appRedirectSchemes: string[];
+  trustedProxies: string[];
 }
 
 export function readEnv(source: Record<string, string | undefined>): ServerEnv {
@@ -138,6 +144,9 @@ export function readEnv(source: Record<string, string | undefined>): ServerEnv {
     appRedirectSchemes: value.APP_REDIRECT_SCHEMES.split(',')
       .map((scheme) => scheme.trim())
       .filter((scheme) => scheme.length > 0),
+    trustedProxies: value.TRUSTED_PROXIES.split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0),
   };
 }
 

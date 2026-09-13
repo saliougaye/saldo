@@ -31,6 +31,13 @@ describe('readEnv', () => {
     expect(env.appRedirectSchemes).toEqual(['saldo']);
   });
 
+  it('defaults trustedProxies to empty, and splits a configured list', () => {
+    expect(readEnv(complete).trustedProxies).toEqual([]);
+    expect(
+      readEnv({ ...complete, TRUSTED_PROXIES: '10.0.0.5, 172.28.0.0/16' }).trustedProxies,
+    ).toEqual(['10.0.0.5', '172.28.0.0/16']);
+  });
+
   it('rejects a short secret, a bad url and an unknown registration mode', () => {
     expect(() => readEnv({ ...complete, JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
     expect(() => readEnv({ ...complete, PUBLIC_URL: 'not-a-url' })).toThrow(/PUBLIC_URL/);
