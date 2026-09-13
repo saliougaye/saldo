@@ -58,7 +58,8 @@ export function Toggle({
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={accessibilityLabel}
-      hitSlop={10}
+      // The track is 22pt tall: 11 each side is what carries it to the 44pt floor.
+      hitSlop={11}
       onPress={() => onChange(!value)}
     >
       <Animated.View

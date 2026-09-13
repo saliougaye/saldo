@@ -116,6 +116,7 @@ export function BudgetForm({
           currency={currency}
           locale={locale}
           autoFocus={mode === 'new'}
+          label={t('budgets.amount')}
           doneLabel={t('common.done')}
         />
       </View>

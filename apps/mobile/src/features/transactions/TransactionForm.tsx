@@ -312,6 +312,7 @@ export function TransactionForm({
             currency={currency}
             locale={locale}
             autoFocus={mode === 'new'}
+            label={t('txForm.amount')}
             doneLabel={t('common.done')}
           />
         </View>

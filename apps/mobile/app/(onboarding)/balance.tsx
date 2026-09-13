@@ -57,6 +57,7 @@ export default function BalanceStep() {
             currency={currency}
             locale={locale}
             autoFocus
+            label={t('onboarding.accountBalance')}
             doneLabel={t('common.done')}
           />
         </View>

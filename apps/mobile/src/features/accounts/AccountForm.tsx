@@ -150,6 +150,7 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
             currency={currency}
             locale={locale}
             autoFocus={mode === 'new'}
+            label={t('accounts.balance')}
             doneLabel={t('common.done')}
           />
         </View>
