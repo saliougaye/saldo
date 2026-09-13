@@ -66,6 +66,9 @@ export default function CategoriesAdmin() {
           name: category.name,
         })}
         disabled={disabled}
+        // 36pt arrows with 4pt between them: the height reaches 44, and the width stops at 40
+        // rather than overlap its twin — a tap in the gap must not reorder the wrong way.
+        hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}
         onPress={() => move(siblings, category.id, direction)}
         style={({ pressed }) => ({
           width: 36,
@@ -173,7 +176,7 @@ export default function CategoriesAdmin() {
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ selected: reordering }}
-            hitSlop={10}
+            hitSlop={{ top: 14, bottom: 14, left: 10, right: 10 }}
             onPress={() => setReordering(!reordering)}
           >
             <Text size="footnote" color={reordering ? 'accent' : 'textMuted'}>

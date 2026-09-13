@@ -34,6 +34,9 @@ export function CycleStartDaySheet({
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
                 accessibilityLabel={String(day)}
+                // The keys are 40pt tall; the two points each way are all the 6pt gap allows,
+                // and all the 44pt floor asks for.
+                hitSlop={{ top: 2, bottom: 2 }}
                 onPress={() => {
                   onSelect(day);
                   onClose();

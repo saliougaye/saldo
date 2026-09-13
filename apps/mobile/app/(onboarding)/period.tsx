@@ -86,6 +86,8 @@ export default function PeriodStep() {
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   accessibilityLabel={String(value)}
+                  // 40pt keys, 6 apart — the same grid, and the same two points, as the sheet.
+                  hitSlop={{ top: 2, bottom: 2 }}
                   onPress={() => setDay(value)}
                   style={{
                     width: `${100 / 7}%`,

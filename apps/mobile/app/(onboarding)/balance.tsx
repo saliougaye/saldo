@@ -75,6 +75,8 @@ export default function BalanceStep() {
                 key={code}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                // The row of codes is 38pt tall; it is already wide, so only the height grows.
+                hitSlop={{ top: 3, bottom: 3 }}
                 onPress={() => setCurrency(code)}
                 style={{
                   flex: 1,

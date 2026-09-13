@@ -96,7 +96,11 @@ export default function BudgetsScreen() {
         views.map((view) => {
           const category = categories.find((row) => row.id === view.budget.categoryIds[0]);
           return (
-            <Pressable key={view.budget.id} onPress={() => setOpenId(view.budget.id)}>
+            <Pressable
+              key={view.budget.id}
+              accessibilityRole="button"
+              onPress={() => setOpenId(view.budget.id)}
+            >
               <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <IconBox

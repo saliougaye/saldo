@@ -84,7 +84,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {toast.action === undefined ? null : (
               <Pressable
                 accessibilityRole="button"
-                hitSlop={8}
+                // One line of body text is ~18pt; 13 above and below clears the 44pt target.
+                hitSlop={{ top: 13, bottom: 13, left: 13, right: 13 }}
                 onPress={() => {
                   toast.action?.onPress();
                   setToast(null);

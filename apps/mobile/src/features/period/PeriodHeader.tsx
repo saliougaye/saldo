@@ -94,6 +94,9 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('period.title')}
+        // A line of body text over a caption is ~32pt. Only the height grows — the picker is
+        // already the width of the header — so the arrows beside it keep every tap of their own.
+        hitSlop={{ top: 6, bottom: 6 }}
         onPress={() => setSheetOpen(true)}
         style={({ pressed }) => ({ flex: 1, minWidth: 0, opacity: pressed ? 0.6 : 1 })}
       >

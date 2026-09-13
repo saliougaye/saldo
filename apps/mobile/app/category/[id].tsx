@@ -159,7 +159,8 @@ export default function CategoryDetail() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('categories.inParent', { name: parent.name })}
-              hitSlop={6}
+              // Caption text is ~14pt tall, so most of the target has to come from the slop.
+              hitSlop={{ top: 15, bottom: 15, left: 6, right: 6 }}
               onPress={() => router.push({ pathname: '/category/[id]', params: { id: parent.id } })}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
@@ -177,7 +178,7 @@ export default function CategoryDetail() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('categories.editCategory')}
-          hitSlop={10}
+          hitSlop={{ top: 14, bottom: 14, left: 10, right: 10 }}
           onPress={() =>
             router.push({ pathname: '/category/edit/[id]', params: { id: category.id } })
           }

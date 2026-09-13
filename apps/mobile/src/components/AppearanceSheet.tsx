@@ -62,6 +62,10 @@ export function AppearanceSheet({
             accessibilityRole="button"
             accessibilityState={{ selected: index === colorIndex }}
             accessibilityLabel={swatch}
+            // 30pt swatches 8 apart cannot reach 44 without their slop meeting in the gap, so
+            // it meets there: a tap between two swatches picks one of them rather than nothing,
+            // and picking the wrong colour costs one more tap.
+            hitSlop={7}
             onPress={() => onChange({ colorIndex: index, icon })}
             style={{
               width: 30,
@@ -133,6 +137,8 @@ function IconGrid({
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={name}
+            // 36pt tiles, 6 apart: 4 each way, on the same reasoning as the swatches above.
+            hitSlop={4}
             onPress={() => onSelect(name)}
             style={({ pressed }) => ({
               width: 36,
