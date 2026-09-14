@@ -93,6 +93,33 @@ the caveat about Blob URLs under [attachments](#attachments) first.
 the domain that created it: registered against a preview URL, it will not work on the real one, and
 the failure is an opaque WebAuthn error rather than anything that names the cause.
 
+### The environment variables Vercel needs
+
+Set these in the project's **Environment Variables**, or with `vercel env add <NAME> production`.
+They do **not** go in `vercel.json`: that file is committed, and its `env` field holds literal
+values, so a secret put there is a secret published.
+
+| | Value | |
+| --- | --- | --- |
+| `PUBLIC_URL` | `https://saldo.example.com` | Your production domain. Not a preview URL. |
+| `WEBAUTHN_RP_ID` | `saldo.example.com` | The registrable domain: no scheme, no port. A passkey is bound to it. |
+| `WEBAUTHN_RP_NAME` | `Saldo` | What the passkey prompt calls your instance. |
+| `JWT_SECRET` | `openssl rand -base64 48` | **Secret.** |
+| `DATABASE_URL` | `postgres://…` | **Secret.** Your managed Postgres, not the compose one. |
+| `ATTACHMENT_STORAGE` | `none`, `s3` or `vercel-blob` | Never `fs` here. |
+| `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. |
+| `APP_REDIRECT_SCHEMES` | `saldo` | Must match the app's `SALDO_SCHEME` at build time. |
+| `TRUSTED_PROXIES` | — | Leave empty until you have looked at what Vercel sends; see below. |
+
+Plus whichever the storage driver needs: `BLOB_READ_WRITE_TOKEN` is injected by Vercel for
+`vercel-blob`, and `s3` takes the block documented under [attachments](#attachments).
+
+`WEB_PORT`, `POSTGRES_PORT` and `STORAGE_DIR` are compose-only and mean nothing here.
+
+Set them for **Production**. Giving previews the same `DATABASE_URL` points them at your real data,
+and the same `PUBLIC_URL` is wrong for them by definition — either give previews their own database
+or leave them unconfigured and expect them to fail at boot, which is the safer of the two.
+
 Two more worth knowing before you expose it:
 
 - **The auth rate limiter keeps its counters in memory**, so on Vercel each serverless instance has
