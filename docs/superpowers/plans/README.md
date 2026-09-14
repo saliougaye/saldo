@@ -507,24 +507,24 @@ other four behind one disclosure; the account and category forms are three cards
 behind rows, sharing one colour-and-icon sheet; the tag editor is a card on the tag screen rather
 than a sheet over it.
 
-### UI scoping — motion, the transaction form, date entry 🔜 queued
+### UI scoping — motion, the transaction form, date entry ✅ decided
 
-Asked for by the user on 2026-09-11. Three **investigations**, not implementations: each ends in a
-decision and a short scope, and the work that follows gets its own plan. Written up in
-`2026-09-11-ui-scoping.md`.
+Asked for by the user on 2026-09-11 as three **investigations**. All three ended in a decision;
+`2026-09-11-ui-scoping.md` carries each one with its reasoning.
 
-- **A. Motion.** The app has no motion of its own — §13 covers colour, type and radii and says
-  nothing about timing. Decide where animation carries meaning, one timing scale as `@saldo/ui`
-  tokens, the library, and the reduced-motion rule.
-- **B. The transaction form (§6.16).** The screen the app exists for, assembled row by row across
-  phases and never looked at whole. Decide the fast path, the field order, what a disclosure hides,
-  and the "recently used" rule — as a core function, not screen logic.
-- **C. Date entry.** Every transaction has a date and the design draws a calendar the app does not
-  have. Decide native picker versus drawn calendar (and say why, because it will not be revisited
-  cheaply), the today/yesterday shortcuts, and how `CustomRangeSheet` reuses the same component.
-
-Order, if done in order: C, then B, then A — date entry lives inside the form, and motion is worth
-scoping once the screens it animates have stopped moving. None of them blocks 10 or 11.
+- **A. Motion** — decided and built 2026-09-11. Reanimated 4, a token scale, four presets in
+  `src/theme/motion.ts`, counting numbers, lists that close up when filtered, staggered Home cards,
+  skeletons behind a 180ms grace. Reduce Motion is honoured by construction.
+- **B. The transaction form** — decided 2026-09-13. Account and date above the grid; the grid caps
+  at seven plus "Altro"; "Dettagli" hides tags, attachments, repeat and `excludeFromTotals` while
+  the description stays out; the recents rule moved to `packages/core/src/recents.ts` and ranks on
+  the last 90 days; and no primary button is ever silently disabled. The timed fast path was
+  deferred by the user on 2026-09-13 — the form was already reordered around the two fields every
+  transaction sets, so counting taps would have confirmed that rather than changed it.
+- **C. Date entry** — decided and built 2026-09-11. Drawn, not native:
+  `@react-native-community/datetimepicker` is gone, `src/components/Calendar.tsx` draws the month
+  grid, and `CustomRangeSheet` uses the same component in range mode, so there is one calendar.
+  "Oggi" and "Ieri" stay chips on the form, so the common case opens no sheet at all.
 
 ### Backlog from hands-on use 🚧 planned
 
@@ -549,8 +549,7 @@ small enough to land on its own branch without a plan file of its own.
   the row, usage rolls up into the parent (`rollUpCategoryUsage`), and the row leads to the category
   detail that shows what was spent, not only to *edit*. Archiving stays the only way out, with the
   option of moving the rows.
-- **Seeing transactions across accounts.** Two real gaps sit behind this, and the first thing the
-  work does is decide which one was meant (probably both):
+- ✅ **Seeing transactions across accounts.** Both gaps behind it are closed:
   - ✅ `TransactionFilters.accountId` is now set, both ways: an account's "Ultime transazioni"
     opens the list filtered to it, and the list has its own account chip opening a single-select
     sheet (archived accounts included — filtering to one you no longer use is exactly when you
