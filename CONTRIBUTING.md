@@ -58,6 +58,17 @@ their output, run them unwrapped before you believe them.
 `test(web): …`, `docs: …`), and a branch per piece of work rather than a commit straight onto `main`.
 Commit often; a small commit that explains why is worth more than a large one that explains what.
 
+## Two numbers that are not yours to change casually
+
+`SYNC_SCHEMA_VERSION` (`packages/core/src/sync/protocol.ts`) is what stops an old peer from
+silently dropping rows it cannot represent (§8.1). Bump it when a row written by the new code
+cannot be read correctly by the old — a new required field, a changed meaning, a removed one — and
+not for anything only the UI can see. Every phone has to be rebuilt and reinstalled by hand after a
+bump, so an unnecessary one costs everybody an evening. **Versions and compatibility** in
+[self-hosting](docs/self-hosting.md) is what a self-hoster reads about it.
+
+`apiVersion` in `/api/health` is the same promise for the HTTP surface.
+
 ## What to open first
 
 Open an issue describing the behaviour — what it does now, what you expected — before you open a pull

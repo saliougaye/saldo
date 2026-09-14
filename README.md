@@ -191,6 +191,12 @@ See [docs/self-hosting.md](docs/self-hosting.md): one `docker compose` command w
 `apps/web/docker/docker-compose.yml` (the deployment file, which builds the server into an image —
 not the development one above), plus an HTTPS domain, which passkeys require.
 
+## Security
+
+Found a way to read somebody else's data, or to sign in as them? [SECURITY.md](SECURITY.md) says
+where to send it — not to a public issue, since every Saldo server is somebody's own machine and
+there is no central instance to patch the problem out from under.
+
 ## License
 
 [MIT](LICENSE)
