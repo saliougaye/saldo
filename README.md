@@ -53,6 +53,9 @@ the same account converges — offline edits included, merged last-write-wins.
    [docs/self-hosting.md](docs/self-hosting.md).
 2. **Build the app** yourself, with your server's address baked in — see
    [docs/building-android.md](docs/building-android.md) or [docs/building-ios.md](docs/building-ios.md).
+   Android needs the Android SDK and a keystore you generate. **iOS needs a Mac with Xcode**, and on a
+   free Apple ID the app stops opening after seven days until you reinstall it — a paid developer
+   account moves that to a year.
 3. **Create your account** in the app with the invite code and a passkey; after that it works offline
    and syncs when it can.
 
