@@ -242,6 +242,50 @@ factor nobody here has measured on real hardware. What the table does establish 
 render before blaming the sums. The heaviest fold is the account sparkline, which walks the whole
 ledger once per point drawn.
 
+## Versions and compatibility
+
+The app and the server are built from the same repository, and the number that has to match is
+`SYNC_SCHEMA_VERSION` in `packages/core/src/sync/protocol.ts` — **currently 1**. Both sides import
+it from the same package, so they can only disagree when they were built from different commits,
+which is exactly what happens when you update one and not the other.
+
+The check is exact equality, and a mismatch stops sync rather than letting it go wrong quietly. Both
+answers are a `409` naming the two numbers and which side to move:
+
+| What happened | The app is told |
+| --- | --- |
+| The server is newer (`schema_too_old`) | This server speaks sync schema *n*; the app speaks *n−1*. Update the app. |
+| The app is newer (`schema_too_new`) | This server speaks sync schema *n*; the app speaks *n+1*. Update the server. |
+
+**Nothing is lost while they disagree.** Saldo is local-first: the app keeps working, you keep
+adding transactions, and the changes stay queued on the phone until a server it can talk to shows
+up. What stops is the exchange, not the app.
+
+`/api/health` reports `schemaVersion` alongside `apiVersion` and the server's own version, so you
+can see what an instance speaks without signing in.
+
+### Updating
+
+Update the server first, then rebuild the phones. The server is one place and takes minutes; the
+phones are sideloaded one at a time, and until each is rebuilt it simply queues. Doing it the other
+way round works too — it just means the phone you updated first is the one that stops syncing.
+
+Two things to know before you bump a schema version:
+
+- **Both sides run migrations.** The server migrates on deploy; the app migrates on next launch. A
+  phone that is never opened again keeps its old database, and its queued changes with it.
+- **Rolling the server back is not free.** Once a phone has pushed rows written under a newer
+  schema, an older server may not be able to represent them. Roll back only if no phone has pushed
+  since the update, and otherwise go forward.
+
+### If you are changing Saldo yourself
+
+Bump `SYNC_SCHEMA_VERSION` when a row written by the new code cannot be read correctly by the old:
+a new required field, a changed meaning, a removed one. Do **not** bump it for a change only the UI
+can see. The gate above is what keeps an old peer from silently dropping data it cannot represent
+(§8.1), so an unnecessary bump costs everyone a rebuild for nothing, and a missing one costs
+somebody their data.
+
 ## Security notes
 
 - Authentication is [Better Auth](https://better-auth.com) with its passkey plugin: it owns accounts,

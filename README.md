@@ -53,6 +53,9 @@ the same account converges — offline edits included, merged last-write-wins.
    [docs/self-hosting.md](docs/self-hosting.md).
 2. **Build the app** yourself, with your server's address baked in — see
    [docs/building-android.md](docs/building-android.md) or [docs/building-ios.md](docs/building-ios.md).
+   Android needs the Android SDK and a keystore you generate. **iOS needs a Mac with Xcode**, and on a
+   free Apple ID the app stops opening after seven days until you reinstall it — a paid developer
+   account moves that to a year.
 3. **Create your account** in the app with the invite code and a passkey; after that it works offline
    and syncs when it can.
 
@@ -144,9 +147,20 @@ xcrun simctl get_app_container booted io.github.saldo.app data
 rm -f "<that path>/Documents/SQLite/saldo.db"
 ```
 
-On first run the app offers "Create account": `REGISTRATION=first-user` lets exactly one through.
-The passkey ceremony needs a platform authenticator — on the simulator, enrol Face ID first
-(Features → Face ID → Enrolled).
+`.env.example` ships `REGISTRATION=invite`, so nothing creates an account without a code — yours
+included. Mint one before you try to sign in:
+
+```bash
+pnpm --filter web invite new --label me
+```
+
+That prints the code once. The app offers "Create account", the browser page asks for the code, and
+the first account to register becomes the instance's admin.
+
+Setting `REGISTRATION=first-user` in your own `.env` skips the code and lets exactly one account
+through, which is quicker — at the cost of never exercising locally the path every real deployment
+uses. The passkey ceremony needs a platform authenticator either way: on the simulator, enrol Face
+ID first (Features → Face ID → Enrolled).
 
 ### Step 4 — stop
 
@@ -190,6 +204,12 @@ is what gives you multi-device sync and attachment backup.
 See [docs/self-hosting.md](docs/self-hosting.md): one `docker compose` command with
 `apps/web/docker/docker-compose.yml` (the deployment file, which builds the server into an image —
 not the development one above), plus an HTTPS domain, which passkeys require.
+
+## Security
+
+Found a way to read somebody else's data, or to sign in as them? [SECURITY.md](SECURITY.md) says
+where to send it — not to a public issue, since every Saldo server is somebody's own machine and
+there is no central instance to patch the problem out from under.
 
 ## License
 
