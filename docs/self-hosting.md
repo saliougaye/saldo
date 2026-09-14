@@ -62,6 +62,48 @@ Set `WEB_PORT` if 3000 is taken on the host:
 WEB_PORT=3007 docker compose -f apps/web/docker/docker-compose.yml up -d
 ```
 
+## Run it on Vercel instead
+
+Docker is not the only way. The server is an ordinary Next.js app, and `vercel.json` at the
+repository root carries the settings so you do not have to reproduce them by hand: the project's
+root directory is the **repository root**, not `apps/web`, because the build filters to that
+workspace from there.
+
+> Not yet walked end to end by anybody. The Docker path above has been; this one is assembled from
+> what the code does. If something here is wrong, that is a bug worth reporting.
+
+Four things differ from the compose file, and three of them will bite if you miss them.
+
+**Bring your own Postgres.** The compose file's database is local to it. Use a managed one — Neon,
+Supabase, Vercel Postgres — and point `DATABASE_URL` at it.
+
+**Run the migrations yourself.** They are deliberately *not* in the build command: previews build
+too, and a preview pointed at the production database would migrate it. Run them from your machine
+against the production URL before the first deploy, and again whenever a deploy carries a new one:
+
+```bash
+DATABASE_URL='postgres://…' pnpm --filter web db:migrate
+```
+
+**`ATTACHMENT_STORAGE` cannot be `fs`.** Vercel's filesystem is wiped on every deploy. Use `none`
+(attachments stay on the phone, which is a supported way to run), `s3`, or `vercel-blob` — reading
+the caveat about Blob URLs under [attachments](#attachments) first.
+
+**`PUBLIC_URL` and `RP_ID` must be the production domain**, not a preview URL. A passkey is bound to
+the domain that created it: registered against a preview URL, it will not work on the real one, and
+the failure is an opaque WebAuthn error rather than anything that names the cause.
+
+Two more worth knowing before you expose it:
+
+- **The auth rate limiter keeps its counters in memory**, so on Vercel each serverless instance has
+  its own and the limit is per-instance rather than per-server. See the note under
+  [security](#security-notes).
+- **`TRUSTED_PROXIES` behind Vercel is unverified.** Better Auth resolves the caller's IP from
+  `x-forwarded-for` and ignores the header when it holds more than one value unless this is set.
+  Whether Vercel sends one value or several is not something this document has checked — look at
+  what arrives before deciding, because a wrong value here produces a limiter that quietly protects
+  nothing.
+
 ## Check that it works
 
 ```bash
