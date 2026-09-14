@@ -134,13 +134,39 @@ until it is renewed. Either:
 
 - Plug the phone in and press Run in Xcode again, once a week. Nothing is lost — the app's data
   stays on the phone across a reinstall, as long as the bundle identifier is the same.
-- Or install [AltStore](https://altstore.io) or [SideStore](https://sidestore.io). Both refresh the
-  signature in the background — AltStore from a helper on your Mac, SideStore from the device
-  itself — so the seven days stop being your problem. They install an `.ipa` rather than building
-  from Xcode; follow their own instructions for producing one, since the Xcode menus for it move
-  between releases.
+- Or install [Sideloadly](https://sideloadly.io), [AltStore](https://altstore.io) or
+  [SideStore](https://sidestore.io). These install an `.ipa` and sign it with your Apple ID
+  themselves. AltStore and SideStore also refresh the signature in the background — AltStore from a
+  helper on your Mac, SideStore from the device itself — so the seven days stop being your problem.
+  Sideloadly does not: it is a reinstall each time.
 
 A paid developer account moves the expiry to a year, which is usually long enough to forget about.
+
+## Building an .ipa for a sideload tool
+
+Those tools want an `.ipa`, and a free Apple ID cannot export one through Xcode's Archive →
+Distribute. It does not need to: they sign the app themselves at install time, so what they want is
+an **unsigned** build, which is a plain `xcodebuild` plus a zip.
+
+```bash
+pnpm --filter mobile build:ipa saldo.example.com com.yourname.saldo
+```
+
+The second argument is optional and defaults to this project's own bundle identifier; pass one of
+your own if the tool refuses to sign that. `SALDO_SERVER_URL` and `SALDO_BUNDLE_ID` work as
+environment variables instead, and `SALDO_DRY_RUN=1` prints what it would bake in and stops —
+worth one run, because the build takes minutes and `--clean` throws `ios/` away before it starts.
+
+The file lands at `apps/mobile/build/Saldo.ipa`. Drag it into the tool, enter your Apple ID, start.
+
+Sideloadly offers to rewrite the bundle identifier as it installs. Accepting is fine: the
+`saldo://` scheme that carries sign-in back from the browser lives in `Info.plist` and does not
+depend on the identifier. What you must not change is the scheme itself unless the server's
+`APP_REDIRECT_SCHEMES` changes with it — see [the server address](#the-server-address-is-a-build-input)
+above.
+
+The script is `apps/mobile/scripts/build-ipa.sh`, and it is short enough to read if you would
+rather run the steps by hand.
 
 ## When it goes wrong
 
