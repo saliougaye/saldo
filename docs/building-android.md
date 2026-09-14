@@ -108,11 +108,17 @@ git clone https://github.com/saldo-app/saldo.git
 cd saldo
 pnpm install
 
-SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:android
+pnpm --filter mobile build:android saldo.example.com
 ```
 
+The address can go in front of the command as `SALDO_SERVER_URL=…` instead, and a second argument
+sets the bundle identifier if you are not using this project's own. `SALDO_DRY_RUN=1` prints the
+values it would bake in and stops — worth one run, because what follows takes minutes and starts by
+throwing `android/` away.
+
 That one script does both halves: `expo prebuild --platform android --clean` regenerates the native
-project with your variables in it, then `./gradlew assembleRelease` compiles it. The first run
+project with your variables in it, then `./gradlew assembleRelease` compiles it. It ends by asking
+`apksigner` which key signed the result and saying plainly whether that key is yours. The first run
 downloads a Gradle distribution and compiles every native module, so give it a quarter of an hour
 and a network connection; later runs are much shorter.
 
@@ -130,8 +136,11 @@ apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 
 ## Check that it is really signed
 
-Ask `apksigner` who signed it. It is not on your `PATH`; it ships with the SDK's build tools, so
-reach for it by path and use the newest version you have installed:
+The build script already does this and prints the answer. Run it yourself when you want to check an
+APK somebody handed you, or when `ANDROID_HOME` was unset and the script said it could not.
+
+`apksigner` is not on your `PATH`; it ships with the SDK's build tools, so reach for it by path and
+use the newest version you have installed:
 
 ```bash
 "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs \
