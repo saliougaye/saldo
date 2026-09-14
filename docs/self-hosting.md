@@ -93,6 +93,60 @@ the caveat about Blob URLs under [attachments](#attachments) first.
 the domain that created it: registered against a preview URL, it will not work on the real one, and
 the failure is an opaque WebAuthn error rather than anything that names the cause.
 
+### Step by step
+
+**Decide the domain first.** A passkey is bound to the domain that created it, so an account
+registered against `saldo-abc123.vercel.app` cannot sign in at `saldo.example.com` later — the
+passkey simply is not offered, and nothing says why. Pick the address you will keep, and do not
+create an account before it is in place.
+
+1. **Create the database.** Neon, Supabase or Vercel Postgres. Copy its connection string.
+2. **Run the migrations from your machine**, against that string. Nothing else creates the tables:
+
+   ```bash
+   DATABASE_URL='postgres://…' pnpm --filter web db:migrate
+   ```
+
+3. **Import the repository into Vercel.** Leave the root directory at the repository root —
+   `vercel.json` there already carries the install command, the build command and the output
+   directory, and the build filters to the web workspace itself.
+4. **Add the environment variables** from the table below, for **Production**. `PUBLIC_URL` and
+   `WEBAUTHN_RP_ID` name the domain you chose in step 0, not the deployment URL Vercel generates.
+5. **Attach the domain** in the project's Domains tab, and wait for its certificate. Passkeys need
+   HTTPS and will not work over anything else.
+6. **Deploy**, then check it answers:
+
+   ```bash
+   curl -s https://saldo.example.com/api/health
+   ```
+
+   `registrationAllowed` and `inviteRequired` should both be `true` under `REGISTRATION=invite`, and
+   `schemaVersion` is the number the app has to match.
+7. **Mint your own invite code.** Under `invite` nothing creates an account without one, yours
+   included. With no shell on the server, run it from your machine against the production database:
+
+   ```bash
+   DATABASE_URL='postgres://…' pnpm --filter web invite new --label me
+   ```
+
+   It prints the code once. The first account to register becomes the instance's admin.
+
+   Both this and the migration above load `apps/web/.env` if you have one for development, but a
+   variable set on the command line wins over it — so they reach the production database, not your
+   local one. Worth knowing because the opposite mistake is silent: an invite minted into the wrong
+   database is a code that simply never works.
+8. **Build the app against that domain** and install it —
+   [Android](building-android.md), [iOS](building-ios.md):
+
+   ```bash
+   pnpm --filter mobile build:android https://saldo.example.com
+   ```
+
+   The address is compiled in, so an app built against a different one will not reach this server.
+9. **Sign in.** The app opens a browser at your own `/auth/mobile`, the passkey ceremony runs there,
+   and the handoff comes back to the app over the `saldo://` scheme. If it stalls, check that
+   `APP_REDIRECT_SCHEMES` on the server matches the `SALDO_SCHEME` the app was built with.
+
 ### The environment variables Vercel needs
 
 Set these in the project's **Environment Variables**, or with `vercel env add <NAME> production`.
