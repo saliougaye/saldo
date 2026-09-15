@@ -567,6 +567,21 @@ small enough to land on its own branch without a plan file of its own.
   properly: one `icons.<name>` entry per `ICON_NAMES` member in both catalogues, with the grid
   reading ``t(`icons.${name}`)`` the way the swatches now read ``t(`colors.${name}`)``.
 
+### Picked up from `TODO.md` on 2026-09-15 ✅ done
+
+**Plan:** `2026-09-15-refresh-swipe-segmented.md` · **Spec:** §8.5, §6.29, §6.32
+
+- ✅ **Pull to refresh.** `Screen` takes `refreshable`, the Transactions list is a `SyncScrollView`,
+  and `useSyncRefresh` runs the scheduler's `syncNow`. The spinner follows the pull; a pull that
+  could not sync says so in a toast.
+- ✅ **No swipe-back under the tabs.** The cause was `replace` swapping only the top of the root
+  stack: unlocking over a pushed screen left a second copy of the tabs. `enterTabs` and `startOver`
+  (`src/navigation/history.ts`) are tested against the real router, and `(tabs)` and `lock` have
+  `gestureEnabled: false`.
+- ✅ **Account type toggle in onboarding step 2.** `Segmented` keeps a label on one centred line,
+  shrinking to 80% before it truncates. No rename: "Current account" still truncates on a 390pt
+  phone.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

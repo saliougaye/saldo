@@ -84,7 +84,7 @@ export default function TagView() {
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   return (
-    <Screen>
+    <Screen refreshable>
       <ScreenHeader title={tag.name} />
       <Text size="footnote" color="textMuted">
         {t('tags.total')}

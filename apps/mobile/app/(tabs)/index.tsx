@@ -101,7 +101,7 @@ export default function HomeTab() {
   );
 
   return (
-    <Screen underTabBar>
+    <Screen underTabBar refreshable>
       <PeriodHeader showProfile />
 
       <Animated.View entering={entering(0)}>

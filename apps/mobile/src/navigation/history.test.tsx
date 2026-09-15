@@ -30,8 +30,7 @@ const ROUTES = {
 async function open(initialUrl: string): Promise<() => string[]> {
   const rendered = renderRouter(ROUTES, { initialUrl });
   await rendered;
-  return () =>
-    rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
+  return () => rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
 }
 
 async function run(navigate: () => void): Promise<void> {

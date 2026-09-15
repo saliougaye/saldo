@@ -179,8 +179,7 @@ const ROUTES = {
 async function open(initialUrl: string): Promise<() => string[]> {
   const rendered = renderRouter(ROUTES, { initialUrl });
   await rendered;
-  return () =>
-    rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
+  return () => rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
 }
 
 async function run(navigate: () => void): Promise<void> {
@@ -323,13 +322,14 @@ rtk git commit -m "fix(mobile): nothing left under the tabs or the lock screen t
 **Files:**
 - Create: `apps/mobile/src/sync/pullFeedback.ts`, test `pullFeedback.test.ts`
 - Create: `apps/mobile/src/sync/useSyncRefresh.ts`, test `useSyncRefresh.test.tsx`
+- Create: `apps/mobile/src/sync/syncContext.ts`; modify `SyncProvider.tsx` to use it and re-export `useSync`
 - Create: `apps/mobile/src/components/SyncScrollView.tsx`
 - Modify: `apps/mobile/src/components/Screen.tsx`, test `Screen.test.tsx`
 - Modify: `apps/mobile/app/(tabs)/transactions.tsx` and the `refreshable` screens listed above
 - Modify: `packages/i18n/src/locales/en.ts`, `it.ts` (`sync.pullFailed`)
 - Modify: spec §8.5, `TODO.md` (remove "Pull to refresh"), `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Write the failing test for what a pull says**
+- [x] **Step 1: Write the failing test for what a pull says**
 
 `apps/mobile/src/sync/pullFeedback.test.ts`:
 
@@ -362,12 +362,12 @@ describe('pullFeedbackKey', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/sync/pullFeedback.test.ts --selectProjects db`
 Expected: FAIL — `Cannot find module './pullFeedback'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/sync/pullFeedback.ts`:
 
@@ -405,12 +405,12 @@ Add to the `sync` block of both catalogues, after `syncing`:
 - `en.ts`: `pullFailed: 'Could not sync. Everything stays on this phone until it can.',`
 - `it.ts`: `pullFailed: 'Sincronizzazione non riuscita. Tutto resta su questo telefono finché non ci riesce.',`
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/sync/pullFeedback.test.ts --selectProjects db`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Write the failing test for the hook**
+- [x] **Step 5: Write the failing test for the hook**
 
 `apps/mobile/src/sync/useSyncRefresh.test.tsx`:
 
@@ -425,11 +425,12 @@ import { useSyncRefresh } from './useSyncRefresh';
 
 const mockShow = jest.fn();
 let mockScheduler: Scheduler | null = null;
-let mockUser: { displayName: string } | null = null;
+let mockCanSync = true;
 
 jest.mock('../components/Toast', () => ({ useToast: () => ({ show: mockShow }) }));
-jest.mock('./SyncProvider', () => ({ useSync: () => ({ scheduler: mockScheduler }) }));
-jest.mock('../auth/ServerProvider', () => ({ useServer: () => ({ user: mockUser }) }));
+jest.mock('./syncContext', () => ({
+  useSync: () => ({ scheduler: mockScheduler, canSync: mockCanSync }),
+}));
 
 let i18n: I18nInstance;
 
@@ -439,7 +440,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   mockShow.mockClear();
-  mockUser = { displayName: 'Ada' };
+  mockCanSync = true;
 });
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -478,7 +479,7 @@ describe('useSyncRefresh', () => {
 
   it('offers no pull while signed out', async () => {
     mockScheduler = schedulerEndingIn({ kind: 'idle', lastSyncAt: 1 }).scheduler;
-    mockUser = null;
+    mockCanSync = false;
     const { result } = await renderHook(() => useSyncRefresh(), { wrapper });
     expect(result.current).toBeNull();
   });
@@ -518,22 +519,29 @@ describe('useSyncRefresh', () => {
 });
 ```
 
-- [ ] **Step 6: Run it and watch it fail**
+- [x] **Step 6: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/sync/useSyncRefresh.test.tsx --selectProjects app`
 Expected: FAIL — `Cannot find module './useSyncRefresh'`.
 
-- [ ] **Step 7: Implement the hook**
+- [x] **Step 7: Implement the hook**
+
+**Found while executing:** the first version read `useSync` from `SyncProvider` and `useServer` from
+`ServerProvider`. Both modules open SQLite on import (`db/client`), and `Screen` reaches this hook, so every
+component test that renders a screen failed to load (AccountForm, CategoryForm, TransactionForm). The context
+therefore lives in `src/sync/syncContext.ts` — `SyncContext`, `SyncValue`, `IDLE`, `useSync`, type-only imports —
+and gains `canSync` (a scheduler **and** a signed-in user), which `SyncProvider` computes. `SyncProvider` re-exports
+`useSync` and `SyncValue`, so `app/index.tsx` and `profile/server.tsx` are unchanged. The hook no longer needs
+`useServer`.
 
 `apps/mobile/src/sync/useSyncRefresh.ts`:
 
 ```ts
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useServer } from '../auth/ServerProvider';
 import { useToast } from '../components/Toast';
 import { pullFeedbackKey } from './pullFeedback';
-import { useSync } from './SyncProvider';
+import { useSync } from './syncContext';
 
 export interface SyncRefresh {
   refreshing: boolean;
@@ -549,10 +557,12 @@ export interface SyncRefresh {
  * own, and a spinner that appeared at the top of the screen each time would push the content down
  * under the user's thumb. Nothing is refetched afterwards; `useLiveQuery` already redraws on the
  * rows the cycle wrote.
+ *
+ * Reads `syncContext`, not `SyncProvider`: `Screen` reaches this hook, and the provider's module
+ * opens the database on import.
  */
 export function useSyncRefresh(): SyncRefresh | null {
-  const { scheduler } = useSync();
-  const { user } = useServer();
+  const { scheduler, canSync } = useSync();
   const toast = useToast();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
@@ -571,17 +581,17 @@ export function useSyncRefresh(): SyncRefresh | null {
       .finally(() => setRefreshing(false));
   }, [scheduler, toast, t]);
 
-  if (scheduler === null || user === null) return null;
+  if (scheduler === null || !canSync) return null;
   return { refreshing, onRefresh };
 }
 ```
 
-- [ ] **Step 8: Run it and watch it pass**
+- [x] **Step 8: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/sync/useSyncRefresh.test.tsx --selectProjects app`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 9: Write the failing `Screen` tests**
+- [x] **Step 9: Write the failing `Screen` tests**
 
 In `Screen.test.tsx`, mock the hook at the top (after the imports) and add two tests:
 
@@ -619,12 +629,12 @@ jest.mock('../sync/useSyncRefresh', () => ({
   });
 ```
 
-- [ ] **Step 10: Run them and watch the first fail**
+- [x] **Step 10: Run them and watch the first fail**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/components/Screen.test.tsx --selectProjects app`
 Expected: FAIL — `refreshControl` is undefined on the refreshable screen (and a type error on `refreshable`).
 
-- [ ] **Step 11: Implement `SyncScrollView` and the prop**
+- [x] **Step 11: Implement `SyncScrollView` and the prop**
 
 `apps/mobile/src/components/SyncScrollView.tsx`:
 
@@ -670,12 +680,12 @@ In `Screen.tsx`, add the prop to `ScreenProps`:
 destructure it (`refreshable = false`), pick the scroller once — `const Scroller = refreshable ? SyncScrollView :
 ScrollView;` — and render `<Scroller …>` where `<ScrollView …>` was, with the same props.
 
-- [ ] **Step 12: Run them and watch them pass**
+- [x] **Step 12: Run them and watch them pass**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/components/Screen.test.tsx --selectProjects app`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 13: Opt the screens in**
+- [x] **Step 13: Opt the screens in**
 
 Add `refreshable` to the main `<Screen>` of: `app/(tabs)/index.tsx`, `app/(tabs)/accounts.tsx`, `app/(tabs)/stats.tsx`,
 `app/profile.tsx`, `app/profile/server.tsx`, `app/budgets.tsx`, `app/settings/tags.tsx`, `app/account/[id].tsx`,
@@ -684,13 +694,13 @@ Add `refreshable` to the main `<Screen>` of: `app/(tabs)/index.tsx`, `app/(tabs)
 In `app/(tabs)/transactions.tsx` the list is its own `ScrollView`; make it a `SyncScrollView` with the same props (the
 chip row stays a horizontal `ScrollView`).
 
-- [ ] **Step 14: Spec, roadmap, TODO**
+- [x] **Step 14: Spec, roadmap, TODO**
 
 Spec §8.5, triggers: "pull-to-refresh on the Server screen" becomes "pull-to-refresh on the tabs, the Server screen
 and the other screens that show synced data (never a form); the spinner follows the pull, and a pull that could not
 sync says so in a toast". Remove "Pull to refresh" from `TODO.md`. Add this plan to the roadmap's backlog section.
 
-- [ ] **Step 15: Verify and commit**
+- [x] **Step 15: Verify and commit**
 
 ```bash
 rtk proxy pnpm lint

@@ -24,6 +24,7 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionDivider } from '../../src/components/SectionDivider';
 import { SkeletonList } from '../../src/components/Skeleton';
+import { SyncScrollView } from '../../src/components/SyncScrollView';
 import { TextField } from '../../src/components/TextField';
 import { useToast } from '../../src/components/Toast';
 import { useDelayed } from '../../src/components/useDelayed';
@@ -331,7 +332,8 @@ export default function TransactionsTab() {
         </Animated.View>
       )}
 
-      <ScrollView
+      {/* Its own list rather than `Screen`'s, so the pull to sync is wired here (§8.5). */}
+      <SyncScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ gap: 10, paddingBottom: 24 }}
         keyboardDismissMode="on-drag"
@@ -388,7 +390,7 @@ export default function TransactionsTab() {
             {groups.map(dayCard)}
           </>
         )}
-      </ScrollView>
+      </SyncScrollView>
 
       <AccountFilterSheet
         visible={accountSheetOpen}

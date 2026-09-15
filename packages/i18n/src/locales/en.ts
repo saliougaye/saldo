@@ -390,6 +390,7 @@ export const en: Messages = {
     hoursAgo: '{{count}} h ago',
     syncNow: 'Sync now',
     syncing: 'Syncing…',
+    pullFailed: 'Could not sync. Everything stays on this phone until it can.',
     signIn: 'Sign in with passkey',
     createAccount: 'Create account',
     signOut: 'Sign out',

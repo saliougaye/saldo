@@ -390,6 +390,8 @@ export const it = {
     hoursAgo: '{{count}} h fa',
     syncNow: 'Sincronizza ora',
     syncing: 'Sincronizzo…',
+    pullFailed:
+      'Sincronizzazione non riuscita. Tutto resta su questo telefono finché non ci riesce.',
     signIn: 'Accedi con passkey',
     createAccount: 'Crea account',
     signOut: 'Esci',

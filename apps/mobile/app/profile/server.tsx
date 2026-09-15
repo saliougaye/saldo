@@ -83,7 +83,7 @@ export default function ServerScreen() {
   const connected = serverUrl !== null && user !== null;
 
   return (
-    <Screen>
+    <Screen refreshable>
       <ScreenHeader title={t('sync.title')} />
 
       <Card>

@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeProvider';
 import { ScrollFade } from './ScrollFade';
+import { SyncScrollView } from './SyncScrollView';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -22,6 +23,12 @@ export interface ScreenProps {
    * so the device's top inset would be dead space above the header — it uses a plain gap instead.
    */
   sheet?: boolean;
+  /**
+   * Pulling the content down runs a sync (§8.5). For screens that show synced data and hold nothing
+   * half-typed: a form's sheet already closes on a downward swipe, and onboarding has no account to
+   * sync with yet.
+   */
+  refreshable?: boolean;
 }
 
 /** Screen frame: theme background, safe-area insets and the §6 horizontal padding. */
@@ -31,6 +38,7 @@ export function Screen({
   footer,
   underTabBar = false,
   sheet = false,
+  refreshable = false,
 }: ScreenProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -43,6 +51,7 @@ export function Screen({
     paddingTop: sheet ? 12 : insets.top + 8,
   };
   const tabBarSpace = underTabBar ? theme.layout.fabLift : 0;
+  const Scroller = refreshable ? SyncScrollView : ScrollView;
   return (
     <View style={{ flex: 1, backgroundColor: theme.palette.bg }}>
       <KeyboardAvoidingView
@@ -56,7 +65,7 @@ export function Screen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {scroll ? (
-          <ScrollView
+          <Scroller
             testID="screen-scroll"
             /*
              * The default is `'never'`: while the keyboard is up the first tap on any control is
@@ -71,7 +80,7 @@ export function Screen({
             }}
           >
             {children}
-          </ScrollView>
+          </Scroller>
         ) : (
           <View
             style={{

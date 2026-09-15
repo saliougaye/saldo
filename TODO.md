@@ -86,22 +86,3 @@ To decide:
   whether it belongs in the four segments of onboarding step 2, which already do not fit (see the
   item above).
 
-## Pull to refresh
-
-- [ ] Pulling down on a screen starts a sync and shows the spinner until it comes back.
-
-No screen has a `RefreshControl` today. A sync runs on start and whenever the app becomes active
-(`apps/mobile/src/sync/SyncProvider.tsx`), and nothing lets you ask for one by hand.
-
-What should make it small:
-
-- `useSync()` already hands screens the scheduler, whose `syncNow()` is the call to make, and the
-  sync status, which is what the spinner should follow.
-- The screens read SQLite through `useLiveQuery`, which updates by itself when rows change, so the
-  pull only has to sync. Nothing needs refetching once it is done.
-- Most screens scroll inside `Screen` (`apps/mobile/src/components/Screen.tsx`), so the refresh
-  control belongs there, once. The Transactions tab has its own list (`scroll={false}`) and needs
-  it separately.
-
-To decide: what the pull does with no server reachable or when offline — Saldo keeps working locally,
-so it should say it could not sync rather than fail silently.

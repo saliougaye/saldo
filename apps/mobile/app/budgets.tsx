@@ -53,7 +53,7 @@ export default function BudgetsScreen() {
   );
 
   return (
-    <Screen>
+    <Screen refreshable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackButton />
         <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>

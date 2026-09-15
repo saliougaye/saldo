@@ -61,7 +61,7 @@ export default function ProfileScreen() {
   }[settings?.theme ?? 'system'];
 
   return (
-    <Screen>
+    <Screen refreshable>
       <BackButton />
       <Text size="display" weight="semibold" tracking="tighter">
         {t('profile.title')}

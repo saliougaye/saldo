@@ -4,6 +4,13 @@ import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { Screen } from './Screen';
 
+const mockOnRefresh = jest.fn();
+
+// The hook needs the server, sync and toast providers; what `Screen` owes it is only the wiring.
+jest.mock('../sync/useSyncRefresh', () => ({
+  useSyncRefresh: () => ({ refreshing: false, onRefresh: mockOnRefresh }),
+}));
+
 /**
  * `useSafeAreaInsets` throws without a provider, and there is none in `jest.setup.js`. These are
  * the metrics of a notched phone, which is the case the padding exists for.
@@ -62,5 +69,28 @@ describe('Screen', () => {
       </Host>,
     );
     expect(screen.queryByTestId('screen-scroll-fade', FADE)).toBeNull();
+  });
+
+  it('lets a refreshable screen be pulled to sync', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const control = screen.getByTestId('screen-scroll').props.refreshControl;
+    expect(control.props.onRefresh).toBe(mockOnRefresh);
+  });
+
+  it('offers no pull on any other screen: a sheet already closes on that gesture', async () => {
+    await render(
+      <Host>
+        <Screen>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    expect(screen.getByTestId('screen-scroll').props.refreshControl).toBeUndefined();
   });
 });
