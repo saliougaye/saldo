@@ -1,0 +1,45 @@
+# `vercel deploy` from a checkout uploads the working tree as it is, and it does not read .gitignore.
+# Without this file it walks into the generated native projects — gigabytes, and CocoaPods symlinks
+# the upload rejects — and, worse, into local .env files and real bank exports.
+#
+# An allowlist at the root, so a new top-level file stays on your machine until somebody decides
+# the build needs it.
+#
+# turbo.json is left out on purpose. The build is `pnpm --filter web build` and uses no Turborepo,
+# and with that file in the upload the Vercel build breaks. It stays in the repository, where
+# `pnpm typecheck` and `pnpm test` need it.
+/*
+!/apps
+!/packages
+!/package.json
+!/pnpm-lock.yaml
+!/pnpm-workspace.yaml
+!/tsconfig.base.json
+!/vercel.json
+!/.nvmrc
+
+# apps/mobile itself stays: the install runs with --frozen-lockfile, and the lockfile has an importer
+# for it. What it generates does not.
+/apps/mobile/ios
+/apps/mobile/android
+/apps/mobile/build
+/apps/mobile/.*.cjs
+**/.expo
+**/.next
+**/.turbo
+**/node_modules
+**/*.tsbuildinfo
+
+# Secrets and signing material, wherever they turn up.
+**/.env*
+!**/.env.example
+*.keystore
+*.jks
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+*.ipa
+*.apk
+*.aab

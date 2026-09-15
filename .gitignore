@@ -50,3 +50,7 @@ apps/web/migrate.cjs
 # real data dropped in for import work: never committed (the anonymised fixture lives in
 # packages/core/src/io/__fixtures__/)
 transactions_export_*.csv
+
+# Vercel CLI project link (`vercel link`)
+.vercel
+.env*

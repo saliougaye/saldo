@@ -64,10 +64,11 @@ WEB_PORT=3007 docker compose -f apps/web/docker/docker-compose.yml up -d
 
 ## Run it on Vercel instead
 
-Docker is not the only way. The server is an ordinary Next.js app, and `vercel.json` at the
-repository root carries the settings so you do not have to reproduce them by hand: the project's
-root directory is the **repository root**, not `apps/web`, because the build filters to that
-workspace from there.
+Docker is not the only way. The server is an ordinary Next.js app inside a pnpm workspace, and
+Vercel deploys it as a monorepo: the project's **Root Directory is `apps/web`**, where `next` is
+declared, and `vercel.json` at the repository root carries the install and build commands so you do
+not have to reproduce them by hand. Pointed at the repository root instead, the build stops with
+"No Next.js version detected", because the root `package.json` does not depend on `next`.
 
 > Not yet walked end to end by anybody. The Docker path above has been; this one is assembled from
 > what the code does. If something here is wrong, that is a bug worth reporting.
@@ -107,9 +108,26 @@ create an account before it is in place.
    DATABASE_URL='postgres://…' pnpm --filter web db:migrate
    ```
 
-3. **Import the repository into Vercel.** Leave the root directory at the repository root —
-   `vercel.json` there already carries the install command, the build command and the output
-   directory, and the build filters to the web workspace itself.
+3. **Create the project with its Root Directory set to `apps/web`, and turn on "Include files
+   outside the root directory in the Build Step".** Both live under Settings → Build and
+   Deployment → Root Directory. The second is required, not a default to count on: without it the
+   build sees only `apps/web`, so pnpm finds no lockfile and `packages/*` is not there to compile.
+   From the CLI, run everything from the **repository root**, never from `apps/web` — the CLI
+   applies the Root Directory itself:
+
+   ```bash
+   vercel link
+   vercel project update --root-directory apps/web
+   ```
+
+   `project update` has no option for the second setting, so switch that one on in the dashboard.
+
+   A deploy from your machine (`vercel --prod`) uploads your working tree, not a clone, so the
+   `.vercelignore` at the root is what decides what leaves it. Without that file the upload walks
+   into the generated `ios/` and `android/` projects and any local `.env`. It also keeps
+   `turbo.json` out on purpose: the deploy does not use Turborepo, and with that file in the upload
+   the build breaks. Do not delete it from the repository instead — `pnpm typecheck` and
+   `pnpm test` run through it.
 4. **Add the environment variables** from the table below, for **Production**. `PUBLIC_URL` and
    `WEBAUTHN_RP_ID` name the domain you chose in step 0, not the deployment URL Vercel generates.
 5. **Attach the domain** in the project's Domains tab, and wait for its certificate. Passkeys need
