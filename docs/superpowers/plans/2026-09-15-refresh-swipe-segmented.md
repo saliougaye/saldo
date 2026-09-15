@@ -70,7 +70,7 @@ shrinking to 80% before truncating; on a 390pt phone that fits both Italian labe
 - Test: `apps/mobile/src/components/a11y.test.tsx` (the `Segmented` block)
 - Modify: `TODO.md` (remove "Account type toggle in onboarding step 2")
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `a11y.test.tsx` (`StyleSheet` is already imported), add to `describe('Segmented')`:
 
@@ -87,14 +87,14 @@ In `a11y.test.tsx` (`StyleSheet` is already imported), add to `describe('Segment
   });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/components/a11y.test.tsx --selectProjects app`
 Expected: FAIL — `numberOfLines` is `undefined`.
 
 (The path goes **before** `--selectProjects`: that flag takes several values and would swallow it.)
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `Segmented.tsx`, replace the label:
 
@@ -118,12 +118,12 @@ In `Segmented.tsx`, replace the label:
             </Text>
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/components/a11y.test.tsx --selectProjects app`
 Expected: PASS.
 
-- [ ] **Step 5: Remove the item from `TODO.md` and commit**
+- [x] **Step 5: Remove the item from `TODO.md` and commit**
 
 ```bash
 rtk git add apps/mobile/src/components TODO.md

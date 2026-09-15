@@ -60,22 +60,6 @@ To decide:
   step 3 and the imported history have to agree.
 - A Saldo JSON backup (§11.1) is a restore, not an import, and may deserve its own path.
 
-## Account type toggle in onboarding step 2
-
-- [ ] Fix the type selector in onboarding step 2, where "Current account" does not fit its segment.
-
-On an iPhone in English the label wraps onto two lines, the text sits left-aligned instead of
-centred, and the selected pill grows taller than the other segments. The screen is
-`apps/mobile/app/(onboarding)/account-details.tsx`, and the control is `Segmented`
-(`apps/mobile/src/components/Segmented.tsx`), so the fix belongs in the component: it should keep a
-long label on one line or centre it, and keep every segment the same height.
-
-Renaming the type to something shorter, such as "Bank", may be the better fix or a second one. The
-label is `accountTypes.checking` in `packages/i18n/src/locales/en.ts` and `it.ts` ("Conto corrente"),
-and it is not only used here: the Accounts tab, the account detail, the account form and
-`AccountTypeSheet` show it too, so a rename changes all of them. The onboarding name placeholder
-(`onboarding.accountNamePlaceholder`) repeats the same words and would follow.
-
 ## Debit card as an account type
 
 - [ ] Add `debit_card` next to `cash`, `checking`, `credit_card`, `savings` and `investment`.

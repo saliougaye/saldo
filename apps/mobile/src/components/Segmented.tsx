@@ -54,7 +54,21 @@ export function Segmented<T extends string>({
               backgroundColor: selected ? theme.palette.accent : 'transparent',
             }}
           >
-            <Text size="footnote" weight="medium" color={selected ? 'onAccent' : 'textMuted'}>
+            {/*
+              One line, centred, shrinking to 80% before it truncates. Four account types share
+              ~78pt each on a 390pt phone: "Carta di credito" needs 81% and fits, "Current account"
+              needs 77% and truncates, and neither wraps any more — wrapping is what made the
+              selected pill taller than its neighbours and left the text flush left.
+            */}
+            <Text
+              size="footnote"
+              weight="medium"
+              color={selected ? 'onAccent' : 'textMuted'}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              style={{ alignSelf: 'stretch', textAlign: 'center' }}
+            >
               {option.label}
             </Text>
           </Pressable>
