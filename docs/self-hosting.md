@@ -62,6 +62,147 @@ Set `WEB_PORT` if 3000 is taken on the host:
 WEB_PORT=3007 docker compose -f apps/web/docker/docker-compose.yml up -d
 ```
 
+## Run it on Vercel instead
+
+Docker is not the only way. The server is an ordinary Next.js app inside a pnpm workspace, and
+Vercel deploys it as a monorepo: the project's **Root Directory is `apps/web`**, where `next` is
+declared, and `vercel.json` at the repository root carries the install and build commands so you do
+not have to reproduce them by hand. Pointed at the repository root instead, the build stops with
+"No Next.js version detected", because the root `package.json` does not depend on `next`.
+
+> Not yet walked end to end by anybody. The Docker path above has been; this one is assembled from
+> what the code does. If something here is wrong, that is a bug worth reporting.
+
+Four things differ from the compose file, and three of them will bite if you miss them.
+
+**Bring your own Postgres.** The compose file's database is local to it. Use a managed one — Neon,
+Supabase, Vercel Postgres — and point `DATABASE_URL` at it.
+
+**Run the migrations yourself.** They are deliberately *not* in the build command: previews build
+too, and a preview pointed at the production database would migrate it. Run them from your machine
+against the production URL before the first deploy, and again whenever a deploy carries a new one:
+
+```bash
+DATABASE_URL='postgres://…' pnpm --filter web db:migrate
+```
+
+**`ATTACHMENT_STORAGE` cannot be `fs`.** Vercel's filesystem is wiped on every deploy. Use `none`
+(attachments stay on the phone, which is a supported way to run), `s3`, or `vercel-blob` — reading
+the caveat about Blob URLs under [attachments](#attachments) first.
+
+**`PUBLIC_URL` and `RP_ID` must be the production domain**, not a preview URL. A passkey is bound to
+the domain that created it: registered against a preview URL, it will not work on the real one, and
+the failure is an opaque WebAuthn error rather than anything that names the cause.
+
+### Step by step
+
+**Decide the domain first.** A passkey is bound to the domain that created it, so an account
+registered against `saldo-abc123.vercel.app` cannot sign in at `saldo.example.com` later — the
+passkey simply is not offered, and nothing says why. Pick the address you will keep, and do not
+create an account before it is in place.
+
+1. **Create the database.** Neon, Supabase or Vercel Postgres. Copy its connection string.
+2. **Run the migrations from your machine**, against that string. Nothing else creates the tables:
+
+   ```bash
+   DATABASE_URL='postgres://…' pnpm --filter web db:migrate
+   ```
+
+3. **Create the project with its Root Directory set to `apps/web`, and turn on "Include files
+   outside the root directory in the Build Step".** Both live under Settings → Build and
+   Deployment → Root Directory. The second is required, not a default to count on: without it the
+   build sees only `apps/web`, so pnpm finds no lockfile and `packages/*` is not there to compile.
+   From the CLI, run everything from the **repository root**, never from `apps/web` — the CLI
+   applies the Root Directory itself:
+
+   ```bash
+   vercel link
+   vercel project update --root-directory apps/web
+   ```
+
+   `project update` has no option for the second setting, so switch that one on in the dashboard.
+
+   A deploy from your machine (`vercel --prod`) uploads your working tree, not a clone, so the
+   `.vercelignore` at the root is what decides what leaves it. Without that file the upload walks
+   into the generated `ios/` and `android/` projects and any local `.env`. It also keeps
+   `turbo.json` out on purpose: the deploy does not use Turborepo, and with that file in the upload
+   the build breaks. Do not delete it from the repository instead — `pnpm typecheck` and
+   `pnpm test` run through it.
+4. **Add the environment variables** from the table below, for **Production**. `PUBLIC_URL` and
+   `WEBAUTHN_RP_ID` name the domain you chose in step 0, not the deployment URL Vercel generates.
+5. **Attach the domain** in the project's Domains tab, and wait for its certificate. Passkeys need
+   HTTPS and will not work over anything else.
+6. **Deploy**, then check it answers:
+
+   ```bash
+   curl -s https://saldo.example.com/api/health
+   ```
+
+   `registrationAllowed` and `inviteRequired` should both be `true` under `REGISTRATION=invite`, and
+   `schemaVersion` is the number the app has to match.
+7. **Mint your own invite code.** Under `invite` nothing creates an account without one, yours
+   included. With no shell on the server, run it from your machine against the production database:
+
+   ```bash
+   DATABASE_URL='postgres://…' pnpm --filter web invite new --label me
+   ```
+
+   It prints the code once. The first account to register becomes the instance's admin.
+
+   Both this and the migration above load `apps/web/.env` if you have one for development, but a
+   variable set on the command line wins over it — so they reach the production database, not your
+   local one. Worth knowing because the opposite mistake is silent: an invite minted into the wrong
+   database is a code that simply never works.
+8. **Build the app against that domain** and install it —
+   [Android](building-android.md), [iOS](building-ios.md):
+
+   ```bash
+   pnpm --filter mobile build:android https://saldo.example.com
+   ```
+
+   The address is compiled in, so an app built against a different one will not reach this server.
+9. **Sign in.** The app opens a browser at your own `/auth/mobile`, the passkey ceremony runs there,
+   and the handoff comes back to the app over the `saldo://` scheme. If it stalls, check that
+   `APP_REDIRECT_SCHEMES` on the server matches the `SALDO_SCHEME` the app was built with.
+
+### The environment variables Vercel needs
+
+Set these in the project's **Environment Variables**, or with `vercel env add <NAME> production`.
+They do **not** go in `vercel.json`: that file is committed, and its `env` field holds literal
+values, so a secret put there is a secret published.
+
+| | Value | |
+| --- | --- | --- |
+| `PUBLIC_URL` | `https://saldo.example.com` | Your production domain. Not a preview URL. |
+| `WEBAUTHN_RP_ID` | `saldo.example.com` | The registrable domain: no scheme, no port. A passkey is bound to it. |
+| `WEBAUTHN_RP_NAME` | `Saldo` | What the passkey prompt calls your instance. |
+| `JWT_SECRET` | `openssl rand -base64 48` | **Secret.** |
+| `DATABASE_URL` | `postgres://…` | **Secret.** Your managed Postgres, not the compose one. |
+| `ATTACHMENT_STORAGE` | `none`, `s3` or `vercel-blob` | Never `fs` here. |
+| `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. |
+| `APP_REDIRECT_SCHEMES` | `saldo` | Must match the app's `SALDO_SCHEME` at build time. |
+| `TRUSTED_PROXIES` | — | Leave empty until you have looked at what Vercel sends; see below. |
+
+Plus whichever the storage driver needs: `BLOB_READ_WRITE_TOKEN` is injected by Vercel for
+`vercel-blob`, and `s3` takes the block documented under [attachments](#attachments).
+
+`WEB_PORT`, `POSTGRES_PORT` and `STORAGE_DIR` are compose-only and mean nothing here.
+
+Set them for **Production**. Giving previews the same `DATABASE_URL` points them at your real data,
+and the same `PUBLIC_URL` is wrong for them by definition — either give previews their own database
+or leave them unconfigured and expect them to fail at boot, which is the safer of the two.
+
+Two more worth knowing before you expose it:
+
+- **The auth rate limiter keeps its counters in memory**, so on Vercel each serverless instance has
+  its own and the limit is per-instance rather than per-server. See the note under
+  [security](#security-notes).
+- **`TRUSTED_PROXIES` behind Vercel is unverified.** Better Auth resolves the caller's IP from
+  `x-forwarded-for` and ignores the header when it holds more than one value unless this is set.
+  Whether Vercel sends one value or several is not something this document has checked — look at
+  what arrives before deciding, because a wrong value here produces a limiter that quietly protects
+  nothing.
+
 ## Check that it works
 
 ```bash

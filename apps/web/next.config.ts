@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
   // Next writes its own AGENTS.md/CLAUDE.md into this directory on every dev start, which would
   // shadow the repository's AGENTS.md for anything under apps/web.
   agentRules: false,
-  output: 'standalone',
+  // Standalone is for the Docker image, which runs `node server.js` against a traced copy of the
+  // workspace. Vercel builds its own functions and has no use for it, so it is left off there:
+  // `VERCEL` is set in every Vercel build, and nowhere else.
+  output: process.env.VERCEL ? undefined : 'standalone',
   outputFileTracingRoot: `${import.meta.dirname}/../..`,
   transpilePackages: ['@saldo/core', '@saldo/i18n', '@saldo/ui'],
   async headers() {
