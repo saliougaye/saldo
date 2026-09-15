@@ -21,6 +21,7 @@ import { useAccounts, useSettings } from '../src/db/hooks';
 import { runMaterialiser } from '../src/db/recurrenceService';
 import { wipeDevice } from '../src/db/wipe';
 import { usePeriod } from '../src/features/period/PeriodProvider';
+import { startOver } from '../src/navigation/history';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
 
@@ -224,7 +225,7 @@ export default function ProfileScreen() {
             await disconnect();
             deleteAllAttachmentFiles();
             wipeDevice(db);
-            router.replace('/');
+            startOver(router, '/');
           })();
         }}
         onCancel={() => setResetOpen(false)}

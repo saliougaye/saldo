@@ -86,31 +86,6 @@ To decide:
   whether it belongs in the four segments of onboarding step 2, which already do not fit (see the
   item above).
 
-## No swipe-back on the tab screens
-
-- [ ] On the tab screens (Home, Transactions, Stats, Accounts), the iOS edge swipe must not go back.
-
-The tabs are the bottom of the app: there is nothing behind them a user should be able to return to.
-Yet the root `Stack` in `apps/mobile/app/_layout.tsx` does not declare `(tabs)` at all, so it gets the
-default native-stack options, swipe-back included.
-
-Likely cause, not yet confirmed on a device: the ways into the tabs replace a route *inside another
-navigator* — `router.replace('/(tabs)')` from the last onboarding step
-(`app/(onboarding)/categories.tsx`) and from `app/lock.tsx`, and the boot router's `<Redirect>` in
-`app/index.tsx` — which can leave the onboarding stack, the lock screen or `index` underneath the
-tabs in the root stack. A swipe then brings back a screen that should be gone.
-
-Two parts to the fix, and it probably needs both:
-
-- `<Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />` in the root layout, so the
-  gesture is off whatever sits underneath.
-- Leaving onboarding and the lock screen without keeping them in the history (for example dismissing
-  the stack before replacing), so a hardware back on Android does not reach them either — the swipe
-  option only covers iOS.
-
-Check first which screen the swipe actually reveals, from a fresh install through onboarding and from
-a cold start behind the lock.
-
 ## Pull to refresh
 
 - [ ] Pulling down on a screen starts a sync and shows the spinner until it comes back.

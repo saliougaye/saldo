@@ -116,6 +116,14 @@ export default function RootLayout() {
                 <Ready>
                   <Stack screenOptions={{ headerShown: false }}>
                     {/*
+                      The tabs are the bottom of the app and the lock covers it: neither may be
+                      swiped away. `enterTabs` and `startOver` already keep anything from being
+                      underneath; this is the belt to their braces on iOS, where the edge swipe
+                      would otherwise go back to whatever a future navigation leaves there.
+                    */}
+                    <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+                    <Stack.Screen name="lock" options={{ gestureEnabled: false }} />
+                    {/*
                       §6.16 draws the transaction form as a sheet over whatever you were looking
                       at, and the design is right about why: you are adding a transaction *to* the
                       list or the cycle you can still see behind it, and a swipe down is a cheaper

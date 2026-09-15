@@ -142,7 +142,7 @@ rtk git commit -m "fix(mobile): a segment keeps a long label on one centred line
   `src/features/lock/useAppLock.ts`, `app/profile/server.tsx`, `app/profile/restore.tsx`, `app/profile.tsx`
 - Modify: `TODO.md` (remove "No swipe-back on the tab screens")
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/mobile/src/navigation/history.test.tsx`:
 
@@ -159,7 +159,7 @@ const ROUTES = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
   index: page('boot'),
   '(tabs)/_layout': () => <Tabs />,
-  '(tabs)/home': page('home'),
+  '(tabs)/index': page('home'),
   '(tabs)/accounts': page('accounts'),
   '(onboarding)/_layout': () => <Stack screenOptions={{ headerShown: false }} />,
   '(onboarding)/period': page('period'),
@@ -168,21 +168,19 @@ const ROUTES = {
   profile: page('profile'),
 };
 
-type Rendered = ReturnType<typeof renderRouter>;
-
 /**
- * `renderRouter` hangs its getters on what RNTL's `render` returns, which in RNTL 14 is a promise:
- * awaiting it hands back the plain result without them, so the promise itself is kept.
+ * Renders the app at `initialUrl` and returns a reader for the root stack's route names, bottom
+ * first.
+ *
+ * A reader rather than the render result: `renderRouter` hangs its getters on what RNTL's `render`
+ * returns, which in RNTL 14 is a promise, and awaiting it — or returning it from an async function —
+ * hands back the plain result without them.
  */
-async function open(initialUrl: string): Promise<Rendered> {
+async function open(initialUrl: string): Promise<() => string[]> {
   const rendered = renderRouter(ROUTES, { initialUrl });
   await rendered;
-  return rendered;
-}
-
-/** Route names in the root stack, bottom first. */
-function rootStack(rendered: Rendered): string[] {
-  return rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
+  return () =>
+    rendered.getRouterState()?.routes[0]?.state?.routes.map((route) => route.name) ?? [];
 }
 
 async function run(navigate: () => void): Promise<void> {
@@ -193,55 +191,56 @@ async function run(navigate: () => void): Promise<void> {
 
 describe('enterTabs', () => {
   it('goes back to the tabs underneath instead of stacking a second copy on them', async () => {
-    const rendered = await open('/home');
+    const rootStack = await open('/(tabs)');
     await run(() => router.push('/profile'));
+    // What relocking over a pushed screen used to leave behind.
     await run(() => router.replace('/lock'));
-    expect(rootStack(rendered)).toEqual(['(tabs)', 'lock']);
+    expect(rootStack()).toEqual(['(tabs)', 'lock']);
 
     await run(() => enterTabs(router));
 
-    expect(rootStack(rendered)).toEqual(['(tabs)']);
+    expect(rootStack()).toEqual(['(tabs)']);
   });
 
   it('leaves nothing under the tabs at the end of onboarding', async () => {
-    const rendered = await open('/period');
+    const rootStack = await open('/period');
     await run(() => router.push('/categories'));
 
     await run(() => enterTabs(router));
 
-    expect(rootStack(rendered)).toEqual(['(tabs)']);
+    expect(rootStack()).toEqual(['(tabs)']);
   });
 });
 
 describe('startOver', () => {
   it('leaves nothing under the lock screen for a swipe to uncover', async () => {
-    const rendered = await open('/home');
+    const rootStack = await open('/(tabs)');
     await run(() => router.push('/profile'));
 
     await run(() => startOver(router, '/lock'));
 
-    expect(rootStack(rendered)).toEqual(['lock']);
+    expect(rootStack()).toEqual(['lock']);
   });
 
   it('leaves none of the signed-in screens under the boot router', async () => {
-    const rendered = await open('/home');
+    const rootStack = await open('/(tabs)');
     await run(() => router.push('/profile'));
 
     await run(() => startOver(router, '/'));
 
-    expect(rootStack(rendered)).toEqual(['index']);
+    expect(rootStack()).toEqual(['index']);
   });
 });
 ```
 
-The fixture names the first tab `home` rather than `index` so that `/` is unambiguously the boot router.
+The fixture mirrors the app: a root `index` (the boot router, `/`) and a `(tabs)/index` (`/(tabs)`). Without the second one `/(tabs)` matches nothing and expo-router renders its Unmatched screen, which fails on `expo-linking` having no scheme under Jest.
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/navigation/history.test.tsx --selectProjects app`
 Expected: FAIL — `Cannot find module './history'`.
 
-- [ ] **Step 3: Implement the helpers**
+- [x] **Step 3: Implement the helpers**
 
 `apps/mobile/src/navigation/history.ts`:
 
@@ -273,12 +272,12 @@ export function startOver(router: Router, href: '/' | '/lock'): void {
 }
 ```
 
-- [ ] **Step 4: Run them and watch them pass**
+- [x] **Step 4: Run them and watch them pass**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/navigation/history.test.tsx --selectProjects app`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Use them everywhere the app enters the tabs or starts over**
+- [x] **Step 5: Use them everywhere the app enters the tabs or starts over**
 
 `app/lock.tsx`: `if (result.success) enterTabs(router);` (import from `../src/navigation/history`).
 
@@ -292,7 +291,7 @@ reset): `startOver(router, '/')` in place of `router.replace('/')`.
 `app/(onboarding)/welcome.tsx` keeps `router.replace('/')`: the welcome screen is only ever reached with nothing under
 it, by the boot router's own redirect or by `startOver`.
 
-- [ ] **Step 6: Turn the gesture off in the root layout**
+- [x] **Step 6: Turn the gesture off in the root layout**
 
 In `app/_layout.tsx`, inside the root `Stack`, before the transaction modals:
 
@@ -307,7 +306,7 @@ In `app/_layout.tsx`, inside the root `Stack`, before the transaction modals:
                     <Stack.Screen name="lock" options={{ gestureEnabled: false }} />
 ```
 
-- [ ] **Step 7: Remove the item from `TODO.md`, run the app tests, commit**
+- [x] **Step 7: Remove the item from `TODO.md`, run the app tests, commit**
 
 Run: `rtk proxy pnpm --filter mobile exec jest src/navigation src/components --selectProjects app`
 Expected: PASS.
