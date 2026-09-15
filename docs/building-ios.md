@@ -16,6 +16,12 @@ install an app you built yourself, but with a free Apple ID it does so on a shor
 A paid Apple Developer account (99 USD/year) replaces the seven days with a year and the three apps
 with a hundred. Nothing else changes — you still build and install it yourself.
 
+**The recommended way to install it is [Sideloadly](https://sideloadly.io).** One command builds an
+`.ipa`, and Sideloadly signs it with your Apple ID as it installs it — nothing to set up in Xcode's
+signing screens — and, with its automatic refresh turned on, signs it again before the seven days
+run out. That route is [building an .ipa](#building-an-ipa-for-a-sideload-tool) below. Running
+from Xcode, which the rest of this page walks through, is for when you are changing the app itself.
+
 Have the server running first. Its address is compiled into the app rather than typed on the phone,
 so you need to know it before you build: see [self-hosting Saldo](./self-hosting.md).
 
@@ -132,13 +138,15 @@ It will show the sign-in screen for the server you built it against; if that ser
 With a free Apple ID the provisioning profile expires after seven days, and the app refuses to open
 until it is renewed. Either:
 
+- **Install with [Sideloadly](https://sideloadly.io) and turn on its automatic refresh
+  (recommended).** Its background daemon signs the app again when it is near expiry, whenever it
+  can see the phone — over USB, or over Wi-Fi once Wi-Fi sideloading is set up. That needs the
+  computer running Sideloadly, so a phone that stays out of its reach for a week still lapses.
 - Plug the phone in and press Run in Xcode again, once a week. Nothing is lost — the app's data
   stays on the phone across a reinstall, as long as the bundle identifier is the same.
-- Or install [Sideloadly](https://sideloadly.io), [AltStore](https://altstore.io) or
-  [SideStore](https://sidestore.io). These install an `.ipa` and sign it with your Apple ID
-  themselves. AltStore and SideStore also refresh the signature in the background — AltStore from a
-  helper on your Mac, SideStore from the device itself — so the seven days stop being your problem.
-  Sideloadly does not: it is a reinstall each time.
+- [AltStore](https://altstore.io) and [SideStore](https://sidestore.io) do the same job as
+  Sideloadly, and also refresh in the background — AltStore from a helper on your Mac, SideStore
+  from the device itself.
 
 A paid developer account moves the expiry to a year, which is usually long enough to forget about.
 
@@ -157,7 +165,19 @@ your own if the tool refuses to sign that. `SALDO_SERVER_URL` and `SALDO_BUNDLE_
 environment variables instead, and `SALDO_DRY_RUN=1` prints what it would bake in and stops —
 worth one run, because the build takes minutes and `--clean` throws `ios/` away before it starts.
 
-The file lands at `apps/mobile/build/Saldo.ipa`. Drag it into the tool, enter your Apple ID, start.
+The file lands at `apps/mobile/build/Saldo.ipa`. To install it with Sideloadly:
+
+1. Plug the phone in, unlock it, and choose it as the device in Sideloadly.
+2. Drag the `.ipa` into Sideloadly and enter your Apple ID.
+3. Turn on its **automatic refresh** option, so the app is signed again before the seven days run
+   out.
+4. Press **Start**.
+5. On the phone, turn on **Settings → Privacy & Security → Developer Mode** if iOS asks for it
+   (iOS 16 and later), then trust your Apple ID under **Settings → General → VPN & Device
+   Management**. Open Saldo from the home screen.
+
+To update the app later, build a new `.ipa` and install it the same way, with the same Apple ID and
+the same bundle identifier: it replaces the old one and the data on the phone stays.
 
 Sideloadly offers to rewrite the bundle identifier as it installs. Accepting is fine: the
 `saldo://` scheme that carries sign-in back from the browser lives in `Info.plist` and does not
