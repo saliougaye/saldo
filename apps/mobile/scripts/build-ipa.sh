@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Builds an unsigned .ipa for sideloading with Sideloadly, AltStore or SideStore.
+# Builds an unsigned .ipa for sideloading — with Sideloadly, which is the recommended tool, or with
+# AltStore or SideStore.
 #
 #   pnpm --filter mobile build:ipa saldo.example.com
 #   SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:ipa
@@ -11,7 +12,8 @@
 # and the sideload tools do not want one that was.
 #
 # What comes out lasts **7 days** on a free Apple ID, and you may have 3 sideloaded apps at once.
-# Re-run and re-install when it lapses, or use SideStore, which refreshes itself over wifi.
+# Tick Sideloadly's automatic refresh when you install and it re-signs the app before then; otherwise
+# re-install when it lapses.
 #
 # See docs/building-ios.md for the whole path, including what to do when it goes wrong.
 
