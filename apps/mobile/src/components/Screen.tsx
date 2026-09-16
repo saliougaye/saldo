@@ -68,13 +68,20 @@ export function Screen({
           <Scroller
             testID="screen-scroll"
             /*
+             * The top inset sits outside the scroll view, not inside its content. A pull's spinner
+             * is drawn at the top of the scroll view's own frame: with the frame starting at the
+             * top of the display it spun under the status bar and the notch, where nobody could
+             * see it. The content now stops at the status bar instead of scrolling behind it.
+             */
+            style={{ marginTop: padding.paddingTop }}
+            /*
              * The default is `'never'`: while the keyboard is up the first tap on any control is
              * swallowed to dismiss it. On the transaction form that is a tap wasted on every
              * entry — type the amount, tap a category, nothing happens, tap it again.
              */
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{
-              ...padding,
+              paddingHorizontal: padding.paddingHorizontal,
               paddingBottom: 24 + tabBarSpace + footerHeight,
               gap: theme.layout.cardGap,
             }}

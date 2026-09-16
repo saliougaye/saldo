@@ -55,10 +55,10 @@ export function Segmented<T extends string>({
             }}
           >
             {/*
-              One line, centred, shrinking to 80% before it truncates. Four account types share
-              ~78pt each on a 390pt phone: "Carta di credito" needs 81% and fits, "Current account"
-              needs 77% and truncates, and neither wraps any more — wrapping is what made the
-              selected pill taller than its neighbours and left the text flush left.
+              One line, centred, shrinking to 80% before it truncates. Four options share ~78pt
+              each on a 390pt phone, and "Carta di credito" needs 81% of the footnote size to fit;
+              wrapping is what made the selected pill taller than its neighbours and left the text
+              flush left.
             */}
             <Text
               size="footnote"

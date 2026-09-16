@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
-import { Text as RNText } from 'react-native';
+import { Text as RNText, StyleSheet } from 'react-native';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { Screen } from './Screen';
@@ -81,6 +81,21 @@ describe('Screen', () => {
     );
     const control = screen.getByTestId('screen-scroll').props.refreshControl;
     expect(control.props.onRefresh).toBe(mockOnRefresh);
+  });
+
+  // A spinner is drawn at the top of the scroll view's frame; with the inset inside the content it
+  // spun under the status bar, and a pull looked like it did nothing.
+  it('keeps the scroll view below the status bar, where a pull can be seen', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const scroll = screen.getByTestId('screen-scroll');
+    expect(StyleSheet.flatten(scroll.props.style).marginTop).toBe(METRICS.insets.top + 8);
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingTop).toBeUndefined();
   });
 
   it('offers no pull on any other screen: a sheet already closes on that gesture', async () => {

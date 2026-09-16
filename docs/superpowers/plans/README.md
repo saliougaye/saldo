@@ -579,8 +579,8 @@ small enough to land on its own branch without a plan file of its own.
   (`src/navigation/history.ts`) are tested against the real router, and `(tabs)` and `lock` have
   `gestureEnabled: false`.
 - ✅ **Account type toggle in onboarding step 2.** `Segmented` keeps a label on one centred line,
-  shrinking to 80% before it truncates. No rename: "Current account" still truncates on a 390pt
-  phone.
+  shrinking to 80% before it truncates, and `accountTypes.checking` is now "Conto" / "Bank"
+  (the onboarding name placeholder follows).
 
 ## Future (not POC)
 

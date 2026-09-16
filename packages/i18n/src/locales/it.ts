@@ -72,7 +72,7 @@ export const it = {
     accountTitle: 'Il tuo primo conto',
     accountBody: 'Puoi aggiungerne altri quando vuoi.',
     accountName: 'Nome',
-    accountNamePlaceholder: 'Conto corrente',
+    accountNamePlaceholder: 'Conto',
     accountType: 'Tipo',
     balanceTitle: 'Quanto hai adesso?',
     balanceBody: 'Il saldo attuale del conto. Puoi correggerlo in qualsiasi momento.',
@@ -85,7 +85,7 @@ export const it = {
   },
   accountTypes: {
     cash: 'Contanti',
-    checking: 'Conto corrente',
+    checking: 'Conto',
     credit_card: 'Carta di credito',
     savings: 'Risparmi',
     investment: 'Investimenti',
