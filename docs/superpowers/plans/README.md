@@ -573,7 +573,10 @@ small enough to land on its own branch without a plan file of its own.
 
 - ✅ **Pull to refresh.** `Screen` takes `refreshable`, the Transactions list is a `SyncScrollView`,
   and `useSyncRefresh` runs the scheduler's `syncNow`. The spinner follows the pull; a pull that
-  could not sync says so in a toast.
+  could not sync says so in a toast. Found on a device afterwards: the top inset has to sit outside
+  the scroll view (inside it, iOS drew the spinner under the status bar); Transactions scrolls as a
+  whole with its period, search and chips pinned, so a pull anywhere syncs; and a pull counts only
+  when the drag starts at the top, because a fast fling back up bounced past the threshold.
 - ✅ **No swipe-back under the tabs.** The cause was `replace` swapping only the top of the root
   stack: unlocking over a pushed screen left a second copy of the tabs. `enterTabs` and `startOver`
   (`src/navigation/history.ts`) are tested against the real router, and `(tabs)` and `lock` have
