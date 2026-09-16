@@ -1,5 +1,11 @@
 import { type ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  type ScrollViewProps,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeProvider';
 import { ScrollFade } from './ScrollFade';
@@ -29,6 +35,9 @@ export interface ScreenProps {
    * sync with yet.
    */
   refreshable?: boolean;
+  /** Children of the scrolling content that stay pinned once they reach the top. */
+  stickyHeaderIndices?: number[];
+  keyboardDismissMode?: ScrollViewProps['keyboardDismissMode'];
 }
 
 /** Screen frame: theme background, safe-area insets and the §6 horizontal padding. */
@@ -39,6 +48,8 @@ export function Screen({
   underTabBar = false,
   sheet = false,
   refreshable = false,
+  stickyHeaderIndices,
+  keyboardDismissMode,
 }: ScreenProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -80,6 +91,8 @@ export function Screen({
              * entry — type the amount, tap a category, nothing happens, tap it again.
              */
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={keyboardDismissMode}
+            stickyHeaderIndices={stickyHeaderIndices}
             contentContainerStyle={{
               paddingHorizontal: padding.paddingHorizontal,
               paddingBottom: 24 + tabBarSpace + footerHeight,

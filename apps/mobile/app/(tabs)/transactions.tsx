@@ -24,7 +24,6 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionDivider } from '../../src/components/SectionDivider';
 import { SkeletonList } from '../../src/components/Skeleton';
-import { SyncScrollView } from '../../src/components/SyncScrollView';
 import { TextField } from '../../src/components/TextField';
 import { useToast } from '../../src/components/Toast';
 import { useDelayed } from '../../src/components/useDelayed';
@@ -233,111 +232,127 @@ export default function TransactionsTab() {
   };
 
   return (
-    <Screen scroll={false} underTabBar>
-      <PeriodHeader />
-      <TextField
-        label={t('transactions.searchPlaceholder')}
-        placeholder={t('transactions.searchPlaceholder')}
-        value={filters.query}
-        onChangeText={(query) => set({ query })}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        // A horizontal ScrollView in a flex column would otherwise stretch and clip its chips,
-        // and the negative margin lets them scroll edge to edge under the screen padding.
-        style={{ flexGrow: 0, flexShrink: 0, marginHorizontal: -theme.layout.screenPaddingX }}
-        contentContainerStyle={{
-          gap: 6,
-          paddingHorizontal: theme.layout.screenPaddingX,
-          paddingVertical: 2,
-        }}
-      >
-        <Chip
-          label={t('transactions.onlyExpenses')}
-          icon="arrowUR"
-          active={filters.direction === 'expense'}
-          onPress={() => set({ direction: filters.direction === 'expense' ? 'all' : 'expense' })}
-        />
-        <Chip
-          label={t('transactions.onlyIncome')}
-          icon="arrowDL"
-          active={filters.direction === 'income'}
-          onPress={() => set({ direction: filters.direction === 'income' ? 'all' : 'income' })}
-        />
-        <Chip
-          label={t('transactions.onlyTransfers')}
-          icon="swap"
-          active={filters.direction === 'transfer'}
-          onPress={() => set({ direction: filters.direction === 'transfer' ? 'all' : 'transfer' })}
-        />
-        <Chip
-          // One tag is named, several are counted: a chip that always reads "Tag" cannot say which
-          // cycle total the line below it belongs to.
-          label={
-            filters.tagIds.length === 1
-              ? (tags.find((tag) => tag.id === filters.tagIds[0])?.name ?? t('transactions.tags'))
-              : filters.tagIds.length > 1
-                ? t('transactions.tagsCount', { count: filters.tagIds.length })
-                : t('transactions.tags')
-          }
-          icon="tag"
-          active={filters.tagIds.length > 0}
-          chevron
-          onPress={() => setTagSheetOpen(true)}
-        />
-        <Chip
-          label={
-            filters.accountId === null
-              ? t('transactions.account')
-              : (accounts.find((row) => row.id === filters.accountId)?.name ??
-                t('transactions.account'))
-          }
-          icon="wallet"
-          active={filters.accountId !== null}
-          chevron
-          onPress={() => setAccountSheetOpen(true)}
-        />
-        <Chip
-          label={t('transactions.onlyExcluded')}
-          icon="archive"
-          active={filters.onlyExcluded}
-          onPress={() => set({ onlyExcluded: !filters.onlyExcluded })}
-        />
-      </ScrollView>
+    <>
+      {/*
+        The whole screen scrolls, so a pull anywhere on it syncs (§8.5) — with the list as its own
+        scroll view under a fixed header, only a pull on the list did. The search and the chips stay
+        sticky (§6.2): child 1 is pinned, the period header above it scrolls away.
+      */}
+      <Screen underTabBar refreshable stickyHeaderIndices={[1]} keyboardDismissMode="on-drag">
+        <PeriodHeader />
+        <View
+          style={{
+            backgroundColor: theme.palette.bg,
+            // Edge to edge, so the rows scrolling under it are covered in the screen padding too.
+            marginHorizontal: -theme.layout.screenPaddingX,
+            paddingHorizontal: theme.layout.screenPaddingX,
+            paddingBottom: 6,
+            gap: theme.layout.cardGap,
+          }}
+        >
+          <TextField
+            label={t('transactions.searchPlaceholder')}
+            placeholder={t('transactions.searchPlaceholder')}
+            value={filters.query}
+            onChangeText={(query) => set({ query })}
+          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            // A horizontal ScrollView in a flex column would otherwise stretch and clip its chips,
+            // and the negative margin lets them scroll edge to edge under the screen padding.
+            style={{ flexGrow: 0, flexShrink: 0, marginHorizontal: -theme.layout.screenPaddingX }}
+            contentContainerStyle={{
+              gap: 6,
+              paddingHorizontal: theme.layout.screenPaddingX,
+              paddingVertical: 2,
+            }}
+          >
+            <Chip
+              label={t('transactions.onlyExpenses')}
+              icon="arrowUR"
+              active={filters.direction === 'expense'}
+              onPress={() =>
+                set({ direction: filters.direction === 'expense' ? 'all' : 'expense' })
+              }
+            />
+            <Chip
+              label={t('transactions.onlyIncome')}
+              icon="arrowDL"
+              active={filters.direction === 'income'}
+              onPress={() => set({ direction: filters.direction === 'income' ? 'all' : 'income' })}
+            />
+            <Chip
+              label={t('transactions.onlyTransfers')}
+              icon="swap"
+              active={filters.direction === 'transfer'}
+              onPress={() =>
+                set({ direction: filters.direction === 'transfer' ? 'all' : 'transfer' })
+              }
+            />
+            <Chip
+              // One tag is named, several are counted: a chip that always reads "Tag" cannot say which
+              // cycle total the line below it belongs to.
+              label={
+                filters.tagIds.length === 1
+                  ? (tags.find((tag) => tag.id === filters.tagIds[0])?.name ??
+                    t('transactions.tags'))
+                  : filters.tagIds.length > 1
+                    ? t('transactions.tagsCount', { count: filters.tagIds.length })
+                    : t('transactions.tags')
+              }
+              icon="tag"
+              active={filters.tagIds.length > 0}
+              chevron
+              onPress={() => setTagSheetOpen(true)}
+            />
+            <Chip
+              label={
+                filters.accountId === null
+                  ? t('transactions.account')
+                  : (accounts.find((row) => row.id === filters.accountId)?.name ??
+                    t('transactions.account'))
+              }
+              icon="wallet"
+              active={filters.accountId !== null}
+              chevron
+              onPress={() => setAccountSheetOpen(true)}
+            />
+            <Chip
+              label={t('transactions.onlyExcluded')}
+              icon="archive"
+              active={filters.onlyExcluded}
+              onPress={() => set({ onlyExcluded: !filters.onlyExcluded })}
+            />
+          </ScrollView>
 
-      {hiddenTransfers === 0 ? null : (
-        // Without this the chip silently eats them and the list looks like it lost the rows.
-        <Animated.View entering={appearing} exiting={leaving}>
-          <Text size="footnote" color="textMuted" style={{ paddingTop: 6 }}>
-            {t('transactions.transfersHidden', { count: hiddenTransfers })}
-          </Text>
-        </Animated.View>
-      )}
+          {hiddenTransfers === 0 ? null : (
+            // Without this the chip silently eats them and the list looks like it lost the rows.
+            <Animated.View entering={appearing} exiting={leaving}>
+              <Text size="footnote" color="textMuted" style={{ paddingTop: 6 }}>
+                {t('transactions.transfersHidden', { count: hiddenTransfers })}
+              </Text>
+            </Animated.View>
+          )}
 
-      {!active ? null : (
-        <Animated.View entering={appearing} exiting={leaving}>
-          <Text size="footnote" color="textMuted" style={{ paddingTop: 6 }}>
-            {t(
-              filterTotals.income > 0
-                ? 'transactions.filteredTotalMixed'
-                : 'transactions.filteredTotal',
-              {
-                count: filterTotals.count,
-                spent: formatMoney(filterTotals.expense, currency, locale),
-                income: formatMoney(filterTotals.income, currency, locale),
-              },
-            )}
-          </Text>
-        </Animated.View>
-      )}
+          {!active ? null : (
+            <Animated.View entering={appearing} exiting={leaving}>
+              <Text size="footnote" color="textMuted" style={{ paddingTop: 6 }}>
+                {t(
+                  filterTotals.income > 0
+                    ? 'transactions.filteredTotalMixed'
+                    : 'transactions.filteredTotal',
+                  {
+                    count: filterTotals.count,
+                    spent: formatMoney(filterTotals.expense, currency, locale),
+                    income: formatMoney(filterTotals.income, currency, locale),
+                  },
+                )}
+              </Text>
+            </Animated.View>
+          )}
+        </View>
 
-      {/* Its own list rather than `Screen`'s, so the pull to sync is wired here (§8.5). */}
-      <SyncScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ gap: 10, paddingBottom: 24 }}
-        keyboardDismissMode="on-drag"
-      >
         {!loaded ? (
           // Nothing at all until the query has been slow enough to be worth mentioning: on a warm
           // database it answers in a frame, and a skeleton that flashes reads as a glitch.
@@ -390,7 +405,7 @@ export default function TransactionsTab() {
             {groups.map(dayCard)}
           </>
         )}
-      </SyncScrollView>
+      </Screen>
 
       <AccountFilterSheet
         visible={accountSheetOpen}
@@ -414,6 +429,6 @@ export default function TransactionsTab() {
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
       />
-    </Screen>
+    </>
   );
 }

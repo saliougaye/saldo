@@ -98,6 +98,19 @@ describe('Screen', () => {
     expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingTop).toBeUndefined();
   });
 
+  // Transactions scrolls as a whole, so a pull anywhere syncs, and keeps its search pinned.
+  it('pins the children it is told to', async () => {
+    await render(
+      <Host>
+        <Screen refreshable stickyHeaderIndices={[1]}>
+          <RNText>header</RNText>
+          <RNText>search</RNText>
+        </Screen>
+      </Host>,
+    );
+    expect(screen.getByTestId('screen-scroll').props.stickyHeaderIndices).toEqual([1]);
+  });
+
   it('offers no pull on any other screen: a sheet already closes on that gesture', async () => {
     await render(
       <Host>
