@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text as RNText, StyleSheet } from 'react-native';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../theme/ThemeProvider';
@@ -27,6 +27,10 @@ function Host({ children }: { children: React.ReactNode }) {
     </SafeAreaProvider>
   );
 }
+
+beforeEach(() => {
+  mockOnRefresh.mockClear();
+});
 
 describe('Screen', () => {
   /**
@@ -80,7 +84,29 @@ describe('Screen', () => {
       </Host>,
     );
     const control = screen.getByTestId('screen-scroll').props.refreshControl;
-    expect(control.props.onRefresh).toBe(mockOnRefresh);
+    control.props.onRefresh();
+    expect(mockOnRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  // A fast fling back up a long list bounces past the top and fired the refresh on its own.
+  it('ignores a refresh reached by momentum rather than by a pull from the top', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const scroll = screen.getByTestId('screen-scroll');
+    await fireEvent(scroll, 'scrollBeginDrag', {
+      nativeEvent: { contentOffset: { x: 0, y: 600 } },
+    });
+    screen.getByTestId('screen-scroll').props.refreshControl.props.onRefresh();
+    expect(mockOnRefresh).not.toHaveBeenCalled();
+
+    await fireEvent(scroll, 'scrollBeginDrag', { nativeEvent: { contentOffset: { x: 0, y: 0 } } });
+    screen.getByTestId('screen-scroll').props.refreshControl.props.onRefresh();
+    expect(mockOnRefresh).toHaveBeenCalledTimes(1);
   });
 
   // A spinner is drawn at the top of the scroll view's frame; with the inset inside the content it
