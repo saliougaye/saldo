@@ -701,7 +701,11 @@ so concurrent pushes stay correct without application locks.
 ### 8.5 Scheduler (mobile)
 
 - Triggers: app start (after auth), app foreground, 2s debounce after local writes, every 60s while in foreground,
-  pull-to-refresh on the Server screen, and "Sincronizza ora". Never run concurrently (single-flight promise).
+  pull-to-refresh, and "Sincronizza ora". Never run concurrently (single-flight promise).
+- Pull-to-refresh is offered on the tabs, the Server screen and the other screens that show synced data — never on a
+  form, whose sheet already closes on a downward swipe, and never while signed out. The spinner follows the pull, not
+  the scheduler's own cycles, and a pull that could not sync says so in a toast (could not sync, session expired, or
+  the schema mismatch); one that worked says nothing.
 - Cycle: push all pending (batches) → pull until `hasMore = false` → run recurrence materialiser → upload attachment
   blobs queue.
 - Backoff on network/5xx: 5s, 15s, 60s, 5min cap. On 401: try refresh once, else go to "Sessione scaduta" state

@@ -141,7 +141,7 @@ export default function CategoryDetail() {
   const colour = theme.categoryColor(category.colorIndex);
 
   return (
-    <Screen>
+    <Screen refreshable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <BackButton />
         <IconBox name={category.icon as IconName} colour={colour} />

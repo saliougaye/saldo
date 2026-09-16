@@ -309,6 +309,17 @@ describe('Segmented', () => {
   it('is big enough to hit', async () => {
     expect(touchTarget(await showSegmented()).height).toBeGreaterThanOrEqual(MIN);
   });
+
+  // "Current account" needs 77% of the footnote size in a four-way segment; wrapping made the
+  // selected pill taller than the rest and left the text flush left.
+  it('keeps a long label on one centred line, shrinking before it truncates', async () => {
+    await showSegmented();
+    const label = screen.getByText('Expense');
+    expect(label.props.numberOfLines).toBe(1);
+    expect(label.props.adjustsFontSizeToFit).toBe(true);
+    expect(label.props.minimumFontScale).toBe(0.8);
+    expect(StyleSheet.flatten(label.props.style).textAlign).toBe('center');
+  });
 });
 
 describe('TabBar', () => {

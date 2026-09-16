@@ -17,6 +17,7 @@ import { db } from '../../src/db/client';
 import { createClock } from '../../src/db/clock';
 import { useDatabase } from '../../src/db/DatabaseProvider';
 import { applyRestore } from '../../src/io/restoreService';
+import { startOver } from '../../src/navigation/history';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -125,8 +126,8 @@ export default function RestoreScreen() {
     }
     toast.show(t('io.restored', { count: outcome.restored }));
     // Settings, accounts and categories all changed underneath every screen, so go back through
-    // the boot router rather than leaving stale lists behind.
-    router.replace('/');
+    // the boot router rather than leaving stale lists behind — under it as well as in front of it.
+    startOver(router, '/');
   };
 
   return (

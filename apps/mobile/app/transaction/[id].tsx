@@ -106,7 +106,7 @@ export default function TransactionDetail() {
       : () => router.push({ pathname: '/account/[id]', params: { id: accountId } });
 
   return (
-    <Screen>
+    <Screen refreshable>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <BackButton />
         <Pressable

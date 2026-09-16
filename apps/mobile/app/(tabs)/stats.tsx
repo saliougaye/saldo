@@ -198,7 +198,7 @@ export default function StatsTab() {
   }
 
   return (
-    <Screen underTabBar>
+    <Screen underTabBar refreshable>
       <PeriodHeader />
 
       <Animated.View entering={entering(0)}>

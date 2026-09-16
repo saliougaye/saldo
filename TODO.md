@@ -60,22 +60,6 @@ To decide:
   step 3 and the imported history have to agree.
 - A Saldo JSON backup (§11.1) is a restore, not an import, and may deserve its own path.
 
-## Account type toggle in onboarding step 2
-
-- [ ] Fix the type selector in onboarding step 2, where "Current account" does not fit its segment.
-
-On an iPhone in English the label wraps onto two lines, the text sits left-aligned instead of
-centred, and the selected pill grows taller than the other segments. The screen is
-`apps/mobile/app/(onboarding)/account-details.tsx`, and the control is `Segmented`
-(`apps/mobile/src/components/Segmented.tsx`), so the fix belongs in the component: it should keep a
-long label on one line or centre it, and keep every segment the same height.
-
-Renaming the type to something shorter, such as "Bank", may be the better fix or a second one. The
-label is `accountTypes.checking` in `packages/i18n/src/locales/en.ts` and `it.ts` ("Conto corrente"),
-and it is not only used here: the Accounts tab, the account detail, the account form and
-`AccountTypeSheet` show it too, so a rename changes all of them. The onboarding name placeholder
-(`onboarding.accountNamePlaceholder`) repeats the same words and would follow.
-
 ## Debit card as an account type
 
 - [ ] Add `debit_card` next to `cash`, `checking`, `credit_card`, `savings` and `investment`.
@@ -102,47 +86,3 @@ To decide:
   whether it belongs in the four segments of onboarding step 2, which already do not fit (see the
   item above).
 
-## No swipe-back on the tab screens
-
-- [ ] On the tab screens (Home, Transactions, Stats, Accounts), the iOS edge swipe must not go back.
-
-The tabs are the bottom of the app: there is nothing behind them a user should be able to return to.
-Yet the root `Stack` in `apps/mobile/app/_layout.tsx` does not declare `(tabs)` at all, so it gets the
-default native-stack options, swipe-back included.
-
-Likely cause, not yet confirmed on a device: the ways into the tabs replace a route *inside another
-navigator* — `router.replace('/(tabs)')` from the last onboarding step
-(`app/(onboarding)/categories.tsx`) and from `app/lock.tsx`, and the boot router's `<Redirect>` in
-`app/index.tsx` — which can leave the onboarding stack, the lock screen or `index` underneath the
-tabs in the root stack. A swipe then brings back a screen that should be gone.
-
-Two parts to the fix, and it probably needs both:
-
-- `<Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />` in the root layout, so the
-  gesture is off whatever sits underneath.
-- Leaving onboarding and the lock screen without keeping them in the history (for example dismissing
-  the stack before replacing), so a hardware back on Android does not reach them either — the swipe
-  option only covers iOS.
-
-Check first which screen the swipe actually reveals, from a fresh install through onboarding and from
-a cold start behind the lock.
-
-## Pull to refresh
-
-- [ ] Pulling down on a screen starts a sync and shows the spinner until it comes back.
-
-No screen has a `RefreshControl` today. A sync runs on start and whenever the app becomes active
-(`apps/mobile/src/sync/SyncProvider.tsx`), and nothing lets you ask for one by hand.
-
-What should make it small:
-
-- `useSync()` already hands screens the scheduler, whose `syncNow()` is the call to make, and the
-  sync status, which is what the spinner should follow.
-- The screens read SQLite through `useLiveQuery`, which updates by itself when rows change, so the
-  pull only has to sync. Nothing needs refetching once it is done.
-- Most screens scroll inside `Screen` (`apps/mobile/src/components/Screen.tsx`), so the refresh
-  control belongs there, once. The Transactions tab has its own list (`scroll={false}`) and needs
-  it separately.
-
-To decide: what the pull does with no server reachable or when offline — Saldo keeps working locally,
-so it should say it could not sync rather than fail silently.

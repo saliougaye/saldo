@@ -99,6 +99,7 @@ export default function AccountDetail() {
 
   return (
     <Screen
+      refreshable
       footer={
         <View style={{ gap: 8 }}>
           {archived ? (

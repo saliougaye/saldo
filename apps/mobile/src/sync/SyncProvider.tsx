@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 import { readBytes, storeBytes } from '../attachments/localFiles';
 import { useServer } from '../auth/ServerProvider';
@@ -9,22 +9,10 @@ import { runMaterialiser } from '../db/recurrenceService';
 import { usePeriod } from '../features/period/PeriodProvider';
 import { log } from '../log';
 import { uploadPendingBlobs } from './blobSync';
-import {
-  createScheduler,
-  FOREGROUND_INTERVAL_MS,
-  type Scheduler,
-  type SyncStatus,
-} from './scheduler';
+import { createScheduler, FOREGROUND_INTERVAL_MS, type SyncStatus } from './scheduler';
+import { IDLE, SyncContext, type SyncValue } from './syncContext';
 
-export interface SyncValue {
-  status: SyncStatus;
-  /** Null while the app is local-only: every trigger is then a no-op. */
-  scheduler: Scheduler | null;
-}
-
-const IDLE: SyncStatus = { kind: 'idle', lastSyncAt: null };
-
-const SyncContext = createContext<SyncValue>({ status: IDLE, scheduler: null });
+export { type SyncValue, useSync } from './syncContext';
 
 /**
  * Wires the scheduler to the app's lifecycle (§8.5): a cycle on mount, one on every return to the
@@ -100,10 +88,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     };
   }, [scheduler, user]);
 
-  const value = useMemo<SyncValue>(() => ({ status, scheduler }), [status, scheduler]);
+  const canSync = scheduler !== null && user !== null;
+  const value = useMemo<SyncValue>(
+    () => ({ status, scheduler, canSync }),
+    [status, scheduler, canSync],
+  );
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
-}
-
-export function useSync(): SyncValue {
-  return useContext(SyncContext);
 }

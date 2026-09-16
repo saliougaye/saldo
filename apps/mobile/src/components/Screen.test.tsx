@@ -1,8 +1,15 @@
-import { render, screen } from '@testing-library/react-native';
-import { Text as RNText } from 'react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Text as RNText, StyleSheet } from 'react-native';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { Screen } from './Screen';
+
+const mockOnRefresh = jest.fn();
+
+// The hook needs the server, sync and toast providers; what `Screen` owes it is only the wiring.
+jest.mock('../sync/useSyncRefresh', () => ({
+  useSyncRefresh: () => ({ refreshing: false, onRefresh: mockOnRefresh }),
+}));
 
 /**
  * `useSafeAreaInsets` throws without a provider, and there is none in `jest.setup.js`. These are
@@ -20,6 +27,10 @@ function Host({ children }: { children: React.ReactNode }) {
     </SafeAreaProvider>
   );
 }
+
+beforeEach(() => {
+  mockOnRefresh.mockClear();
+});
 
 describe('Screen', () => {
   /**
@@ -62,5 +73,78 @@ describe('Screen', () => {
       </Host>,
     );
     expect(screen.queryByTestId('screen-scroll-fade', FADE)).toBeNull();
+  });
+
+  it('lets a refreshable screen be pulled to sync', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const control = screen.getByTestId('screen-scroll').props.refreshControl;
+    control.props.onRefresh();
+    expect(mockOnRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  // A fast fling back up a long list bounces past the top and fired the refresh on its own.
+  it('ignores a refresh reached by momentum rather than by a pull from the top', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const scroll = screen.getByTestId('screen-scroll');
+    await fireEvent(scroll, 'scrollBeginDrag', {
+      nativeEvent: { contentOffset: { x: 0, y: 600 } },
+    });
+    screen.getByTestId('screen-scroll').props.refreshControl.props.onRefresh();
+    expect(mockOnRefresh).not.toHaveBeenCalled();
+
+    await fireEvent(scroll, 'scrollBeginDrag', { nativeEvent: { contentOffset: { x: 0, y: 0 } } });
+    screen.getByTestId('screen-scroll').props.refreshControl.props.onRefresh();
+    expect(mockOnRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  // A spinner is drawn at the top of the scroll view's frame; with the inset inside the content it
+  // spun under the status bar, and a pull looked like it did nothing.
+  it('keeps the scroll view below the status bar, where a pull can be seen', async () => {
+    await render(
+      <Host>
+        <Screen refreshable>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    const scroll = screen.getByTestId('screen-scroll');
+    expect(StyleSheet.flatten(scroll.props.style).marginTop).toBe(METRICS.insets.top + 8);
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingTop).toBeUndefined();
+  });
+
+  // Transactions scrolls as a whole, so a pull anywhere syncs, and keeps its search pinned.
+  it('pins the children it is told to', async () => {
+    await render(
+      <Host>
+        <Screen refreshable stickyHeaderIndices={[1]}>
+          <RNText>header</RNText>
+          <RNText>search</RNText>
+        </Screen>
+      </Host>,
+    );
+    expect(screen.getByTestId('screen-scroll').props.stickyHeaderIndices).toEqual([1]);
+  });
+
+  it('offers no pull on any other screen: a sheet already closes on that gesture', async () => {
+    await render(
+      <Host>
+        <Screen>
+          <RNText>body</RNText>
+        </Screen>
+      </Host>,
+    );
+    expect(screen.getByTestId('screen-scroll').props.refreshControl).toBeUndefined();
   });
 });

@@ -59,7 +59,7 @@ export default function AccountsTab() {
   );
 
   return (
-    <Screen underTabBar>
+    <Screen underTabBar refreshable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
           {t('accounts.title')}

@@ -72,7 +72,7 @@ export const it = {
     accountTitle: 'Il tuo primo conto',
     accountBody: 'Puoi aggiungerne altri quando vuoi.',
     accountName: 'Nome',
-    accountNamePlaceholder: 'Conto corrente',
+    accountNamePlaceholder: 'Conto',
     accountType: 'Tipo',
     balanceTitle: 'Quanto hai adesso?',
     balanceBody: 'Il saldo attuale del conto. Puoi correggerlo in qualsiasi momento.',
@@ -85,7 +85,7 @@ export const it = {
   },
   accountTypes: {
     cash: 'Contanti',
-    checking: 'Conto corrente',
+    checking: 'Conto',
     credit_card: 'Carta di credito',
     savings: 'Risparmi',
     investment: 'Investimenti',
@@ -390,6 +390,8 @@ export const it = {
     hoursAgo: '{{count}} h fa',
     syncNow: 'Sincronizza ora',
     syncing: 'Sincronizzo…',
+    pullFailed:
+      'Sincronizzazione non riuscita. Tutto resta su questo telefono finché non ci riesce.',
     signIn: 'Accedi con passkey',
     createAccount: 'Crea account',
     signOut: 'Esci',

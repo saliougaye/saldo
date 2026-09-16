@@ -7,9 +7,11 @@
  * pattern — which expects the package name straight after `node_modules/` — leaves
  * `@react-native/jest-preset/jest/setup.js` untransformed and Jest then fails on its ESM syntax.
  * `@saldo/*` needs no entry: pnpm links workspace packages to `packages/*`, outside node_modules.
+ * `standard-navigation` is expo-router's own ESM dependency: without it `expo-router` cannot be
+ * imported for real, only mocked, and `renderRouter` is out of reach.
  */
 const RN_PACKAGES =
-  '(?:@react-native|react-native|expo|@expo|@gorhom|react-navigation|@react-navigation)';
+  '(?:@react-native|react-native|expo|@expo|@gorhom|react-navigation|@react-navigation|standard-navigation)';
 
 const transformIgnorePatterns = [
   `/node_modules/\\.pnpm/(?!${RN_PACKAGES}[^/]*/)`,

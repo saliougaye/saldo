@@ -11,6 +11,7 @@ import { BackButton } from '../../src/components/ScreenHeader';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { PICKABLE_SEED_CATEGORIES, seedFromOnboarding } from '../../src/db/seed';
 import { useOnboarding } from '../../src/features/onboarding/state';
+import { enterTabs } from '../../src/navigation/history';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -54,7 +55,7 @@ export default function CategoriesStep() {
       translate: (key) => t(`seed.${key}`),
       completedAt: new Date().toISOString(),
     });
-    router.replace('/(tabs)');
+    enterTabs(router);
   };
 
   return (

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { PrimaryButton } from '../src/components/Button';
 import { Screen } from '../src/components/Screen';
+import { enterTabs } from '../src/navigation/history';
 import { Icon } from '../src/theme/Icon';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
@@ -23,7 +24,7 @@ export default function LockScreen() {
       // Falling back to the passcode keeps the app reachable when biometrics are unavailable.
       disableDeviceFallback: false,
     });
-    if (result.success) router.replace('/(tabs)');
+    if (result.success) enterTabs(router);
     else setFailed(true);
   }, [router, t]);
 

@@ -10,6 +10,7 @@ import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { ConnectForm } from '../../src/features/server/ConnectForm';
+import { startOver } from '../../src/navigation/history';
 import { ApiClientError } from '../../src/net/apiClient';
 import { useSync } from '../../src/sync/SyncProvider';
 import { useSyncCounts } from '../../src/sync/useSyncCounts';
@@ -82,7 +83,7 @@ export default function ServerScreen() {
   const connected = serverUrl !== null && user !== null;
 
   return (
-    <Screen>
+    <Screen refreshable>
       <ScreenHeader title={t('sync.title')} />
 
       <Card>
@@ -166,8 +167,8 @@ export default function ServerScreen() {
           void run(async () => {
             await disconnect();
             // Signing out is not "go local-only" any more: the data stays, the app returns to the
-            // sign-in that §6.29 requires.
-            router.replace('/');
+            // sign-in that §6.29 requires — with nothing of the signed-in app left underneath it.
+            startOver(router, '/');
           });
         }}
         onCancel={() => setSignOutOpen(false)}
