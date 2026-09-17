@@ -64,9 +64,29 @@ export const syncChangeSchema = syncChangeEnvelopeSchema.superRefine((change, ct
 
 export type SyncChange = z.infer<typeof syncChangeSchema>;
 
+/**
+ * §8.6. Which generation of an account's data a device holds. It starts at 0 and goes up by one
+ * every time the account's data is deleted, so a device still holding the previous generation can
+ * be told so instead of pushing deleted rows back.
+ */
+export const dataEpochSchema = z.number().int().nonnegative();
+
+/** `GET /api/data` and `DELETE /api/data`. */
+export const dataEpochResponseSchema = z.object({ epoch: dataEpochSchema });
+
+export type DataEpochResponse = z.infer<typeof dataEpochResponseSchema>;
+
+/** The 409 a push or a pull answers when the device holds an earlier generation (§8.6). */
+export const DATA_RESET_CODE = 'data_reset';
+
 export const pushRequestSchema = z.object({
   schemaVersion: z.number().int().positive(),
   deviceId: z.string().min(1).max(128),
+  /**
+   * The generation these changes were written against. Optional only so a request that predates
+   * §8.6 still parses; the app always sends it.
+   */
+  epoch: dataEpochSchema.optional(),
   changes: z.array(syncChangeEnvelopeSchema).max(MAX_CHANGES_PER_PUSH),
 });
 

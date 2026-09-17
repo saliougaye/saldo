@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   compareSchemaVersion,
+  DATA_RESET_CODE,
+  dataEpochResponseSchema,
   MAX_CHANGES_PER_PUSH,
   pullResponseSchema,
   pushRequestSchema,
@@ -122,5 +124,20 @@ describe('compareSchemaVersion', () => {
     expect(compareSchemaVersion(SYNC_SCHEMA_VERSION)).toBe('ok');
     expect(compareSchemaVersion(SYNC_SCHEMA_VERSION - 1)).toBe('peer-too-old');
     expect(compareSchemaVersion(SYNC_SCHEMA_VERSION + 1)).toBe('peer-too-new');
+  });
+});
+
+describe('data epoch', () => {
+  it('lets a push name the generation it was written against, and accepts one that does not', () => {
+    const base = { schemaVersion: SYNC_SCHEMA_VERSION, deviceId: 'device-a', changes: [] };
+    expect(pushRequestSchema.parse({ ...base, epoch: 3 }).epoch).toBe(3);
+    expect(pushRequestSchema.parse(base).epoch).toBeUndefined();
+    expect(pushRequestSchema.safeParse({ ...base, epoch: -1 }).success).toBe(false);
+  });
+
+  it('reads the epoch the server answers with', () => {
+    expect(dataEpochResponseSchema.parse({ epoch: 0 })).toEqual({ epoch: 0 });
+    expect(dataEpochResponseSchema.safeParse({ epoch: 1.5 }).success).toBe(false);
+    expect(DATA_RESET_CODE).toBe('data_reset');
   });
 });
