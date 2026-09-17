@@ -131,7 +131,7 @@ export function seedFromImport(db, repos, input: ImportSeedInput): boolean {
 
 - [x] Move pick/map/preview from `profile/import.tsx` into `features/import/ImportWizard.tsx` with props
       `{ currency, context: () => Omit<ImportContext, 'currency'>, confirmLabel: (plan) => string,
-      onConfirm: (plan) => void, busy?: boolean }`. The profile screen keeps `done`, `applyImport` and the header.
+      onConfirm: (plan) => void, confirming?: boolean }`. The profile screen keeps `done`, `applyImport` and the header.
 - [x] Move the currency row from `balance.tsx` into `components/CurrencyChips.tsx` (`value`, `onChange`).
 - [x] `pnpm typecheck` and the mobile tests pass (no behaviour change). Commit
       `refactor(mobile): the import wizard and currency chips are components`.
