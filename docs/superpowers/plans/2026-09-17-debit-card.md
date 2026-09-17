@@ -62,7 +62,7 @@ six types.
 
 **Files:** `packages/core/src/entities.ts`, `entities.test.ts`, `accounts.test.ts`
 
-- [ ] **Step 1: failing tests.** In `entities.test.ts` import `accountTypeSchema` and add:
+- [x] **Step 1: failing tests.** In `entities.test.ts` import `accountTypeSchema` and add:
 
 ```ts
 describe('accountTypeSchema', () => {
@@ -87,30 +87,30 @@ In `accounts.test.ts`, `describe('transferOverdrawsSource')`:
   });
 ```
 
-- [ ] **Step 2:** `pnpm --filter @saldo/core test` — both fail (enum mismatch; `'debit_card'` is a type error / parse).
-- [ ] **Step 3:** add `'debit_card'` after `'checking'` in `accountTypeSchema`.
-- [ ] **Step 4:** tests pass. Commit `feat(core): a debit card account type`.
+- [x] **Step 2:** `pnpm --filter @saldo/core test` — both fail (enum mismatch; `'debit_card'` is a type error / parse).
+- [x] **Step 3:** add `'debit_card'` after `'checking'` in `accountTypeSchema`.
+- [x] **Step 4:** tests pass. Commit `feat(core): a debit card account type`.
 
 ### Task 2: labels
 
-- [ ] `accountTypes.debit_card`: `'Carta di debito'` / `'Debit card'`. The parity test passes.
+- [x] `accountTypes.debit_card`: `'Carta di debito'` / `'Debit card'`. The parity test passes.
       Commit `feat(i18n): the debit card account type`.
 
 ### Task 3: the mobile app follows the enum
 
-- [ ] `db/schema.ts` `.$type<AccountType>()`, `SeedInput.account.type: AccountType`, `OnboardingDraft.accountType:
+- [x] `db/schema.ts` `.$type<AccountType>()`, `SeedInput.account.type: AccountType`, `OnboardingDraft.accountType:
       AccountType` (all `import type { AccountType } from '@saldo/core'`).
-- [ ] `AccountTypeSheet.tsx`: `export const ACCOUNT_TYPES = accountTypeSchema.options;` (comment "Five options" →
+- [x] `AccountTypeSheet.tsx`: `export const ACCOUNT_TYPES = accountTypeSchema.options;` (comment "Five options" →
       no count).
-- [ ] `scripts/measure-performance.ts`: add `'debit_card'` to its list.
-- [ ] `pnpm typecheck`. Commit `feat(mobile): the account sheet offers a debit card`.
+- [x] `scripts/measure-performance.ts`: add `'debit_card'` to its list.
+- [x] `pnpm typecheck`. Commit `feat(mobile): the account sheet offers a debit card`.
 
 ### Task 4: onboarding step 2 as a tile grid
 
-- [ ] **Step 1: failing test** `src/features/accounts/AccountTypeGrid.test.tsx` (same `Host` as `AccountForm.test.tsx`):
+- [x] **Step 1: failing test** `src/features/accounts/AccountTypeGrid.test.tsx` (same `Host` as `AccountForm.test.tsx`):
       six radios labelled with the English type names, the chosen one `checked`, pressing "Debit card" calls
       `onChange('debit_card')`, and each label may take two lines.
-- [ ] **Step 2:** `accountTypeIcon.ts`:
+- [x] **Step 2:** `accountTypeIcon.ts`:
 
 ```ts
 export const ACCOUNT_TYPE_ICONS = {
@@ -119,15 +119,15 @@ export const ACCOUNT_TYPE_ICONS = {
 } as const satisfies Record<AccountType, IconName>;
 ```
 
-- [ ] **Step 3:** `AccountTypeGrid.tsx`: `radiogroup` of `ACCOUNT_TYPES`, tiles `width: '31%'`, `minHeight: 70`,
-      `padding: 10`, `gap: 9`, `borderRadius: theme.radii.input`, border `borderStrong`/`border`, selected background
+- [x] **Step 3:** `AccountTypeGrid.tsx`: `radiogroup` of `ACCOUNT_TYPES`, tiles `width: '31%'`, `minHeight: 70`,
+      `padding: 10`, `gap: 9`, `borderRadius: theme.radii.input`, `raised` tile with a `border` edge; selected background
       `accent` with `onAccent` icon and text; `Text size="caption" numberOfLines={2}`.
-- [ ] **Step 4:** `account-details.tsx` renders `AccountTypeGrid` instead of `Segmented`; `categories.tsx` passes
+- [x] **Step 4:** `account-details.tsx` renders `AccountTypeGrid` instead of `Segmented`; `categories.tsx` passes
       `icon: ACCOUNT_TYPE_ICONS[draft.accountType]`.
-- [ ] **Step 5:** tests pass. Commit `feat(mobile): onboarding offers every account type as a tile`.
+- [x] **Step 5:** tests pass. Commit `feat(mobile): onboarding offers every account type as a tile`.
 
 ### Task 5: docs
 
-- [ ] Spec §4 `type` row and `includeInSpendable` defaults; §6.29 step 2 names the tile grid.
-- [ ] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: debit card account type`.
+- [x] Spec §4 `type` row and `includeInSpendable` defaults; §6.29 step 2 names the tile grid.
+- [x] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: debit card account type`.
