@@ -60,6 +60,14 @@ against a generation of the account that no longer exists.
   alone would be undone by the next sign-in.
 - The developer "Reset this phone" row stays as it is (it signs out and wipes `kv`).
 
+**Found while executing:**
+
+- A third `ApiClient` fake, in `src/sync/blobSync.test.ts`, also needed `delete` (Task 6), and the `Scheduler` fake in
+  `src/sync/useSyncRefresh.test.tsx` needed `exclusive` (Task 8).
+- `app/profile/delete-data.tsx` is a new route, so `router.push('/profile/delete-data')` fails `tsc` until Expo
+  regenerates `.expo/types/router.d.ts` (it is git-ignored). Starting `expo start` once regenerates it.
+- Passing a Drizzle transaction where `ServerDatabase` is expected typechecks as is; no fallback was needed.
+
 ---
 
 ## File map
@@ -93,7 +101,7 @@ against a generation of the account that no longer exists.
 - Modify: `packages/core/src/sync/protocol.ts`
 - Test: `packages/core/src/sync/protocol.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add `dataEpochResponseSchema` and `DATA_RESET_CODE` to the import list at the top of `protocol.test.ts`, then append:
 
@@ -114,12 +122,12 @@ describe('data epoch', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- src/sync/protocol.test.ts`
 Expected: FAIL — `dataEpochResponseSchema` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `protocol.ts`, directly above `pushRequestSchema`, add:
 
@@ -155,12 +163,12 @@ export const pushRequestSchema = z.object({
 });
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- src/sync/protocol.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/sync/protocol.ts packages/core/src/sync/protocol.test.ts
@@ -177,7 +185,7 @@ git commit -m "feat(core): a data epoch in the sync protocol"
 - Create: `apps/web/drizzle/0003_*.sql` (generated) and its `meta/` snapshot
 - Test: `apps/web/src/server/db/schema.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `schema.test.ts`, import `dataEpochs` next to `invites, syncRows, user`, and add inside `describe('schema', …)`:
 
@@ -195,12 +203,12 @@ In `schema.test.ts`, import `dataEpochs` next to `invites, syncRows, user`, and 
   });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter web test -- src/server/db/schema.test.ts`
 Expected: FAIL — `dataEpochs` is not exported.
 
-- [ ] **Step 3: Add the table**
+- [x] **Step 3: Add the table**
 
 In `schema.ts`, add `integer` to the `drizzle-orm/pg-core` import, and after `deletedBlobs`:
 
@@ -229,19 +237,19 @@ In `harness.ts`, change the truncate statement to:
         sql`truncate table sync_rows, deleted_blobs, data_epochs, invites, passkey, session, account, verification, "user" cascade`,
 ```
 
-- [ ] **Step 4: Generate the migration**
+- [x] **Step 4: Generate the migration**
 
 Run: `pnpm --filter web db:generate`
 Expected: a new `apps/web/drizzle/0003_<random>.sql` containing `CREATE TABLE "data_epochs"` and a foreign key to
 `user` with `ON DELETE cascade`, plus `meta/0003_snapshot.json` and an updated `_journal.json`. Read the SQL; it must
 contain nothing else.
 
-- [ ] **Step 5: Run it and watch it pass**
+- [x] **Step 5: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter web test -- src/server/db/schema.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/server/db/schema.ts apps/web/src/server/db/schema.test.ts apps/web/src/server/test/harness.ts apps/web/drizzle
@@ -256,7 +264,7 @@ git commit -m "feat(web): a data_epochs table for account data generations"
 - Create: `apps/web/src/server/sync/epoch.ts`
 - Test: `apps/web/src/server/sync/epoch.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/web/src/server/sync/epoch.test.ts`:
 
@@ -385,12 +393,12 @@ describe('deleteAccountData', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter web test -- src/server/sync/epoch.test.ts`
 Expected: FAIL — cannot resolve `./epoch`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `apps/web/src/server/sync/epoch.ts`:
 
@@ -487,12 +495,12 @@ If `tsc` rejects passing `tx` where `ServerDatabase` is expected (drizzle's `PgT
 it should not), widen the parameter of `lockEpoch` to
 `Pick<ServerDatabase, 'insert' | 'select'>` and record the change in this plan.
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter web test -- src/server/sync/epoch.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/server/sync/epoch.ts apps/web/src/server/sync/epoch.test.ts
@@ -509,7 +517,7 @@ git commit -m "feat(web): delete an account's data and move its epoch"
 - Modify: `apps/web/app/api/sync/pull/route.ts`
 - Test: `apps/web/app/api/data/route.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/web/app/api/data/route.test.ts`:
 
@@ -641,12 +649,12 @@ describe('sync after a deletion', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter web test -- app/api/data/route.test.ts`
 Expected: FAIL — cannot resolve `./route`.
 
-- [ ] **Step 3: Create the route**
+- [x] **Step 3: Create the route**
 
 Create `apps/web/app/api/data/route.ts`:
 
@@ -696,7 +704,7 @@ export function DELETE(request: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Check the epoch on push**
+- [x] **Step 4: Check the epoch on push**
 
 In `apps/web/app/api/sync/push/route.ts`, add the import:
 
@@ -715,7 +723,7 @@ and replace `const results = await applyPush(getDb(), user.id, body, now);` with
     });
 ```
 
-- [ ] **Step 5: Check the epoch on pull**
+- [x] **Step 5: Check the epoch on pull**
 
 In `apps/web/app/api/sync/pull/route.ts`, add the import:
 
@@ -754,18 +762,18 @@ and, right after the `invalid_query` check, before `const startedAt`:
 
 Also update the `invalid_query` message to `'since, limit and epoch must be non-negative integers'`.
 
-- [ ] **Step 6: Run the route tests**
+- [x] **Step 6: Run the route tests**
 
 Run: `rtk proxy pnpm --filter web test -- app/api`
 Expected: PASS, including the existing `sync/push/route.test.ts` and `attachments.test.ts`.
 
-- [ ] **Step 7: Typecheck the server**
+- [x] **Step 7: Typecheck the server**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors. If `applyPush(tx, …)` is rejected, apply the fallback noted in Task 3 to `applyPush` and
 `nextSeq` too, and record it here.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/web/app/api/data apps/web/app/api/sync/push/route.ts apps/web/app/api/sync/pull/route.ts
@@ -780,7 +788,7 @@ git commit -m "feat(web): DELETE /api/data, and sync refuses a deleted generatio
 - Modify: `apps/mobile/src/db/wipe.ts`
 - Test: `apps/mobile/src/db/wipe.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `wipe.test.ts`, change the imports to:
 
@@ -850,12 +858,12 @@ describe('wipeAccountData', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db/wipe.test.ts`
 Expected: FAIL — `wipeAccountData` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `wipe.ts`, change the imports to:
 
@@ -896,12 +904,12 @@ export function wipeAccountData(db: RepositoryDatabase, epoch: number | null): v
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db/wipe.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/db/wipe.ts apps/mobile/src/db/wipe.test.ts
@@ -914,10 +922,10 @@ git commit -m "feat(mobile): empty the account data and keep the session"
 
 **Files:**
 - Modify: `apps/mobile/src/net/apiClient.ts`
-- Modify: `apps/mobile/src/sync/client.test.ts`, `apps/mobile/src/sync/convergence.test.ts` (fakes only)
+- Modify: `apps/mobile/src/sync/client.test.ts`, `apps/mobile/src/sync/convergence.test.ts`, `apps/mobile/src/sync/blobSync.test.ts` (fakes only)
 - Test: `apps/mobile/src/net/apiClient.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Read `apiClient.test.ts` first and follow its existing fake `fetchImpl` pattern. Add a test that:
 
@@ -944,12 +952,12 @@ Read `apiClient.test.ts` first and follow its existing fake `fetchImpl` pattern.
 
 (Import `z` from `zod` if the file does not already.)
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/net/apiClient.test.ts`
 Expected: FAIL — `client.delete is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In the `ApiClient` interface, after `post`:
 
@@ -968,12 +976,12 @@ In the two fakes, add a member after `post`, so they still satisfy the interface
 - `client.test.ts`, inside `fakeApi`: `delete: async () => { throw new Error('not used by the cycle'); },`
 - `convergence.test.ts`, inside `apiFor`: `delete: async () => { throw new Error('not used by the cycle'); },`
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/net src/sync`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/net apps/mobile/src/sync/client.test.ts apps/mobile/src/sync/convergence.test.ts
@@ -989,7 +997,7 @@ git commit -m "feat(mobile): the api client can send a DELETE"
 - Modify: `apps/mobile/src/sync/SyncProvider.tsx`
 - Test: `apps/mobile/src/sync/client.test.ts`, `apps/mobile/src/sync/convergence.test.ts`
 
-- [ ] **Step 1: Teach the `client.test.ts` fake the epoch**
+- [x] **Step 1: Teach the `client.test.ts` fake the epoch**
 
 Change the imports at the top:
 
@@ -1057,7 +1065,7 @@ function fakeApi(server: FakeServer): ApiClient {
 
 (This replaces the `delete` member added in Task 6.)
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Append inside `describe('runSyncCycle', …)`:
 
@@ -1117,12 +1125,12 @@ Append inside `describe('runSyncCycle', …)`:
 If `repos.tags.list()` filters or orders in a way that hides `tag-new`, select from the `tags` table directly
 (`db.select().from(tags).all()`, importing `tags` from `../db/schema`).
 
-- [ ] **Step 3: Run them and watch them fail**
+- [x] **Step 3: Run them and watch them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/sync/client.test.ts`
 Expected: FAIL — the two new tests (no epoch is sent; the 409 escapes the cycle).
 
-- [ ] **Step 4: Implement in `client.ts`**
+- [x] **Step 4: Implement in `client.ts`**
 
 Change the `@saldo/core` import to add `DATA_RESET_CODE` and `dataEpochResponseSchema`, and add:
 
@@ -1192,7 +1200,7 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
 }
 ```
 
-- [ ] **Step 5: Wire the files in `SyncProvider.tsx`**
+- [x] **Step 5: Wire the files in `SyncProvider.tsx`**
 
 Change `import { readBytes, storeBytes } from '../attachments/localFiles';` to
 `import { deleteAllAttachmentFiles, readBytes, storeBytes } from '../attachments/localFiles';` and add to the object
@@ -1202,12 +1210,12 @@ returned by `deps`, after `syncBlobs`:
         deleteAttachmentFiles: deleteAllAttachmentFiles,
 ```
 
-- [ ] **Step 6: Run the client tests**
+- [x] **Step 6: Run the client tests**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/sync/client.test.ts`
 Expected: PASS, old tests included.
 
-- [ ] **Step 7: Teach the convergence server the epoch, and add the two-device test**
+- [x] **Step 7: Teach the convergence server the epoch, and add the two-device test**
 
 In `convergence.test.ts`, add imports:
 
@@ -1283,12 +1291,12 @@ Append inside `describe('two devices against one server', …)`:
   });
 ```
 
-- [ ] **Step 8: Run all sync tests**
+- [x] **Step 8: Run all sync tests**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/sync`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/mobile/src/sync
@@ -1303,7 +1311,7 @@ git commit -m "feat(mobile): sync sends the data epoch and empties a phone whose
 - Modify: `apps/mobile/src/sync/scheduler.ts`
 - Test: `apps/mobile/src/sync/scheduler.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `scheduler.test.ts`:
 
@@ -1371,12 +1379,12 @@ describe('exclusive', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/sync/scheduler.test.ts`
 Expected: FAIL — `scheduler.exclusive is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In the `Scheduler` interface, after `requestSync()`:
 
@@ -1429,12 +1437,12 @@ and above `const scheduler: Scheduler = {`:
   const noOutcome = (): null => null;
 ```
 
-- [ ] **Step 4: Run them and watch them pass**
+- [x] **Step 4: Run them and watch them pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/sync/scheduler.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/sync/scheduler.ts apps/mobile/src/sync/scheduler.test.ts
@@ -1450,7 +1458,7 @@ git commit -m "feat(mobile): the scheduler can run a task with no cycle beside i
 - Create: `apps/mobile/src/features/deleteData/confirmWord.ts`
 - Test: `apps/mobile/src/features/deleteData/deleteAllData.test.ts`, `apps/mobile/src/features/deleteData/confirmWord.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `confirmWord.test.ts`:
 
@@ -1561,12 +1569,12 @@ describe('deleteAllData', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/deleteData`
 Expected: FAIL — cannot resolve `./confirmWord` and `./deleteAllData`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `confirmWord.ts`:
 
@@ -1621,12 +1629,12 @@ export async function deleteAllData(deps: DeleteAllDataDeps): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Run them and watch them pass**
+- [x] **Step 4: Run them and watch them pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/deleteData`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/deleteData
@@ -1640,7 +1648,7 @@ git commit -m "feat(mobile): delete all data, server first"
 **Files:**
 - Modify: `packages/i18n/src/locales/it.ts`, `packages/i18n/src/locales/en.ts`
 
-- [ ] **Step 1: Add the keys**
+- [x] **Step 1: Add the keys**
 
 In `it.ts`, inside `profile`, after `version`:
 
@@ -1694,12 +1702,12 @@ and after the whole `profile` block:
 
 Use the same key order in both files.
 
-- [ ] **Step 2: Run the parity test**
+- [x] **Step 2: Run the parity test**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/i18n/src/locales
@@ -1716,7 +1724,7 @@ git commit -m "feat(i18n): strings for deleting all data"
 - Modify: `apps/mobile/app/profile.tsx`
 - Modify: `apps/mobile/app/(tabs)/_layout.tsx`
 
-- [ ] **Step 1: The confirmation screen**
+- [x] **Step 1: The confirmation screen**
 
 Create `apps/mobile/app/profile/delete-data.tsx`:
 
@@ -1805,7 +1813,7 @@ export default function DeleteDataScreen() {
 }
 ```
 
-- [ ] **Step 2: The Profile row**
+- [x] **Step 2: The Profile row**
 
 In `apps/mobile/app/profile.tsx`, directly above `{__DEV__ ? (`:
 
@@ -1822,7 +1830,7 @@ In `apps/mobile/app/profile.tsx`, directly above `{__DEV__ ? (`:
       </Card>
 ```
 
-- [ ] **Step 3: The hook that leaves the tabs**
+- [x] **Step 3: The hook that leaves the tabs**
 
 Create `apps/mobile/src/features/deleteData/useLeaveWhenDataGone.ts`:
 
@@ -1873,12 +1881,12 @@ import { useLeaveWhenDataGone } from '../../src/features/deleteData/useLeaveWhen
   useLeaveWhenDataGone();
 ```
 
-- [ ] **Step 4: Gates**
+- [x] **Step 4: Gates**
 
 Run: `rtk proxy pnpm typecheck` and `rtk proxy pnpm --filter mobile test`
 Expected: no type errors; all mobile tests PASS (the a11y and Screen tests included).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/app/profile/delete-data.tsx apps/mobile/app/profile.tsx "apps/mobile/app/(tabs)/_layout.tsx" apps/mobile/src/features/deleteData/useLeaveWhenDataGone.ts
@@ -1894,7 +1902,7 @@ git commit -m "feat(mobile): Delete all data in Profile"
 - Modify: `TODO.md`
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Spec**
+- [x] **Step 1: Spec**
 
 1. §6.8 row: after "Blocco con Face ID/biometria toggle;" insert
    `**Elimina tutti i dati** (NEW → \`profile/delete-data\`, §8.6);`.
@@ -1928,7 +1936,7 @@ passkey account stays, and so does the session.
 
 4. §14 endpoints table: add the row `| GET/DELETE | \`/api/data\` | bearer |` after the sync row.
 
-- [ ] **Step 2: TODO and roadmap**
+- [x] **Step 2: TODO and roadmap**
 
 Delete the whole `## Delete all data from Settings` section from `TODO.md`. In `docs/superpowers/plans/README.md`,
 above `## Future (not POC)`, add:
@@ -1943,7 +1951,7 @@ above `## Future (not POC)`, add:
   makes other phones empty themselves on their next sync instead of pushing deleted data back.
 ```
 
-- [ ] **Step 3: Run every gate, and read the output**
+- [x] **Step 3: Run every gate, and read the output**
 
 ```bash
 rtk proxy pnpm lint
@@ -1954,14 +1962,15 @@ rtk proxy pnpm test
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no type errors; every package green. Fix anything
 found before going on.
 
-- [ ] **Step 4: Check on the simulator** (skip only if none is available, and say so in the report)
+- [ ] **Step 4: Check on the simulator** (skip only if none is available, and say so in the report) — *not done
+  during execution: no simulator was booted, and the only Postgres listening was an SSH tunnel to an unknown database.*
 
 After the `data_epochs` migration, apply it to the dev database (`pnpm --filter web db:migrate`) and run the server
 and the app. Sign in, load demo data, open Profile → Elimina tutti i dati. The button stays disabled until `ELIMINA`
 is typed. Deleting lands on onboarding step 1, and the server log shows `deleted all data of …`. Finish onboarding and
 confirm the new data syncs (no `data_reset` in the log).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md TODO.md docs/superpowers/plans/README.md docs/superpowers/plans/2026-09-17-delete-all-data.md

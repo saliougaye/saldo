@@ -3,22 +3,6 @@
 Work that has been asked for but not planned yet. When an item is picked up it gets a plan under
 `docs/superpowers/plans/` like any other piece of work, and leaves this list.
 
-## Delete all data from Settings
-
-- [ ] An option in Settings that deletes all of the user's data.
-
-Today the only way is the **developer-only** "reset device" row in `apps/mobile/app/profile.tsx`. It
-signs out, deletes the attachment files and runs `wipeDevice` (`apps/mobile/src/db/wipe.ts`). That
-empties the phone, not the server: sign in again and the first sync brings everything back.
-
-To decide:
-
-- Whether "everything" includes the server copy. If it does, it needs a server route, and the other
-  devices signed in to the account have to find out; a local wipe on its own is undone by the next
-  pull.
-- Whether the user stays signed in and lands back on onboarding, or is signed out.
-- A confirmation that matches something irreversible.
-
 ## Negative account balances
 
 - [ ] Let an account's balance be entered below zero, in the account sheet (§6.22) and in onboarding
