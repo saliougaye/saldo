@@ -1,4 +1,4 @@
-import type { CurrencyCode, PeriodKind } from '@saldo/core';
+import type { AccountType, CurrencyCode, PeriodKind } from '@saldo/core';
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 /** What the three onboarding steps collect before anything is written (§6.29). */
@@ -9,7 +9,7 @@ export interface OnboardingDraft {
   cycleStartDay: number;
   currency: CurrencyCode;
   accountName: string;
-  accountType: 'cash' | 'checking' | 'credit_card' | 'savings' | 'investment';
+  accountType: AccountType;
   /** Keypad buffer, converted to minor units on save. */
   balanceBuffer: string;
   selectedCategoryKeys: string[];

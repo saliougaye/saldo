@@ -1,4 +1,4 @@
-import type { Account } from '@saldo/core';
+import { type Account, accountTypeSchema } from '@saldo/core';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { ListRow } from '../../components/ListRow';
@@ -6,15 +6,10 @@ import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
 
-export const ACCOUNT_TYPES = [
-  'cash',
-  'checking',
-  'credit_card',
-  'savings',
-  'investment',
-] as const satisfies readonly Account['type'][];
+/** Every account type, in the order of the enum. */
+export const ACCOUNT_TYPES = accountTypeSchema.options;
 
-/** Five options, chosen and closed: a sheet. */
+/** A handful of options, chosen and closed: a sheet. */
 export function AccountTypeSheet({
   visible,
   onClose,
