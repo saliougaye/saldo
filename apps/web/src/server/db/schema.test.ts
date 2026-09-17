@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
-import { invites, syncRows, user } from './schema';
+import { dataEpochs, invites, syncRows, user } from './schema';
 
 let harness: TestDatabase;
 
@@ -19,6 +19,18 @@ afterAll(async () => {
 });
 
 describe('schema', () => {
+  it('keeps one epoch per account, gone with the account', async () => {
+    const { db } = harness;
+    const { userId } = await createTestSession(db);
+    await db.insert(dataEpochs).values({ userId });
+
+    const [row] = await db.select().from(dataEpochs).where(eq(dataEpochs.userId, userId));
+    expect(row).toEqual({ userId, epoch: 0, resetAt: null });
+
+    await db.delete(user).where(eq(user.id, userId));
+    expect(await db.select().from(dataEpochs)).toEqual([]);
+  });
+
   it('round-trips a sync row, keeping its json body and its tombstone', async () => {
     const { db } = harness;
     const { userId } = await createTestSession(db);
