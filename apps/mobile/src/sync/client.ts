@@ -11,7 +11,7 @@ import {
 import type { Clock } from '../db/clock';
 import type { KvStore } from '../db/kv';
 import type { RepositoryDatabase } from '../db/repositories/support';
-import { DATA_RESET_NOTICE_KEY, SYNC_EPOCH_KEY, wipeAccountData } from '../db/wipe';
+import { DATA_RESET_NOTICE_KEY, hasLocalData, SYNC_EPOCH_KEY, wipeAccountData } from '../db/wipe';
 import { log, ms, shortId } from '../log';
 import { type ApiClient, ApiClientError } from '../net/apiClient';
 import { isSyncedEntity } from './entities';
@@ -88,8 +88,10 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncOutcome> {
     if (!(error instanceof ApiClientError) || error.code !== DATA_RESET_CODE) throw error;
     log('sync', 'the account data was deleted on another device, emptying this phone');
     const { epoch } = await deps.api.get('/api/data', dataEpochResponseSchema);
-    // Before the wipe: the tabs react to the rows disappearing and read this as they do.
-    deps.kv.set(DATA_RESET_NOTICE_KEY, 'true');
+    // Before the wipe: the tabs react to the rows disappearing and read this as they do. Only when
+    // there was something to delete — a phone that signed out of one account and into another
+    // holds the old account's epoch and nothing else, and nobody deleted anything of this one.
+    if (hasLocalData(deps.db)) deps.kv.set(DATA_RESET_NOTICE_KEY, 'true');
     deps.deleteAttachmentFiles?.();
     wipeAccountData(deps.db, epoch);
     return runOnce(deps);

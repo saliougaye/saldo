@@ -278,4 +278,17 @@ describe('runSyncCycle', () => {
     expect(kv.get('syncCursor')).toBe('1');
     expect(kv.get(DATA_RESET_NOTICE_KEY)).toBe('true');
   });
+
+  it('adopts the epoch without a notice when the phone held nothing to lose', async () => {
+    // Signed out of one account and into another: the stored epoch is the other account's, and
+    // there is no data on the phone that anybody deleted.
+    const { db, kv, clock } = createTestContext();
+    kv.set(SYNC_EPOCH_KEY, '5');
+    const server: FakeServer = { pushes: [], pushResponse: appliedTo, pages: [], epoch: 0 };
+
+    await runSyncCycle({ db, kv, clock, api: fakeApi(server), deviceId: 'device-a' });
+
+    expect(kv.get(SYNC_EPOCH_KEY)).toBe('0');
+    expect(kv.get(DATA_RESET_NOTICE_KEY)).toBeNull();
+  });
 });
