@@ -57,7 +57,7 @@ Transaction, budget and category amounts stay positive: they do not opt in.
 
 **Files:** `packages/core/src/money.ts`, `money.test.ts`
 
-- [ ] **Step 1: failing tests.**
+- [x] **Step 1: failing tests.**
 
 ```ts
 describe('sanitizeAmountInput with allowNegative', () => {
@@ -81,8 +81,8 @@ and in `amountBufferToMinor / minorToAmountBuffer`: `'-12.5'` → `-1250`, `'-'`
 `minorToAmountBuffer(-41235, 2)` → `'-412.35'` (replacing the old unsigned expectation), negative values in the
 round-trip, and `toggleAmountBufferSign`: `'' → '-'`, `'-' → ''`, `'12.5' → '-12.5'`, `'-12.5' → '12.5'`.
 
-- [ ] **Step 2:** `pnpm --filter @saldo/core test` — they fail.
-- [ ] **Step 3:** implement (below). - [ ] **Step 4:** tests pass. Commit `feat(core): an amount buffer can carry a sign`.
+- [x] **Step 2:** `pnpm --filter @saldo/core test` — they fail.
+- [x] **Step 3:** implement (below). - [x] **Step 4:** tests pass. Commit `feat(core): an amount buffer can carry a sign`.
 
 ```ts
 export interface AmountInputOptions {
@@ -106,30 +106,30 @@ export function toggleAmountBufferSign(buffer: string): string {
 
 ### Task 2: label
 
-- [ ] `common.negative`: `'Negativo'` / `'Negative'`. Commit `feat(i18n): a label for the negative amount switch`.
+- [x] `common.negative`: `'Negativo'` / `'Negative'`. Commit `feat(i18n): a label for the negative amount switch`.
 
 ### Task 3: the `±` switch
 
 **Files:** `apps/mobile/src/components/AmountInput.tsx`, `a11y.test.tsx`, `features/accounts/AccountForm.tsx` (+ test),
 `app/(onboarding)/balance.tsx`
 
-- [ ] **Step 1: failing tests.** In `a11y.test.tsx` `describe('AmountInput')`: without `allowNegative` there is no
+- [x] **Step 1: failing tests.** In `a11y.test.tsx` `describe('AmountInput')`: without `allowNegative` there is no
       switch; with `allowNegative` and `negativeLabel="Negative"`, buffer `'-12.34'` shows `'−12.34'` in the field and a
       checked `switch` named "Negative"; pressing it calls `onChange('12.34')`; typing `'−5'` calls `onChange('-5')`.
       In `AccountForm.test.tsx`: `accountFormFrom` of an account at `-41235` gives buffer `'-412.35'`, and
       `openingBalanceFrom` of buffer `'-412.35'` for a new account gives `-41235`; the form shows the "Negative" switch.
-- [ ] **Step 2:** `AmountInput` props `allowNegative?: boolean` and `negativeLabel?: string`. When `allowNegative`,
+- [x] **Step 2:** `AmountInput` props `allowNegative?: boolean` and `negativeLabel?: string`. When `allowNegative`,
       render before the currency symbol a 36×36 `Pressable` (`accessibilityRole="switch"`,
       `accessibilityState={{ checked: negative }}`, `hitSlop` 4, `borderRadius: theme.radii.chipSmall`, background
       `raised`, or `accent` when negative, with `Text size="headline"` `±` in `text` / `onAccent`) calling
       `onChange(toggleAmountBufferSign(buffer))`. The field's value swaps `-` for `−`; `onChangeText` passes
       `{ allowNegative }` to `sanitizeAmountInput`.
-- [ ] **Step 3:** `AccountForm` and onboarding `balance.tsx` pass `allowNegative` and `negativeLabel={t('common.negative')}`.
-- [ ] **Step 4:** tests pass. Commit `feat(mobile): a balance can be entered below zero`.
+- [x] **Step 3:** `AccountForm` and onboarding `balance.tsx` pass `allowNegative` and `negativeLabel={t('common.negative')}`.
+- [x] **Step 4:** tests pass. Commit `feat(mobile): a balance can be entered below zero`.
 
 ### Task 4: docs
 
-- [ ] Spec §5.1 (signed buffer, `±` switch), §6.22 and §6.29 step 3 (balance may be negative).
-- [ ] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: negative account balances`.
+- [x] Spec §5.1 (signed buffer, `±` switch), §6.22 and §6.29 step 3 (balance may be negative).
+- [x] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: negative account balances`.
 - [ ] Check on a device — *by the user after execution.*
