@@ -1,5 +1,6 @@
+import { inArray } from 'drizzle-orm';
 import type { RepositoryDatabase } from './repositories/support';
-import { schema, syncedTables } from './schema';
+import { kv, schema, syncedTables } from './schema';
 
 /**
  * Returns the device to the state a fresh install is in: every synced entity gone, and every
@@ -33,5 +34,35 @@ export function hasLocalData(db: RepositoryDatabase): boolean {
 export function wipeDevice(db: RepositoryDatabase): void {
   db.transaction((tx) => {
     for (const table of Object.values(schema)) tx.delete(table).run();
+  });
+}
+
+/** Device-local: the generation of the account's data this phone holds (§8.6). */
+export const SYNC_EPOCH_KEY = 'syncEpoch';
+
+/**
+ * Set when a sync found the account's data deleted on another device, and read once by the tabs to
+ * say so. A key rather than an event because the sync provider sits above the toast provider.
+ */
+export const DATA_RESET_NOTICE_KEY = 'dataResetNotice';
+
+/**
+ * §8.6. Empties the account's data from this phone and records which generation it now holds —
+ * `null` on a build with no server, where there is no generation to hold.
+ *
+ * Unlike `wipeDevice` this keeps the device's identity, its HLC, the account it is signed in to
+ * and the lock: the user stays signed in, and only the data starts again. The cursor goes, because
+ * the rows it counted past no longer exist.
+ */
+export function wipeAccountData(db: RepositoryDatabase, epoch: number | null): void {
+  db.transaction((tx) => {
+    for (const table of Object.values(syncedTables)) tx.delete(table).run();
+    tx.delete(kv)
+      .where(inArray(kv.key, ['syncCursor', SYNC_EPOCH_KEY]))
+      .run();
+    if (epoch !== null)
+      tx.insert(kv)
+        .values({ key: SYNC_EPOCH_KEY, value: String(epoch) })
+        .run();
   });
 }

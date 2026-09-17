@@ -1,12 +1,14 @@
 import { Tabs, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { TabBar } from '../../src/components/TabBar';
+import { useLeaveWhenDataGone } from '../../src/features/deleteData/useLeaveWhenDataGone';
 import { useAppLock } from '../../src/features/lock/useAppLock';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const router = useRouter();
   useAppLock();
+  useLeaveWhenDataGone();
   return (
     <Tabs
       screenOptions={{ headerShown: false }}

@@ -587,10 +587,25 @@ export const en: Messages = {
     restoreBackup: 'Restore a backup',
     appLock: 'Biometric lock',
     version: 'Version {{version}}',
+    deleteAllData: 'Delete all data',
     currencyConfirmTitle: 'Change currency?',
     currencyConfirmBody: 'Amounts are reformatted, not converted.',
     currencyConfirmScale:
       '{{before}} will read as {{after}}. Amounts are reformatted, not converted.',
+  },
+  deleteData: {
+    title: 'Delete all data',
+    bodyServer:
+      'Deletes accounts, transactions, budgets, categories, tags and attachments: on this phone, on the server and on every other phone signed in to this account. You stay signed in and start again from the setup. This cannot be undone: export your data first if you might want it back.',
+    bodyLocal:
+      'Deletes accounts, transactions, budgets, categories, tags and attachments from this phone, and you start again from the setup. This cannot be undone: export your data first if you might want it back.',
+    confirmWord: 'DELETE',
+    typeToConfirm: 'Type {{word}} to confirm',
+    confirm: 'Delete everything',
+    signInFirst:
+      'Your session has expired. Sign in again from Server and sync, then try again: the server copy has to go too.',
+    failed: 'Could not reach the server. Nothing was deleted.',
+    deletedElsewhere: 'All data was deleted from another device',
   },
   /** What each swatch is, not what it is for. */
   colors: {

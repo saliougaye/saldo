@@ -591,10 +591,25 @@ export const it = {
     restoreBackup: 'Ripristina backup',
     appLock: 'Blocco con biometria',
     version: 'Versione {{version}}',
+    deleteAllData: 'Elimina tutti i dati',
     currencyConfirmTitle: 'Cambiare valuta?',
     currencyConfirmBody: 'Gli importi vengono riformattati, non convertiti.',
     currencyConfirmScale:
       '{{before}} diventerà {{after}}. Gli importi vengono riformattati, non convertiti.',
+  },
+  deleteData: {
+    title: 'Elimina tutti i dati',
+    bodyServer:
+      'Elimina conti, transazioni, budget, categorie, tag e allegati: su questo telefono, sul server e su ogni altro telefono collegato a questo account. Resti connesso e ricominci dalla configurazione iniziale. Non si può annullare: se potresti volerli indietro, esporta prima i dati.',
+    bodyLocal:
+      'Elimina conti, transazioni, budget, categorie, tag e allegati da questo telefono e ricominci dalla configurazione iniziale. Non si può annullare: se potresti volerli indietro, esporta prima i dati.',
+    confirmWord: 'ELIMINA',
+    typeToConfirm: 'Scrivi {{word}} per confermare',
+    confirm: 'Elimina tutto',
+    signInFirst:
+      'La sessione è scaduta. Accedi di nuovo da Server e sincronizzazione e riprova: anche la copia sul server va eliminata.',
+    failed: 'Impossibile raggiungere il server. Non è stato eliminato nulla.',
+    deletedElsewhere: 'Tutti i dati sono stati eliminati da un altro dispositivo',
   },
   /** I nomi delle pastiglie di colore: che colore è, non a che cosa serve. */
   colors: {

@@ -186,6 +186,17 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
+      <Card padded={false}>
+        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
+          <ListRow
+            title={t('profile.deleteAllData')}
+            leading={lead('trash')}
+            onPress={() => router.push('/profile/delete-data')}
+            chevron
+          />
+        </View>
+      </Card>
+
       {__DEV__ ? (
         <Card padded={false}>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>

@@ -50,6 +50,9 @@ function fakeApi(
       }
       return schema.parse({});
     },
+    async delete<T>(_path: string, _schema: z.ZodType<T>): Promise<T> {
+      throw new Error('not used');
+    },
     async putBinary(path: string, bytes: Uint8Array, headers: Record<string, string>) {
       recorder.puts.push({ path, bytes, headers });
     },

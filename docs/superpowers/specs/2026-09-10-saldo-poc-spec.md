@@ -557,7 +557,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.5 | **Conti** | 394–469 | **Patrimonio complessivo first**, as the hero — it is the question the screen answers and it needs no explanation — with Totale spendibile under it on its own line plus a sentence saying what it leaves out (savings and investments); spendable list, "Risparmi e investimenti" list, Patrimonio complessivo, a **"Conti archiviati" row** with the count, opening `settings/archived-accounts` (the collapsible list of the prototype became that screen, so the Accounts tab and the Profile row lead to the same place). An archived account offers **Ripristina and nothing else**: its detail hides edit, transfer and archive, and `account/edit` refuses with the same restore button, since a deep link can still reach it. Header: settings gear, "+". |
 | 6.6 | **Transaction detail** | 471–536 | Amount (44px), title, rows Categoria (dot), Conto (transfer: "A → B"), Data (long format with year), Nota (note, or "Ricorrente, ogni mese" / "Registrata manualmente"), Esclusa dai totali. Tag chips → Tag view. **Attachments:** "Scontrino"/"Allegati" horizontal list of 96×124 thumbnails, tap → full-screen viewer (pinch-zoom; PDFs open in the system viewer). "Modifica" → edit sheet. |
 | 6.7 | **Impostazioni** | 538–584 | **Not built as a separate screen.** Every row of it is already in 6.8 Profilo — categories, tags, the period, the currency — and in the prototype the two screens differ only in how you reach them. The gear on Accounts opens the Profile, and "Rivedi la configurazione iniziale" moved there. One list, one place to change a setting. |
-| 6.8 | **Profilo** | 586–669 | Inizio del ciclo, Valuta (row shows the **symbol** next to the code), Lingua, Tema — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. |
+| 6.8 | **Profilo** | 586–669 | Inizio del ciclo, Valuta (row shows the **symbol** next to the code), Lingua, Tema — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; **Elimina tutti i dati** (NEW → `profile/delete-data`, §8.6); Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. |
 | 6.9 | **Categorie** | 671–727 | §5.11. |
 | 6.10 | **Account detail** | 729–804 | Edit, archive (confirm toast), icon/name/kind, balance, delta over last 8 months, sparkline of month-end balances over 8 months (labels first/last month), credit card box, cycle income/expense tiles, "Trasferisci verso un altro conto" → new transfer sheet, last 6 transactions. |
 | 6.11 | **Tag view** | 807–857 | §5.10. |
@@ -609,7 +609,7 @@ screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, Secondar
   inside `useMemo`. POC data volume (≤ 20k transactions) keeps this fast. Load only the date ranges needed
   (the selected cycle + 6 previous for baselines).
 - Device-local key/value store: `expo-secure-store` for tokens; a `kv` SQLite table (not synced) for `deviceId`,
-  `serverUrl`, `syncCursor`, `appLockEnabled`, `lastAlertPeriodStart:{budgetId}`.
+  `serverUrl`, `syncCursor`, `syncEpoch`, `dataResetNotice`, `appLockEnabled`, `lastAlertPeriodStart:{budgetId}`.
 - **Dev seed:** in `__DEV__` builds, Profile shows "Carica dati demo". It generates data equivalent to the design mock
   (`CYCLES`, `TAG_EXTRA`, `ACCOUNTS`, `BUDGETS`) shifted so the current cycle contains today.
 - Optional hardening (documented, not required): enable SQLCipher via the `expo-sqlite` config plugin
@@ -712,6 +712,29 @@ so concurrent pushes stay correct without application locks.
   (local use continues).
 - First sign-in on a device that already has local data (onboarded locally): push everything (full upload), then pull.
   There's no merge prompt in the POC; LWW applies.
+
+### 8.6 Deleting all data
+
+Profile → **Elimina tutti i dati** opens a screen that says what goes and enables its button only once the user types
+`ELIMINA` (`DELETE` in English). It deletes every synced row and attachment of the account, on every device; the
+passkey account stays, and so does the session.
+
+- **Server.** `data_epochs (user_id pk → user on delete cascade, epoch int default 0, reset_at timestamptz)`.
+  `DELETE /api/data` bumps the epoch, deletes the account's `sync_rows` and queues its attachment blobs in
+  `deleted_blobs` as already past the grace period, in one transaction, and answers `{ epoch }`. `GET /api/data`
+  answers the current `{ epoch }`.
+- **Sync.** The push body carries `epoch` and the pull query `&epoch=`. A different value answers
+  `409 data_reset`. The push compares under a `FOR SHARE` lock on the epoch row, inside the transaction that writes
+  the rows, so it cannot interleave with a deletion.
+- **The deleting phone** runs the request inside `scheduler.exclusive`. Only once the server has answered does it
+  delete the attachment files and the synced tables, drop `syncCursor` and store the new `syncEpoch`. It keeps
+  `deviceId`, `hlc`, `accountId` and `appLockEnabled`, then returns to the boot router, which opens onboarding. With
+  an expired session it refuses and asks to sign in again. A build with no server deletes the phone only.
+- **Every other phone** learns on its next push or pull. On `data_reset` it asks `GET /api/data`, empties itself the
+  same way (pending writes included) and runs the cycle again. The tabs then toast "Tutti i dati sono stati eliminati
+  da un altro dispositivo" and return to the boot router if no settings are left.
+- A phone that has never synced asks `GET /api/data` once, before its first push. "Esci" keeps `syncEpoch`, so a
+  phone that signed out before the deletion is still refused when it signs back in.
 
 ---
 
@@ -1083,6 +1106,7 @@ Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
 | POST | `/api/auth/token` · `/api/auth/logout` | – (body tokens) |
 | GET | `/api/me` | bearer |
 | POST | `/api/sync/push` · GET `/api/sync/pull` | bearer |
+| GET/DELETE | `/api/data` | bearer |
 | PUT/GET | `/api/attachments/[id]` | bearer |
 | GET | `/auth/mobile` (page) | – |
 | GET | `/` (page) | – simple landing: "Saldo server is running", version, link to repo |

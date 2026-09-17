@@ -1,18 +1,9 @@
 import { type PullResponse, type PushResponse, SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { createTestContext } from '../db/testing';
-import type { ApiClient } from '../net/apiClient';
+import { DATA_RESET_NOTICE_KEY, SYNC_EPOCH_KEY } from '../db/wipe';
+import { type ApiClient, ApiClientError } from '../net/apiClient';
 import { runSyncCycle } from './client';
 import { errorCount, pendingCount } from './localStore';
-
-interface PushBody {
-  changes: { entity: string; id: string }[];
-}
-
-interface FakeServer {
-  pushes: PushBody[];
-  pushResponse: (body: PushBody) => PushResponse;
-  pages: PullResponse[];
-}
 
 const EMPTY_PAGE: PullResponse = {
   schemaVersion: SYNC_SCHEMA_VERSION,
@@ -21,8 +12,26 @@ const EMPTY_PAGE: PullResponse = {
   hasMore: false,
 };
 
+interface PushBody {
+  epoch?: number;
+  changes: { entity: string; id: string }[];
+}
+
+interface FakeServer {
+  pushes: PushBody[];
+  pushResponse: (body: PushBody) => PushResponse;
+  pages: PullResponse[];
+  /** The account's data generation; 0 unless a test deletes it. */
+  epoch?: number;
+  /** How many times the cycle asked `GET /api/data`. */
+  epochReads?: number;
+}
+
+const refused = () => new ApiClientError(409, 'data_reset', 'deleted elsewhere');
+
 function fakeApi(server: FakeServer): ApiClient {
   let pulls = 0;
+  const current = () => server.epoch ?? 0;
   return {
     hasSession: async () => true,
     // Blobs have their own tests; these fakes only move rows.
@@ -30,10 +39,21 @@ function fakeApi(server: FakeServer): ApiClient {
     getBinary: async () => new Uint8Array(),
     post: async (_path, body, schema) => {
       const typed = body as PushBody;
+      if (typed.epoch !== undefined && typed.epoch !== current()) throw refused();
       server.pushes.push(typed);
       return schema.parse(server.pushResponse(typed));
     },
-    get: async (_path, schema) => {
+    delete: async () => {
+      throw new Error('not used by the cycle');
+    },
+    get: async (path, schema) => {
+      const url = new URL(path, 'http://server.invalid');
+      if (url.pathname === '/api/data') {
+        server.epochReads = (server.epochReads ?? 0) + 1;
+        return schema.parse({ epoch: current() });
+      }
+      const epoch = url.searchParams.get('epoch');
+      if (epoch !== null && Number(epoch) !== current()) throw refused();
       const page = server.pages[pulls] ?? EMPTY_PAGE;
       pulls += 1;
       return schema.parse(page);
@@ -201,5 +221,74 @@ describe('runSyncCycle', () => {
     await expect(
       runSyncCycle({ db, kv, clock, api: fakeApi(server), deviceId: 'device-a' }),
     ).rejects.toMatchObject({ code: 'schema_too_new' });
+  });
+
+  it('learns the epoch once and sends it with every push and pull', async () => {
+    const { db, kv, clock, repos } = createTestContext();
+    repos.tags.create({ name: 'Rimborsabile' });
+    const server: FakeServer = { pushes: [], pushResponse: appliedTo, pages: [], epoch: 3 };
+    const deps = { db, kv, clock, api: fakeApi(server), deviceId: 'device-a' };
+
+    await runSyncCycle(deps);
+    repos.tags.create({ name: 'Trasloco' });
+    await runSyncCycle(deps);
+
+    expect(kv.get(SYNC_EPOCH_KEY)).toBe('3');
+    expect(server.epochReads).toBe(1);
+    expect(server.pushes.map((body) => body.epoch)).toEqual([3, 3]);
+  });
+
+  it('empties the phone and starts over when the data was deleted on another device', async () => {
+    const { db, kv, clock, repos } = createTestContext();
+    kv.set(SYNC_EPOCH_KEY, '0');
+    kv.set('syncCursor', '40');
+    // Written offline, against the generation that was deleted: it must not reach the server.
+    repos.tags.create({ name: 'Scritto offline' });
+    let filesDeleted = 0;
+    const server: FakeServer = {
+      pushes: [],
+      pushResponse: appliedTo,
+      epoch: 1,
+      pages: [
+        {
+          schemaVersion: SYNC_SCHEMA_VERSION,
+          changes: [row('tag-new', 1)],
+          nextSince: 1,
+          hasMore: false,
+        },
+      ],
+    };
+
+    const outcome = await runSyncCycle({
+      db,
+      kv,
+      clock,
+      api: fakeApi(server),
+      deviceId: 'device-a',
+      deleteAttachmentFiles: () => {
+        filesDeleted += 1;
+      },
+    });
+
+    expect(server.pushes).toEqual([]);
+    expect(repos.tags.list().map((tag) => tag.id)).toEqual(['tag-new']);
+    expect(outcome.pulled).toBe(1);
+    expect(filesDeleted).toBe(1);
+    expect(kv.get(SYNC_EPOCH_KEY)).toBe('1');
+    expect(kv.get('syncCursor')).toBe('1');
+    expect(kv.get(DATA_RESET_NOTICE_KEY)).toBe('true');
+  });
+
+  it('adopts the epoch without a notice when the phone held nothing to lose', async () => {
+    // Signed out of one account and into another: the stored epoch is the other account's, and
+    // there is no data on the phone that anybody deleted.
+    const { db, kv, clock } = createTestContext();
+    kv.set(SYNC_EPOCH_KEY, '5');
+    const server: FakeServer = { pushes: [], pushResponse: appliedTo, pages: [], epoch: 0 };
+
+    await runSyncCycle({ db, kv, clock, api: fakeApi(server), deviceId: 'device-a' });
+
+    expect(kv.get(SYNC_EPOCH_KEY)).toBe('0');
+    expect(kv.get(DATA_RESET_NOTICE_KEY)).toBeNull();
   });
 });

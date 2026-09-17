@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
-import { readBytes, storeBytes } from '../attachments/localFiles';
+import { deleteAllAttachmentFiles, readBytes, storeBytes } from '../attachments/localFiles';
 import { useServer } from '../auth/ServerProvider';
 import { db } from '../db/client';
 import { createClock } from '../db/clock';
@@ -42,6 +42,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           if (api === null) return;
           await uploadPendingBlobs({ repos, api, readBytes, storeBytes });
         },
+        deleteAttachmentFiles: deleteAllAttachmentFiles,
       }),
     });
   }, [api, kv, repos, today, def]);

@@ -1,4 +1,13 @@
-import { bigint, index, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 import { account, passkey, session, user, verification } from './authSchema';
 
 /**
@@ -52,6 +61,21 @@ export const deletedBlobs = pgTable(
 );
 
 /**
+ * §8.6. Which generation of its data an account is on. No row means generation 0: the row is
+ * written the first time a push needs to lock it or the data is deleted.
+ *
+ * Its own table rather than a column on `user`, which Better Auth generates and owns.
+ */
+export const dataEpochs = pgTable('data_epochs', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  epoch: integer('epoch').notNull().default(0),
+  /** When the account's data was last deleted; null if it never was. */
+  resetAt: timestamp('reset_at', { withTimezone: true }),
+});
+
+/**
  * §9.5. One row per invite the owner has minted. The code itself is **never** stored — only its
  * sha-256 — so a database backup cannot be turned into an account.
  *
@@ -88,5 +112,6 @@ export const schema = {
   passkey,
   syncRows,
   deletedBlobs,
+  dataEpochs,
   invites,
 };
