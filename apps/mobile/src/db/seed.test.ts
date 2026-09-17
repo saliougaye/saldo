@@ -48,6 +48,20 @@ describe('seedFromOnboarding', () => {
     expect(account?.includeInSpendable).toBe(true);
   });
 
+  it('writes no account when onboarding brings its own (an import, §6.29)', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => BASE.completedAt);
+    expect(seedFromOnboarding(repos, { ...BASE, account: null, selectedCategoryKeys: [] })).toBe(
+      true,
+    );
+    expect(repos.settings.get()?.onboardingCompletedAt).toBe(BASE.completedAt);
+    expect(repos.accounts.list()).toEqual([]);
+    expect(repos.categories.list().map((category) => category.name)).toEqual([
+      't:refunds',
+      't:gifts',
+    ]);
+  });
+
   it('writes nothing when a sync already delivered the account settings', () => {
     const db = createTestDatabase();
     const repos = createRepositories(db, () => BASE.completedAt);

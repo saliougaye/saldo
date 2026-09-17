@@ -73,12 +73,13 @@ export interface SeedInput {
   currency: CurrencyCode;
   language: 'system' | 'it' | 'en';
   theme: 'system' | 'dark' | 'light';
+  /** Null when the accounts come from somewhere else — an import (§6.29). */
   account: {
     name: string;
     type: AccountType;
     openingBalance: number;
     icon: IconName;
-  };
+  } | null;
   /** `nameKey`s the user kept selected. Hidden rows are created regardless. */
   selectedCategoryKeys: readonly string[];
   /** Resolves a `seed.*` key to the user's language. */
@@ -107,20 +108,22 @@ export function seedFromOnboarding(repos: Repositories, input: SeedInput): boole
     onboardingCompletedAt: input.completedAt,
   });
 
-  repos.accounts.create({
-    name: input.account.name,
-    type: input.account.type,
-    institution: null,
-    openingBalance: input.account.openingBalance,
-    includeInSpendable: true,
-    colorIndex: 0,
-    icon: input.account.icon,
-    creditCloseDay: null,
-    creditChargeDay: null,
-    creditPaymentAccountId: null,
-    archivedAt: null,
-    sortOrder: 0,
-  });
+  if (input.account !== null) {
+    repos.accounts.create({
+      name: input.account.name,
+      type: input.account.type,
+      institution: null,
+      openingBalance: input.account.openingBalance,
+      includeInSpendable: true,
+      colorIndex: 0,
+      icon: input.account.icon,
+      creditCloseDay: null,
+      creditChargeDay: null,
+      creditPaymentAccountId: null,
+      archivedAt: null,
+      sortOrder: 0,
+    });
+  }
 
   const selected = new Set(input.selectedCategoryKeys);
   let sortOrder = 0;
