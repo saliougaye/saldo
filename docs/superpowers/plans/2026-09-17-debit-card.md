@@ -131,3 +131,4 @@ export const ACCOUNT_TYPE_ICONS = {
 - [x] Spec §4 `type` row and `includeInSpendable` defaults; §6.29 step 2 names the tile grid.
 - [x] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: debit card account type`.
+- [x] Check on a device — *done by the user after execution (2026-09-17): working.*
