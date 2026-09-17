@@ -7,7 +7,7 @@ Work that has been asked for but not planned yet. When an item is picked up it g
 
 - [x] Analyse how to bring an account's balance in line with the real one — see
       `docs/superpowers/analysis/2026-09-17-settle-an-account.md`.
-- [ ] Decide between patching the opening-balance edit (A) and a balance checkpoint (C), then plan it.
+- [ ] Decide between keeping the opening-balance edit (A) and a balance checkpoint (C), then plan it.
 
 Use case: the history comes from a Spendee export, but the bank says the account holds a different
 amount. The import creates unknown accounts with `openingBalance 0` (§11.3), so afterwards the

@@ -110,20 +110,22 @@ already does the same.
 keeps statistics out of it by construction, keeps history honest in both use cases, and survives the multi-device
 cases this app is built around.
 
-**A, with its sync hole closed**, if settling stays a rare correction: it is already built. The cheap fixes are to
-stop writing `openingBalance` when the balance field was not edited (so a rename cannot overwrite a settle from
-another device), and to add the post-import "Controlla il saldo" prompt.
+**A, as it is**, if settling stays a rare correction: it is already built, and only the post-import "Controlla il
+saldo" prompt is missing. Its sync hole has **no cheap fix**: leaving `openingBalance` out of a rename's patch does
+not help, because the repository writes the whole row and the whole row wins (`sync/merge.ts`). Closing it means
+field-level merge for accounts, or moving the balance out of the account row — which is most of the way to C. So A
+is a choice to accept that a rename on one phone can undo a settle on another.
 
 **Not B.** It looks simplest, but it is a transaction that must not behave like one: a system category, a set of
 exceptions in rules that already exist, and a standing trap for every rule written later.
 
 ## 5. Decisions needed
 
-1. A (patched) or C?
+1. A as it is, or C?
 2. With C: may a checkpoint be dated in the past ("the statement on 31 August said…"), or only today?
 3. With C: does a checkpoint replace the account sheet's balance field (typing a balance = a checkpoint today), or
    sit beside it?
 4. Either way: add the "Controlla il saldo" step after a Profile import?
 
 Unrelated gap found on the way: the CSV import ignores the `excluded` column the export writes, so a Saldo CSV
-round trip counts excluded rows again. Worth its own `TODO.md` item.
+round trip counts excluded rows again. It has its own `TODO.md` item.
