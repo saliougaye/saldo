@@ -1,10 +1,11 @@
+import type { Account } from '@saldo/core';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { AccountForm, emptyAccountForm } from './AccountForm';
+import { AccountForm, accountFormFrom, emptyAccountForm, openingBalanceFrom } from './AccountForm';
 
 // `ScreenHeader` pulls in expo-router, whose `standard-navigation` dependency ships ESM that the
 // jest transform does not reach. Every component test in this app mocks it for the same reason.
@@ -82,5 +83,42 @@ describe('AccountForm', () => {
     await renderForm({ ...emptyAccountForm(), name: 'Conto corrente' });
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
     expect(screen.queryByText('Enter a name to save.')).toBeNull();
+  });
+
+  it('offers a sign switch, so a balance can be entered below zero', async () => {
+    await renderForm();
+    expect(screen.getByRole('switch', { name: 'Negative' })).not.toBeChecked();
+  });
+});
+
+describe('a negative balance', () => {
+  const card: Account = {
+    id: 'acc-card',
+    createdAt: '2026-09-01T00:00:00.000Z',
+    updatedAt: '0',
+    deletedAt: null,
+    name: 'Carta',
+    type: 'credit_card',
+    institution: null,
+    openingBalance: 0,
+    includeInSpendable: false,
+    colorIndex: 0,
+    icon: 'card',
+    creditCloseDay: 5,
+    creditChargeDay: 15,
+    creditPaymentAccountId: null,
+    archivedAt: null,
+    sortOrder: 0,
+  };
+
+  it('keeps its sign when an account is opened for editing', () => {
+    expect(accountFormFrom(card, -41235, 2).buffer).toBe('-412.35');
+  });
+
+  it('is stored below zero on a new account', () => {
+    const values = { ...emptyAccountForm(), buffer: '-412.35' };
+    expect(openingBalanceFrom(values, 2, { accountId: null, txs: [], today: '2026-09-17' })).toBe(
+      -41235,
+    );
   });
 });

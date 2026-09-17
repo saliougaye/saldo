@@ -152,6 +152,8 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
             autoFocus={mode === 'new'}
             label={t('accounts.balance')}
             doneLabel={t('common.done')}
+            allowNegative
+            negativeLabel={t('common.negative')}
           />
         </View>
       </Card>

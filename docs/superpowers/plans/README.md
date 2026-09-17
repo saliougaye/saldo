@@ -601,6 +601,14 @@ small enough to land on its own branch without a plan file of its own.
   reads the list from `accountTypeSchema.options`, and onboarding step 2 picks the type from a tile grid with all six
   types. `SYNC_SCHEMA_VERSION` stays at 1.
 
+### Picked up from `TODO.md` on 2026-09-17 ✅ done
+
+**Plan:** `2026-09-17-negative-balances.md` · **Spec:** §5.1, §6.22, §6.29
+
+- ✅ **Negative account balances.** The account sheet and onboarding step 3 show a `±` switch before the amount, and
+  a typed minus is kept. Editing an account below zero no longer saves it as positive: `minorToAmountBuffer` used to
+  drop the sign.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

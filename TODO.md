@@ -3,16 +3,6 @@
 Work that has been asked for but not planned yet. When an item is picked up it gets a plan under
 `docs/superpowers/plans/` like any other piece of work, and leaves this list.
 
-## Negative account balances
-
-- [ ] Let an account's balance be entered below zero, in the account sheet (§6.22) and in onboarding
-      step 3.
-
-A balance can already be negative — a credit card's is by design (§5.3) — but neither form offers a
-way to type a minus sign. Entry points: `apps/mobile/src/features/accounts/AccountForm.tsx`,
-`apps/mobile/app/(onboarding)/balance.tsx`, and the keypad buffer conversion
-`amountBufferToMinor` in `packages/core/src/money.ts`.
-
 ## Settle an account (analysis first)
 
 - [ ] Analyse how to bring an account's balance in line with the real one.
