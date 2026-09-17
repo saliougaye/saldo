@@ -78,7 +78,14 @@ const random = makeRandom(0x5a1d0);
 const pick = <T>(values: readonly T[], fallback: T): T =>
   values[Math.floor(random() * values.length)] ?? fallback;
 
-const ACCOUNT_TYPES = ['checking', 'cash', 'savings', 'credit_card', 'investment'] as const;
+const ACCOUNT_TYPES = [
+  'checking',
+  'cash',
+  'savings',
+  'credit_card',
+  'investment',
+  'debit_card',
+] as const;
 
 const accounts: Account[] = Array.from({ length: ACCOUNT_COUNT }, (_, index) => ({
   id: `acc-${index}`,

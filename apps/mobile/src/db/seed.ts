@@ -1,4 +1,4 @@
-import type { CurrencyCode, PeriodKind } from '@saldo/core';
+import type { AccountType, CurrencyCode, PeriodKind } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import type { Repositories } from './repositories';
 
@@ -75,7 +75,7 @@ export interface SeedInput {
   theme: 'system' | 'dark' | 'light';
   account: {
     name: string;
-    type: 'cash' | 'checking' | 'credit_card' | 'savings' | 'investment';
+    type: AccountType;
     openingBalance: number;
     icon: IconName;
   };

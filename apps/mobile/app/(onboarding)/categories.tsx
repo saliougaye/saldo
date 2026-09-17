@@ -10,6 +10,7 @@ import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { PICKABLE_SEED_CATEGORIES, seedFromOnboarding } from '../../src/db/seed';
+import { ACCOUNT_TYPE_ICONS } from '../../src/features/accounts/accountTypeIcon';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { enterTabs } from '../../src/navigation/history';
 import { Icon } from '../../src/theme/Icon';
@@ -49,7 +50,7 @@ export default function CategoriesStep() {
         name: draft.accountName.length > 0 ? draft.accountName : t('seed.firstAccount'),
         type: draft.accountType,
         openingBalance: amountBufferToMinor(draft.balanceBuffer, minorDigits),
-        icon: 'landmark',
+        icon: ACCOUNT_TYPE_ICONS[draft.accountType],
       },
       selectedCategoryKeys: selected,
       translate: (key) => t(`seed.${key}`),

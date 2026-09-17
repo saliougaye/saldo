@@ -184,10 +184,10 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | Field | Type | Rules |
 | --- | --- | --- |
 | `name` | string 1–60 | |
-| `type` | `cash \| checking \| credit_card \| savings \| investment` | Labels: Contanti, Conto corrente, Carta di credito, Risparmio, Investimento. |
+| `type` | `cash \| checking \| debit_card \| credit_card \| savings \| investment` | Labels: Contanti, Conto, Carta di debito, Carta di credito, Risparmi, Investimenti. A debit card is its own account with its own balance, and behaves like `checking`. |
 | `institution` | string ≤60 \| null | Shown as subtitle ("Intesa Sanpaolo"). |
 | `openingBalance` | minor int | Balance at creation (may be negative for credit cards). |
-| `includeInSpendable` | boolean | Default `true` for cash/checking/credit_card, `false` for savings/investment. |
+| `includeInSpendable` | boolean | Default `true` for cash/checking/debit_card/credit_card, `false` for savings/investment. |
 | `colorIndex` | int 0–9 | Index into `categoryColors`. |
 | `icon` | IconName | Options: landmark, card, coins, piggy, trend, phone, briefcase, shield. |
 | `creditCloseDay` / `creditChargeDay` | int 1–28 \| null | Only for `credit_card`. |
@@ -578,7 +578,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
-| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, and the build already knows which one (§15), so this screen only names the server and offers passkey sign-in, plus "Crea account" when the server allows it. A build without a usable `SALDO_SERVER_URL` says exactly that and offers nothing. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then **four steps**: 1 **period** (four kinds, with the 7-col day grid revealed only for the pay cycle, and the "il tuo periodo va dal X al Y" timeline), 2 account details (name, type), 3 current balance + currency, 4 categories. Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
+| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, and the build already knows which one (§15), so this screen only names the server and offers passkey sign-in, plus "Crea account" when the server allows it. A build without a usable `SALDO_SERVER_URL` says exactly that and offers nothing. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then **four steps**: 1 **period** (four kinds, with the 7-col day grid revealed only for the pay cycle, and the "il tuo periodo va dal X al Y" timeline), 2 account details (name, and the type as a three-column grid of tiles offering all six types, icon over label), 3 current balance + currency, 4 categories. Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keyboard up. Progress bar 2px. "Inizia" writes settings + account + categories. |
 | 6.30 | **Server & sync** (NEW) | — | The configured server address, read-only, status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
 | 6.31 | **Import wizard** (NEW) | — | §11.3 steps, each a full screen with a sticky bottom CTA. |
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |

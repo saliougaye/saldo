@@ -593,6 +593,14 @@ small enough to land on its own branch without a plan file of its own.
   (`DELETE /api/data`) and on every phone, keeps the session and returns to onboarding. A per-account data epoch
   makes other phones empty themselves on their next sync instead of pushing deleted data back.
 
+### Picked up from `TODO.md` on 2026-09-17 ✅ done
+
+**Plan:** `2026-09-17-debit-card.md` · **Spec:** §4, §6.29
+
+- ✅ **Debit card as an account type.** `debit_card` is its own account, behaving like `checking`. The mobile app
+  reads the list from `accountTypeSchema.options`, and onboarding step 2 picks the type from a tile grid with all six
+  types. `SYNC_SCHEMA_VERSION` stays at 1.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)
