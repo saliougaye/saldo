@@ -1962,8 +1962,7 @@ rtk proxy pnpm test
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no type errors; every package green. Fix anything
 found before going on.
 
-- [ ] **Step 4: Check on the simulator** (skip only if none is available, and say so in the report) — *not done
-  during execution: no simulator was booted, and the only Postgres listening was an SSH tunnel to an unknown database.*
+- [x] **Step 4: Check on the simulator** — *done by the user after execution (2026-09-17): working.*
 
 After the `data_epochs` migration, apply it to the dev database (`pnpm --filter web db:migrate`) and run the server
 and the app. Sign in, load demo data, open Profile → Elimina tutti i dati. The button stays disabled until `ELIMINA`
@@ -1977,6 +1976,6 @@ git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md TODO.md docs/superpo
 git commit -m "docs: delete all data (§8.6), and the item leaves TODO.md"
 ```
 
-- [ ] **Step 6: Review**
+- [x] **Step 6: Review** — self-review; it found the notice shown to a phone that held no data (fixed).
 
 Use **requesting-code-review** on `feat/delete-all-data` against `main` before merging.

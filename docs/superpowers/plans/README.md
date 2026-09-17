@@ -585,11 +585,11 @@ small enough to land on its own branch without a plan file of its own.
   shrinking to 80% before it truncates, and `accountTypes.checking` is now "Conto" / "Bank"
   (the onboarding name placeholder follows).
 
-### Picked up from `TODO.md` on 2026-09-17
+### Picked up from `TODO.md` on 2026-09-17 ✅ done
 
 **Plan:** `2026-09-17-delete-all-data.md` · **Spec:** §6.8, §8.6, §14
 
-- **Delete all data.** Profile → "Elimina tutti i dati" deletes the account's rows and attachments on the server
+- ✅ **Delete all data.** Profile → "Elimina tutti i dati" deletes the account's rows and attachments on the server
   (`DELETE /api/data`) and on every phone, keeps the session and returns to onboarding. A per-account data epoch
   makes other phones empty themselves on their next sync instead of pushing deleted data back.
 
