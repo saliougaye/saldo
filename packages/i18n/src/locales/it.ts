@@ -83,6 +83,22 @@ export const it = {
     categoriesBody: 'Le useremo per organizzare le spese. Potrai modificarle dopo.',
     categoriesSelected: '{{count}} selezionate',
     step: 'Passo {{current}} di {{total}}',
+    startTitle: 'Come vuoi iniziare?',
+    startBody: 'Puoi partire da zero o portarti dietro quello che hai già.',
+    startFresh: 'Da zero',
+    startFreshHint: 'Un conto, il suo saldo e le categorie',
+    startImport: 'Importa un export',
+    startImportHint: 'Un CSV da Spendee, da Saldo o da un’altra app',
+    startRestore: 'Ripristina un backup',
+    startRestoreHint: 'Un backup di Saldo: sostituisce tutto, impostazioni comprese',
+    importCurrencyTitle: 'In che valuta?',
+    importCurrencyBody: 'Quella del file. Le righe in un’altra valuta non vengono importate.',
+    importFileTitle: 'Il tuo export',
+    importFileBody:
+      'Conti, categorie ed etichette arrivano dal file. Non viene salvato niente fino a «Inizia».',
+    importBalancesTitle: 'Quanto c’è adesso?',
+    importBalancesBody:
+      'Il saldo attuale di ogni conto importato. Parte da quanto somma lo storico: correggilo se la banca dice altro.',
   },
   accountTypes: {
     cash: 'Contanti',

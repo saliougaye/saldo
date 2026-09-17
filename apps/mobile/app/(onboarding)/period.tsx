@@ -40,7 +40,7 @@ export default function PeriodStep() {
           label={t('common.continue')}
           onPress={() => {
             setDraft({ periodKind: kind, cycleStartDay: day });
-            router.push('/account-details');
+            router.push(draft.path === 'import' ? '/import-currency' : '/account-details');
           }}
         />
       }
