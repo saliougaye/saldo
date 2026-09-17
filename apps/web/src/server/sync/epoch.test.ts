@@ -90,9 +90,7 @@ describe('deleteAccountData', () => {
 
     await deleteAccountData(harness.db, userId, NOW);
 
-    expect(await harness.db.select().from(syncRows).where(eq(syncRows.userId, userId))).toEqual(
-      [],
-    );
+    expect(await harness.db.select().from(syncRows).where(eq(syncRows.userId, userId))).toEqual([]);
     expect(await harness.db.select().from(syncRows).where(eq(syncRows.userId, other))).toHaveLength(
       1,
     );

@@ -6,6 +6,7 @@ import { readJson } from '../../../../src/server/http/json';
 import { requireUser } from '../../../../src/server/http/requireUser';
 import { log, ms, shortId } from '../../../../src/server/log';
 import { getStore } from '../../../../src/server/storage';
+import { assertEpoch, lockEpoch } from '../../../../src/server/sync/epoch';
 import { applyPush } from '../../../../src/server/sync/push';
 
 export const runtime = 'nodejs';
@@ -37,7 +38,12 @@ export function POST(request: Request): Promise<Response> {
       );
     }
 
-    const results = await applyPush(getDb(), user.id, body, now);
+    // §8.6: under the epoch's share lock, so a deletion cannot land between the check and the
+    // writes and leave rows of the previous generation behind.
+    const results = await getDb().transaction(async (tx) => {
+      assertEpoch(body.epoch, await lockEpoch(tx, user.id));
+      return applyPush(tx, user.id, body, now);
+    });
     // `stale` and `invalid` are the two the app cannot explain on its own: one means the server
     // held a newer row, the other that it refused the row outright.
     log('sync', `push from ${shortId(user.id)} answered in ${ms(startedAt)}`, {
