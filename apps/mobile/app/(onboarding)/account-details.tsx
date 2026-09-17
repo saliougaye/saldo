@@ -7,12 +7,10 @@ import { Card } from '../../src/components/Card';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { Segmented } from '../../src/components/Segmented';
 import { TextField } from '../../src/components/TextField';
+import { AccountTypeGrid } from '../../src/features/accounts/AccountTypeGrid';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
-
-const TYPES = ['cash', 'checking', 'credit_card', 'savings'] as const;
 
 /** §6.29 step 2: what the account *is*. Its balance and currency are step 3. */
 export default function AccountDetailsStep() {
@@ -59,9 +57,8 @@ export default function AccountDetailsStep() {
             <Text size="footnote" color="textMuted">
               {t('onboarding.accountType')}
             </Text>
-            <Segmented
+            <AccountTypeGrid
               accessibilityLabel={t('onboarding.accountType')}
-              options={TYPES.map((value) => ({ value, label: t(`accountTypes.${value}`) }))}
               value={type}
               onChange={setType}
             />
