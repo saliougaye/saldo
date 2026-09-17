@@ -164,4 +164,4 @@ export function seedFromImport(db, repos, input: ImportSeedInput): boolean {
 - [x] `TODO.md`: the item leaves; the settle item notes that onboarding already settles imported accounts.
 - [x] `README.md` "Picked up from TODO.md" entry. `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`.
       Commit `docs: import during onboarding`.
-- [ ] Check on a device — *by the user after execution.*
+- [x] Check on a device — *done by the user after execution (2026-09-17): working.*
