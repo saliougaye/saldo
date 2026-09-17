@@ -86,6 +86,7 @@ export const en: Messages = {
   accountTypes: {
     cash: 'Cash',
     checking: 'Bank',
+    debit_card: 'Debit card',
     credit_card: 'Credit card',
     savings: 'Savings',
     investment: 'Investments',

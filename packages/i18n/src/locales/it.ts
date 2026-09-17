@@ -86,6 +86,7 @@ export const it = {
   accountTypes: {
     cash: 'Contanti',
     checking: 'Conto',
+    debit_card: 'Carta di debito',
     credit_card: 'Carta di credito',
     savings: 'Risparmi',
     investment: 'Investimenti',
