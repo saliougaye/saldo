@@ -1,5 +1,5 @@
 import { fontSize, layout } from '@saldo/ui';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Insets, StyleSheet } from 'react-native';
@@ -409,6 +409,47 @@ describe('AmountInput', () => {
     // default, and one wrapped round a field swallows the field whole.
     expect(screen.getByLabelText('Amount')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Amount' })).toBeNull();
+  });
+
+  it('offers no sign switch unless the amount may be negative', async () => {
+    await showAmount();
+    expect(screen.queryByRole('switch', { name: 'Negative' })).toBeNull();
+  });
+
+  async function showBalance(buffer: string, onChange = jest.fn()) {
+    await render(
+      <Host>
+        <AmountInput
+          buffer={buffer}
+          onChange={onChange}
+          currency="EUR"
+          locale="en"
+          label="Balance"
+          doneLabel="Done"
+          allowNegative
+          negativeLabel="Negative"
+        />
+      </Host>,
+    );
+    return onChange;
+  }
+
+  it('shows a negative balance with a real minus and a checked sign switch', async () => {
+    await showBalance('-12.34');
+    expect(screen.getByLabelText('Balance').props.value).toBe('\u221212.34');
+    expect(screen.getByRole('switch', { name: 'Negative' })).toBeChecked();
+  });
+
+  it('flips the sign from the switch', async () => {
+    const onChange = await showBalance('-12.34');
+    await userEvent.press(screen.getByRole('switch', { name: 'Negative' }));
+    expect(onChange).toHaveBeenCalledWith('12.34');
+  });
+
+  it('keeps a minus typed into a balance', async () => {
+    const onChange = await showBalance('');
+    fireEvent.changeText(screen.getByLabelText('Balance'), '\u22125');
+    expect(onChange).toHaveBeenCalledWith('-5');
   });
 });
 

@@ -61,6 +61,8 @@ export default function BalanceStep() {
             autoFocus
             label={t('onboarding.accountBalance')}
             doneLabel={t('common.done')}
+            allowNegative
+            negativeLabel={t('common.negative')}
           />
         </View>
       </Card>

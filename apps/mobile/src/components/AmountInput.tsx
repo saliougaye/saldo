@@ -3,6 +3,7 @@ import {
   type CurrencyCode,
   getCurrency,
   sanitizeAmountInput,
+  toggleAmountBufferSign,
 } from '@saldo/core';
 import { type AppLocale, formatMoneyParts } from '@saldo/i18n';
 import { useRef } from 'react';
@@ -22,6 +23,13 @@ export interface AmountInputProps {
   /** Label for the accessory bar's dismiss button. */
   doneLabel: string;
   onDone?: () => void;
+  /**
+   * A balance can be below zero. The device's `decimal-pad` has no minus key on iOS, so this adds a
+   * `±` switch before the amount; a typed or pasted minus is kept as well.
+   */
+  allowNegative?: boolean;
+  /** What the sign switch announces, e.g. "Negative". Required with `allowNegative`. */
+  negativeLabel?: string;
   /** Identifier for the field itself, so an end-to-end flow can aim at it (`apps/mobile/maestro`). */
   testID?: string;
 }
@@ -46,6 +54,8 @@ export function AmountInput({
   label,
   doneLabel,
   onDone,
+  allowNegative = false,
+  negativeLabel,
   testID,
 }: AmountInputProps) {
   const theme = useTheme();
@@ -54,6 +64,7 @@ export function AmountInput({
   const { minorDigits } = getCurrency(currency);
   const parts = formatMoneyParts(amountBufferToMinor(buffer, minorDigits), currency, locale);
   const separator = locale === 'it' ? ',' : '.';
+  const negative = buffer.startsWith('-');
 
   return (
     // Tapping beside the digits focuses them, which is a convenience for a pointing finger and
@@ -61,6 +72,29 @@ export function AmountInput({
     // the field from assistive technology entirely.
     <Pressable accessible={false} onPress={() => input.current?.focus()}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        {allowNegative ? (
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityLabel={negativeLabel}
+            accessibilityState={{ checked: negative }}
+            // 36pt beside a 38pt amount; the slop brings the target to 44.
+            hitSlop={4}
+            onPress={() => onChange(toggleAmountBufferSign(buffer))}
+            style={{
+              width: 36,
+              height: 36,
+              alignSelf: 'center',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: theme.radii.chipSmall,
+              backgroundColor: negative ? theme.palette.accent : theme.palette.raised,
+            }}
+          >
+            <Text size="headline" weight="semibold" color={negative ? 'onAccent' : 'text'}>
+              ±
+            </Text>
+          </Pressable>
+        ) : null}
         {parts.symbolPosition === 'prefix' ? (
           <Text size="amountXl" weight="semibold" color="textFaint">
             {parts.symbol}
@@ -70,8 +104,11 @@ export function AmountInput({
           ref={input}
           testID={testID}
           accessibilityLabel={label}
-          value={buffer.replace('.', separator)}
-          onChangeText={(text) => onChange(sanitizeAmountInput(text, minorDigits))}
+          // The buffer stores `-`; the field shows the typographic minus every amount uses (§5.1).
+          value={buffer.replace('-', '\u2212').replace('.', separator)}
+          onChangeText={(text) =>
+            onChange(sanitizeAmountInput(text, minorDigits, { allowNegative }))
+          }
           keyboardType="decimal-pad"
           autoFocus={autoFocus}
           placeholder="0"
