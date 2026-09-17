@@ -256,3 +256,18 @@ export function planImport(
   ];
   return plan;
 }
+
+/**
+ * What each new account's balance would be if the import were its whole history: §5.3 with an
+ * opening balance of 0. Onboarding shows it as the starting balance, and subtracts it from the
+ * balance the user enters to get the opening balance (§6.22).
+ */
+export function importedBalances(plan: ImportPlan, today: LocalDate): Map<string, MinorUnits> {
+  const balances = new Map<string, MinorUnits>(plan.newAccounts.map((name) => [name, 0]));
+  for (const row of plan.transactions) {
+    if (row.date > today) continue;
+    const signed = row.kind === 'income' ? row.amount : -row.amount;
+    balances.set(row.accountName, (balances.get(row.accountName) ?? 0) + signed);
+  }
+  return balances;
+}

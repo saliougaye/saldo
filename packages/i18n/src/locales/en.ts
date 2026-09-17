@@ -83,6 +83,22 @@ export const en: Messages = {
     categoriesBody: 'We use them to organise your spending. You can change them later.',
     categoriesSelected: '{{count}} selected',
     step: 'Step {{current}} of {{total}}',
+    startTitle: 'How do you want to start?',
+    startBody: 'Start from scratch, or bring along what you already have.',
+    startFresh: 'From scratch',
+    startFreshHint: 'One account, its balance and your categories',
+    startImport: 'Import an export',
+    startImportHint: 'A CSV from Spendee, from Saldo or from another app',
+    startRestore: 'Restore a backup',
+    startRestoreHint: 'A Saldo backup: it replaces everything, settings included',
+    importCurrencyTitle: 'Which currency?',
+    importCurrencyBody: 'The one the file uses. Rows in another currency are not imported.',
+    importFileTitle: 'Your export',
+    importFileBody:
+      'Accounts, categories and tags come from the file. Nothing is saved until “Start”.',
+    importBalancesTitle: 'What’s there now?',
+    importBalancesBody:
+      'The current balance of each imported account. It starts at what the history adds up to: correct it if your bank says otherwise.',
   },
   accountTypes: {
     cash: 'Cash',

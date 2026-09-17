@@ -7,7 +7,7 @@ import FIXTURE from './__fixtures__/spendee.csv?raw';
 import { parseCsv } from './csvParse';
 import { transactionFingerprint } from './fingerprint';
 import { detectPreset, type ImportMapping, mappingFor } from './importMapping';
-import { type ImportContext, planImport } from './importPlan';
+import { type ImportContext, type ImportPlan, importedBalances, planImport } from './importPlan';
 
 const { rows } = parseCsv(FIXTURE);
 const headers = rows[0] ?? [];
@@ -321,5 +321,60 @@ describe('planImport, other shapes', () => {
       context(),
     );
     expect(plan.transactions[0]?.date).toBe('2026-04-18');
+  });
+});
+
+describe('importedBalances', () => {
+  const row = (
+    accountName: string,
+    kind: 'expense' | 'income',
+    amount: number,
+    date: string,
+  ): ImportPlan['transactions'][number] => ({
+    rowNumber: 1,
+    date,
+    kind,
+    amount,
+    accountName,
+    categoryName: 'Varie',
+    description: '',
+    note: null,
+    tagNames: [],
+    fingerprint: `${accountName}-${kind}-${amount}-${date}`,
+  });
+
+  const importPlan = (transactions: ImportPlan['transactions']): ImportPlan => ({
+    transactions,
+    duplicates: 0,
+    errors: [],
+    newAccounts: ['My Money', 'Carta', 'Vuoto'],
+    newCategories: [],
+    newTags: [],
+  });
+
+  it('adds up each account as if the import were its whole history', () => {
+    const balances = importedBalances(
+      importPlan([
+        row('My Money', 'income', 7000, '2026-08-12'),
+        row('My Money', 'expense', 500, '2026-08-12'),
+        row('Carta', 'expense', 1399, '2026-08-15'),
+      ]),
+      '2026-09-17',
+    );
+    expect(balances).toEqual(
+      new Map([
+        ['My Money', 6500],
+        ['Carta', -1399],
+        ['Vuoto', 0],
+      ]),
+    );
+  });
+
+  it('leaves out what is still scheduled, as a balance does (§5.3)', () => {
+    const balances = importedBalances(
+      importPlan([row('My Money', 'expense', 500, '2026-09-18')]),
+      '2026-09-17',
+    );
+    expect(balances.get('My Money')).toBe(0);
   });
 });

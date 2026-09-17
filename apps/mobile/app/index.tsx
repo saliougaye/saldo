@@ -56,7 +56,7 @@ export default function Boot() {
         />
       );
     case 'onboarding':
-      return <Redirect href="/period" />;
+      return <Redirect href="/start" />;
     case 'tabs':
       return <Redirect href="/(tabs)" />;
   }

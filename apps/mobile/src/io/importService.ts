@@ -2,6 +2,7 @@ import {
   IMPORTED_CATEGORY_COLOR,
   IMPORTED_CATEGORY_ICON,
   type ImportPlan,
+  type MinorUnits,
   normalizeText,
   transactionFingerprint,
 } from '@saldo/core';
@@ -38,90 +39,110 @@ export function existingFingerprints(repos: Repositories): Set<string> {
   return fingerprints;
 }
 
+export interface ImportWriteOptions {
+  /** Opening balance per new account name; 0 for any name it does not list (§11.3). */
+  openingBalances?: ReadonlyMap<string, MinorUnits>;
+}
+
 /**
  * Writes what `planImport` decided, in one transaction (§11.3): a half-finished import would leave
- * accounts and categories nobody asked for. Names are created first so every transaction can point
- * at an id.
+ * accounts and categories nobody asked for.
  */
 export function applyImport(
   db: RepositoryDatabase,
   repos: Repositories,
   plan: ImportPlan,
+  options: ImportWriteOptions = {},
 ): ImportOutcome {
-  return db.transaction(() => {
-    const accounts = new Map(
-      repos.accounts.list().map((account) => [normalizeText(account.name), account.id]),
-    );
-    const tags = new Map(repos.tags.list().map((tag) => [normalizeText(tag.name), tag.id]));
-    const categories = new Map(
-      repos.categories
-        .list()
-        .map((category) => [`${category.direction}:${normalizeText(category.name)}`, category.id]),
-    );
+  return db.transaction(() => writeImport(repos, plan, options));
+}
 
-    for (const name of plan.newAccounts) {
-      const created = repos.accounts.create({
-        name,
-        type: 'checking',
-        institution: null,
-        openingBalance: 0,
-        includeInSpendable: true,
-        colorIndex: 0,
-        icon: 'landmark',
-        creditCloseDay: null,
-        creditChargeDay: null,
-        creditPaymentAccountId: null,
-        archivedAt: null,
-        sortOrder: accounts.size,
-      });
-      accounts.set(normalizeText(name), created.id);
-    }
+/**
+ * `applyImport` without a transaction of its own, for a caller that writes more in the same one
+ * (onboarding, §6.29). Names are created first so every transaction can point at an id, and only
+ * when they are still missing: rows written after the plan was made — the hidden seed categories,
+ * or a sync — must not gain a twin.
+ */
+export function writeImport(
+  repos: Repositories,
+  plan: ImportPlan,
+  options: ImportWriteOptions = {},
+): ImportOutcome {
+  const accounts = new Map(
+    repos.accounts.list().map((account) => [normalizeText(account.name), account.id]),
+  );
+  const tags = new Map(repos.tags.list().map((tag) => [normalizeText(tag.name), tag.id]));
+  const categories = new Map(
+    repos.categories
+      .list()
+      .map((category) => [`${category.direction}:${normalizeText(category.name)}`, category.id]),
+  );
 
-    for (const { name, direction } of plan.newCategories) {
-      const created = repos.categories.create({
-        name,
-        direction,
-        parentId: null,
-        colorIndex: IMPORTED_CATEGORY_COLOR,
-        icon: IMPORTED_CATEGORY_ICON,
-        archivedAt: null,
-        sortOrder: categories.size,
-      });
-      categories.set(`${direction}:${normalizeText(name)}`, created.id);
-    }
+  for (const name of plan.newAccounts) {
+    if (accounts.has(normalizeText(name))) continue;
+    const created = repos.accounts.create({
+      name,
+      type: 'checking',
+      institution: null,
+      openingBalance: options.openingBalances?.get(name) ?? 0,
+      includeInSpendable: true,
+      colorIndex: 0,
+      icon: 'landmark',
+      creditCloseDay: null,
+      creditChargeDay: null,
+      creditPaymentAccountId: null,
+      archivedAt: null,
+      sortOrder: accounts.size,
+    });
+    accounts.set(normalizeText(name), created.id);
+  }
 
-    for (const name of plan.newTags) {
-      const created = repos.tags.create({ name });
-      tags.set(normalizeText(name), created.id);
-    }
+  for (const { name, direction } of plan.newCategories) {
+    if (categories.has(`${direction}:${normalizeText(name)}`)) continue;
+    const created = repos.categories.create({
+      name,
+      direction,
+      parentId: null,
+      colorIndex: IMPORTED_CATEGORY_COLOR,
+      icon: IMPORTED_CATEGORY_ICON,
+      archivedAt: null,
+      sortOrder: categories.size,
+    });
+    categories.set(`${direction}:${normalizeText(name)}`, created.id);
+  }
 
-    let imported = 0;
-    for (const planned of plan.transactions) {
-      const accountId = accounts.get(normalizeText(planned.accountName));
-      // Unreachable: the planner registered every name it used. Skipping beats writing a row that
-      // points nowhere.
-      if (accountId === undefined) continue;
-      const categoryId = categories.get(`${planned.kind}:${normalizeText(planned.categoryName)}`);
-      // Unreachable for the same reason as the account above.
-      if (categoryId === undefined) continue;
-      repos.transactions.create({
-        date: planned.date,
-        kind: planned.kind,
-        amount: planned.amount,
-        accountId,
-        toAccountId: null,
-        categoryId,
-        description: planned.description,
-        note: planned.note,
-        tagIds: planned.tagNames
-          .map((name) => tags.get(normalizeText(name)))
-          .filter((id): id is string => id !== undefined),
-        excludeFromTotals: false,
-        recurrenceId: null,
-      });
-      imported += 1;
-    }
+  for (const name of plan.newTags) {
+    if (tags.has(normalizeText(name))) continue;
+    const created = repos.tags.create({ name });
+    tags.set(normalizeText(name), created.id);
+  }
 
-    return { imported, skipped: plan.duplicates };
-  });
+  let imported = 0;
+  for (const planned of plan.transactions) {
+    const accountId = accounts.get(normalizeText(planned.accountName));
+    // Unreachable: the planner registered every name it used. Skipping beats writing a row that
+    // points nowhere.
+    if (accountId === undefined) continue;
+    const categoryId = categories.get(`${planned.kind}:${normalizeText(planned.categoryName)}`);
+    // Unreachable for the same reason as the account above.
+    if (categoryId === undefined) continue;
+    repos.transactions.create({
+      date: planned.date,
+      kind: planned.kind,
+      amount: planned.amount,
+      accountId,
+      toAccountId: null,
+      categoryId,
+      description: planned.description,
+      note: planned.note,
+      tagIds: planned.tagNames
+        .map((name) => tags.get(normalizeText(name)))
+        .filter((id): id is string => id !== undefined),
+      excludeFromTotals: false,
+      recurrenceId: null,
+    });
+    imported += 1;
+  }
+
+  return { imported, skipped: plan.duplicates };
 }

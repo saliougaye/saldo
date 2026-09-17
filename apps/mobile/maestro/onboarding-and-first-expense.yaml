@@ -4,20 +4,20 @@
 # ------------------------
 # §6.29 step 0 is sign-in, and sign-in is a passkey ceremony: `ConnectForm` hands off to a browser
 # and to the platform authenticator, neither of which Maestro drives. So this flow does not start
-# from a fresh install. It starts one screen later, at step 1 of 4, and everything before that is
+# from a fresh install. It starts one screen later, at the start chooser, and everything before that is
 # done by hand once.
 #
 # THE STATE THE DEVICE MUST BE IN
 # -------------------------------
 #  * The app is installed (`SALDO_SERVER_URL=… npx expo run:ios`, see README "Step 3").
 #  * It is signed in to a **brand new** account — one whose server holds no settings row yet.
-#  * It is therefore sitting on onboarding step 1 when launched: `decideBoot` only returns
+#  * It is therefore sitting on the onboarding chooser when launched: `decideBoot` only returns
 #    `onboarding` once a sync cycle has come back and brought no settings
 #    (`apps/mobile/src/boot/decide.ts:75-95`).
 #
 # How to get there: launch the app, tap "Create account" on the welcome screen, finish the passkey
 # ceremony yourself (on the simulator, Features -> Face ID -> Enrolled first), and stop when
-# "Passo 1 di 4" / "Step 1 of 4" appears. To run the flow a second time, delete the device's
+# "Come vuoi iniziare?" / "How do you want to start?" appears. To run the flow a second time, delete the device's
 # database — the session lives in the keychain and survives it:
 #
 #   xcrun simctl get_app_container booted io.github.saldo.app data
@@ -37,13 +37,17 @@ name: Onboarding, then a first expense on Home
 ---
 - launchApp
 
-# Step 1 of 4 — how you track spending. The month is already selected (`INITIAL.periodKind` in
-# `src/features/onboarding/state.tsx`), so there is nothing to choose. The wait is long because a
-# freshly signed-in device shows the "first sync" spinner until a cycle comes back.
+# Before step 1 — where the data comes from. This flow starts from scratch. The wait is long
+# because a freshly signed-in device shows the "first sync" spinner until a cycle comes back.
 - extendedWaitUntil:
     visible:
-      id: "onboarding-period-continue"
+      id: "onboarding-start-fresh"
     timeout: 30000
+- tapOn:
+    id: "onboarding-start-fresh"
+
+# Step 1 of 4 — how you track spending. The month is already selected (`INITIAL.periodKind` in
+# `src/features/onboarding/state.tsx`), so there is nothing to choose.
 - tapOn:
     id: "onboarding-period-continue"
 
