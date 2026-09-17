@@ -132,4 +132,4 @@ export function toggleAmountBufferSign(buffer: string): string {
 - [x] Spec §5.1 (signed buffer, `±` switch), §6.22 and §6.29 step 3 (balance may be negative).
 - [x] Item leaves `TODO.md`; `README.md` gets a "Picked up from TODO.md" entry.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`. Commit `docs: negative account balances`.
-- [ ] Check on a device — *by the user after execution.*
+- [x] Check on a device — *done by the user after execution (2026-09-17): working.*
