@@ -10,6 +10,7 @@ import {
   minorToAmountBuffer,
   parseDecimalAmount,
   sanitizeAmountInput,
+  toggleAmountBufferSign,
 } from './money';
 
 describe('currencies', () => {
@@ -95,6 +96,33 @@ describe('sanitizeAmountInput', () => {
   });
 });
 
+describe('sanitizeAmountInput with allowNegative', () => {
+  it('keeps a minus, typed as a hyphen or as U+2212, wherever the caret put it', () => {
+    expect(sanitizeAmountInput('-12', 2, { allowNegative: true })).toBe('-12');
+    expect(sanitizeAmountInput('−12,5', 2, { allowNegative: true })).toBe('-12.5');
+    expect(sanitizeAmountInput('1−2', 2, { allowNegative: true })).toBe('-12');
+  });
+
+  it('keeps a lone minus so the sign can come before the digits', () => {
+    expect(sanitizeAmountInput('-', 2, { allowNegative: true })).toBe('-');
+    expect(sanitizeAmountInput('-05', 2, { allowNegative: true })).toBe('-5');
+    expect(sanitizeAmountInput('-.5', 2, { allowNegative: true })).toBe('-0.5');
+  });
+
+  it('still drops the minus by default', () => {
+    expect(sanitizeAmountInput('−12', 2)).toBe('12');
+  });
+});
+
+describe('toggleAmountBufferSign', () => {
+  it('flips the leading minus, even on an empty buffer', () => {
+    expect(toggleAmountBufferSign('')).toBe('-');
+    expect(toggleAmountBufferSign('-')).toBe('');
+    expect(toggleAmountBufferSign('12.5')).toBe('-12.5');
+    expect(toggleAmountBufferSign('-12.5')).toBe('12.5');
+  });
+});
+
 describe('amountBufferToMinor / minorToAmountBuffer', () => {
   it('converts buffers to minor units', () => {
     expect(amountBufferToMinor('', 2)).toBe(0);
@@ -106,11 +134,17 @@ describe('amountBufferToMinor / minorToAmountBuffer', () => {
     expect(amountBufferToMinor('12.5', 3)).toBe(12500);
   });
 
+  it('reads a leading minus, and never produces -0', () => {
+    expect(amountBufferToMinor('-12.5', 2)).toBe(-1250);
+    expect(Object.is(amountBufferToMinor('-', 2), 0)).toBe(true);
+    expect(Object.is(amountBufferToMinor('-0', 2), 0)).toBe(true);
+  });
+
   it('converts minor units back to the shortest buffer', () => {
     expect(minorToAmountBuffer(1200, 2)).toBe('12');
     expect(minorToAmountBuffer(1250, 2)).toBe('12.5');
     expect(minorToAmountBuffer(1205, 2)).toBe('12.05');
-    expect(minorToAmountBuffer(-41235, 2)).toBe('412.35');
+    expect(minorToAmountBuffer(-41235, 2)).toBe('-412.35');
     expect(minorToAmountBuffer(1200, 0)).toBe('1200');
     expect(minorToAmountBuffer(1500, 3)).toBe('1.5');
     expect(minorToAmountBuffer(1050, 3)).toBe('1.05');
@@ -119,7 +153,7 @@ describe('amountBufferToMinor / minorToAmountBuffer', () => {
 
   it('round-trips every supported scale', () => {
     for (const minorDigits of [0, 2, 3] as const) {
-      for (const minor of [0, 1, 5, 99, 100, 1005, 123456]) {
+      for (const minor of [0, 1, 5, 99, 100, 1005, 123456, -1, -1005, -123456]) {
         expect(amountBufferToMinor(minorToAmountBuffer(minor, minorDigits), minorDigits)).toBe(
           minor,
         );

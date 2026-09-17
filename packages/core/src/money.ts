@@ -37,12 +37,31 @@ export function maxIntegerDigits(minorDigits: MinorDigits): number {
  * The buffer always uses `.` as its decimal separator, but the system keypad emits `.` or `,`
  * depending on the device locale, so both are accepted. Anything else is dropped rather than
  * rejected: a keyboard can deliver a paste, a minus sign or a second separator, and refusing the
- * whole edit would leave the field stuck.
+ * whole edit would leave the field stuck. A minus survives only with `allowNegative`.
  *
  * Limits mirror the old on-screen keypad: `maxIntegerDigits(minorDigits)` before the separator,
  * `minorDigits` after it, and no separator at all for a currency without a minor unit.
  */
-export function sanitizeAmountInput(text: string, minorDigits: MinorDigits): string {
+export interface AmountInputOptions {
+  /**
+   * Keep a minus sign as a leading `-` (§5.1). Only a balance can be below zero; a transaction or
+   * budget amount is always positive, so its fields leave this off.
+   */
+  allowNegative?: boolean;
+}
+
+export function sanitizeAmountInput(
+  text: string,
+  minorDigits: MinorDigits,
+  options: AmountInputOptions = {},
+): string {
+  // Anywhere, not only first: the caret can sit before the sign when a digit is typed, and the
+  // field shows the sign as U+2212 while the buffer stores `-`.
+  const sign = options.allowNegative === true && /[-\u2212]/.test(text) ? '-' : '';
+  return sign + sanitizeUnsignedAmount(text, minorDigits);
+}
+
+function sanitizeUnsignedAmount(text: string, minorDigits: MinorDigits): string {
   const digitsAndSeparators = text.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
   const [rawInteger = '', ...rest] = digitsAndSeparators.split('.');
   // Only the first separator counts; later ones join the fraction.
@@ -55,11 +74,19 @@ export function sanitizeAmountInput(text: string, minorDigits: MinorDigits): str
   return `${integer.length === 0 ? '0' : integer}.${rawFraction.slice(0, minorDigits)}`;
 }
 
+/** Flips the sign of a balance buffer. An empty buffer becomes `-`, so the sign can come first. */
+export function toggleAmountBufferSign(buffer: string): string {
+  return buffer.startsWith('-') ? buffer.slice(1) : `-${buffer}`;
+}
+
 export function amountBufferToMinor(buffer: string, minorDigits: MinorDigits): MinorUnits {
-  if (buffer.length === 0) return 0;
-  const [integerPart = '', decimalPart = ''] = buffer.split('.');
+  const negative = buffer.startsWith('-');
+  const unsigned = negative ? buffer.slice(1) : buffer;
+  if (unsigned.length === 0) return 0;
+  const [integerPart = '', decimalPart = ''] = unsigned.split('.');
   const fraction = decimalPart.padEnd(minorDigits, '0').slice(0, minorDigits);
-  return Number(integerPart || '0') * 10 ** minorDigits + Number(fraction || '0');
+  const value = Number(integerPart || '0') * 10 ** minorDigits + Number(fraction || '0');
+  return negative && value !== 0 ? -value : value;
 }
 
 export function minorToAmountBuffer(minor: MinorUnits, minorDigits: MinorDigits): string {
@@ -67,8 +94,9 @@ export function minorToAmountBuffer(minor: MinorUnits, minorDigits: MinorDigits)
   const abs = Math.abs(Math.trunc(minor));
   const integer = Math.floor(abs / scale);
   const fraction = abs % scale;
-  if (fraction === 0) return String(integer);
-  return `${integer}.${String(fraction).padStart(minorDigits, '0').replace(/0+$/, '')}`;
+  const sign = abs > 0 && minor < 0 ? '-' : '';
+  if (fraction === 0) return `${sign}${integer}`;
+  return `${sign}${integer}.${String(fraction).padStart(minorDigits, '0').replace(/0+$/, '')}`;
 }
 
 /**
