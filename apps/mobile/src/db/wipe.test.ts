@@ -1,7 +1,8 @@
 import type { Account, Settings } from '@saldo/core';
-import { schema } from './schema';
+import { DEVICE_ACCOUNT_KEY } from '../auth/deviceOwner';
+import { schema, syncedTables } from './schema';
 import { createTestContext, type TestContext } from './testing';
-import { hasLocalData, wipeDevice } from './wipe';
+import { hasLocalData, SYNC_EPOCH_KEY, wipeAccountData, wipeDevice } from './wipe';
 
 const SETTINGS_INPUT = {
   periodKind: 'cycle',
@@ -110,5 +111,59 @@ describe('wipeDevice', () => {
     const account = context.repos.accounts.create({ ...ACCOUNT_INPUT, name: 'Nuovo' });
     expect(account.name).toBe('Nuovo');
     expect(context.repos.accounts.list()).toHaveLength(1);
+  });
+});
+
+describe('wipeAccountData', () => {
+  it('empties every synced table and forgets the cursor', () => {
+    const context = createTestContext();
+    fill(context);
+
+    wipeAccountData(context.db, 4);
+
+    for (const table of Object.values(syncedTables)) {
+      expect(context.db.select().from(table).all()).toEqual([]);
+    }
+    expect(context.kv.get('syncCursor')).toBeNull();
+    expect(context.kv.get(SYNC_EPOCH_KEY)).toBe('4');
+  });
+
+  it('keeps what belongs to the phone and the session', () => {
+    const context = createTestContext();
+    fill(context);
+    context.kv.set(DEVICE_ACCOUNT_KEY, 'account-1');
+    context.clock.now();
+    const deviceId = context.kv.deviceId();
+    const hlc = context.kv.get('hlc');
+
+    wipeAccountData(context.db, 1);
+
+    // The user stays signed in (§8.6): the phone is the same phone, on the same account, with the
+    // same lock — only the data is new.
+    expect(context.kv.deviceId()).toBe(deviceId);
+    expect(context.kv.get('hlc')).toBe(hlc);
+    expect(context.kv.get(DEVICE_ACCOUNT_KEY)).toBe('account-1');
+    expect(context.kv.get('appLockEnabled')).toBe('true');
+  });
+
+  it('forgets the epoch when there is no server to have one', () => {
+    const context = createTestContext();
+    fill(context);
+    context.kv.set(SYNC_EPOCH_KEY, '2');
+
+    wipeAccountData(context.db, null);
+
+    expect(context.kv.get(SYNC_EPOCH_KEY)).toBeNull();
+  });
+
+  it('leaves no settings, which is what sends boot to onboarding', () => {
+    const context = createTestContext();
+    fill(context);
+
+    wipeAccountData(context.db, 1);
+
+    expect(context.repos.settings.get()).toBeNull();
+    context.repos.settings.create(SETTINGS_INPUT);
+    expect(context.repos.settings.get()).not.toBeNull();
   });
 });
