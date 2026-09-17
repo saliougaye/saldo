@@ -1,11 +1,13 @@
 import {
+  DATA_RESET_CODE,
   type PullResponse,
   type PushResponse,
   SYNC_SCHEMA_VERSION,
   shouldApplyRemote,
 } from '@saldo/core';
 import { createTestContext, type TestContext } from '../db/testing';
-import type { ApiClient } from '../net/apiClient';
+import { wipeAccountData } from '../db/wipe';
+import { type ApiClient, ApiClientError } from '../net/apiClient';
 import { runSyncCycle } from './client';
 import { SYNCED_ENTITY_NAMES, SYNCED_TABLES } from './entities';
 import { pendingCount } from './localStore';
@@ -20,6 +22,7 @@ interface ServerRow {
 }
 
 interface PushBody {
+  epoch?: number;
   changes: {
     entity: string;
     id: string;
@@ -37,11 +40,21 @@ interface PushBody {
 function createMemoryServer() {
   const rows = new Map<string, ServerRow>();
   let seq = 0;
+  let epoch = 0;
   const key = (entity: string, id: string) => `${entity}:${id}`;
 
   return {
     rows,
+    epoch: () => epoch,
+    /** What `DELETE /api/data` does (§8.6). */
+    deleteAll() {
+      rows.clear();
+      epoch += 1;
+    },
     push(body: PushBody): PushResponse {
+      if (body.epoch !== undefined && body.epoch !== epoch) {
+        throw new ApiClientError(409, DATA_RESET_CODE, 'deleted elsewhere');
+      }
       return {
         schemaVersion: SYNC_SCHEMA_VERSION,
         serverTime: '2026-09-10T10:00:00.000Z',
@@ -63,7 +76,10 @@ function createMemoryServer() {
         }),
       };
     },
-    pull(since: number, limit: number): PullResponse {
+    pull(since: number, limit: number, requested: number | null): PullResponse {
+      if (requested !== null && requested !== epoch) {
+        throw new ApiClientError(409, DATA_RESET_CODE, 'deleted elsewhere');
+      }
       const ordered = [...rows.values()]
         .filter((row) => row.seq > since)
         .sort((left, right) => left.seq - right.seq);
@@ -99,9 +115,11 @@ function apiFor(server: MemoryServer): ApiClient {
     },
     get: async (path, schema) => {
       const url = new URL(path, 'http://server.invalid');
+      if (url.pathname === '/api/data') return schema.parse({ epoch: server.epoch() });
       const since = Number.parseInt(url.searchParams.get('since') ?? '0', 10);
       const limit = Number.parseInt(url.searchParams.get('limit') ?? '500', 10);
-      return schema.parse(server.pull(since, limit));
+      const epoch = url.searchParams.get('epoch');
+      return schema.parse(server.pull(since, limit, epoch === null ? null : Number(epoch)));
     },
   };
 }
@@ -316,5 +334,26 @@ describe('two devices against one server', () => {
     expect(pendingCount(b.db)).toBe(0);
     // And the server holds one row per entity id, not duplicates.
     expect(server.rows.size).toBe(2);
+  });
+
+  it('empty the other phone when one deletes everything, without its offline writes', async () => {
+    const server = createMemoryServer();
+    const a = createDevice('device-a', server);
+    const b = createDevice('device-b', server);
+    a.repos.tags.create({ name: 'Condiviso' });
+    await a.sync();
+    await b.sync();
+    b.repos.tags.create({ name: 'Scritto offline' });
+
+    // Device A deletes everything: the server first, then its own copy, then a fresh start.
+    server.deleteAll();
+    wipeAccountData(a.db, server.epoch());
+    a.repos.tags.create({ name: 'Da capo' });
+    await a.sync();
+    await b.sync();
+
+    expect(snapshot(b)).toEqual(snapshot(a));
+    expect(b.repos.tags.list().map((tag) => tag.name)).toEqual(['Da capo']);
+    expect([...server.rows.values()]).toHaveLength(1);
   });
 });
