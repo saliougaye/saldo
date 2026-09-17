@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountTypeSchema,
   BUDGET_ALERT_THRESHOLDS,
   budgetSchema,
   entitySchemas,
@@ -195,6 +196,19 @@ describe('entitySchemas', () => {
       'settings',
       'tag',
       'transaction',
+    ]);
+  });
+});
+
+describe('accountTypeSchema', () => {
+  it('knows a debit card, between a current account and a credit card', () => {
+    expect(accountTypeSchema.options).toEqual([
+      'cash',
+      'checking',
+      'debit_card',
+      'credit_card',
+      'savings',
+      'investment',
     ]);
   });
 });

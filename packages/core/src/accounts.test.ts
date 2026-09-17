@@ -184,6 +184,10 @@ describe('transferOverdrawsSource', () => {
     );
   });
 
+  it('catches a debit card going below zero, as it would a current account', () => {
+    expect(transferOverdrawsSource({ type: 'debit_card' }, { now: 5000, after: -1000 })).toBe(true);
+  });
+
   it('does not block a transfer that moves nothing yet', () => {
     // A future-dated transfer out of an account that is already in the red: `after === now`, so
     // this transfer is not what put it there.

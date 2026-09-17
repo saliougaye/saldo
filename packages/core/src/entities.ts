@@ -53,6 +53,7 @@ export const settingsSchema = z.object({
 export const accountTypeSchema = z.enum([
   'cash',
   'checking',
+  'debit_card',
   'credit_card',
   'savings',
   'investment',
