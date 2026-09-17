@@ -35,6 +35,12 @@ export interface Scheduler {
   syncNow(): Promise<SyncOutcome | null>;
   /** Coalesces bursts of local writes into one cycle (§8.5). */
   requestSync(): void;
+  /**
+   * Runs `task` with no cycle beside it (§8.6): waits for the cycle in flight, and any `syncNow`
+   * asked for meanwhile joins the task instead of starting one. A cycle interleaved with a data
+   * deletion could pull rows of the deleted generation back after the phone was emptied.
+   */
+  exclusive<T>(task: () => Promise<T>): Promise<T>;
   status(): SyncStatus;
   subscribe(listener: (status: SyncStatus) => void): () => void;
   stop(): void;
@@ -62,6 +68,7 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
   const clearTimer = options.clearTimer ?? clearTimeout;
 
   let inFlight: Promise<SyncOutcome | null> | null = null;
+  let exclusiveTask: Promise<unknown> | null = null;
   let failures = 0;
   let debounce: ReturnType<typeof setTimeout> | null = null;
   let stopped = false;
@@ -108,12 +115,15 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
     }
   };
 
+  const noOutcome = (): null => null;
+
   const scheduler: Scheduler = {
     start() {
       stopped = false;
     },
     syncNow() {
       if (stopped) return Promise.resolve(null);
+      if (exclusiveTask !== null) return exclusiveTask.then(noOutcome, noOutcome);
       inFlight ??= cycle().finally(() => {
         inFlight = null;
       });
@@ -126,6 +136,16 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
         debounce = null;
         void scheduler.syncNow();
       }, WRITE_DEBOUNCE_MS);
+    },
+    exclusive(task) {
+      const before = exclusiveTask ?? inFlight ?? Promise.resolve(null);
+      const run = before.then(task, task);
+      exclusiveTask = run;
+      const release = (): void => {
+        if (exclusiveTask === run) exclusiveTask = null;
+      };
+      run.then(release, release);
+      return run;
     },
     status: () => status,
     subscribe(listener) {

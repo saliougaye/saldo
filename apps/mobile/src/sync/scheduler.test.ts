@@ -188,3 +188,65 @@ describe('hasSyncSettled', () => {
     expect(hasSyncSettled({ kind: 'session-expired' })).toBe(true);
   });
 });
+
+describe('exclusive', () => {
+  it('waits for the cycle in flight before running the task', async () => {
+    const cycle = deferred<typeof NO_OUTCOME>();
+    const scheduler = createScheduler({ deps: () => NO_DEPS, runCycle: () => cycle.promise });
+    const order: string[] = [];
+    void scheduler.syncNow().then(() => order.push('cycle'));
+
+    const task = scheduler.exclusive(async () => {
+      order.push('task');
+      return 7;
+    });
+    await Promise.resolve();
+    expect(order).toEqual([]);
+
+    cycle.resolve(NO_OUTCOME);
+    await expect(task).resolves.toBe(7);
+    expect(order).toEqual(['cycle', 'task']);
+  });
+
+  it('starts no cycle while the task runs, and syncs normally afterwards', async () => {
+    let cycles = 0;
+    const scheduler = createScheduler({
+      deps: () => NO_DEPS,
+      runCycle: async () => {
+        cycles += 1;
+        return NO_OUTCOME;
+      },
+    });
+    const gate = deferred<void>();
+    const running = scheduler.exclusive(() => gate.promise);
+
+    const joined = scheduler.syncNow();
+    gate.resolve();
+    await running;
+
+    await expect(joined).resolves.toBeNull();
+    expect(cycles).toBe(0);
+    await scheduler.syncNow();
+    expect(cycles).toBe(1);
+  });
+
+  it('lets cycles run again when the task fails', async () => {
+    let cycles = 0;
+    const scheduler = createScheduler({
+      deps: () => NO_DEPS,
+      runCycle: async () => {
+        cycles += 1;
+        return NO_OUTCOME;
+      },
+    });
+
+    await expect(
+      scheduler.exclusive(async () => {
+        throw new Error('offline');
+      }),
+    ).rejects.toThrow('offline');
+
+    await scheduler.syncNow();
+    expect(cycles).toBe(1);
+  });
+});

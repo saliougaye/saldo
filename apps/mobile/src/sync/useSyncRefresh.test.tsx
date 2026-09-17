@@ -38,6 +38,7 @@ function schedulerEndingIn(ending: SyncStatus) {
     start: jest.fn(),
     stop: jest.fn(),
     requestSync: jest.fn(),
+    exclusive: (task) => task(),
     subscribe: () => () => undefined,
     status: () => status,
     syncNow: jest.fn(
