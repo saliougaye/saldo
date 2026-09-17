@@ -609,6 +609,15 @@ small enough to land on its own branch without a plan file of its own.
   a typed minus is kept. Editing an account below zero no longer saves it as positive: `minorToAmountBuffer` used to
   drop the sign.
 
+### Picked up from `TODO.md` on 2026-09-17 ✅ done
+
+**Plan:** `2026-09-17-onboarding-import.md` · **Spec:** §6.29, §11.3
+
+- ✅ **Import during onboarding.** A chooser before step 1 starts from scratch, from a CSV export, or from a Saldo
+  backup. The import path is period, currency, the import wizard, and one current balance per imported account,
+  stored as an opening balance; nothing is written until "Inizia". `applyImport` no longer twins a name that exists
+  by the time it writes.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

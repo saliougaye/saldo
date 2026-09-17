@@ -67,10 +67,10 @@ carries its own settings, so the boot router takes it to the tabs.
 
 ### Task 1: `importedBalances` in core
 
-- [ ] **Failing test** in `importPlan.test.ts`: a plan with two accounts, income and expense rows, and a row dated
+- [x] **Failing test** in `importPlan.test.ts`: a plan with two accounts, income and expense rows, and a row dated
       after `today` → `Map { 'My Money' → income − expense (future row ignored), 'Carta' → −amount }`; every name in
       `plan.newAccounts` is present, at 0 when it has no rows.
-- [ ] Implement:
+- [x] Implement:
 
 ```ts
 /**
@@ -89,27 +89,27 @@ export function importedBalances(plan: ImportPlan, today: LocalDate): Map<string
 }
 ```
 
-- [ ] Commit `feat(core): the balances an import adds up to`.
+- [x] Commit `feat(core): the balances an import adds up to`.
 
 ### Task 2: the import writer composes
 
-- [ ] **Failing tests** in `importService.test.ts`: (a) with an existing income category "Money Back", `applyImport`
+- [x] **Failing tests** in `importService.test.ts`: (a) with an existing income category "Money Back", `applyImport`
       of a plan that lists it in `newCategories` creates no second one; (b) `applyImport(db, repos, plan,
       { openingBalances: new Map([['My Money', 12000]]) })` stores `openingBalance 12000`.
-- [ ] Split `applyImport` into `writeImport(repos, plan, options)` (no transaction) and `applyImport(db, repos, plan,
+- [x] Split `applyImport` into `writeImport(repos, plan, options)` (no transaction) and `applyImport(db, repos, plan,
       options = {})` = `db.transaction(() => writeImport(…))`. Skip names already in the map;
       `openingBalance: options.openingBalances?.get(name) ?? 0`.
-- [ ] Commit `feat(mobile): an import can set opening balances and never duplicates a name`.
+- [x] Commit `feat(mobile): an import can set opening balances and never duplicates a name`.
 
 ### Task 3: seeding without a first account
 
-- [ ] **Failing test** in `seed.test.ts`: `account: null, selectedCategoryKeys: []` writes settings, no account, and
+- [x] **Failing test** in `seed.test.ts`: `account: null, selectedCategoryKeys: []` writes settings, no account, and
       only the hidden categories.
-- [ ] `SeedInput.account` becomes `… | null`; skip the account when null.
-- [ ] **Failing test** `features/onboarding/importOnboarding.test.ts`: `seedFromImport(db, repos, input)` on the
+- [x] `SeedInput.account` becomes `… | null`; skip the account when null.
+- [x] **Failing test** `features/onboarding/importOnboarding.test.ts`: `seedFromImport(db, repos, input)` on the
       fixture plan writes settings (`onboardingCompletedAt`), `refunds`/`gifts`, the imported account with
       `openingBalance = entered − imported`, and the transactions; returns false and writes nothing when settings exist.
-- [ ] Implement:
+- [x] Implement:
 
 ```ts
 export function seedFromImport(db, repos, input: ImportSeedInput): boolean {
@@ -125,43 +125,43 @@ export function seedFromImport(db, repos, input: ImportSeedInput): boolean {
 }
 ```
 
-- [ ] Commit `feat(mobile): onboarding can seed from an import`.
+- [x] Commit `feat(mobile): onboarding can seed from an import`.
 
 ### Task 4: the wizard and the chips become components
 
-- [ ] Move pick/map/preview from `profile/import.tsx` into `features/import/ImportWizard.tsx` with props
+- [x] Move pick/map/preview from `profile/import.tsx` into `features/import/ImportWizard.tsx` with props
       `{ currency, context: () => Omit<ImportContext, 'currency'>, confirmLabel: (plan) => string,
       onConfirm: (plan) => void, busy?: boolean }`. The profile screen keeps `done`, `applyImport` and the header.
-- [ ] Move the currency row from `balance.tsx` into `components/CurrencyChips.tsx` (`value`, `onChange`).
-- [ ] `pnpm typecheck` and the mobile tests pass (no behaviour change). Commit
+- [x] Move the currency row from `balance.tsx` into `components/CurrencyChips.tsx` (`value`, `onChange`).
+- [x] `pnpm typecheck` and the mobile tests pass (no behaviour change). Commit
       `refactor(mobile): the import wizard and currency chips are components`.
 
 ### Task 5: the onboarding screens
 
-- [ ] i18n (it / en): `onboarding.startTitle` "Come vuoi iniziare?" / "How do you want to start?",
+- [x] i18n (it / en): `onboarding.startTitle` "Come vuoi iniziare?" / "How do you want to start?",
       `startBody`, `startFresh` "Da zero" / "From scratch" + `startFreshHint`, `startImport` "Importa un export" /
       "Import an export" + `startImportHint`, `startRestore` "Ripristina un backup" / "Restore a backup" +
       `startRestoreHint`, `importCurrencyTitle`, `importCurrencyBody`, `importFileTitle`, `importFileBody`,
       `importBalancesTitle` "Quanto c'è adesso?" / "What's there now?", `importBalancesBody`.
-- [ ] `state.tsx`: `path: 'fresh' | 'import'` (default `fresh`), `importPlan: ImportPlan | null`.
-- [ ] `start.tsx`: title, body, one card with three `ListRow`s (`onboarding-start-fresh|import|restore`). Fresh and
+- [x] `state.tsx`: `path: 'fresh' | 'import'` (default `fresh`), `importPlan: ImportPlan | null`.
+- [x] `start.tsx`: title, body, one card with three `ListRow`s (`onboarding-start-fresh|import|restore`). Fresh and
       import set `path` and push `/period`; restore pushes `/profile/restore`.
-- [ ] `period.tsx` continues to `/account-details` or `/import-currency` by path. `app/index.tsx` redirects
+- [x] `period.tsx` continues to `/account-details` or `/import-currency` by path. `app/index.tsx` redirects
       onboarding to `/start`.
-- [ ] `import-currency.tsx` (step 2 of 4): `CurrencyChips`, continue → `/import-file`.
-- [ ] `import-file.tsx` (step 3 of 4): `ImportWizard` with an empty context (nothing exists yet), confirm label
+- [x] `import-currency.tsx` (step 2 of 4): `CurrencyChips`, continue → `/import-file`.
+- [x] `import-file.tsx` (step 3 of 4): `ImportWizard` with an empty context (nothing exists yet), confirm label
       `common.continue`; on confirm `setDraft({ importPlan })` and push `/import-balances`.
-- [ ] `import-balances.tsx` (step 4 of 4): per `plan.newAccounts` a card with the name and an `AmountInput`
+- [x] `import-balances.tsx` (step 4 of 4): per `plan.newAccounts` a card with the name and an `AmountInput`
       (`allowNegative`) starting at `minorToAmountBuffer(importedBalances(plan, today).get(name))`; "Inizia" →
       `seedFromImport`, then `enterTabs(router)`.
-- [ ] Maestro: tap `onboarding-start-fresh` before step 1. Commit `feat(mobile): onboarding offers an import or a
+- [x] Maestro: tap `onboarding-start-fresh` before step 1. Commit `feat(mobile): onboarding offers an import or a
       restore`.
 
 ### Task 6: docs
 
-- [ ] Spec §6.29 (the chooser and the import path) and §11.3 (reachable from onboarding; names skipped when present;
+- [x] Spec §6.29 (the chooser and the import path) and §11.3 (reachable from onboarding; names skipped when present;
       opening balances).
-- [ ] `TODO.md`: the item leaves; the settle item notes that onboarding already settles imported accounts.
-- [ ] `README.md` "Picked up from TODO.md" entry. `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`.
+- [x] `TODO.md`: the item leaves; the settle item notes that onboarding already settles imported accounts.
+- [x] `README.md` "Picked up from TODO.md" entry. `pnpm lint`, `pnpm typecheck`, `pnpm test` through `rtk proxy`.
       Commit `docs: import during onboarding`.
 - [ ] Check on a device — *by the user after execution.*

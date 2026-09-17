@@ -17,19 +17,6 @@ transaction dated today, visible in the list, before building anything:
 
 - which one keeps statistics and budgets honest — an adjustment must not count as spending or income;
 - how it syncs, and what happens when two devices settle the same account;
-- whether it should be offered straight after an import.
-
-## Offer an import during onboarding
-
-- [ ] Ask during onboarding whether the user wants to import an existing export.
-
-Onboarding (§6.29) is four steps — period, account details, balance, categories — and the import
-wizard is reachable only from Profile (`apps/mobile/app/profile/import.tsx`, §11.3).
-
-To decide:
-
-- Where the question goes: before the account steps, so the import can create the accounts itself,
-  or after "Inizia".
-- How it meets the settle item above: an imported account starts from 0, so the balance asked in
-  step 3 and the imported history have to agree.
-- A Saldo JSON backup (§11.1) is a restore, not an import, and may deserve its own path.
+- whether it should be offered straight after an import. Onboarding's import path already asks each imported
+  account's current balance and stores it as an opening balance (§6.29), so this is about an import from
+  Profile, or a balance that drifts later.
