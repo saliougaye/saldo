@@ -27,6 +27,23 @@ describe('createApiClient', () => {
     expect(seen[0]?.url).toBe(`${SERVER}/api/me`);
   });
 
+  it('sends a DELETE with the session and parses the answer', async () => {
+    const seen: Request[] = [];
+    const client = createApiClient({
+      serverUrl: SERVER,
+      getAuthHeaders: async () => ({ cookie: 'better-auth.session_token=session-1' }),
+      fetchImpl: async (request) => {
+        seen.push(request);
+        return json({ ok: true });
+      },
+    });
+
+    await expect(client.delete('/api/data', schema)).resolves.toEqual({ ok: true });
+    expect(seen[0]?.method).toBe('DELETE');
+    expect(seen[0]?.url).toBe(`${SERVER}/api/data`);
+    expect(seen[0]?.headers.get('cookie')).toBe('better-auth.session_token=session-1');
+  });
+
   it('posts a json body', async () => {
     let body: string | null = null;
     const client = createApiClient({

@@ -33,6 +33,9 @@ function fakeApi(server: FakeServer): ApiClient {
       server.pushes.push(typed);
       return schema.parse(server.pushResponse(typed));
     },
+    delete: async () => {
+      throw new Error('not used by the cycle');
+    },
     get: async (_path, schema) => {
       const page = server.pages[pulls] ?? EMPTY_PAGE;
       pulls += 1;

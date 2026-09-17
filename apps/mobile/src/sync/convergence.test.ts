@@ -94,6 +94,9 @@ function apiFor(server: MemoryServer): ApiClient {
     putBinary: async () => undefined,
     getBinary: async () => new Uint8Array(),
     post: async (_path, body, schema) => schema.parse(server.push(body as PushBody)),
+    delete: async () => {
+      throw new Error('not used by the cycle');
+    },
     get: async (path, schema) => {
       const url = new URL(path, 'http://server.invalid');
       const since = Number.parseInt(url.searchParams.get('since') ?? '0', 10);

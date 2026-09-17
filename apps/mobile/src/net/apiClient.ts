@@ -15,6 +15,7 @@ export class ApiClientError extends Error {
 export interface ApiClient {
   get<T>(path: string, schema: z.ZodType<T>): Promise<T>;
   post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promise<T>;
+  delete<T>(path: string, schema: z.ZodType<T>): Promise<T>;
   /** Raw bytes up, with no JSON in either direction: attachment blobs (§10). */
   putBinary(path: string, bytes: Uint8Array, headers: Record<string, string>): Promise<void>;
   /** Raw bytes down. Follows the redirect a presigning store answers with. */
@@ -120,6 +121,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         },
         schema,
       ),
+    delete: (path, schema) => send(path, { method: 'DELETE' }, schema),
 
     async putBinary(path, bytes, headers) {
       const startedAt = Date.now();
