@@ -139,6 +139,32 @@ describe('applyImport', () => {
     expect(repos.accounts.list()).toHaveLength(1);
     expect(repos.accounts.list()[0]?.type).toBe('cash');
   });
+
+  it('creates a name the plan listed only if it is still missing when it writes', () => {
+    const { db, repos } = setup();
+    const planned = plan(repos);
+    // Written after the plan was made — a seed row, or a sync landing before the confirm.
+    repos.categories.create({
+      name: 'Money Back',
+      direction: 'income',
+      parentId: null,
+      colorIndex: 3,
+      icon: 'arrowDL',
+      archivedAt: null,
+      sortOrder: 0,
+    });
+    applyImport(db, repos, planned);
+    expect(repos.categories.list().filter((row) => row.name === 'Money Back')).toHaveLength(1);
+    const moneyBack = repos.categories.list().find((row) => row.name === 'Money Back');
+    const rimborso = repos.transactions.list().find((tx) => tx.description === 'rimborso swap');
+    expect(rimborso?.categoryId).toBe(moneyBack?.id);
+  });
+
+  it('gives a new account the opening balance it is handed', () => {
+    const { db, repos } = setup();
+    applyImport(db, repos, plan(repos), { openingBalances: new Map([['My Money', 12000]]) });
+    expect(repos.accounts.list()[0]?.openingBalance).toBe(12000);
+  });
 });
 
 describe('existingFingerprints', () => {
