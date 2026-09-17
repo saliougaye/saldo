@@ -22,6 +22,7 @@ export const it = {
     and: 'e',
     thisOne: 'questa voce',
     stepOf: 'Passo {{step}} di {{total}}',
+    negative: 'Negativo',
   },
   tabs: {
     home: 'Home',

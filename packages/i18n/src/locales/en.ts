@@ -22,6 +22,7 @@ export const en: Messages = {
     and: 'and',
     thisOne: 'this entry',
     stepOf: 'Step {{step}} of {{total}}',
+    negative: 'Negative',
   },
   tabs: {
     home: 'Home',
