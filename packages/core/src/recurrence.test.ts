@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Recurrence } from './entities';
 import {
   materializeOccurrences,
+  nthOccurrence,
   occurrenceDates,
   planRecurrenceEdit,
   recurrenceHorizonEnd,
@@ -24,14 +25,41 @@ const RECURRENCE: Recurrence = {
   updatedAt: '001775000000000-0000-dev',
   deletedAt: null,
   frequency: 'monthly',
+  interval: 1,
   startDate: '2026-01-27',
   endDate: null,
   template: TEMPLATE,
 };
 
+const MONTHLY = {
+  frequency: 'monthly',
+  interval: 1,
+  startDate: '2026-01-27',
+  endDate: null,
+} as const;
+
+describe('nthOccurrence', () => {
+  it('counts from the start date', () => {
+    expect(nthOccurrence(MONTHLY, 0)).toBe('2026-01-27');
+    expect(nthOccurrence(MONTHLY, 2)).toBe('2026-03-27');
+    expect(nthOccurrence({ ...MONTHLY, interval: 3 }, 2)).toBe('2026-07-27');
+  });
+
+  it('steps days and weeks by the interval', () => {
+    expect(nthOccurrence({ ...MONTHLY, frequency: 'daily', interval: 2 }, 3)).toBe('2026-02-02');
+    expect(nthOccurrence({ ...MONTHLY, frequency: 'weekly', interval: 2 }, 1)).toBe('2026-02-10');
+  });
+
+  it('keeps a yearly date on its month and day, clamping 29 February', () => {
+    const leap = { frequency: 'yearly', interval: 1, startDate: '2024-02-29' } as const;
+    expect(nthOccurrence(leap, 1)).toBe('2025-02-28');
+    expect(nthOccurrence(leap, 4)).toBe('2028-02-29');
+  });
+});
+
 describe('occurrenceDates', () => {
   it('repeats the start day every month', () => {
-    expect(occurrenceDates('2026-01-27', null, '2026-04-30')).toEqual([
+    expect(occurrenceDates(MONTHLY, '2026-04-30')).toEqual([
       '2026-01-27',
       '2026-02-27',
       '2026-03-27',
@@ -40,7 +68,7 @@ describe('occurrenceDates', () => {
   });
 
   it('clamps the day to short months, without losing it afterwards', () => {
-    expect(occurrenceDates('2026-01-31', null, '2026-04-30')).toEqual([
+    expect(occurrenceDates({ ...MONTHLY, startDate: '2026-01-31' }, '2026-04-30')).toEqual([
       '2026-01-31',
       '2026-02-28',
       '2026-03-31',
@@ -49,19 +77,40 @@ describe('occurrenceDates', () => {
   });
 
   it('stops at the inclusive end date', () => {
-    expect(occurrenceDates('2026-01-15', '2026-03-15', '2026-12-31')).toEqual([
-      '2026-01-15',
-      '2026-02-15',
-      '2026-03-15',
-    ]);
-    expect(occurrenceDates('2026-01-15', '2026-03-14', '2026-12-31')).toEqual([
-      '2026-01-15',
-      '2026-02-15',
-    ]);
+    expect(
+      occurrenceDates({ ...MONTHLY, startDate: '2026-01-15', endDate: '2026-03-15' }, '2026-12-31'),
+    ).toEqual(['2026-01-15', '2026-02-15', '2026-03-15']);
+    expect(
+      occurrenceDates({ ...MONTHLY, startDate: '2026-01-15', endDate: '2026-03-14' }, '2026-12-31'),
+    ).toEqual(['2026-01-15', '2026-02-15']);
   });
 
-  it('returns nothing when the horizon is before the start', () => {
-    expect(occurrenceDates('2026-05-01', null, '2026-04-30')).toEqual([]);
+  it('returns nothing when the start is past the horizon', () => {
+    expect(occurrenceDates({ ...MONTHLY, startDate: '2027-01-01' }, '2026-12-31')).toEqual([]);
+  });
+
+  it('fires every second week on the same weekday', () => {
+    expect(
+      occurrenceDates(
+        { frequency: 'weekly', interval: 2, startDate: '2026-09-18', endDate: null },
+        '2026-10-31',
+      ),
+    ).toEqual(['2026-09-18', '2026-10-02', '2026-10-16', '2026-10-30']);
+  });
+
+  it('fires every day, every three days, and once a year', () => {
+    expect(
+      occurrenceDates(
+        { frequency: 'daily', interval: 3, startDate: '2026-09-28', endDate: null },
+        '2026-10-05',
+      ),
+    ).toEqual(['2026-09-28', '2026-10-01', '2026-10-04']);
+    expect(
+      occurrenceDates(
+        { frequency: 'yearly', interval: 1, startDate: '2025-03-12', endDate: null },
+        '2027-12-31',
+      ),
+    ).toEqual(['2025-03-12', '2026-03-12', '2027-03-12']);
   });
 });
 

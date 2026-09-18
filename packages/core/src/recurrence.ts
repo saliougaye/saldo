@@ -10,25 +10,47 @@ import type { Recurrence, Transaction } from './entities';
 import { occurrenceId } from './ids';
 import { type PeriodDef, periodContaining, shiftPeriod } from './period';
 
+/** The part of a recurrence that says *when* it fires. */
+export type RecurrenceSchedule = Pick<
+  Recurrence,
+  'frequency' | 'interval' | 'startDate' | 'endDate'
+>;
+
 /**
- * Dates a monthly recurrence fires on, from `startDate` up to `min(endDate, horizonEnd)` (§5.9).
+ * The k-th date a schedule fires on, k = 0 being `startDate` (§5.9).
  *
- * The day of month comes from `startDate` and is clamped per month, so a recurrence on the 31st
- * fires on the 28th in February and returns to the 31st in March — it is never lost.
+ * `startDate` is the anchor: its day of month for monthly and yearly schedules — clamped per
+ * month, so the 31st fires on the 28th in February and returns to the 31st in March, and 29 Feb
+ * fires on the 28th in common years — and its weekday for weekly ones.
  */
-export function occurrenceDates(
-  startDate: LocalDate,
-  endDate: LocalDate | null,
-  horizonEnd: LocalDate,
-): LocalDate[] {
-  const { year, month, day } = parseLocalDate(startDate);
-  const last = endDate === null || endDate > horizonEnd ? horizonEnd : endDate;
+export function nthOccurrence(
+  schedule: Pick<RecurrenceSchedule, 'frequency' | 'interval' | 'startDate'>,
+  k: number,
+): LocalDate {
+  const steps = k * schedule.interval;
+  switch (schedule.frequency) {
+    case 'daily':
+      return addDays(schedule.startDate, steps);
+    case 'weekly':
+      return addDays(schedule.startDate, steps * 7);
+    case 'monthly':
+    case 'yearly': {
+      const { year, month, day } = parseLocalDate(schedule.startDate);
+      const ym = addMonths({ year, month }, schedule.frequency === 'monthly' ? steps : steps * 12);
+      return makeLocalDate(ym.year, ym.month, Math.min(day, daysInMonth(ym.year, ym.month)));
+    }
+  }
+}
+
+/** Dates a schedule fires on, from `startDate` up to `min(endDate, horizonEnd)` inclusive (§5.9). */
+export function occurrenceDates(schedule: RecurrenceSchedule, horizonEnd: LocalDate): LocalDate[] {
+  const last =
+    schedule.endDate === null || schedule.endDate > horizonEnd ? horizonEnd : schedule.endDate;
   const dates: LocalDate[] = [];
-  for (let offset = 0; ; offset += 1) {
-    const ym = addMonths({ year, month }, offset);
-    const date = makeLocalDate(ym.year, ym.month, Math.min(day, daysInMonth(ym.year, ym.month)));
+  for (let k = 0; ; k += 1) {
+    const date = nthOccurrence(schedule, k);
     if (date > last) break;
-    if (date >= startDate) dates.push(date);
+    dates.push(date);
   }
   return dates;
 }
@@ -51,7 +73,7 @@ export function materializeOccurrences(
   horizonEnd: LocalDate,
 ): NewOccurrence[] {
   if (recurrence.deletedAt !== null) return [];
-  return occurrenceDates(recurrence.startDate, recurrence.endDate, horizonEnd)
+  return occurrenceDates(recurrence, horizonEnd)
     .map((date) => ({ date, id: occurrenceId(recurrence.id, date) }))
     .filter(({ id }) => !existingIds.has(id))
     .map(({ date, id }) => ({
