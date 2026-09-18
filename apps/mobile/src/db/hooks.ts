@@ -1,11 +1,29 @@
-import type { Account, Budget, Category, LocalDate, Settings, Tag, Transaction } from '@saldo/core';
+import type {
+  Account,
+  Budget,
+  Category,
+  LocalDate,
+  Recurrence,
+  Settings,
+  Tag,
+  Transaction,
+} from '@saldo/core';
 import { SETTINGS_ID } from '@saldo/core';
 import { and, asc, count, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from './client';
 import type { LocalAttachment } from './repositories/attachments';
 import { toEntity } from './repositories/support';
-import { accounts, attachments, budgets, categories, settings, tags, transactions } from './schema';
+import {
+  accounts,
+  attachments,
+  budgets,
+  categories,
+  recurrences,
+  settings,
+  tags,
+  transactions,
+} from './schema';
 
 /**
  * Live reads (§3.3). `useLiveQuery` re-runs whenever `expo-sqlite` reports a change, which is why
@@ -181,4 +199,40 @@ export function useTransaction(id: string): Transaction | null {
 
 export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transaction[] {
   return useTransactionsInRangeQuery(start, end).rows;
+}
+
+export function useRecurrences(): Recurrence[] {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(recurrences)
+      .where(isNull(recurrences.deletedAt))
+      .orderBy(asc(recurrences.startDate)),
+  );
+  return data.map(toEntity);
+}
+
+export function useRecurrence(id: string): Recurrence | null {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(recurrences)
+      .where(and(eq(recurrences.id, id), isNull(recurrences.deletedAt))),
+    [id],
+  );
+  const row = data[0];
+  return row === undefined ? null : toEntity(row);
+}
+
+/** Every live occurrence of one recurrence, newest first (§6.34). */
+export function useOccurrences(recurrenceId: string): Transaction[] {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(transactions)
+      .where(and(eq(transactions.recurrenceId, recurrenceId), isNull(transactions.deletedAt)))
+      .orderBy(desc(transactions.date)),
+    [recurrenceId],
+  );
+  return data.map(toEntity);
 }
