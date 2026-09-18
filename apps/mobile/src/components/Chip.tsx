@@ -13,6 +13,8 @@ export interface ChipProps {
   /** Shown on the left: what the chip is about, at the stroke weight of its label (§13). */
   icon?: IconName;
   accessibilityLabel?: string;
+  /** For the end-to-end flows in `apps/mobile/maestro`, whose labels are translated. */
+  testID?: string;
 }
 
 /** Filter chip of §5.12: neutral when off, accent when a filter is applied. */
@@ -23,10 +25,12 @@ export function Chip({
   chevron = false,
   icon,
   accessibilityLabel,
+  testID,
 }: ChipProps) {
   const theme = useTheme();
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       accessibilityLabel={accessibilityLabel ?? label}

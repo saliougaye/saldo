@@ -66,4 +66,41 @@ describe('RecurrenceSheet', () => {
       endDate: '2027-08-18',
     });
   });
+
+  it('reads the end from the rule it is opened with, not from the one it was mounted with', async () => {
+    const { rerender } = await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <ThemeProvider preference="dark">
+          <I18nextProvider i18n={i18n}>
+            <RecurrenceSheet
+              visible={false}
+              onClose={() => {}}
+              value={null}
+              startDate="2026-09-18"
+              today="2026-09-18"
+              onChange={jest.fn()}
+            />
+          </I18nextProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>,
+    );
+    await rerender(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <ThemeProvider preference="dark">
+          <I18nextProvider i18n={i18n}>
+            <RecurrenceSheet
+              visible
+              onClose={() => {}}
+              value={{ frequency: 'weekly', interval: 2, endDate: '2027-02-20' }}
+              startDate="2026-09-18"
+              today="2026-09-18"
+              onChange={jest.fn()}
+            />
+          </I18nextProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>,
+    );
+    // "Last occurrence" is only drawn when the end mode is "on a date".
+    expect(await screen.findByText('Last occurrence')).toBeTruthy();
+  });
 });

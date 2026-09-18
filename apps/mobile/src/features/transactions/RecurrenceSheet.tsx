@@ -6,7 +6,7 @@ import {
   type RecurrenceRule,
 } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { PrimaryButton } from '../../components/Button';
@@ -77,6 +77,16 @@ export function RecurrenceSheet({
   const [endMode, setEndMode] = useState<EndMode>(value?.endDate == null ? 'never' : 'date');
   const [times, setTimes] = useState(DEFAULT_TIMES);
   const [endPickerOpen, setEndPickerOpen] = useState(false);
+
+  // The detail screen mounts this sheet with no rule and hands it one when it opens, so the two
+  // states derived from the rule are re-read at that moment rather than only at mount. Only on
+  // opening: while it is open, the user's taps are what these two follow.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-read the rule when the sheet opens, not on every change
+  useEffect(() => {
+    if (!visible) return;
+    setCustomOpen(presetOf(value) === 'custom');
+    setEndMode(value?.endDate == null ? 'never' : 'date');
+  }, [visible]);
 
   const custom = customOpen || preset === 'custom';
 

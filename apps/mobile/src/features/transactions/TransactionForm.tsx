@@ -261,9 +261,11 @@ export function TransactionForm({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 6 }}
       >
-        {liveAccounts.map((account) => (
+        {liveAccounts.map((account, index) => (
           <Chip
             key={account.id}
+            // By position, as the category tiles: the end-to-end flows need *an* account.
+            testID={`txform-account-${index}`}
             label={account.name}
             active={account.id === selectedId}
             onPress={() => onSelect(account.id)}
@@ -435,11 +437,13 @@ export function TransactionForm({
                   contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
                 >
                   <Chip
+                    testID="txform-repeat-never"
                     label={t('recurrence.never')}
                     active={values.recurrence === null}
                     onPress={() => set({ recurrence: null })}
                   />
                   <Chip
+                    testID="txform-repeat-monthly"
                     label={t('recurrence.everyMonth')}
                     active={presetOf(values.recurrence) === 'monthly'}
                     onPress={() =>
@@ -449,6 +453,7 @@ export function TransactionForm({
                     }
                   />
                   <Chip
+                    testID="txform-repeat-weekly"
                     label={t('recurrence.everyWeek')}
                     active={presetOf(values.recurrence) === 'weekly'}
                     onPress={() =>
@@ -458,6 +463,7 @@ export function TransactionForm({
                     }
                   />
                   <Chip
+                    testID="txform-repeat-other"
                     label={
                       otherRule
                         ? cadenceLabel(otherRule, values.date, t, locale)
