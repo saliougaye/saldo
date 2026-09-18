@@ -30,6 +30,7 @@ const mockCategories: Category[] = [category('cat-1', 'Spesa')];
 // it only feeds the category ranking, the tag suggestions and the transfer balance preview, and
 // none of those decide whether the form can be saved.
 jest.mock('../../db/hooks', () => ({
+  useRecurrence: () => null,
   useSettings: () => ({ currency: 'EUR' }),
   useAccounts: () => mockAccounts,
   useCategories: () => mockCategories,

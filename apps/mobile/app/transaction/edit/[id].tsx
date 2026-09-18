@@ -6,8 +6,10 @@ import { removeAttachment } from '../../../src/attachments/attachmentService';
 import { ConfirmDialog } from '../../../src/components/ConfirmDialog';
 import { Screen } from '../../../src/components/Screen';
 import { useToast } from '../../../src/components/Toast';
+import { db } from '../../../src/db/client';
 import { useDatabase } from '../../../src/db/DatabaseProvider';
 import { useSettings } from '../../../src/db/hooks';
+import { startRecurrence } from '../../../src/db/recurrenceService';
 import { PrivacyOverlay } from '../../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
 import { RecurrenceScopeSheet } from '../../../src/features/transactions/RecurrenceScopeSheet';
@@ -52,7 +54,14 @@ export default function EditTransaction() {
       setScopeOpen(true);
       return;
     }
-    repos.transactions.update(transaction.id, toTransactionInput(values, minorDigits));
+    const updated = repos.transactions.update(
+      transaction.id,
+      toTransactionInput(values, minorDigits),
+    );
+    // A plain transaction can start repeating from the edit form too, exactly as from the new one.
+    if (values.recurrence !== null) {
+      startRecurrence(db, repos, updated, values.recurrence, today, def);
+    }
     toast.show(t('transactions.saved'));
     router.back();
   };
@@ -81,6 +90,7 @@ export default function EditTransaction() {
         values={values}
         onChange={setValues}
         mode="edit"
+        recurrenceId={transaction.recurrenceId}
         onSubmit={save}
         onDelete={() => setConfirmingDelete(true)}
       />
