@@ -114,7 +114,7 @@ rtk git commit -m "docs: plan and mockup for recurring transactions"
 
 **Files:** `packages/core/src/entities.ts:158-175`, `packages/core/src/entities.test.ts:105-140`
 
-- [ ] **Step 1: Failing tests.** In `entities.test.ts`, inside `describe('recurrenceSchema', …)` after the existing
+- [x] **Step 1: Failing tests.** In `entities.test.ts`, inside `describe('recurrenceSchema', …)` after the existing
       `it('accepts a valid monthly recurrence', …)`, add:
 
 ```ts
@@ -137,13 +137,13 @@ rtk git commit -m "docs: plan and mockup for recurring transactions"
   });
 ```
 
-- [ ] **Step 2: Run to see them fail.**
+- [x] **Step 2: Run to see them fail.**
 
 Run: `pnpm --filter @saldo/core test -- entities`
 Expected: FAIL — `weekly` is not `'monthly'`; `interval` unknown key is stripped (so the second `it` passes only
 partially). Read the failures, not the exit code.
 
-- [ ] **Step 3: Implement.** In `entities.ts` replace the `recurrenceSchema` block with:
+- [x] **Step 3: Implement.** In `entities.ts` replace the `recurrenceSchema` block with:
 
 ```ts
 export const recurrenceFrequencySchema = z.enum(['daily', 'weekly', 'monthly', 'yearly']);
@@ -181,12 +181,12 @@ export type RecurrenceFrequency = z.infer<typeof recurrenceFrequencySchema>;
 export type RecurrenceRule = Pick<Recurrence, 'frequency' | 'interval' | 'endDate'>;
 ```
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter @saldo/core test -- entities`
 Expected: PASS.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add packages/core/src/entities.ts packages/core/src/entities.test.ts
@@ -199,7 +199,7 @@ rtk git commit -m "feat(core): recurrence frequency enum and interval"
 
 **Files:** `packages/core/src/recurrence.ts:1-64`, `packages/core/src/recurrence.test.ts`
 
-- [ ] **Step 1: Rewrite the existing `occurrenceDates` tests to the new signature and add the new cases.** In
+- [x] **Step 1: Rewrite the existing `occurrenceDates` tests to the new signature and add the new cases.** In
       `recurrence.test.ts` replace the whole `describe('occurrenceDates', …)` block with:
 
 ```ts
@@ -285,12 +285,12 @@ describe('occurrenceDates', () => {
 Add `nthOccurrence` to the import from `./recurrence`. Keep every other existing test in the file as it is; where they
 build a `Recurrence` literal (`RECURRENCE`), add `interval: 1` after `frequency: 'monthly'`.
 
-- [ ] **Step 2: Run to see them fail.**
+- [x] **Step 2: Run to see them fail.**
 
 Run: `pnpm --filter @saldo/core test -- recurrence`
 Expected: FAIL — `nthOccurrence` not exported; `occurrenceDates` called with an object.
 
-- [ ] **Step 3: Implement.** In `recurrence.ts` replace everything from the `occurrenceDates` doc comment down to
+- [x] **Step 3: Implement.** In `recurrence.ts` replace everything from the `occurrenceDates` doc comment down to
       and including its closing brace with:
 
 ```ts
@@ -339,12 +339,12 @@ export function occurrenceDates(schedule: RecurrenceSchedule, horizonEnd: LocalD
 
 In `materializeOccurrences`, change the call to `occurrenceDates(recurrence, horizonEnd)`.
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter @saldo/core test -- recurrence`
 Expected: PASS.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add packages/core/src/recurrence.ts packages/core/src/recurrence.test.ts
@@ -357,7 +357,7 @@ rtk git commit -m "feat(core): schedules fire every N days, weeks, months or yea
 
 **Files:** `packages/core/src/recurrence.ts`, `packages/core/src/recurrence.test.ts`
 
-- [ ] **Step 1: Failing tests.** Append to `recurrence.test.ts`:
+- [x] **Step 1: Failing tests.** Append to `recurrence.test.ts`:
 
 ```ts
 describe('nextOccurrence', () => {
@@ -449,12 +449,12 @@ describe('planStopRecurrence', () => {
 Extend the import from `./recurrence` with `endDateAfterCount, nextOccurrence, occurrencesPerMonth,
 planStopRecurrence, recurringMonthlyTotals`.
 
-- [ ] **Step 2: Run to see them fail.**
+- [x] **Step 2: Run to see them fail.**
 
 Run: `pnpm --filter @saldo/core test -- recurrence`
 Expected: FAIL — five missing exports.
 
-- [ ] **Step 3: Implement.** Append to `recurrence.ts`:
+- [x] **Step 3: Implement.** Append to `recurrence.ts`:
 
 ```ts
 /** The first date a schedule fires strictly after `after`, or null once it has ended. */
@@ -535,12 +535,12 @@ export function planStopRecurrence(
 }
 ```
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter @saldo/core test -- recurrence`
 Expected: PASS.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add packages/core/src/recurrence.ts packages/core/src/recurrence.test.ts
@@ -554,7 +554,7 @@ rtk git commit -m "feat(core): next occurrence, end after N, monthly totals, sto
 **Files:** `packages/i18n/src/format.ts`, `packages/i18n/src/format.test.ts`,
 `packages/i18n/src/locales/it.ts`, `packages/i18n/src/locales/en.ts`
 
-- [ ] **Step 1: Failing formatter tests.** Append to `format.test.ts`:
+- [x] **Step 1: Failing formatter tests.** Append to `format.test.ts`:
 
 ```ts
 describe('formatWeekday / formatDayMonthLong', () => {
@@ -573,12 +573,12 @@ describe('formatWeekday / formatDayMonthLong', () => {
 
 Add both names to the import from `./format`.
 
-- [ ] **Step 2: Run to see them fail.**
+- [x] **Step 2: Run to see them fail.**
 
 Run: `pnpm --filter @saldo/i18n test -- format`
 Expected: FAIL — not exported.
 
-- [ ] **Step 3: Implement.** In `format.ts`, import `weekdayOf` from `@saldo/core` (extend the existing import), add
+- [x] **Step 3: Implement.** In `format.ts`, import `weekdayOf` from `@saldo/core` (extend the existing import), add
       after `WEEKDAYS_SHORT`:
 
 ```ts
@@ -604,12 +604,12 @@ export function formatDayMonthLong(date: LocalDate, locale: AppLocale): string {
 }
 ```
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter @saldo/i18n test -- format`
 Expected: PASS.
 
-- [ ] **Step 5: Keys.** In `it.ts`, delete the line `recurringEveryMonth: 'Ricorrente, ogni mese',` in
+- [x] **Step 5: Keys.** In `it.ts`, delete the line `recurringEveryMonth: 'Ricorrente, ogni mese',` in
       `transactions` and add a new top-level block right after `recurrenceScope: { … },`:
 
 ```ts
@@ -750,14 +750,14 @@ In `en.ts`, delete `recurringEveryMonth: 'Recurring, every month',` and add afte
   },
 ```
 
-- [ ] **Step 6: Parity test and lint.**
+- [x] **Step 6: Parity test and lint.**
 
 Run: `pnpm --filter @saldo/i18n test` then `pnpm lint`
 Expected: locales test PASS (both files have the same keys); no `lint/…` lines. `recurringEveryMonth` is now unused
 — the two call sites (`transaction/[id].tsx`, `RecurrenceScopeSheet.tsx`) are fixed in Tasks 11 and 10; typecheck of
 `mobile` fails until then, which is expected at this commit.
 
-- [ ] **Step 7: Commit.**
+- [x] **Step 7: Commit.**
 
 ```bash
 rtk git add packages/i18n
@@ -771,7 +771,7 @@ rtk git commit -m "feat(i18n): recurrence copy, weekday and day-month formatters
 **Files:** `apps/mobile/src/db/schema.ts:105-115`, `apps/mobile/drizzle/`, `apps/mobile/src/db/recurrenceService.ts`,
 `apps/mobile/src/db/recurrenceService.test.ts`, `apps/mobile/src/db/demo.ts:168-171`
 
-- [ ] **Step 1: Schema.** In `schema.ts` import `RecurrenceFrequency` from `@saldo/core` (extend the existing type
+- [x] **Step 1: Schema.** In `schema.ts` import `RecurrenceFrequency` from `@saldo/core` (extend the existing type
       import) and change the two columns:
 
 ```ts
@@ -780,7 +780,7 @@ rtk git commit -m "feat(i18n): recurrence copy, weekday and day-month formatters
     startDate: text('start_date').notNull(),
 ```
 
-- [ ] **Step 2: Generate the migration.**
+- [x] **Step 2: Generate the migration.**
 
 Run: `pnpm --filter mobile db:generate`
 Expected: a new `apps/mobile/drizzle/0002_<name>.sql` containing exactly
@@ -788,7 +788,7 @@ Expected: a new `apps/mobile/drizzle/0002_<name>.sql` containing exactly
 in `meta/_journal.json`, and `drizzle/migrations.js` importing `m0002`. If `migrations.js` was not regenerated, add
 `import m0002 from './0002_<name>.sql';` and `m0002` to its `migrations` object by hand.
 
-- [ ] **Step 3: Failing service tests.** In `recurrenceService.test.ts`, add `interval: 1` to every
+- [x] **Step 3: Failing service tests.** In `recurrenceService.test.ts`, add `interval: 1` to every
       `repos.recurrences.create({ frequency: 'monthly', … })` literal, and update every `startRecurrence(db, repos, tx,
       TODAY, CYCLE_DEF)` call to `startRecurrence(db, repos, tx, MONTHLY_RULE, TODAY, CYCLE_DEF)` with, near the top:
 
@@ -919,12 +919,12 @@ describe('changeRecurrenceRule', () => {
 
 Extend the import from `./recurrenceService` with `changeRecurrenceRule, stopRecurrence`.
 
-- [ ] **Step 4: Run to see them fail.**
+- [x] **Step 4: Run to see them fail.**
 
 Run: `pnpm --filter mobile test -- recurrenceService`
 Expected: FAIL — `startRecurrence` argument count; missing exports.
 
-- [ ] **Step 5: Implement.** In `recurrenceService.ts`:
+- [x] **Step 5: Implement.** In `recurrenceService.ts`:
 
 Extend the `@saldo/core` import with `nextOccurrence, planStopRecurrence, type RecurrenceRule`.
 
@@ -1058,12 +1058,12 @@ export function changeRecurrenceRule(
 
 In `demo.ts:168` add `interval: 1,` under `frequency: 'monthly',`.
 
-- [ ] **Step 6: Run the tests.**
+- [x] **Step 6: Run the tests.**
 
 Run: `pnpm --filter mobile test -- recurrenceService demo repositories schema`
 Expected: PASS. (`new.tsx` does not compile yet — Task 7 fixes the call site; jest only loads what the tests import.)
 
-- [ ] **Step 7: Commit.**
+- [x] **Step 7: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/db apps/mobile/drizzle
@@ -1076,7 +1076,7 @@ rtk git commit -m "feat(mobile): recurrence interval column, stop and rule chang
 
 **Files:** `apps/mobile/src/db/hooks.ts`
 
-- [ ] **Step 1: Add.** Extend the type import with `Recurrence`, the schema import with `recurrences`, and append:
+- [x] **Step 1: Add.** Extend the type import with `Recurrence`, the schema import with `recurrences`, and append:
 
 ```ts
 export function useRecurrences(): Recurrence[] {
@@ -1116,7 +1116,7 @@ export function useOccurrences(recurrenceId: string): Transaction[] {
 }
 ```
 
-- [ ] **Step 2: Typecheck just this file's package later with Task 7 (the app does not compile until the form is
+- [x] **Step 2: Typecheck just this file's package later with Task 7 (the app does not compile until the form is
       migrated).** Commit now:
 
 ```bash
@@ -1132,7 +1132,7 @@ rtk git commit -m "feat(mobile): live queries for recurrences and their occurren
 `apps/mobile/src/features/transactions/useTransactionForm.test.ts`, `apps/mobile/app/transaction/new.tsx:58-62`,
 `apps/mobile/app/transaction/edit/[id].tsx:49-57`
 
-- [ ] **Step 1: Failing tests.** In `useTransactionForm.test.ts` replace every `repeat: false` / `repeat: true` in
+- [x] **Step 1: Failing tests.** In `useTransactionForm.test.ts` replace every `repeat: false` / `repeat: true` in
       literals with `recurrence: null` / `recurrence: { frequency: 'monthly', interval: 1, endDate: null }`, and any
       assertion on `summary.repeat` with one on `summary.recurring`. Add:
 
@@ -1173,12 +1173,12 @@ describe('formFromTransaction', () => {
 
 (If the file already has a `describe('detailsSummary')`, add the `it` inside it instead of a second block.)
 
-- [ ] **Step 2: Run to see them fail.**
+- [x] **Step 2: Run to see them fail.**
 
 Run: `pnpm --filter mobile test -- useTransactionForm`
 Expected: FAIL — `recurrence` unknown, `repeat` missing.
 
-- [ ] **Step 3: Implement.** In `useTransactionForm.ts`: add `type RecurrenceRule` to the `@saldo/core` import;
+- [x] **Step 3: Implement.** In `useTransactionForm.ts`: add `type RecurrenceRule` to the `@saldo/core` import;
       in `TransactionFormValues` replace `repeat: boolean;` with
 
 ```ts
@@ -1240,12 +1240,12 @@ In `edit/[id].tsx`, `save` becomes:
 with `import { db } from '../../../src/db/client';` and `import { startRecurrence } from
 '../../../src/db/recurrenceService';` added.
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter mobile test -- useTransactionForm`
 Expected: PASS. `TransactionForm.tsx` still references `values.repeat` and `summary.repeat`: Task 10 removes them.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/features/transactions/useTransactionForm.ts apps/mobile/src/features/transactions/useTransactionForm.test.ts apps/mobile/app/transaction/new.tsx 'apps/mobile/app/transaction/edit/[id].tsx'
@@ -1259,7 +1259,7 @@ rtk git commit -m "feat(mobile): the transaction form holds a recurrence rule"
 **Files:** `apps/mobile/src/features/transactions/recurrenceCopy.ts`,
 `apps/mobile/src/features/transactions/recurrenceCopy.test.ts`
 
-- [ ] **Step 1: Failing tests.** Create `recurrenceCopy.test.ts`:
+- [x] **Step 1: Failing tests.** Create `recurrenceCopy.test.ts`:
 
 ```ts
 import type { i18n as I18nInstance } from 'i18next';
@@ -1324,12 +1324,12 @@ describe('presets', () => {
 });
 ```
 
-- [ ] **Step 2: Run to see it fail.**
+- [x] **Step 2: Run to see it fail.**
 
 Run: `pnpm --filter mobile test -- recurrenceCopy`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement.** Create `recurrenceCopy.ts`:
+- [x] **Step 3: Implement.** Create `recurrenceCopy.ts`:
 
 ```ts
 import { type LocalDate, parseLocalDate, type RecurrenceRule } from '@saldo/core';
@@ -1396,12 +1396,12 @@ export function ruleForPreset(
 }
 ```
 
-- [ ] **Step 4: Run the tests.**
+- [x] **Step 4: Run the tests.**
 
 Run: `pnpm --filter mobile test -- recurrenceCopy`
 Expected: PASS.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/features/transactions/recurrenceCopy.ts apps/mobile/src/features/transactions/recurrenceCopy.test.ts
@@ -1416,7 +1416,7 @@ rtk git commit -m "feat(mobile): recurrence copy helpers"
 `apps/mobile/src/features/transactions/RecurrenceSheet.tsx`,
 `apps/mobile/src/features/transactions/RecurrenceSheet.test.tsx`
 
-- [ ] **Step 1: `CountStepper`.** Create `apps/mobile/src/components/CountStepper.tsx`:
+- [x] **Step 1: `CountStepper`.** Create `apps/mobile/src/components/CountStepper.tsx`:
 
 ```tsx
 import { Pressable, View } from 'react-native';
@@ -1490,7 +1490,7 @@ export function CountStepper({
 Add `decrement: 'Meno'` / `increment: 'Più'` to `common` in `it.ts` and `decrement: 'Less'` / `increment: 'More'`
 in `en.ts`.
 
-- [ ] **Step 2: Failing sheet test.** Create `RecurrenceSheet.test.tsx`:
+- [x] **Step 2: Failing sheet test.** Create `RecurrenceSheet.test.tsx`:
 
 ```tsx
 import { render, screen, userEvent } from '@testing-library/react-native';
@@ -1555,12 +1555,12 @@ describe('RecurrenceSheet', () => {
 });
 ```
 
-- [ ] **Step 3: Run to see it fail.**
+- [x] **Step 3: Run to see it fail.**
 
 Run: `pnpm --filter mobile test -- RecurrenceSheet`
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Implement.** Create `RecurrenceSheet.tsx`:
+- [x] **Step 4: Implement.** Create `RecurrenceSheet.tsx`:
 
 ```tsx
 import {
@@ -1842,12 +1842,12 @@ export function RecurrenceSheet({
 `ListRow` has no `trailing` for a check yet? It does (`trailing?: ReactNode`). If `Text` does not accept `tabular`
 without a size, keep `tabular` — it is what `AmountText` and the `Segmented` labels already use.
 
-- [ ] **Step 5: Run the tests.**
+- [x] **Step 5: Run the tests.**
 
 Run: `pnpm --filter mobile test -- RecurrenceSheet`
 Expected: PASS.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/components/CountStepper.tsx apps/mobile/src/features/transactions/RecurrenceSheet.tsx apps/mobile/src/features/transactions/RecurrenceSheet.test.tsx packages/i18n/src/locales
@@ -1861,7 +1861,7 @@ rtk git commit -m "feat(mobile): recurrence sheet with presets, custom cadence a
 **Files:** `apps/mobile/src/features/transactions/TransactionForm.tsx`,
 `apps/mobile/src/features/transactions/RecurrenceScopeSheet.tsx:150-152`, `apps/mobile/app/transaction/edit/[id].tsx`
 
-- [ ] **Step 1: Props.** In `TransactionFormProps` add:
+- [x] **Step 1: Props.** In `TransactionFormProps` add:
 
 ```ts
   /**
@@ -1876,7 +1876,7 @@ and destructure `recurrenceId = null` in the component. Import `RecurrenceSheet`
 `useRouter` from `expo-router`. Add state `const [recurrenceSheetOpen, setRecurrenceSheetOpen] = useState(false);`,
 `const router = useRouter();` and `const occurrenceOf = useRecurrence(recurrenceId ?? '');`.
 
-- [ ] **Step 2: The row.** Inside the account/date `<Card>`, after the `Data` block's closing `</View>` and before
+- [x] **Step 2: The row.** Inside the account/date `<Card>`, after the `Data` block's closing `</View>` and before
       the card's `</View></Card>`, add:
 
 ```tsx
@@ -1979,12 +1979,12 @@ and destructure `recurrenceId = null` in the component. Import `RecurrenceSheet`
           </View>
 ```
 
-- [ ] **Step 3: Remove the toggle from Dettagli.** Delete the `<View style={{ flexDirection:'row', … }}>…<Toggle
+- [x] **Step 3: Remove the toggle from Dettagli.** Delete the `<View style={{ flexDirection:'row', … }}>…<Toggle
       testID="txform-repeat" …/></View>` block (the one with `t('txForm.repeat')` and `values.repeat`) inside
       `detailsOpen`. In `summaryParts` delete the `summary.repeat ? t('txForm.repeat') : null,` line. Delete the
       `Toggle` import only if nothing else in the file uses it (the exclude toggle does — keep it).
 
-- [ ] **Step 4: Mount the sheet.** Next to `<DateSheet …/>` at the bottom of the form add:
+- [x] **Step 4: Mount the sheet.** Next to `<DateSheet …/>` at the bottom of the form add:
 
 ```tsx
       <RecurrenceSheet
@@ -1997,7 +1997,7 @@ and destructure `recurrenceId = null` in the component. Import `RecurrenceSheet`
       />
 ```
 
-- [ ] **Step 5: Footer hint.** Where the form renders its save button (the `footer` of `Screen` / the primary
+- [x] **Step 5: Footer hint.** Where the form renders its save button (the `footer` of `Screen` / the primary
       button), add above the button, only when `values.recurrence !== null && occurrenceOf === null`:
 
 ```tsx
@@ -2009,10 +2009,10 @@ and destructure `recurrenceId = null` in the component. Import `RecurrenceSheet`
         </View>
 ```
 
-- [ ] **Step 6: Edit route passes the id.** In `edit/[id].tsx` add `recurrenceId={transaction.recurrenceId}` to
+- [x] **Step 6: Edit route passes the id.** In `edit/[id].tsx` add `recurrenceId={transaction.recurrenceId}` to
       `<TransactionForm …/>`.
 
-- [ ] **Step 7: Scope sheet caption.** In `RecurrenceScopeSheet.tsx` replace the last `<Text size="caption" …>
+- [x] **Step 7: Scope sheet caption.** In `RecurrenceScopeSheet.tsx` replace the last `<Text size="caption" …>
       {t('transactions.recurringEveryMonth')}</Text>` with:
 
 ```tsx
@@ -2024,14 +2024,14 @@ and destructure `recurrenceId = null` in the component. Import `RecurrenceSheet`
 importing `cadenceLabel` from `./recurrenceCopy` and `useAppLocale` from `../../i18n/useAppLocale`
 (`const locale = useAppLocale();`).
 
-- [ ] **Step 8: Typecheck and existing form tests.**
+- [x] **Step 8: Typecheck and existing form tests.**
 
 Run: `pnpm --filter mobile typecheck` then `pnpm --filter mobile test -- TransactionForm useTransactionForm a11y`
 Expected: only errors left are in `transaction/[id].tsx` (`recurringEveryMonth`, fixed in Task 11). Tests PASS; if
 an a11y or form test looked for the `txform-repeat` toggle, point it at the chip instead:
 `screen.getByLabelText('Every month')` (`Chip` exposes its label as the accessibility label).
 
-- [ ] **Step 9: Commit.**
+- [x] **Step 9: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/features/transactions 'apps/mobile/app/transaction/edit/[id].tsx'
@@ -2046,7 +2046,7 @@ rtk git commit -m "feat(mobile): Ripeti chip row in the transaction form"
 `apps/mobile/app/(tabs)/transactions.tsx:173-200`, `apps/mobile/app/account/[id].tsx:250-280`,
 `apps/mobile/app/tag/[id].tsx:138-160`, `apps/mobile/app/transaction/[id].tsx:205-214`
 
-- [ ] **Step 1: `IconBox` badge.** Replace `IconBox` in `ListRow.tsx` with:
+- [x] **Step 1: `IconBox` badge.** Replace `IconBox` in `ListRow.tsx` with:
 
 ```tsx
 /** Rounded icon box used as a row's leading element (§6). */
@@ -2099,12 +2099,12 @@ export function IconBox({
 }
 ```
 
-- [ ] **Step 2: Call sites.** In each of the four screens, on the `<IconBox name={row.icon} colour={colour} />`
+- [x] **Step 2: Call sites.** In each of the four screens, on the `<IconBox name={row.icon} colour={colour} />`
       (or `rowMeta.icon`) that sits next to a `transactionRow(tx, …)` call, add
       `badge={tx.recurrenceId === null ? undefined : 'repeat'}`. That is two places in `(tabs)/index.tsx`, one each in
       `(tabs)/transactions.tsx`, `account/[id].tsx` and `tag/[id].tsx`.
 
-- [ ] **Step 3: Transaction detail.** In `transaction/[id].tsx` add `useRecurrence` to the hooks import, and after
+- [x] **Step 3: Transaction detail.** In `transaction/[id].tsx` add `useRecurrence` to the hooks import, and after
       `const transaction = useTransaction(id ?? '');` (before the early return — hooks first) add
       `const recurrence = useRecurrence(transaction?.recurrenceId ?? '');`. Move that line **above** the `if
       (transaction === null)` return. Replace the note row with:
@@ -2135,12 +2135,12 @@ export function IconBox({
 
 with `cadenceLabel, endLabel` imported from `../../src/features/transactions/recurrenceCopy`.
 
-- [ ] **Step 4: Typecheck.**
+- [x] **Step 4: Typecheck.**
 
 Run: `pnpm typecheck`
 Expected: clean across the workspace.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/components/ListRow.tsx 'apps/mobile/app/(tabs)' 'apps/mobile/app/account/[id].tsx' 'apps/mobile/app/tag/[id].tsx' 'apps/mobile/app/transaction/[id].tsx'
@@ -2154,7 +2154,7 @@ rtk git commit -m "feat(mobile): repeat badge on occurrences, cadence in the det
 **Files:** `apps/mobile/src/features/recurrences/RecurrencesCard.tsx`, `apps/mobile/app/(tabs)/transactions.tsx`,
 `apps/mobile/app/recurrences.tsx`
 
-- [ ] **Step 1: A shared view model.** Create `apps/mobile/src/features/recurrences/recurrenceViews.ts`:
+- [x] **Step 1: A shared view model.** Create `apps/mobile/src/features/recurrences/recurrenceViews.ts`:
 
 ```ts
 import { type LocalDate, nextOccurrence, type Recurrence } from '@saldo/core';
@@ -2196,7 +2196,7 @@ export function byNext(a: RecurrenceView, b: RecurrenceView): number {
 }
 ```
 
-- [ ] **Step 2: The card.** Create `RecurrencesCard.tsx`:
+- [x] **Step 2: The card.** Create `RecurrencesCard.tsx`:
 
 ```tsx
 import { recurringMonthlyTotals } from '@saldo/core';
@@ -2288,11 +2288,11 @@ export function RecurrencesCard() {
 }
 ```
 
-- [ ] **Step 3: Mount it in the tab.** In `(tabs)/transactions.tsx` import `RecurrencesCard` from
+- [x] **Step 3: Mount it in the tab.** In `(tabs)/transactions.tsx` import `RecurrencesCard` from
       `'../../src/features/recurrences/RecurrencesCard'` and render `<RecurrencesCard />` as the first child after the sticky header `</View>` (before the `{!loaded ? …}`
       ternary), so it shows whether or not the period has rows.
 
-- [ ] **Step 4: The list screen.** Create `apps/mobile/app/recurrences.tsx`:
+- [x] **Step 4: The list screen.** Create `apps/mobile/app/recurrences.tsx`:
 
 ```tsx
 import { type Recurrence, recurringMonthlyTotals } from '@saldo/core';
@@ -2496,14 +2496,14 @@ export default function RecurrencesScreen() {
 
 `AmountText` extends `TextProps` minus `children`/`tabular`, so `size`, `weight`, `tracking` and `color` pass through.
 
-- [ ] **Step 5: Typecheck, lint, run on the simulator.**
+- [x] **Step 5: Typecheck, lint, run on the simulator.**
 
 Run: `pnpm typecheck && pnpm lint`
 Expected: clean. Then `pnpm --filter mobile seed:db` (the seed's recurrences are monthly, `interval 1`), start Metro
 with `--clear` and, since the migration changed, delete the simulator's `Documents/SQLite/saldo.db` first (see
 AGENTS.md). Tap "Ricorrenti" on the Transactions tab: summary, groups, rows.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ```bash
 rtk git add apps/mobile/src/features/recurrences apps/mobile/app/recurrences.tsx 'apps/mobile/app/(tabs)/transactions.tsx' packages/i18n/src/locales
@@ -2516,7 +2516,7 @@ rtk git commit -m "feat(mobile): Ricorrenti card and list screen"
 
 **Files:** `apps/mobile/app/recurrence/[id].tsx`
 
-- [ ] **Step 1: Create the screen.**
+- [x] **Step 1: Create the screen.**
 
 ```tsx
 import type { RecurrenceRule } from '@saldo/core';
@@ -2814,13 +2814,13 @@ export default function RecurrenceDetail() {
 }
 ```
 
-- [ ] **Step 2: Typecheck, lint, drive it.**
+- [x] **Step 2: Typecheck, lint, drive it.**
 
 Run: `pnpm typecheck && pnpm lint`
 Expected: clean. On the simulator: open a recurrence, change the end → toast "Fine aggiornata", rows past the end
 disappear; change the cadence → new detail with the new id; "Smetti di ripetere" → future rows gone, series ends today.
 
-- [ ] **Step 3: Commit.**
+- [x] **Step 3: Commit.**
 
 ```bash
 rtk git add 'apps/mobile/app/recurrence/[id].tsx'

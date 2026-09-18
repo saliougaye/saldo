@@ -618,6 +618,18 @@ small enough to land on its own branch without a plan file of its own.
   stored as an opening balance; nothing is written until "Inizia". `applyImport` no longer twins a name that exists
   by the time it writes.
 
+### 12 — Recurring transactions 🚧 in progress
+
+**Plan:** `2026-09-19-12-recurring-transactions.md` · **Spec:** §4 (Recurrence), §5.9, §6.2, §6.6, §6.16, §6.33, §6.34
+· **Mockup:** `docs/superpowers/mockups/2026-09-18-recurring-transactions.html` (form: variant A, tab: variant B)
+
+- Every N days/weeks/months/years, end on a date or after N times; "Ripeti" as a chip row in the form.
+- "Ricorrenti" card on the Transactions tab → list with monthly totals → detail with cadence, end, occurrences and
+  "Smetti di ripetere". ↻ badge on occurrence rows. No pause.
+
+**Acceptance:** create a bi-weekly expense and see its occurrences up to the end of next cycle; change its end and
+its cadence from the detail; stop it and see only the future go; `SYNC_SCHEMA_VERSION` stays 1 (documented).
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)
