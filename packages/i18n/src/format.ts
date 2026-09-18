@@ -6,6 +6,7 @@ import {
   type LocalDate,
   type PeriodKind,
   parseLocalDate,
+  weekdayOf,
   type YearMonth,
 } from '@saldo/core';
 
@@ -139,6 +140,18 @@ export function formatLongDate(date: LocalDate, locale: AppLocale): string {
   return locale === 'it' ? `${day} ${name} ${year}` : `${name} ${day}, ${year}`;
 }
 
+/** it `venerdì`, en `Friday`. Monday-first, as `weekdayOf` counts. */
+export function formatWeekday(date: LocalDate, locale: AppLocale): string {
+  return WEEKDAYS_LONG[locale][weekdayOf(date)] ?? '';
+}
+
+/** it `18 settembre`, en `September 18`: a yearly anchor, whose year is the point of leaving out. */
+export function formatDayMonthLong(date: LocalDate, locale: AppLocale): string {
+  const { month, day } = parseLocalDate(date);
+  const name = monthName(MONTHS_LONG, locale, month);
+  return locale === 'it' ? `${day} ${name}` : `${name} ${day}`;
+}
+
 /** it `18 apr 2025`, en `Apr 18, 2025` */
 function formatDayMonthYear(date: LocalDate, locale: AppLocale): string {
   const { year } = parseLocalDate(date);
@@ -217,6 +230,11 @@ export function formatMajor(
 const WEEKDAYS_SHORT: Record<AppLocale, readonly string[]> = {
   it: ['L', 'M', 'M', 'G', 'V', 'S', 'D'],
   en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+};
+
+const WEEKDAYS_LONG: Record<AppLocale, readonly string[]> = {
+  it: ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'],
+  en: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
 };
 
 /**
