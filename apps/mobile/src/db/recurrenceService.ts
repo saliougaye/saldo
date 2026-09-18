@@ -1,11 +1,14 @@
 import type { LocalDate } from '@saldo/core';
 import {
   materializeOccurrences,
+  nextOccurrence,
   occurrenceId,
   type PeriodDef,
   planRecurrenceEdit,
+  planStopRecurrence,
   type Recurrence,
   type RecurrenceEditScope,
+  type RecurrenceRule,
   recurrenceHorizonEnd,
   type Transaction,
 } from '@saldo/core';
@@ -117,9 +120,11 @@ export function applyRecurrenceEdit(
     }
     if (plan.startNewRecurrenceOn !== null) {
       const created = repos.recurrences.create({
-        frequency: 'monthly',
+        // The new series keeps the cadence and the end of the one it continues.
+        frequency: recurrence.frequency,
+        interval: recurrence.interval,
         startDate: plan.startNewRecurrenceOn,
-        endDate: null,
+        endDate: recurrence.endDate,
         template: values,
       });
       // Materialise the new series immediately so the list does not show a gap.
@@ -131,48 +136,118 @@ export function applyRecurrenceEdit(
   });
 }
 
-/** Creates a recurrence from a transaction the user toggled "Ripeti" on (§5.9). */
+/** Creates a recurrence from a transaction the user set "Ripeti" on (§5.9). */
 export function startRecurrence(
   db: RepositoryDatabase,
   repos: Repositories,
   transaction: Transaction,
+  rule: RecurrenceRule,
   today: LocalDate,
   def: PeriodDef,
 ): Recurrence {
-  return db.transaction(() => startRecurrenceInTransaction(db, repos, transaction, today, def));
+  return db.transaction(() => {
+    const recurrence = repos.recurrences.create({
+      frequency: rule.frequency,
+      interval: rule.interval,
+      startDate: transaction.date,
+      endDate: rule.endDate,
+      template: {
+        kind: transaction.kind,
+        amount: transaction.amount,
+        accountId: transaction.accountId,
+        toAccountId: transaction.toAccountId,
+        categoryId: transaction.categoryId,
+        description: transaction.description,
+        tagIds: transaction.tagIds,
+        excludeFromTotals: transaction.excludeFromTotals,
+      },
+    });
+    // The transaction the user just saved becomes the first occurrence, keeping its own id out of
+    // the way: the deterministic id is what other devices will converge on (D21).
+    repos.transactions.remove(transaction.id);
+    repos.transactions.create({
+      ...transaction,
+      id: occurrenceId(recurrence.id, transaction.date),
+      recurrenceId: recurrence.id,
+    });
+    runMaterialiser(db, repos, today, def);
+    return recurrence;
+  });
 }
 
-function startRecurrenceInTransaction(
+function occurrencesOf(
+  repos: Repositories,
+  recurrenceId: string,
+): { id: string; date: LocalDate }[] {
+  return repos.transactions
+    .list()
+    .filter((tx) => tx.recurrenceId === recurrenceId)
+    .map((tx) => ({ id: tx.id, date: tx.date }));
+}
+
+/** "Smetti di ripetere" (§5.9): applies `planStopRecurrence` in one transaction. */
+export function stopRecurrence(
   db: RepositoryDatabase,
   repos: Repositories,
-  transaction: Transaction,
+  recurrence: Recurrence,
+  today: LocalDate,
+): void {
+  const plan = planStopRecurrence(recurrence, occurrencesOf(repos, recurrence.id), today);
+  db.transaction(() => {
+    for (const id of plan.tombstoneOccurrenceIds) repos.transactions.remove(id);
+    if (plan.deleteRecurrence) repos.recurrences.remove(recurrence.id);
+    else if (plan.endDate !== null) {
+      repos.recurrences.update(recurrence.id, { endDate: plan.endDate });
+    }
+  });
+}
+
+/**
+ * A new rule for an existing recurrence (§6.34). Same cadence: only `endDate` moves, and the rows
+ * past the new end go. New cadence: the old series ends today and a new one, same template, starts
+ * on the first date the new rule fires after today, anchored on the old `startDate` so the day of
+ * month or the weekday is the one the user already knows. Returns the recurrence that carries on,
+ * or null when the new rule has already ended.
+ */
+export function changeRecurrenceRule(
+  db: RepositoryDatabase,
+  repos: Repositories,
+  recurrence: Recurrence,
+  rule: RecurrenceRule,
   today: LocalDate,
   def: PeriodDef,
-): Recurrence {
-  const recurrence = repos.recurrences.create({
-    frequency: 'monthly',
-    startDate: transaction.date,
-    endDate: null,
-    template: {
-      kind: transaction.kind,
-      amount: transaction.amount,
-      accountId: transaction.accountId,
-      toAccountId: transaction.toAccountId,
-      categoryId: transaction.categoryId,
-      description: transaction.description,
-      tagIds: transaction.tagIds,
-      excludeFromTotals: transaction.excludeFromTotals,
-    },
+): Recurrence | null {
+  const occurrences = occurrencesOf(repos, recurrence.id);
+  const sameCadence =
+    rule.frequency === recurrence.frequency && rule.interval === recurrence.interval;
+
+  return db.transaction(() => {
+    if (sameCadence) {
+      for (const row of occurrences) {
+        if (row.date > today && rule.endDate !== null && row.date > rule.endDate) {
+          repos.transactions.remove(row.id);
+        }
+      }
+      const updated = repos.recurrences.update(recurrence.id, { endDate: rule.endDate });
+      runMaterialiser(db, repos, today, def);
+      return updated;
+    }
+
+    for (const row of occurrences) if (row.date > today) repos.transactions.remove(row.id);
+    const hasPast = occurrences.some((row) => row.date <= today);
+    if (hasPast) repos.recurrences.update(recurrence.id, { endDate: today });
+    else repos.recurrences.remove(recurrence.id);
+
+    const startDate = nextOccurrence({ ...rule, startDate: recurrence.startDate }, today);
+    if (startDate === null) return null;
+    const created = repos.recurrences.create({
+      frequency: rule.frequency,
+      interval: rule.interval,
+      startDate,
+      endDate: rule.endDate,
+      template: recurrence.template,
+    });
+    runMaterialiser(db, repos, today, def);
+    return created;
   });
-  // The transaction the user just saved becomes the first occurrence, keeping its own id out of
-  // the way: the deterministic id is what other devices will converge on (D21).
-  repos.transactions.remove(transaction.id);
-  const firstId = occurrenceId(recurrence.id, transaction.date);
-  repos.transactions.create({
-    ...transaction,
-    id: firstId,
-    recurrenceId: recurrence.id,
-  });
-  runMaterialiser(db, repos, today, def);
-  return recurrence;
 }
