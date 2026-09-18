@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { Recurrence } from './entities';
 import {
+  endDateAfterCount,
   materializeOccurrences,
+  nextOccurrence,
   nthOccurrence,
   occurrenceDates,
+  occurrencesPerMonth,
   planRecurrenceEdit,
+  planStopRecurrence,
   recurrenceHorizonEnd,
+  recurringMonthlyTotals,
 } from './recurrence';
 
 const TEMPLATE: Recurrence['template'] = {
@@ -228,5 +233,98 @@ describe('planRecurrenceEdit', () => {
     expect(plan.updateOccurrenceIds).toEqual(occurrences.map((row) => row.id));
     expect(plan.tombstoneOccurrenceIds).toEqual([]);
     expect(plan.unchangedCount).toBe(0);
+  });
+});
+
+describe('nextOccurrence', () => {
+  it('is the first date strictly after the given one', () => {
+    expect(nextOccurrence(MONTHLY, '2026-03-27')).toBe('2026-04-27');
+    expect(nextOccurrence(MONTHLY, '2026-03-26')).toBe('2026-03-27');
+    expect(nextOccurrence(MONTHLY, '2025-12-01')).toBe('2026-01-27');
+  });
+
+  it('is null once the schedule has ended', () => {
+    expect(nextOccurrence({ ...MONTHLY, endDate: '2026-03-27' }, '2026-03-27')).toBeNull();
+    expect(nextOccurrence({ ...MONTHLY, endDate: '2026-03-27' }, '2026-03-26')).toBe('2026-03-27');
+  });
+});
+
+describe('endDateAfterCount', () => {
+  it('is the date of the N-th occurrence', () => {
+    expect(endDateAfterCount(MONTHLY, 1)).toBe('2026-01-27');
+    expect(endDateAfterCount(MONTHLY, 12)).toBe('2026-12-27');
+    expect(endDateAfterCount({ ...MONTHLY, frequency: 'weekly', interval: 2 }, 3)).toBe(
+      '2026-02-24',
+    );
+  });
+
+  it('treats anything below one as one', () => {
+    expect(endDateAfterCount(MONTHLY, 0)).toBe('2026-01-27');
+  });
+});
+
+describe('recurringMonthlyTotals', () => {
+  const template = (kind: Recurrence['template']['kind'], amount: number) => ({
+    ...TEMPLATE,
+    kind,
+    amount,
+    categoryId: kind === 'transfer' ? null : TEMPLATE.categoryId,
+    toAccountId: kind === 'transfer' ? 'acc-savings' : null,
+  });
+  const rec = (
+    frequency: Recurrence['frequency'],
+    interval: number,
+    kind: Recurrence['template']['kind'],
+    amount: number,
+  ): Recurrence => ({
+    ...RECURRENCE,
+    id: `${frequency}-${interval}-${kind}`,
+    frequency,
+    interval,
+    template: template(kind, amount),
+  });
+
+  it('brings every cadence back to a month', () => {
+    expect(occurrencesPerMonth({ frequency: 'monthly', interval: 1 })).toBe(1);
+    expect(occurrencesPerMonth({ frequency: 'monthly', interval: 3 })).toBeCloseTo(1 / 3);
+    expect(occurrencesPerMonth({ frequency: 'weekly', interval: 2 })).toBeCloseTo(52 / 24);
+    expect(occurrencesPerMonth({ frequency: 'yearly', interval: 1 })).toBeCloseTo(1 / 12);
+    expect(occurrencesPerMonth({ frequency: 'daily', interval: 1 })).toBeCloseTo(365 / 12);
+  });
+
+  it('sums expenses and income apart and ignores transfers', () => {
+    const totals = recurringMonthlyTotals([
+      rec('monthly', 1, 'expense', 85000),
+      rec('weekly', 2, 'expense', 6000), // 6000 × 52 / 24 = 13000
+      rec('yearly', 1, 'expense', 48000), // 4000
+      rec('monthly', 1, 'income', 215000),
+      rec('monthly', 1, 'transfer', 50000),
+    ]);
+    expect(totals).toEqual({ expense: 102000, income: 215000 });
+  });
+});
+
+describe('planStopRecurrence', () => {
+  const occurrences = [
+    { id: 'rec-rent:2026-03-27', date: '2026-03-27' },
+    { id: 'rec-rent:2026-04-27', date: '2026-04-27' },
+    { id: 'rec-rent:2026-05-27', date: '2026-05-27' },
+  ] as const;
+
+  it('ends today and removes only what is still to come', () => {
+    expect(planStopRecurrence(RECURRENCE, occurrences, '2026-04-27')).toEqual({
+      endDate: '2026-04-27',
+      deleteRecurrence: false,
+      tombstoneOccurrenceIds: ['rec-rent:2026-05-27'],
+    });
+  });
+
+  it('removes a series that has not started yet', () => {
+    const future = { ...RECURRENCE, startDate: '2026-05-27' };
+    expect(planStopRecurrence(future, [occurrences[2]], '2026-04-18')).toEqual({
+      endDate: null,
+      deleteRecurrence: true,
+      tombstoneOccurrenceIds: ['rec-rent:2026-05-27'],
+    });
   });
 });

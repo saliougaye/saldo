@@ -163,3 +163,78 @@ export function planRecurrenceEdit(
     unchangedCount: occurrences.length - doomed.length,
   };
 }
+
+/** The first date a schedule fires strictly after `after`, or null once it has ended. */
+export function nextOccurrence(schedule: RecurrenceSchedule, after: LocalDate): LocalDate | null {
+  for (let k = 0; ; k += 1) {
+    const date = nthOccurrence(schedule, k);
+    if (schedule.endDate !== null && date > schedule.endDate) return null;
+    if (date > after) return date;
+  }
+}
+
+/** The `endDate` that makes a schedule fire exactly `count` times ("dopo N volte", §5.9). */
+export function endDateAfterCount(
+  schedule: Pick<RecurrenceSchedule, 'frequency' | 'interval' | 'startDate'>,
+  count: number,
+): LocalDate {
+  return nthOccurrence(schedule, Math.max(1, Math.floor(count)) - 1);
+}
+
+const FIRES_PER_YEAR: Record<Recurrence['frequency'], number> = {
+  daily: 365,
+  weekly: 52,
+  monthly: 12,
+  yearly: 1,
+};
+
+/** How many times a schedule fires in an average month. */
+export function occurrencesPerMonth(
+  schedule: Pick<RecurrenceSchedule, 'frequency' | 'interval'>,
+): number {
+  return FIRES_PER_YEAR[schedule.frequency] / 12 / schedule.interval;
+}
+
+export interface RecurringMonthlyTotals {
+  /** Minor units a month, positive. */
+  expense: number;
+  income: number;
+}
+
+/**
+ * What the live recurrences add up to in a month (§6.33). Transfers move money between two of the
+ * user's own accounts, so they belong to neither side.
+ */
+export function recurringMonthlyTotals(recurrences: readonly Recurrence[]): RecurringMonthlyTotals {
+  let expense = 0;
+  let income = 0;
+  for (const recurrence of recurrences) {
+    const perMonth = Math.round(recurrence.template.amount * occurrencesPerMonth(recurrence));
+    if (recurrence.template.kind === 'expense') expense += perMonth;
+    else if (recurrence.template.kind === 'income') income += perMonth;
+  }
+  return { expense, income };
+}
+
+export interface StopRecurrencePlan {
+  /** New `endDate`, or null when the recurrence goes away entirely. */
+  endDate: LocalDate | null;
+  deleteRecurrence: boolean;
+  tombstoneOccurrenceIds: string[];
+}
+
+/**
+ * "Smetti di ripetere" (§5.9): the past stays, the future goes. The series ends on `today`, so an
+ * occurrence dated today is kept; a series that has not started yet has nothing to keep.
+ */
+export function planStopRecurrence(
+  recurrence: Recurrence,
+  occurrences: readonly { id: string; date: LocalDate }[],
+  today: LocalDate,
+): StopRecurrencePlan {
+  const tombstoneOccurrenceIds = occurrences.filter((row) => row.date > today).map((row) => row.id);
+  if (recurrence.startDate > today) {
+    return { endDate: null, deleteRecurrence: true, tombstoneOccurrenceIds };
+  }
+  return { endDate: today, deleteRecurrence: false, tombstoneOccurrenceIds };
+}
