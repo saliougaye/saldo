@@ -618,7 +618,7 @@ small enough to land on its own branch without a plan file of its own.
   stored as an opening balance; nothing is written until "Inizia". `applyImport` no longer twins a name that exists
   by the time it writes.
 
-### 12 — Recurring transactions 🚧 in progress
+### 12 — Recurring transactions ✅ done
 
 **Plan:** `2026-09-19-12-recurring-transactions.md` · **Spec:** §4 (Recurrence), §5.9, §6.2, §6.6, §6.16, §6.33, §6.34
 · **Mockup:** `docs/superpowers/mockups/2026-09-18-recurring-transactions.html` (form: variant A, tab: variant B)
@@ -629,6 +629,10 @@ small enough to land on its own branch without a plan file of its own.
 
 **Acceptance:** create a bi-weekly expense and see its occurrences up to the end of next cycle; change its end and
 its cadence from the detail; stop it and see only the future go; `SYNC_SCHEMA_VERSION` stays 1 (documented).
+
+**Status:** met on iOS. Lint, typecheck and the 434 mobile / 352 core tests are green; the flows above were driven
+on the simulator with Maestro (see the plan's status section). Changing the cadence from the detail is covered by
+`recurrenceService.test.ts` and was not tapped through on the device. Android unverified, as for every phase.
 
 ## Future (not POC)
 

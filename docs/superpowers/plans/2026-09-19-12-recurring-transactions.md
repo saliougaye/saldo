@@ -2833,7 +2833,7 @@ rtk git commit -m "feat(mobile): recurrence detail with cadence, end and stop"
 
 **Files:** `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`, `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Spec §4 Recurrence table** (line 228 onward). Replace the `frequency` row and add `interval`:
+- [x] **Step 1: Spec §4 Recurrence table** (line 228 onward). Replace the `frequency` row and add `interval`:
 
 ```markdown
 | `frequency` | `daily \| weekly \| monthly \| yearly` | With `interval`: every N units. Rows written when only `monthly` existed still parse. |
@@ -2842,7 +2842,7 @@ rtk git commit -m "feat(mobile): recurrence detail with cadence, end and stop"
 | `endDate` | LocalDate \| null | Inclusive. "Dopo N volte" is stored as the date of the N-th occurrence. |
 ```
 
-- [ ] **Step 2: Spec §5.9.** Replace the first two bullets with:
+- [x] **Step 2: Spec §5.9.** Replace the first two bullets with:
 
 ```markdown
 - The "Ripeti" chip row of the new-transaction sheet (Mai / Ogni mese / Ogni settimana / Altro › sheet with presets,
@@ -2865,7 +2865,7 @@ and append two bullets after "Deleting":
   Template edits keep going through the scope sheet from an occurrence.
 ```
 
-- [ ] **Step 3: Spec §6 rows.** In 6.2 append: `A **Ricorrenti** row under "In arrivo" (only when a recurrence exists)
+- [x] **Step 3: Spec §6 rows.** In 6.2 append: `A **Ricorrenti** row under "In arrivo" (only when a recurrence exists)
       opens §6.33.` In 6.6 replace `"Ricorrente, ogni mese"` with `"Ricorrente, ogni mese, il 18" (the cadence)` and
       append `A **Ricorrenza** row (end) opens §6.34.` In 6.16 replace `Ripeti toggle;` with `**Ripeti** chip row under
       Data (Mai / Ogni mese / Ogni settimana / Altro › sheet) with a one-line summary and "Cambia"; on an occurrence a
@@ -2876,7 +2876,7 @@ and append two bullets after "Deleting":
 | 6.34 | **Recurrence detail** (NEW) | — | Name, amount, cadence and next date; rows Cadenza › and Fine › (both open the Ripeti sheet on a draft, applied on close per §5.9), Prima occorrenza; every occurrence, newest first, upcoming ones with the 2px rule; "Modifica" opens the edit sheet of the next upcoming occurrence (or the latest), which asks the scope; "Smetti di ripetere" confirms with the real count of scheduled rows. |
 ```
 
-- [ ] **Step 4: Roadmap.** In `docs/superpowers/plans/README.md`, before `## Future (not POC)`, add:
+- [x] **Step 4: Roadmap.** In `docs/superpowers/plans/README.md`, before `## Future (not POC)`, add:
 
 ```markdown
 ### 12 — Recurring transactions 🚧 planned
@@ -2894,7 +2894,7 @@ its cadence from the detail; stop it and see only the future go; `SYNC_SCHEMA_VE
 
 Mark it ✅ done with a **Status** line once Step 6 passes.
 
-- [ ] **Step 5: Gates.** Run each through `rtk proxy` and read the output, not the exit code (AGENTS.md):
+- [x] **Step 5: Gates.** Run each through `rtk proxy` and read the output, not the exit code (AGENTS.md):
 
 ```bash
 rtk proxy pnpm lint
@@ -2905,12 +2905,12 @@ rtk proxy pnpm test
 Expected: no `lint/…` lines, no `× Some errors were emitted`; typecheck clean in every package; every vitest/jest
 suite green.
 
-- [ ] **Step 6: Simulator pass** (AGENTS.md verification-before-completion): delete the simulator's
+- [x] **Step 6: Simulator pass** (AGENTS.md verification-before-completion): delete the simulator's
       `Documents/SQLite/saldo.db`, Metro `--clear`, seed, then: new expense with "Ogni 2 settimane", see two badged
       rows behind "In arrivo"; open the card → list → detail; change end; change cadence; stop; edit an occurrence and
       see the "Gestisci ›" row; a plain transaction turned recurring from the edit form.
 
-- [ ] **Step 7: Commit and review.**
+- [x] **Step 7: Commit and review.**
 
 ```bash
 rtk git add docs
@@ -2918,3 +2918,25 @@ rtk git commit -m "docs: recurring transactions in spec and roadmap"
 ```
 
 Then use **requesting-code-review** on `main..feat/recurrences` before merging.
+
+---
+
+## Status (2026-09-19)
+
+Driven on the iPhone 17 Pro simulator (iOS 26.5) with Maestro 2.10 (`~/.maestro/bin/maestro`, installed for this):
+a bi-weekly expense from the form (chip row, sheet with presets, "Personalizzato", "Dopo N volte"), the "Ricorrenti"
+card with the monthly figure, the list grouped by cadence with the ↻ badge, the detail, the cadence sheet, and
+"Smetti di ripetere" (future rows gone, series in "Terminate", total recomputed). One defect found and fixed there: the
+sheet opened from the detail reported "Mai" for a series with an end.
+
+Notes for the next simulator session:
+
+- `CI=1 expo start` disables Metro's file watcher; edits do not reach the app until Metro restarts. Start it plain.
+- With a hardware keyboard attached to the simulator, Maestro's `hideKeyboard` fails and a tap right after
+  `inputText` is spent dismissing the keyboard. Tap something inert first, or choose chips before typing.
+- `apps/mobile/maestro/edit-recurring-following.yaml` was updated to the chip row but still uses `hideKeyboard`, so it
+  fails on this machine for that reason alone; it was not run to the end.
+- Text taps on `ListRow` titles do not resolve on iOS; rows carry `recurrence-<id>` test ids for that.
+- Description text typed by Maestro did not land in the field on this run (the row was named after its category),
+  which is a test-driver quirk, not a product one.
+
