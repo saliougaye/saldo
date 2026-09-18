@@ -13,11 +13,13 @@ import {
   useAccounts,
   useAttachments,
   useCategories,
+  useRecurrence,
   useSettings,
   useTags,
   useTransaction,
 } from '../../src/db/hooks';
 import { AttachmentTile } from '../../src/features/transactions/AttachmentTile';
+import { cadenceLabel, endLabel } from '../../src/features/transactions/recurrenceCopy';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
@@ -44,6 +46,7 @@ export default function TransactionDetail() {
   const attachments = useAttachments(id ?? '');
 
   const transaction = useTransaction(id ?? '');
+  const recurrence = useRecurrence(transaction?.recurrenceId ?? '');
   if (transaction === null) {
     return (
       <Screen>
@@ -207,11 +210,28 @@ export default function TransactionDetail() {
           t('transactions.detailNote'),
           <Text style={{ textAlign: 'right' }}>
             {transaction.note ??
-              (transaction.recurrenceId === null
+              (recurrence === null
                 ? t('transactions.manual')
-                : t('transactions.recurringEveryMonth'))}
+                : t('recurrence.recurringNote', {
+                    cadence: cadenceLabel(
+                      recurrence,
+                      recurrence.startDate,
+                      t,
+                      locale,
+                    ).toLowerCase(),
+                  }))}
           </Text>,
         )}
+        {recurrence === null
+          ? null
+          : row(
+              t('recurrence.recurringRow'),
+              <Text>{endLabel(recurrence.endDate, t, locale)}</Text>,
+              {
+                onPress: () =>
+                  router.push({ pathname: '/recurrence/[id]', params: { id: recurrence.id } }),
+              },
+            )}
         {transaction.excludeFromTotals
           ? row(
               t('transactions.excludedFromTotals'),
