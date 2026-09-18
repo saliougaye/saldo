@@ -4,6 +4,7 @@ import {
   type LocalDate,
   type MinorDigits,
   minorToAmountBuffer,
+  type RecurrenceRule,
   type Transaction,
   type TransactionKind,
 } from '@saldo/core';
@@ -18,7 +19,8 @@ export interface TransactionFormValues {
   description: string;
   tagIds: string[];
   excludeFromTotals: boolean;
-  repeat: boolean;
+  /** Null = does not repeat. On an occurrence this stays null: its rule lives on the recurrence. */
+  recurrence: RecurrenceRule | null;
 }
 
 export function emptyForm(today: LocalDate, accountId: string | null): TransactionFormValues {
@@ -32,7 +34,7 @@ export function emptyForm(today: LocalDate, accountId: string | null): Transacti
     description: '',
     tagIds: [],
     excludeFromTotals: false,
-    repeat: false,
+    recurrence: null,
   };
 }
 
@@ -50,7 +52,7 @@ export function formFromTransaction(
     description: transaction.description,
     tagIds: [...transaction.tagIds],
     excludeFromTotals: transaction.excludeFromTotals,
-    repeat: transaction.recurrenceId !== null,
+    recurrence: null,
   };
 }
 
@@ -169,33 +171,25 @@ export function canCreateTag(tags: readonly { name: string }[], query: string): 
 /**
  * What the form's "Dettagli" disclosure is holding (§6.16).
  *
- * Tags, attachments, repeat and exclude are the four fields that are rarely touched and that
+ * Tags, attachments and exclude are the three fields that are rarely touched and that
  * together pushed the frequent ones off the screen. Collapsing them is only safe if a *set* value
  * stays readable without opening anything, which is what this counts.
  */
 export interface DetailsSummary {
   tags: number;
   attachments: number;
-  repeat: boolean;
   excludeFromTotals: boolean;
 }
 
 export function detailsSummary(
-  values: Pick<TransactionFormValues, 'tagIds' | 'repeat' | 'excludeFromTotals'>,
+  values: Pick<TransactionFormValues, 'tagIds' | 'excludeFromTotals'>,
   attachments: number,
 ): DetailsSummary {
-  return {
-    tags: values.tagIds.length,
-    attachments,
-    repeat: values.repeat,
-    excludeFromTotals: values.excludeFromTotals,
-  };
+  return { tags: values.tagIds.length, attachments, excludeFromTotals: values.excludeFromTotals };
 }
 
 export function detailsAreEmpty(summary: DetailsSummary): boolean {
-  return (
-    summary.tags === 0 && summary.attachments === 0 && !summary.repeat && !summary.excludeFromTotals
-  );
+  return summary.tags === 0 && summary.attachments === 0 && !summary.excludeFromTotals;
 }
 
 /**

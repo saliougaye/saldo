@@ -108,11 +108,11 @@ describe('formFromTransaction', () => {
     } satisfies Transaction;
     const form = formFromTransaction(transaction, 2);
     expect(form.buffer).toBe('45');
-    expect(form.repeat).toBe(false);
+    expect(form.recurrence).toBeNull();
     expect(toTransactionInput(form, 2).amount).toBe(4500);
   });
 
-  it('marks an occurrence as repeating', () => {
+  it('leaves the rule empty for an occurrence: the rule lives on the recurrence', () => {
     const transaction = {
       ...toTransactionInput(valid, 2),
       id: 'rec:2026-04-18',
@@ -121,7 +121,7 @@ describe('formFromTransaction', () => {
       deletedAt: null,
       recurrenceId: 'rec',
     } satisfies Transaction;
-    expect(formFromTransaction(transaction, 2).repeat).toBe(true);
+    expect(formFromTransaction(transaction, 2).recurrence).toBeNull();
   });
 });
 
@@ -225,11 +225,16 @@ describe('the details disclosure', () => {
   const base = emptyForm(TODAY, 'acc-1');
 
   it('counts what it is holding', () => {
-    const summary = detailsSummary(
-      { ...base, tagIds: ['t1', 't2'], repeat: true, excludeFromTotals: false },
-      3,
-    );
-    expect(summary).toEqual({ tags: 2, attachments: 3, repeat: true, excludeFromTotals: false });
+    const summary = detailsSummary({ ...base, tagIds: ['t1', 't2'], excludeFromTotals: false }, 3);
+    expect(summary).toEqual({ tags: 2, attachments: 3, excludeFromTotals: false });
+  });
+
+  it('no longer counts the recurrence, which has its own row in the form', () => {
+    const withRule = {
+      ...base,
+      recurrence: { frequency: 'weekly' as const, interval: 2, endDate: null },
+    };
+    expect(detailsAreEmpty(detailsSummary(withRule, 0))).toBe(true);
   });
 
   it('is empty when nothing in it is set', () => {
@@ -249,8 +254,8 @@ describe('the details disclosure', () => {
   });
 
   it('stays closed on a new transaction even if a default put something in it', () => {
-    // A "repeat this" entry point could pre-set the switch; the form still has to fit.
-    expect(detailsOpenInitially('new', detailsSummary({ ...base, repeat: true }, 0))).toBe(false);
+    // A "duplicate this" entry point could pre-set a tag; the form still has to fit.
+    expect(detailsOpenInitially('new', detailsSummary({ ...base, tagIds: ['t1'] }, 0))).toBe(false);
   });
 
   it('opens on an edit that has something in it, which is what you came back for', () => {
