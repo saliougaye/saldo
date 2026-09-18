@@ -155,9 +155,16 @@ export const transactionSchema = z
   })
   .superRefine(refineTransactionShape);
 
+export const recurrenceFrequencySchema = z.enum(['daily', 'weekly', 'monthly', 'yearly']);
+
 export const recurrenceSchema = z.object({
   ...syncMeta,
-  frequency: z.literal('monthly'),
+  frequency: recurrenceFrequencySchema,
+  /**
+   * Every `interval` units of `frequency`: 2 + weekly = every two weeks. Defaults to 1 so a row
+   * written before the column existed still parses on pull (§8).
+   */
+  interval: z.number().int().min(1).max(99).default(1),
   startDate: localDate,
   endDate: localDate.nullable(),
   template: z
@@ -226,6 +233,9 @@ export type Tag = z.infer<typeof tagSchema>;
 export type TransactionKind = z.infer<typeof transactionKindSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type Recurrence = z.infer<typeof recurrenceSchema>;
+export type RecurrenceFrequency = z.infer<typeof recurrenceFrequencySchema>;
+/** When a recurrence fires. The form and the sheets pass this around; the template travels apart. */
+export type RecurrenceRule = Pick<Recurrence, 'frequency' | 'interval' | 'endDate'>;
 export type BudgetPeriod = z.infer<typeof budgetPeriodSchema>;
 export type Budget = z.infer<typeof budgetSchema>;
 export type Attachment = z.infer<typeof attachmentSchema>;
