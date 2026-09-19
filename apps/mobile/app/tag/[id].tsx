@@ -22,6 +22,7 @@ import { SplitBar } from '../../src/features/stats/SplitBar';
 import { TagEditCard } from '../../src/features/tags/TagEditCard';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -29,6 +30,7 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 export default function TagView() {
   const theme = useTheme();
   const router = useRouter();
+  const leaveGone = useLeaveGone();
   const { t } = useTranslation();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -170,7 +172,7 @@ export default function TagView() {
       </Text>
 
       {/* Last: the screen reads as what the tag *is*, then what you can do to it. */}
-      <TagEditCard tag={tag} onDeleted={() => router.back()} />
+      <TagEditCard tag={tag} onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })} />
     </Screen>
   );
 }

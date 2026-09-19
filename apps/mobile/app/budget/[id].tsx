@@ -8,11 +8,12 @@ import { useToast } from '../../src/components/Toast';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useSettings } from '../../src/db/hooks';
 import { BudgetForm, budgetFormFrom } from '../../src/features/budgets/BudgetForm';
-import { leaveAfterDelete } from '../../src/navigation/leave';
+import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';
 
 export default function EditBudget() {
   const router = useRouter();
+  const leaveGone = useLeaveGone();
   const { t } = useTranslation();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,8 +67,7 @@ export default function EditBudget() {
           repos.budgets.remove(budget.id);
           setConfirmingDelete(false);
           toast.show(t('budgets.deleted'));
-          // The screen underneath is this budget's detail, which is now empty.
-          leaveAfterDelete(router, '/budgets');
+          leaveGone({ kind: 'budget', ids: [budget.id] });
         }}
         onCancel={() => setConfirmingDelete(false)}
       />

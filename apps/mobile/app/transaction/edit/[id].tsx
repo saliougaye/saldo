@@ -18,11 +18,12 @@ import {
   formFromTransaction,
   toTransactionInput,
 } from '../../../src/features/transactions/useTransactionForm';
-import { leaveAfterDelete } from '../../../src/navigation/leave';
+import { useLeaveGone } from '../../../src/navigation/leave';
 import { Text } from '../../../src/theme/Text';
 
 export default function EditTransaction() {
   const router = useRouter();
+  const leaveGone = useLeaveGone();
   const { t } = useTranslation();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -79,7 +80,7 @@ export default function EditTransaction() {
     toast.show(t('transactions.deleted', { name }));
     // The screen underneath is the detail of the row that no longer exists, so going back one step
     // would land on an empty screen.
-    leaveAfterDelete(router);
+    leaveGone({ kind: 'transaction', ids: [transaction.id] });
   };
 
   return (
