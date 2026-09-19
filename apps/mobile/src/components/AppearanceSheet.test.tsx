@@ -69,6 +69,24 @@ describe('AppearanceSheet', () => {
     expect(onChange).toHaveBeenCalledWith({ colorIndex: 2, icon: 'card' });
   });
 
+  it('hides the swatches when colours are turned off', async () => {
+    await render(
+      <Host>
+        <AppearanceSheet
+          visible
+          onClose={jest.fn()}
+          colorIndex={0}
+          icon="landmark"
+          groups={GROUPS}
+          colours={false}
+          onChange={jest.fn()}
+        />
+      </Host>,
+    );
+    expect(screen.queryByLabelText('Terracotta')).toBeNull();
+    expect(screen.getByLabelText('card')).toBeTruthy();
+  });
+
   it('offers no search box when there is one short group to look through', async () => {
     await render(
       <Host>

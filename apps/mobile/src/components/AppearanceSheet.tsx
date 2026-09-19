@@ -22,6 +22,8 @@ export interface AppearanceSheetProps {
   groups: readonly IconGroup[];
   /** Category icons come from the whole library, so they need a search; account icons do not. */
   searchable?: boolean;
+  /** `false` hides the swatches, for things whose colour is not theirs (a budget takes its category's). */
+  colours?: boolean;
   onChange: (value: { colorIndex: number; icon: IconName }) => void;
 }
 
@@ -40,6 +42,7 @@ export function AppearanceSheet({
   icon,
   groups,
   searchable = false,
+  colours = true,
   onChange,
 }: AppearanceSheetProps) {
   const theme = useTheme();
@@ -55,30 +58,32 @@ export function AppearanceSheet({
 
   return (
     <Sheet visible={visible} onClose={onClose} title={t('common.appearance')} tall>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {/* The names, not the hexes: walking them is what guarantees every swatch has one. */}
-        {categoryColorNames.map((name, index) => (
-          <Pressable
-            key={name}
-            accessibilityRole="button"
-            accessibilityState={{ selected: index === colorIndex }}
-            accessibilityLabel={t(`colors.${name}`)}
-            // 30pt swatches 8 apart cannot reach 44 without their slop meeting in the gap, so
-            // it meets there: a tap between two swatches picks one of them rather than nothing,
-            // and picking the wrong colour costs one more tap.
-            hitSlop={7}
-            onPress={() => onChange({ colorIndex: index, icon })}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: theme.categoryColor(index),
-              borderWidth: index === colorIndex ? 2 : 0,
-              borderColor: theme.palette.text,
-            }}
-          />
-        ))}
-      </View>
+      {colours ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {/* The names, not the hexes: walking them is what guarantees every swatch has one. */}
+          {categoryColorNames.map((name, index) => (
+            <Pressable
+              key={name}
+              accessibilityRole="button"
+              accessibilityState={{ selected: index === colorIndex }}
+              accessibilityLabel={t(`colors.${name}`)}
+              // 30pt swatches 8 apart cannot reach 44 without their slop meeting in the gap, so
+              // it meets there: a tap between two swatches picks one of them rather than nothing,
+              // and picking the wrong colour costs one more tap.
+              hitSlop={7}
+              onPress={() => onChange({ colorIndex: index, icon })}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: theme.categoryColor(index),
+                borderWidth: index === colorIndex ? 2 : 0,
+                borderColor: theme.palette.text,
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
 
       {searchable ? (
         <TextField label={t('categories.iconSearch')} value={query} onChangeText={setQuery} />
