@@ -725,6 +725,10 @@ export const en: Messages = {
     health: 'Health',
     leisure: 'Leisure',
     work: 'Work',
+    nature: 'Pets & nature',
+    shopping: 'Shopping',
+    tech: 'Tech',
+    finance: 'Money',
   },
   home: {
     remaining: 'Left to spend',

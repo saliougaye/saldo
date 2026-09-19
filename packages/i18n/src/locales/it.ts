@@ -730,6 +730,10 @@ export const it = {
     health: 'Salute',
     leisure: 'Svago',
     work: 'Lavoro',
+    nature: 'Animali e natura',
+    shopping: 'Acquisti',
+    tech: 'Tecnologia',
+    finance: 'Denaro',
   },
   home: {
     remaining: 'Rimasto da spendere',
