@@ -65,3 +65,229 @@ Open questions:
 
 A Saldo CSV round trip counts excluded rows again: `IMPORT_FIELDS` has no `excluded`, so every imported row gets
 `excludeFromTotals: false`. Found during the settle analysis.
+
+## Tags: freeze, palette and layout
+
+Reported on 2026-09-19. Not investigated yet.
+
+- [ ] **The app sometimes freezes** when deleting a tag, or while picking an icon for it. Reproduce first: find out
+      whether the freeze is the icon grid rendering (too many items in one pass) or the delete flow (a confirm sheet
+      over the edit sheet).
+- [ ] **More colours and icons** for tags. Both come from `@saldo/ui` tokens and `packages/ui/src/icons.ts`; new
+      icons need their licence noted (see the third-party notices item below).
+- [ ] **Tag edit UI:** move the edit and delete actions to the top of the sheet instead of the bottom.
+
+## Routing: swipe back lands on a stale screen
+
+- [ ] Swiping left (back) sometimes returns to an old page, for example after a delete: the deleted item's detail
+      screen is still on the stack. After a delete the screen should be replaced or popped, and the back gesture
+      should never reach a screen whose data is gone. Find every delete flow that ends with a `router.back()` or
+      `push` and check the stack.
+
+## Editing a transaction and making it recurring shows "not found"
+
+- [ ] Reported on 2026-09-19. Open an existing transaction, edit it, set it as recurring and save: the app shows a
+      "not found" screen. Not investigated. Likely the same family as the stale-screen item above: saving the rule
+      may replace or re-key the transaction so the edit route's id no longer resolves. Check what the recurrence
+      sheet (phase `feat/recurrences`) does to the row on save, and where it navigates afterwards.
+
+## No way to reach Budgets when none exist
+
+- [ ] Reported on 2026-09-19. With zero budgets the Budgets screen cannot be opened from anywhere, so the first
+      one cannot be created from the wizard. The only entry point is the Home budget card
+      (`src/features/budgets/HomeBudgetCard.tsx:25`, `router.push('/budgets')`), and it returns `null` when
+      `views.length === 0`. Settings has no link either. The only way in today is the category form's "Budget
+      mensile" toggle (`app/category/edit/[id].tsx`), which creates a single-category budget and makes the card appear.
+- [ ] Fix: show an empty state in the Home card instead of `null` («Nessun budget», tappable → `/budget/new`;
+      `budgets.empty` already exists in `it.ts`). Optionally add a «Budget» row in Settings as a second way in.
+      Spec §6.1 and §5.8 describe the card only with budgets present, so note the empty state there in the same commit.
+
+## Going public: what is missing before the first push
+
+Audited on 2026-09-18. The repository has no remote yet, so the first push publishes all 316 commits at once.
+**Verified clean and needing nothing:** no `.env`, keystore, `.p12` or personal CSV was ever added in history; no
+`sk-`/`ghp_`/`AKIA`/private-key patterns in tracked files; `.env*`, `.vercel`, `.screenshots` and
+`transactions_export_*.csv` are ignored; the screenshots in `docs/screenshots/` are demo data with no real figures;
+the Spendee fixture is anonymised (`"A Person"`, `"My Money"`); dependency licences hold no copyleft trap
+(`node-forge` is dual BSD-3/GPL-2, `@img/sharp-libvips-*` is an LGPL native binary Next pulls in). The commit
+author address stays as it is: the repository will be `saliougaye/saldo`, so the name is public either way.
+
+Blockers — none of these should survive the first push:
+
+- [ ] **A security contact.** `SECURITY.md` still says `**<!-- SECURITY CONTACT: set this before publishing -->**`,
+      which renders as bold nothing. Put a real address there, and turn on GitHub's private vulnerability reporting
+      once the repo exists — the file already says that is the better channel.
+- [ ] **The repository slug.** `apps/web/app/page.tsx:11` and `docs/building-android.md:107` name
+      `github.com/saldo-app/saldo`, which does not exist; the first is on the landing page every server instance
+      serves. Both become `saliougaye/saldo`.
+- [ ] **Third-party notices.** `packages/ui/src/icons.ts:3-5` says part of the icon set is "taken from Lucide";
+      Lucide is ISC and its licence has to travel with the copies. There is no `NOTICE` or `THIRD-PARTY.md` —
+      `git ls-files | grep -i licen` returns only `LICENSE`. Geist arrives through `@expo-google-fonts/geist`, so
+      its OFL ships with the package and needs nothing here.
+- [ ] **References to a prototype that is not published.** `docs/design/` is gitignored and stays that way, but
+      `AGENTS.md:11` sends every implementing agent to `docs/design/README.md` and the line ranges of
+      `Spese.dc.html`, `CONTRIBUTING.md:11` links the same README, and source comments cite its line numbers
+      (`packages/ui/src/icons.ts:3`, `src/features/stats/CashflowChart.tsx`, `SpendHistoryChart.tsx`). A public
+      contributor follows those to a 404. Rewrite each reference to say what the file *was* and that it is not
+      part of the repository, without pretending the tokens and icons came from nowhere.
+
+Worth doing in the same pass:
+
+- [ ] **Community health files.** No `CODE_OF_CONDUCT.md`, no `.github/ISSUE_TEMPLATE/`, no
+      `PULL_REQUEST_TEMPLATE.md`, no `dependabot.yml`. `CONTRIBUTING.md` tells people to open an issue describing
+      the behaviour before sending a fix, and gives them no template to shape it.
+- [ ] **Decide what happens to `.claude/`, `.agents/` and `skills-lock.json`.** All three are untracked *and*
+      un-ignored, so a `git add .` before the first push commits them. Either ignore them or commit them on purpose.
+- [ ] **Local paths and a first name in tracked files.** `/Users/saliougaye/…` and `rtk proxy` (a private local
+      wrapper) appear in `docs/superpowers/plans/2026-09-13-11-release-and-hardening.md:978,1076,1250`, and
+      `apps/web/src/server/auth/admin.test.ts:88` uses `'Saliou'` as a display name. Cosmetic, but the paths read
+      as an accident rather than a choice.
+- [ ] **A dependency gate in CI.** `.github/workflows/ci.yml` runs lint, typecheck and test only. A public repo
+      gets Dependabot, CodeQL and secret-scanning push protection for free; `pnpm audit` is one more step.
+
+## The roadmap understates what works
+
+The passkey ceremony was run on a real phone on 2026-09-18 and it works. Six phases still end with a sentence
+saying it has never been driven — 06, 06b, 07, 08, 10 and 11 in `docs/superpowers/plans/README.md`, and with it
+the `SALDO_SCHEME` round trip, the invite burn in `afterVerification`, the first-account-becomes-admin rule and
+the connected state of §6.30. The roadmap is the first thing a visitor reads, so this is worth correcting before
+the repository is public. Record what was actually exercised on the device, and leave the rest listed as still
+open.
+
+## Distribution: a server image, and an app build that does not need a Mac
+
+Self-hosting currently means building the server from source, and installing the app means owning a Mac or an
+Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere.
+
+`SALDO_SERVER_URL` is baked in at build time (08b), so **one official APK cannot exist** — but two things can:
+
+- a tagged server image on `ghcr.io`, so `docker compose` pulls instead of building;
+- a reusable workflow a user runs in their own fork, with their own `SALDO_SERVER_URL` and signing secrets,
+  producing a signed APK as an artifact.
+
+The second one needs care in the writing: keystore-in-secrets guidance, and a hard rule that this repository never
+publishes an APK of its own, because any APK it built would point at the wrong server.
+
+### Releases: there is nothing to update *to*
+
+Found on 2026-09-18 while asking what an open-source self-hoster sees. `git tag` returns nothing, there is no
+`CHANGELOG`, and `apps/web/src/server/version.ts:5` hard-codes `APP_VERSION = '0.1.0'`, so `/api/health` and the
+landing page report the same version whatever commit is running. `docs/self-hosting.md` §Updating explains the
+order (server first, then the phones) but the only thing to update to is `main`, and a `SYNC_SCHEMA_VERSION` bump
+with no release note is discovered as a `409` on the phone. The image and the fork workflow above need a tag to hang
+on anyway, so this comes first:
+
+- [ ] Semver tags (`v0.1.0` …) and a `CHANGELOG.md` whose entries say in the first line whether
+      `SYNC_SCHEMA_VERSION` or `apiVersion` moved — that line is what a self-hoster reads before pulling.
+- [ ] `APP_VERSION` derived from the tag at build time (the file's own comment says why it cannot read
+      `package.json` at runtime; a build-time inject keeps that property).
+- [ ] The `ghcr.io` image tagged with the same version, and `latest` only on a tagged build.
+- [ ] The fork workflow pins itself to a tag too, so the APK a user builds says which release it is.
+
+## A first run with no server (local-only), sign-in later
+
+Spec §1.1 goal 2 keeps «a server-less variant» as a later option, and the code still carries half of it:
+`apps/mobile/src/boot/decide.ts:31,74` sends a signed-in phone with no scheduler straight to onboarding,
+`src/sync/SyncProvider.tsx:51` reads a null scheduler as «local-only», and `src/sync/scheduler.ts:50` and
+`src/sync/syncContext.ts:6` document the same state. None of it is reachable: `decide.ts:70` routes every
+signed-out session to welcome, and welcome offers only sign-in (phase 08).
+
+Why it matters for an open-source app: the README's quick start asks for an HTTPS domain, a running server, an
+invite code and a self-built app **before the first transaction**. For something described as local-first and
+«own your data», that is the highest bar in the category, and the first five minutes decide whether anybody comes
+back. The offline part already works; what is missing is the door.
+
+This reopens a decision taken at 08 (sign-in required), so it is a product call, recorded here rather than argued:
+
+- Welcome gains «Start on this phone»; sign-in stays on the same screen and in Profile for later.
+- Phase 10b's ownership question gets a third case: local rows exist, no `kv.accountId`, and somebody signs in —
+  adopt the rows into the account (push them) or discard them. Today's `ownershipVerdict` only knows a device with
+  a recorded account and a device with none.
+- §1.2's last bullet («a first run with no network … says so instead of appearing broken») and §6.29 step 0 change
+  wording; §1.1 goal 2 loses its «later».
+- A build with an empty `SALDO_SERVER_URL` becomes a legitimate local-only build instead of one that «can only
+  say so» (§15).
+
+## A shared ledger — decide the owning entity
+
+Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the local rows)
+was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two shapes are already
+written there and are kept apart on purpose:
+
+- **Two people, one account.** Each registers a passkey on the same user. The server already works this way; what
+  is missing is adding a passkey to an existing account — `resolveUser` always mints a new user and `addPasskey`
+  wants a session. No local scoping needed. Cheap, and it covers a couple.
+- **Two accounts, shared data.** An owning entity (space, household), a membership table, the pull scoped to the
+  spaces a user belongs to (`sync_rows` is keyed `(user_id, entity, id)` and the pull is `where user_id = ?`), and a
+  rule for rows when somebody leaves. The LWW merge already tolerates more writers.
+
+Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
+households from the POC; this is the note that it is the next non-goal to fall, and that the first shape is a
+weekend while the second is a phase.
+
+## Web app (spec §17.1) and end-to-end encryption — decide together
+
+Two futures that constrain each other, recorded so the first one built does not close the second by accident.
+
+**Web app.** D3 says `apps/web` «becomes the web app later»; today `apps/web/app/page.tsx` is fifteen lines. The
+spec offers two data paths and decides neither: query `sync_rows` server-side through `@saldo/core` (D11 foresees a
+«typed projection»), or run local-first in the browser with SQLite WASM and the same sync client. The second reuses
+what the phone already has; the first makes the server read the data.
+
+**End-to-end encryption.** The server is already nearly a blob store: `packages/core/src/sync/protocol.ts:27` carries
+`data: z.unknown()`, D11 stores it opaquely, and no route has relational logic. What stands in the way is small but
+real: `apps/web/src/server/sync/push.ts:16` validates every row against `entitySchemas` (the server reads the
+content), attachment bytes sit on the server in clear, and `deletedAt` stays visible in the envelope. Key
+handling is the hard part — the passkey PRF extension is out of reach through the browser ceremony and one-time
+token handoff, so it would be a separate key the user has to keep, with the recovery story that implies.
+
+The constraint: a server-side web app needs to read rows; encrypted rows cannot be read. Pick one before either is
+built. Neither is next.
+
+## Considered on 2026-09-18 and not planned
+
+Kept so they are not re-derived.
+
+- **Field-level merge.** `packages/core/src/sync/merge.ts` is whole-row last-writer-wins; the settle analysis
+  shows the cost (a rename on one phone can undo a balance edit on another). The checkpoint above removes the
+  frequent case; what is left — rename against colour, one settings toggle against another — is rare. Not worth
+  the machinery.
+- **Native passkeys (§9.4).** D13 still holds: a free Apple ID cannot sign Associated Domains, and the app is
+  sideloaded. Pointless until there is a store build.
+- **Multi-currency.** §1.2 excludes it with a reason (historical rates per transaction date). A decision, not a gap.
+
+## AI receipt analysis, BYOK (spec §17.2)
+
+Spec §17.2 already fixes the shape: provider (Anthropic or an OpenAI-compatible base URL), the key in
+`expo-secure-store` and never synced, a `ReceiptAnalyzer` in `@saldo/core/ai`, and "Allega foto" → "Analizza
+scontrino" → a prefilled transaction sheet the user always confirms. Phase 09b already shipped everything it
+stands on: capture, compression, the local file store, the viewer, and the category list the prompt needs.
+
+The thing to settle before building: this is the first outbound call to a host the user does not run, and §18
+currently promises no third-party network calls at all. That line changes with the feature, and the consent has
+to be explicit rather than a settings toggle nobody reads. Worth a spike first — the interface, one driver, and
+the settings screen — rather than a full build.
+
+## AI spending insights, BYOK (spec §17.3)
+
+The second half of §17: an `InsightsProvider` in `@saldo/core/ai`, fed **aggregates only** — per-cycle category
+totals, budgets and trends out of `@saldo/core` — never raw descriptions unless the user opts in, with results
+cached locally per cycle. It shares the provider settings, the key storage and the consent question with the
+receipt analyser above, so whichever is built first should build those for both.
+
+## A mascotte in 3D — scope undecided
+
+The idea is a 3D character, possibly a panda. The brand today is a raccoon: `docs/brand/mascotte/procione*.svg`
+plus thirteen generator pages that render nine outputs (iOS light, dark and tinted; Android background, foreground
+and monochrome; splash light and dark; favicon).
+
+Two constraints to decide against, recorded so they are not re-derived:
+
+- **Android monochrome and iOS tinted flatten to a single-channel silhouette.** Shading does not survive them, so
+  those variants stay vector whatever the hero art becomes.
+- **The current pipeline is HTML/CSS/SVG → PNG.** A 3D render needs a renderer alongside it, and 3D sits against
+  an interface drawn in flat 1.5px strokes.
+
+The cheap shape is therefore: keep the vector set for icons and splashes, and use 3D only where shading survives —
+README, docs, a future landing page. Whether the character stays a raccoon or becomes a panda is a free choice
+either way.
