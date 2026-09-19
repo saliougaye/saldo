@@ -3,6 +3,7 @@ import {
   firstWeekdayFor,
   formatCycleRange,
   formatDayMonth,
+  formatDayMonthLong,
   formatLongDate,
   formatMajor,
   formatMoney,
@@ -10,6 +11,7 @@ import {
   formatMonthYear,
   formatPeriodTick,
   formatSignedPercent,
+  formatWeekday,
   resolveLocale,
   weekdayLabels,
 } from './format';
@@ -162,5 +164,18 @@ describe('calendar labels', () => {
   it('names the month over the grid', () => {
     expect(formatMonthYear({ year: 2026, month: 4 }, 'it')).toBe('aprile 2026');
     expect(formatMonthYear({ year: 2026, month: 4 }, 'en')).toBe('April 2026');
+  });
+});
+
+describe('formatWeekday / formatDayMonthLong', () => {
+  it('names the weekday in full', () => {
+    expect(formatWeekday('2026-09-18', 'it')).toBe('venerdì');
+    expect(formatWeekday('2026-09-18', 'en')).toBe('Friday');
+    expect(formatWeekday('2026-09-20', 'it')).toBe('domenica');
+  });
+
+  it('writes day and long month without the year', () => {
+    expect(formatDayMonthLong('2026-09-18', 'it')).toBe('18 settembre');
+    expect(formatDayMonthLong('2026-09-18', 'en')).toBe('September 18');
   });
 });

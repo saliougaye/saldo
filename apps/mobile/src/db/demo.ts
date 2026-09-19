@@ -167,6 +167,7 @@ export function seedDemoData(repos: Repositories, input: DemoSeedInput): void {
     const anchorDate = addDays(anchor.date, shift);
     const recurrence = repos.recurrences.create({
       frequency: 'monthly',
+      interval: 1,
       startDate: anchorDate,
       endDate: anchorDate,
       template: {

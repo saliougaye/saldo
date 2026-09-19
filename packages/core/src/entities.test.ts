@@ -124,6 +124,24 @@ describe('recurrenceSchema', () => {
     expect(recurrenceSchema.safeParse(recurrence).success).toBe(true);
   });
 
+  it('accepts every N days, weeks, months or years, and defaults the interval to 1', () => {
+    for (const frequency of ['daily', 'weekly', 'monthly', 'yearly']) {
+      const parsed = recurrenceSchema.safeParse({ ...recurrence, frequency, interval: 3 });
+      expect(parsed.success).toBe(true);
+    }
+    const legacy = recurrenceSchema.safeParse(recurrence);
+    expect(legacy.success && legacy.data.interval).toBe(1);
+  });
+
+  it('rejects an interval below 1, above 99, or fractional', () => {
+    for (const interval of [0, 100, 1.5, -1]) {
+      expect(recurrenceSchema.safeParse({ ...recurrence, interval }).success).toBe(false);
+    }
+    expect(recurrenceSchema.safeParse({ ...recurrence, frequency: 'fortnightly' }).success).toBe(
+      false,
+    );
+  });
+
   it('holds the template to the same rules as a transaction', () => {
     const withoutCategory = {
       ...recurrence,

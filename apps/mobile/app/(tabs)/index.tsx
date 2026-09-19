@@ -156,7 +156,11 @@ export default function HomeTab() {
                     title={row.title}
                     subtitle={row.subtitle}
                     leading={
-                      <IconBox name={row.icon} colour={theme.categoryColor(row.colorIndex)} />
+                      <IconBox
+                        name={row.icon}
+                        colour={theme.categoryColor(row.colorIndex)}
+                        badge={tx.recurrenceId === null ? undefined : 'repeat'}
+                      />
                     }
                     onPress={() =>
                       router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
@@ -211,7 +215,11 @@ export default function HomeTab() {
                       title={row.title}
                       subtitle={row.subtitle}
                       leading={
-                        <IconBox name={row.icon} colour={theme.categoryColor(row.colorIndex)} />
+                        <IconBox
+                          name={row.icon}
+                          colour={theme.categoryColor(row.colorIndex)}
+                          badge={tx.recurrenceId === null ? undefined : 'repeat'}
+                        />
                       }
                       onPress={() =>
                         router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })

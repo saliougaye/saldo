@@ -13,7 +13,9 @@ import { Sheet } from '../../components/Sheet';
 import { db } from '../../db/client';
 import { useDatabase } from '../../db/DatabaseProvider';
 import { applyRecurrenceEdit } from '../../db/recurrenceService';
+import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
+import { cadenceLabel } from './recurrenceCopy';
 import { type TransactionFormValues, toTransactionInput } from './useTransactionForm';
 
 export interface RecurrenceScopeSheetProps {
@@ -50,6 +52,7 @@ export function RecurrenceScopeSheet({
   onDone,
 }: RecurrenceScopeSheetProps) {
   const { t } = useTranslation();
+  const locale = useAppLocale();
   const { repos } = useDatabase();
 
   const recurrence =
@@ -121,7 +124,7 @@ export function RecurrenceScopeSheet({
           );
         })}
         <Text size="caption" color="textFaint" style={{ paddingTop: 6 }}>
-          {t('transactions.recurringEveryMonth')}
+          {cadenceLabel(recurrence, recurrence.startDate, t, locale)}
         </Text>
       </View>
     </Sheet>

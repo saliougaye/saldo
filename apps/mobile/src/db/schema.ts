@@ -1,4 +1,11 @@
-import type { AccountType, BudgetPeriod, CurrencyCode, PeriodKind, Recurrence } from '@saldo/core';
+import type {
+  AccountType,
+  BudgetPeriod,
+  CurrencyCode,
+  PeriodKind,
+  Recurrence,
+  RecurrenceFrequency,
+} from '@saldo/core';
 import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
@@ -106,7 +113,8 @@ export const recurrences = sqliteTable(
   'recurrences',
   {
     ...syncMeta,
-    frequency: text('frequency').$type<'monthly'>().notNull(),
+    frequency: text('frequency').$type<RecurrenceFrequency>().notNull(),
+    interval: integer('interval').notNull().default(1),
     startDate: text('start_date').notNull(),
     endDate: text('end_date'),
     template: text('template', { mode: 'json' }).$type<Recurrence['template']>().notNull(),

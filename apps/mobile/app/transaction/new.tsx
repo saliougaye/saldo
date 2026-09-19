@@ -59,7 +59,9 @@ export default function NewTransaction() {
             recurrenceId: null,
           });
           // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
-          if (values.repeat) startRecurrence(db, repos, created, today, def);
+          if (values.recurrence !== null) {
+            startRecurrence(db, repos, created, values.recurrence, today, def);
+          }
           toast.show(t('transactions.created'));
           router.back();
         }}

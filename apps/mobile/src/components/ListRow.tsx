@@ -95,10 +95,13 @@ export function IconBox({
   name,
   colour,
   small = false,
+  badge,
 }: {
   name: Parameters<typeof Icon>[0]['name'];
   colour: string;
   small?: boolean;
+  /** A second, tiny glyph on the corner: `repeat` marks an occurrence of a recurrence (§5.9). */
+  badge?: Parameters<typeof Icon>[0]['name'];
 }) {
   const theme = useTheme();
   const size = small ? theme.layout.iconBoxSmall : theme.layout.iconBox;
@@ -114,6 +117,24 @@ export function IconBox({
       }}
     >
       <Icon name={name} size={small ? 14 : 16} color={colour} />
+      {badge === undefined ? null : (
+        <View
+          accessibilityElementsHidden
+          style={{
+            position: 'absolute',
+            right: -4,
+            bottom: -4,
+            width: 15,
+            height: 15,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: theme.palette.surface,
+          }}
+        >
+          <Icon name={badge} size={9} color={theme.palette.textMuted} />
+        </View>
+      )}
     </View>
   );
 }

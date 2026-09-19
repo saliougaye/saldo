@@ -37,6 +37,7 @@ import {
 } from '../../src/db/hooks';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
+import { RecurrencesCard } from '../../src/features/recurrences/RecurrencesCard';
 import { AccountFilterSheet } from '../../src/features/transactions/AccountFilterSheet';
 import { SwipeRow } from '../../src/features/transactions/SwipeRow';
 import { TagFilterSheet } from '../../src/features/transactions/TagFilterSheet';
@@ -196,7 +197,13 @@ export default function TransactionsTab() {
                         ? rowTags.map((tag) => tag.name).join(' · ')
                         : row.subtitle
                     }
-                    leading={<IconBox name={row.icon} colour={colour} />}
+                    leading={
+                      <IconBox
+                        name={row.icon}
+                        colour={colour}
+                        badge={tx.recurrenceId === null ? undefined : 'repeat'}
+                      />
+                    }
                     upcoming={tx.date > today}
                     trailing={
                       <AmountText
@@ -360,6 +367,8 @@ export default function TransactionsTab() {
             )}
           </View>
         </View>
+
+        <RecurrencesCard />
 
         {!loaded ? (
           // Nothing at all until the query has been slow enough to be worth mentioning: on a warm

@@ -8,6 +8,7 @@ import {
 } from '@saldo/core';
 import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -27,6 +28,7 @@ import {
   useAccounts,
   useAttachments,
   useCategories,
+  useRecurrence,
   useSettings,
   useTags,
   useTransactionsInRange,
@@ -37,6 +39,8 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
+import { RecurrenceSheet } from './RecurrenceSheet';
+import { cadenceLabel, endLabel, presetOf, ruleForPreset } from './recurrenceCopy';
 import {
   canCreateTag,
   changeKind,
@@ -63,6 +67,11 @@ export interface TransactionFormProps {
   onSubmit: () => void;
   onDelete?: () => void;
   submitting?: boolean;
+  /**
+   * Set when editing an occurrence: the rule is shown read-only and "Gestisci" opens the
+   * recurrence, because a rule change is a change to the whole series, not to this row (§5.9).
+   */
+  recurrenceId?: string | null;
 }
 
 const KINDS = ['expense', 'income', 'transfer'] as const;
@@ -78,8 +87,10 @@ export function TransactionForm({
   onSubmit,
   onDelete,
   submitting = false,
+  recurrenceId = null,
 }: TransactionFormProps) {
   const theme = useTheme();
+  const router = useRouter();
   const { t } = useTranslation();
   const locale = useAppLocale();
   const repos = useRepositories();
@@ -92,6 +103,8 @@ export function TransactionForm({
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [recurrenceSheetOpen, setRecurrenceSheetOpen] = useState(false);
+  const occurrenceOf = useRecurrence(recurrenceId ?? '');
   const [tagQuery, setTagQuery] = useState('');
   const attachments = useAttachments(transactionId);
   const summary = detailsSummary(values, attachments.length);
@@ -174,11 +187,15 @@ export function TransactionForm({
   const ready = missing === null;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
+  // The rule the two named chips cannot show — the fourth chip wears its label instead of "Altro".
+  const otherRule =
+    values.recurrence !== null && !['monthly', 'weekly'].includes(presetOf(values.recurrence))
+      ? values.recurrence
+      : null;
 
   const summaryParts = [
     summary.tags > 0 ? t('txForm.detailsTags', { count: summary.tags }) : null,
     summary.attachments > 0 ? t('txForm.detailsAttachments', { count: summary.attachments }) : null,
-    summary.repeat ? t('txForm.repeat') : null,
     summary.excludeFromTotals ? t('txForm.exclude') : null,
   ].filter((part): part is string => part !== null);
   const summaryLabel =
@@ -244,9 +261,11 @@ export function TransactionForm({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 6 }}
       >
-        {liveAccounts.map((account) => (
+        {liveAccounts.map((account, index) => (
           <Chip
             key={account.id}
+            // By position, as the category tiles: the end-to-end flows need *an* account.
+            testID={`txform-account-${index}`}
             label={account.name}
             active={account.id === selectedId}
             onPress={() => onSelect(account.id)}
@@ -276,6 +295,14 @@ export function TransactionForm({
               })}
             </Text>
           )}
+          {values.recurrence !== null && occurrenceOf === null ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon name="repeat" size={12} color={theme.palette.textMuted} />
+              <Text size="caption" color="textMuted">
+                {t('recurrence.createsUpcoming')}
+              </Text>
+            </View>
+          ) : null}
           <PrimaryButton
             testID="txform-submit"
             label={mode === 'new' ? t('txForm.create') : t('txForm.save')}
@@ -369,6 +396,113 @@ export function TransactionForm({
                 chevron
               />
             </View>
+          </View>
+
+          <View style={{ gap: 6 }}>
+            <Text size="footnote" color="textMuted">
+              {t('txForm.repeat')}
+            </Text>
+            {occurrenceOf !== null ? (
+              <Pressable
+                testID="txform-recurrence-manage"
+                accessibilityRole="button"
+                accessibilityLabel={t('recurrence.manage')}
+                onPress={() =>
+                  router.push({ pathname: '/recurrence/[id]', params: { id: occurrenceOf.id } })
+                }
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  minHeight: theme.layout.minHitTarget,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Icon name="repeat" size={14} color={theme.palette.textMuted} />
+                <Text style={{ flex: 1 }} numberOfLines={1}>
+                  {cadenceLabel(occurrenceOf, occurrenceOf.startDate, t, locale)} ·{' '}
+                  {endLabel(occurrenceOf.endDate, t, locale)}
+                </Text>
+                <Text size="footnote" color="textMuted">
+                  {t('recurrence.manage')}
+                </Text>
+                <Icon name="chevR" size={16} color={theme.palette.textFaint} />
+              </Pressable>
+            ) : (
+              <>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ flexGrow: 0, flexShrink: 0 }}
+                  contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
+                >
+                  <Chip
+                    testID="txform-repeat-never"
+                    label={t('recurrence.never')}
+                    active={values.recurrence === null}
+                    onPress={() => set({ recurrence: null })}
+                  />
+                  <Chip
+                    testID="txform-repeat-monthly"
+                    label={t('recurrence.everyMonth')}
+                    active={presetOf(values.recurrence) === 'monthly'}
+                    onPress={() =>
+                      set({
+                        recurrence: ruleForPreset('monthly', values.recurrence?.endDate ?? null),
+                      })
+                    }
+                  />
+                  <Chip
+                    testID="txform-repeat-weekly"
+                    label={t('recurrence.everyWeek')}
+                    active={presetOf(values.recurrence) === 'weekly'}
+                    onPress={() =>
+                      set({
+                        recurrence: ruleForPreset('weekly', values.recurrence?.endDate ?? null),
+                      })
+                    }
+                  />
+                  <Chip
+                    testID="txform-repeat-other"
+                    label={
+                      otherRule
+                        ? cadenceLabel(otherRule, values.date, t, locale)
+                        : t('recurrence.other')
+                    }
+                    icon="repeat"
+                    chevron
+                    active={otherRule !== null}
+                    onPress={() => setRecurrenceSheetOpen(true)}
+                  />
+                </ScrollView>
+                {values.recurrence === null ? null : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('recurrence.change')}
+                    onPress={() => setRecurrenceSheetOpen(true)}
+                    hitSlop={6}
+                    style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}
+                  >
+                    <Text
+                      size="caption"
+                      color="textFaint"
+                      numberOfLines={1}
+                      style={{ flexShrink: 1 }}
+                    >
+                      {cadenceLabel(values.recurrence, values.date, t, locale)} ·{' '}
+                      {endLabel(values.recurrence.endDate, t, locale)}
+                    </Text>
+                    <Text
+                      size="caption"
+                      color="textMuted"
+                      style={{ textDecorationLine: 'underline' }}
+                    >
+                      {t('recurrence.change')}
+                    </Text>
+                  </Pressable>
+                )}
+              </>
+            )}
           </View>
         </View>
       </Card>
@@ -566,22 +700,6 @@ export function TransactionForm({
 
             <AttachmentStrip transactionId={transactionId} />
 
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Text>{t('txForm.repeat')}</Text>
-              <Toggle
-                testID="txform-repeat"
-                value={values.repeat}
-                onChange={(repeat) => set({ repeat })}
-                accessibilityLabel={t('txForm.repeat')}
-              />
-            </View>
-
             <View>
               <View
                 style={{
@@ -604,6 +722,15 @@ export function TransactionForm({
           </View>
         ) : null}
       </Card>
+
+      <RecurrenceSheet
+        visible={recurrenceSheetOpen}
+        onClose={() => setRecurrenceSheetOpen(false)}
+        value={values.recurrence}
+        startDate={values.date}
+        today={today}
+        onChange={(recurrence) => set({ recurrence })}
+      />
 
       <DateSheet
         visible={datePickerOpen}

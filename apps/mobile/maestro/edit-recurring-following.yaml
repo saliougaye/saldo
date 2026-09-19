@@ -49,19 +49,13 @@ name: Edit a recurring transaction, this one and the following ones
     id: "txform-description"
 - inputText: "Maestro rent"
 - hideKeyboard
-# "Ripeti" lives inside the collapsed "Dettagli" disclosure, below the fold on most screens.
+# "Ripeti" is a chip row under the date (§6.16): "Ogni mese" is the second chip.
 - scrollUntilVisible:
     element:
-      id: "txform-details"
+      id: "txform-repeat-monthly"
     direction: DOWN
 - tapOn:
-    id: "txform-details"
-- scrollUntilVisible:
-    element:
-      id: "txform-repeat"
-    direction: DOWN
-- tapOn:
-    id: "txform-repeat"
+    id: "txform-repeat-monthly"
 - tapOn:
     id: "txform-submit"
 

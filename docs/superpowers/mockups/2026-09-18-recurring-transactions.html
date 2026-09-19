@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saldo · Ricorrenti · varianti A/B/C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ---------- tokens: copied from packages/ui/src/tokens.ts ---------- */
+:root {
+  --font: 'Geist', 'Inter Tight', system-ui, sans-serif;
+  --r-iconbox: 8px; --r-chip: 9px; --r-input: 10px; --r-toggle: 11px; --r-button: 12px; --r-card: 14px; --r-sheet: 14px; --r-dialog: 16px; --r-fab: 18px; --r-pill: 999px;
+  --fs-caption: 11px; --fs-footnote: 13px; --fs-body: 15px; --fs-headline: 17px; --fs-title: 24px; --fs-amount-md: 28px; --fs-amount-lg: 32px; --fs-hero: 44px;
+  --pad-x: 16px; --card-pad: 16px; --card-gap: 10px;
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --press-ms: 120ms; --fade-ms: 200ms; --sheet-ms: 280ms; --toggle-ms: 180ms;
+  /* category colours (index 0-9) */
+  --c0:#C57B4E; --c1:#B4894A; --c2:#8F9152; --c3:#63926F; --c4:#4F8D8B; --c5:#5A82A6; --c6:#7A79AC; --c7:#A06FA0; --c8:#AF6B7B; --c9:#8A8A8A;
+}
+[data-theme="dark"] {
+  --page:#050505; --bg:#0A0A0A; --surface:#121212; --raised:#1A1A1A;
+  --border:rgba(255,255,255,0.07); --border-strong:rgba(255,255,255,0.12);
+  --text:#EDEDED; --text-muted:#8C8C8C; --text-faint:#5C5C5C;
+  --accent:#C7C7C7; --on-accent:#0A0A0A; --positive:#5FBF7F; --bar-grey:#3A3A3A; --track:#1E1E1E;
+  --scrim:rgba(0,0,0,0.55); --tint-a: 0.14; color-scheme: dark;
+}
+[data-theme="light"] {
+  --page:#E9E9E7; --bg:#FFFFFF; --surface:#FAFAF9; --raised:#F1F1EF;
+  --border:rgba(0,0,0,0.08); --border-strong:rgba(0,0,0,0.18);
+  --text:#171717; --text-muted:#6E6E6E; --text-faint:#9A9A9A;
+  --accent:#4A4A46; --on-accent:#FFFFFF; --positive:#2E8A50; --bar-grey:#C9C9C6; --track:#EDEDEB;
+  --scrim:rgba(0,0,0,0.55); --tint-a: 0.14; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font); background: var(--page); color: var(--text);
+  -webkit-font-smoothing: antialiased; text-wrap: pretty;
+  transition: background var(--fade-ms) ease;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: start; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-input); }
+svg { display: block; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------- stage ---------- */
+.stage {
+  min-height: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 40px; padding: 40px 24px 120px; flex-wrap: wrap;
+}
+.stage-label {
+  position: fixed; top: 20px; left: 24px; font-size: var(--fs-footnote); color: var(--text-muted);
+  display: flex; gap: 10px; align-items: baseline;
+}
+.stage-label b { color: var(--text); font-weight: 600; font-size: var(--fs-headline); letter-spacing: -0.02em; }
+.phone-wrap { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.phone-caption { font-size: var(--fs-footnote); color: var(--text-muted); }
+
+.phone {
+  width: 390px; height: 844px; border-radius: 48px; background: var(--bg); overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px var(--border-strong), 0 30px 80px -20px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column; isolation: isolate;
+}
+.statusbar {
+  height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 8px; font-size: 15px; font-weight: 600; flex: none;
+}
+.island { position: absolute; top: 12px; left: 50%; translate: -50% 0; width: 122px; height: 36px; border-radius: 20px; background: #000; }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--pad-x); display: flex; flex-direction: column; gap: var(--card-gap); scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+.home-indicator { position: absolute; bottom: 8px; left: 50%; translate: -50% 0; width: 134px; height: 5px; border-radius: 3px; background: var(--text); opacity: 0.9; z-index: 5; }
+
+/* ---------- primitives (mirror apps/mobile/src/components) ---------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--card-pad); }
+.card.flush { padding: 0; }
+.label { font-size: var(--fs-footnote); color: var(--text-muted); }
+.caption { font-size: var(--fs-caption); color: var(--text-faint); }
+.muted { color: var(--text-muted); }
+.faint { color: var(--text-faint); }
+.row { display: flex; align-items: center; gap: 12px; }
+.grow { flex: 1; min-width: 0; }
+.ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.press { transition: transform var(--press-ms) ease-out, opacity var(--press-ms) ease-out; }
+.press:active { transform: scale(0.97); opacity: 0.8; }
+
+.segmented { display: flex; background: var(--raised); border-radius: var(--r-input); padding: 3px; gap: 3px; position: relative; }
+.segmented button { flex: 1; min-height: 36px; display: grid; place-items: center; border-radius: var(--r-chip); font-size: var(--fs-footnote); color: var(--text-muted); position: relative; z-index: 1; transition: color var(--toggle-ms) ease; }
+.segmented button[aria-selected="true"] { color: var(--on-accent); font-weight: 500; }
+.segmented .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; background: var(--accent); border-radius: var(--r-chip); transition: transform var(--toggle-ms) var(--ease), width var(--toggle-ms) var(--ease); z-index: 0; }
+.segmented.small button { min-height: 30px; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px; border-radius: var(--r-chip); background: var(--raised); color: var(--text-muted); font-size: var(--fs-footnote); white-space: nowrap; transition: background var(--toggle-ms) ease, color var(--toggle-ms) ease, transform var(--press-ms) ease-out; flex: none; }
+.chip svg { width: 13px; height: 13px; color: var(--text-faint); }
+.chip .chev { width: 12px; height: 12px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 500; }
+.chip[aria-pressed="true"] svg { color: var(--on-accent); }
+.chip:active { transform: scale(0.96); }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.chips::-webkit-scrollbar { display: none; }
+.chips.bleed { margin: 0 calc(-1 * var(--pad-x)); padding-inline: var(--pad-x); }
+
+.iconbox { width: 32px; height: 32px; border-radius: var(--r-iconbox); display: grid; place-items: center; flex: none; position: relative; }
+.iconbox svg { width: 16px; height: 16px; }
+.iconbox.small { width: 26px; height: 26px; }
+.iconbox.small svg { width: 14px; height: 14px; }
+/* ↻ badge: chosen in the brief — a mark on the icon, no extra text */
+.iconbox .badge { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--surface); display: grid; place-items: center; }
+.iconbox .badge svg { width: 9px; height: 9px; color: var(--text-muted); }
+
+.listrow { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 0; width: 100%; }
+.listrow.upcoming { padding-inline-start: 10px; border-inline-start: 2px solid var(--border-strong); }
+.listrow .title { font-size: var(--fs-body); }
+.listrow .sub { font-size: var(--fs-footnote); color: var(--text-muted); }
+.chevR { width: 16px; height: 16px; color: var(--text-faint); flex: none; }
+.scroll > * { flex: none; }
+.amount { font-size: var(--fs-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount .cents { color: var(--text-muted); }
+.amount.pos { color: var(--positive); }
+.amount.muted { color: var(--text-muted); }
+.amount.muted .cents { color: var(--text-faint); }
+
+.textfield { background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-input); height: 46px; display: flex; align-items: center; padding: 0 14px; color: var(--text-faint); font-size: var(--fs-body); }
+
+.toggle { width: 38px; height: 22px; border-radius: var(--r-toggle); background: var(--bar-grey); position: relative; transition: background var(--toggle-ms) ease; flex: none; }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform var(--toggle-ms) var(--ease); }
+.toggle[aria-checked="true"] { background: var(--accent); }
+.toggle[aria-checked="true"]::after { transform: translateX(16px); background: var(--on-accent); }
+
+.btn-primary { height: 50px; border-radius: var(--r-button); background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: var(--fs-headline); display: grid; place-items: center; width: 100%; }
+.btn-primary[disabled] { opacity: 0.45; }
+.btn-secondary { height: 44px; border-radius: var(--r-button); background: var(--raised); color: var(--text); font-weight: 500; font-size: var(--fs-body); display: grid; place-items: center; width: 100%; }
+.btn-danger { color: var(--text-muted); }
+
+.section-label { font-size: var(--fs-footnote); color: var(--text-muted); padding: 6px 4px 0; }
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* header */
+.header { display: flex; align-items: center; gap: 14px; padding: 6px var(--pad-x) 12px; flex: none; }
+.header .hbtn { width: 34px; height: 34px; border-radius: 50%; background: var(--raised); display: grid; place-items: center; flex: none; }
+.header .hbtn svg { width: 16px; height: 16px; }
+.header h1 { font-size: var(--fs-title); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.period { display: flex; align-items: center; padding: 6px 0 4px; }
+.period .pt { font-size: var(--fs-headline); font-weight: 600; letter-spacing: -0.02em; display: flex; align-items: center; gap: 6px; }
+.period .pt svg { width: 14px; height: 14px; color: var(--text-faint); }
+.period .ps { font-size: var(--fs-footnote); color: var(--text-muted); }
+
+/* tab bar */
+.tabbar { flex: none; height: 78px; padding-bottom: 20px; display: flex; border-top: 1px solid var(--border); background: var(--bg); position: relative; z-index: 2; }
+.tabbar .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 12px; font-size: var(--fs-caption); color: var(--text-faint); }
+.tabbar .tab svg { width: 20px; height: 20px; }
+.tabbar .tab[aria-selected="true"] { color: var(--text); }
+.tabbar .fabslot { width: 72px; position: relative; }
+.tabbar .fab { position: absolute; top: -16px; left: 8px; width: 56px; height: 56px; border-radius: var(--r-fab); background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+.tabbar .fab svg { width: 22px; height: 22px; }
+
+/* sticky bottom of form */
+.form-footer { flex: none; padding: 10px var(--pad-x) 30px; background: var(--bg); border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- sheet (Modal slide, 280ms, 0.55 scrim) ---------- */
+.sheet-layer { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.sheet-layer .scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; transition: opacity var(--sheet-ms) ease; }
+.sheet-layer .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; background: var(--surface); border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 0 var(--pad-x) 34px; transform: translateY(100%); transition: transform var(--sheet-ms) var(--ease); display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; }
+.sheet-layer[data-open="true"] { pointer-events: auto; }
+.sheet-layer[data-open="true"] .scrim { opacity: 1; }
+.sheet-layer[data-open="true"] .sheet { transform: translateY(0); }
+.sheet .handle { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--border-strong); margin: 8px auto 4px; flex: none; }
+.sheet h2 { font-size: var(--fs-headline); font-weight: 600; letter-spacing: -0.02em; margin: 10px 0 12px; }
+.sheet .body { display: flex; flex-direction: column; gap: 14px; }
+.check { width: 16px; height: 16px; color: var(--text); flex: none; }
+
+/* stepper (mirror Stepper.tsx) */
+.stepper { display: inline-flex; align-items: center; background: var(--raised); border-radius: var(--r-input); height: 36px; }
+.stepper button { width: 40px; height: 36px; display: grid; place-items: center; color: var(--text-muted); }
+.stepper button svg { width: 14px; height: 14px; }
+.stepper .val { min-width: 28px; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* calendar (compact) */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; font-size: var(--fs-footnote); text-align: center; }
+.cal .dow { color: var(--text-faint); font-size: var(--fs-caption); padding: 4px 0; }
+.cal button { height: 34px; border-radius: var(--r-chip); display: grid; place-items: center; color: var(--text); font-variant-numeric: tabular-nums; }
+.cal button.out { color: var(--text-faint); }
+.cal button.sel { background: var(--accent); color: var(--on-accent); font-weight: 500; }
+.cal button.today { box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+/* stack navigation inside phone 2 */
+.stack { position: relative; flex: 1; min-height: 0; }
+.stack > .page { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); transition: transform var(--sheet-ms) var(--ease), opacity var(--sheet-ms) ease; }
+.stack > .page[data-state="under"] { transform: translateX(-24%); opacity: 0.6; pointer-events: none; }
+.stack > .page[data-state="off"] { transform: translateX(100%); pointer-events: none; }
+.stack > .page[data-state="on"] { transform: translateX(0); }
+
+/* progress */
+.progress { height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width 300ms var(--ease); }
+
+/* natural-language "Quando" row (variant C) */
+.quando { display: flex; align-items: center; gap: 12px; width: 100%; }
+.quando .big { font-size: var(--fs-headline); font-weight: 500; letter-spacing: -0.02em; }
+.quando .sub { font-size: var(--fs-footnote); color: var(--text-muted); margin-top: 2px; }
+.quando .sub b { color: var(--text); font-weight: 500; }
+
+/* enter animation for list items */
+@keyframes appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.appear > * { animation: appear var(--fade-ms) var(--ease) both; }
+.appear > *:nth-child(2) { animation-delay: 40ms; } .appear > *:nth-child(3) { animation-delay: 80ms; } .appear > *:nth-child(4) { animation-delay: 120ms; } .appear > *:nth-child(5) { animation-delay: 160ms; } .appear > *:nth-child(6) { animation-delay: 200ms; }
+
+/* ---------- Tweaks ---------- */
+.tweaks-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 100; height: 36px; padding: 0 14px; border-radius: var(--r-pill); background: var(--text); color: var(--bg); font-size: var(--fs-footnote); font-weight: 500; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5); }
+.tweaks { position: fixed; right: 20px; bottom: 66px; z-index: 100; width: 260px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); padding: 14px; display: none; flex-direction: column; gap: 12px; box-shadow: 0 20px 50px -20px rgba(0,0,0,0.6); }
+.tweaks[data-open="true"] { display: flex; }
+.tweaks h3 { margin: 0; font-size: var(--fs-footnote); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--text-muted); }
+.tweaks .field { display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-footnote); color: var(--text-muted); }
+.tweaks .field .row { justify-content: space-between; }
+.tweaks .desc { font-size: var(--fs-caption); color: var(--text-faint); line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-layer .sheet, .stack > .page, .segmented .thumb, .toggle::after { transition-duration: 1ms; }
+  .appear > * { animation: none; }
+}
+@media (max-width: 860px) { .stage { transform: scale(0.8); transform-origin: top center; } }
+</style>
+</head>
+<body data-theme="dark" data-variant="A">
+
+<div class="stage-label"><b>Ricorrenti</b><span id="variant-title">Variante A · Chip</span></div>
+
+<div class="stage">
+  <div class="phone-wrap">
+    <div class="phone" id="phone-form"></div>
+    <div class="phone-caption">Nuova transazione</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone" id="phone-tab"></div>
+    <div class="phone-caption">Tab Transazioni</div>
+  </div>
+</div>
+
+<button class="tweaks-toggle" id="tweaks-toggle" aria-expanded="false">Tweaks</button>
+<div class="tweaks" id="tweaks" data-open="false">
+  <h3>Tweaks</h3>
+  <div class="field">
+    <span>Variante</span>
+    <div class="segmented small" id="tw-variant">
+      <div class="thumb"></div>
+      <button data-v="A" aria-selected="true">A · Chip</button>
+      <button data-v="B">B · Card</button>
+      <button data-v="C">C · Quando</button>
+    </div>
+    <div class="desc" id="tw-desc"></div>
+  </div>
+  <div class="field">
+    <span>Tema</span>
+    <div class="segmented small" id="tw-theme">
+      <div class="thumb"></div>
+      <button data-t="dark" aria-selected="true">Scuro</button>
+      <button data-t="light">Chiaro</button>
+    </div>
+  </div>
+  <div class="field"><div class="row"><span>Ripetizione impostata nel form</span><button class="toggle" id="tw-repeat" role="switch" aria-checked="true"></button></div></div>
+  <div class="field"><div class="row"><span>Mostra sheet ripetizione</span><button class="toggle" id="tw-sheet" role="switch" aria-checked="false"></button></div></div>
+</div>
+
+<script>
+/* ---------- icons: paths copied from packages/ui/src/icons.ts (24×24, stroke 1.5) ---------- */
+const P = {
+  house:'<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h9M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  wallet:'<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 16.5z"/><path d="M3 8.5V7a2 2 0 0 1 2-2h11"/><path d="M16.5 12.5h.01"/>',
+  cart:'<circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M2 3h2.2l2.4 11.2A1.8 1.8 0 0 0 8.4 15.6h9.4a1.8 1.8 0 0 0 1.8-1.4L21 7H5"/>',
+  train:'<rect x="4.5" y="3" width="15" height="13.5" rx="2.5"/><path d="M4.5 10.5h15M9 21l-1.5-2.5M15 21l1.5-2.5M9.5 7h5"/>',
+  zap:'<path d="M13.5 2 4 13.5h6l-1.5 8.5L20 10.5h-6z"/>',
+  utensils:'<path d="M3.5 2.5v6a3 3 0 0 0 6 0v-6M6.5 11.5v10M17 2.5c-1.4 1.2-2 3-2 5s.6 3.2 2 4.2v9.8"/>',
+  monitor:'<rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M10.5 8l4.5 2.5-4.5 2.5zM8.5 20.5h7M12 16.5v4"/>',
+  dumbbell:'<path d="M7 6.5v11M17 6.5v11M4 9.5v5M20 9.5v5M7 12h10"/>',
+  bag:'<path d="M6.5 2.5 4.5 6.5v13A2 2 0 0 0 6.5 21.5h11a2 2 0 0 0 2-2v-13l-2-4z"/><path d="M4.5 6.5h15M15.5 10.5a3.5 3.5 0 0 1-7 0"/>',
+  shield:'<path d="M12 21.5s7.5-3.8 7.5-9.5V5.2L12 2.5 4.5 5.2V12c0 5.7 7.5 9.5 7.5 9.5z"/>',
+  trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  landmark:'<path d="M3 21.5h18M5 21.5V10M19 21.5V10M9.5 21.5V10M14.5 21.5V10M2.5 9.5 12 3l9.5 6.5z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
+  chevL:'<path d="m14.5 18-6-6 6-6"/>', chevR:'<path d="m9.5 18 6-6-6-6"/>', chevD:'<path d="m6 9.5 6 6 6-6"/>',
+  chevUD:'<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>', plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>',
+  repeat:'<path d="m17 2.5 4 4-4 4M21 6.5H7a4 4 0 0 0-4 4v1.5M7 21.5l-4-4 4-4M3 17.5h14a4 4 0 0 0 4-4V12"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/>',
+  arrowDL:'<path d="M17 7 7 17"/><path d="M17 17H7V7"/>', arrowUR:'<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+  swap:'<path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/>',
+  check:'<path d="M20 6.5 9 17.5l-5-5"/>',
+  tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/>',
+  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M4.5 8v11a1.5 1.5 0 0 0 1.5 1.5h12A1.5 1.5 0 0 0 19.5 19V8M10 12h4"/>',
+  house2:'<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/>',
+  pause:'<path d="M8 5v14M16 5v14"/>',
+  music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  car:'<path d="M5 17h14M6.5 17v2M17.5 17v2M3.5 12.5 5.5 7h13l2 5.5V17h-17z"/><circle cx="7.5" cy="14" r="1"/><circle cx="16.5" cy="14" r="1"/>',
+  drop:'<path d="M12 2.7 6.9 8a7.2 7.2 0 1 0 10.2 0z"/>',
+  cloud:'<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.3 8.5 4.5 4.5 0 0 0 6.5 19z"/>',
+  cellular:'<path d="M2 20h2M8 16v4M14 11v9M20 6v14" stroke-width="2.4"/>',
+};
+const ico = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${P[n]||''}</svg>`;
+const tint = (hex, a) => { const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; };
+const CAT = ['#C57B4E','#B4894A','#8F9152','#63926F','#4F8D8B','#5A82A6','#7A79AC','#A06FA0','#AF6B7B','#8A8A8A'];
+const iconbox = (name, colour, {small=false, badge=false}={}) =>
+  `<span class="iconbox ${small?'small':''}" style="background:${tint(colour,0.14)};color:${colour}">${ico(name)}${badge?`<span class="badge" title="Ricorrente">${ico('repeat')}</span>`:''}</span>`;
+
+/* money: Italian, integer minor units at the edge */
+const eur = (minor, {sign='auto'}={}) => {
+  const abs = Math.abs(minor); const int = Math.floor(abs/100).toLocaleString('it-IT'); const cents = String(abs%100).padStart(2,'0');
+  const s = minor < 0 ? '−' : (sign==='always' && minor>0 ? '+' : '');
+  return `${s}${int},<span class="cents">${cents}</span> €`;
+};
+const amount = (minor, {muted=false, sign='auto', pos=false}={}) => `<span class="amount ${muted?'muted':''} ${pos?'pos':''} tabular">${eur(minor,{sign})}</span>`;
+
+/* ---------- state ---------- */
+const state = {
+  variant: 'A', theme: 'dark',
+  repeat: true, freq: 'month', every: 1, unit: 'month', end: 'never', endDate: '2026-12-18',
+  sheet: null,       // form sheet id
+  tabView: 'list',   // A: 'list' | 'recurring'  C: 'list' | 'recurring'
+  page: 'tab',       // B: 'tab' | 'recurrences' | 'detail'
+  upcomingOpen: false,
+  dateSel: 18,
+};
+const DESC = {
+  A: 'Ripeti come riga di chip sotto Data — stesso pattern della data. "Altro" apre lo sheet. Nel tab: chip filtro «Ricorrenti».',
+  B: 'Card «Ripeti» dedicata con Segmented; righe Ogni/Fine. Nel tab: card d’ingresso → schermata Ricorrenti → dettaglio.',
+  C: 'Data e ripetizione fuse in una riga «Quando» in linguaggio naturale, un solo sheet. Nel tab: Segmented Movimenti/Ricorrenti.',
+};
+const TITLE = { A: 'Variante A · Chip', B: 'Variante B · Card', C: 'Variante C · Quando' };
+
+/* ---------- copy (it) ---------- */
+const UNIT = { day:['giorno','giorni'], week:['settimana','settimane'], month:['mese','mesi'], year:['anno','anni'] };
+function freqLabel() {
+  if (!state.repeat) return 'Non si ripete';
+  const n = state.every, u = UNIT[state.unit];
+  const core = n === 1 ? `ogni ${u[0]}` : `ogni ${n} ${u[1]}`;
+  const anchor = state.unit === 'month' ? ', il 18' : state.unit === 'week' ? ', il venerdì' : state.unit === 'year' ? ', il 18 settembre' : '';
+  return core.charAt(0).toUpperCase() + core.slice(1) + anchor;
+}
+function endLabel() { return state.end === 'never' ? 'Mai' : state.end === 'date' ? '18 dicembre 2026' : 'Dopo 12 volte'; }
+function endSentence() { return state.end === 'never' ? 'senza fine' : state.end === 'date' ? 'fino al 18 dicembre' : 'per 12 volte'; }
+
+/* ---------- shared pieces ---------- */
+const statusbar = () => `<div class="statusbar"><span>9:41</span><div class="island"></div><span class="row" style="gap:6px">${ico('cellular')}<span style="width:24px;height:11px;border:1.5px solid currentColor;border-radius:3px;display:inline-block;position:relative"><i style="position:absolute;inset:2px;background:currentColor;border-radius:1px"></i></span></span></div>`;
+const tabbar = () => `<nav class="tabbar">
+  <button class="tab">${ico('house')}<span>Home</span></button>
+  <button class="tab" aria-selected="true">${ico('list')}<span>Transazioni</span></button>
+  <div class="fabslot"><button class="fab press" aria-label="Nuova transazione">${ico('plus')}</button></div>
+  <button class="tab">${ico('trend')}<span>Statistiche</span></button>
+  <button class="tab">${ico('wallet')}<span>Conti</span></button>
+</nav>`;
+const segmented = (id, opts, value, extra='') => `<div class="segmented ${extra}" id="${id}" role="tablist"><div class="thumb"></div>${opts.map(o=>`<button role="tab" data-v="${o.v}" aria-selected="${o.v===value}">${o.l}</button>`).join('')}</div>`;
+function layoutThumbs(root=document) {
+  root.querySelectorAll('.segmented').forEach(seg => {
+    const btns = [...seg.querySelectorAll('button')]; const i = btns.findIndex(b=>b.getAttribute('aria-selected')==='true'); const th = seg.querySelector('.thumb'); if (i<0||!th) return;
+    const w = (seg.clientWidth - 6 - 3*(btns.length-1)) / btns.length; th.style.width = w+'px'; th.style.transform = `translateX(${i*(w+3)}px)`;
+  });
+}
+
+/* ---------- PHONE 1: form ---------- */
+function repeatBlock() {
+  const v = state.variant;
+  if (v === 'A') {
+    const on = state.repeat;
+    const presetMonth = on && state.unit==='month' && state.every===1 && state.end==='never';
+    const presetWeek  = on && state.unit==='week'  && state.every===1 && state.end==='never';
+    const other = on && !presetMonth && !presetWeek;
+    return `<div style="display:flex;flex-direction:column;gap:6px">
+      <span class="label">Ripeti</span>
+      <div class="chips">
+        <button class="chip" data-act="rep-none" aria-pressed="${!on}">Mai</button>
+        <button class="chip" data-act="rep-month" aria-pressed="${presetMonth}">Ogni mese</button>
+        <button class="chip" data-act="rep-week" aria-pressed="${presetWeek}">Ogni settimana</button>
+        <button class="chip" data-act="open-repeat" aria-pressed="${other}">${ico('repeat')}${other ? freqLabel() : 'Altro'}${ico('chevD','chev')}</button>
+      </div>
+      ${on ? `<button class="caption" data-act="open-repeat" style="display:flex;gap:4px;align-items:center;padding:2px 0">${freqLabel()} · ${endSentence()} <span style="color:var(--text-muted);text-decoration:underline;text-underline-offset:2px">Cambia</span></button>` : ''}
+    </div>`;
+  }
+  if (v === 'B') {
+    const seg = segmented('seg-freq', [{v:'never',l:'Mai'},{v:'week',l:'Settimana'},{v:'month',l:'Mese'},{v:'year',l:'Anno'}], state.repeat ? state.unit : 'never');
+    return `<div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="row" style="justify-content:space-between"><span class="label">Ripeti</span>${state.repeat ? `<span class="caption">Prima occorrenza: 18 set</span>` : ''}</div>
+      ${seg}
+      ${state.repeat ? `<div>
+        <button class="listrow press" data-act="open-repeat" style="padding:10px 0 8px">${iconbox('repeat','var(--text-muted)',{small:true})}<span class="grow"><div class="title">${freqLabel()}</div><div class="sub">Tocca per cambiare cadenza</div></span>${ico('chevR','chevR')}</button>
+        <div class="divider"></div>
+        <button class="listrow press" data-act="open-end" style="padding:8px 0 2px">${iconbox('cal','var(--text-muted)',{small:true})}<span class="grow"><div class="title">Fine</div><div class="sub">${endLabel()}</div></span>${ico('chevR','chevR')}</button>
+      </div>` : ''}
+    </div>`;
+  }
+  return ''; // C renders inside the date card
+}
+function dateBlock() {
+  if (state.variant === 'C') {
+    return `<div style="display:flex;flex-direction:column;gap:6px">
+      <span class="label">Quando</span>
+      <button class="quando press" data-act="open-quando">
+        <span class="grow"><div class="big">Oggi, 18 settembre</div><div class="sub">${state.repeat ? `Si ripete <b>${freqLabel().toLowerCase()}</b>, ${endSentence()}` : 'Non si ripete'}</div></span>
+        ${ico('chevR','chevR')}
+      </button>
+    </div>`;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:6px">
+    <span class="label">Data</span>
+    <div class="chips">
+      <button class="chip" aria-pressed="true">Oggi</button>
+      <button class="chip">Ieri</button>
+      <button class="chip">${ico('cal')}18 set${ico('chevD','chev')}</button>
+    </div>
+  </div>`;
+}
+function renderForm() {
+  const v = state.variant;
+  const el = document.getElementById('phone-form');
+  const cats = [['cart','Spesa',0],['train','Trasporti',2],['utensils','Ristoranti',3],['house2','Casa',5],['zap','Bollette',1],['bag','Shopping',7],['monitor','Abbonamenti',4]];
+  el.innerHTML = `${statusbar()}
+  <div class="screen">
+    <div class="header"><button class="hbtn press" aria-label="Chiudi">${ico('x')}</button><h1>Nuova transazione</h1></div>
+    <div class="scroll" id="form-scroll">
+      ${segmented('seg-kind',[{v:'expense',l:'Uscita'},{v:'income',l:'Entrata'},{v:'transfer',l:'Trasferimento'}],'expense')}
+      <div class="card"><span class="label">Importo</span><div style="margin-top:6px;font-size:var(--fs-hero);font-weight:600;letter-spacing:-0.03em;display:flex;align-items:baseline;gap:8px" class="tabular">12,99 <span class="muted" style="font-size:var(--fs-amount-md);font-weight:500">€</span></div></div>
+      <div class="card" style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Conto</span>
+          <div class="chips"><button class="chip" aria-pressed="true">Conto corrente</button><button class="chip">Carta</button><button class="chip">Amex</button><button class="chip">Contanti</button></div></div>
+        ${dateBlock()}
+        ${v==='A' ? repeatBlock() : ''}
+      </div>
+      ${v==='B' ? repeatBlock() : ''}
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><span class="label">Categoria</span><span class="caption">Le più usate</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">
+          ${cats.map(([i,n,c],k)=>`<button class="press" style="display:flex;flex-direction:column;align-items:center;gap:5px"><span style="width:100%;height:52px;border-radius:var(--r-input);border:1px solid ${k===6?'var(--border-strong)':'var(--border)'};background:${k===6?tint(CAT[c],0.18):'var(--raised)'};display:grid;place-items:center;color:${k===6?CAT[c]:'var(--text-muted)'}">${ico(i).replace('<svg','<svg width="20" height="20"')}</span><span class="caption" style="color:${k===6?'var(--text)':'var(--text-muted)'};font-size:var(--fs-footnote)">${n}</span></button>`).join('')}
+          <button class="press" style="display:flex;flex-direction:column;align-items:center;gap:5px"><span style="width:100%;height:52px;border-radius:var(--r-input);border:1px dashed var(--border-strong);display:grid;place-items:center;color:var(--text-faint)">···</span><span class="label">Altro</span></button>
+        </div>
+      </div>
+      <div class="card"><span class="label">Descrizione</span><div class="textfield" style="margin-top:6px;color:var(--text)">Netflix</div></div>
+      <div class="card">
+        <button class="row" style="justify-content:space-between;width:100%"><span class="grow"><div>Dettagli</div><div class="label">${v==='A'||v==='B'||v==='C' ? 'Niente di impostato' : ''}</div></span>${ico('chevD','chevR')}</button>
+      </div>
+      <div style="height:6px"></div>
+    </div>
+    <div class="form-footer">
+      ${state.repeat ? `<div class="caption" style="display:flex;gap:6px;align-items:center;color:var(--text-muted)">${ico('repeat').replace('<svg','<svg width="12" height="12"')}Crea anche le prossime occorrenze fino a fine ciclo prossimo</div>` : ''}
+      <button class="btn-primary press">Aggiungi</button>
+    </div>
+    ${sheetLayer()}
+    <div class="home-indicator"></div>
+  </div>`;
+  layoutThumbs(el);
+}
+
+/* ---------- sheets (form) ---------- */
+function presetRow(label, sub, selected, act) {
+  return `<button class="listrow press" data-act="${act}"><span class="grow"><div class="title">${label}</div>${sub?`<div class="sub">${sub}</div>`:''}</span>${selected?ico('check','check'):''}</button>`;
+}
+function customBlock() {
+  const units = [{v:'day',l:'giorni'},{v:'week',l:'settimane'},{v:'month',l:'mesi'},{v:'year',l:'anni'}];
+  return `<div class="card" style="display:flex;flex-direction:column;gap:12px;background:var(--raised);border:0">
+    <div class="row" style="justify-content:space-between"><span>Ogni</span>
+      <span class="stepper"><button data-act="every-minus" aria-label="Meno">${ico('minus')}</button><span class="val">${state.every}</span><button data-act="every-plus" aria-label="Più">${ico('plus')}</button></span></div>
+    ${segmented('seg-unit', units, state.unit)}
+    <div class="caption">${freqLabel()} · prossime: ${nextDates()}</div>
+  </div>`;
+}
+function nextDates() {
+  const map = { day:['19 set','20 set','21 set'], week:['25 set','2 ott','9 ott'], month:['18 ott','18 nov','18 dic'], year:['18 set 2027','18 set 2028','18 set 2029'] };
+  const n = state.every; const base = map[state.unit];
+  if (n===1) return base.join(', ');
+  if (state.unit==='week') return n===2 ? '2 ott, 16 ott, 30 ott' : `ogni ${n} sett.`;
+  if (state.unit==='month') return n===2 ? '18 nov, 18 gen, 18 mar' : n===3 ? '18 dic, 18 mar, 18 giu' : `+${n} mesi`;
+  if (state.unit==='day') return n===2 ? '20 set, 22 set, 24 set' : `+${n} giorni`;
+  return `+${n} anni`;
+}
+function endBlock() {
+  return `<div style="display:flex;flex-direction:column;gap:6px"><span class="label">Fine</span>
+    <div class="chips">
+      <button class="chip" data-act="end-never" aria-pressed="${state.end==='never'}">Mai</button>
+      <button class="chip" data-act="end-date" aria-pressed="${state.end==='date'}">${ico('cal')}In una data</button>
+      <button class="chip" data-act="end-count" aria-pressed="${state.end==='count'}">Dopo N volte</button>
+    </div>
+    ${state.end==='date' ? `<div class="row" style="justify-content:space-between;padding-top:4px"><span class="muted" style="font-size:var(--fs-footnote)">Ultima occorrenza</span><button class="chip">${ico('cal')}18 dic 2026${ico('chevD','chev')}</button></div>` : ''}
+    ${state.end==='count' ? `<div class="row" style="justify-content:space-between;padding-top:4px"><span class="muted" style="font-size:var(--fs-footnote)">Numero di volte</span><span class="stepper"><button>${ico('minus')}</button><span class="val">12</span><button>${ico('plus')}</button></span></div>` : ''}
+  </div>`;
+}
+function sheetLayer() {
+  const s = state.sheet; let title='', body='';
+  const isPreset = (u,n)=>state.repeat && state.unit===u && state.every===n;
+  if (s === 'repeat' || s === 'quando') {
+    title = s==='quando' ? 'Quando' : 'Ripeti';
+    const custom = state.repeat && !( (state.unit==='week'&&state.every===1) || (state.unit==='month'&&state.every===1) || (state.unit==='year'&&state.every===1) || (state.unit==='week'&&state.every===2) );
+    body = `
+      ${s==='quando' ? `<div class="chips"><button class="chip" aria-pressed="true">Oggi</button><button class="chip">Ieri</button></div>
+      <div class="cal">${['L','M','M','G','V','S','D'].map(d=>`<span class="dow">${d}</span>`).join('')}${calDays()}</div>
+      <div class="divider"></div><span class="label">Ripeti</span>` : ''}
+      <div class="card flush" style="padding:2px 14px;background:var(--raised);border:0">
+        ${presetRow('Mai', null, !state.repeat, 'rep-none')}<div class="divider"></div>
+        ${presetRow('Ogni settimana', 'il venerdì', isPreset('week',1)&&!custom, 'rep-week')}<div class="divider"></div>
+        ${presetRow('Ogni 2 settimane', 'venerdì, a settimane alterne', isPreset('week',2), 'rep-2week')}<div class="divider"></div>
+        ${presetRow('Ogni mese', 'il 18', isPreset('month',1), 'rep-month')}<div class="divider"></div>
+        ${presetRow('Ogni anno', 'il 18 settembre', isPreset('year',1), 'rep-year')}<div class="divider"></div>
+        ${presetRow('Personalizzato', custom ? freqLabel() : 'Ogni N giorni, settimane, mesi o anni', custom, 'rep-custom')}
+      </div>
+      ${custom ? customBlock() : ''}
+      ${state.repeat ? endBlock() : ''}
+      <button class="btn-primary press" data-act="close-sheet" style="margin-top:4px">Fatto</button>`;
+  } else if (s === 'end') {
+    title = 'Fine ripetizione';
+    body = `${endBlock()}<button class="btn-primary press" data-act="close-sheet" style="margin-top:4px">Fatto</button>`;
+  }
+  return `<div class="sheet-layer" data-open="${!!s}"><div class="scrim" data-act="close-sheet"></div><div class="sheet"><div class="handle"></div>${s?`<h2>${title}</h2><div class="body">${body}</div>`:''}</div></div>`;
+}
+function calDays() {
+  // September 2026 starts on a Tuesday (Mon-first grid → 1 leading blank)
+  let out = '<span></span>';
+  for (let d=1; d<=30; d++) out += `<button class="${d===18?'sel':''} ${d===18?'today':''}" data-act="cal-day">${d}</button>`;
+  for (let d=1; d<=4; d++) out += `<button class="out">${d}</button>`;
+  return out;
+}
+
+/* ---------- PHONE 2: transactions tab ---------- */
+const RECUR = [ // demo data; amounts in minor units
+  { id:'netflix', name:'Netflix', cat:'Abbonamenti', icon:'monitor', c:4, amt:-1299, unit:'month', every:1, next:'18 ott', nextDays:30, day:'il 18', acct:'Carta' },
+  { id:'spotify', name:'Spotify', cat:'Abbonamenti', icon:'music', c:4, amt:-1099, unit:'month', every:1, next:'2 ott', nextDays:14, day:'il 2', acct:'Carta' },
+  { id:'rent', name:'Affitto', cat:'Casa', icon:'house2', c:5, amt:-85000, unit:'month', every:1, next:'1 ott', nextDays:13, day:'il 1', acct:'Conto corrente' },
+  { id:'gym', name:'Palestra', cat:'Sport', icon:'dumbbell', c:3, amt:-3900, unit:'month', every:1, next:'5 ott', nextDays:17, day:'il 5', acct:'Carta' },
+  { id:'icloud', name:'iCloud', cat:'Abbonamenti', icon:'cloud', c:4, amt:-299, unit:'month', every:1, next:'22 set', nextDays:4, day:'il 22', acct:'Carta' },
+  { id:'clean', name:'Pulizie', cat:'Casa', icon:'drop', c:5, amt:-6000, unit:'week', every:2, next:'25 set', nextDays:7, day:'il venerdì', acct:'Contanti' },
+  { id:'salary', name:'Stipendio', cat:'Stipendio', icon:'landmark', c:5, amt:215000, unit:'month', every:1, next:'27 set', nextDays:9, day:'il 27', acct:'Conto corrente' },
+  { id:'ins', name:'Assicurazione auto', cat:'Auto', icon:'car', c:8, amt:-48000, unit:'year', every:1, next:'12 mar', nextDays:175, day:'il 12 marzo', acct:'Conto corrente' },
+];
+const cadence = r => r.unit==='month' ? (r.every===1?`Ogni mese`:`Ogni ${r.every} mesi`) : r.unit==='week' ? (r.every===1?'Ogni settimana':`Ogni ${r.every} settimane`) : 'Ogni anno';
+const perMonth = r => r.unit==='month' ? r.amt/r.every : r.unit==='week' ? Math.round(r.amt*52/12/r.every) : Math.round(r.amt/12);
+const OUT_MONTH = RECUR.filter(r=>r.amt<0).reduce((s,r)=>s+perMonth(r),0); // ≈ −1.085,96
+const IN_MONTH = RECUR.filter(r=>r.amt>0).reduce((s,r)=>s+perMonth(r),0);
+
+function recurRow(r, {chevron=true, showNext=true}={}) {
+  const col = CAT[r.c];
+  return `<button class="listrow press" data-act="open-detail" data-id="${r.id}">
+    ${iconbox(r.icon,col,{badge:true})}
+    <span class="grow"><div class="title ellip">${r.name}</div><div class="sub ellip">${cadence(r)} ${r.day}${showNext?` · prossima ${r.next}`:''}</div></span>
+    ${amount(r.amt,{pos:r.amt>0,sign:'always'})}
+    ${chevron?ico('chevR','chevR'):''}
+  </button>`;
+}
+function periodHeader() {
+  return `<div class="period"><span class="grow"><div class="pt">1 set – 30 set ${ico('chevUD')}</div><div class="ps">giorno 18 di 30</div></span>
+    <span class="row" style="gap:8px"><span class="hbtn" style="width:34px;height:34px;border-radius:50%;background:var(--raised);display:grid;place-items:center">${ico('chevL').replace('<svg','<svg width="16" height="16"')}</span><span style="width:34px;height:34px;border-radius:50%;background:var(--raised);display:grid;place-items:center;opacity:1">${ico('chevR').replace('<svg','<svg width="16" height="16"')}</span></span></div>`;
+}
+function filterChips({recurringActive=false, withRecurring=true}={}) {
+  return `<div class="chips bleed">
+    ${withRecurring ? `<button class="chip" data-act="toggle-recurring" aria-pressed="${recurringActive}">${ico('repeat')}Ricorrenti</button>` : ''}
+    <button class="chip">${ico('arrowUR')}Solo uscite</button>
+    <button class="chip">${ico('arrowDL')}Solo entrate</button>
+    <button class="chip">${ico('swap')}Solo trasferimenti</button>
+    <button class="chip">${ico('tag')}Tag${ico('chevD','chev')}</button>
+    <button class="chip">${ico('wallet')}Conto${ico('chevD','chev')}</button>
+  </div>`;
+}
+function upcomingRow() {
+  return `<div class="card flush"><button class="row press" data-act="toggle-upcoming" style="padding:var(--card-pad);width:100%">
+    ${iconbox('clock','var(--text-muted)',{small:true})}
+    <span class="grow"><div style="font-weight:500;letter-spacing:-0.01em">In arrivo</div><div class="caption" style="color:var(--text-muted)">4 voci dopo oggi</div></span>
+    <span class="amount muted tabular">${eur(-90298)}</span>
+    <span style="transition:transform var(--fade-ms) var(--ease);transform:rotate(${state.upcomingOpen?180:0}deg)">${ico('chevD','chevR')}</span></button>
+    ${state.upcomingOpen ? `<div style="padding:0 var(--card-pad) 8px" class="appear">
+      ${txRow({t:'iCloud',s:'Abbonamenti',i:'cloud',c:4,a:-299,up:true,rec:true})}
+      ${txRow({t:'Pulizie',s:'Casa',i:'drop',c:5,a:-6000,up:true,rec:true})}
+      ${txRow({t:'Stipendio',s:'Stipendio',i:'landmark',c:5,a:215000,up:true,rec:true})}
+      ${txRow({t:'Regalo Marta',s:'Regali',i:'bag',c:7,a:-4500,up:true})}
+    </div>` : ''}
+  </div>`;
+}
+function txRow({t,s,i,c,a,up=false,rec=false}) {
+  return `<div class="listrow ${up?'upcoming':''}">${iconbox(i,CAT[c],{badge:rec})}<span class="grow"><div class="title ellip">${t}</div><div class="sub ellip">${s}</div></span>${amount(a,{muted:up,pos:a>0&&!up,sign:'always'})}</div>`;
+}
+function dayCard(date, total, rows) {
+  return `<div class="card flush"><div class="row" style="justify-content:space-between;padding:var(--card-pad) var(--card-pad) 4px"><span class="label">${date}</span><span class="label tabular">${eur(total)}</span></div><div style="padding:0 var(--card-pad) 8px">${rows.map(txRow).join('')}</div></div>`;
+}
+function settledList() {
+  return `
+    ${dayCard('18 set', 1299, [{t:'Netflix',s:'Abbonamenti',i:'monitor',c:4,a:-1299,rec:true}])}
+    ${dayCard('17 set', 4260, [{t:'Esselunga',s:'Spesa',i:'cart',c:0,a:-4260}])}
+    ${dayCard('16 set', 950, [{t:'Bar Centrale',s:'Ristoranti',i:'utensils',c:3,a:-260},{t:'Trenord',s:'Trasporti',i:'train',c:2,a:-690}])}
+    ${dayCard('15 set', 3900, [{t:'Palestra',s:'Sport',i:'dumbbell',c:3,a:-3900,rec:true}])}`;
+}
+
+/* --- A: chip filter switches the list into recurrence mode --- */
+function tabA() {
+  const rec = state.tabView === 'recurring';
+  return `<div class="scroll">
+    ${periodHeader()}
+    <div class="textfield">Cerca</div>
+    ${filterChips({recurringActive:rec})}
+    ${rec ? `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><span class="label">Impegnate ogni mese</span><span class="caption">8 ricorrenze</span></div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px"><span class="tabular" style="font-size:var(--fs-amount-md);font-weight:600;letter-spacing:-0.02em">${eur(OUT_MONTH)}</span><span class="amount pos tabular" style="font-size:var(--fs-footnote)">${eur(IN_MONTH,{sign:'always'})}</span></div>
+        <div class="caption" style="margin-top:4px">Settimanali e annuali riportate al mese</div>
+      </div>
+      <div class="card flush appear" style="padding:0 var(--card-pad) 6px">
+        <div class="label" style="padding:14px 0 2px">Prossime</div>
+        ${[...RECUR].sort((a,b)=>a.nextDays-b.nextDays).map(r=>recurRow(r)).join('')}
+      </div>
+      <div class="card flush" style="padding:0 var(--card-pad) 6px">
+        <div class="label" style="padding:14px 0 2px">In pausa</div>
+        <button class="listrow press" data-act="open-detail" data-id="paused">${iconbox('shield',CAT[9])}<span class="grow"><div class="title muted">Assicurazione casa</div><div class="sub">Ogni anno · in pausa da luglio</div></span><span class="amount muted tabular">${eur(-21000)}</span>${ico('chevR','chevR')}</button>
+      </div>` : `
+      ${upcomingRow()}
+      ${settledList()}`}
+    <div style="height:10px"></div>
+  </div>`;
+}
+
+/* --- B: entry card → Ricorrenti screen → detail --- */
+function tabB() {
+  return `<div class="scroll">
+    ${periodHeader()}
+    <div class="textfield">Cerca</div>
+    ${filterChips({withRecurring:false})}
+    ${upcomingRow()}
+    <div class="card flush"><button class="row press" data-act="push-recurrences" style="padding:var(--card-pad);width:100%">
+      ${iconbox('repeat','var(--text-muted)',{small:true})}
+      <span class="grow"><div style="font-weight:500;letter-spacing:-0.01em">Ricorrenti</div><div class="caption" style="color:var(--text-muted)">8 attive · prossima iCloud il 22 set</div></span>
+      <span class="amount muted tabular" style="font-size:var(--fs-footnote)">${eur(OUT_MONTH)}<span class="faint">/mese</span></span>
+      ${ico('chevR','chevR')}</button></div>
+    ${settledList()}
+    <div style="height:10px"></div>
+  </div>`;
+}
+function recurrencesPage() {
+  const groups = [['Ogni mese', RECUR.filter(r=>r.unit==='month')], ['Ogni 2 settimane', RECUR.filter(r=>r.unit==='week')], ['Ogni anno', RECUR.filter(r=>r.unit==='year')]];
+  return `<div class="header"><button class="hbtn press" data-act="pop" aria-label="Indietro">${ico('chevL')}</button><h1>Ricorrenti</h1></div>
+  <div class="scroll">
+    <div class="card">
+      <span class="label">Ogni mese, in media</span>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px"><span class="tabular" style="font-size:var(--fs-amount-md);font-weight:600;letter-spacing:-0.02em">${eur(OUT_MONTH)}</span><span class="amount pos tabular" style="font-size:var(--fs-footnote)">${eur(IN_MONTH,{sign:'always'})}</span></div>
+      <div class="progress" style="margin-top:12px"><i style="width:${Math.round(-OUT_MONTH/IN_MONTH*100)}%"></i></div>
+      <div class="caption" style="margin-top:6px">Le uscite fisse sono il ${Math.round(-OUT_MONTH/IN_MONTH*100)}% delle entrate fisse</div>
+    </div>
+    ${groups.map(([g,rows])=>`<div class="card flush appear" style="padding:0 var(--card-pad) 6px"><div class="label" style="padding:14px 0 2px">${g}</div>${rows.map(r=>recurRow(r,{showNext:true})).join('')}</div>`).join('')}
+    <div class="card flush" style="padding:0 var(--card-pad) 6px"><div class="label" style="padding:14px 0 2px">In pausa</div>
+      <button class="listrow press" data-act="open-detail" data-id="paused">${iconbox('shield',CAT[9])}<span class="grow"><div class="title muted">Assicurazione casa</div><div class="sub">Ogni anno · in pausa da luglio</div></span><span class="amount muted tabular">${eur(-21000)}</span>${ico('chevR','chevR')}</button></div>
+    <div style="height:10px"></div>
+  </div>`;
+}
+function detailPage() {
+  const r = RECUR.find(x=>x.id===state.detailId) || RECUR[0];
+  const col = CAT[r.c];
+  const kv = (k,v,chev=false) => `<div class="listrow"><span class="grow"><div class="sub">${k}</div><div class="title">${v}</div></span>${chev?ico('chevR','chevR'):''}</div>`;
+  return `<div class="header"><button class="hbtn press" data-act="pop" aria-label="Indietro">${ico('chevL')}</button><h1 class="grow">${r.name}</h1><button class="chip" style="height:34px">Modifica</button></div>
+  <div class="scroll">
+    <div class="card" style="display:flex;flex-direction:column;gap:4px">
+      <div class="row">${iconbox(r.icon,col,{badge:true})}<span class="grow"><div class="label">${r.cat} · ${r.acct}</div></span></div>
+      <div class="tabular" style="font-size:var(--fs-hero);font-weight:600;letter-spacing:-0.03em;margin-top:6px;${r.amt>0?'color:var(--positive)':''}">${eur(r.amt,{sign:'always'})}</div>
+      <div class="muted" style="font-size:var(--fs-footnote)">${cadence(r)} ${r.day} · prossima <b style="color:var(--text);font-weight:500">${r.next}</b></div>
+    </div>
+    <div class="card flush" style="padding:0 var(--card-pad)">
+      ${kv('Cadenza', `${cadence(r)}, ${r.day}`, true)}<div class="divider"></div>
+      ${kv('Fine', 'Mai', true)}<div class="divider"></div>
+      ${kv('Prima occorrenza', '18 gennaio 2025')}
+    </div>
+    <div class="card flush appear" style="padding:0 var(--card-pad) 6px">
+      <div class="row" style="justify-content:space-between;padding:14px 0 2px"><span class="label">Occorrenze</span><span class="caption">21 · ${eur(r.amt*21).replace(/<[^>]+>/g,'')} in tutto</span></div>
+      ${txRow({t:r.next,s:'In arrivo',i:r.icon,c:r.c,a:r.amt,up:true,rec:true})}
+      ${(() => { const d = (r.day.match(/\d+/)||['18'])[0]; const months = r.unit==='month' ? ['set','ago','lug'] : r.unit==='week' ? ['11 set','28 ago','14 ago'] : ['mar 2026','mar 2025','mar 2024'];
+        return months.map((m,i)=>txRow({t: r.unit==='month' ? `${d} ${m}` : r.unit==='week' ? m : `${d} ${m}`, s: i===0 && r.unit==='month' && d==='18' ? 'Oggi' : '', i:r.icon,c:r.c,a:r.amt,rec:true})).join(''); })()}
+      <button class="label press" style="padding:8px 0 6px;text-decoration:underline;text-underline-offset:3px">Vedi tutte</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+      <button class="btn-secondary press">${'Metti in pausa'}</button>
+      <button class="btn-secondary press btn-danger">Smetti di ripetere</button>
+      <div class="caption" style="text-align:center;padding:0 12px">Le occorrenze passate restano. Le 2 future già programmate vengono rimosse.</div>
+    </div>
+    <div style="height:10px"></div>
+  </div>`;
+}
+
+/* --- C: Segmented Movimenti / Ricorrenti --- */
+function tabC() {
+  const rec = state.tabView === 'recurring';
+  const sorted = [...RECUR].sort((a,b)=>a.nextDays-b.nextDays);
+  const inCycle = sorted.filter(r=>r.nextDays<=12); // fino a fine ciclo (30 set)
+  const later = sorted.filter(r=>r.nextDays>12);
+  const spentSoFar = -(1299+3900); // occorrenze già passate nel ciclo (Netflix 18 set, Palestra 15 set)
+  const toCome = inCycle.filter(r=>r.amt<0).reduce((s,r)=>s+r.amt,0);
+  const timelineRow = r => `<button class="listrow press" data-act="open-detail" data-id="${r.id}">
+    <span style="width:44px;flex:none;text-align:center"><div class="tabular" style="font-size:var(--fs-headline);font-weight:600;letter-spacing:-0.02em;line-height:1">${r.next.split(' ')[0]}</div><div class="caption" style="margin-top:2px">${r.next.split(' ')[1]}</div></span>
+    ${iconbox(r.icon,CAT[r.c],{badge:true})}
+    <span class="grow"><div class="title ellip">${r.name}</div><div class="sub ellip">${cadence(r).toLowerCase()} · ${r.nextDays<=1?'domani':`tra ${r.nextDays} giorni`}</div></span>
+    ${amount(r.amt,{pos:r.amt>0,sign:'always'})}
+  </button>`;
+  return `<div class="scroll">
+    ${periodHeader()}
+    ${segmented('seg-tab',[{v:'list',l:'Movimenti'},{v:'recurring',l:'Ricorrenti'}], rec?'recurring':'list')}
+    ${rec ? `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><span class="label">Fisse in questo ciclo</span><span class="caption">8 ricorrenze</span></div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span class="tabular" style="font-size:var(--fs-amount-md);font-weight:600;letter-spacing:-0.02em">${eur(spentSoFar+toCome)}</span><span class="caption">di cui ${eur(spentSoFar).replace(/<[^>]+>/g,'')} già passate</span></div>
+        <div class="progress" style="margin-top:12px"><i style="width:${Math.round(spentSoFar/(spentSoFar+toCome)*100)}%"></i></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px"><span class="caption">Passate</span><span class="caption">Ancora ${eur(toCome).replace(/<[^>]+>/g,'')} entro il 30 set</span></div>
+      </div>
+      <div class="card flush appear" style="padding:0 var(--card-pad) 6px"><div class="label" style="padding:14px 0 2px">Entro fine ciclo</div>${inCycle.map(timelineRow).join('')}</div>
+      <div class="card flush" style="padding:0 var(--card-pad) 6px"><div class="label" style="padding:14px 0 2px">Più avanti</div>${later.map(timelineRow).join('')}</div>
+      <button class="label press" style="text-align:center;padding:6px 0;text-decoration:underline;text-underline-offset:3px">1 in pausa</button>` : `
+      <div class="textfield">Cerca</div>
+      ${filterChips({withRecurring:false})}
+      ${upcomingRow()}
+      ${settledList()}`}
+    <div style="height:10px"></div>
+  </div>`;
+}
+
+function renderTab() {
+  const el = document.getElementById('phone-tab'); const v = state.variant;
+  let inner;
+  if (v === 'B') {
+    const st = p => state.page===p ? 'on' : (['tab','recurrences','detail'].indexOf(p) < ['tab','recurrences','detail'].indexOf(state.page) ? 'under' : 'off');
+    inner = `<div class="stack">
+      <div class="page" data-state="${st('tab')}">${tabB()}</div>
+      <div class="page" data-state="${st('recurrences')}">${recurrencesPage()}</div>
+      <div class="page" data-state="${st('detail')}">${state.page==='detail'?detailPage():''}</div>
+    </div>`;
+  } else {
+    // A and C also push a detail page on row tap, reusing B's detail
+    const on = state.page==='detail';
+    inner = `<div class="stack">
+      <div class="page" data-state="${on?'under':'on'}">${v==='A'?tabA():tabC()}</div>
+      <div class="page" data-state="${on?'on':'off'}">${on?detailPage():''}</div>
+    </div>`;
+  }
+  el.innerHTML = `${statusbar()}<div class="screen">${inner}${tabbar()}<div class="home-indicator"></div></div>`;
+  layoutThumbs(el);
+}
+
+/* ---------- render + events ---------- */
+function render() {
+  document.body.dataset.variant = state.variant; document.body.dataset.theme = state.theme;
+  document.getElementById('variant-title').textContent = TITLE[state.variant];
+  document.getElementById('tw-desc').textContent = DESC[state.variant];
+  document.getElementById('tw-repeat').setAttribute('aria-checked', String(state.repeat));
+  document.getElementById('tw-sheet').setAttribute('aria-checked', String(!!state.sheet));
+  renderForm(); renderTab(); layoutThumbs();
+}
+function setRepeat(unit, every, end) { state.repeat = true; state.unit = unit; state.every = every; if (end) state.end = end; }
+
+document.addEventListener('click', (e) => {
+  const seg = e.target.closest('.segmented button'); const actEl = e.target.closest('[data-act]');
+  if (seg) {
+    const id = seg.parentElement.id, v = seg.dataset.v;
+    if (id === 'tw-variant') { state.variant = v; state.sheet = null; state.page = 'tab'; state.tabView = 'list'; }
+    else if (id === 'tw-theme') { state.theme = v; }
+    else if (id === 'seg-freq') { if (v==='never') state.repeat=false; else setRepeat(v, 1); }
+    else if (id === 'seg-unit') { state.unit = v; }
+    else if (id === 'seg-tab') { state.tabView = v; }
+    else return;
+    render(); return;
+  }
+  if (!actEl) return;
+  const act = actEl.dataset.act;
+  switch (act) {
+    case 'rep-none': state.repeat = false; break;
+    case 'rep-month': setRepeat('month',1); break;
+    case 'rep-week': setRepeat('week',1); break;
+    case 'rep-2week': setRepeat('week',2); break;
+    case 'rep-year': setRepeat('year',1); break;
+    case 'rep-custom': setRepeat('month',2); break;
+    case 'every-minus': state.every = Math.max(1, state.every-1); break;
+    case 'every-plus': state.every = Math.min(99, state.every+1); break;
+    case 'end-never': state.end='never'; break; case 'end-date': state.end='date'; break; case 'end-count': state.end='count'; break;
+    case 'open-repeat': state.sheet = 'repeat'; break;
+    case 'open-end': state.sheet = 'end'; break;
+    case 'open-quando': state.sheet = 'quando'; break;
+    case 'close-sheet': state.sheet = null; break;
+    case 'toggle-recurring': state.tabView = state.tabView==='recurring' ? 'list' : 'recurring'; break;
+    case 'toggle-upcoming': state.upcomingOpen = !state.upcomingOpen; break;
+    case 'push-recurrences': state.page = 'recurrences'; break;
+    case 'open-detail': state.detailId = actEl.dataset.id; state.page = 'detail'; break;
+    case 'pop': state.page = state.variant==='B' && state.page==='detail' ? 'recurrences' : 'tab'; break;
+    case 'cal-day': break;
+    default: return;
+  }
+  // keep the sheet open while editing inside it: re-render without resetting scroll of the sheet
+  const openBefore = document.querySelector('#phone-form .sheet-layer .sheet'); const scrollTop = openBefore ? openBefore.scrollTop : 0;
+  render();
+  const after = document.querySelector('#phone-form .sheet-layer .sheet'); if (after) after.scrollTop = scrollTop;
+});
+
+/* tweaks toggles */
+document.getElementById('tweaks-toggle').addEventListener('click', (e) => { const p = document.getElementById('tweaks'); const open = p.dataset.open !== 'true'; p.dataset.open = String(open); e.currentTarget.setAttribute('aria-expanded', String(open)); });
+document.getElementById('tw-repeat').addEventListener('click', () => { state.repeat = !state.repeat; if (state.repeat && !state.unit) state.unit='month'; render(); });
+document.getElementById('tw-sheet').addEventListener('click', () => { state.sheet = state.sheet ? null : (state.variant==='C' ? 'quando' : 'repeat'); render(); });
+window.addEventListener('resize', () => layoutThumbs());
+
+/* deep links: #v=B&theme=light&sheet=repeat&tab=recurring&page=detail&id=netflix&repeat=0&every=2&unit=week&end=date&upcoming=1 */
+(function applyHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('v')) state.variant = h.get('v');
+  if (h.get('theme')) state.theme = h.get('theme');
+  if (h.get('sheet')) state.sheet = h.get('sheet');
+  if (h.get('tab')) state.tabView = h.get('tab');
+  if (h.get('page')) state.page = h.get('page');
+  if (h.get('id')) state.detailId = h.get('id');
+  if (h.get('repeat') === '0') state.repeat = false;
+  if (h.get('every')) state.every = Number(h.get('every'));
+  if (h.get('unit')) state.unit = h.get('unit');
+  if (h.get('end')) state.end = h.get('end');
+  if (h.get('upcoming') === '1') state.upcomingOpen = true;
+})();
+render();
+</script>
+</body>
+</html>
