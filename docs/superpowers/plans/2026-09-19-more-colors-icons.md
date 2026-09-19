@@ -35,7 +35,7 @@ Run every command from the worktree root `/Users/saliougaye/sandbox/saldo-more-c
 - Modify: `packages/core/src/entities.ts:17`
 - Test: `packages/core/src/entities.test.ts` (append; if the file does not exist, create it with the imports shown)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -71,12 +71,12 @@ describe('colorIndex', () => {
 
 If `entities.test.ts` already exists, add only the `describe` block and merge the imports.
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `pnpm --filter @saldo/core test -- entities`
 Expected: FAIL, `MAX_COLOR_INDEX` is not exported (the first test fails on `undefined`).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/entities.ts` replace line 17:
 
@@ -88,12 +88,12 @@ const colorIndex = z.number().int().min(0).max(MAX_COLOR_INDEX);
 
 Check that `packages/core/src/index.ts` re-exports `entities` with `export *`; if it lists names, add `MAX_COLOR_INDEX`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @saldo/core test`
 Expected: all pass. `backup.test.ts` still rejects `colorIndex: 99`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/entities.ts packages/core/src/entities.test.ts packages/core/src/index.ts
@@ -109,7 +109,7 @@ git commit -m "feat(core): allow 24 colour indices"
 - Modify: `packages/ui/src/tokens.test.ts` (the `categoryColors` describe block)
 - Modify: `packages/i18n/src/locales/en.ts:695-706`, `packages/i18n/src/locales/it.ts:700-711`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace the `describe('categoryColors', …)` block in `packages/ui/src/tokens.test.ts`:
 
@@ -145,12 +145,12 @@ describe('categoryColors', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `pnpm --filter @saldo/ui test -- tokens`
 Expected: FAIL, `expected 10 to be 24`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/ui/src/tokens.ts` change the doc comment to `/** Category and account colours; entities store an index 0-23. Never reorder: an index is stored. */` and append to the two arrays (keep the existing ten untouched):
 
@@ -228,12 +228,12 @@ In `it.ts`, inside `colors`, after `grey: 'Grigio',`:
     slate: 'Ardesia',
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @saldo/ui test && pnpm --filter @saldo/i18n test`
 Expected: PASS (the i18n parity test checks both files have the same keys).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts packages/i18n/src/locales
@@ -251,7 +251,7 @@ git commit -m "feat(ui): grow the category palette to 24 colours"
 
 The markup below was generated from `lucide-static@1.47.0`; `line` and `polyline` elements were rewritten as `path` because `parseIconMarkup` only understands `path`, `circle` and `rect`. Three of the icons (`headphones`, `percent`, `tv`) are Feather-derived and MIT-licensed, see Task 4.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/ui/src/icons.test.ts` change the `icon set` count test and add a group test:
 
@@ -275,12 +275,12 @@ In `packages/ui/src/icons.test.ts` change the `icon set` count test and add a gr
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `pnpm --filter @saldo/ui test -- icons`
 Expected: FAIL, `expected 75 to have a length of 134`.
 
-- [ ] **Step 3: Add the markup**
+- [x] **Step 3: Add the markup**
 
 Append inside `iconMarkup` in `packages/ui/src/icons.ts`, after the `piggy` entry and before `} as const satisfies`:
 
@@ -414,7 +414,7 @@ Append inside `iconMarkup` in `packages/ui/src/icons.ts`, after the `piggy` entr
     '<path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/>',
 ```
 
-- [ ] **Step 4: Extend the picker groups**
+- [x] **Step 4: Extend the picker groups**
 
 In the same file, replace `categoryIconGroups` and `accountIconOptions`:
 
@@ -453,7 +453,7 @@ The `work` group is unchanged; every other icon appears in exactly one group (th
 
 Update the header comment of `icons.ts` to say the extra icons come from Lucide 1.47.0 and point at `THIRD-PARTY.md`.
 
-- [ ] **Step 5: Group names**
+- [x] **Step 5: Group names**
 
 `en.ts`, `iconGroups` (keep `work`, add four keys after it):
 
@@ -473,12 +473,12 @@ Update the header comment of `icons.ts` to say the extra icons come from Lucide 
     finance: 'Denaro',
 ```
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run: `pnpm --filter @saldo/ui test && pnpm --filter @saldo/i18n test && pnpm typecheck`
 Expected: PASS. Icons all have nodes, so a malformed markup string shows up as a zero-node failure naming the icon.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/ui packages/i18n
@@ -493,7 +493,7 @@ git commit -m "feat(ui): 59 more icons in themed picker groups"
 - Create: `THIRD-PARTY.md`
 - Modify: `TODO.md` (tick "Third-party notices" under "Going public"; remove the "More colours and icons" bullet from "Tags: freeze, palette and layout", keeping the other two)
 
-- [ ] **Step 1: Write `THIRD-PARTY.md`**
+- [x] **Step 1: Write `THIRD-PARTY.md`**
 
 ```markdown
 # Third-party notices
@@ -548,11 +548,11 @@ SOFTWARE.
 
 The icons Lucide-derived **before** this change (`chevUD`, and any others noted in the `icons.ts` header) are covered by the same Lucide notice.
 
-- [ ] **Step 2: Update `TODO.md`**
+- [x] **Step 2: Update `TODO.md`**
 
 Tick the "Third-party notices" box and delete the "More colours and icons" bullet.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add THIRD-PARTY.md TODO.md
@@ -568,7 +568,7 @@ git commit -m "docs: third-party notices for Lucide and Feather icons"
 
 The mobile app is the one place that sees core, ui and i18n together, so the cross-package guarantees live here.
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ts
 import { MAX_COLOR_INDEX } from '@saldo/core';
@@ -596,12 +596,12 @@ describe('appearance data', () => {
 });
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `pnpm --filter mobile test -- appearanceCoverage` (use the package name from `apps/mobile/package.json` if it differs)
 Expected: PASS, since Tasks 1–3 already made the data consistent. If it fails, the failure names the missing key: fix the data, not the test.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/mobile/src/components/appearanceCoverage.test.ts
@@ -618,7 +618,7 @@ git commit -m "test(mobile): palette, names and icon groups stay in step"
 
 A budget's colour comes from its category, so its sheet must not offer swatches that would do nothing.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to the `describe` in `AppearanceSheet.test.tsx`, following the pattern of the first test (same `Host`, `GROUPS`):
 
@@ -642,12 +642,12 @@ Add to the `describe` in `AppearanceSheet.test.tsx`, following the pattern of th
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `pnpm --filter mobile test -- AppearanceSheet`
 Expected: FAIL, the Terracotta swatch is still rendered (TypeScript also flags `colours` as an unknown prop).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `AppearanceSheetProps` add:
 
@@ -658,12 +658,12 @@ In `AppearanceSheetProps` add:
 
 Destructure `colours = true`, and wrap the swatch `<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>…</View>` in `{colours ? ( … ) : null}`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter mobile test -- AppearanceSheet`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/components/AppearanceSheet.tsx apps/mobile/src/components/AppearanceSheet.test.tsx
@@ -682,7 +682,7 @@ git commit -m "feat(mobile): AppearanceSheet can hide the colour grid"
 
 `icon: null` in the form means "follow the first category", which is what a new budget did before; once a user picks, the choice is stored and kept.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/features/budgets/budgetFormValues.test.ts`:
 
@@ -716,12 +716,12 @@ describe('budget form icon', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `pnpm --filter mobile test -- budgetFormValues`
 Expected: FAIL, `icon` is undefined.
 
-- [ ] **Step 3: Implement the values**
+- [x] **Step 3: Implement the values**
 
 In `budgetFormValues.ts` add to `BudgetFormValues`:
 
@@ -732,7 +732,7 @@ In `budgetFormValues.ts` add to `BudgetFormValues`:
 
 with `import type { IconName } from '@saldo/ui';`, `icon: null,` in `emptyBudgetForm` and `icon: budget.icon as IconName,` in `budgetFormFrom`.
 
-- [ ] **Step 4: Wire the routes**
+- [x] **Step 4: Wire the routes**
 
 `new.tsx`, replace `icon: first?.icon ?? 'target',` with:
 
@@ -742,7 +742,7 @@ with `import type { IconName } from '@saldo/ui';`, `icon: null,` in `emptyBudget
 
 `[id].tsx`, in the `repos.budgets.update(budget.id, { … })` object add `icon: values.icon ?? budget.icon,`.
 
-- [ ] **Step 5: Add the row and the sheet**
+- [x] **Step 5: Add the row and the sheet**
 
 In `BudgetForm.tsx`: import `AppearanceSheet` from `'../../components/AppearanceSheet'`, `ListRow` next to `IconBox` (`import { IconBox, ListRow } from '../../components/ListRow'`) and `categoryIconGroups` (`import { categoryIconGroups, type IconName } from '@saldo/ui'`, replacing the type-only import). Add state next to the others:
 
@@ -781,12 +781,12 @@ Render the sheet once, as the last child of the form's fragment (next to where `
 
 Check `ListRow` accepts `title`, `leading`, `onPress`, `chevron` exactly as `AccountForm.tsx:193` uses them, and that a `ListRow` inside a padded `Card` matches how the account form nests it (it wraps rows in `<Card padded={false}>` with a 4-pt vertical padding); if the row looks cramped inside the padded card, wrap it the same way.
 
-- [ ] **Step 6: Run the checks**
+- [x] **Step 6: Run the checks**
 
 Run: `pnpm --filter mobile test -- budgets && pnpm typecheck`
 Expected: PASS. `useBudgetProgress.test.ts` and `budgetAlerts.test.ts` build `Budget` objects directly and need no change.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/mobile/src/features/budgets apps/mobile/app/budget

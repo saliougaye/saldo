@@ -256,8 +256,8 @@ describe('colorIndex', () => {
   });
 
   it('rejects an index beyond the palette', () => {
-    expect(
-      categorySchema.safeParse({ ...category, colorIndex: MAX_COLOR_INDEX + 1 }).success,
-    ).toBe(false);
+    expect(categorySchema.safeParse({ ...category, colorIndex: MAX_COLOR_INDEX + 1 }).success).toBe(
+      false,
+    );
   });
 });
