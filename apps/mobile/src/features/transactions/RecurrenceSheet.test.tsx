@@ -103,4 +103,32 @@ describe('RecurrenceSheet', () => {
     // "Last occurrence" is only drawn when the end mode is "on a date".
     expect(await screen.findByText('Last occurrence')).toBeTruthy();
   });
+
+  it('counts "after N times" from the anchor the caller names', async () => {
+    const onChange = jest.fn();
+    await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <ThemeProvider preference="dark">
+          <I18nextProvider i18n={i18n}>
+            <RecurrenceSheet
+              visible
+              onClose={() => {}}
+              value={{ frequency: 'weekly', interval: 1, endDate: null }}
+              startDate="2026-09-18"
+              today="2026-09-18"
+              onChange={onChange}
+              anchorFor={() => '2026-09-25'}
+            />
+          </I18nextProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>,
+    );
+    await userEvent.press(screen.getByText('After N times'));
+    // 12 Fridays from 25 Sep: the 12th is 11 Dec.
+    expect(onChange).toHaveBeenLastCalledWith({
+      frequency: 'weekly',
+      interval: 1,
+      endDate: '2026-12-11',
+    });
+  });
 });

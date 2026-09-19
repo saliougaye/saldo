@@ -31,6 +31,12 @@ export interface RecurrenceSheetProps {
   today: LocalDate;
   /** Every tap reports the whole rule; the sheet keeps no draft the form does not see. */
   onChange: (rule: RecurrenceRule | null) => void;
+  /**
+   * The date "dopo N volte" and the preview count from, when it is not `startDate`. The recurrence
+   * detail passes the first date a *new* cadence fires after today (§5.9), so ten times means ten
+   * times in the series that will exist, not ten from an anchor that series never sees.
+   */
+  anchorFor?: (rule: RecurrenceRule) => LocalDate;
 }
 
 const PRESETS: readonly Exclude<RecurrencePreset, 'custom'>[] = [
@@ -67,6 +73,7 @@ export function RecurrenceSheet({
   startDate,
   today,
   onChange,
+  anchorFor,
 }: RecurrenceSheetProps) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -90,15 +97,19 @@ export function RecurrenceSheet({
 
   const custom = customOpen || preset === 'custom';
 
-  const withEnd = (rule: RecurrenceRule, mode: EndMode, count: number): RecurrenceRule => ({
-    ...rule,
-    endDate:
-      mode === 'never'
-        ? null
-        : mode === 'count'
-          ? endDateAfterCount({ ...rule, startDate }, count)
-          : (rule.endDate ?? endDateAfterCount({ ...rule, startDate }, count)),
-  });
+  const anchor = (rule: RecurrenceRule): LocalDate => anchorFor?.(rule) ?? startDate;
+  const withEnd = (rule: RecurrenceRule, mode: EndMode, count: number): RecurrenceRule => {
+    const from = { ...rule, startDate: anchor(rule) };
+    return {
+      ...rule,
+      endDate:
+        mode === 'never'
+          ? null
+          : mode === 'count'
+            ? endDateAfterCount(from, count)
+            : (rule.endDate ?? endDateAfterCount(from, count)),
+    };
+  };
 
   const pickPreset = (next: Exclude<RecurrencePreset, 'custom'>) => {
     setCustomOpen(false);
@@ -128,7 +139,9 @@ export function RecurrenceSheet({
     value === null
       ? null
       : [1, 2, 3]
-          .map((k) => formatDayMonth(nthOccurrence({ ...value, startDate }, k), locale))
+          .map((k) =>
+            formatDayMonth(nthOccurrence({ ...value, startDate: anchor(value) }, k), locale),
+          )
           .join(', ');
   const check = <Icon name="check" size={16} color={theme.palette.text} />;
 

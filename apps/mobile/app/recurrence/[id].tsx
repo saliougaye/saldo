@@ -1,4 +1,4 @@
-import type { RecurrenceRule } from '@saldo/core';
+import { nextOccurrence, type RecurrenceRule } from '@saldo/core';
 import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -306,6 +306,14 @@ export default function RecurrenceDetail() {
         startDate={recurrence.startDate}
         today={today}
         onChange={setDraft}
+        anchorFor={(rule) =>
+          rule.frequency === recurrence.frequency && rule.interval === recurrence.interval
+            ? recurrence.startDate
+            : // A new cadence starts on its first date after today (`changeRecurrenceRule`); the
+              // end is unknown until the rule is complete, so count from the open-ended schedule.
+              (nextOccurrence({ ...rule, endDate: null, startDate: recurrence.startDate }, today) ??
+              recurrence.startDate)
+        }
       />
 
       <ConfirmDialog
