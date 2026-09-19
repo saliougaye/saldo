@@ -3,7 +3,9 @@ import {
   accountTypeSchema,
   BUDGET_ALERT_THRESHOLDS,
   budgetSchema,
+  categorySchema,
   entitySchemas,
+  MAX_COLOR_INDEX,
   recurrenceSchema,
   settingsSchema,
   type Transaction,
@@ -228,5 +230,34 @@ describe('accountTypeSchema', () => {
       'savings',
       'investment',
     ]);
+  });
+});
+
+describe('colorIndex', () => {
+  const category = {
+    id: 'c1',
+    createdAt: '2026-09-19T10:00:00.000Z',
+    updatedAt: '0000000000000-0000-a',
+    deletedAt: null,
+    name: 'Groceries',
+    direction: 'expense' as const,
+    parentId: null,
+    icon: 'cart',
+    archivedAt: null,
+    sortOrder: 0,
+  };
+
+  it('accepts every swatch up to MAX_COLOR_INDEX', () => {
+    expect(MAX_COLOR_INDEX).toBe(23);
+    expect(categorySchema.safeParse({ ...category, colorIndex: 0 }).success).toBe(true);
+    expect(categorySchema.safeParse({ ...category, colorIndex: MAX_COLOR_INDEX }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects an index beyond the palette', () => {
+    expect(
+      categorySchema.safeParse({ ...category, colorIndex: MAX_COLOR_INDEX + 1 }).success,
+    ).toBe(false);
   });
 });

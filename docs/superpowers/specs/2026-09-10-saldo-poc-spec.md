@@ -188,7 +188,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `institution` | string ≤60 \| null | Shown as subtitle ("Intesa Sanpaolo"). |
 | `openingBalance` | minor int | Balance at creation (may be negative for credit cards). |
 | `includeInSpendable` | boolean | Default `true` for cash/checking/debit_card/credit_card, `false` for savings/investment. |
-| `colorIndex` | int 0–9 | Index into `categoryColors`. |
+| `colorIndex` | int 0–23 | Index into `categoryColors`. |
 | `icon` | IconName | Options: landmark, card, coins, piggy, trend, phone, briefcase, shield. |
 | `creditCloseDay` / `creditChargeDay` | int 1–28 \| null | Only for `credit_card`. |
 | `creditPaymentAccountId` | id \| null | Account the card is charged to. |
@@ -203,7 +203,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `direction` | `expense \| income` | |
 | `parentId` | id \| null | **One level only**: a child cannot have children, and a parent's direction must match. |
 | `icon` | IconName | Picker groups in §6.13. |
-| `colorIndex` | int 0–9 | |
+| `colorIndex` | int 0–23 | |
 | `archivedAt` | ISO \| null | |
 | `sortOrder` | int | Manual reorder ("Riordina"). |
 
