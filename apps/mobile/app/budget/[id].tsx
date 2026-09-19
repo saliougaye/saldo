@@ -49,6 +49,7 @@ export default function EditBudget() {
             period: values.period,
             alertThreshold: values.alertThreshold,
             rollover: values.period === 'period' ? values.rollover : false,
+            icon: values.icon ?? budget.icon,
           });
           toast.show(t('budgets.saved'));
           router.back();

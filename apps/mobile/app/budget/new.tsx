@@ -36,7 +36,7 @@ export default function NewBudget() {
           period: values.period,
           alertThreshold: values.alertThreshold,
           rollover: values.period === 'period' ? values.rollover : false,
-          icon: first?.icon ?? 'target',
+          icon: values.icon ?? first?.icon ?? 'target',
           sortOrder: budgets.length,
         });
         toast.show(t('budgets.created'));

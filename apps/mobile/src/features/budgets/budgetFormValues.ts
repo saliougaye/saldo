@@ -1,4 +1,5 @@
 import type { Budget, MinorDigits } from '@saldo/core';
+import type { IconName } from '@saldo/ui';
 
 /**
  * What the budget form holds while it is being filled in — separate from the screen so the step
@@ -11,6 +12,8 @@ export interface BudgetFormValues {
   period: Budget['period'];
   alertThreshold: number | null;
   rollover: boolean;
+  /** `null` until the user picks one; a new budget then takes its first category's icon. */
+  icon: IconName | null;
 }
 
 export function emptyBudgetForm(): BudgetFormValues {
@@ -21,6 +24,7 @@ export function emptyBudgetForm(): BudgetFormValues {
     period: 'period',
     alertThreshold: 90,
     rollover: false,
+    icon: null,
   };
 }
 
@@ -32,5 +36,6 @@ export function budgetFormFrom(budget: Budget, minorDigits: MinorDigits): Budget
     period: budget.period,
     alertThreshold: budget.alertThreshold,
     rollover: budget.rollover,
+    icon: budget.icon as IconName,
   };
 }

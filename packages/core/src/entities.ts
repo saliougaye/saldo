@@ -14,7 +14,9 @@ const isoTimestamp = z.iso.datetime();
 const localDate = z.string().refine(isLocalDate, 'Expected YYYY-MM-DD date');
 const minorUnits = z.number().int();
 const positiveMinorUnits = z.number().int().positive();
-const colorIndex = z.number().int().min(0).max(9);
+/** Swatches in `categoryColors` (`@saldo/ui`) minus one; a mobile test keeps the two equal. */
+export const MAX_COLOR_INDEX = 23;
+const colorIndex = z.number().int().min(0).max(MAX_COLOR_INDEX);
 const dayOfMonth = z.number().int().min(1).max(31);
 const percent = z.number().int().min(1).max(100);
 

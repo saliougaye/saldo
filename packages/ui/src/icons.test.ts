@@ -30,13 +30,21 @@ describe('parseIconMarkup', () => {
 
 describe('icon set', () => {
   it('contains the 74 design icons plus the Lucide additions, each with at least one node', () => {
-    expect(ICON_NAMES).toHaveLength(75);
+    expect(ICON_NAMES).toHaveLength(134);
     // Added beyond the design's set; see the comment on `iconMarkup`.
     expect(ICON_NAMES).toContain('chevUD');
     for (const name of ICON_NAMES) {
       expect(iconNodes[name].length, name).toBeGreaterThan(0);
     }
     expect(iconNodes.grip.filter((node) => node.tag === 'circle')).toHaveLength(6);
+  });
+
+  it('offers every category icon exactly once in the picker', () => {
+    const offered: string[] = categoryIconGroups.flatMap((group) => [...group.icons]);
+    expect(new Set(offered).size).toBe(offered.length);
+    for (const name of ['sofa', 'dog', 'shirt', 'laptop', 'banknote']) {
+      expect(offered).toContain(name);
+    }
   });
 
   it('only references existing icons in picker groups', () => {
