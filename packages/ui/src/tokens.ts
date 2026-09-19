@@ -80,7 +80,10 @@ export const palettes: Record<ThemeName, Palette> = {
   },
 };
 
-/** Category and account colours; entities store an index 0-9. */
+/**
+ * Category and account colours; entities store an index 0-23. Never reorder or remove one: the
+ * index is what is stored and synced, so only appending keeps old rows their colour.
+ */
 export const categoryColors = [
   '#C57B4E',
   '#B4894A',
@@ -92,6 +95,20 @@ export const categoryColors = [
   '#A06FA0',
   '#AF6B7B',
   '#8A8A8A',
+  '#B5584F',
+  '#D0806A',
+  '#C9A048',
+  '#78934A',
+  '#4A8560',
+  '#5FA890',
+  '#5B9BC0',
+  '#4F6FB0',
+  '#6461A8',
+  '#8E5C93',
+  '#B36FA8',
+  '#B35878',
+  '#8A6A55',
+  '#6B7785',
 ] as const;
 
 /**
@@ -113,6 +130,20 @@ export const categoryColorNames = [
   'mauve',
   'dustyRose',
   'grey',
+  'brick',
+  'coral',
+  'amber',
+  'moss',
+  'forest',
+  'mint',
+  'sky',
+  'cobalt',
+  'indigo',
+  'plum',
+  'orchid',
+  'raspberry',
+  'coffee',
+  'slate',
 ] as const;
 
 /**

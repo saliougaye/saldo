@@ -63,8 +63,26 @@ describe('palettes', () => {
 });
 
 describe('categoryColors', () => {
-  it('has ten swatches', () => {
-    expect(categoryColors).toHaveLength(10);
+  it('has twenty-four swatches, the original ten first', () => {
+    expect(categoryColors).toHaveLength(24);
+    // Stored indices must keep their meaning: a row saved with 4 was teal and stays teal.
+    expect(categoryColors.slice(0, 10)).toEqual([
+      '#C57B4E',
+      '#B4894A',
+      '#8F9152',
+      '#63926F',
+      '#4F8D8B',
+      '#5A82A6',
+      '#7A79AC',
+      '#A06FA0',
+      '#AF6B7B',
+      '#8A8A8A',
+    ]);
+  });
+
+  it('are valid, distinct hex colours', () => {
+    for (const colour of categoryColors) expect(colour).toMatch(/^#[0-9A-F]{6}$/);
+    expect(new Set(categoryColors).size).toBe(categoryColors.length);
   });
 
   it('names every one of them', () => {
