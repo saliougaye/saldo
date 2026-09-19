@@ -31,6 +31,7 @@ import { Sparkline } from '../../src/features/accounts/Sparkline';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -41,6 +42,7 @@ const RECENT = 6;
 export default function AccountDetail() {
   const theme = useTheme();
   const router = useRouter();
+  const leaveGone = useLeaveGone();
   const { t } = useTranslation();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -296,7 +298,7 @@ export default function AccountDetail() {
           archiveAccount(repos, account.id, new Date().toISOString());
           setConfirmArchive(false);
           toast.show(t('accounts.archivedToast', { name: account.name }));
-          router.back();
+          leaveGone({ kind: 'account', ids: [account.id] });
         }}
         onCancel={() => setConfirmArchive(false)}
       />

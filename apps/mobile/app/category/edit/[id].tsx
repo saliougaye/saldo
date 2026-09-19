@@ -4,18 +4,21 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '../../../src/components/Screen';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
-import { useBudgets, useSettings } from '../../../src/db/hooks';
+import { useBudgets, useCategories, useSettings } from '../../../src/db/hooks';
 import { ArchiveCategorySheet } from '../../../src/features/categories/ArchiveCategorySheet';
 import { CategoryForm, categoryFormFrom } from '../../../src/features/categories/CategoryForm';
+import { useLeaveGone } from '../../../src/navigation/leave';
 import { Text } from '../../../src/theme/Text';
 
 export default function EditCategory() {
   const router = useRouter();
+  const leaveGone = useLeaveGone();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
   const settings = useSettings();
   const budgets = useBudgets();
+  const categories = useCategories();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
   const [archiveOpen, setArchiveOpen] = useState(false);
 
@@ -81,7 +84,9 @@ export default function EditCategory() {
         category={category}
         onDone={() => {
           setArchiveOpen(false);
-          router.back();
+          // Its children are archived with it (`archiveCategory`), so their screens go too.
+          const children = categories.filter((child) => child.parentId === category.id);
+          leaveGone({ kind: 'category', ids: [category.id, ...children.map((child) => child.id)] });
         }}
       />
     </>

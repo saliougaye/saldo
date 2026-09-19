@@ -79,10 +79,16 @@ Reported on 2026-09-19. Not investigated yet.
 
 ## Routing: swipe back lands on a stale screen
 
-- [ ] Swiping left (back) sometimes returns to an old page, for example after a delete: the deleted item's detail
+- [x] Swiping left (back) sometimes returns to an old page, for example after a delete: the deleted item's detail
       screen is still on the stack. After a delete the screen should be replaced or popped, and the back gesture
       should never reach a screen whose data is gone. Find every delete flow that ends with a `router.back()` or
       `push` and check the stack.
+      **Done on 2026-09-19** (`fix/routing-stale-screens`): `useLeaveGone` (`src/navigation/leave.ts`) takes every
+      detail and editor of the gone row out of the root stack, wherever it sits, instead of `router.back()` or
+      `dismissAll`. Used by archiving a category (with its children), archiving an account, deleting a transaction,
+      a budget or a tag. Reproduced on the simulator for the category archive (it landed on the archived
+      category's detail); saving an edit went back correctly there, so if a save still misbehaves on the phone the
+      exact path is needed.
 
 ## Editing a transaction and making it recurring shows "not found"
 
