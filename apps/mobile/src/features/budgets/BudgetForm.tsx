@@ -9,14 +9,15 @@ import {
   takenCategoryIds,
 } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
-import type { IconName } from '@saldo/ui';
+import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
+import { AppearanceSheet } from '../../components/AppearanceSheet';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { IconBox } from '../../components/ListRow';
+import { IconBox, ListRow } from '../../components/ListRow';
 import { Screen } from '../../components/Screen';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Segmented } from '../../components/Segmented';
@@ -103,6 +104,25 @@ export function BudgetForm({
     t('common.and'),
   );
   const set = (patch: Partial<BudgetFormValues>) => onChange({ ...values, ...patch });
+
+  // The icon follows the first category until the user picks one; the colour always does (a
+  // budget has no colour of its own), so the sheet offers icons only.
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const firstCategory = categories.find((category) => category.id === values.categoryIds[0]);
+  const icon = (values.icon ?? firstCategory?.icon ?? 'target') as IconName;
+  const iconColorIndex = firstCategory?.colorIndex ?? 9;
+  const appearanceSheet = (
+    <AppearanceSheet
+      visible={appearanceOpen}
+      onClose={() => setAppearanceOpen(false)}
+      colorIndex={iconColorIndex}
+      icon={icon}
+      groups={categoryIconGroups}
+      searchable
+      colours={false}
+      onChange={({ icon: next }) => set({ icon: next })}
+    />
+  );
 
   const amountCard = () => (
     <Card>
@@ -211,6 +231,12 @@ export function BudgetForm({
           value={values.name}
           onChangeText={(name) => set({ name })}
         />
+        <ListRow
+          title={t('common.appearance')}
+          leading={<IconBox name={icon} colour={theme.categoryColor(iconColorIndex)} />}
+          onPress={() => setAppearanceOpen(true)}
+          chevron
+        />
         <View style={{ gap: 6 }}>
           <Text size="footnote" color="textMuted">
             {t('budgets.repeats')}
@@ -298,6 +324,7 @@ export function BudgetForm({
         {amountCard()}
         {categoriesCard()}
         {detailsCard()}
+        {appearanceSheet}
       </Screen>
     );
   }
@@ -332,6 +359,7 @@ export function BudgetForm({
       {step === 'categories' ? categoriesCard() : null}
       {step === 'amount' ? amountCard() : null}
       {step === 'details' ? detailsCard() : null}
+      {appearanceSheet}
     </Screen>
   );
 }
