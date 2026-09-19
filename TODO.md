@@ -73,8 +73,6 @@ Reported on 2026-09-19. Not investigated yet.
 - [ ] **The app sometimes freezes** when deleting a tag, or while picking an icon for it. Reproduce first: find out
       whether the freeze is the icon grid rendering (too many items in one pass) or the delete flow (a confirm sheet
       over the edit sheet).
-- [ ] **More colours and icons** for tags. Both come from `@saldo/ui` tokens and `packages/ui/src/icons.ts`; new
-      icons need their licence noted (see the third-party notices item below).
 - [ ] **Tag edit UI:** move the edit and delete actions to the top of the sheet instead of the bottom.
 
 ## Routing: swipe back lands on a stale screen
@@ -120,7 +118,7 @@ Blockers — none of these should survive the first push:
 - [ ] **The repository slug.** `apps/web/app/page.tsx:11` and `docs/building-android.md:107` name
       `github.com/saldo-app/saldo`, which does not exist; the first is on the landing page every server instance
       serves. Both become `saliougaye/saldo`.
-- [ ] **Third-party notices.** `packages/ui/src/icons.ts:3-5` says part of the icon set is "taken from Lucide";
+- [x] **Third-party notices.** Done in `THIRD-PARTY.md` (Lucide ISC, Feather MIT). `packages/ui/src/icons.ts:3-5` says part of the icon set is "taken from Lucide";
       Lucide is ISC and its licence has to travel with the copies. There is no `NOTICE` or `THIRD-PARTY.md` —
       `git ls-files | grep -i licen` returns only `LICENSE`. Geist arrives through `@expo-google-fonts/geist`, so
       its OFL ships with the package and needs nothing here.
