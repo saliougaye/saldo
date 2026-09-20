@@ -25,7 +25,21 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
   const categories = useCategories();
   const currency = settings?.currency ?? 'EUR';
 
-  if (views.length === 0) return null;
+  // Without this the card rendered nothing, and since it is the only way into /budgets the
+  // screen — and the wizard behind it — could not be reached on a fresh install. The header is
+  // still the card's one action: it leads to the Budgets screen, whose own empty state carries
+  // the dashed "Nuovo budget" (§6.4).
+  if (views.length === 0) {
+    return (
+      <Card>
+        <CardHeader
+          title={t('home.budget')}
+          status={t('budgets.empty')}
+          onPress={() => router.push('/budgets')}
+        />
+      </Card>
+    );
+  }
 
   const top = [...views].sort((a, b) => b.ratio - a.ratio).slice(0, TOP);
   const overPace = views.filter((view) => view.overPace).length;

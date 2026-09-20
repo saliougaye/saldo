@@ -109,6 +109,12 @@ export default function ProfileScreen() {
       <Card padded={false}>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
           <ListRow
+            title={t('settings.budgets')}
+            leading={lead('target')}
+            onPress={() => router.push('/budgets')}
+            chevron
+          />
+          <ListRow
             title={t('settings.categories')}
             leading={lead('grip')}
             onPress={() => router.push('/settings/categories')}

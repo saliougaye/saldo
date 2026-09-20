@@ -97,14 +97,18 @@ Reported on 2026-09-19. Not investigated yet.
 
 ## No way to reach Budgets when none exist
 
-- [ ] Reported on 2026-09-19. With zero budgets the Budgets screen cannot be opened from anywhere, so the first
+- [x] Reported on 2026-09-19. With zero budgets the Budgets screen cannot be opened from anywhere, so the first
       one cannot be created from the wizard. The only entry point is the Home budget card
       (`src/features/budgets/HomeBudgetCard.tsx:25`, `router.push('/budgets')`), and it returns `null` when
       `views.length === 0`. Settings has no link either. The only way in today is the category form's "Budget
       mensile" toggle (`app/category/edit/[id].tsx`), which creates a single-category budget and makes the card appear.
-- [ ] Fix: show an empty state in the Home card instead of `null` («Nessun budget», tappable → `/budget/new`;
-      `budgets.empty` already exists in `it.ts`). Optionally add a «Budget» row in Settings as a second way in.
-      Spec §6.1 and §5.8 describe the card only with budgets present, so note the empty state there in the same commit.
+- [x] Done on 2026-09-20. The Home card keeps its header with the note «Nessun budget» instead of returning `null`,
+      and a «Budget» row in the Profile leads to the same place. Both open `/budgets` rather than `/budget/new` as
+      first sketched: the budget list already has the empty state the wizard is reached from (the dashed «Nuovo
+      budget» and the header "+"), and the point of the bug is that *the screen* was unreachable — dropping the user
+      straight into the wizard would have left it that way, and cancelling would have put them back at the start.
+      One action per card, as `CardHeader` asks. Noted in spec §5.8, §6.1 and §6.8; covered by
+      `src/features/budgets/HomeBudgetCard.test.tsx`.
 
 ## Going public: what is missing before the first push
 

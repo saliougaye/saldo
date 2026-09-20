@@ -643,6 +643,7 @@ export const en: Messages = {
     allDates: 'All dates, outside the selected period',
   },
   settings: {
+    budgets: 'Budgets',
     categories: 'Categories',
     tags: 'Tags',
     manageTags: 'Manage tags',

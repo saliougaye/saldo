@@ -648,6 +648,7 @@ export const it = {
     allDates: 'Tutte le date, fuori dal periodo selezionato',
   },
   settings: {
+    budgets: 'Budget',
     categories: 'Categorie',
     tags: 'Tag',
     manageTags: 'Gestisci i tag',
