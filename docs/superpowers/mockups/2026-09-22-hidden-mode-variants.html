@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saldo — Modalità nascosta · varianti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ───────────────────────── tokens (packages/ui/src/tokens.ts) ───────────────────────── */
+:root{
+  --page:#050505;--bg:#0A0A0A;--surface:#121212;--raised:#1A1A1A;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.12);
+  --text:#EDEDED;--text-muted:#8C8C8C;--text-faint:#5C5C5C;
+  --accent:#C7C7C7;--positive:#5FBF7F;--on-accent:#0A0A0A;
+  --bar-grey:#3A3A3A;--track:#1E1E1E;
+  --ease:cubic-bezier(0.32,0.72,0,1);
+  --press:120ms;--fade:200ms;--stagger:40ms;
+  /* Slow-mo multiplier (Tweaks) */
+  --k:1;
+}
+[data-theme="light"]{
+  --page:#E9E9E7;--bg:#FFFFFF;--surface:#FAFAF9;--raised:#F1F1EF;
+  --border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.18);
+  --text:#171717;--text-muted:#6E6E6E;--text-faint:#9A9A9A;
+  --accent:#4A4A46;--positive:#2E8A50;--on-accent:#FFFFFF;
+  --bar-grey:#C9C9C6;--track:#EDEDEB;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--page);color:var(--text);
+  font-family:Geist,"Inter Tight",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  display:grid;place-items:center;padding:32px 16px 96px;min-height:100%;
+}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:6px}
+svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
+.num{font-variant-numeric:tabular-nums}
+
+/* ───────────────────────── phone frame ───────────────────────── */
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:46px;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px var(--border-strong),0 30px 80px rgba(0,0,0,.5);
+}
+.screen{height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+
+.header{
+  position:sticky;top:0;z-index:6;background:var(--bg);border-bottom:1px solid var(--border);
+  padding:54px 16px 14px;display:flex;align-items:center;gap:8px;
+}
+.avatar{width:34px;height:34px;flex:0 0 auto;border-radius:17px;background:var(--raised);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--text-muted)}
+.period{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:2px 0;margin-inline-start:4px;text-align:left}
+.period .l{display:flex;align-items:center;gap:5px;font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.period .l .ic{color:var(--text-muted)}
+.period .s{font-size:11px;color:var(--text-faint);white-space:nowrap}
+.hbtn{
+  width:34px;height:34px;flex:0 0 auto;border-radius:9px;background:var(--raised);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--text-muted);position:relative;
+  transition:transform var(--press) var(--ease),color var(--press) var(--ease);
+}
+.hbtn:active{transform:scale(.96)}
+.hbtn .ic{position:absolute;width:16px;height:16px;transition:opacity 200ms cubic-bezier(.2,0,0,1),transform 200ms cubic-bezier(.2,0,0,1),filter 200ms cubic-bezier(.2,0,0,1)}
+.hbtn .ic.off{opacity:0;transform:scale(.25);filter:blur(4px)}
+.root[data-hidden="true"] .hbtn .ic.on{opacity:0;transform:scale(.25);filter:blur(4px)}
+.root[data-hidden="true"] .hbtn .ic.off{opacity:1;transform:scale(1);filter:blur(0)}
+.root[data-hidden="true"] .hbtn{color:var(--text)}
+.nav{flex:0 0 auto;display:flex;align-items:stretch;height:34px;border-radius:9px;background:var(--raised);border:1px solid var(--border);overflow:hidden}
+.nav button{width:36px;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.nav button+button{border-inline-start:1px solid var(--border);color:var(--text-faint)}
+
+.content{padding:16px;display:flex;flex-direction:column;gap:10px}
+.card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.card-h .t{font-size:15px;font-weight:500;letter-spacing:-.01em}
+.card-h .n{font-size:11px;color:var(--text-faint);white-space:nowrap}
+.more{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted)}
+.more .ic{color:var(--text-muted)}
+
+/* hero */
+.hero{padding:16px 16px 22px;overflow:hidden;text-align:left;width:100%;display:block;
+  transition:transform 450ms linear;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hero.holding{transform:scale(.98)}
+.hero.snap{transition:transform 200ms var(--ease)}
+.hero .lbl{font-size:13px;color:var(--text-muted)}
+.hero .big{margin-top:6px;font-size:34px;font-weight:600;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
+.hero .row{display:flex;gap:24px;margin-top:16px}
+.hero .row .k{font-size:11px;color:var(--text-faint)}
+.hero .row .v{font-size:15px;margin-top:3px}
+.hero .row .v.pos{color:var(--positive)}
+.hero .track{position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--track)}
+.hint{position:absolute;right:16px;top:16px;font-size:11px;color:var(--text-faint);opacity:0;transition:opacity var(--fade) var(--ease)}
+.hero.holding .hint{opacity:1}
+
+/* bars */
+.bar{position:relative;height:4px;border-radius:2px;background:var(--track);overflow:visible}
+.bar .fill{height:100%;border-radius:2px;background:var(--accent);transition:opacity calc(var(--fade)*var(--k)) var(--ease)}
+.bar .fill.grey{background:var(--bar-grey)}
+.bar .pace{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--text-muted);transition:opacity calc(var(--fade)*var(--k)) var(--ease)}
+.root[data-hidden="true"] .bar .fill,.root[data-hidden="true"] .bar .pace{opacity:0;transition-delay:var(--d,0ms)}
+
+/* budgets */
+.budget{display:flex;flex-direction:column;gap:14px;margin-top:15px}
+.budget .line{display:flex;align-items:baseline;gap:8px;font-size:13px}
+.budget .line .name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.budget .line .of{color:var(--text-faint);white-space:nowrap}
+.budget .bar{margin-top:8px}
+
+/* chart */
+.chart{position:relative;margin-top:16px;height:96px}
+.chart svg{width:100%;height:100%;display:block;overflow:visible}
+.chart .live,.chart .flat{transition:opacity calc(var(--fade)*var(--k)) var(--ease)}
+.chart .flat{opacity:0}
+.root[data-hidden="true"] .chart .live{opacity:0;transition-delay:var(--d,0ms)}
+.root[data-hidden="true"] .chart .flat{opacity:1;transition-delay:var(--d,0ms)}
+.chart .lab{position:absolute;right:0;top:0;font-size:11px;color:var(--text-muted);background:var(--surface);padding:2px 0 2px 6px;white-space:nowrap}
+.foot{margin-top:12px;font-size:11px;color:var(--text-faint)}
+
+/* rows */
+.rows{margin-top:6px}
+.row-tx{width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.row-tx:first-child{border-top:none}
+.row-tx .ib{width:32px;height:32px;flex:0 0 auto;border-radius:8px;background:var(--raised);display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.row-tx .ib .ic{width:16px;height:16px}
+.row-tx .m{flex:1;min-width:0}
+.row-tx .m .t{font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-tx .m .s{display:flex;gap:10px;margin-top:2px;font-size:13px}
+.row-tx .m .s .c{color:var(--text-muted)}.row-tx .m .s .a{color:var(--text-faint)}
+.row-tx .rowamt{font-size:15px;white-space:nowrap}
+.row-tx .rowamt.pos{color:var(--positive)}
+.row-tx .rowamt.muted{color:var(--text-muted)}
+
+/* tab bar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:78px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 12px 0}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text-faint);width:64px}
+.tab.on{color:var(--text)}
+.tab .ic{width:22px;height:22px}
+.fab{position:absolute;right:16px;bottom:94px;width:56px;height:56px;border-radius:18px;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.5);transition:transform var(--press) var(--ease)}
+.fab:active{transform:scale(.96)}
+.fab .ic{width:22px;height:22px;stroke-width:2}
+
+/* ───────────────────────── the figure: two stacked layers ───────────────────────── */
+/* .amt is a grid; both layers occupy the same cell so the widest one sizes the box: no layout shift. */
+.amt{display:inline-grid;grid-template-areas:"a";vertical-align:baseline;position:relative}
+.amt>*{grid-area:a;white-space:nowrap}
+.amt .dim{opacity:.5}
+.amt .mask{color:var(--text-muted);letter-spacing:.06em}
+.amt .mask .dim{letter-spacing:0}
+.amt .real{color:inherit}
+/* dots follow the column's alignment: right-aligned figures keep their right edge, inline ones sit centred */
+.rowamt .mask,.budget .line .mask,.lab .mask{justify-self:end}
+.card-h .n .mask,.foot .mask{justify-self:center}
+/* stagger per card, set from JS as --d */
+
+/* ══ Variant 1 · Veil ══  blur + crossfade. Blur bridges the two states so the eye reads one object dissolving. */
+[data-variant="veil"] .amt .real,[data-variant="veil"] .amt .mask{
+  transition:opacity calc(var(--dur)*var(--k)) var(--ease),filter calc(var(--dur)*var(--k)) var(--ease);
+  transition-delay:var(--d,0ms);
+}
+[data-variant="veil"] .amt .real{--dur:220ms}          /* reveal: watched, so a touch longer */
+[data-variant="veil"] .amt .mask{--dur:220ms;opacity:0;filter:blur(4px)}
+[data-variant="veil"][data-hidden="true"] .amt .real{--dur:160ms;opacity:0;filter:blur(4px)}   /* hide: urgent, faster */
+[data-variant="veil"][data-hidden="true"] .amt .mask{--dur:160ms;opacity:1;filter:blur(0)}
+
+/* ══ Variant 2 · Roll ══  odometer. Digits tick upward and out glyph by glyph (right to left), dots tick in from below. Always travels up. */
+[data-variant="roll"] .amt{overflow:hidden;clip-path:inset(-0.08em 0 -0.12em 0)}
+[data-variant="roll"] .amt .real .g{display:inline-block;transition:transform calc(180ms*var(--k)) var(--ease),opacity calc(180ms*var(--k)) var(--ease);transition-delay:calc(var(--d,0ms) + var(--gd,0ms)*var(--k))}
+[data-variant="roll"] .amt .mask{transform:translateY(60%);opacity:0;transition:transform calc(200ms*var(--k)) var(--ease),opacity calc(200ms*var(--k)) var(--ease);transition-delay:calc(var(--d,0ms) + 60ms*var(--k))}
+[data-variant="roll"][data-hidden="true"] .amt .real .g{transform:translateY(-60%);opacity:0}
+[data-variant="roll"][data-hidden="true"] .amt .mask{transform:translateY(0);opacity:1}
+/* reveal: digits arrive from below, so the odometer keeps turning forward; dots leave upward */
+[data-variant="roll"][data-hidden="false"] .amt .real .g{transition-delay:calc(var(--d,0ms) + 60ms*var(--k) + var(--gd,0ms)*var(--k))}
+[data-variant="roll"][data-hidden="false"] .amt .mask{transform:translateY(-60%);transition-delay:var(--d,0ms)}
+[data-variant="roll"] .amt.rev .real .g{transform:translateY(60%);opacity:0;transition:none}
+
+/* ══ Variant 3 · Redact ══  a wipe. The mask layer is opaque and clips open left→right over the digits; reveal wipes it away in the same direction. */
+[data-variant="redact"] .amt .mask{
+  background:var(--surface);border-radius:4px;padding:0 3px;margin:0 -3px;
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path calc(240ms*var(--k)) var(--ease);transition-delay:var(--d,0ms);
+}
+[data-variant="redact"] .amt .real{transition:opacity 0ms linear;transition-delay:calc(var(--d,0ms) + 240ms*var(--k))}
+[data-variant="redact"][data-hidden="true"] .amt .mask{clip-path:inset(0 0 0 0)}
+[data-variant="redact"][data-hidden="true"] .amt .real{opacity:0}
+[data-variant="redact"][data-hidden="false"] .amt .mask{clip-path:inset(0 0 0 100%);transition-duration:calc(200ms*var(--k))}
+[data-variant="redact"][data-hidden="false"] .amt .real{opacity:1;transition-delay:0ms}
+[data-variant="redact"] .amt.rev .mask{clip-path:inset(0 100% 0 0);transition:none}
+
+/* ── reduced motion: opacity only, no blur/transform/clip, one short crossfade ── */
+.rm .amt .real,.rm .amt .mask,.rm .amt .real .g{
+  transition:opacity 120ms linear !important;transform:none !important;filter:none !important;clip-path:none !important;transition-delay:0ms !important;
+}
+.rm .amt .mask{opacity:0}
+.rm [data-hidden="true"] .amt .mask{opacity:1}
+.rm [data-hidden="true"] .amt .real,.rm [data-hidden="true"] .amt .real .g{opacity:0}
+.rm .hero,.rm .hbtn,.rm .fab{transition:none !important;transform:none !important}
+@media (prefers-reduced-motion:reduce){
+  [data-variant] .amt .real,[data-variant] .amt .mask,[data-variant] .amt .real .g{
+    transition:opacity 120ms linear !important;transform:none !important;filter:none !important;clip-path:none !important;transition-delay:0ms !important;
+  }
+}
+
+/* live region */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ───────────────────────── variant picker (outside the design system on purpose) ───────────────────────── */
+.variant-picker{position:fixed;bottom:24px;left:50%;translate:-50% 0;z-index:2147483647;display:flex;gap:2px;padding:4px;border-radius:999px;background:rgb(20 20 20 / .9);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .25);font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none}
+.variant-picker button{padding:7px 14px;border:0;white-space:nowrap;border-radius:999px;background:none;color:rgb(255 255 255 / .6);cursor:pointer}
+.variant-picker button:hover{color:rgb(255 255 255 / .85)}
+.variant-picker button[aria-current="true"]{background:rgb(255 255 255 / .14);color:#fff}
+.variant-picker button:focus-visible{outline:2px solid rgb(255 255 255 / .7);outline-offset:2px}
+.variant-picker .sep{width:1px;background:rgb(255 255 255 / .12);margin:4px 4px}
+
+/* ───────────────────────── tweaks ───────────────────────── */
+.tweaks{position:fixed;right:20px;bottom:24px;z-index:2147483646;font:13px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#fff}
+.tweaks summary{list-style:none;cursor:pointer;padding:9px 14px;border-radius:999px;background:rgb(20 20 20 / .9);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .25);color:rgb(255 255 255 / .75);user-select:none}
+.tweaks summary::-webkit-details-marker{display:none}
+.tweaks[open] summary{color:#fff}
+.tweaks .panel{position:absolute;right:0;bottom:44px;width:240px;padding:12px 14px;border-radius:14px;background:rgb(20 20 20 / .95);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .35);display:flex;flex-direction:column;gap:10px}
+.tweaks label{display:flex;align-items:center;justify-content:space-between;gap:10px;color:rgb(255 255 255 / .8)}
+.tweaks select,.tweaks input{accent-color:#fff;font:inherit}
+.tweaks select{background:rgb(255 255 255 / .08);color:#fff;border:0;border-radius:6px;padding:4px 6px}
+.tweaks .note{color:rgb(255 255 255 / .5);font-size:12px;line-height:1.4;border-top:1px solid rgb(255 255 255 / .1);padding-top:10px}
+.tweaks kbd{font:inherit;padding:1px 5px;border-radius:4px;background:rgb(255 255 255 / .1)}
+</style>
+</head>
+<body>
+
+<div class="root" id="root" data-hidden="false" data-variant="veil">
+<div class="phone" data-theme-scope>
+  <div class="screen">
+
+    <div class="header">
+      <button class="avatar" aria-label="Profilo">SG</button>
+      <button class="period" aria-label="Cambia periodo">
+        <div class="l num">Settembre 2026 <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></div>
+        <div class="s num">1 set – 30 set · 8 giorni rimasti</div>
+      </button>
+      <button class="hbtn" id="eye" aria-label="Nascondi gli importi" aria-pressed="false">
+        <svg class="ic on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="ic off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.7 5.8A10.6 10.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.2 3M14.1 14.1a3 3 0 1 1-4.2-4.2M6.6 6.6C4 8.4 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.7 0 3.2-.5 4.5-1.2"/><path d="m3 3 18 18"/></svg>
+      </button>
+      <div class="nav">
+        <button aria-label="Periodo precedente"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 18-6-6 6-6"/></svg></button>
+        <button aria-label="Periodo successivo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Hero: hold to hide, tap to reveal -->
+      <button class="card hero" id="hero" data-card="0" aria-describedby="hero-help">
+        <span class="hint" id="hero-help">Tieni premuto per nascondere</span>
+        <div class="lbl">Rimasto nel ciclo</div>
+        <div class="big num"><span class="amt" data-int="1.284" data-frac=",50 €"></span></div>
+        <div class="row">
+          <div><div class="k">Entrate</div><div class="v num pos"><span class="amt" data-int="+2.650" data-frac=",00 €"></span></div></div>
+          <div><div class="k">Uscite</div><div class="v num"><span class="amt" data-int="−1.365" data-frac=",50 €"></span></div></div>
+        </div>
+        <div class="track"><div class="bar" style="height:4px;border-radius:0;background:transparent"><div class="fill" style="width:52%;border-radius:0"></div><div class="pace" style="left:73%"></div></div></div>
+      </button>
+
+      <!-- Budget -->
+      <div class="card" data-card="1" style="padding-bottom:4px">
+        <div class="card-h"><div class="t">Budget</div><div class="n num">3 di 6 · <span class="amt" data-int="574" data-frac=",60 €"></span> spesi</div></div>
+        <div class="budget">
+          <div>
+            <div class="line num"><div class="name">Spesa</div><div><span class="amt" data-int="312" data-frac=",40 €"></span></div><div class="of">di <span class="amt" data-int="450" data-frac=",00 €"></span></div></div>
+            <div class="bar"><div class="fill grey" style="width:69%"></div><div class="pace" style="left:73%"></div></div>
+          </div>
+          <div>
+            <div class="line num"><div class="name">Ristoranti</div><div><span class="amt" data-int="198" data-frac=",00 €"></span></div><div class="of">di <span class="amt" data-int="200" data-frac=",00 €"></span></div></div>
+            <div class="bar"><div class="fill" style="width:99%"></div><div class="pace" style="left:73%"></div></div>
+          </div>
+          <div>
+            <div class="line num"><div class="name">Trasporti</div><div><span class="amt" data-int="64" data-frac=",20 €"></span></div><div class="of">di <span class="amt" data-int="120" data-frac=",00 €"></span></div></div>
+            <div class="bar"><div class="fill grey" style="width:54%"></div><div class="pace" style="left:73%"></div></div>
+          </div>
+        </div>
+        <button class="more" style="margin-top:15px"><span>Tutti i budget</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 18 6-6-6-6"/></svg></button>
+      </div>
+
+      <!-- Andamento -->
+      <div class="card" data-card="2">
+        <div class="card-h"><div class="t">Andamento del ciclo</div><div class="n num"><span class="amt" data-int="1.365" data-frac=",50 €"></span> su 30 giorni</div></div>
+        <div class="chart">
+          <svg viewBox="0 0 358 96" preserveAspectRatio="none" aria-hidden="true">
+            <g class="live">
+              <path d="M0 92 L24 90 L48 84 L72 80 L96 71 L120 68 L144 60 L168 52 L192 50 L216 41 L240 36 L262 30" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              <path d="M262 30 L286 24 L310 17 L334 10 L358 4" fill="none" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="3 4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              <circle cx="262" cy="30" r="3" fill="var(--text)"/>
+            </g>
+            <g class="flat">
+              <path d="M0 48 L358 48" fill="none" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
+            </g>
+          </svg>
+          <div class="lab num" style="top:14px"><span class="amt" data-int="~1.860" data-frac=" €"></span></div>
+        </div>
+        <div class="foot num">Media giornaliera <span class="amt" data-int="62" data-frac=",07 €"></span> · ieri <span class="amt" data-int="18" data-frac=",75 €"></span></div>
+      </div>
+
+      <!-- In arrivo -->
+      <div class="card" data-card="3" style="padding-bottom:6px">
+        <div class="card-h"><div class="t">In arrivo</div><div class="n num"><span class="amt" data-int="860" data-frac=",99 €"></span></div></div>
+        <div class="rows">
+          <div class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/></svg></div>
+            <div class="m"><div class="t">Affitto</div><div class="s"><span class="a">1 ott · ogni mese</span></div></div>
+            <div class="rowamt muted num" style="font-size:15px"><span class="amt" data-int="−850" data-frac=",00 €"></span></div>
+          </div>
+          <div class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15.6" r="3"/><path d="M9 18V5.6L21 3v12.6"/></svg></div>
+            <div class="m"><div class="t">Spotify</div><div class="s"><span class="a">25 set · ogni mese</span></div></div>
+            <div class="rowamt muted num" style="font-size:15px"><span class="amt" data-int="−10" data-frac=",99 €"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ultime transazioni -->
+      <div class="card" data-card="4" style="padding-bottom:4px">
+        <div class="card-h"><div class="t">Ultime transazioni</div></div>
+        <div class="rows">
+          <button class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M2 3h2.2l2.4 11.2A1.8 1.8 0 0 0 8.4 15.6h9.4a1.8 1.8 0 0 0 1.8-1.4L21 7H5"/></svg></div>
+            <div class="m"><div class="t">Esselunga</div><div class="s"><span class="c">Spesa</span><span class="a">Conto corrente</span></div></div>
+            <div class="rowamt num" style="font-size:15px"><span class="amt" data-int="−48" data-frac=",20 €"></span></div>
+          </button>
+          <button class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="13.5" rx="2.5"/><path d="M4.5 10.5h15M9 21l-1.5-2.5M15 21l1.5-2.5M9.5 7h5"/></svg></div>
+            <div class="m"><div class="t">Trenitalia</div><div class="s"><span class="c">Trasporti</span><span class="a">Carta</span></div></div>
+            <div class="rowamt num" style="font-size:15px"><span class="amt" data-int="−29" data-frac=",90 €"></span></div>
+          </button>
+          <button class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="13" rx="2.2"/><path d="M8.5 7V5.2A1.7 1.7 0 0 1 10.2 3.5h3.6A1.7 1.7 0 0 1 15.5 5.2V7M2.5 12.6h19"/></svg></div>
+            <div class="m"><div class="t">Stipendio</div><div class="s"><span class="c">Reddito</span><span class="a">Conto corrente</span></div></div>
+            <div class="rowamt num pos" style="font-size:15px"><span class="amt" data-int="+2.650" data-frac=",00 €"></span></div>
+          </button>
+          <button class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h13v5.5a5.5 5.5 0 0 1-5.5 5.5H9a5.5 5.5 0 0 1-5.5-5.5z"/><path d="M16.5 9.5H19a2.6 2.6 0 0 1 0 5.2h-2.5M6 3v2.2M9.8 2.6v2.2M13.6 3v2.2"/></svg></div>
+            <div class="m"><div class="t">Bar Centrale</div><div class="s"><span class="c">Ristoranti</span><span class="a">Contanti</span></div></div>
+            <div class="rowamt num" style="font-size:15px"><span class="amt" data-int="−3" data-frac=",20 €"></span></div>
+          </button>
+          <button class="row-tx">
+            <div class="ib"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m10.6 3.6-7 7a5 5 0 0 0 7 7l7-7a5 5 0 0 0-7-7z"/><path d="m7.1 7.1 7 7"/></svg></div>
+            <div class="m"><div class="t">Farmacia</div><div class="s"><span class="c">Salute</span><span class="a">Carta</span></div></div>
+            <div class="rowamt num" style="font-size:15px"><span class="amt" data-int="−18" data-frac=",75 €"></span></div>
+          </button>
+          <button class="more"><span>Tutte le transazioni</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div style="height:84px"></div>
+    </div>
+  </div>
+
+  <button class="fab" aria-label="Nuova transazione"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div class="tabbar">
+    <div class="tab on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/></svg>Home</div>
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h9M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Transazioni</div>
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Statistiche</div>
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 16.5z"/><path d="M3 8.5V7a2 2 0 0 1 2-2h11"/><path d="M16.5 12.5h.01"/></svg>Conti</div>
+  </div>
+</div>
+<div class="sr" role="status" aria-live="polite" id="live"></div>
+</div>
+
+<nav class="variant-picker" aria-label="Varianti">
+  <button type="button" data-variant="veil" aria-current="true">Veil</button>
+  <button type="button" data-variant="roll">Roll</button>
+  <button type="button" data-variant="redact">Redact</button>
+  <span class="sep" aria-hidden="true"></span>
+  <button type="button" id="replay" aria-label="Alterna nascosto / visibile (H)">Toggle · H</button>
+</nav>
+
+<details class="tweaks">
+  <summary>Tweaks</summary>
+  <div class="panel">
+    <label>Tema <select id="tw-theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+    <label>Velocità <select id="tw-speed"><option value="1">1×</option><option value="3">⅓ (slow-mo)</option><option value="8">⅛ (frame-by-frame)</option></select></label>
+    <label>Stagger fra le card <input type="checkbox" id="tw-stagger" checked /></label>
+    <label>Reduce motion <input type="checkbox" id="tw-rm" /></label>
+    <div class="note">
+      Tieni premuto il saldo (450 ms) per nascondere, tocca per mostrare. Occhio in alto a destra: toggle.
+      <kbd>←</kbd><kbd>→</kbd> cambia variante, <kbd>1</kbd>–<kbd>3</kbd> salta, <kbd>H</kbd> alterna.
+    </div>
+  </div>
+</details>
+
+<script>
+(() => {
+  const root = document.getElementById('root');
+  const phone = document.querySelector('.phone');
+  const live = document.getElementById('live');
+  const eye = document.getElementById('eye');
+  const hero = document.getElementById('hero');
+  const VARIANTS = ['veil', 'roll', 'redact'];
+  const MASK = '••••';
+
+  /* ── build the two layers of every figure ──
+     .real  = the formatted amount, digits wrapped in .g for the Roll variant (gd = glyph delay, right→left)
+     .mask  = fixed four dots + the same tail (currency is not a secret), so the width never shifts */
+  for (const el of document.querySelectorAll('span.amt[data-int]')) {
+    const int = el.dataset.int, frac = el.dataset.frac;
+    const glyphs = [...int];
+    const n = glyphs.length;
+    const real = document.createElement('span');
+    real.className = 'real';
+    real.append(...glyphs.map((ch, i) => {
+      const g = document.createElement('span');
+      g.className = 'g'; g.textContent = ch;
+      g.style.setProperty('--gd', `${(n - 1 - i) * 18}ms`);
+      return g;
+    }));
+    const dim = document.createElement('span');
+    dim.className = 'dim g'; dim.textContent = frac;
+    dim.style.setProperty('--gd', '0ms');
+    real.append(dim);
+    const mask = document.createElement('span');
+    mask.className = 'mask';
+    mask.setAttribute('aria-label', 'Importo nascosto');
+    mask.setAttribute('role', 'img');
+    // keep the tail (" €" / ",00 €") only as the currency symbol
+    const sym = frac.trim().slice(-1);
+    mask.innerHTML = `${MASK}<span class="dim"> ${sym}</span>`;
+    el.append(real, mask);
+  }
+
+  /* per-card stagger: hero first, then down the page */
+  function applyStagger() {
+    const on = document.getElementById('tw-stagger').checked;
+    for (const card of document.querySelectorAll('[data-card]')) {
+      card.style.setProperty('--d', on ? `calc(${Number(card.dataset.card) * 40}ms * var(--k))` : '0ms');
+    }
+  }
+  applyStagger();
+
+  /* ── state ── */
+  let hidden = false;
+  function setHidden(next) {
+    if (next === hidden) return;
+    hidden = next;
+    // Prime the start position so the wipe / roll always travels in the same direction:
+    // Roll reveal → digits start below the baseline; Redact hide → the bar starts fully clipped on the left.
+    const v = root.dataset.variant;
+    if ((v === 'roll' && !hidden) || (v === 'redact' && hidden)) {
+      document.querySelectorAll('.amt').forEach((a) => a.classList.add('rev'));
+      void root.offsetHeight;
+      document.querySelectorAll('.amt').forEach((a) => a.classList.remove('rev'));
+    }
+    root.dataset.hidden = String(hidden);
+    eye.setAttribute('aria-pressed', String(hidden));
+    eye.setAttribute('aria-label', hidden ? 'Mostra gli importi' : 'Nascondi gli importi');
+    for (const r of document.querySelectorAll('.amt .real')) r.setAttribute('aria-hidden', String(hidden));
+    for (const m of document.querySelectorAll('.amt .mask')) m.setAttribute('aria-hidden', String(!hidden));
+    live.textContent = hidden ? 'Importi nascosti' : 'Importi visibili';
+  }
+  document.querySelectorAll('.amt .mask').forEach((m) => m.setAttribute('aria-hidden', 'true'));
+  eye.addEventListener('click', () => setHidden(!hidden));
+  document.getElementById('replay').addEventListener('click', () => setHidden(!hidden));
+
+  /* ── hero: hold 450ms to hide (slow, deliberate), tap to reveal (instant) ── */
+  const HOLD = 450;
+  let timer = null, held = false;
+  function start(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (timer) return;
+    held = false;
+    hero.classList.remove('snap');
+    if (!hidden) hero.classList.add('holding');
+    timer = setTimeout(() => {
+      timer = null; held = true;
+      hero.classList.remove('holding'); hero.classList.add('snap');
+      setHidden(true);
+      if (navigator.vibrate) navigator.vibrate(10);
+    }, HOLD);
+  }
+  function end(e) {
+    if (timer) { clearTimeout(timer); timer = null; }
+    hero.classList.remove('holding'); hero.classList.add('snap');
+    if (!held && e.type === 'pointerup' && hidden) setHidden(false);
+    held = false;
+  }
+  hero.addEventListener('pointerdown', start);
+  hero.addEventListener('pointerup', end);
+  hero.addEventListener('pointercancel', end);
+  hero.addEventListener('pointerleave', end);
+  hero.addEventListener('contextmenu', (e) => e.preventDefault());
+  hero.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHidden(!hidden); } });
+
+  /* ── picker: URL is the source of truth ── */
+  const picker = document.querySelector('.variant-picker');
+  function setVariant(v, push = true) {
+    if (!VARIANTS.includes(v)) v = VARIANTS[0];
+    // swap with transitions suppressed so the change of metaphor never animates
+    root.style.setProperty('--k', '0');
+    root.dataset.variant = v;
+    void root.offsetHeight; // flush: the swap resolves with 0ms durations, so nothing animates
+    root.style.setProperty('--k', document.getElementById('tw-speed').value);
+    picker.querySelectorAll('[data-variant]').forEach((b) => {
+      if (b.dataset.variant === v) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+    if (push) {
+      const u = new URL(location.href); u.searchParams.set('variant', v); history.replaceState(null, '', u);
+    }
+  }
+  picker.addEventListener('click', (e) => { const b = e.target.closest('[data-variant]'); if (b) setVariant(b.dataset.variant); });
+  setVariant(new URL(location.href).searchParams.get('variant') || 'veil', false);
+  // ?hidden=1 opens already hidden, without animating (for static screenshots)
+  if (new URL(location.href).searchParams.get('hidden') === '1') {
+    root.style.setProperty('--k', '0');
+    setHidden(true);
+    void root.offsetHeight;
+    root.style.setProperty('--k', document.getElementById('tw-speed').value);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input,select,textarea')) return;
+    const i = VARIANTS.indexOf(root.dataset.variant);
+    if (e.key === 'ArrowRight') setVariant(VARIANTS[(i + 1) % VARIANTS.length]);
+    else if (e.key === 'ArrowLeft') setVariant(VARIANTS[(i - 1 + VARIANTS.length) % VARIANTS.length]);
+    else if (/^[1-3]$/.test(e.key)) setVariant(VARIANTS[Number(e.key) - 1]);
+    else if (e.key === 'h' || e.key === 'H') setHidden(!hidden);
+  });
+
+  /* ── tweaks ── */
+  document.getElementById('tw-theme').addEventListener('change', (e) => {
+    // better-ui: no crossfade on a theme flip — kill transitions for one frame, then restore.
+    const kill = document.createElement('style');
+    kill.textContent = '*,*::before,*::after{transition:none !important}';
+    document.head.append(kill);
+    for (const el of [phone, document.documentElement]) {
+      if (e.target.value === 'light') el.setAttribute('data-theme', 'light'); else el.removeAttribute('data-theme');
+    }
+    void document.body.offsetHeight;
+    requestAnimationFrame(() => kill.remove());
+  });
+  document.getElementById('tw-speed').addEventListener('change', (e) => { root.style.setProperty('--k', e.target.value); applyStagger(); });
+  document.getElementById('tw-stagger').addEventListener('change', applyStagger);
+  document.getElementById('tw-rm').addEventListener('change', (e) => root.classList.toggle('rm', e.target.checked));
+})();
+</script>
+</body>
+</html>
