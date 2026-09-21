@@ -29,7 +29,7 @@ export function TagFilterSheet({ visible, onClose, selected, onChange }: TagFilt
   return (
     <Sheet visible={visible} onClose={onClose} title={t('transactions.tags')}>
       {ordered.length === 0 ? (
-        <Text color="textMuted">{t('transactions.empty')}</Text>
+        <Text color="textMuted">{t('tags.empty')}</Text>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {ordered.map((tag) => {
