@@ -12,6 +12,7 @@ export const it = {
     close: 'Chiudi',
     continue: 'Continua',
     back: 'Indietro',
+    goBack: 'Torna indietro',
     start: 'Inizia',
     restore: 'Ripristina',
     archive: 'Archivia',

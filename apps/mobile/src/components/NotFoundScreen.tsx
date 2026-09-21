@@ -21,7 +21,9 @@ export function NotFoundScreen() {
         title={t('common.notFoundTitle')}
         body={t('common.notFoundBody')}
         action={{
-          label: t('common.back'),
+          // Not "Back": the header chevron already carries that name, and two buttons announced
+          // the same way are one too many.
+          label: t('common.goBack'),
           // A deep link can open this with nothing behind it; home is the only way out then.
           onPress: () => (router.canGoBack() ? router.back() : router.replace('/')),
         }}

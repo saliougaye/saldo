@@ -52,18 +52,14 @@ describe('NotFoundScreen', () => {
   it('says the record is gone and goes back', async () => {
     await renderScreen();
     expect(screen.getByRole('header', { name: 'Not here any more' })).toBeTruthy();
-    // The header back button and the action share a label; the action is the last one.
-    const buttons = screen.getAllByRole('button', { name: 'Back' });
-    const action = buttons[buttons.length - 1];
-    if (action === undefined) throw new Error('no action');
-    await userEvent.press(action);
+    await userEvent.press(screen.getByRole('button', { name: 'Go back' }));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
   it('goes home when a deep link left nothing behind it', async () => {
     mockCanGoBack = false;
     await renderScreen();
-    await userEvent.press(screen.getByRole('button', { name: 'Back' }));
+    await userEvent.press(screen.getByRole('button', { name: 'Go back' }));
     expect(mockReplace).toHaveBeenCalledWith('/');
     expect(mockBack).not.toHaveBeenCalled();
   });

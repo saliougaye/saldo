@@ -208,7 +208,7 @@ function GhostInner({ kind }: { kind: GhostKind }) {
   const theme = useTheme();
   const { ghostInk: ink, ghostInkSoft: soft, ghostEdge: edge } = theme.palette;
   const bar = (width: `${number}%` | number, colour: string, height = 6) => (
-    <View style={{ width, height, borderRadius: height / 2, backgroundColor: colour }} />
+    <View style={{ width, height, borderRadius: theme.radii.pill, backgroundColor: colour }} />
   );
   const box = (
     <View
@@ -241,7 +241,14 @@ function GhostInner({ kind }: { kind: GhostKind }) {
         {box}
         <View style={{ flex: 1, gap: 5 }}>
           {bar('56%', ink)}
-          <View style={{ height: 4, borderRadius: 2, backgroundColor: soft, overflow: 'hidden' }}>
+          <View
+            style={{
+              height: 4,
+              borderRadius: theme.radii.pill,
+              backgroundColor: soft,
+              overflow: 'hidden',
+            }}
+          >
             {bar('52%', ink, 4)}
           </View>
         </View>

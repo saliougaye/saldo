@@ -24,6 +24,19 @@
 - **Accounts have no "nothing yet".** Onboarding always creates an account and no screen lists zero accounts. `accounts.empty` is used only by the two account not-found screens, which switch to `NotFoundScreen`.
 - **Mascot later.** Variant D (the raccoon peeking over the ghost) was designed and deferred. `GhostStack` is the single element it would replace.
 
+## Review follow-up (2026-09-21)
+
+Fixed after the code review:
+- **Missing `loaded` gate.** `useLiveQuery` starts with `[]`. Without a gate, five detail screens flashed "Not here any more" on every open, and four list screens mounted the ghost stack before their rows arrived. New `*Query` variants in `hooks.ts` (`useCategoriesQuery`, `useTagsQuery`, `useBudgetsQuery`, `useRecurrencesQuery`, `useTransactionQuery`, `useRecurrenceQuery`) expose `loaded`. It comes from the same query's `updatedAt`, as `useAccountsQuery` already did, so there is **no extra request**. The screens render nothing until it is true.
+- **Hard-coded radii.** Two in the ghost fill now use `radii.pill`.
+- **Two buttons both announced as "Back".** The not-found action is now "Go back" / "Torna indietro" (`common.goBack`), so it no longer duplicates the header chevron.
+- **No test for the press wiring.** A new test holds and releases the action for all three kinds.
+
+Kept as they are, on purpose:
+- **Light ghost equals `surface`.** On `#FFFFFF` the stack reads through its edge. That faintness was approved in the preview.
+- **Dark ghost values are literals.** They copy `raised`/`borderStrong`/`barGrey`/`segmentOther` instead of referencing them, because the palettes are flat literal objects. The token test pins the contrast relationship, not the identity.
+- **"New category" ignores its section.** It opens `/category/new` whether it sits under Expenses or Income, because the route takes no direction. Onboarding seeds both sections, so the empty section is rarely seen.
+
 Design reference (local only, `docs/design/` is gitignored): `docs/design/empty-states.variants.html`, variant B.
 
 ## File map

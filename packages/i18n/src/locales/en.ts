@@ -12,6 +12,7 @@ export const en: Messages = {
     close: 'Close',
     continue: 'Continue',
     back: 'Back',
+    goBack: 'Go back',
     start: 'Start',
     restore: 'Restore',
     archive: 'Archive',
