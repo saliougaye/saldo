@@ -37,7 +37,7 @@ Kept as they are, on purpose:
 - **Dark ghost values are literals.** They copy `raised`/`borderStrong`/`barGrey`/`segmentOther` instead of referencing them, because the palettes are flat literal objects. The token test pins the contrast relationship, not the identity.
 - **"New category" ignores its section.** It opens `/category/new` whether it sits under Expenses or Income, because the route takes no direction. Onboarding seeds both sections, so the empty section is rarely seen.
 
-Design reference (local only, `docs/design/` is gitignored): `docs/design/empty-states.variants.html`, variant B.
+Design reference: variant B of a local HTML preview (four variants), deleted after the merge. The values that matter live in the `emptyState` tokens.
 
 ## File map
 
