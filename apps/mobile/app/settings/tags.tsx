@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
@@ -7,6 +8,7 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useTagsQuery, useTagUsage } from '../../src/db/hooks';
+import { NewTagSheet } from '../../src/features/tags/NewTagSheet';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -17,6 +19,7 @@ export default function TagsAdmin() {
   const { t } = useTranslation();
   const { rows: tags, loaded } = useTagsQuery();
   const usage = useTagUsage();
+  const [creating, setCreating] = useState(false);
 
   return (
     <Screen refreshable>
@@ -30,7 +33,7 @@ export default function TagsAdmin() {
           accessibilityRole="button"
           accessibilityLabel={t('tags.newTag')}
           hitSlop={10}
-          onPress={() => router.push('/tag/new')}
+          onPress={() => setCreating(true)}
         >
           <IconBox name="plus" colour={theme.palette.textMuted} small />
         </Pressable>
@@ -43,7 +46,7 @@ export default function TagsAdmin() {
           ghost="chips"
           title={t('tags.empty')}
           body={t('tags.emptyBody')}
-          action={{ label: t('tags.newTag'), onPress: () => router.push('/tag/new') }}
+          action={{ label: t('tags.newTag'), onPress: () => setCreating(true) }}
         />
       ) : (
         <Card padded={false}>
@@ -60,6 +63,8 @@ export default function TagsAdmin() {
           </View>
         </Card>
       )}
+
+      <NewTagSheet visible={creating} onClose={() => setCreating(false)} />
     </Screen>
   );
 }

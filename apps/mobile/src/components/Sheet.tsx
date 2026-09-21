@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Platform, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
@@ -57,46 +57,53 @@ export function Sheet({
       onRequestClose={onClose}
       onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('common.close')}
-        onPress={onClose}
-        style={{ flex: 1, backgroundColor: theme.palette.scrim }}
-      />
-      <View
-        style={{
-          backgroundColor: theme.palette.surface,
-          borderTopLeftRadius: theme.radii.sheet,
-          borderTopRightRadius: theme.radii.sheet,
-          paddingBottom: insets.bottom + 16,
-          maxHeight: tall ? '92%' : '80%',
-        }}
+      {/* The same rule as `Screen`: iOS needs the padding, Android resizes the window itself. A
+          sheet with a text field would otherwise open its keyboard over the field and the button. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-          <View
-            style={{
-              width: theme.layout.sheetHandleWidth,
-              height: theme.layout.sheetHandleHeight,
-              borderRadius: theme.radii.pill,
-              backgroundColor: theme.palette.borderStrong,
-            }}
-          />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+          onPress={onClose}
+          style={{ flex: 1, backgroundColor: theme.palette.scrim }}
+        />
+        <View
+          style={{
+            backgroundColor: theme.palette.surface,
+            borderTopLeftRadius: theme.radii.sheet,
+            borderTopRightRadius: theme.radii.sheet,
+            paddingBottom: insets.bottom + 16,
+            maxHeight: tall ? '92%' : '80%',
+          }}
+        >
+          <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
+            <View
+              style={{
+                width: theme.layout.sheetHandleWidth,
+                height: theme.layout.sheetHandleHeight,
+                borderRadius: theme.radii.pill,
+                backgroundColor: theme.palette.borderStrong,
+              }}
+            />
+          </View>
+          {title === undefined ? null : (
+            <Text
+              size="headline"
+              weight="semibold"
+              tracking="tight"
+              style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}
+            >
+              {title}
+            </Text>
+          )}
+          {/* Shrinks, so a scroll view inside a long sheet stops at `maxHeight` instead of past it. */}
+          <View style={{ flexShrink: 1, paddingHorizontal: theme.layout.cardPadding, gap: 10 }}>
+            {children}
+          </View>
         </View>
-        {title === undefined ? null : (
-          <Text
-            size="headline"
-            weight="semibold"
-            tracking="tight"
-            style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}
-          >
-            {title}
-          </Text>
-        )}
-        {/* Shrinks, so a scroll view inside a long sheet stops at `maxHeight` instead of past it. */}
-        <View style={{ flexShrink: 1, paddingHorizontal: theme.layout.cardPadding, gap: 10 }}>
-          {children}
-        </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

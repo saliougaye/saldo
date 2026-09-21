@@ -3,7 +3,8 @@ import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { TagEditCard, tagMissingForSave } from './TagEditCard';
+import { TagEditCard } from './TagEditCard';
+import { tagMissingForSave } from './tagName';
 
 const mockRename = jest.fn();
 const mockMerge = jest.fn();
