@@ -19,8 +19,9 @@ of them (the AI milestone bends the last one), the bend is written down here bef
 ```
 0.1 Forecast ──────────────────────────┐
 0.2 Shared ledger ─────────────────────┤
-0.3 AI, bring your own key ────────────┼──> 0.5 Public repository ──> 0.6 Releases & distribution
-0.4 Web app & end-to-end encryption ───┘
+0.3 AI, bring your own key ────────────┼──> 0.6 Public repository ──> 0.7 Releases & distribution
+0.4 Web app & end-to-end encryption ───┤
+0.5 MCP server ────────────────────────┘
 ```
 
 ---
@@ -189,7 +190,46 @@ scheduled or explicitly dropped with the reason.
 
 ---
 
-## 0.5 — Public repository
+## 0.5 — MCP server: the user's own assistant reads the ledger
+
+Idea from 2026-09-22. The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint so
+an assistant the user already runs (Claude, or any MCP client) can ask «quanto ho speso in Spesa questo ciclo?»
+and get the answer from the user's own instance. It is the mirror image of the AI milestone: there the server
+holds a key and calls a model; here the user's model calls the server, and no key ever touches Saldo.
+
+**What it stands on.** The same thing the web app and the server-side AI need: the server reading `sync_rows`
+through `@saldo/core` (D11's «typed projection»). MCP is a third consumer of that projection, not a new model.
+Everything money-related is already a pure function in core (cycle totals, budgets, «Quota impegnata», the
+forecast of 0.1), so the tools are thin wrappers that load rows, call core and return numbers as integer minor
+units plus the currency.
+
+**Shape to aim for:**
+
+- Transport: streamable HTTP on a route in `apps/web` (same process as sync, same Postgres).
+- Auth: a **personal access token** minted in Profile, scoped to one user, revocable, shown once. Passkeys
+  cannot authenticate an MCP client, so this is a new credential surface and `SECURITY.md` §sessions has to
+  describe it.
+- Tools, read-only first: list transactions with filters, accounts and balances, budgets with progress, cycle
+  aggregates per category, the forecast. Writes (create a transaction, add a tag) come second, and only after the
+  read tools have shown the token model holds.
+- Everything the tools return is what the app already shows the signed-in user. No aggregate the phone does not
+  compute.
+
+**To decide before planning:**
+
+- [ ] Whether this replaces the BYOK spending insights (0.3) or sits beside them. A user with Claude on the
+      desktop gets insights through MCP without giving Saldo a key at all; receipt analysis still needs the
+      in-app flow, so 0.3 does not disappear.
+- [ ] Token model: one token per client, expiry, and what a revoked token does to an in-flight conversation.
+- [ ] Rate limits and the audit trail: a token that reads everything deserves a «last used» column in Profile.
+- [ ] Spec section (`§17.4 MCP server`), then the plan.
+
+**Done when:** a user pastes the instance URL and a token into an MCP client and asks about their month, the
+answer matches Statistics to the cent, and revoking the token in Profile stops the next call.
+
+---
+
+## 0.6 — Public repository
 
 What stands between this repository and its first public push. Audited on 2026-09-18. The repository has
 no remote yet, so the first push publishes all 316 commits at once.
@@ -247,7 +287,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.6 — Releases & distribution
+## 0.7 — Releases & distribution
 
 Self-hosting currently means building the server from source, and installing the app means owning a Mac
 or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found
