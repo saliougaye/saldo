@@ -56,7 +56,7 @@ All commands run from the repo root. Gate commands go through `rtk proxy`, becau
 - Modify: `packages/ui/src/tokens.ts`
 - Test: `packages/ui/src/tokens.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/ui/src/tokens.test.ts` (and add `emptyState` to the import on line 2: `import { categoryColorNames, categoryColors, emptyState, palettes, trackingPx, withAlpha } from './tokens';`):
 
@@ -101,12 +101,12 @@ describe('emptyState', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: FAIL. `emptyState` is not exported and `p.ghost` is `undefined`. Vitest reports `contrast` receiving `undefined`, or a TypeError.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/ui/src/tokens.ts`, add four fields to `interface Palette`, directly after `barGrey: string;`:
 
@@ -174,12 +174,12 @@ export const emptyState = {
 } as const;
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: PASS, including the existing `define the same tokens for dark and light` and `only contain valid colours`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -194,12 +194,12 @@ rtk git commit -m "feat(ui): ghost colours and stack geometry for empty states"
 - Modify: `packages/i18n/src/locales/en.ts`, `packages/i18n/src/locales/it.ts`
 - Test: `packages/i18n/src/locales.test.ts` (existing parity test, no edit)
 
-- [ ] **Step 1: Check who reads `recurrence.empty`**
+- [x] **Step 1: Check who reads `recurrence.empty`**
 
 Run: `rtk grep "recurrence.empty" apps packages`
 Expected: exactly two hits, `apps/mobile/app/recurrences.tsx` and `apps/mobile/app/recurrence/[id].tsx`. Both are rewritten in Tasks 7 and 8, so shortening the string is safe.
 
-- [ ] **Step 2: Add the keys to `en.ts`**
+- [x] **Step 2: Add the keys to `en.ts`**
 
 In `common`, after `thisOne: 'this one',` (keep whatever the current value is; only add the two lines):
 
@@ -236,7 +236,7 @@ In `recurrence`, replace `empty: 'No recurrences. Turn on “Repeat” on a tran
     emptyBody: 'Turn on “Repeat” on a transaction: rent, subscriptions and salary then record themselves.',
 ```
 
-- [ ] **Step 3: Add the same keys to `it.ts`**
+- [x] **Step 3: Add the same keys to `it.ts`**
 
 `common`:
 
@@ -272,12 +272,12 @@ In `recurrence`, replace `empty: 'No recurrences. Turn on “Repeat” on a tran
     emptyBody: 'Attiva «Ripeti» su una transazione: affitto, abbonamenti e stipendio si registrano da soli.',
 ```
 
-- [ ] **Step 4: Run the parity test**
+- [x] **Step 4: Run the parity test**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS (`have identical key structure in it and en`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/i18n/src/locales/en.ts packages/i18n/src/locales/it.ts
@@ -293,7 +293,7 @@ rtk git commit -m "feat(i18n): say why an empty screen is worth filling"
 - Create: `apps/mobile/src/components/EmptyState.test.tsx`
 - Modify: `apps/mobile/src/components/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/components/EmptyState.test.tsx`:
 
@@ -355,12 +355,12 @@ describe('EmptyState', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/EmptyState.test.tsx`
 Expected: FAIL with `Cannot find module './EmptyState'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/components/EmptyState.tsx`:
 
@@ -628,7 +628,7 @@ Add to `apps/mobile/src/components/index.ts` (keep alphabetical order, after `Co
 export * from './EmptyState';
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/EmptyState.test.tsx`
 Expected: PASS, 8 tests.
@@ -637,12 +637,12 @@ If `getByRole('header', …)` finds nothing, check that `Text` forwards `accessi
 
 If `.get()`/`.set()` are reported missing on the shared value, the installed Reanimated predates them. Switch to `.value` as `Skeleton.tsx` does, and note the change in this plan.
 
-- [ ] **Step 5: Typecheck**
+- [x] **Step 5: Typecheck**
 
 Run: `rtk proxy pnpm --filter mobile typecheck`
 Expected: no errors. Watch for `transformOrigin`, which is supported since RN 0.73; this repo runs 0.86.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/EmptyState.tsx apps/mobile/src/components/EmptyState.test.tsx apps/mobile/src/components/index.ts
@@ -658,7 +658,7 @@ rtk git commit -m "feat(mobile): EmptyState with a 3D ghost stack for nothing-ye
 - Create: `apps/mobile/src/components/NotFoundScreen.test.tsx`
 - Modify: `apps/mobile/src/components/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/components/NotFoundScreen.test.tsx`:
 
@@ -735,12 +735,12 @@ describe('NotFoundScreen', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/NotFoundScreen.test.tsx`
 Expected: FAIL with `Cannot find module './NotFoundScreen'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/components/NotFoundScreen.tsx`:
 
@@ -784,14 +784,14 @@ Add to `apps/mobile/src/components/index.ts`, after `LoadingScreen`:
 export * from './NotFoundScreen';
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/NotFoundScreen.test.tsx`
 Expected: PASS, 2 tests.
 
 If `Screen` needs more providers than safe-area, copy the host from `src/components/Screen.test.tsx`, which already renders `Screen` in jest.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/NotFoundScreen.tsx apps/mobile/src/components/NotFoundScreen.test.tsx apps/mobile/src/components/index.ts
@@ -805,7 +805,7 @@ rtk git commit -m "feat(mobile): one not-found screen for gone records"
 **Files:**
 - Modify: `apps/mobile/app/(tabs)/transactions.tsx` (the `groups.length === 0 && upcoming.length === 0` branch, currently around line 378)
 
-- [ ] **Step 1: Replace the card**
+- [x] **Step 1: Replace the card**
 
 Import `EmptyState` next to the other components:
 
@@ -845,17 +845,17 @@ Replace the whole `groups.length === 0 && upcoming.length === 0 ? ( <Animated.Vi
         ) : (
 ```
 
-- [ ] **Step 2: Drop now-unused imports**
+- [x] **Step 2: Drop now-unused imports**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no trailing `× Some errors were emitted`. If Biome flags `Card` or `SecondaryButton` as unused in `transactions.tsx`, delete those imports. `appearing` is still used by the upcoming row, so keep it.
 
-- [ ] **Step 3: Typecheck and test**
+- [x] **Step 3: Typecheck and test**
 
 Run: `rtk proxy pnpm --filter mobile typecheck && rtk proxy pnpm --filter mobile test`
 Expected: both clean.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add "apps/mobile/app/(tabs)/transactions.tsx"
@@ -869,7 +869,7 @@ rtk git commit -m "feat(mobile): Transactions empty states through EmptyState"
 **Files:**
 - Modify: `apps/mobile/app/budgets.tsx` (the `views.length === 0` branch, around line 73)
 
-- [ ] **Step 1: Replace the card and the dashed button**
+- [x] **Step 1: Replace the card and the dashed button**
 
 Import:
 
@@ -898,12 +898,12 @@ Then update the header comment above the "+" `Pressable`, which mentions "the da
             "Nuovo budget", where it is the only thing to do on the screen. */}
 ```
 
-- [ ] **Step 2: Lint, typecheck, test**
+- [x] **Step 2: Lint, typecheck, test**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm --filter mobile typecheck && rtk proxy pnpm --filter mobile test`
 Expected: clean. Remove `Card` from the imports only if Biome reports it unused; the list branch still uses it.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add apps/mobile/app/budgets.tsx
@@ -919,7 +919,7 @@ rtk git commit -m "feat(mobile): Budgets empty state shows what a budget looks l
 - Modify: `apps/mobile/app/settings/tags.tsx` (around line 31)
 - Modify: `apps/mobile/app/recurrences.tsx` (around line 138)
 
-- [ ] **Step 1: Categories**
+- [x] **Step 1: Categories**
 
 Import `EmptyState` from `'../../src/components/EmptyState'`. Inside `section`, replace the `parents.length === 0 ? ( <Card> …empty… </Card> )` branch with:
 
@@ -940,7 +940,7 @@ Import `EmptyState` from `'../../src/components/EmptyState'`. Inside `section`, 
 
 `router` is already in scope: line 190 uses it for the header "+".
 
-- [ ] **Step 2: Tags**
+- [x] **Step 2: Tags**
 
 Import `EmptyState` from `'../../src/components/EmptyState'`. Replace the `tags.length === 0 ? ( <Card> … </Card> )` branch with:
 
@@ -960,7 +960,7 @@ Import `EmptyState` from `'../../src/components/EmptyState'`. Replace the `tags.
       ) : (
 ```
 
-- [ ] **Step 3: Recurrences**
+- [x] **Step 3: Recurrences**
 
 Import `EmptyState` from `'../src/components/EmptyState'`. Add `const router = useRouter();` at the top of `RecurrencesScreen` if it is not already there (check the component body; `useRouter` is already imported). Replace the `views.length === 0 ? ( <Card> <Text …>{t('recurrence.empty')}</Text> </Card> )` branch with:
 
@@ -980,12 +980,12 @@ Import `EmptyState` from `'../src/components/EmptyState'`. Add `const router = u
       ) : (
 ```
 
-- [ ] **Step 4: Lint, typecheck, test**
+- [x] **Step 4: Lint, typecheck, test**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm --filter mobile typecheck && rtk proxy pnpm --filter mobile test`
 Expected: clean. Remove any import Biome reports unused.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/app/settings/categories.tsx apps/mobile/app/settings/tags.tsx apps/mobile/app/recurrences.tsx
@@ -1010,7 +1010,7 @@ rtk git commit -m "feat(mobile): categories, tags and recurrences get a way forw
 | `apps/mobile/app/tag/[id].tsx` | `tag === undefined` | `tags.empty` |
 | `apps/mobile/app/budget/[id].tsx` | `budget === null \|\| values === null` | `budgets.empty` |
 
-- [ ] **Step 1: Replace each early return**
+- [x] **Step 1: Replace each early return**
 
 In each file, keep the guard condition exactly as it is and replace only the returned JSX, for example:
 
@@ -1034,22 +1034,22 @@ import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
 
 `NotFoundScreen` draws its own `BackButton`, so do not leave another one above it.
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 Run: `rtk proxy pnpm lint`
 Expected: Biome may report `Screen`, `BackButton` or `Text` unused in some of these files. Delete exactly the imports it names and re-run until no `lint/…` lines remain.
 
-- [ ] **Step 3: Confirm no wrong key is left**
+- [x] **Step 3: Confirm no wrong key is left**
 
 Run: `rtk grep -n "t('stats.empty')\|t('accounts.empty')\|t('recurrence.empty')" apps/mobile/app`
 Expected: only `stats.empty` in `apps/mobile/app/(tabs)/stats.tsx` (the in-card line, kept on purpose) and `recurrence.empty` in `apps/mobile/app/recurrences.tsx`.
 
-- [ ] **Step 4: Typecheck and test**
+- [x] **Step 4: Typecheck and test**
 
 Run: `rtk proxy pnpm --filter mobile typecheck && rtk proxy pnpm --filter mobile test`
 Expected: clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add "apps/mobile/app/transaction/[id].tsx" "apps/mobile/app/transaction/edit/[id].tsx" "apps/mobile/app/recurrence/[id].tsx" "apps/mobile/app/account/[id].tsx" "apps/mobile/app/account/edit/[id].tsx" "apps/mobile/app/category/[id].tsx" "apps/mobile/app/category/edit/[id].tsx" "apps/mobile/app/tag/[id].tsx" "apps/mobile/app/budget/[id].tsx"
@@ -1063,7 +1063,7 @@ rtk git commit -m "fix(mobile): gone records say they are gone, not that a list 
 **Files:**
 - Modify: `apps/mobile/src/features/transactions/TagFilterSheet.tsx:32`
 
-- [ ] **Step 1: Fix the key**
+- [x] **Step 1: Fix the key**
 
 With no tags, the sheet said "No transactions". Change:
 
@@ -1079,7 +1079,7 @@ to:
 
 It stays an inline line: it sits inside a sheet whose title already says "Tags".
 
-- [ ] **Step 2: Test and commit**
+- [x] **Step 2: Test and commit**
 
 Run: `rtk proxy pnpm --filter mobile test`
 Expected: PASS.
@@ -1097,7 +1097,7 @@ rtk git commit -m "fix(mobile): the tag filter says there are no tags, not no tr
 - Modify: `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md` (§13, after the Motion bullet)
 - Modify: `TODO.md` (section "New UI for the empty states")
 
-- [ ] **Step 1: Spec §13**
+- [x] **Step 1: Spec §13**
 
 After the `- **Motion:** …` bullet, add:
 
@@ -1111,7 +1111,7 @@ After the `- **Motion:** …` bullet, add:
   Stats split, the Home budget card) stay a muted line.
 ```
 
-- [ ] **Step 2: TODO**
+- [x] **Step 2: TODO**
 
 In `TODO.md`, replace the body of `## New UI for the empty states` with a closed entry:
 
@@ -1125,7 +1125,7 @@ below, and `GhostStack` is the one element it would replace. Recorded in spec §
 `docs/superpowers/plans/2026-09-21-empty-states.md`.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md TODO.md
@@ -1136,7 +1136,7 @@ rtk git commit -m "docs: record the three empty-state shapes"
 
 ### Task 11: Verification
 
-- [ ] **Step 1: Gates, read the output rather than the exit code**
+- [x] **Step 1: Gates, read the output rather than the exit code**
 
 ```bash
 rtk proxy pnpm lint
@@ -1146,7 +1146,7 @@ rtk proxy pnpm test
 
 Expected: lint shows no `lint/…` lines and no `× Some errors were emitted while running checks.`; typecheck is clean in every package; all test suites pass.
 
-- [ ] **Step 2: On the simulator**
+- [ ] **Step 2: On the simulator** — done 2026-09-21 for 1, 3, 4 and 5 in both themes, by deep link on an empty install. Not done: 2 (search with no match), the press-and-hold feel, and 6 (Reduce Motion); `simctl` cannot tap or toggle Reduce Motion.
 
 Start Metro with `pnpm --filter mobile start --clear`. Use a fresh install, or wipe data from Profile, then walk these:
 
