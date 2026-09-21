@@ -15,7 +15,7 @@ import {
   useAccounts,
   useCategories,
   useSettings,
-  useTags,
+  useTagsQuery,
   useTransactionsInRange,
 } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -36,7 +36,7 @@ export default function TagView() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
-  const tags = useTags();
+  const { rows: tags, loaded } = useTagsQuery();
   const categories = useCategories();
   const accounts = useAccounts();
   const { today } = usePeriod();
@@ -74,6 +74,7 @@ export default function TagView() {
       });
   }, [tagged, categories, today, theme]);
 
+  if (!loaded) return null;
   if (tag === undefined) {
     return <NotFoundScreen />;
   }

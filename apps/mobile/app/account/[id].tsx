@@ -27,7 +27,7 @@ import { BackButton } from '../../src/components/ScreenHeader';
 import { useToast } from '../../src/components/Toast';
 import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useAccountsQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
@@ -50,7 +50,7 @@ export default function AccountDetail() {
   const repos = useRepositories();
   const toast = useToast();
   const settings = useSettings();
-  const accounts = useAccounts();
+  const { accounts, loaded } = useAccountsQuery();
   const { today, def } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [confirmArchive, setConfirmArchive] = useState(false);
@@ -84,6 +84,7 @@ export default function AccountDetail() {
     [rows, id],
   );
 
+  if (!loaded) return null;
   if (account === undefined) {
     return <NotFoundScreen />;
   }

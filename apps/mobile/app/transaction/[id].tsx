@@ -17,7 +17,7 @@ import {
   useRecurrence,
   useSettings,
   useTags,
-  useTransaction,
+  useTransactionQuery,
 } from '../../src/db/hooks';
 import { AttachmentTile } from '../../src/features/transactions/AttachmentTile';
 import { cadenceLabel, endLabel } from '../../src/features/transactions/recurrenceCopy';
@@ -46,8 +46,9 @@ export default function TransactionDetail() {
   const tags = useTags();
   const attachments = useAttachments(id ?? '');
 
-  const transaction = useTransaction(id ?? '');
+  const { transaction, loaded } = useTransactionQuery(id ?? '');
   const recurrence = useRecurrence(transaction?.recurrenceId ?? '');
+  if (!loaded) return null;
   if (transaction === null) {
     return <NotFoundScreen />;
   }

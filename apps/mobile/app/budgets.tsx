@@ -12,7 +12,12 @@ import { IconBox } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
-import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '../src/db/hooks';
+import {
+  useBudgetsQuery,
+  useCategories,
+  useSettings,
+  useTransactionsInRange,
+} from '../src/db/hooks';
 import { BudgetDetailSheet } from '../src/features/budgets/BudgetDetailSheet';
 import { budgetViews } from '../src/features/budgets/useBudgetProgress';
 import { usePeriod } from '../src/features/period/PeriodProvider';
@@ -30,7 +35,7 @@ export default function BudgetsScreen() {
   const { t } = useTranslation();
   const locale = useAppLocale();
   const settings = useSettings();
-  const budgets = useBudgets();
+  const { rows: budgets, loaded } = useBudgetsQuery();
   const categories = useCategories();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
@@ -73,13 +78,17 @@ export default function BudgetsScreen() {
       </View>
 
       {views.length === 0 ? (
-        <EmptyState
-          kind="yet"
-          ghost="bar"
-          title={t('budgets.empty')}
-          body={t('budgets.emptyBody')}
-          action={{ label: t('budgets.newBudget'), onPress: () => router.push('/budget/new') }}
-        />
+        // Nothing until the query answers: an existing budget list would otherwise open on the
+        // empty state and collapse a frame later.
+        !loaded ? null : (
+          <EmptyState
+            kind="yet"
+            ghost="bar"
+            title={t('budgets.empty')}
+            body={t('budgets.emptyBody')}
+            action={{ label: t('budgets.newBudget'), onPress: () => router.push('/budget/new') }}
+          />
+        )
       ) : (
         views.map((view) => {
           const category = categories.find((row) => row.id === view.budget.categoryIds[0]);

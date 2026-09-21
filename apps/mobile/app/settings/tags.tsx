@@ -9,7 +9,7 @@ import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { tagUsage } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useTags } from '../../src/db/hooks';
+import { useTagsQuery } from '../../src/db/hooks';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -19,7 +19,7 @@ export default function TagsAdmin() {
   const router = useRouter();
   const { t } = useTranslation();
   const repos = useRepositories();
-  const tags = useTags();
+  const { rows: tags, loaded } = useTagsQuery();
   const usage = useMemo(() => tagUsage(repos), [repos]);
 
   return (
@@ -30,7 +30,7 @@ export default function TagsAdmin() {
       </Text>
       <Text color="textMuted">{t('tags.footnote')}</Text>
 
-      {tags.length === 0 ? (
+      {!loaded ? null : tags.length === 0 ? (
         <EmptyState
           kind="yet"
           ghost="chips"

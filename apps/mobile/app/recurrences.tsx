@@ -12,7 +12,7 @@ import { IconBox, ListRow } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
-import { useCategories, useRecurrences, useSettings } from '../src/db/hooks';
+import { useCategories, useRecurrencesQuery, useSettings } from '../src/db/hooks';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import {
   byNext,
@@ -45,7 +45,7 @@ export default function RecurrencesScreen() {
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
-  const recurrences = useRecurrences();
+  const { rows: recurrences, loaded } = useRecurrencesQuery();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -136,7 +136,7 @@ export default function RecurrencesScreen() {
         </Text>
       </View>
 
-      {views.length === 0 ? (
+      {!loaded ? null : views.length === 0 ? (
         <EmptyState
           kind="yet"
           ghost="row"

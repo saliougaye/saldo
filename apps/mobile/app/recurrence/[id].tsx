@@ -20,7 +20,7 @@ import {
   useAccounts,
   useCategories,
   useOccurrences,
-  useRecurrence,
+  useRecurrenceQuery,
   useSettings,
 } from '../../src/db/hooks';
 import { changeRecurrenceRule, stopRecurrence } from '../../src/db/recurrenceService';
@@ -46,7 +46,7 @@ export default function RecurrenceDetail() {
   const categories = useCategories();
   const accounts = useAccounts();
   const { today, def } = usePeriod();
-  const recurrence = useRecurrence(id ?? '');
+  const { recurrence, loaded } = useRecurrenceQuery(id ?? '');
   const occurrences = useOccurrences(id ?? '');
   // The sheet edits a draft: every tap in it reports a whole rule, and a cadence change splits the
   // series, so the database is written once, when the sheet closes (§5.9).
@@ -54,6 +54,7 @@ export default function RecurrenceDetail() {
   const [ruleOpen, setRuleOpen] = useState(false);
   const [confirmingStop, setConfirmingStop] = useState(false);
 
+  if (!loaded) return null;
   if (recurrence === null) {
     return <NotFoundScreen />;
   }
