@@ -21,6 +21,7 @@ import { Card } from '../../src/components/Card';
 import { CardHeader } from '../../src/components/CardHeader';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useToast } from '../../src/components/Toast';
@@ -84,11 +85,7 @@ export default function AccountDetail() {
   );
 
   if (account === undefined) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('accounts.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   // An archived account is history: §5.6 keeps its rows and its balance, and the only thing left

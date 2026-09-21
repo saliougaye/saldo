@@ -10,6 +10,7 @@ import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useToast } from '../../src/components/Toast';
@@ -54,12 +55,7 @@ export default function RecurrenceDetail() {
   const [confirmingStop, setConfirmingStop] = useState(false);
 
   if (recurrence === null) {
-    return (
-      <Screen>
-        <BackButton />
-        <Text color="textMuted">{t('recurrence.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const currency = settings?.currency ?? 'EUR';

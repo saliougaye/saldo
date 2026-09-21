@@ -7,6 +7,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Chip } from '../../src/components/Chip';
 import { IconBox } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import {
@@ -48,12 +49,7 @@ export default function TransactionDetail() {
   const transaction = useTransaction(id ?? '');
   const recurrence = useRecurrence(transaction?.recurrenceId ?? '');
   if (transaction === null) {
-    return (
-      <Screen>
-        <BackButton />
-        <Text color="textMuted">{t('transactions.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const currency = settings?.currency ?? 'EUR';

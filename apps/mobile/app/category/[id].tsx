@@ -17,6 +17,7 @@ import { Pressable, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
@@ -127,11 +128,7 @@ export default function CategoryDetail() {
   }, [rows, period.range, today, id, children]);
 
   if (category === undefined) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('stats.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const delta = deltaPercent(total, pastMedian);

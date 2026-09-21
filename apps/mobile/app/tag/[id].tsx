@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import {
@@ -74,11 +75,7 @@ export default function TagView() {
   }, [tagged, categories, today, theme]);
 
   if (tag === undefined) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('tags.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const total = tagged
