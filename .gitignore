@@ -14,6 +14,7 @@ out/
 apps/mobile/android/
 apps/mobile/ios/
 *.apk
+
 *.aab
 *.ipa
 
@@ -54,3 +55,7 @@ transactions_export_*.csv
 # Vercel CLI project link (`vercel link`)
 .vercel
 .env*
+
+.agents
+.claude
+skills-lock.json
