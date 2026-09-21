@@ -696,6 +696,13 @@ export const it = {
     currencyConfirmScale:
       '{{before}} diventerà {{after}}. Gli importi vengono riformattati, non convertiti.',
   },
+  currencyPicker: {
+    search: 'Cerca per nome o codice',
+    common: 'Comuni',
+    all: 'Tutte le valute',
+    noResults: 'Nessuna valuta corrisponde alla ricerca.',
+    other: 'Altra…',
+  },
   deleteData: {
     title: 'Elimina tutti i dati',
     bodyServer:

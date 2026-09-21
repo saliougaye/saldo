@@ -4,6 +4,7 @@ export * from './budgetRanges';
 export * from './budgets';
 export * from './calendar';
 export * from './categories';
+export * from './currencyPicker';
 export * from './cycle';
 export * from './dates';
 export * from './entities';

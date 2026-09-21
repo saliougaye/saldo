@@ -1,20 +1,17 @@
-import { COMMON_CURRENCY_CODES, type CurrencyCode, getCurrency } from '@saldo/core';
+import { type CurrencyCode, getCurrency } from '@saldo/core';
 import { formatMoney } from '@saldo/i18n';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
+import { CurrencyList } from '../../src/components/CurrencyList';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useSettings } from '../../src/db/hooks';
-import { OptionRow, SettingScreen } from '../../src/features/profile/SettingScreen';
+import { SettingScreen } from '../../src/features/profile/SettingScreen';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
-import { Text } from '../../src/theme/Text';
-import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** §6.8 + §5.1. The symbol is shown next to the code: it is what the user sees in every amount. */
+/** §6.8 + §5.1 + §6.25: every currency, searchable; changing it reformats, never converts. */
 export default function CurrencySetting() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const locale = useAppLocale();
   const repos = useRepositories();
   const settings = useSettings();
@@ -22,34 +19,18 @@ export default function CurrencySetting() {
   const [pending, setPending] = useState<CurrencyCode | null>(null);
 
   return (
-    <SettingScreen title={t('profile.currency')} subtitle={t('profile.currencyConfirmBody')}>
-      {COMMON_CURRENCY_CODES.map((code) => (
-        <OptionRow
-          key={code}
-          label={code}
-          detail={formatMoney(0, code, locale)}
-          selected={code === current}
-          leading={
-            <View
-              style={{
-                width: theme.layout.iconBoxSmall,
-                height: theme.layout.iconBoxSmall,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: theme.radii.iconBox,
-                backgroundColor: theme.palette.raised,
-              }}
-            >
-              <Text size="footnote" weight="medium">
-                {getCurrency(code).symbol}
-              </Text>
-            </View>
-          }
-          onPress={() => {
-            if (code !== current) setPending(code);
-          }}
-        />
-      ))}
+    <SettingScreen
+      title={t('profile.currency')}
+      subtitle={t('profile.currencyConfirmBody')}
+      card={false}
+    >
+      <CurrencyList
+        card
+        value={current}
+        onSelect={(code) => {
+          if (code !== current) setPending(code);
+        }}
+      />
 
       <ConfirmDialog
         visible={pending !== null}

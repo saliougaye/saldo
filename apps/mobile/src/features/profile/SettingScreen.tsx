@@ -63,12 +63,15 @@ export function SettingScreen({
 /** One choice in a setting list: selected is a check, not a colour the user has to compare. */
 export function OptionRow({
   label,
+  subtitle,
   detail,
   selected,
   onPress,
   leading,
 }: {
   label: string;
+  /** A second line under the label: a currency's name under its code. */
+  subtitle?: string;
   detail?: string;
   selected: boolean;
   onPress: () => void;
@@ -78,6 +81,7 @@ export function OptionRow({
   return (
     <ListRow
       title={label}
+      subtitle={subtitle}
       leading={leading}
       selected={selected}
       onPress={onPress}

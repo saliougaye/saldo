@@ -92,7 +92,10 @@ export function Sheet({
             {title}
           </Text>
         )}
-        <View style={{ paddingHorizontal: theme.layout.cardPadding, gap: 10 }}>{children}</View>
+        {/* Shrinks, so a scroll view inside a long sheet stops at `maxHeight` instead of past it. */}
+        <View style={{ flexShrink: 1, paddingHorizontal: theme.layout.cardPadding, gap: 10 }}>
+          {children}
+        </View>
       </View>
     </Modal>
   );

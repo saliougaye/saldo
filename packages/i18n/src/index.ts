@@ -1,6 +1,7 @@
 import { en } from './locales/en';
 import { it } from './locales/it';
 
+export * from './currencyNames';
 export * from './format';
 export type { Messages } from './locales/it';
 export { en, it };

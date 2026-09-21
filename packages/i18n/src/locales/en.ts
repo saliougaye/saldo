@@ -689,6 +689,13 @@ export const en: Messages = {
     currencyConfirmScale:
       '{{before}} will read as {{after}}. Amounts are reformatted, not converted.',
   },
+  currencyPicker: {
+    search: 'Search by name or code',
+    common: 'Common',
+    all: 'All currencies',
+    noResults: 'No currency matches your search.',
+    other: 'Other…',
+  },
   deleteData: {
     title: 'Delete all data',
     bodyServer:

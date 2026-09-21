@@ -168,7 +168,7 @@ Suggested: one `pt` (European) for now.
 
 ### Currency picker: offer every currency, not four
 
-- [ ] Reported on 2026-09-21 as "add every currency in the world".
+- [x] Reported on 2026-09-21 as "add every currency in the world".
 
 The model already has them: `CURRENCY_CODES` in `packages/core/src/currencies.generated.ts` holds the 162 ISO 4217
 codes CLDR can format, each with its symbol and `minorDigits`, and `settings.currency` accepts any of them (spec
