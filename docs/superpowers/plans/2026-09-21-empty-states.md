@@ -311,8 +311,9 @@ const copy = {
   action: { label: 'New budget', onPress },
 };
 
-function renderState(props: EmptyStateProps, theme: 'dark' | 'light' = 'dark') {
-  return render(
+// RNTL 14: render is async.
+async function renderState(props: EmptyStateProps, theme: 'dark' | 'light' = 'dark') {
+  await render(
     <ThemeProvider preference={theme}>
       <EmptyState {...props} />
     </ThemeProvider>,
@@ -325,29 +326,29 @@ describe('EmptyState', () => {
     { kind: 'noMatch', icon: 'search', ...copy },
     { kind: 'notFound', icon: 'inbox', ...copy },
   ] as const)('$kind shows its title as a header, its body and its action', async (props) => {
-    renderState(props);
+    await renderState(props);
     expect(screen.getByRole('header', { name: 'No budgets' })).toBeTruthy();
     expect(screen.getByText('A budget caps a category.')).toBeTruthy();
     await userEvent.press(screen.getByRole('button', { name: 'New budget' }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('draws three ghost layers for "nothing yet", hidden from screen readers', () => {
-    renderState({ kind: 'yet', ghost: 'row', ...copy });
+  it('draws three ghost layers for "nothing yet", hidden from screen readers', async () => {
+    await renderState({ kind: 'yet', ghost: 'row', ...copy });
     expect(screen.getAllByTestId('empty-ghost', { includeHiddenElements: true })).toHaveLength(3);
     expect(screen.queryAllByTestId('empty-ghost')).toHaveLength(0);
   });
 
-  it.each(['dark', 'light'] as const)('renders the stack in the %s theme', (theme) => {
-    renderState({ kind: 'yet', ghost: 'chips', ...copy }, theme);
+  it.each(['dark', 'light'] as const)('renders the stack in the %s theme', async (theme) => {
+    await renderState({ kind: 'yet', ghost: 'chips', ...copy }, theme);
     expect(screen.getAllByTestId('empty-ghost', { includeHiddenElements: true })).toHaveLength(3);
   });
 
   it.each([
     { kind: 'noMatch', icon: 'search', ...copy },
     { kind: 'notFound', icon: 'inbox', ...copy },
-  ] as const)('$kind draws no stack: nothing is waiting to be created', (props) => {
-    renderState(props);
+  ] as const)('$kind draws no stack: nothing is waiting to be created', async (props) => {
+    await renderState(props);
     expect(screen.queryAllByTestId('empty-ghost', { includeHiddenElements: true })).toHaveLength(0);
   });
 });
@@ -689,8 +690,8 @@ beforeEach(() => {
   mockCanGoBack = true;
 });
 
-function renderScreen() {
-  return render(
+async function renderScreen() {
+  await render(
     <SafeAreaProvider
       initialMetrics={{
         frame: { x: 0, y: 0, width: 390, height: 844 },
@@ -708,7 +709,7 @@ function renderScreen() {
 
 describe('NotFoundScreen', () => {
   it('says the record is gone and goes back', async () => {
-    renderScreen();
+    await renderScreen();
     expect(screen.getByRole('header', { name: 'Not here any more' })).toBeTruthy();
     // The header back button and the action share a label; the action is the last one.
     const buttons = screen.getAllByRole('button', { name: 'Back' });
@@ -720,7 +721,7 @@ describe('NotFoundScreen', () => {
 
   it('goes home when a deep link left nothing behind it', async () => {
     mockCanGoBack = false;
-    renderScreen();
+    await renderScreen();
     await userEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(mockReplace).toHaveBeenCalledWith('/');
     expect(mockBack).not.toHaveBeenCalled();
