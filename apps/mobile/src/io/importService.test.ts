@@ -79,6 +79,21 @@ describe('applyImport', () => {
     expect(aperitivo?.tagIds).toEqual([banca?.id]);
   });
 
+  it('writes the excluded flag the plan read', () => {
+    const { db, repos } = setup();
+    const planned = plan(repos);
+    applyImport(db, repos, {
+      ...planned,
+      transactions: planned.transactions.map((tx) => ({
+        ...tx,
+        excluded: tx.description === 'aperitivo',
+      })),
+    });
+
+    const excluded = repos.transactions.list().filter((tx) => tx.excludeFromTotals);
+    expect(excluded.map((tx) => tx.description)).toEqual(['aperitivo']);
+  });
+
   it('creates an income category for an income row', () => {
     const { db, repos } = setup();
     applyImport(db, repos, plan(repos));

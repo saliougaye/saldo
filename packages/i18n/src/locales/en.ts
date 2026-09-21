@@ -407,6 +407,7 @@ export const en: Messages = {
     field_note: 'Note',
     field_tags: 'Tags',
     field_currency: 'Currency',
+    field_excluded: 'Excluded from totals',
     options: 'Options',
     defaultAccount: 'Default account',
     defaultAccountPlaceholder: 'For rows with no account',

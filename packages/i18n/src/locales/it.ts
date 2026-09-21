@@ -409,6 +409,7 @@ export const it = {
     field_note: 'Nota',
     field_tags: 'Etichette',
     field_currency: 'Valuta',
+    field_excluded: 'Esclusa dai totali',
     options: 'Opzioni',
     defaultAccount: 'Conto predefinito',
     defaultAccountPlaceholder: 'Per le righe senza conto',

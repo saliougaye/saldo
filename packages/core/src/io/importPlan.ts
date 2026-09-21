@@ -23,6 +23,8 @@ export interface PlannedTransaction {
   description: string;
   note: string | null;
   tagNames: string[];
+  /** `excludeFromTotals` (§4): our own export writes it (§11.2), so a round trip keeps it. */
+  excluded: boolean;
   fingerprint: string;
 }
 
@@ -104,6 +106,16 @@ function readKind(
   if (mapping.typeValues.income.some((name) => normalizeText(name) === value)) return 'income';
   // Spendee's `Transfer` lands here: the sample had none, so it is reported rather than guessed.
   return null;
+}
+
+/**
+ * Our export writes `true`/`false` (§11.2); the rest is for a column mapped by hand. Anything
+ * unrecognised — an empty cell included — counts in the totals, since that is what a new transaction does.
+ */
+const EXCLUDED_VALUES = new Set(['true', '1', 'yes', 'si']);
+
+function readExcluded(raw: string | null): boolean {
+  return raw !== null && EXCLUDED_VALUES.has(normalizeText(raw));
 }
 
 /** Matches an existing name case- and accent-insensitively, and remembers what it has invented. */
@@ -244,6 +256,7 @@ export function planImport(
               .map((name) => name.trim())
               .filter((name) => name !== '')
               .map((name) => tags.resolve(name)),
+      excluded: readExcluded(cell(row, mapping.columns.excluded)),
       fingerprint,
     });
   });

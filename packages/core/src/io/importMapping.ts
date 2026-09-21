@@ -11,6 +11,7 @@ export const IMPORT_FIELDS = [
   'note',
   'tags',
   'currency',
+  'excluded',
 ] as const;
 
 export type ImportField = (typeof IMPORT_FIELDS)[number];
@@ -48,6 +49,7 @@ const NO_COLUMNS: Record<ImportField, number | null> = {
   note: null,
   tags: null,
   currency: null,
+  excluded: null,
 };
 
 /** Our own export (§11.2). */
@@ -100,6 +102,7 @@ function presetFor(headers: readonly string[], name: PresetName): ImportMapping 
         note: indexOf(headers, 'note'),
         tags: indexOf(headers, 'tags'),
         currency: indexOf(headers, 'currency'),
+        excluded: indexOf(headers, 'excluded'),
       },
       dateFormat: 'iso',
       decimalSeparator: '.',

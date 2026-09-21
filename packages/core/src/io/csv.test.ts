@@ -266,4 +266,9 @@ describe('export → import round-trip', () => {
     const plan = reimport({ ...expense, description: "'90s playlist" });
     expect(plan.transactions[0]?.description).toBe("'90s playlist");
   });
+
+  it('keeps an excluded transaction excluded', () => {
+    expect(reimport({ ...expense, excludeFromTotals: true }).transactions[0]?.excluded).toBe(true);
+    expect(reimport(expense).transactions[0]?.excluded).toBe(false);
+  });
 });

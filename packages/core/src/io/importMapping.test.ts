@@ -39,6 +39,7 @@ describe('mappingFor', () => {
     expect(mapping.columns.amount).toBe(4);
     expect(mapping.columns.currency).toBe(5);
     expect(mapping.columns.description).toBe(6); // Note
+    expect(mapping.columns.excluded).toBeNull();
     expect(mapping.columns.tags).toBe(7); // Labels
     expect(mapping.tagSeparator).toBe(',');
   });
@@ -65,6 +66,7 @@ describe('mappingFor', () => {
     expect(mapping.columns.date).toBe(0);
     expect(mapping.columns.type).toBe(1);
     expect(mapping.columns.amount).toBe(2);
+    expect(mapping.columns.excluded).toBe(11);
     expect(mapping.tagSeparator).toBe('|');
   });
 

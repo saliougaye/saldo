@@ -7,12 +7,7 @@ Work that has been asked for but not planned yet. When an item is picked up it g
 
 Something that works wrong today.
 
-### CSV import ignores `excluded`
-
-- [ ] Read the `excluded` column the Saldo CSV export writes (§11.2) when importing (§11.3).
-
-A Saldo CSV round trip counts excluded rows again: `IMPORT_FIELDS` has no `excluded`, so every imported row gets
-`excludeFromTotals: false`. Found during the settle analysis.
+None open.
 
 ## Features
 

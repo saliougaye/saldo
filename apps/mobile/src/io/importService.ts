@@ -138,7 +138,7 @@ export function writeImport(
       tagIds: planned.tagNames
         .map((name) => tags.get(normalizeText(name)))
         .filter((id): id is string => id !== undefined),
-      excludeFromTotals: false,
+      excludeFromTotals: planned.excluded,
       recurrenceId: null,
     });
     imported += 1;

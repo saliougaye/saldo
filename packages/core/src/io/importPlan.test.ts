@@ -6,7 +6,7 @@ import type { Account, Category, Tag } from '../entities';
 import FIXTURE from './__fixtures__/spendee.csv?raw';
 import { parseCsv } from './csvParse';
 import { transactionFingerprint } from './fingerprint';
-import { detectPreset, type ImportMapping, mappingFor } from './importMapping';
+import { detectPreset, type ImportMapping, mappingFor, SALDO_HEADERS } from './importMapping';
 import { type ImportContext, type ImportPlan, importedBalances, planImport } from './importPlan';
 
 const { rows } = parseCsv(FIXTURE);
@@ -274,6 +274,7 @@ describe('planImport, other shapes', () => {
       note: null,
       tags: null,
       currency: null,
+      excluded: null,
     },
     dateFormat: 'dmy',
     decimalSeparator: ',',
@@ -322,6 +323,51 @@ describe('planImport, other shapes', () => {
     );
     expect(plan.transactions[0]?.date).toBe('2026-04-18');
   });
+
+  it('reads an excluded column mapped by hand, and counts an empty cell', () => {
+    const plan = planImport(
+      [
+        ['18/04/2026', '-10,00', 'Uno', 'Sì'],
+        ['19/04/2026', '-10,00', 'Due', ''],
+        ['20/04/2026', '-10,00', 'Tre', 'no'],
+      ],
+      { ...generic(), columns: { ...generic().columns, excluded: 3 } },
+      context(),
+    );
+    expect(plan.transactions.map((tx) => tx.excluded)).toEqual([true, false, false]);
+  });
+});
+
+describe('planImport, Saldo export', () => {
+  const saldoRow = (excluded: string, description: string): string[] => [
+    '2026-04-18',
+    'expense',
+    '45.00',
+    'EUR',
+    'Carta',
+    '',
+    'Carburante',
+    'Trasporti',
+    description,
+    '',
+    'Vacanza|Auto',
+    excluded,
+    'false',
+    `id-${description}`,
+  ];
+
+  it('keeps the excluded flag of a round trip (§11.2)', () => {
+    const plan = planImport(
+      [saldoRow('true', 'Benzina'), saldoRow('false', 'Pedaggio')],
+      mappingFor(SALDO_HEADERS, 'saldo'),
+      context(),
+    );
+    expect(plan.errors).toEqual([]);
+    expect(plan.transactions.map((tx) => [tx.description, tx.excluded])).toEqual([
+      ['Benzina', true],
+      ['Pedaggio', false],
+    ]);
+  });
 });
 
 describe('importedBalances', () => {
@@ -340,6 +386,7 @@ describe('importedBalances', () => {
     description: '',
     note: null,
     tagNames: [],
+    excluded: false,
     fingerprint: `${accountName}-${kind}-${amount}-${date}`,
   });
 

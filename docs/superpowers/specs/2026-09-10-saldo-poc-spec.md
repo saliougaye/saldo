@@ -1012,7 +1012,7 @@ Wizard steps (`ImportWizard`, rendered by `profile/import` and by onboarding's i
    `\r\n`) rather than PapaParse: the rules are the ones `toCsv` already writes, and `@saldo/core` imports nothing.
 2. **Preset detection:** match headers to a preset: `saldo` (own export, auto-mapped), `spendee`, else `generic`.
 3. **Mapping** (generic, or to confirm a preset): required `date`, `amount`; optional `type`, `account`, `category`,
-   `description`, `note`, `tags`, `currency`. Options: date format (`YYYY-MM-DD`, `DD/MM/YYYY`, `MM/DD/YYYY`,
+   `description`, `note`, `tags`, `currency`, `excluded`. Options: date format (`YYYY-MM-DD`, `DD/MM/YYYY`, `MM/DD/YYYY`,
    `DD.MM.YYYY`, ISO datetime → local date), decimal separator (`,`/`.`), sign convention (`negative = expense` or
    `type column` with value mapping), default account (when no account column), tag separator.
 4. **Preview:** first 20 parsed rows, total rows, errors per row (with reason), accounts/categories/tags to be
@@ -1027,6 +1027,9 @@ Rules:
   the same shape as the default account. (`Parent > Child` hierarchies are not in the POC: no sampled file uses one.)
 - Unknown accounts are created as `checking`, `openingBalance 0` (onboarding passes the opening balances it computed, §6.29), `includeInSpendable true`.
 - An account, category or tag the plan lists as new is created only if it is **still missing when the import writes**: rows written after the preview — onboarding's hidden seed categories, or a sync — are reused, not twinned.
+- `excluded` sets `excludeFromTotals`: `true`, `1`, `yes` or `sì` (case- and accent-insensitive) exclude the row;
+  anything else, an empty cell included, counts. The `saldo` preset maps it, so a round trip of our own export
+  (§11.2) keeps excluded rows excluded; the Spendee export has no such column.
 - Currency column values ≠ settings currency → row error "Valuta diversa ({code})" (no conversion).
 - **Duplicate fingerprint:** `date | amountMinor | kind | normalize(description) | accountName`. `normalize` =
   lowercase, accent-stripped, collapsed whitespace. Skip rows whose fingerprint already exists (in DB or earlier in
