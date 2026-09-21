@@ -13,10 +13,6 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### Tag edit sheet: actions at the top
-
-- [x] Move the edit and delete actions to the top of the sheet instead of the bottom. Reported on 2026-09-19.
-
 ### Hidden mode: hide the figures in public
 
 The idea: a gesture or a toggle hides every amount while the app keeps working — balances, transaction
