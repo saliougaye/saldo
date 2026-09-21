@@ -225,7 +225,8 @@ In `budgets`, after `empty: 'No budgets',`:
 In `tags`, after `empty: 'No tags',`:
 
 ```ts
-    emptyBody: 'Tags cut across categories: “holiday”, “work”, “to reimburse”. Add one while recording a transaction.',
+    // The screen's footnote already says what tags are for; this says where they come from.
+    emptyBody: 'They are born on a transaction: type one in its tags field while you record it.',
 ```
 
 In `recurrence`, replace `empty: 'No recurrences. Turn on “Repeat” on a transaction to create one.',` with:
@@ -261,7 +262,7 @@ In `recurrence`, replace `empty: 'No recurrences. Turn on “Repeat” on a tran
 `tags`, after `empty: 'Nessun tag',`:
 
 ```ts
-    emptyBody: 'I tag tagliano di traverso alle categorie: «vacanza», «lavoro», «da rimborsare». Aggiungine uno mentre registri una transazione.',
+    emptyBody: 'Nascono su una transazione: scrivine uno nel campo tag mentre la registri.',
 ```
 
 `recurrence`, replace the `empty:` line with:

@@ -655,8 +655,7 @@ export const it = {
     total: 'Totale uscite',
     range: '{{count}} transazioni · {{first}} – {{last}}',
     empty: 'Nessun tag',
-    emptyBody:
-      'I tag tagliano di traverso alle categorie: «vacanza», «lavoro», «da rimborsare». Aggiungine uno mentre registri una transazione.',
+    emptyBody: 'Nascono su una transazione: scrivine uno nel campo tag mentre la registri.',
     allDates: 'Tutte le date, fuori dal periodo selezionato',
   },
   settings: {

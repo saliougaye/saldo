@@ -648,8 +648,7 @@ export const en: Messages = {
     total: 'Total spent',
     range: '{{count}} transactions · {{first}} – {{last}}',
     empty: 'No tags',
-    emptyBody:
-      'Tags cut across categories: “holiday”, “work”, “to reimburse”. Add one while recording a transaction.',
+    emptyBody: 'They are born on a transaction: type one in its tags field while you record it.',
     allDates: 'All dates, outside the selected period',
   },
   settings: {
