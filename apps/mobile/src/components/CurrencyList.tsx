@@ -1,5 +1,5 @@
-import { type CurrencyCode, getCurrency, groupCurrencies } from '@saldo/core';
-import { currencyName } from '@saldo/i18n';
+import { type CurrencyCode, groupCurrencies } from '@saldo/core';
+import { currencyName, formatMoney } from '@saldo/i18n';
 import { Fragment, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -39,8 +39,10 @@ export function CurrencyList({ value, onSelect, card = false }: CurrencyListProp
         key={code}
         label={code}
         subtitle={currencyName(code, locale)}
+        // Zero as every amount will look: the symbol, where it sits and how many decimals. It is
+        // the one column every currency can fill alike — 61 of them have no symbol but the code.
+        detail={formatMoney(0, code, locale)}
         selected={code === value}
-        leading={<CurrencySymbol code={code} />}
         onPress={() => onSelect(code)}
       />
     ));
@@ -77,27 +79,5 @@ export function CurrencyList({ value, onSelect, card = false }: CurrencyListProp
         <Text color="textMuted">{t('currencyPicker.noResults')}</Text>
       ) : null}
     </>
-  );
-}
-
-/** The symbol in a box, as the user sees it in every amount; "F CFA" is shrunk to fit. */
-function CurrencySymbol({ code }: { code: CurrencyCode }) {
-  const theme = useTheme();
-  return (
-    <View
-      style={{
-        width: theme.layout.iconBox,
-        height: theme.layout.iconBox,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 3,
-        borderRadius: theme.radii.iconBox,
-        backgroundColor: theme.palette.raised,
-      }}
-    >
-      <Text size="footnote" weight="medium" numberOfLines={1} adjustsFontSizeToFit>
-        {getCurrency(code).symbol}
-      </Text>
-    </View>
   );
 }
