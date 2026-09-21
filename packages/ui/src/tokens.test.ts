@@ -3,6 +3,8 @@ import {
   categoryColorNames,
   categoryColors,
   emptyState,
+  layout,
+  motion,
   palettes,
   trackingPx,
   withAlpha,
@@ -154,5 +156,20 @@ describe('emptyState', () => {
 
   it('keeps the back layers more opaque on dark, where the page swallows them', () => {
     expect(emptyState.opacity.dark[2]).toBeGreaterThan(emptyState.opacity.light[2]);
+  });
+});
+
+describe('onboarding step motion', () => {
+  it('leaves faster than it arrives, and words follow closer than chunks', () => {
+    expect(motion.stepExitMs).toBeLessThan(motion.stepEnterMs);
+    expect(motion.stepWordStaggerMs).toBeLessThan(motion.stepChunkStaggerMs);
+    // Under 300ms of stagger for a four-chunk step keeps the card tappable before the eye is done
+    // reading the title (stagger is decorative, never blocking).
+    expect(motion.stepChunkStaggerMs * 3).toBeLessThanOrEqual(300);
+  });
+
+  it('draws the step segments as a 2px strip (§6.29)', () => {
+    expect(layout.stepSegmentHeight).toBe(2);
+    expect(layout.stepSegmentGap).toBeGreaterThan(0);
   });
 });
