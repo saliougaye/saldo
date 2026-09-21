@@ -188,13 +188,14 @@ svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;str
 [data-variant="redact"][data-hidden="false"] .amt .real{opacity:1;transition-delay:0ms}
 [data-variant="redact"] .amt.rev .mask{clip-path:inset(0 100% 0 0);transition:none}
 
-/* ══ Variant 4 · Cipher ══  the digits are scrambled by JS for three 40ms steps, then the dots settle over them.
-   Reveal: dots fade at once, digits arrive scrambled and settle to the real value right→left. */
-[data-variant="cipher"] .amt .real,[data-variant="cipher"] .amt .mask{transition:opacity calc(100ms*var(--k)) var(--ease)}
+/* ══ Variant 4 · Cipher ══  the digits are scrambled by JS for four 60ms steps (240ms), then the dots settle over them
+   in a 160ms crossfade. Reveal: dots fade at once, digits arrive scrambled and settle to the real value right→left.
+   Deliberately slower than the other three: the scramble is the message, and it needs to be read. */
+[data-variant="cipher"] .amt .real,[data-variant="cipher"] .amt .mask{transition:opacity calc(160ms*var(--k)) var(--ease)}
 [data-variant="cipher"] .amt .mask{opacity:0;transition-delay:var(--d,0ms)}
-[data-variant="cipher"] .amt .real{transition-delay:calc(var(--d,0ms) + 120ms*var(--k))}
+[data-variant="cipher"] .amt .real{transition-delay:calc(var(--d,0ms) + 240ms*var(--k))}
 [data-variant="cipher"][data-hidden="true"] .amt .real{opacity:0}
-[data-variant="cipher"][data-hidden="true"] .amt .mask{opacity:1;transition-delay:calc(var(--d,0ms) + 120ms*var(--k))}
+[data-variant="cipher"][data-hidden="true"] .amt .mask{opacity:1;transition-delay:calc(var(--d,0ms) + 240ms*var(--k))}
 [data-variant="cipher"][data-hidden="false"] .amt .real{transition-delay:var(--d,0ms)}
 [data-variant="cipher"] .amt .real .g.cy{color:var(--text-muted)}
 
@@ -470,9 +471,11 @@ svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;str
   }
   document.querySelectorAll('.amt .mask').forEach((m) => m.setAttribute('aria-hidden', 'true'));
 
-  /* ── Cipher: scramble the digit glyphs. Three steps of 40ms, then settle right→left at 18ms per glyph.
+  /* ── Cipher: scramble the digit glyphs. STEPS×STEP_MS of noise, then settle right→left at SETTLE_MS per glyph.
+     Slower than the CSS-only variants on purpose (user feedback 2026-09-22: the first cut read as a flicker).
      Only digits scramble; signs, separators and the tail stay put so the figure keeps its shape. ── */
   let cipherTimers = [];
+  const CIPHER = { STEPS: 4, STEP_MS: 60, FADE_MS: 160, SETTLE_MS: 30 };
   const rnd = () => String(Math.floor(Math.random() * 10));
   function cipher(toHidden) {
     for (const t of cipherTimers) clearTimeout(t);
@@ -487,14 +490,15 @@ svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;str
       const card = amt.closest('[data-card]');
       const base = stagger && card ? Number(card.dataset.card) * 40 * k : 0;
       const at = (ms, fn) => cipherTimers.push(setTimeout(fn, base + ms));
-      for (let step = 0; step < 3; step++) {
-        at(step * 40 * k, () => digits.forEach((g) => { g.textContent = rnd(); g.classList.add('cy'); }));
+      const scrambleMs = CIPHER.STEPS * CIPHER.STEP_MS;
+      for (let step = 0; step < CIPHER.STEPS; step++) {
+        at(step * CIPHER.STEP_MS * k, () => digits.forEach((g) => { g.textContent = rnd(); g.classList.add('cy'); }));
       }
       if (toHidden) {
-        at(120 * k + 100 * k, restore); // the real layer is invisible by now; put the true digits back
+        at((scrambleMs + CIPHER.FADE_MS) * k, restore); // the real layer is invisible by now; put the true digits back
       } else {
         const n = digits.length;
-        digits.forEach((g, i) => at(120 * k + (n - 1 - i) * 18 * k, () => { g.textContent = g.dataset.ch; g.classList.remove('cy'); }));
+        digits.forEach((g, i) => at((scrambleMs + (n - 1 - i) * CIPHER.SETTLE_MS) * k, () => { g.textContent = g.dataset.ch; g.classList.remove('cy'); }));
       }
     }
   }
