@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { categoryColorNames, categoryColors, palettes, trackingPx, withAlpha } from './tokens';
+import {
+  categoryColorNames,
+  categoryColors,
+  emptyState,
+  palettes,
+  trackingPx,
+  withAlpha,
+} from './tokens';
 
 function luminance(hex: string): number {
   const channels = [1, 3, 5].map(
@@ -108,5 +115,44 @@ describe('withAlpha', () => {
 
   it('rejects non hex colours', () => {
     expect(() => withAlpha('red', 0.5)).toThrow(RangeError);
+  });
+});
+
+describe('ghost colours', () => {
+  it('stand further off the page than a plain surface does, in both themes', () => {
+    // Review found the dark stack invisible when it was drawn with surface/border on #0A0A0A.
+    for (const theme of ['dark', 'light'] as const) {
+      const p = palettes[theme];
+      expect(contrast(p.ghost, p.bg)).toBeGreaterThanOrEqual(contrast(p.surface, p.bg));
+    }
+    expect(palettes.dark.ghost).not.toBe(palettes.dark.surface);
+  });
+
+  it('keep the ink inside a ghost visible against the ghost itself', () => {
+    for (const theme of ['dark', 'light'] as const) {
+      const p = palettes[theme];
+      expect(contrast(p.ghostInk, p.ghost)).toBeGreaterThan(1.5);
+    }
+  });
+});
+
+describe('emptyState', () => {
+  it('stacks three layers, each further back, smaller and fainter than the one before', () => {
+    const { layers, opacity } = emptyState;
+    expect(layers).toHaveLength(3);
+    for (let i = 1; i < layers.length; i++) {
+      const front = layers[i - 1];
+      const back = layers[i];
+      if (front === undefined || back === undefined) throw new Error('layer missing');
+      expect(back.translateY).toBeLessThan(front.translateY);
+      expect(back.scale).toBeLessThan(front.scale);
+      for (const theme of ['dark', 'light'] as const) {
+        expect(opacity[theme][i] ?? 1).toBeLessThan(opacity[theme][i - 1] ?? 0);
+      }
+    }
+  });
+
+  it('keeps the back layers more opaque on dark, where the page swallows them', () => {
+    expect(emptyState.opacity.dark[2]).toBeGreaterThan(emptyState.opacity.light[2]);
   });
 });
