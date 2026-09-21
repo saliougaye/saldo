@@ -5,10 +5,9 @@ Work that has been asked for but not planned yet. When an item is picked up it g
 
 ## Settle an account (analysis first)
 
-- [x] Analyse how to bring an account's balance in line with the real one — see
-      `docs/superpowers/analysis/2026-09-17-settle-an-account.md`.
-- [x] Decide between keeping the opening-balance edit (A) and a balance checkpoint (C): **C**, decided with the
-      user on 2026-09-18.
+Analysis in `docs/superpowers/analysis/2026-09-17-settle-an-account.md`; a balance checkpoint (C) was chosen
+over keeping the opening-balance edit (A) with the user on 2026-09-18.
+
 - [ ] Answer the open questions below, then plan it.
 
 Use case: the history comes from a Spendee export, but the bank says the account holds a different
@@ -66,7 +65,7 @@ Open questions:
 A Saldo CSV round trip counts excluded rows again: `IMPORT_FIELDS` has no `excluded`, so every imported row gets
 `excludeFromTotals: false`. Found during the settle analysis.
 
-## Tags: freeze, palette and layout
+## Tags: freeze and layout
 
 Reported on 2026-09-19. Not investigated yet.
 
@@ -74,47 +73,6 @@ Reported on 2026-09-19. Not investigated yet.
       whether the freeze is the icon grid rendering (too many items in one pass) or the delete flow (a confirm sheet
       over the edit sheet).
 - [ ] **Tag edit UI:** move the edit and delete actions to the top of the sheet instead of the bottom.
-
-## Routing: swipe back lands on a stale screen
-
-- [x] Swiping left (back) sometimes returns to an old page, for example after a delete: the deleted item's detail
-      screen is still on the stack. After a delete the screen should be replaced or popped, and the back gesture
-      should never reach a screen whose data is gone. Find every delete flow that ends with a `router.back()` or
-      `push` and check the stack.
-      **Done on 2026-09-19** (`fix/routing-stale-screens`): `useLeaveGone` (`src/navigation/leave.ts`) takes every
-      detail and editor of the gone row out of the root stack, wherever it sits, instead of `router.back()` or
-      `dismissAll`. Used by archiving a category (with its children), archiving an account, deleting a transaction,
-      a budget or a tag. Reproduced on the simulator for the category archive (it landed on the archived
-      category's detail); saving an edit went back correctly there, so if a save still misbehaves on the phone the
-      exact path is needed.
-
-## Editing a transaction and making it recurring shows "not found"
-
-- [x] Reported on 2026-09-19. Open an existing transaction, edit it, set it as recurring and save: the app shows a
-      "not found" screen.
-- [x] Done on 2026-09-20. It was the re-key, as suspected: `startRecurrence` tombstones the saved row and recreates
-      it under the deterministic occurrence id (D21), and the edit form then called `router.back()` onto the detail
-      of the old id, which no longer resolves. `useLeaveRenamed` (`src/navigation/leave.ts`) takes every screen of
-      the old id to the new one in the same reset that pops the editor, so going back shows the transaction with
-      its ↻ badge. Found in the same line: the row's **receipts stayed on the tombstone** and were lost — from the
-      new-transaction form too, where nothing looked wrong. `attachments.moveTo` repoints them, and
-      `startRecurrence` now returns the occurrence it created instead of leaving each caller to recompute the id.
-      Noted in spec §5.9; covered by `src/navigation/leave.test.tsx` and `src/db/recurrenceService.test.ts`.
-
-## No way to reach Budgets when none exist
-
-- [x] Reported on 2026-09-19. With zero budgets the Budgets screen cannot be opened from anywhere, so the first
-      one cannot be created from the wizard. The only entry point is the Home budget card
-      (`src/features/budgets/HomeBudgetCard.tsx:25`, `router.push('/budgets')`), and it returns `null` when
-      `views.length === 0`. Settings has no link either. The only way in today is the category form's "Budget
-      mensile" toggle (`app/category/edit/[id].tsx`), which creates a single-category budget and makes the card appear.
-- [x] Done on 2026-09-20. The Home card keeps its header with the note «Nessun budget» instead of returning `null`,
-      and a «Budget» row in the Profile leads to the same place. Both open `/budgets` rather than `/budget/new` as
-      first sketched: the budget list already has the empty state the wizard is reached from (the dashed «Nuovo
-      budget» and the header "+"), and the point of the bug is that *the screen* was unreachable — dropping the user
-      straight into the wizard would have left it that way, and cancelling would have put them back at the start.
-      One action per card, as `CardHeader` asks. Noted in spec §5.8, §6.1 and §6.8; covered by
-      `src/features/budgets/HomeBudgetCard.test.tsx`.
 
 ## Going public: what is missing before the first push
 
@@ -131,17 +89,14 @@ Blockers — none of these should survive the first push:
 - [ ] **A security contact.** `SECURITY.md` still says `**<!-- SECURITY CONTACT: set this before publishing -->**`,
       which renders as bold nothing. Put a real address there, and turn on GitHub's private vulnerability reporting
       once the repo exists — the file already says that is the better channel.
-- [ ] **The repository slug.** `apps/web/app/page.tsx:11` and `docs/building-android.md:107` name
-      `github.com/saldo-app/saldo`, which does not exist; the first is on the landing page every server instance
-      serves. Both become `saliougaye/saldo`.
-- [x] **Third-party notices.** Done in `THIRD-PARTY.md` (Lucide ISC, Feather MIT). `packages/ui/src/icons.ts:3-5` says part of the icon set is "taken from Lucide";
-      Lucide is ISC and its licence has to travel with the copies. There is no `NOTICE` or `THIRD-PARTY.md` —
-      `git ls-files | grep -i licen` returns only `LICENSE`. Geist arrives through `@expo-google-fonts/geist`, so
-      its OFL ships with the package and needs nothing here.
+- [ ] **The repository slug.** `apps/web/app/page.tsx:11`, `docs/building-android.md:107`,
+      `docs/building-ios.md:60` and `docs/self-hosting.md:44` name `github.com/saldo-app/saldo`, which does not
+      exist; the first is on the landing page every server instance serves. All become `saliougaye/saldo`.
 - [ ] **References to a prototype that is not published.** `docs/design/` is gitignored and stays that way, but
       `AGENTS.md:11` sends every implementing agent to `docs/design/README.md` and the line ranges of
       `Spese.dc.html`, `CONTRIBUTING.md:11` links the same README, and source comments cite its line numbers
-      (`packages/ui/src/icons.ts:3`, `src/features/stats/CashflowChart.tsx`, `SpendHistoryChart.tsx`). A public
+      (`packages/ui/src/icons.ts:3`, `packages/ui/src/tokens.ts:1`, `packages/i18n/src/locales/it.ts:1`,
+      `src/features/stats/CashflowChart.tsx`, `SpendHistoryChart.tsx`, `scripts/generate-demo-data.mjs`). A public
       contributor follows those to a 404. Rewrite each reference to say what the file *was* and that it is not
       part of the repository, without pretending the tokens and icons came from nowhere.
 
@@ -153,7 +108,8 @@ Worth doing in the same pass:
 - [ ] **Decide what happens to `.claude/`, `.agents/` and `skills-lock.json`.** All three are untracked *and*
       un-ignored, so a `git add .` before the first push commits them. Either ignore them or commit them on purpose.
 - [ ] **Local paths and a first name in tracked files.** `/Users/saliougaye/…` and `rtk proxy` (a private local
-      wrapper) appear in `docs/superpowers/plans/2026-09-13-11-release-and-hardening.md:978,1076,1250`, and
+      wrapper) appear in `docs/superpowers/plans/2026-09-13-11-release-and-hardening.md:978,1076,1250` and
+      `2026-09-19-more-colors-icons.md`, and
       `apps/web/src/server/auth/admin.test.ts:88` uses `'Saliou'` as a display name. Cosmetic, but the paths read
       as an accident rather than a choice.
 - [ ] **A dependency gate in CI.** `.github/workflows/ci.yml` runs lint, typecheck and test only. A public repo
@@ -292,14 +248,6 @@ To settle before planning:
 - **Accessibility.** A hidden amount must drop out of the accessibility tree as well, otherwise VoiceOver
   reads out loud exactly what the screen is hiding.
 
-## New UI for the empty states — done 2026-09-21
-
-`EmptyState` (`apps/mobile/src/components/EmptyState.tsx`) with three shapes — nothing yet, nothing matches,
-not found — and `NotFoundScreen` for the nine detail and edit screens. The 3D ghost stack is variant B of the
-design review; variant D (the raccoon peeking over the ghost) was designed and deferred until the mascot work
-below, and `GhostStack` is the one element it would replace. Recorded in spec §13; plan
-`docs/superpowers/plans/2026-09-21-empty-states.md`.
-
 ## Considered on 2026-09-18 and not planned
 
 Kept so they are not re-derived.
@@ -399,7 +347,8 @@ Two constraints to decide against, recorded so they are not re-derived:
 
 The cheap shape is therefore: keep the vector set for icons and splashes, and use 3D only where shading survives —
 README, docs, a future landing page. Whether the character stays a raccoon or becomes a panda is a free choice
-either way.
+either way. The empty states (§13) already have a mascot variant waiting: variant D of their design review, the
+raccoon peeking over the ghost stack, would replace `GhostStack` alone.
 
 ## Onboarding: a better UI, and a step for the system permissions
 
