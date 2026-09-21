@@ -1,8 +1,8 @@
 # TODO
 
 Work that has been asked for but not planned yet. When an item is picked up it gets a plan under
-`docs/superpowers/plans/` like any other piece of work, and leaves this list. The big directions — going
-public, releases, shared ledger, AI, web app — live in [`ROADMAP.md`](ROADMAP.md), not here.
+`docs/superpowers/plans/` like any other piece of work, and leaves this list. The big directions — forecast,
+shared ledger, AI, web app, going public, releases — live in [`ROADMAP.md`](ROADMAP.md), not here.
 
 ## Bugs
 
@@ -47,59 +47,6 @@ To settle before planning:
   the form is the point.
 - **Accessibility.** A hidden amount must drop out of the accessibility tree as well, otherwise VoiceOver
   reads out loud exactly what the screen is hiding.
-
-### Forecast: the next three months, from what already repeats
-
-Discussed on 2026-09-21. The ask: a simple forecast of the coming months from past spending. The app already
-computes every input it needs, so this is a projection layer on top of §5.5 and §5.7, not a new model.
-
-**What it shows.** In Statistics, the cashflow chart (§5.7) grows **three forecast cycles** after the current
-one, drawn dimmed and hatched like the current cycle is today. For each forecast cycle:
-
-- **Expenses** = `median(discretionary of the last 6 cycles)` + Σ recurring expenses that
-  `occurrenceDates` places in that cycle. `discretionary = spent − committed`, as in "Quota impegnata".
-- **Income** = Σ recurring incomes placed in that cycle + `median(non-recurring counted income of the last 6
-  cycles)`.
-- **Balance** = the previous cycle's projected balance + income − expenses, starting from today's total balance
-  (`monthEndBalances` extended forward). Shown as the net label above each forecast bar pair, and as one line under
-  the chart: "A fine {mese} circa {amount}".
-- **Uncertainty** = a min/max band from the same 6-cycle window (lowest and highest discretionary), drawn as a
-  lighter range behind each forecast expense bar. No statistics beyond what §5.5 already computes.
-
-**Decisions taken with the user (2026-09-21):**
-
-- Scope is spending **and** balance; both share the same inputs, so building one without the other saves nothing.
-- Statistics only for now. A Home card ("A fine novembre circa …") and the dashed continuation of the account
-  balance line in account detail were considered and left out; add them only if the Statistics version proves
-  useful.
-- Horizon fixed at **3 cycles**: a median-based forecast degrades fast, and three keeps it credible. No
-  3/6/12 selector.
-- Band, not a point estimate, so the chart is honest about how noisy six cycles are.
-
-**Rules that carry over unchanged:**
-
-- Forecast is **derived, never stored**: one pure function in `@saldo/core` (`forecastCycles(input, today)`) with
-  injected `today`, unit-tested first. Screens only load the ledger and recurrences and render.
-- Excluded transactions and transfers stay out, exactly as in every statistic. A recurrence that ends inside the
-  horizon contributes only its remaining occurrences.
-- Fewer than 3 cycles of history → hide the forecast entirely, same as §5.7 hides the projection line when there is
-  no cycle median. Do not fake confidence with one month of data.
-- Cycle definition follows the user's period (§5.2), not calendar months, so "next cycle" means whatever the app
-  already means by it.
-- Money stays integer minor units; medians are rounded once, at the end.
-
-**Considered and not in scope (recorded so they are not re-derived):**
-
-- **Per-category forecast** feeding budget warnings ("Spesa will overflow by ~40 € next month"). Same maths per
-  category, but a much heavier UI and much noisier numbers. Revisit after the aggregate version ships.
-- **Seasonality** (weighting the same month last year) needs ≥ 12 cycles and most users will not have them for a
-  year. Note only.
-- **"What if" slider** (add a hypothetical recurring expense, watch the balance move). Good demo, scope creep.
-- These aggregates are exactly what §17.3 AI insights would consume; whichever ships first should expose them from
-  `@saldo/core` in a shape the other can reuse.
-
-- [ ] Write the plan (`docs/superpowers/plans/…-forecast.md`) with the core function, the chart extension and
-      the i18n keys, then move this item out of the list.
 
 ### Onboarding: a better UI, and a step for the system permissions
 

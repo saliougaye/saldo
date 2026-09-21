@@ -1,7 +1,7 @@
 # Roadmap
 
 Where Saldo goes after the proof of concept, in the order the work has to happen. Each milestone is a
-coherent release a self-hoster can update to. The product milestones come first and their order is a
+coherent release a self-hoster can update to. Milestone numbers are an order, not version numbers. The product milestones come first and their order is a
 product call, provisional until the one before ships; going public and releasing come last, once the
 feature set is what the repository will be judged on, and their order is fixed by dependencies (a release
 needs a public repository to publish to).
@@ -17,14 +17,75 @@ Every milestone keeps the rules that make Saldo what it is: local-first, integer
 of them (the AI milestone bends the last one), the bend is written down here before it is built.
 
 ```
-0.1 Shared ledger ─────────────────────┐
-0.2 AI, bring your own key ────────────┼──> 0.4 Public repository ──> 0.5 Releases & distribution
-0.3 Web app & end-to-end encryption ───┘
+0.1 Forecast ──────────────────────────┐
+0.2 Shared ledger ─────────────────────┤
+0.3 AI, bring your own key ────────────┼──> 0.5 Public repository ──> 0.6 Releases & distribution
+0.4 Web app & end-to-end encryption ───┘
 ```
 
 ---
 
-## 0.1 — Shared ledger
+## 0.1 — Forecast: the next three months, from what already repeats
+
+Discussed on 2026-09-21. The ask: a simple forecast of the coming months from past spending. The app already
+computes every input it needs, so this is a projection layer on top of §5.5 and §5.7, not a new model.
+
+**What it shows.** In Statistics, the cashflow chart (§5.7) grows **three forecast cycles** after the current
+one, drawn dimmed and hatched like the current cycle is today. For each forecast cycle:
+
+- **Expenses** = `median(discretionary of the last 6 cycles)` + Σ recurring expenses that
+  `occurrenceDates` places in that cycle. `discretionary = spent − committed`, as in "Quota impegnata".
+- **Income** = Σ recurring incomes placed in that cycle + `median(non-recurring counted income of the last 6
+  cycles)`.
+- **Balance** = the previous cycle's projected balance + income − expenses, starting from today's total balance
+  (`monthEndBalances` extended forward). Shown as the net label above each forecast bar pair, and as one line under
+  the chart: "A fine {mese} circa {amount}".
+- **Uncertainty** = a min/max band from the same 6-cycle window (lowest and highest discretionary), drawn as a
+  lighter range behind each forecast expense bar. No statistics beyond what §5.5 already computes.
+
+**Decisions taken with the user (2026-09-21):**
+
+- Scope is spending **and** balance; both share the same inputs, so building one without the other saves nothing.
+- Statistics only for now. A Home card ("A fine novembre circa …") and the dashed continuation of the account
+  balance line in account detail were considered and left out; add them only if the Statistics version proves
+  useful.
+- Horizon fixed at **3 cycles**: a median-based forecast degrades fast, and three keeps it credible. No
+  3/6/12 selector.
+- Band, not a point estimate, so the chart is honest about how noisy six cycles are.
+
+**Rules that carry over unchanged:**
+
+- Forecast is **derived, never stored**: one pure function in `@saldo/core` (`forecastCycles(input, today)`) with
+  injected `today`, unit-tested first. Screens only load the ledger and recurrences and render.
+- Excluded transactions and transfers stay out, exactly as in every statistic. A recurrence that ends inside the
+  horizon contributes only its remaining occurrences.
+- Fewer than 3 cycles of history → hide the forecast entirely, same as §5.7 hides the projection line when there is
+  no cycle median. Do not fake confidence with one month of data.
+- Cycle definition follows the user's period (§5.2), not calendar months, so "next cycle" means whatever the app
+  already means by it.
+- Money stays integer minor units; medians are rounded once, at the end.
+
+**Considered and not in scope (recorded so they are not re-derived):**
+
+- **Per-category forecast** feeding budget warnings ("Spesa will overflow by ~40 € next month"). Same maths per
+  category, but a much heavier UI and much noisier numbers. Revisit after the aggregate version ships.
+- **Seasonality** (weighting the same month last year) needs ≥ 12 cycles and most users will not have them for a
+  year. Note only.
+- **"What if" slider** (add a hypothetical recurring expense, watch the balance move). Good demo, scope creep.
+- These aggregates are exactly what the AI insights in 0.3 would consume; whichever ships first should expose
+  them from `@saldo/core` in a shape the other can reuse.
+
+**To decide before planning:** nothing — the decisions above are taken.
+
+- [ ] Write the plan (`docs/superpowers/plans/…-forecast.md`) with the core function, the chart extension and
+      the i18n keys.
+
+**Done when:** Statistics shows three dimmed forecast cycles with a min/max band and a «A fine {mese} circa
+{amount}» line, hidden with fewer than 3 cycles of history, and `forecastCycles` is unit-tested in `@saldo/core`.
+
+---
+
+## 0.2 — Shared ledger
 
 Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
 households from the POC; this is the note that it is the next non-goal to fall.
@@ -56,7 +117,7 @@ step towards the second, or the second can make the first unnecessary.
 
 ---
 
-## 0.2 — AI, bring your own key
+## 0.3 — AI, bring your own key
 
 Spec §17.2 and §17.3. Both halves share the provider settings (Anthropic or an OpenAI-compatible base
 URL), the key in `expo-secure-store` — never synced, never sent to the Saldo server — and the consent
@@ -78,8 +139,8 @@ category list the prompt needs.
 
 An `InsightsProvider` in `@saldo/core/ai`, fed **aggregates only** — per-cycle category totals, budgets
 and trends out of `@saldo/core` — never raw descriptions unless the user opts in, with results cached
-locally per cycle. The forecast in `TODO.md` computes exactly the aggregates this would consume; whichever
-ships first should expose them from `@saldo/core` in a shape the other can reuse.
+locally per cycle. The forecast (0.1) computes exactly the aggregates this would consume; whichever ships
+first should expose them from `@saldo/core` in a shape the other can reuse.
 
 **To decide before planning:**
 
@@ -94,10 +155,10 @@ leaves and when.
 
 ---
 
-## 0.3 — Web app & end-to-end encryption
+## 0.4 — Web app & end-to-end encryption
 
 Two futures that constrain each other, recorded so the first one built does not close the second by
-accident. Neither is next; they are here so 0.1 and 0.2 do not decide them by default.
+accident. Neither is next; they are here so 0.2 and 0.3 do not decide them by default.
 
 **Web app (spec §17.1).** D3 says `apps/web` «becomes the web app later»; today `apps/web/app/page.tsx` is
 fifteen lines. The spec offers two data paths and decides neither: query `sync_rows` server-side through
@@ -114,7 +175,7 @@ passkey PRF extension is out of reach through the browser ceremony and one-time 
 be a separate key the user has to keep, with the recovery story that implies.
 
 **The constraint:** a server-side web app needs to read rows; encrypted rows cannot be read. Pick one
-before either is built. A shared ledger (0.1) with the «two accounts, shared data» shape adds a third
+before either is built. A shared ledger (0.2) with the «two accounts, shared data» shape adds a third
 party to the key question: who holds the space's key, and how a new member gets it.
 
 **To decide before planning:**
@@ -128,7 +189,7 @@ scheduled or explicitly dropped with the reason.
 
 ---
 
-## 0.4 — Public repository
+## 0.5 — Public repository
 
 What stands between this repository and its first public push. Audited on 2026-09-18. The repository has
 no remote yet, so the first push publishes all 316 commits at once.
@@ -186,7 +247,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.5 — Releases & distribution
+## 0.6 — Releases & distribution
 
 Self-hosting currently means building the server from source, and installing the app means owning a Mac
 or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found
