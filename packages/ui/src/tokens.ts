@@ -24,6 +24,11 @@ export interface Palette {
   positive: string;
   onAccent: string;
   barGrey: string;
+  /** Ghost layers of an empty state: the shape of what is missing (§13, empty states). */
+  ghost: string;
+  ghostEdge: string;
+  ghostInk: string;
+  ghostInkSoft: string;
   track: string;
   heatmap: readonly [string, string, string, string, string];
   segments: readonly [string, string, string, string, string];
@@ -48,6 +53,11 @@ export const palettes: Record<ThemeName, Palette> = {
     positive: '#5FBF7F',
     onAccent: '#0A0A0A',
     barGrey: '#3A3A3A',
+    // One step up from surface/border: at those values the stack vanished into #0A0A0A.
+    ghost: '#1A1A1A',
+    ghostEdge: 'rgba(255,255,255,0.12)',
+    ghostInk: '#3A3A3A',
+    ghostInkSoft: '#2A2A2A',
     track: '#1E1E1E',
     heatmap: ['#151515', '#333333', '#4F4F4F', '#757575', '#A8A8A8'],
     segments: ['#EDEDED', '#B8B8B8', '#8C8C8C', '#606060', '#454545'],
@@ -70,6 +80,10 @@ export const palettes: Record<ThemeName, Palette> = {
     positive: '#2E8A50',
     onAccent: '#FFFFFF',
     barGrey: '#C9C9C6',
+    ghost: '#FAFAF9',
+    ghostEdge: 'rgba(0,0,0,0.08)',
+    ghostInk: '#C9C9C6',
+    ghostInkSoft: '#EDEDEB',
     track: '#EDEDEB',
     heatmap: ['#F0F0EE', '#D8D8D4', '#B2B2AD', '#8A8A85', '#57574F'],
     segments: ['#3A3A37', '#5C5C58', '#7E7E79', '#A0A09B', '#BFBFBA'],
@@ -245,6 +259,39 @@ export const motion = {
   progressMs: 300,
   toastMs: 4000,
   undoToastMs: 5000,
+} as const;
+
+/**
+ * The "nothing yet" stack: three ghosts of the missing row, tilted and fanned. Each ghost is a
+ * sibling view with its own perspective — React Native has no `preserve-3d`, so nesting them
+ * would flatten on Android. Layers run front (0) to back (2).
+ */
+export const emptyState = {
+  stackWidth: 184,
+  stackHeight: 112,
+  ghostTop: 44,
+  ghostHeight: 46,
+  perspective: 520,
+  /** degrees */
+  tiltX: 46,
+  tiltZ: -15,
+  layers: [
+    { translateY: 0, scale: 1, enterFromY: 10, pressY: 3 },
+    { translateY: -20, scale: 0.93, enterFromY: 4, pressY: 8 },
+    { translateY: -38, scale: 0.86, enterFromY: -2, pressY: 13 },
+  ],
+  /** Per theme: dark keeps the back layers stronger, since #0A0A0A swallows them. */
+  opacity: {
+    dark: [1, 0.72, 0.42],
+    light: [1, 0.6, 0.32],
+  },
+  enterFromScale: 0.9,
+  pressScale: 0.02,
+  enterMs: 520,
+  staggerMs: 60,
+  paddingY: 56,
+  paddingX: 24,
+  bodyMaxWidth: 280,
 } as const;
 
 export const gestures = {

@@ -8,13 +8,14 @@ import { View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import {
   useAccounts,
   useCategories,
   useSettings,
-  useTags,
+  useTagsQuery,
   useTransactionsInRange,
 } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -35,7 +36,7 @@ export default function TagView() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
-  const tags = useTags();
+  const { rows: tags, loaded } = useTagsQuery();
   const categories = useCategories();
   const accounts = useAccounts();
   const { today } = usePeriod();
@@ -73,12 +74,9 @@ export default function TagView() {
       });
   }, [tagged, categories, today, theme]);
 
+  if (!loaded) return null;
   if (tag === undefined) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('tags.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const total = tagged

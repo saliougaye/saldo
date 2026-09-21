@@ -1105,6 +1105,13 @@ Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
   round caps/joins, and per-node attribute overrides (for example `fill="currentColor"`). Default size 18.
 - **Tint helpers:** `withAlpha(hex, a)` for category tints (design uses `+22`, `+24`, `+2E` suffixes ≈ 0.13, 0.14, 0.18).
 - **Motion:** respect "Reduce motion" (`AccessibilityInfo.isReduceMotionEnabled`), which swaps slides for fades.
+- **Empty states** (`EmptyState`, tokens `emptyState` and `palette.ghost*`): three shapes. **Nothing yet** draws
+  three ghost layers of the missing row/bar/chips, tilted in perspective and fanned in (520ms, 60ms stagger),
+  compressed while its CTA is pressed. **Nothing matches** (a filter or a period) only fades in. **Not found**
+  (`NotFoundScreen`, a record deleted or not yet synced) does not move. Every one carries an action. Ghosts are
+  sibling views with their own perspective, because React Native has no `preserve-3d`. On dark they use
+  `raised`/`borderStrong`, because `surface`/`border` vanish into `bg`. In-card empties (Home recent, account recent,
+  Stats split, the Home budget card) stay a muted line.
 - **Accessibility:** minimum hit area 44×44 (use `hitSlop` on 32–34px buttons), `accessibilityLabel` on icon-only
   buttons (i18n keys), amounts read as full currency strings, and toggles expose `accessibilityRole="switch"` with state.
 

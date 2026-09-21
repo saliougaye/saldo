@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../../src/components/Button';
 import { LoadingScreen } from '../../../src/components/LoadingScreen';
+import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
 import { Screen } from '../../../src/components/Screen';
 import { BackButton } from '../../../src/components/ScreenHeader';
 import { useToast } from '../../../src/components/Toast';
@@ -56,12 +57,7 @@ export default function EditAccount() {
   if (!loaded) return <LoadingScreen />;
 
   if (account === undefined || values === null) {
-    return (
-      <Screen>
-        <BackButton />
-        <Text color="textMuted">{t('accounts.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   // Nothing in the app offers this for an archived account any more (§5.6), but a deep link or a

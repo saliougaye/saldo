@@ -12,10 +12,11 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Card } from '../../src/components/Card';
+import { EmptyState } from '../../src/components/EmptyState';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { SectionLabel } from '../../src/components/SectionLabel';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useCategories, useCategoryUsage } from '../../src/db/hooks';
+import { useCategoriesQuery, useCategoryUsage } from '../../src/db/hooks';
 import { SettingScreen } from '../../src/features/profile/SettingScreen';
 import { Icon } from '../../src/theme/Icon';
 import { entering } from '../../src/theme/motion';
@@ -36,7 +37,7 @@ export default function CategoriesAdmin() {
   const router = useRouter();
   const { t } = useTranslation();
   const repos = useRepositories();
-  const all = useCategories();
+  const { rows: all, loaded } = useCategoriesQuery();
   const direct = useCategoryUsage();
   const [reordering, setReordering] = useState(false);
 
@@ -148,13 +149,17 @@ export default function CategoriesAdmin() {
         <SectionLabel>
           {direction === 'expense' ? t('categories.expenses') : t('categories.income')}
         </SectionLabel>
-        {parents.length === 0 ? (
-          <Card>
-            <Text>{t('categories.empty')}</Text>
-            <Text size="footnote" color="textMuted" style={{ marginTop: 4 }}>
-              {t('categories.emptyNote')}
-            </Text>
-          </Card>
+        {!loaded ? null : parents.length === 0 ? (
+          <EmptyState
+            kind="yet"
+            ghost="chips"
+            title={t('categories.empty')}
+            body={t('categories.emptyNote')}
+            action={{
+              label: t('categories.newCategory'),
+              onPress: () => router.push('/category/new'),
+            }}
+          />
         ) : (
           <Card padded={false}>
             <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>

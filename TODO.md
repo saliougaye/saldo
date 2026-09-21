@@ -292,42 +292,13 @@ To settle before planning:
 - **Accessibility.** A hidden amount must drop out of the accessibility tree as well, otherwise VoiceOver
   reads out loud exactly what the screen is hiding.
 
-## New UI for the empty states
+## New UI for the empty states — done 2026-09-21
 
-Every empty state today is improvised at the call site, and there are at least nine of them. The two
-richest are Transactions (`app/(tabs)/transactions.tsx:380`) — a `Card`, a muted line, a
-`SecondaryButton` — and Budgets (`app/budgets.tsx:74`), a `Card` plus a dashed-border `Pressable`.
-The rest are a bare `<Text color="textMuted">{t('…empty')}</Text>`: `settings/tags.tsx`,
-`settings/categories.tsx`, `TagFilterSheet.tsx`, `recurrence/[id].tsx`, `transaction/[id].tsx`,
-`transaction/edit/[id].tsx`. There is no `EmptyState` in `src/components/`, so each screen decides
-again what an absence looks like.
-
-The strings are already in place: nine `empty` keys across `packages/i18n/src/locales/en.ts`, all
-bare noun phrases ("No budgets", "No accounts", "No tags"). `categories.emptyNote` is the only one
-that says *why the thing is worth creating* — which is the part that makes an empty state useful, and
-the part eight of them are missing.
-
-`UnreachableScreen` (`src/components/UnreachableScreen.tsx`) is the closest thing to designed empty
-UI in the app — centred title, muted body, caption, one button — and its shape is probably what gets
-generalised.
-
-To settle before planning:
-
-- **Three cases are being served by one treatment, and only one of them is an empty state.** "Nothing
-  yet" invites you to create something. "Nothing matches" (`transactions.noResults`, `stats.empty`
-  for a period with no data) wants the filter or the period reset, not a new record. "Not found"
-  (`transaction/[id]`, `recurrence/[id]`, reached after a delete or a sync) is an error wearing the
-  same muted sentence. Deciding the three shapes is most of the design work.
-- **Illustration or type only.** The mascotte set exists (`docs/brand/mascotte/procione*.svg`) and is
-  the obvious source; it also drags in the question in the 3D item below. Type-only is cheaper and
-  ages better on a list that is empty for ten seconds.
-- **Whether every empty state carries its primary action.** Transactions and Budgets do; Accounts,
-  Tags and Categories do not, and Budgets already needed a separate fix for exactly that
-  (`fix(mobile): keep a way into Budgets when there are none`). If the component takes an optional
-  action, the default should be to pass one.
-- **Read the prototype first.** `docs/design/README.md` lists empty states under Transazioni,
-  `docs/design/Spese.dc.html` 180–251; the other screens' are wherever their own ranges are. The spec
-  is silent here, so the prototype governs (AGENTS.md).
+`EmptyState` (`apps/mobile/src/components/EmptyState.tsx`) with three shapes — nothing yet, nothing matches,
+not found — and `NotFoundScreen` for the nine detail and edit screens. The 3D ghost stack is variant B of the
+design review; variant D (the raccoon peeking over the ghost) was designed and deferred until the mascot work
+below, and `GhostStack` is the one element it would replace. Recorded in spec §13; plan
+`docs/superpowers/plans/2026-09-21-empty-states.md`.
 
 ## Considered on 2026-09-18 and not planned
 

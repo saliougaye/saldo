@@ -77,15 +77,29 @@ export function useAccounts(): Account[] {
   return useAccountsQuery().accounts;
 }
 
-export function useCategories(): Category[] {
-  const { data } = useLiveQuery(
+/**
+ * A live list plus whether its first answer has arrived. `useLiveQuery` starts with `[]`, so a
+ * screen that reads "no rows" before then shows an empty state — or "this was deleted" — for
+ * something that exists. Same query, same cost: only `updatedAt` is read as well.
+ */
+export interface LiveRows<T> {
+  rows: T[];
+  loaded: boolean;
+}
+
+export function useCategoriesQuery(): LiveRows<Category> {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(categories)
       .where(isNull(categories.deletedAt))
       .orderBy(asc(categories.sortOrder), asc(categories.name)),
   );
-  return data.map(toEntity);
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
+}
+
+export function useCategories(): Category[] {
+  return useCategoriesQuery().rows;
 }
 
 /**
@@ -138,22 +152,30 @@ export function useAttachment(id: string): LocalAttachment | null {
   return { ...toEntity(rest), localUri, blobState };
 }
 
-export function useTags(): Tag[] {
-  const { data } = useLiveQuery(
+export function useTagsQuery(): LiveRows<Tag> {
+  const { data, updatedAt } = useLiveQuery(
     db.select().from(tags).where(isNull(tags.deletedAt)).orderBy(asc(tags.name)),
   );
-  return data.map(toEntity);
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
 }
 
-export function useBudgets(): Budget[] {
-  const { data } = useLiveQuery(
+export function useTags(): Tag[] {
+  return useTagsQuery().rows;
+}
+
+export function useBudgetsQuery(): LiveRows<Budget> {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(budgets)
       .where(isNull(budgets.deletedAt))
       .orderBy(asc(budgets.sortOrder), asc(budgets.name)),
   );
-  return data.map(toEntity);
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
+}
+
+export function useBudgets(): Budget[] {
+  return useBudgetsQuery().rows;
 }
 
 export interface TransactionsQuery {
@@ -185,8 +207,11 @@ export function useTransactionsInRangeQuery(start: LocalDate, end: LocalDate): T
  * One transaction, live. The detail screen used a plain repository read, so a row edited by a sync
  * while the screen was open kept showing what it said when it opened (§3.3).
  */
-export function useTransaction(id: string): Transaction | null {
-  const { data } = useLiveQuery(
+export function useTransactionQuery(id: string): {
+  transaction: Transaction | null;
+  loaded: boolean;
+} {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(transactions)
@@ -194,26 +219,40 @@ export function useTransaction(id: string): Transaction | null {
     [id],
   );
   const row = data[0];
-  return row === undefined ? null : toEntity(row);
+  return {
+    transaction: row === undefined ? null : toEntity(row),
+    loaded: updatedAt !== undefined,
+  };
+}
+
+export function useTransaction(id: string): Transaction | null {
+  return useTransactionQuery(id).transaction;
 }
 
 export function useTransactionsInRange(start: LocalDate, end: LocalDate): Transaction[] {
   return useTransactionsInRangeQuery(start, end).rows;
 }
 
-export function useRecurrences(): Recurrence[] {
-  const { data } = useLiveQuery(
+export function useRecurrencesQuery(): LiveRows<Recurrence> {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(recurrences)
       .where(isNull(recurrences.deletedAt))
       .orderBy(asc(recurrences.startDate)),
   );
-  return data.map(toEntity);
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
 }
 
-export function useRecurrence(id: string): Recurrence | null {
-  const { data } = useLiveQuery(
+export function useRecurrences(): Recurrence[] {
+  return useRecurrencesQuery().rows;
+}
+
+export function useRecurrenceQuery(id: string): {
+  recurrence: Recurrence | null;
+  loaded: boolean;
+} {
+  const { data, updatedAt } = useLiveQuery(
     db
       .select()
       .from(recurrences)
@@ -221,7 +260,14 @@ export function useRecurrence(id: string): Recurrence | null {
     [id],
   );
   const row = data[0];
-  return row === undefined ? null : toEntity(row);
+  return {
+    recurrence: row === undefined ? null : toEntity(row),
+    loaded: updatedAt !== undefined,
+  };
+}
+
+export function useRecurrence(id: string): Recurrence | null {
+  return useRecurrenceQuery(id).recurrence;
 }
 
 /** Every live occurrence of one recurrence, newest first (§6.34). */

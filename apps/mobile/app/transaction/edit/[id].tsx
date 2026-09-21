@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { removeAttachment } from '../../../src/attachments/attachmentService';
 import { ConfirmDialog } from '../../../src/components/ConfirmDialog';
-import { Screen } from '../../../src/components/Screen';
+import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
 import { useToast } from '../../../src/components/Toast';
 import { db } from '../../../src/db/client';
 import { useDatabase } from '../../../src/db/DatabaseProvider';
@@ -19,7 +19,6 @@ import {
   toTransactionInput,
 } from '../../../src/features/transactions/useTransactionForm';
 import { useLeaveGone, useLeaveRenamed } from '../../../src/navigation/leave';
-import { Text } from '../../../src/theme/Text';
 
 export default function EditTransaction() {
   const router = useRouter();
@@ -41,11 +40,7 @@ export default function EditTransaction() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (transaction === null || values === null) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('transactions.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const name = transaction.description.length > 0 ? transaction.description : t('common.thisOne');

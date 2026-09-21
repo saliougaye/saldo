@@ -12,6 +12,7 @@ export const it = {
     close: 'Chiudi',
     continue: 'Continua',
     back: 'Indietro',
+    goBack: 'Torna indietro',
     start: 'Inizia',
     restore: 'Ripristina',
     archive: 'Archivia',
@@ -21,6 +22,8 @@ export const it = {
     retry: 'Riprova',
     and: 'e',
     thisOne: 'questa voce',
+    notFoundTitle: 'Non c’è più',
+    notFoundBody: 'È stato eliminato, oppure non è ancora arrivato su questo telefono.',
     stepOf: 'Passo {{step}} di {{total}}',
     negative: 'Negativo',
     decrement: 'Meno',
@@ -142,6 +145,10 @@ export const it = {
     noResults: 'Nessun risultato',
     resetFilters: 'Azzera filtri',
     empty: 'Nessuna transazione',
+    // Vero sia a installazione vuota sia in un periodo vuoto: la tab è legata al periodo.
+    emptyBody:
+      'Registra una spesa: da lì nascono le statistiche, i budget e il saldo di ogni conto.',
+    noResultsBody: 'Nessuna transazione corrisponde a ricerca e filtri attivi.',
     upcoming: 'In arrivo',
     upcomingCount_one: '{{count}} voce dopo oggi',
     upcomingCount_other: '{{count}} voci dopo oggi',
@@ -291,7 +298,9 @@ export const it = {
     shareOfIncome: 'Le uscite fisse sono il {{percent}}% delle entrate fisse',
     count_one: '{{count}} ricorrenza',
     count_other: '{{count}} ricorrenze',
-    empty: 'Nessuna ricorrenza. Attiva «Ripeti» su una transazione per crearne una.',
+    empty: 'Nessuna ricorrenza',
+    emptyBody:
+      'Attiva «Ripeti» su una transazione: affitto, abbonamenti e stipendio si registrano da soli.',
     cadence: 'Cadenza',
     cadenceHint: 'Tocca per cambiare cadenza',
     firstOccurrence: 'Prima occorrenza',
@@ -553,6 +562,8 @@ export const it = {
     withinLimits: 'nei limiti',
     alertTitle: 'Budget {{name}}: {{pct}}% usato',
     empty: 'Nessun budget',
+    emptyBody:
+      'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul passo del mese.',
   },
   accounts: {
     title: 'Conti',
@@ -645,6 +656,7 @@ export const it = {
     total: 'Totale uscite',
     range: '{{count}} transazioni · {{first}} – {{last}}',
     empty: 'Nessun tag',
+    emptyBody: 'Nascono su una transazione: scrivine uno nel campo tag mentre la registri.',
     allDates: 'Tutte le date, fuori dal periodo selezionato',
   },
   settings: {

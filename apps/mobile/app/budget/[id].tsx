@@ -3,13 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
-import { Screen } from '../../src/components/Screen';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { useToast } from '../../src/components/Toast';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useSettings } from '../../src/db/hooks';
 import { BudgetForm, budgetFormFrom } from '../../src/features/budgets/BudgetForm';
 import { useLeaveGone } from '../../src/navigation/leave';
-import { Text } from '../../src/theme/Text';
 
 export default function EditBudget() {
   const router = useRouter();
@@ -28,11 +27,7 @@ export default function EditBudget() {
   );
 
   if (budget === null || values === null) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('budgets.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   return (

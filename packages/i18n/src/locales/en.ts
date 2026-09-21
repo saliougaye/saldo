@@ -12,6 +12,7 @@ export const en: Messages = {
     close: 'Close',
     continue: 'Continue',
     back: 'Back',
+    goBack: 'Go back',
     start: 'Start',
     restore: 'Restore',
     archive: 'Archive',
@@ -21,6 +22,8 @@ export const en: Messages = {
     retry: 'Try again',
     and: 'and',
     thisOne: 'this entry',
+    notFoundTitle: 'Not here any more',
+    notFoundBody: 'It was deleted, or it has not reached this phone yet.',
     stepOf: 'Step {{step}} of {{total}}',
     negative: 'Negative',
     decrement: 'Less',
@@ -142,6 +145,9 @@ export const en: Messages = {
     noResults: 'No results',
     resetFilters: 'Reset filters',
     empty: 'No transactions',
+    // True both on a fresh install and in an empty period of a used one: the tab is period-scoped.
+    emptyBody: 'Record an expense: statistics, budgets and every account balance start there.',
+    noResultsBody: 'No transaction matches the search and filters.',
     upcoming: 'Upcoming',
     upcomingCount_one: '{{count}} entry after today',
     upcomingCount_other: '{{count}} entries after today',
@@ -291,7 +297,9 @@ export const en: Messages = {
     shareOfIncome: 'Fixed expenses are {{percent}}% of fixed income',
     count_one: '{{count}} recurrence',
     count_other: '{{count}} recurrences',
-    empty: 'No recurrences. Turn on “Repeat” on a transaction to create one.',
+    empty: 'No recurrences',
+    emptyBody:
+      'Turn on “Repeat” on a transaction: rent, subscriptions and salary then record themselves.',
     cadence: 'Cadence',
     cadenceHint: 'Tap to change the cadence',
     firstOccurrence: 'First occurrence',
@@ -549,6 +557,7 @@ export const en: Messages = {
     withinLimits: 'within limits',
     alertTitle: 'Budget {{name}}: {{pct}}% used',
     empty: 'No budgets',
+    emptyBody: 'A budget caps a category and warns you when you are ahead of the month’s pace.',
   },
   accounts: {
     title: 'Accounts',
@@ -640,6 +649,7 @@ export const en: Messages = {
     total: 'Total spent',
     range: '{{count}} transactions · {{first}} – {{last}}',
     empty: 'No tags',
+    emptyBody: 'They are born on a transaction: type one in its tags field while you record it.',
     allDates: 'All dates, outside the selected period',
   },
   settings: {

@@ -1,19 +1,16 @@
 import { amountBufferToMinor, getCurrency } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Screen } from '../../../src/components/Screen';
+import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
 import { useBudgets, useCategories, useSettings } from '../../../src/db/hooks';
 import { ArchiveCategorySheet } from '../../../src/features/categories/ArchiveCategorySheet';
 import { CategoryForm, categoryFormFrom } from '../../../src/features/categories/CategoryForm';
 import { useLeaveGone } from '../../../src/navigation/leave';
-import { Text } from '../../../src/theme/Text';
 
 export default function EditCategory() {
   const router = useRouter();
   const leaveGone = useLeaveGone();
-  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
   const settings = useSettings();
@@ -34,11 +31,7 @@ export default function EditCategory() {
   );
 
   if (category === null || values === null) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('categories.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   return (

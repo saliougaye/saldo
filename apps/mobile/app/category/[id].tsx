@@ -17,9 +17,10 @@ import { Pressable, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { useCategories, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useCategoriesQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SpendHistoryChart } from '../../src/features/stats/SpendHistoryChart';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -36,7 +37,7 @@ export default function CategoryDetail() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
-  const categories = useCategories();
+  const { rows: categories, loaded } = useCategoriesQuery();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -126,12 +127,9 @@ export default function CategoryDetail() {
     return { direct, listed };
   }, [rows, period.range, today, id, children]);
 
+  if (!loaded) return null;
   if (category === undefined) {
-    return (
-      <Screen>
-        <Text color="textMuted">{t('stats.empty')}</Text>
-      </Screen>
-    );
+    return <NotFoundScreen />;
   }
 
   const delta = deltaPercent(total, pastMedian);
