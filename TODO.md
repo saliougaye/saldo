@@ -166,25 +166,6 @@ Today the app speaks `it` and `en` only (`SUPPORTED_LOCALES` in
 Open point: `pt` as one catalog, or `pt-PT` and `pt-BR` separately (they differ in vocabulary more than in grammar).
 Suggested: one `pt` (European) for now.
 
-### Currency picker: offer every currency, not four
-
-- [x] Reported on 2026-09-21 as "add every currency in the world".
-
-The model already has them: `CURRENCY_CODES` in `packages/core/src/currencies.generated.ts` holds the 162 ISO 4217
-codes CLDR can format, each with its symbol and `minorDigits`, and `settings.currency` accepts any of them (spec
-§4.1). What is missing is the UI: both pickers only render `COMMON_CURRENCY_CODES` (`EUR`, `USD`, `GBP`, `CHF`) —
-`app/profile/currency.tsx:26` and `src/components/CurrencyChips.tsx` in onboarding — although spec §4.1 says those four
-are shown *first* "before the full alphabetical list".
-
-- The Profile screen: the four common ones, then every other code alphabetically, with a search field (162 rows
-  need one). Search by code and by name.
-- Names: "Franco svizzero", "Swiss franc" — from `Intl.DisplayNames(locale, { type: 'currency' })` if Hermes
-  supports it on both platforms, otherwise generated alongside the codes by `scripts/generate-currencies.mjs`, per
-  locale (which ties this to the languages item above).
-- Onboarding keeps its four chips and gains an "Altra…" chip that opens the same list.
-- Changing currency still never converts (§1.2); the scale-change confirm (`currencyConfirmScale`) already covers
-  JPY, KWD and the rest.
-
 ## Ideas
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
