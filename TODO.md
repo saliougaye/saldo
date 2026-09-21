@@ -199,6 +199,52 @@ already model "money set aside"; what is missing is the target, the deadline and
   - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
 - [ ] Spec section (`§5.x Goals`), then the plan.
 
+### Five more languages: French, German, Swedish, Spanish, Portuguese
+
+- [ ] Asked for on 2026-09-21. Scope the catalogs and the formatting tables, then plan.
+
+Today the app speaks `it` and `en` only (`SUPPORTED_LOCALES` in
+`packages/i18n/src/format.ts:13`). A language is more than a catalog:
+
+- **The catalog.** `packages/i18n/src/locales/{fr,de,sv,es,pt}.ts`, ~760 keys each, registered in `resources`
+  (`packages/i18n/src/index.ts`). The parity test (`locales.test.ts`) only compares `it` against `en`; it has to
+  check every catalog against `it`, keys and `{{variables}}` both.
+- **The formatting tables.** `format.ts` hand-writes, per locale, the separators, short and long months and short and
+  long weekdays (`Record<AppLocale, …>`, no `Intl`). Each new locale fills all five, and the separators differ:
+  `de`/`es`/`pt` `.` and `,`, `fr` and `sv` a (narrow) no-break space and `,`. Pin them with `format.test.ts` cases.
+- **The setting.** `language` is `z.enum(['system', 'it', 'en'])` in `packages/core/src/entities.ts:50`, a synced
+  field, plus the column type in `apps/mobile/src/db/schema.ts:33` and `seed.ts`. Widening the enum means an older
+  build rejects a settings row written by a newer one — acceptable before release (see the frozen
+  `SYNC_SCHEMA_VERSION`), worth a line in the changelog after. `resolveLocale` must map `pt-BR`/`pt-PT`, `es-*`
+  etc. to the base language.
+- **The Language screen** (`app/profile/language.tsx`) grows from three rows to seven; each language named in its
+  own tongue, not translated.
+- **Quality.** Machine-drafted text is fine for a start, but the Italian copy is written with care (tone, short
+  labels that fit the design). Each catalog needs a native read before it ships, and German will overflow some
+  buttons and chips — check the longest strings on the simulator.
+
+Open point: `pt` as one catalog, or `pt-PT` and `pt-BR` separately (they differ in vocabulary more than in grammar).
+Suggested: one `pt` (European) for now.
+
+### Currency picker: offer every currency, not four
+
+- [ ] Reported on 2026-09-21 as "add every currency in the world".
+
+The model already has them: `CURRENCY_CODES` in `packages/core/src/currencies.generated.ts` holds the 162 ISO 4217
+codes CLDR can format, each with its symbol and `minorDigits`, and `settings.currency` accepts any of them (spec
+§4.1). What is missing is the UI: both pickers only render `COMMON_CURRENCY_CODES` (`EUR`, `USD`, `GBP`, `CHF`) —
+`app/profile/currency.tsx:26` and `src/components/CurrencyChips.tsx` in onboarding — although spec §4.1 says those four
+are shown *first* "before the full alphabetical list".
+
+- The Profile screen: the four common ones, then every other code alphabetically, with a search field (162 rows
+  need one). Search by code and by name.
+- Names: "Franco svizzero", "Swiss franc" — from `Intl.DisplayNames(locale, { type: 'currency' })` if Hermes
+  supports it on both platforms, otherwise generated alongside the codes by `scripts/generate-currencies.mjs`, per
+  locale (which ties this to the languages item above).
+- Onboarding keeps its four chips and gains an "Altra…" chip that opens the same list.
+- Changing currency still never converts (§1.2); the scale-change confirm (`currencyConfirmScale`) already covers
+  JPY, KWD and the rest.
+
 ## Ideas
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
