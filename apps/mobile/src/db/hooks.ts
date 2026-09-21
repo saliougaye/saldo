@@ -163,6 +163,27 @@ export function useTags(): Tag[] {
   return useTagsQuery().rows;
 }
 
+/**
+ * How many live transactions carry each tag, over the whole history (§5.10).
+ *
+ * Live, like `useCategoryUsage`: a merge rewrites `tagIds` on the rows behind the admin list, and
+ * a count read once when the screen mounted kept saying "0 transactions" for the tag that had
+ * just received them.
+ */
+export function useTagUsage(): Map<string, number> {
+  const { data } = useLiveQuery(
+    db
+      .select({ tagIds: transactions.tagIds })
+      .from(transactions)
+      .where(isNull(transactions.deletedAt)),
+  );
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    for (const id of row.tagIds) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export function useBudgetsQuery(): LiveRows<Budget> {
   const { data, updatedAt } = useLiveQuery(
     db

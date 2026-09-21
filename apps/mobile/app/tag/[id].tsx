@@ -86,6 +86,9 @@ export default function TagView() {
   return (
     <Screen refreshable>
       <ScreenHeader title={tag.name} />
+      {/* First, under the header: at the bottom it sat past every transaction the tag carries,
+          and a tag with a long history made rename, merge and delete a scroll away. */}
+      <TagEditCard tag={tag} onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })} />
       <Text size="footnote" color="textMuted">
         {t('tags.total')}
       </Text>
@@ -168,9 +171,6 @@ export default function TagView() {
       <Text size="caption" color="textFaint">
         {formatMoney(total, currency, locale)}
       </Text>
-
-      {/* Last: the screen reads as what the tag *is*, then what you can do to it. */}
-      <TagEditCard tag={tag} onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })} />
     </Screen>
   );
 }

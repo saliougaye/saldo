@@ -1,15 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { EmptyState } from '../../src/components/EmptyState';
-import { ListRow } from '../../src/components/ListRow';
+import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { tagUsage } from '../../src/db/adminService';
-import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useTagsQuery } from '../../src/db/hooks';
+import { useTagsQuery, useTagUsage } from '../../src/db/hooks';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -18,16 +15,26 @@ export default function TagsAdmin() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
-  const repos = useRepositories();
   const { rows: tags, loaded } = useTagsQuery();
-  const usage = useMemo(() => tagUsage(repos), [repos]);
+  const usage = useTagUsage();
 
   return (
     <Screen refreshable>
       <BackButton />
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('tags.title')}
-      </Text>
+      {/* "+" on the title row, where Categorie keeps its own (§6.9). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
+          {t('tags.title')}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('tags.newTag')}
+          hitSlop={10}
+          onPress={() => router.push('/tag/new')}
+        >
+          <IconBox name="plus" colour={theme.palette.textMuted} small />
+        </Pressable>
+      </View>
       <Text color="textMuted">{t('tags.footnote')}</Text>
 
       {!loaded ? null : tags.length === 0 ? (
@@ -36,11 +43,7 @@ export default function TagsAdmin() {
           ghost="chips"
           title={t('tags.empty')}
           body={t('tags.emptyBody')}
-          // Tags have no screen of their own to be born on: they are typed into a transaction.
-          action={{
-            label: t('transactions.newTransaction'),
-            onPress: () => router.push('/transaction/new'),
-          }}
+          action={{ label: t('tags.newTag'), onPress: () => router.push('/tag/new') }}
         />
       ) : (
         <Card padded={false}>

@@ -13,9 +13,20 @@ import { useTags } from '../../db/hooks';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 
-/** What the rename is waiting for, or `null` when nothing is: a tag is only its name (§5.10). */
-export function tagMissingForSave(name: string): 'name' | null {
-  return name.trim().length > 0 ? null : 'name';
+/**
+ * What a new or renamed tag is waiting for, or `null` when nothing is: a tag is only its name, and
+ * names are unique case-insensitively among live tags (§5.10). `selfId` is the tag being renamed,
+ * which may keep its own name or change only its case.
+ */
+export function tagMissingForSave(
+  name: string,
+  tags: readonly Pick<Tag, 'id' | 'name'>[],
+  selfId?: string,
+): 'name' | 'taken' | null {
+  const wanted = name.trim().toLowerCase();
+  if (wanted.length === 0) return 'name';
+  const clash = tags.some((tag) => tag.id !== selfId && tag.name.trim().toLowerCase() === wanted);
+  return clash ? 'taken' : null;
 }
 
 export interface TagEditCardProps {
@@ -40,7 +51,7 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const others = tags.filter((candidate) => candidate.id !== tag.id);
-  const missing = tagMissingForSave(name);
+  const missing = tagMissingForSave(name, tags, tag.id);
 
   return (
     <Card>
@@ -51,6 +62,23 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
         </Text>
 
         <TextField label={t('tags.name')} value={name} onChangeText={setName} />
+
+        {/* The actions sit under the name, above the merge list: that list grows with every tag,
+            and it used to push Save and Delete below the fold. */}
+        <View style={{ gap: 8 }}>
+          {missing === null ? null : (
+            // Not an error — nothing is wrong yet — so it is a muted line, not a red one.
+            <Text size="footnote" color="textMuted">
+              {t(`tags.missing_${missing}`)}
+            </Text>
+          )}
+          <PrimaryButton
+            label={t('common.save')}
+            disabled={missing !== null}
+            onPress={() => renameTag(repos, tag.id, name.trim())}
+          />
+          <SecondaryButton label={t('tags.delete')} onPress={() => setConfirmDelete(true)} />
+        </View>
 
         {others.length === 0 ? null : (
           <View style={{ gap: 8 }}>
@@ -83,21 +111,6 @@ export function TagEditCard({ tag, onDeleted }: TagEditCardProps) {
             </View>
           </View>
         )}
-
-        <View style={{ gap: 8 }}>
-          {missing === null ? null : (
-            // Not an error — nothing is wrong yet — so it is a muted line, not a red one.
-            <Text size="footnote" color="textMuted">
-              {t(`tags.missing_${missing}`)}
-            </Text>
-          )}
-          <PrimaryButton
-            label={t('common.save')}
-            disabled={missing !== null}
-            onPress={() => renameTag(repos, tag.id, name.trim())}
-          />
-          <SecondaryButton label={t('tags.delete')} onPress={() => setConfirmDelete(true)} />
-        </View>
       </View>
 
       <ConfirmDialog

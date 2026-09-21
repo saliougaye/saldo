@@ -105,15 +105,6 @@ export function renameTag(repos: Repositories, tagId: string, name: string): Tag
   return repos.tags.rename(tagId, name);
 }
 
-/** Usage counts per tag id, for the admin list and the filter sheet ordering (§5.10). */
-export function tagUsage(repos: Repositories): Map<string, number> {
-  const usage = new Map<string, number>();
-  for (const tx of repos.transactions.list()) {
-    for (const id of tx.tagIds) usage.set(id, (usage.get(id) ?? 0) + 1);
-  }
-  return usage;
-}
-
 /** Archives an account; its transactions stay, as they still describe money that moved. */
 export function archiveAccount(repos: Repositories, accountId: string, nowIso: string): void {
   repos.accounts.update(accountId, { archivedAt: nowIso });

@@ -487,7 +487,9 @@ Let `today = todayLocal()`.
 
 ### 5.10 Tags
 
-- Created inline from the transaction sheet's tag field ("Crea «X»"). The list is sorted by usage count desc.
+- Created inline from the transaction sheet's tag field ("Crea «X»"), or with "+" on the tag admin ("Nuovo tag"), for a
+  tag made before the transactions that will carry it. Names are unique case-insensitively, on create and on rename.
+  The list is sorted by usage count desc.
 - **Rename:** update `Tag.name` (ids unchanged).
 - **Merge into another tag:** replace the source id with the target id in every transaction's `tagIds` (dedupe), then tombstone
   the source.

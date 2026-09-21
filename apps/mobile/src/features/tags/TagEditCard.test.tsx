@@ -3,7 +3,7 @@ import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { TagEditCard } from './TagEditCard';
+import { TagEditCard, tagMissingForSave } from './TagEditCard';
 
 const mockRename = jest.fn();
 const mockMerge = jest.fn();
@@ -45,6 +45,27 @@ function Host({ children }: { children: React.ReactNode }) {
   );
 }
 
+describe('tagMissingForSave', () => {
+  const tags = [
+    { id: 'a', name: 'Holiday' },
+    { id: 'b', name: 'Move' },
+  ];
+
+  it('asks for a name', () => {
+    expect(tagMissingForSave('  ', tags)).toBe('name');
+  });
+
+  it('refuses a name another tag already has, whatever its case', () => {
+    expect(tagMissingForSave(' move ', tags)).toBe('taken');
+    expect(tagMissingForSave('Move', tags, 'a')).toBe('taken');
+  });
+
+  it('lets a tag keep its own name or change only its case', () => {
+    expect(tagMissingForSave('holiday', tags, 'a')).toBeNull();
+    expect(tagMissingForSave('Trip', tags)).toBeNull();
+  });
+});
+
 describe('TagEditCard', () => {
   it('renames on save', async () => {
     await render(
@@ -70,6 +91,17 @@ describe('TagEditCard', () => {
     fireEvent.changeText(screen.getByLabelText('Name'), '   ');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled());
     expect(screen.getByText('Enter a name to save.')).toBeTruthy();
+  });
+
+  it('will not rename a tag onto the name of another one', async () => {
+    await render(
+      <Host>
+        <TagEditCard tag={tag} onDeleted={jest.fn()} />
+      </Host>,
+    );
+    fireEvent.changeText(screen.getByLabelText('Name'), 'move');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled());
+    expect(screen.getByText('A tag with this name already exists.')).toBeTruthy();
   });
 
   it('does not offer to merge a tag into itself', async () => {

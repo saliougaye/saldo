@@ -5,7 +5,6 @@ import {
   mergeTags,
   reorderCategories,
   restoreCategory,
-  tagUsage,
 } from './adminService';
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
@@ -200,19 +199,6 @@ describe('deleteTag', () => {
     expect(repos.transactions.byId('t1')?.tagIds).toEqual(['tag-b']);
     expect(repos.transactions.byId('t1')?.deletedAt).toBeNull();
     expect(repos.tags.byId('tag-a')?.deletedAt).toBe(NOW);
-  });
-});
-
-describe('tagUsage', () => {
-  it('counts how many transactions carry each tag', () => {
-    const { repos } = setup();
-    repos.tags.create({ id: 'tag-a', name: 'A' });
-    repos.tags.create({ id: 'tag-b', name: 'B' });
-    expense(repos, 't1', 'cat-food', ['tag-a']);
-    expense(repos, 't2', 'cat-food', ['tag-a', 'tag-b']);
-    const usage = tagUsage(repos);
-    expect(usage.get('tag-a')).toBe(2);
-    expect(usage.get('tag-b')).toBe(1);
   });
 });
 
