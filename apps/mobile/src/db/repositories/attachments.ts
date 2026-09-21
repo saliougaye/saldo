@@ -38,6 +38,12 @@ export interface AttachmentsRepository {
   remove(id: string): void;
   /** Tombstones every attachment of a transaction; called when the transaction goes (§10). */
   removeFor(transactionId: string): void;
+  /**
+   * Repoints the live attachments of one transaction at another, for the one case where a row is
+   * saved under a new id: "Ripeti" replacing a transaction with the first occurrence of a series
+   * (§5.9). Without it the receipts would stay on the tombstone and be lost.
+   */
+  moveTo(fromTransactionId: string, toTransactionId: string): void;
   /** Device-local, so it changes no HLC and pushes nothing. */
   setLocalUri(id: string, localUri: string | null): void;
   setBlobState(id: string, blobState: BlobState): void;
@@ -97,6 +103,15 @@ export function createAttachmentsRepository(context: RepositoryContext): Attachm
 
     removeFor(transactionId) {
       for (const row of repository.listFor(transactionId)) repository.remove(row.id);
+    },
+
+    moveTo(fromTransactionId, toTransactionId) {
+      for (const row of repository.listFor(fromTransactionId)) {
+        db.update(attachments)
+          .set({ transactionId: toTransactionId, ...updateStamp(context) })
+          .where(eq(attachments.id, row.id))
+          .run();
+      }
     },
 
     setLocalUri(id, localUri) {

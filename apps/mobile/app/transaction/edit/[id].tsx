@@ -18,12 +18,13 @@ import {
   formFromTransaction,
   toTransactionInput,
 } from '../../../src/features/transactions/useTransactionForm';
-import { useLeaveGone } from '../../../src/navigation/leave';
+import { useLeaveGone, useLeaveRenamed } from '../../../src/navigation/leave';
 import { Text } from '../../../src/theme/Text';
 
 export default function EditTransaction() {
   const router = useRouter();
   const leaveGone = useLeaveGone();
+  const leaveRenamed = useLeaveRenamed();
   const { t } = useTranslation();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -61,7 +62,12 @@ export default function EditTransaction() {
     );
     // A plain transaction can start repeating from the edit form too, exactly as from the new one.
     if (values.recurrence !== null) {
-      startRecurrence(db, repos, updated, values.recurrence, today, def);
+      const { occurrence } = startRecurrence(db, repos, updated, values.recurrence, today, def);
+      toast.show(t('transactions.saved'));
+      // The row now lives under the series' deterministic id, so the detail underneath — and any
+      // other copy of it in the stack — follows it there instead of showing an empty screen.
+      leaveRenamed({ kind: 'transaction', from: transaction.id, to: occurrence.id });
+      return;
     }
     toast.show(t('transactions.saved'));
     router.back();

@@ -118,12 +118,51 @@ describe('startRecurrence', () => {
       excludeFromTotals: false,
       recurrenceId: null,
     });
-    const recurrence = startRecurrence(db, repos, saved, MONTHLY_RULE, TODAY, CYCLE_DEF);
+    const { recurrence, occurrence } = startRecurrence(
+      db,
+      repos,
+      saved,
+      MONTHLY_RULE,
+      TODAY,
+      CYCLE_DEF,
+    );
     const live = repos.transactions.list();
-    expect(live.map((tx) => tx.id)).toContain(`${recurrence.id}:2026-04-10`);
+    expect(occurrence.id).toBe(`${recurrence.id}:2026-04-10`);
+    expect(live.map((tx) => tx.id)).toContain(occurrence.id);
     expect(repos.transactions.byId(saved.id)?.deletedAt).not.toBeNull();
     // Horizon 2026-05-26, so the May occurrence is scheduled too.
     expect(dates(repos)).toEqual(['2026-04-10', '2026-05-10']);
+  });
+
+  it('takes the receipts to the occurrence that replaces the row (\u00a710)', () => {
+    const { db, repos } = setup();
+    const saved = repos.transactions.create({
+      kind: 'expense',
+      amount: 1299,
+      date: '2026-04-10',
+      accountId: 'acc-card',
+      toAccountId: null,
+      categoryId: 'cat-subscriptions',
+      description: 'Netflix',
+      note: null,
+      tagIds: [],
+      excludeFromTotals: false,
+      recurrenceId: null,
+    });
+    const receipt = repos.attachments.create({
+      transactionId: saved.id,
+      mimeType: 'image/jpeg',
+      byteSize: 1024,
+      sha256: 'a'.repeat(64),
+      width: 800,
+      height: 600,
+      localUri: 'file:///attachments/att-1.jpg',
+    });
+
+    const { occurrence } = startRecurrence(db, repos, saved, MONTHLY_RULE, TODAY, CYCLE_DEF);
+
+    expect(repos.attachments.listFor(occurrence.id).map((row) => row.id)).toEqual([receipt.id]);
+    expect(repos.attachments.listFor(saved.id)).toEqual([]);
   });
 });
 
@@ -214,7 +253,7 @@ describe('startRecurrence with a rule', () => {
       note: null,
       recurrenceId: null,
     });
-    const recurrence = startRecurrence(
+    const { recurrence } = startRecurrence(
       db,
       repos,
       tx,

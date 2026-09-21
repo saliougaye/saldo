@@ -90,10 +90,16 @@ Reported on 2026-09-19. Not investigated yet.
 
 ## Editing a transaction and making it recurring shows "not found"
 
-- [ ] Reported on 2026-09-19. Open an existing transaction, edit it, set it as recurring and save: the app shows a
-      "not found" screen. Not investigated. Likely the same family as the stale-screen item above: saving the rule
-      may replace or re-key the transaction so the edit route's id no longer resolves. Check what the recurrence
-      sheet (phase `feat/recurrences`) does to the row on save, and where it navigates afterwards.
+- [x] Reported on 2026-09-19. Open an existing transaction, edit it, set it as recurring and save: the app shows a
+      "not found" screen.
+- [x] Done on 2026-09-20. It was the re-key, as suspected: `startRecurrence` tombstones the saved row and recreates
+      it under the deterministic occurrence id (D21), and the edit form then called `router.back()` onto the detail
+      of the old id, which no longer resolves. `useLeaveRenamed` (`src/navigation/leave.ts`) takes every screen of
+      the old id to the new one in the same reset that pops the editor, so going back shows the transaction with
+      its ↻ badge. Found in the same line: the row's **receipts stayed on the tombstone** and were lost — from the
+      new-transaction form too, where nothing looked wrong. `attachments.moveTo` repoints them, and
+      `startRecurrence` now returns the occurrence it created instead of leaving each caller to recompute the id.
+      Noted in spec §5.9; covered by `src/navigation/leave.test.tsx` and `src/db/recurrenceService.test.ts`.
 
 ## No way to reach Budgets when none exist
 
@@ -251,6 +257,77 @@ token handoff, so it would be a separate key the user has to keep, with the reco
 
 The constraint: a server-side web app needs to read rows; encrypted rows cannot be read. Pick one before either is
 built. Neither is next.
+
+## Hidden mode: hide the figures in public
+
+The idea: a gesture or a toggle hides every amount while the app keeps working — balances, transaction
+amounts, budget figures, charts — and a tap brings them back. It is for using the app on a train, not a
+second lock.
+
+What it can stand on:
+
+- `AmountText`/`AnimatedAmount` (`apps/mobile/src/components/AmountText.tsx`) is the single place money reaches
+  a screen. Masking there covers most of the app in one change.
+- Not all of it: 22 files still call `formatMoney` directly, and the charts draw magnitudes rather than text
+  (`src/features/stats/CashflowChart.tsx`, `SpendHistoryChart.tsx`, `SplitBar.tsx`, the budget progress bars).
+  A bar chart with the axis labels hidden still shows the shape of the month. The audit is the work; the
+  component change is small.
+- The privacy machinery already exists and this is a sibling of it, not a variant: §6.32's `PrivacyOverlay`
+  blanks the app in the switcher, and `appLockEnabled` in `kv` (`src/db/kv.ts`) is the pattern for a
+  device-local flag. The hidden-mode flag belongs in `kv` too — per device, never synced; a phone hidden in
+  public must not blank the tablet at home.
+
+To settle before planning:
+
+- **The trigger.** A row in Profile is discoverable but slow; a gesture (long-press on the home balance, a
+  two-finger tap) is fast but invisible. Probably both — the row declares the feature exists, the gesture is
+  what gets used. `react-native-gesture-handler` is already a dependency; `expo-haptics` is not.
+- **Whether it survives a relaunch.** Persisting protects; resetting to visible is what people expect. Spec is
+  silent, and the design prototype has no precedent for either.
+- **What a hidden figure looks like.** `expo-blur` over the number reads as "a number is here" but is a new
+  dependency and blurs differently on Android; `••••` at the same tabular width has no layout shift and no
+  dependency. The second is cheaper and probably right.
+- **Inputs stay visible.** Hiding the amount being typed in `AmountInput` is hostile. Hiding the list behind
+  the form is the point.
+- **Accessibility.** A hidden amount must drop out of the accessibility tree as well, otherwise VoiceOver
+  reads out loud exactly what the screen is hiding.
+
+## New UI for the empty states
+
+Every empty state today is improvised at the call site, and there are at least nine of them. The two
+richest are Transactions (`app/(tabs)/transactions.tsx:380`) — a `Card`, a muted line, a
+`SecondaryButton` — and Budgets (`app/budgets.tsx:74`), a `Card` plus a dashed-border `Pressable`.
+The rest are a bare `<Text color="textMuted">{t('…empty')}</Text>`: `settings/tags.tsx`,
+`settings/categories.tsx`, `TagFilterSheet.tsx`, `recurrence/[id].tsx`, `transaction/[id].tsx`,
+`transaction/edit/[id].tsx`. There is no `EmptyState` in `src/components/`, so each screen decides
+again what an absence looks like.
+
+The strings are already in place: nine `empty` keys across `packages/i18n/src/locales/en.ts`, all
+bare noun phrases ("No budgets", "No accounts", "No tags"). `categories.emptyNote` is the only one
+that says *why the thing is worth creating* — which is the part that makes an empty state useful, and
+the part eight of them are missing.
+
+`UnreachableScreen` (`src/components/UnreachableScreen.tsx`) is the closest thing to designed empty
+UI in the app — centred title, muted body, caption, one button — and its shape is probably what gets
+generalised.
+
+To settle before planning:
+
+- **Three cases are being served by one treatment, and only one of them is an empty state.** "Nothing
+  yet" invites you to create something. "Nothing matches" (`transactions.noResults`, `stats.empty`
+  for a period with no data) wants the filter or the period reset, not a new record. "Not found"
+  (`transaction/[id]`, `recurrence/[id]`, reached after a delete or a sync) is an error wearing the
+  same muted sentence. Deciding the three shapes is most of the design work.
+- **Illustration or type only.** The mascotte set exists (`docs/brand/mascotte/procione*.svg`) and is
+  the obvious source; it also drags in the question in the 3D item below. Type-only is cheaper and
+  ages better on a list that is empty for ten seconds.
+- **Whether every empty state carries its primary action.** Transactions and Budgets do; Accounts,
+  Tags and Categories do not, and Budgets already needed a separate fix for exactly that
+  (`fix(mobile): keep a way into Budgets when there are none`). If the component takes an optional
+  action, the default should be to pass one.
+- **Read the prototype first.** `docs/design/README.md` lists empty states under Transazioni,
+  `docs/design/Spese.dc.html` 180–251; the other screens' are wherever their own ranges are. The spec
+  is silent here, so the prototype governs (AGENTS.md).
 
 ## Considered on 2026-09-18 and not planned
 

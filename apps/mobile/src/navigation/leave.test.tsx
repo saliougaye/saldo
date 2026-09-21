@@ -1,7 +1,7 @@
-import { router, Stack, Tabs } from 'expo-router';
-import { act, renderRouter } from 'expo-router/testing-library';
+import { router, Stack, Tabs, useLocalSearchParams } from 'expo-router';
+import { act, renderRouter, screen } from 'expo-router/testing-library';
 import { Text } from 'react-native';
-import { type Gone, showsGone, useLeaveGone } from './leave';
+import { type Gone, type Renamed, showsGone, useLeaveGone, useLeaveRenamed } from './leave';
 
 const page = (name: string) => () => <Text>{name}</Text>;
 
@@ -9,8 +9,12 @@ const page = (name: string) => () => <Text>{name}</Text>;
 let leave: (gone: Gone) => void = () => {
   throw new Error('no editor rendered');
 };
+let leaveRenamed: (renamed: Renamed) => void = () => {
+  throw new Error('no editor rendered');
+};
 function Editor() {
   leave = useLeaveGone();
+  leaveRenamed = useLeaveRenamed();
   return <Text>editor</Text>;
 }
 
@@ -23,7 +27,11 @@ const ROUTES = {
   'settings/categories': page('categories'),
   'category/[id]': page('category'),
   'category/edit/[id]': Editor,
-  'transaction/[id]': page('transaction'),
+  // Prints its id, so a test can tell the screen apart from the route entry in the state.
+  'transaction/[id]': () => {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    return <Text>{`transaction:${id ?? ''}`}</Text>;
+  },
   'transaction/edit/[id]': Editor,
 };
 
@@ -109,6 +117,56 @@ describe('useLeaveGone', () => {
     const rootStack = await open('/category/edit/a');
 
     await run(() => leave({ kind: 'category', ids: ['a'] }));
+
+    expect(rootStack()).toEqual(['(tabs)']);
+  });
+});
+
+describe('useLeaveRenamed', () => {
+  it('sends the detail underneath to the id the row was saved under', async () => {
+    const rootStack = await open('/(tabs)');
+    await run(() => router.push('/transaction/t1'));
+    await run(() => router.push('/transaction/edit/t1'));
+
+    await run(() => leaveRenamed({ kind: 'transaction', from: 't1', to: 'rec-1:2026-04-10' }));
+
+    expect(rootStack()).toEqual(['(tabs)', 'transaction/[id]:rec-1:2026-04-10']);
+    // The route keeps its key so the screen does not remount: it has to read the new id anyway,
+    // otherwise it goes on loading the row that "Ripeti" replaced and shows nothing.
+    expect(screen.getByText('transaction:rec-1:2026-04-10')).toBeTruthy();
+  });
+
+  it('moves every copy of the row further down the stack too', async () => {
+    const rootStack = await open('/(tabs)');
+    await run(() => router.push('/transaction/t1'));
+    await run(() => router.push('/category/c1'));
+    await run(() => router.push('/transaction/t1'));
+    await run(() => router.push('/transaction/edit/t1'));
+
+    await run(() => leaveRenamed({ kind: 'transaction', from: 't1', to: 't2' }));
+
+    expect(rootStack()).toEqual([
+      '(tabs)',
+      'transaction/[id]:t2',
+      'category/[id]:c1',
+      'transaction/[id]:t2',
+    ]);
+  });
+
+  it('leaves other rows alone', async () => {
+    const rootStack = await open('/(tabs)');
+    await run(() => router.push('/transaction/other'));
+    await run(() => router.push('/transaction/edit/t1'));
+
+    await run(() => leaveRenamed({ kind: 'transaction', from: 't1', to: 't2' }));
+
+    expect(rootStack()).toEqual(['(tabs)', 'transaction/[id]:other']);
+  });
+
+  it('falls back to the tabs when the editor was all there was', async () => {
+    const rootStack = await open('/transaction/edit/t1');
+
+    await run(() => leaveRenamed({ kind: 'transaction', from: 't1', to: 't2' }));
 
     expect(rootStack()).toEqual(['(tabs)']);
   });

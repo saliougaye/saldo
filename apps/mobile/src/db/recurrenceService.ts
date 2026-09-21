@@ -136,6 +136,12 @@ export function applyRecurrenceEdit(
   });
 }
 
+export interface StartedRecurrence {
+  recurrence: Recurrence;
+  /** The row that replaced the saved transaction: the callers navigate to it (§5.9). */
+  occurrence: Transaction;
+}
+
 /** Creates a recurrence from a transaction the user set "Ripeti" on (§5.9). */
 export function startRecurrence(
   db: RepositoryDatabase,
@@ -144,7 +150,7 @@ export function startRecurrence(
   rule: RecurrenceRule,
   today: LocalDate,
   def: PeriodDef,
-): Recurrence {
+): StartedRecurrence {
   return db.transaction(() => {
     const recurrence = repos.recurrences.create({
       frequency: rule.frequency,
@@ -165,13 +171,15 @@ export function startRecurrence(
     // The transaction the user just saved becomes the first occurrence, keeping its own id out of
     // the way: the deterministic id is what other devices will converge on (D21).
     repos.transactions.remove(transaction.id);
-    repos.transactions.create({
+    const occurrence = repos.transactions.create({
       ...transaction,
       id: occurrenceId(recurrence.id, transaction.date),
       recurrenceId: recurrence.id,
     });
+    // The receipts belong to the row, not to its id: they follow it onto the occurrence (§10).
+    repos.attachments.moveTo(transaction.id, occurrence.id);
     runMaterialiser(db, repos, today, def);
-    return recurrence;
+    return { recurrence, occurrence };
   });
 }
 

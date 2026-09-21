@@ -459,6 +459,10 @@ Let `today = todayLocal()`.
 - The "Ripeti" chip row of the new-transaction sheet (Mai / Ogni mese / Ogni settimana / Altro › sheet with presets,
   "Personalizzato" every N days/weeks/months/years, and an end: mai / in una data / dopo N volte) creates a
   `Recurrence` whose `startDate` is the transaction date, plus the first occurrence (id = `${recurrenceId}:${date}`).
+- **"Ripeti" on an existing transaction** (the same chip row in the edit form) replaces the row with that first
+  occurrence, because the id has to be the deterministic one (D21). Two things travel with it: its **attachments**,
+  repointed at the new id, and the **screens** showing the old one — the detail underneath the editor is taken to
+  the new id instead of being gone back to, otherwise it renders as a row that no longer exists.
 - **Materialiser** (`materializeOccurrences(recurrence, existingIds, horizonEnd)`): for each date the schedule fires
   on (`nthOccurrence`) from `startDate` to `min(endDate, horizonEnd)`, if no row with the deterministic id exists
   (including tombstones), create it from the template. `horizonEnd = end of the cycle after the current one`. It runs
