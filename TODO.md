@@ -400,3 +400,38 @@ Two constraints to decide against, recorded so they are not re-derived:
 The cheap shape is therefore: keep the vector set for icons and splashes, and use 3D only where shading survives —
 README, docs, a future landing page. Whether the character stays a raccoon or becomes a panda is a free choice
 either way.
+
+## Onboarding: a better UI, and a step for the system permissions
+
+- [ ] Rework the onboarding screens (§6.29). Today they follow the prototype's step layout (1616–1717) and have not
+      had a design pass since; scope the redesign before planning it.
+- [ ] Add a step that asks for the system permissions up front, each one with a sentence saying what it is for and
+      a "Più tardi" that skips it. Today every permission is asked at the moment it is first needed:
+  - **notifications** — budget alerts (§5.8), requested by `src/features/budgets/BudgetAlertsGate.tsx`;
+  - **camera and photos** — attachments, requested by `src/attachments/capture.ts`;
+  - **Face ID / biometrics** — the app lock (`app/lock.tsx`); this one is an opt-in setting, so the step offers to
+    turn the lock on rather than asking for a permission.
+
+  Open points: whether the step sits on both paths (*Da zero* and the import) or only after "Inizia"; that a denied
+  permission cannot be asked again by iOS, so the step must not burn the one prompt the in-context request relies on
+  (show our own explanation first, call the system prompt only on "Attiva"); and that Profile needs a place to see
+  and change each one afterwards (a denied one links to the system settings).
+
+## Goals: saving towards a target
+
+Example: putting money aside to buy a car — «Macchina, 12.000 € entro giugno 2027».
+
+Budgets cannot do this, and bending them would break them: a budget is a **ceiling on spending** — `spent` is the sum
+of counted expenses in a category (§5.8), the bar fills as money goes *out*, and rollover only carries the unspent part
+of a limit. A goal is the opposite shape: a **target to accumulate**, with a deadline, filled by money put aside.
+
+What exists today is half of it: a `savings` account (§3, excluded from Totale spendibile) plus transfers into it
+already model "money set aside"; what is missing is the target, the deadline and the progress.
+
+- [ ] Decide the model before planning:
+  - a goal **linked to an account** (progress = the account's balance, or its growth since the goal started), or
+    a goal with its **own contributions** (so one account can hold several goals);
+  - the "on track" rule: required per period = (target − saved) / periods left, against the pace of the budget bars;
+  - where it lives: a Home card like budgets, a row in Profile, or on the account detail;
+  - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
+- [ ] Spec section (`§5.x Goals`), then the plan.
