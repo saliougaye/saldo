@@ -45,7 +45,11 @@ export function digitCount(text: string): number {
  * The last `settledFromRight` digits are the real ones, every digit before them is still scrambled.
  * `settledFromRight >= digitCount(text)` returns `text` unchanged.
  */
-export function settleDigits(text: string, settledFromRight: number, rng: Rng = Math.random): string {
+export function settleDigits(
+  text: string,
+  settledFromRight: number,
+  rng: Rng = Math.random,
+): string {
   const total = digitCount(text);
   const scrambled = Math.max(0, total - settledFromRight);
   let seen = 0;
