@@ -26,3 +26,12 @@ export function parseIconMarkup(markup: string): IconNode[] {
   }
   return nodes;
 }
+
+/**
+ * A stable React key for a node within its icon: the tag plus every attribute. No single
+ * attribute is enough — `target` draws three circles on one centre, told apart by the radius.
+ */
+export function iconNodeKey(node: IconNode): string {
+  const attrs = Object.entries(node.attrs).map(([name, value]) => `${name}=${value}`);
+  return `${node.tag}:${attrs.join(' ')}`;
+}

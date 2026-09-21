@@ -1,4 +1,4 @@
-import { type IconName, type IconNode, iconDefaults, iconNodes } from '@saldo/ui';
+import { type IconName, type IconNode, iconDefaults, iconNodeKey, iconNodes } from '@saldo/ui';
 import { Circle, Path, Rect, Svg } from 'react-native-svg';
 import { useTheme } from './ThemeProvider';
 
@@ -10,13 +10,6 @@ export interface IconProps {
   /** Defaults to the current text colour. */
   color?: string;
   strokeWidth?: number;
-}
-
-/** Identifies a node by the geometry attribute that distinguishes it within an icon. */
-function nodeKey(node: IconNode): string {
-  return (
-    node.attrs.d ?? `${node.attrs.cx ?? node.attrs.x ?? ''},${node.attrs.cy ?? node.attrs.y ?? ''}`
-  );
 }
 
 function IconElement({ node, color }: { node: IconNode; color: string }) {
@@ -42,7 +35,7 @@ export function Icon({ name, size = iconDefaults.size, color, strokeWidth }: Ico
     >
       {iconNodes[name].map((node) => (
         // The node list is static data, so its own shape is a stable identity; no index needed.
-        <IconElement key={`${node.tag}:${nodeKey(node)}`} node={node} color={resolved} />
+        <IconElement key={iconNodeKey(node)} node={node} color={resolved} />
       ))}
     </Svg>
   );

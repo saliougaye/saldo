@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseIconMarkup } from './iconNodes';
+import { iconNodeKey, parseIconMarkup } from './iconNodes';
 import { accountIconOptions, categoryIconGroups, ICON_NAMES, iconMarkup, iconNodes } from './icons';
 
 describe('parseIconMarkup', () => {
@@ -37,6 +37,14 @@ describe('icon set', () => {
       expect(iconNodes[name].length, name).toBeGreaterThan(0);
     }
     expect(iconNodes.grip.filter((node) => node.tag === 'circle')).toHaveLength(6);
+  });
+
+  it('gives every node of an icon a distinct key', () => {
+    // `target` is three circles sharing one centre: only the radius tells them apart.
+    for (const name of ICON_NAMES) {
+      const keys = iconNodes[name].map(iconNodeKey);
+      expect(new Set(keys).size, name).toBe(keys.length);
+    }
   });
 
   it('offers every category icon exactly once in the picker', () => {
