@@ -4,7 +4,8 @@ Open-source, local-first personal finance app. Track spending period by period, 
 phone. Sign in once with a passkey to a server you run yourself; after that it works offline, and syncs across your
 devices when it can. Build it yourself, sideload it, own your data.
 
-> Status: proof of concept in progress. See the [roadmap](docs/superpowers/plans/README.md).
+> Status: proof of concept in progress. See the [phase index](docs/superpowers/plans/README.md) for what is
+> built and [`ROADMAP.md`](ROADMAP.md) for what comes next.
 
 ## Screenshots
 
