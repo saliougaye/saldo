@@ -11,12 +11,12 @@ import {
   parseCsv,
   planImport,
 } from '@saldo/core';
-import { formatMoney } from '@saldo/i18n';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { AmountText } from '../../components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ListRow } from '../../components/ListRow';
@@ -247,13 +247,13 @@ export function ImportWizard({
                   title={row.description === '' ? row.categoryName : row.description}
                   subtitle={`${row.date} · ${row.accountName} · ${row.categoryName}`}
                   trailing={
-                    <Text color={row.kind === 'income' ? 'positive' : 'textMuted'}>
-                      {formatMoney(
-                        row.kind === 'income' ? row.amount : -row.amount,
-                        currency,
-                        locale,
-                      )}
-                    </Text>
+                    <AmountText
+                      minor={row.kind === 'income' ? row.amount : -row.amount}
+                      currency={currency}
+                      locale={locale}
+                      color={row.kind === 'income' ? 'positive' : 'textMuted'}
+                      align="end"
+                    />
                   }
                 />
               ))}

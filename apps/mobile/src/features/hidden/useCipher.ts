@@ -1,5 +1,6 @@
 import { motion } from '@saldo/ui';
 import { useEffect, useRef, useState } from 'react';
+import type { ViewStyle } from 'react-native';
 import {
   type AnimatedStyle,
   useAnimatedStyle,
@@ -15,8 +16,8 @@ export interface Cipher {
   integer: string;
   /** True while the digits are noise, so the caller can dim them. */
   scrambling: boolean;
-  realStyle: AnimatedStyle;
-  maskStyle: AnimatedStyle;
+  realStyle: AnimatedStyle<ViewStyle>;
+  maskStyle: AnimatedStyle<ViewStyle>;
 }
 
 /**

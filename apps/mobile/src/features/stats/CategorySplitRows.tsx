@@ -48,7 +48,9 @@ export function CategorySplitRows({
             subtitle={`${row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)} · ${t('stats.ofTotal', { pct: row.share })}`}
             leading={<IconBox name={row.icon} colour={row.colour} />}
             onPress={() => onPress(row.id)}
-            trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
+            trailing={
+              <AmountText minor={row.amount} currency={currency} locale={locale} align="end" />
+            }
           />
         </Animated.View>
       ))}

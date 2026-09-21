@@ -8,7 +8,7 @@ import {
   shiftPeriod,
   spendingByCategory,
 } from '@saldo/core';
-import { formatDayMonth, formatMoney, formatPeriodTick, formatSignedPercent } from '@saldo/i18n';
+import { formatDayMonth, formatPeriodTick, formatSignedPercent } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -21,6 +21,7 @@ import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useCategoriesQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SpendHistoryChart } from '../../src/features/stats/SpendHistoryChart';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -34,6 +35,7 @@ export default function CategoryDetail() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
@@ -213,7 +215,7 @@ export default function CategoryDetail() {
           </Text>
           {pastMedian === null ? null : (
             <Text size="caption" color="textFaint" tabular numberOfLines={1}>
-              {t('stats.median', { amount: formatMoney(pastMedian, currency, locale) })}
+              {t('stats.median', { amount: money(pastMedian, currency, locale) })}
             </Text>
           )}
         </View>
@@ -235,7 +237,7 @@ export default function CategoryDetail() {
           <Text size="footnote" color="textMuted">
             {t('stats.average')}
           </Text>
-          <Text tabular>{formatMoney(average, currency, locale)}</Text>
+          <AmountText minor={average} currency={currency} locale={locale} align="end" />
         </View>
       </Card>
 
@@ -257,7 +259,9 @@ export default function CategoryDetail() {
                     colour={theme.categoryColor(child.colorIndex)}
                   />
                 }
-                trailing={<AmountText minor={amount} currency={currency} locale={locale} />}
+                trailing={
+                  <AmountText minor={amount} currency={currency} locale={locale} align="end" />
+                }
                 // A subcategory is a category: it leads to its own screen, like every other row
                 // that names one, and that is where it is edited.
                 onPress={() =>
@@ -269,7 +273,12 @@ export default function CategoryDetail() {
               <ListRow
                 title={t('stats.noSubcategory')}
                 trailing={
-                  <AmountText minor={childSpend.direct} currency={currency} locale={locale} />
+                  <AmountText
+                    minor={childSpend.direct}
+                    currency={currency}
+                    locale={locale}
+                    align="end"
+                  />
                 }
               />
             )}
@@ -289,7 +298,9 @@ export default function CategoryDetail() {
                 onPress={() =>
                   router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
                 }
-                trailing={<AmountText minor={-tx.amount} currency={currency} locale={locale} />}
+                trailing={
+                  <AmountText minor={-tx.amount} currency={currency} locale={locale} align="end" />
+                }
               />
             ))}
         </View>

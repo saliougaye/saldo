@@ -1,5 +1,4 @@
 import { accountBalances, netWorth, spendableTotal } from '@saldo/core';
-import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -11,6 +10,7 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
@@ -23,6 +23,7 @@ export default function AccountsTab() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const accounts = useAccounts();
@@ -101,6 +102,7 @@ export default function AccountsTab() {
             {t('accounts.spendable')}
           </Text>
           <AmountText
+            align="end"
             minor={spendableTotal(accounts, balances)}
             currency={currency}
             locale={locale}
@@ -148,7 +150,7 @@ export default function AccountsTab() {
       )}
 
       <Text size="caption" color="textFaint">
-        {formatMoney(netWorth(accounts, balances), currency, locale)}
+        {money(netWorth(accounts, balances), currency, locale)}
       </Text>
     </Screen>
   );

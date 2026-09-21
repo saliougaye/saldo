@@ -1,5 +1,4 @@
 import { previousPeriods } from '@saldo/core';
-import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -20,6 +19,7 @@ import {
 } from '../src/db/hooks';
 import { BudgetDetailSheet } from '../src/features/budgets/BudgetDetailSheet';
 import { budgetViews } from '../src/features/budgets/useBudgetProgress';
+import { useHiddenMoney } from '../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import { useAppLocale } from '../src/i18n/useAppLocale';
 import { Text } from '../src/theme/Text';
@@ -33,6 +33,7 @@ export default function BudgetsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const { rows: budgets, loaded } = useBudgetsQuery();
@@ -116,6 +117,7 @@ export default function BudgetsScreen() {
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <AmountText
+                      align="end"
                       minor={view.spent}
                       currency={currency}
                       locale={locale}
@@ -124,7 +126,7 @@ export default function BudgetsScreen() {
                     />
                     <Text size="caption" color="textMuted">
                       {t('budgets.ofLimit', {
-                        amount: formatMoney(view.limitWithCarry, currency, locale),
+                        amount: money(view.limitWithCarry, currency, locale),
                       })}
                     </Text>
                   </View>

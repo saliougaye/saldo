@@ -1,5 +1,5 @@
 import { nextOccurrence, type RecurrenceRule } from '@saldo/core';
-import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
+import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -24,6 +24,7 @@ import {
   useSettings,
 } from '../../src/db/hooks';
 import { changeRecurrenceRule, stopRecurrence } from '../../src/db/recurrenceService';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { RecurrenceSheet } from '../../src/features/transactions/RecurrenceSheet';
 import { cadenceLabel } from '../../src/features/transactions/recurrenceCopy';
@@ -38,6 +39,7 @@ export default function RecurrenceDetail() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const toast = useToast();
   const repos = useRepositories();
@@ -195,6 +197,7 @@ export default function RecurrenceDetail() {
           </View>
           <View style={{ marginTop: 8 }}>
             <AmountText
+              align="end"
               minor={template.kind === 'transfer' ? template.amount : signed}
               currency={currency}
               locale={locale}
@@ -249,7 +252,7 @@ export default function RecurrenceDetail() {
               <Text size="caption" color="textFaint" tabular>
                 {t('recurrence.occurrencesTotal', {
                   count: occurrences.length,
-                  amount: formatMoney(total, currency, locale),
+                  amount: money(total, currency, locale),
                 })}
               </Text>
             </View>
@@ -268,6 +271,7 @@ export default function RecurrenceDetail() {
                 upcoming={tx.date > today}
                 trailing={
                   <AmountText
+                    align="end"
                     minor={tx.kind === 'income' ? tx.amount : -tx.amount}
                     currency={currency}
                     locale={locale}

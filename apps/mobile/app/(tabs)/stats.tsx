@@ -16,7 +16,7 @@ import {
   summarizePeriod,
   upcomingExpenses,
 } from '@saldo/core';
-import { formatCycleRange, formatMoney, formatPeriodTick } from '@saldo/i18n';
+import { formatCycleRange, formatPeriodTick } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -31,6 +31,7 @@ import { Segmented } from '../../src/components/Segmented';
 import { Sheet } from '../../src/components/Sheet';
 import { useDelayed } from '../../src/components/useDelayed';
 import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -63,6 +64,7 @@ export default function StatsTab() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
@@ -293,7 +295,7 @@ export default function StatsTab() {
                 <Text size="footnote" color="textMuted">
                   {t('stats.excludedRow', {
                     count: excluded.length,
-                    amount: formatMoney(
+                    amount: money(
                       excluded.reduce((sum, tx) => sum + tx.amount, 0),
                       currency,
                       locale,
@@ -331,6 +333,7 @@ export default function StatsTab() {
               {t('stats.cycleTrend')}
             </Text>
             <AmountText
+              align="end"
               minor={current[current.length - 1] ?? 0}
               currency={currency}
               locale={locale}
@@ -362,7 +365,7 @@ export default function StatsTab() {
           <Text size="footnote" color="textMuted" style={{ marginTop: 10 }}>
             {t('stats.committedLine', {
               pct: committedPct,
-              amount: formatMoney(committed, currency, locale),
+              amount: money(committed, currency, locale),
             })}
           </Text>
         </Card>
@@ -375,6 +378,7 @@ export default function StatsTab() {
               {t('stats.projection')}
             </Text>
             <AmountText
+              align="end"
               minor={projection}
               currency={currency}
               locale={locale}
@@ -389,7 +393,7 @@ export default function StatsTab() {
                   ? 'stats.projectionAbove'
                   : 'stats.projectionBelow',
                 {
-                  amount: formatMoney(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
+                  amount: money(Math.abs(projection - (cycleMedian ?? 0)), currency, locale),
                 },
               )}
             </Text>

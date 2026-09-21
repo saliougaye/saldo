@@ -1,5 +1,5 @@
 import { rollupToParents, spendingByCategory } from '@saldo/core';
-import { formatDayMonth, formatMoney } from '@saldo/i18n';
+import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -18,6 +18,7 @@ import {
   useTagsQuery,
   useTransactionsInRange,
 } from '../../src/db/hooks';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
 import { TagEditCard } from '../../src/features/tags/TagEditCard';
@@ -33,6 +34,7 @@ export default function TagView() {
   const router = useRouter();
   const leaveGone = useLeaveGone();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
@@ -155,6 +157,7 @@ export default function TagView() {
                 }
                 trailing={
                   <AmountText
+                    align="end"
                     minor={rowMeta.amount.minor}
                     currency={currency}
                     locale={locale}
@@ -169,7 +172,7 @@ export default function TagView() {
       </Card>
 
       <Text size="caption" color="textFaint">
-        {formatMoney(total, currency, locale)}
+        {money(total, currency, locale)}
       </Text>
     </Screen>
   );

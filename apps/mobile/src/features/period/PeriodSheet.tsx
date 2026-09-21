@@ -6,7 +6,7 @@ import {
   previousPeriods,
   summarizePeriod,
 } from '@saldo/core';
-import { formatCycleRange, formatMoney } from '@saldo/i18n';
+import { formatCycleRange } from '@saldo/i18n';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -18,6 +18,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import { CustomRangeSheet } from './CustomRangeSheet';
 import { CycleStartDaySheet } from './CycleStartDaySheet';
 import { PeriodKindSheet } from './PeriodKindSheet';
@@ -38,6 +39,7 @@ const VISIBLE_PERIODS = 5;
  */
 export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const theme = useTheme();
   const repos = useRepositories();
@@ -91,7 +93,7 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
                       elapsed: elapsedDays(entry.period, today),
                       length: periodLength(entry.period),
                     })
-                  : t('period.spent', { amount: formatMoney(spent, currency, locale) })
+                  : t('period.spent', { amount: money(spent, currency, locale) })
               }
               trailing={
                 selected && period.isPeriod ? (

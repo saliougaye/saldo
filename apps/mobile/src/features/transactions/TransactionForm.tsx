@@ -6,7 +6,7 @@ import {
   transferBalancePreview,
   transferOverdrawsSource,
 } from '@saldo/core';
-import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
+import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -37,6 +37,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
 import { RecurrenceSheet } from './RecurrenceSheet';
@@ -92,6 +93,7 @@ export function TransactionForm({
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const repos = useRepositories();
   const settings = useSettings();
@@ -201,7 +203,8 @@ export function TransactionForm({
   const summaryLabel =
     summaryParts.length === 0 ? t('txForm.detailsNone') : summaryParts.join(' · ');
 
-  const money = (minor: number) => formatMoney(minor, currency, locale);
+  // Through hidden mode too: this label is spoken aloud, which is exactly what hiding is for.
+  const spoken = (minor: number) => money(minor, currency, locale);
 
   /**
    * The chosen account's balance, and what this transfer leaves it at. The arrow appears only when
@@ -215,8 +218,8 @@ export function TransactionForm({
         accessible
         accessibilityLabel={
           changes
-            ? t('txForm.balanceAfter', { now: money(preview.now), after: money(preview.after) })
-            : t('txForm.balanceNow', { now: money(preview.now) })
+            ? t('txForm.balanceAfter', { now: spoken(preview.now), after: spoken(preview.after) })
+            : t('txForm.balanceNow', { now: spoken(preview.now) })
         }
         style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
       >
@@ -291,7 +294,7 @@ export function TransactionForm({
             // is exactly when the button is greyest and the reason least guessable.
             <Text size="footnote" color="textMuted">
               {t(`txForm.missing_${missing}`, {
-                available: money(transferPreview.from?.now ?? 0),
+                available: spoken(transferPreview.from?.now ?? 0),
               })}
             </Text>
           )}

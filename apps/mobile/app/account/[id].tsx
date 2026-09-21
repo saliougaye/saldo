@@ -9,7 +9,7 @@ import {
   periodContaining,
   summarizePeriod,
 } from '@saldo/core';
-import { formatDayMonth, formatLongDate, formatMoney, formatSignedPercent } from '@saldo/i18n';
+import { formatDayMonth, formatLongDate, formatSignedPercent } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -29,6 +29,7 @@ import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
+import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -45,6 +46,7 @@ export default function AccountDetail() {
   const router = useRouter();
   const leaveGone = useLeaveGone();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
@@ -178,6 +180,7 @@ export default function AccountDetail() {
             title={t('accounts.accruedInCycle')}
             trailing={
               <AmountText
+                align="end"
                 minor={creditStatementAccrued(account.id, account.creditCloseDay, rows, today)}
                 currency={currency}
                 locale={locale}
@@ -266,6 +269,7 @@ export default function AccountDetail() {
                   }
                   trailing={
                     <AmountText
+                      align="end"
                       minor={row.amount.minor}
                       currency={currency}
                       locale={locale}
@@ -283,7 +287,7 @@ export default function AccountDetail() {
         <SecondaryButton label={t('accounts.archive')} onPress={() => setConfirmArchive(true)} />
       )}
       <Text size="caption" color="textFaint">
-        {formatMoney(balance, currency, locale)}
+        {money(balance, currency, locale)}
       </Text>
 
       <ConfirmDialog

@@ -1,5 +1,5 @@
 import { recurringMonthlyTotals } from '@saldo/core';
-import { formatDayMonth, formatMoney } from '@saldo/i18n';
+import { formatDayMonth } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import { usePeriod } from '../period/PeriodProvider';
 import { byNext, recurrenceViews } from './recurrenceViews';
 
@@ -23,6 +24,7 @@ export function RecurrencesCard() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
@@ -78,7 +80,7 @@ export function RecurrencesCard() {
           </Text>
         </View>
         <Text size="footnote" color="textMuted" tabular>
-          {t('recurrence.perMonth', { amount: formatMoney(-totals.expense, currency, locale) })}
+          {t('recurrence.perMonth', { amount: money(-totals.expense, currency, locale) })}
         </Text>
         <Icon name="chevR" size={16} color={theme.palette.textFaint} />
       </Pressable>

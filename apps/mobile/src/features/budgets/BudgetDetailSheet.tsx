@@ -1,7 +1,7 @@
-import { formatMoney } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { AmountText } from '../../components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { ProgressBar } from '../../components/ProgressBar';
 import { Sheet } from '../../components/Sheet';
@@ -9,6 +9,7 @@ import { useRepositories } from '../../db/DatabaseProvider';
 import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import type { BudgetView } from './useBudgetProgress';
 
 export interface BudgetDetailSheetProps {
@@ -21,6 +22,7 @@ export interface BudgetDetailSheetProps {
 export function BudgetDetailSheet({ visible, onClose, view }: BudgetDetailSheetProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const repos = useRepositories();
@@ -30,11 +32,16 @@ export function BudgetDetailSheet({ visible, onClose, view }: BudgetDetailSheetP
 
   return (
     <Sheet visible={visible} onClose={onClose} title={view.budget.name}>
-      <Text size="amountLg" weight="semibold" tracking="tighter" tabular>
-        {formatMoney(view.spent, currency, locale)}
-      </Text>
+      <AmountText
+        minor={view.spent}
+        currency={currency}
+        locale={locale}
+        size="amountLg"
+        weight="semibold"
+        tracking="tighter"
+      />
       <Text color="textMuted">
-        {t('budgets.ofLimit', { amount: formatMoney(view.limitWithCarry, currency, locale) })}
+        {t('budgets.ofLimit', { amount: money(view.limitWithCarry, currency, locale) })}
       </Text>
       <View style={{ marginTop: 6 }}>
         <ProgressBar

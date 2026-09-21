@@ -8,7 +8,6 @@ import {
   suggestBudgetAmount,
   takenCategoryIds,
 } from '@saldo/core';
-import { formatMoney } from '@saldo/i18n';
 import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +28,7 @@ import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import { usePeriod } from '../period/PeriodProvider';
 import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
 import { BUDGET_STEPS, budgetStepMissing } from './steps';
@@ -61,6 +61,7 @@ export function BudgetForm({
 }: BudgetFormProps) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const [stepIndex, setStepIndex] = useState(0);
   const toast = useToast();
@@ -143,7 +144,7 @@ export function BudgetForm({
       {suggestion === null ? null : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
           <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
-            {t('budgets.medianHint', { amount: formatMoney(suggestion, currency, locale) })}
+            {t('budgets.medianHint', { amount: money(suggestion, currency, locale) })}
           </Text>
           <Pressable
             accessibilityRole="button"

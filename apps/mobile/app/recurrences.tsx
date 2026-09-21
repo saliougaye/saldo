@@ -101,6 +101,7 @@ export default function RecurrencesScreen() {
         leading={<IconBox name={icon} colour={colour} badge="repeat" />}
         trailing={
           <AmountText
+            align="end"
             minor={template.kind === 'transfer' ? template.amount : signed}
             currency={currency}
             locale={locale}
@@ -167,6 +168,7 @@ export default function RecurrencesScreen() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
               <AmountText
+                align="end"
                 minor={-totals.expense}
                 currency={currency}
                 locale={locale}
@@ -176,6 +178,7 @@ export default function RecurrencesScreen() {
               />
               {totals.income === 0 ? null : (
                 <AmountText
+                  align="end"
                   minor={totals.income}
                   currency={currency}
                   locale={locale}

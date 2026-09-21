@@ -5,7 +5,7 @@ import {
   type LocalDate,
   spendingByTag,
 } from '@saldo/core';
-import { type AppLocale, formatMoney } from '@saldo/i18n';
+import type { AppLocale } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import { Card } from '../../components/Card';
 import { ListRow } from '../../components/ListRow';
 import { useTags } from '../../db/hooks';
 import { Text } from '../../theme/Text';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 
 /** How many tags the card shows before handing over to the full list. */
 const TOP_TAGS = 5;
@@ -41,6 +42,7 @@ export interface TagSpendCardProps {
 export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendCardProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const tags = useTags();
 
   const spending = useMemo(() => spendingByTag(rows, range, today), [rows, range, today]);
@@ -77,7 +79,9 @@ export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendC
               title={nameOf.get(row.tagId) ?? row.tagId}
               subtitle={t('tags.uses', { count: row.count })}
               onPress={() => router.push({ pathname: '/tag/[id]', params: { id: row.tagId } })}
-              trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
+              trailing={
+                <AmountText minor={row.amount} currency={currency} locale={locale} align="end" />
+              }
               chevron
             />
           ))}
@@ -88,7 +92,7 @@ export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendC
         <Text size="footnote" color="textMuted" style={{ marginTop: 8 }}>
           {t('stats.tagsUntagged', {
             count: spending.untaggedCount,
-            amount: formatMoney(spending.untagged, currency, locale),
+            amount: money(spending.untagged, currency, locale),
           })}
         </Text>
       )}
