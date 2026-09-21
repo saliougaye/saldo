@@ -1,4 +1,3 @@
-import { formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +10,7 @@ import { useCategories, useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
 import type { BudgetView } from './useBudgetProgress';
 
 /** §6.1: the top three budgets by ratio, plus a link to the full list. */
@@ -20,6 +20,7 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
   const categories = useCategories();
@@ -70,8 +71,8 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
                   {view.budget.name}
                 </Text>
                 <Text size="footnote" color="textMuted" tabular>
-                  {`${formatMoney(view.spent, currency, locale)} ${t('budgets.ofLimit', {
-                    amount: formatMoney(view.limitWithCarry, currency, locale),
+                  {`${money(view.spent, currency, locale)} ${t('budgets.ofLimit', {
+                    amount: money(view.limitWithCarry, currency, locale),
                   })}`}
                 </Text>
               </View>
