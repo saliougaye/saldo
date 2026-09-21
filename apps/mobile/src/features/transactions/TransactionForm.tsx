@@ -657,24 +657,20 @@ export function TransactionForm({
                 value={tagQuery}
                 onChangeText={setTagQuery}
               />
-              {values.tagIds.length === 0 ? null : (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                  {values.tagIds.map((id) => {
-                    const tag = tags.find((candidate) => candidate.id === id);
-                    return (
-                      <Chip
-                        key={id}
-                        label={tag?.name ?? id}
-                        active
-                        onPress={() =>
-                          set({ tagIds: values.tagIds.filter((value) => value !== id) })
-                        }
-                      />
-                    );
-                  })}
-                </View>
-              )}
+              {/* One wrapping row: the chosen tags first, then the suggestions. Two rows put a
+                  chip that was just picked on a line of its own, away from where it was tapped. */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {values.tagIds.map((id) => {
+                  const tag = tags.find((candidate) => candidate.id === id);
+                  return (
+                    <Chip
+                      key={id}
+                      label={tag?.name ?? id}
+                      active
+                      onPress={() => set({ tagIds: values.tagIds.filter((value) => value !== id) })}
+                    />
+                  );
+                })}
                 {suggestions.map((tag) => (
                   <Chip
                     key={tag.id}
