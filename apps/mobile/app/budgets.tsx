@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountText } from '../src/components/AmountText';
 import { Card } from '../src/components/Card';
+import { EmptyState } from '../src/components/EmptyState';
 import { IconBox } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
@@ -59,8 +60,8 @@ export default function BudgetsScreen() {
         <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
           {t('budgets.title')}
         </Text>
-        {/* Where Categorie and Conti keep theirs. The dashed card below stays for the empty
-            state, where it is the only thing to do on the screen rather than a second "+". */}
+        {/* Where Categorie and Conti keep theirs. The empty state below carries its own
+            "Nuovo budget", where it is the only thing to do on the screen. */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('budgets.newBudget')}
@@ -72,26 +73,13 @@ export default function BudgetsScreen() {
       </View>
 
       {views.length === 0 ? (
-        <>
-          <Card>
-            <Text color="textMuted">{t('budgets.empty')}</Text>
-          </Card>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/budget/new')}
-            style={({ pressed }) => ({
-              borderWidth: 1,
-              borderStyle: 'dashed',
-              borderColor: theme.palette.borderStrong,
-              borderRadius: theme.radii.card,
-              paddingVertical: 18,
-              alignItems: 'center',
-              transform: [{ scale: pressed ? 0.96 : 1 }],
-            })}
-          >
-            <Text color="textMuted">{t('budgets.newBudget')}</Text>
-          </Pressable>
-        </>
+        <EmptyState
+          kind="yet"
+          ghost="bar"
+          title={t('budgets.empty')}
+          body={t('budgets.emptyBody')}
+          action={{ label: t('budgets.newBudget'), onPress: () => router.push('/budget/new') }}
+        />
       ) : (
         views.map((view) => {
           const category = categories.find((row) => row.id === view.budget.categoryIds[0]);
