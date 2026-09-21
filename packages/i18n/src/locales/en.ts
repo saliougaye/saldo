@@ -28,6 +28,9 @@ export const en: Messages = {
     negative: 'Negative',
     decrement: 'Less',
     increment: 'More',
+    amountHidden: 'Amount hidden',
+    amountsHidden: 'Amounts hidden',
+    amountsShown: 'Amounts shown',
   },
   tabs: {
     home: 'Home',
@@ -685,6 +688,8 @@ export const en: Messages = {
     importCsv: 'Import transactions (CSV)',
     exportData: 'Export your data',
     restoreBackup: 'Restore a backup',
+    hideAmounts: 'Hide amounts',
+    hideAmountsHint: 'Long-press the balance on Home to hide them, tap to show them.',
     appLock: 'Biometric lock',
     version: 'Version {{version}}',
     deleteAllData: 'Delete all data',
