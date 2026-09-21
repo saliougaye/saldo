@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenAmounts } from '../hidden/hiddenAmounts';
 
 export interface CycleTrendChartProps {
   /** Cumulative counted expenses per elapsed day (§5.6). */
@@ -29,6 +30,7 @@ function points(series: readonly number[], width: number, height: number, max: n
  */
 export function CycleTrendChart({ current, usual, height = 96 }: CycleTrendChartProps) {
   const theme = useTheme();
+  const { hidden } = useHiddenAmounts();
   const [width, setWidth] = useState(0);
   const max = Math.max(1, ...current, ...usual);
   const last = current[current.length - 1] ?? 0;
@@ -40,7 +42,18 @@ export function CycleTrendChart({ current, usual, height = 96 }: CycleTrendChart
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
       style={{ height, width: '100%' }}
     >
-      {width === 0 ? null : (
+      {width === 0 ? null : hidden ? (
+        // The line is the figure: a flat dashed baseline says "there is a chart here" and no more.
+        <Svg width={width} height={height}>
+          <Polyline
+            points={`0,${(height / 2).toFixed(1)} ${width.toFixed(1)},${(height / 2).toFixed(1)}`}
+            fill="none"
+            stroke={theme.palette.borderStrong}
+            strokeWidth={1.5}
+            strokeDasharray="3 4"
+          />
+        </Svg>
+      ) : (
         <Svg width={width} height={height}>
           {usual.length > 0 ? (
             <Polyline

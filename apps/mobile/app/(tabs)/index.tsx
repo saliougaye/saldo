@@ -25,7 +25,7 @@ import {
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
-import { useHiddenAmounts, useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenAmounts, useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';

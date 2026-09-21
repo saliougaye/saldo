@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Text as RnText, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { MASK } from '../features/hidden/cipher';
-import { useHiddenAmounts } from '../features/hidden/HiddenAmountsProvider';
+import { useHiddenAmounts } from '../features/hidden/hiddenAmounts';
 import { useCipher } from '../features/hidden/useCipher';
 import { useCountUp } from '../theme/motion';
 import { Text, type TextProps } from '../theme/Text';

@@ -5,12 +5,8 @@ import { Pressable, Text as RNText } from 'react-native';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { CIPHER } from './cipher';
-import {
-  AMOUNTS_HIDDEN_KEY,
-  HiddenAmountsProvider,
-  useHiddenAmounts,
-  useHiddenMoney,
-} from './HiddenAmountsProvider';
+import { AMOUNTS_HIDDEN_KEY, HiddenAmountsProvider } from './HiddenAmountsProvider';
+import { useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
 
 const mockStore = new Map<string, string>();
 

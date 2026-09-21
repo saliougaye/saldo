@@ -18,7 +18,7 @@ import {
   useTagsQuery,
   useTransactionsInRange,
 } from '../../src/db/hooks';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
 import { TagEditCard } from '../../src/features/tags/TagEditCard';

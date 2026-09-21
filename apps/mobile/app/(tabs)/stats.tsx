@@ -31,7 +31,7 @@ import { Segmented } from '../../src/components/Segmented';
 import { Sheet } from '../../src/components/Sheet';
 import { useDelayed } from '../../src/components/useDelayed';
 import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';

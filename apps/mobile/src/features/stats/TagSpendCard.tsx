@@ -15,7 +15,7 @@ import { Card } from '../../components/Card';
 import { ListRow } from '../../components/ListRow';
 import { useTags } from '../../db/hooks';
 import { Text } from '../../theme/Text';
-import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../hidden/hiddenAmounts';
 
 /** How many tags the card shows before handing over to the full list. */
 const TOP_TAGS = 5;

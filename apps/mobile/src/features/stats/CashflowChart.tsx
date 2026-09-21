@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { MASK } from '../hidden/cipher';
+import { useHiddenAmounts } from '../hidden/hiddenAmounts';
 
 export interface CashflowBar {
   key: string;
@@ -18,6 +20,8 @@ export interface CashflowBar {
 /** Design geometry (`docs/design/Spese.dc.html` lines 265-289): fixed-width bars in 54px halves. */
 const BAR_WIDTH = 16;
 const HALF_HEIGHT = 54;
+/** Height of every bar while the figures are hidden. */
+const HIDDEN_STUB = Math.round(HALF_HEIGHT * 0.35);
 const BAR_RADIUS = 2;
 /** 45° stripes, 2px of ink every 5px, as in the prototype's `repeating-linear-gradient`. */
 const HATCH_PERIOD = 5;
@@ -104,11 +108,15 @@ export function CashflowChart({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { hidden } = useHiddenAmounts();
   const max = Math.max(1, ...bars.flatMap((bar) => [bar.income, bar.expenses]));
   // A cycle with nothing in it gets no bar at all rather than a 1px stub, so "no data" reads as
-  // empty instead of as a very small amount.
-  const barHeight = (value: number) =>
-    value === 0 ? 0 : Math.max(1, Math.round((value / max) * HALF_HEIGHT));
+  // empty instead of as a very small amount. In hidden mode every column is the same stub: with the
+  // labels masked the shape of the year would still say which months were heavy.
+  const barHeight = (value: number) => {
+    if (hidden) return HIDDEN_STUB;
+    return value === 0 ? 0 : Math.max(1, Math.round((value / max) * HALF_HEIGHT));
+  };
 
   const legend: readonly { key: string; label: string; colour: string; hatched: boolean }[] = [
     {
@@ -140,11 +148,11 @@ export function CashflowChart({
             <View key={bar.key} style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: 7 }}>
               <Text
                 size="caption"
-                color={net < 0 ? 'accent' : 'textMuted'}
+                color={!hidden && net < 0 ? 'accent' : 'textMuted'}
                 tabular
                 numberOfLines={1}
               >
-                {formatMajor(net, currency, locale)}
+                {hidden ? MASK : formatMajor(net, currency, locale)}
               </Text>
               <View
                 style={{

@@ -19,7 +19,7 @@ import {
 } from '../src/db/hooks';
 import { BudgetDetailSheet } from '../src/features/budgets/BudgetDetailSheet';
 import { budgetViews } from '../src/features/budgets/useBudgetProgress';
-import { useHiddenMoney } from '../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import { useAppLocale } from '../src/i18n/useAppLocale';
 import { Text } from '../src/theme/Text';

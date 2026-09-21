@@ -18,7 +18,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { CustomRangeSheet } from './CustomRangeSheet';
 import { CycleStartDaySheet } from './CycleStartDaySheet';
 import { PeriodKindSheet } from './PeriodKindSheet';

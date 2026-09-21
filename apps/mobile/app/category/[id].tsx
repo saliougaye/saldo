@@ -21,7 +21,7 @@ import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useCategoriesQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SpendHistoryChart } from '../../src/features/stats/SpendHistoryChart';
 import { useAppLocale } from '../../src/i18n/useAppLocale';

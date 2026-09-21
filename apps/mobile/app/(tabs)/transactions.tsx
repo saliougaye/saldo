@@ -35,7 +35,7 @@ import {
   useTags,
   useTransactionsInRangeQuery,
 } from '../../src/db/hooks';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { RecurrencesCard } from '../../src/features/recurrences/RecurrencesCard';

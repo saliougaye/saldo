@@ -29,7 +29,7 @@ import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';

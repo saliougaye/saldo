@@ -10,7 +10,7 @@ import { useCategories, useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import type { BudgetView } from './useBudgetProgress';
 
 /** §6.1: the top three budgets by ratio, plus a link to the full list. */

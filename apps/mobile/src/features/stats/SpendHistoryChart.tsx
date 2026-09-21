@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { MASK } from '../hidden/cipher';
+import { useHiddenAmounts } from '../hidden/hiddenAmounts';
 
 export interface SpendHistoryBar {
   key: string;
@@ -16,6 +18,8 @@ export interface SpendHistoryBar {
 /** Design geometry (`docs/design/Spese.dc.html` lines 878-887). */
 const COLUMN_HEIGHT = 88;
 const COLUMN_RADIUS = 3;
+/** Every column while the figures are hidden: the labels are masked, the shape must be too. */
+const HIDDEN_STUB = Math.round(COLUMN_HEIGHT * 0.4);
 /** Closed cycles keep the same hue as the running one, faded so the current cycle reads first. */
 const PAST_ALPHA = 0.4;
 /** The track is the same hue again, barely there, so the column well belongs to the category. */
@@ -42,6 +46,7 @@ export function SpendHistoryChart({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { hidden } = useHiddenAmounts();
   const max = Math.max(1, ...bars.map((bar) => bar.amount));
 
   const base = colour ?? theme.palette.accent;
@@ -64,7 +69,7 @@ export function SpendHistoryChart({
               tabular
               numberOfLines={1}
             >
-              {formatMajor(bar.amount, currency, locale, 'never')}
+              {hidden ? MASK : formatMajor(bar.amount, currency, locale, 'never')}
             </Text>
             <View
               style={{
@@ -78,7 +83,9 @@ export function SpendHistoryChart({
             >
               <View
                 style={{
-                  height: Math.max(1, Math.round((bar.amount / max) * COLUMN_HEIGHT)),
+                  height: hidden
+                    ? HIDDEN_STUB
+                    : Math.max(1, Math.round((bar.amount / max) * COLUMN_HEIGHT)),
                   backgroundColor: bar.current ? base : past,
                   borderTopLeftRadius: COLUMN_RADIUS,
                   borderTopRightRadius: COLUMN_RADIUS,

@@ -20,7 +20,7 @@ import { seedDemoData } from '../src/db/demo';
 import { useAccounts, useSettings } from '../src/db/hooks';
 import { runMaterialiser } from '../src/db/recurrenceService';
 import { wipeDevice } from '../src/db/wipe';
-import { useHiddenAmounts } from '../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenAmounts } from '../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import { startOver } from '../src/navigation/history';
 import { Text } from '../src/theme/Text';

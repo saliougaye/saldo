@@ -24,7 +24,7 @@ import {
   useSettings,
 } from '../../src/db/hooks';
 import { changeRecurrenceRule, stopRecurrence } from '../../src/db/recurrenceService';
-import { useHiddenMoney } from '../../src/features/hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { RecurrenceSheet } from '../../src/features/transactions/RecurrenceSheet';
 import { cadenceLabel } from '../../src/features/transactions/recurrenceCopy';

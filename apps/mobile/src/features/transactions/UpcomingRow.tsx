@@ -11,7 +11,7 @@ import { Icon } from '../../theme/Icon';
 import { EASE, useMotion } from '../../theme/motion';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../hidden/hiddenAmounts';
 
 /**
  * The one row that stands in for everything dated after today (§5.12).

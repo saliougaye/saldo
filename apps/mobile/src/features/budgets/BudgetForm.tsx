@@ -28,7 +28,7 @@ import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { useHiddenMoney } from '../hidden/HiddenAmountsProvider';
+import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { usePeriod } from '../period/PeriodProvider';
 import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
 import { BUDGET_STEPS, budgetStepMissing } from './steps';

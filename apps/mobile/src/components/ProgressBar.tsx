@@ -2,6 +2,7 @@ import { motion } from '@saldo/ui';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useHiddenAmounts } from '../features/hidden/hiddenAmounts';
 import { EASE, useMotion } from '../theme/motion';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -16,7 +17,9 @@ export interface ProgressBarProps {
 export function ProgressBar({ ratio, pace, overPace = false }: ProgressBarProps) {
   const theme = useTheme();
   const { reduced } = useMotion();
-  const clamped = Math.min(1, Math.max(0, ratio));
+  const { hidden } = useHiddenAmounts();
+  // A bar full to the brim beside a masked figure still says "over budget", so it empties too.
+  const clamped = hidden ? 0 : Math.min(1, Math.max(0, ratio));
   // `scaleX` rather than `width`: a width animation re-runs layout on every frame, a transform
   // does not. The bar is drawn at full width and squeezed from its left edge.
   const fill = useSharedValue(clamped);
@@ -29,7 +32,7 @@ export function ProgressBar({ ratio, pace, overPace = false }: ProgressBarProps)
   return (
     <View
       accessibilityRole="progressbar"
-      accessibilityValue={{ min: 0, max: 100, now: Math.round(ratio * 100) }}
+      accessibilityValue={hidden ? undefined : { min: 0, max: 100, now: Math.round(ratio * 100) }}
       style={{
         height: theme.layout.progressHeight,
         borderRadius: theme.radii.pill,
@@ -50,7 +53,7 @@ export function ProgressBar({ ratio, pace, overPace = false }: ProgressBarProps)
           fillStyle,
         ]}
       />
-      {pace === undefined ? null : (
+      {pace === undefined || hidden ? null : (
         <View
           style={{
             position: 'absolute',

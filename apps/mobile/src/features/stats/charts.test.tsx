@@ -3,8 +3,17 @@ import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
+import { HiddenAmountsProvider } from '../hidden/HiddenAmountsProvider';
 import { CashflowChart } from './CashflowChart';
 import { SpendHistoryChart } from './SpendHistoryChart';
+import { SplitBar } from './SplitBar';
+
+// Hidden mode reads one key out of `kv`; the SQLite-backed provider is not needed for that.
+jest.mock('../../db/DatabaseProvider', () => ({
+  useDatabase: () => ({
+    kv: { get: (key: string) => (key === 'amountsHidden' ? 'true' : null), set: () => {} },
+  }),
+}));
 
 let i18n: I18nInstance;
 
@@ -104,5 +113,25 @@ describe('SpendHistoryChart', () => {
     expect(tree).toContain('#63926F');
     expect(tree).toContain('#63926F66');
     expect(tree).toContain('#63926F1A');
+  });
+});
+
+describe('hidden mode', () => {
+  it('masks every column label and draws no split', async () => {
+    await render(
+      <Host>
+        <HiddenAmountsProvider>
+          <CashflowChart bars={BARS} currency="EUR" locale="en" />
+          <SplitBar
+            segments={[
+              { key: 'a', amount: 300, colour: '#C57B4E' },
+              { key: 'b', amount: 100, colour: '#B4894A' },
+            ]}
+          />
+        </HiddenAmountsProvider>
+      </Host>,
+    );
+    expect(screen.getAllByText('••••')).toHaveLength(BARS.length);
+    expect(screen.queryByText('+325')).toBeNull();
   });
 });
