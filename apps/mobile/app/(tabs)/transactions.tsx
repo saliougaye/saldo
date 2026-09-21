@@ -16,10 +16,10 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { AmountText } from '../../src/components/AmountText';
-import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { Chip } from '../../src/components/Chip';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
+import { EmptyState } from '../../src/components/EmptyState';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionDivider } from '../../src/components/SectionDivider';
@@ -377,21 +377,31 @@ export default function TransactionsTab() {
             <SkeletonList rows={5} label={t('common.loading')} />
           ) : null
         ) : groups.length === 0 && upcoming.length === 0 ? (
-          <Animated.View entering={appearing}>
-            <Card>
-              <Text color="textMuted">
-                {active ? t('transactions.noResults') : t('transactions.empty')}
-              </Text>
-              <View style={{ marginTop: 12 }}>
-                <SecondaryButton
-                  label={active ? t('transactions.resetFilters') : t('transactions.newTransaction')}
-                  onPress={() =>
-                    active ? setFilters(EMPTY_FILTERS) : router.push('/transaction/new')
-                  }
-                />
-              </View>
-            </Card>
-          </Animated.View>
+          active ? (
+            <EmptyState
+              kind="noMatch"
+              icon="search"
+              title={t('transactions.noResults')}
+              body={t('transactions.noResultsBody')}
+              action={{
+                label: t('transactions.resetFilters'),
+                onPress: () => setFilters(EMPTY_FILTERS),
+              }}
+            />
+          ) : (
+            // One state for "nothing ever" and "nothing this period": telling them apart would
+            // cost a query, and the copy is written to be true in both.
+            <EmptyState
+              kind="yet"
+              ghost="row"
+              title={t('transactions.empty')}
+              body={t('transactions.emptyBody')}
+              action={{
+                label: t('transactions.newTransaction'),
+                onPress: () => router.push('/transaction/new'),
+              }}
+            />
+          )
         ) : (
           <>
             {upcoming.length === 0 ? null : (
