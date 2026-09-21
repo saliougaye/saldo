@@ -132,6 +132,7 @@ describe('wipeAccountData', () => {
     const context = createTestContext();
     fill(context);
     context.kv.set(DEVICE_ACCOUNT_KEY, 'account-1');
+    context.kv.set('amountsHidden', 'true');
     context.clock.now();
     const deviceId = context.kv.deviceId();
     const hlc = context.kv.get('hlc');
@@ -144,6 +145,7 @@ describe('wipeAccountData', () => {
     expect(context.kv.get('hlc')).toBe(hlc);
     expect(context.kv.get(DEVICE_ACCOUNT_KEY)).toBe('account-1');
     expect(context.kv.get('appLockEnabled')).toBe('true');
+    expect(context.kv.get('amountsHidden')).toBe('true');
   });
 
   it('forgets the epoch when there is no server to have one', () => {

@@ -18,6 +18,7 @@ import { LoadingScreen } from '../src/components/LoadingScreen';
 import { ToastProvider } from '../src/components/Toast';
 import { DatabaseProvider } from '../src/db/DatabaseProvider';
 import { useSettings } from '../src/db/hooks';
+import { HiddenAmountsProvider } from '../src/features/hidden/HiddenAmountsProvider';
 import { PrivacyOverlay } from '../src/features/lock/PrivacyOverlay';
 import { MaterialiserGate } from '../src/features/period/MaterialiserGate';
 import { PeriodProvider } from '../src/features/period/PeriodProvider';
@@ -113,17 +114,18 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <DatabaseProvider>
               <SettingsScopedProviders>
-                <Ready>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    {/*
+                <HiddenAmountsProvider>
+                  <Ready>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      {/*
                       The tabs are the bottom of the app and the lock covers it: neither may be
                       swiped away. `enterTabs` and `startOver` already keep anything from being
                       underneath; this is the belt to their braces on iOS, where the edge swipe
                       would otherwise go back to whatever a future navigation leaves there.
                     */}
-                    <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
-                    <Stack.Screen name="lock" options={{ gestureEnabled: false }} />
-                    {/*
+                      <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+                      <Stack.Screen name="lock" options={{ gestureEnabled: false }} />
+                      {/*
                       §6.16 draws the transaction form as a sheet over whatever you were looking
                       at, and the design is right about why: you are adding a transaction *to* the
                       list or the cycle you can still see behind it, and a swipe down is a cheaper
@@ -133,15 +135,16 @@ export default function RootLayout() {
                       its own — the calendar, the category picker, the attachment source — and
                       stacking those inside a `Modal` is what broke the image picker before.
                     */}
-                    <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
-                    <Stack.Screen
-                      name="transaction/edit/[id]"
-                      options={{ presentation: 'modal' }}
-                    />
-                  </Stack>
-                  {/* Last child of `Ready`, so the cover draws over every screen (§18). */}
-                  <PrivacyOverlay />
-                </Ready>
+                      <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
+                      <Stack.Screen
+                        name="transaction/edit/[id]"
+                        options={{ presentation: 'modal' }}
+                      />
+                    </Stack>
+                    {/* Last child of `Ready`, so the cover draws over every screen (§18). */}
+                    <PrivacyOverlay />
+                  </Ready>
+                </HiddenAmountsProvider>
               </SettingsScopedProviders>
             </DatabaseProvider>
           </QueryClientProvider>
