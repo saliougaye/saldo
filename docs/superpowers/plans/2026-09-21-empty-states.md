@@ -678,6 +678,11 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, replace: mockReplace, canGoBack: () => mockCanGoBack }),
 }));
 
+// `Screen` wires pull-to-refresh to sync; this screen owes it nothing more than the wiring.
+jest.mock('../sync/useSyncRefresh', () => ({
+  useSyncRefresh: () => ({ refreshing: false, onRefresh: jest.fn() }),
+}));
+
 let i18n: I18nInstance;
 
 beforeAll(async () => {

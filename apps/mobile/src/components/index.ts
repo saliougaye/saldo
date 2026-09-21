@@ -7,6 +7,7 @@ export * from './ConfirmDialog';
 export * from './EmptyState';
 export * from './ListRow';
 export * from './LoadingScreen';
+export * from './NotFoundScreen';
 export * from './ProgressBar';
 export * from './Screen';
 export * from './ScreenHeader';
