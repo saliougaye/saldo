@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
+import { EmptyState } from '../../src/components/EmptyState';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
@@ -30,9 +31,17 @@ export default function TagsAdmin() {
       <Text color="textMuted">{t('tags.footnote')}</Text>
 
       {tags.length === 0 ? (
-        <Card>
-          <Text color="textMuted">{t('tags.empty')}</Text>
-        </Card>
+        <EmptyState
+          kind="yet"
+          ghost="chips"
+          title={t('tags.empty')}
+          body={t('tags.emptyBody')}
+          // Tags have no screen of their own to be born on: they are typed into a transaction.
+          action={{
+            label: t('transactions.newTransaction'),
+            onPress: () => router.push('/transaction/new'),
+          }}
+        />
       ) : (
         <Card padded={false}>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
