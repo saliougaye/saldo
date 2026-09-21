@@ -15,7 +15,7 @@ Asked for and shaped enough to plan, or one decision away from it.
 
 ### Tag edit sheet: actions at the top
 
-- [ ] Move the edit and delete actions to the top of the sheet instead of the bottom. Reported on 2026-09-19.
+- [x] Move the edit and delete actions to the top of the sheet instead of the bottom. Reported on 2026-09-19.
 
 ### Hidden mode: hide the figures in public
 
