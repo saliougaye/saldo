@@ -33,20 +33,24 @@ What it can stand on:
   device-local flag. The hidden-mode flag belongs in `kv` too — per device, never synced; a phone hidden in
   public must not blank the tablet at home.
 
-To settle before planning:
+Decided on 2026-09-22 and implemented on `feat/hidden-mode-variants` (plan:
+`docs/superpowers/plans/2026-09-22-hidden-mode.md`, motion picked from
+`docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html`, variant **Cipher**). Awaiting the device test
+before this section closes:
 
-- **The trigger.** A row in Profile is discoverable but slow; a gesture (long-press on the home balance, a
-  two-finger tap) is fast but invisible. Probably both — the row declares the feature exists, the gesture is
-  what gets used. `react-native-gesture-handler` is already a dependency; `expo-haptics` is not.
-- **Whether it survives a relaunch.** Persisting protects; resetting to visible is what people expect. Spec is
-  silent, and the design prototype has no precedent for either.
-- **What a hidden figure looks like.** `expo-blur` over the number reads as "a number is here" but is a new
-  dependency and blurs differently on Android; `••••` at the same tabular width has no layout shift and no
-  dependency. The second is cheaper and probably right.
-- **Inputs stay visible.** Hiding the amount being typed in `AmountInput` is hostile. Hiding the list behind
-  the form is the point.
-- **Accessibility.** A hidden amount must drop out of the accessibility tree as well, otherwise VoiceOver
-  reads out loud exactly what the screen is hiding.
+- **Trigger = both.** Long-press (450 ms) on the Home balance hides, a tap on it reveals; a toggle row in Profile
+  declares the feature and is the accessible route. No header button, no haptics (`expo-haptics` not added).
+- **Survives a relaunch.** `kv.amountsHidden`, per device, never synced; kept by `wipeAccountData`, cleared by
+  `wipeDevice` like the rest of `kv`.
+- **A hidden figure is `•••• €`**, fixed four dots (a dot per digit leaks magnitude), `textMuted`; the real text
+  stays in layout at opacity 0, so nothing shifts. Sentences that embed an amount go through
+  `useHiddenMoney().format`.
+- **Inputs stay visible.** `AmountInput` untouched; the "balance after" line in the form masks, including its
+  accessibility label.
+- **Charts draw a placeholder**: equal stubs and `••••` labels, `SplitBar`'s empty track, `ProgressBar` empties,
+  line charts a flat dashed baseline.
+- **Accessibility.** Hidden text leaves the tree; the mask is one element labelled "Importo nascosto"; the
+  toggle announces the state. Reduce Motion crossfades without the scramble.
 
 ### Onboarding: a better UI, and a step for the system permissions
 

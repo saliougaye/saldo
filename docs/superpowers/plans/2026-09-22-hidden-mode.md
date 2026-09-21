@@ -57,24 +57,24 @@ touches `@saldo/core`: this is presentation.
 
 ## Task 1 — i18n keys and icons
 
-- [ ] `packages/i18n/src/locales/it.ts`: in `common` add
+- [x] `packages/i18n/src/locales/it.ts`: in `common` add
   `amountHidden: 'Importo nascosto'`, `amountsHidden: 'Importi nascosti'`, `amountsShown: 'Importi visibili'`;
   in `profile` add `hideAmounts: 'Nascondi gli importi'`,
   `hideAmountsHint: 'Tieni premuto il saldo in Home per nasconderli, tocca per mostrarli.'`.
-- [ ] `en.ts`: `amountHidden: 'Amount hidden'`, `amountsHidden: 'Amounts hidden'`, `amountsShown: 'Amounts shown'`,
+- [x] `en.ts`: `amountHidden: 'Amount hidden'`, `amountsHidden: 'Amounts hidden'`, `amountsShown: 'Amounts shown'`,
   `hideAmounts: 'Hide amounts'`, `hideAmountsHint: 'Long-press the balance on Home to hide them, tap to show them.'`.
-- [ ] `packages/ui/src/icons.ts`: append to the Lucide block
+- [x] `packages/ui/src/icons.ts`: append to the Lucide block
   ```ts
   eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
   eyeOff:
     '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
   ```
   and bump the count in `icons.test.ts` (134 → 136).
-- [ ] `pnpm --filter @saldo/i18n test`, `pnpm --filter @saldo/ui test`. Commit `feat(ui,i18n): eye icons and hidden-mode strings`.
+- [x] `pnpm --filter @saldo/i18n test`, `pnpm --filter @saldo/ui test`. Commit `feat(ui,i18n): eye icons and hidden-mode strings`.
 
 ## Task 2 — pure cipher helpers (TDD)
 
-- [ ] `apps/mobile/src/features/hidden/cipher.ts`:
+- [x] `apps/mobile/src/features/hidden/cipher.ts`:
   - `export const CIPHER = { steps: 4, stepMs: 60, fadeMs: 160, settleMs: 30, reducedMs: 120 } as const;`
   - `export const MASK = '••••';`
   - `scrambleDigits(text, rng = Math.random): string` — every `0-9` replaced by a random digit, anything else kept.
@@ -83,14 +83,14 @@ touches `@saldo/core`: this is presentation.
   - `digitCount(text)`.
   - `maskedMoney(currency, locale)` — `••••` with the symbol where `formatMoneyParts` puts it (`€` suffix in `it`,
     `$` prefix in `en-US`).
-- [ ] `cipher.test.ts` (jest `app` project needs `.tsx`? No: `src/**/*.test.ts` under `features` is the **db**
+- [x] `cipher.test.ts` (jest `app` project needs `.tsx`? No: `src/**/*.test.ts` under `features` is the **db**
   project (node env) — fine for pure functions). Cases: length and non-digits preserved; deterministic rng;
   settle 0 = all scrambled, settle = count → identical; mask for EUR/it and USD/en.
-- [ ] Commit `feat(mobile): cipher helpers for hidden amounts`.
+- [x] Commit `feat(mobile): cipher helpers for hidden amounts`.
 
 ## Task 3 — `HiddenAmountsProvider`
 
-- [ ] `apps/mobile/src/features/hidden/HiddenAmountsProvider.tsx`:
+- [x] `apps/mobile/src/features/hidden/HiddenAmountsProvider.tsx`:
   ```tsx
   export type HiddenPhase = 'visible' | 'scrambling' | 'hidden';
   export interface HiddenAmounts { hidden: boolean; phase: HiddenPhase; tick: number; setHidden(next: boolean): void; toggle(): void; }
@@ -106,18 +106,18 @@ touches `@saldo/core`: this is presentation.
   - `useHiddenMoney()`: `{ hidden, format(minor, currency, locale, signDisplay?) }` where `format` returns
     `formatMoney(...)` when `phase === 'visible'`, `scrambleDigits(formatMoney(...))` when `'scrambling'`,
     `maskedMoney(currency, locale)` when `'hidden'`.
-- [ ] `HiddenAmountsProvider.test.tsx` (mocks `../../db/DatabaseProvider` like `PrivacyOverlay.test.tsx`, fake
+- [x] `HiddenAmountsProvider.test.tsx` (mocks `../../db/DatabaseProvider` like `PrivacyOverlay.test.tsx`, fake
   timers): reads `'true'` from kv; `toggle()` writes `'false'`; phase sequence `scrambling → hidden` after
   `steps*stepMs`; `useHiddenMoney().format` returns `•••• €` when hidden.
-- [ ] Mount in `apps/mobile/app/_layout.tsx` around `<Ready>` (inside `SettingsScopedProviders`, so `t` and `kv`
+- [x] Mount in `apps/mobile/app/_layout.tsx` around `<Ready>` (inside `SettingsScopedProviders`, so `t` and `kv`
   exist).
-- [ ] `apps/mobile/src/db/kv.ts`: add `'amountsHidden'` to `KvKey`. `wipe.test.ts`: assert it is kept by
+- [x] `apps/mobile/src/db/kv.ts`: add `'amountsHidden'` to `KvKey`. `wipe.test.ts`: assert it is kept by
   `wipeAccountData` (set it in the fixture, expect `'true'` after).
-- [ ] Commit `feat(mobile): hidden-amounts state, persisted per device`.
+- [x] Commit `feat(mobile): hidden-amounts state, persisted per device`.
 
 ## Task 4 — `AmountText` masks and ciphers
 
-- [ ] `apps/mobile/src/features/hidden/useCipher.ts`: `useCipher(integer: string, hidden: boolean, stagger = 0)`
+- [x] `apps/mobile/src/features/hidden/useCipher.ts`: `useCipher(integer: string, hidden: boolean, stagger = 0)`
   returns `{ integer: string /* what to draw */, scrambling: boolean, realStyle, maskStyle }` (Reanimated
   animated styles for opacity). Behaviour per the mockup:
   - hide: at `base = stagger*staggerMs`, `steps` scramble steps every `stepMs`; at `base + steps*stepMs` real
@@ -127,7 +127,7 @@ touches `@saldo/core`: this is presentation.
   - `reduced`: no text changes, opacity over `reducedMs`, no stagger.
   - initial mount: no animation, values set from `hidden`.
   - `integer` changes while not animating → drawn immediately.
-- [ ] `AmountText.tsx`: props gain `align?: 'start' | 'end'` (mask alignment, default `start`) and
+- [x] `AmountText.tsx`: props gain `align?: 'start' | 'end'` (mask alignment, default `start`) and
   `stagger?: number`. Render:
   ```tsx
   <View style={style} accessible={false}>
@@ -142,69 +142,69 @@ touches `@saldo/core`: this is presentation.
   ```
   `style` moves to the wrapper (callers only pass layout styles: `marginTop`). `AnimatedAmount` passes
   `useCountUp(minor, !hidden)` so the roll freezes while hidden.
-- [ ] `apps/mobile/src/components/AmountText.test.tsx` (app project, `ThemeProvider` + `I18nextProvider` +
+- [x] `apps/mobile/src/components/AmountText.test.tsx` (app project, `ThemeProvider` + `I18nextProvider` +
   `HiddenAmountsProvider` with mocked kv): visible → `1.284,50 €` on screen, no "Importo nascosto"; hidden from kv
   → label present, real text not reachable without `includeHiddenElements`.
-- [ ] Commit `feat(mobile): AmountText hides behind •••• with the cipher motion`.
+- [x] Commit `feat(mobile): AmountText hides behind •••• with the cipher motion`.
 
 ## Task 5 — Home: gesture, stagger, footers
 
-- [ ] `apps/mobile/app/(tabs)/index.tsx`: wrap the hero `<Card>` in a `Pressable` (`accessible={false}`,
+- [x] `apps/mobile/app/(tabs)/index.tsx`: wrap the hero `<Card>` in a `Pressable` (`accessible={false}`,
   `delayLongPress={450}`, `onLongPress={() => setHidden(true)}`, `onPress={() => hidden && setHidden(false)}`)
   inside an `Animated.View` whose scale goes to 0.98 over 450 ms linear on `pressIn` and back over 200 ms `EASE`
   on `pressOut` (reduced motion: no scale). `AnimatedAmount stagger={0}`; income/expenses footers use
   `useHiddenMoney().format`.
-- [ ] `HomeBudgetCard.tsx` (`stagger` 1 is not applicable to sentences; they follow `phase`): `spent di limit`
+- [x] `HomeBudgetCard.tsx` (`stagger` 1 is not applicable to sentences; they follow `phase`): `spent di limit`
   via `format`. `UpcomingRow.tsx:77` net via `format`. Recent-transactions rows already use `AmountText`.
-- [ ] Commit `feat(mobile): long-press the Home balance to hide the figures`.
+- [x] Commit `feat(mobile): long-press the Home balance to hide the figures`.
 
 ## Task 6 — Profile row
 
-- [ ] `apps/mobile/app/profile.tsx`: new `ListRow` **above** the app-lock row: `title=t('profile.hideAmounts')`,
+- [x] `apps/mobile/app/profile.tsx`: new `ListRow` **above** the app-lock row: `title=t('profile.hideAmounts')`,
   `subtitle=t('profile.hideAmountsHint')`, `leading=lead('eyeOff')`, `trailing=<Toggle value={hidden}
   onChange={setHidden} accessibilityLabel=… />`.
-- [ ] Commit `feat(mobile): hidden-amounts toggle in Profile`.
+- [x] Commit `feat(mobile): hidden-amounts toggle in Profile`.
 
 ## Task 7 — the long tail: sentence-embedded amounts
 
 Replace `formatMoney(...)` with `format(...)` from `useHiddenMoney()` at every rendered site (§2a of the audit):
 
-- [ ] `app/(tabs)/transactions.tsx:169, 361-362`
-- [ ] `app/(tabs)/stats.tsx:296-300, 365, 392`
-- [ ] `app/(tabs)/accounts.tsx:151` · `app/account/[id].tsx:286` · `app/tag/[id].tsx:172`
-- [ ] `app/category/[id].tsx:216, 238` (238 becomes an `AmountText`)
-- [ ] `app/budgets.tsx:127` · `app/recurrence/[id].tsx:252`
-- [ ] `src/features/period/PeriodSheet.tsx:94` · `src/features/recurrences/RecurrencesCard.tsx:81`
-- [ ] `src/features/budgets/BudgetDetailSheet.tsx:34` (→ `AmountText size="amountLg" weight="semibold"`), `:37`
-- [ ] `src/features/budgets/BudgetForm.tsx:146` (median hint)
-- [ ] `src/features/import/ImportWizard.tsx:251-255` (→ `AmountText align="end"`)
-- [ ] `src/features/stats/TagSpendCard.tsx:91`
-- [ ] `src/features/transactions/TransactionForm.tsx:204` (`money` = `format`, so the a11y label masks too)
-- [ ] Trailing `AmountText`s in rows get `align="end"`: `transactions.tsx:209`, `CategorySplitRows.tsx:51`,
+- [x] `app/(tabs)/transactions.tsx:169, 361-362`
+- [x] `app/(tabs)/stats.tsx:296-300, 365, 392`
+- [x] `app/(tabs)/accounts.tsx:151` · `app/account/[id].tsx:286` · `app/tag/[id].tsx:172`
+- [x] `app/category/[id].tsx:216, 238` (238 becomes an `AmountText`)
+- [x] `app/budgets.tsx:127` · `app/recurrence/[id].tsx:252`
+- [x] `src/features/period/PeriodSheet.tsx:94` · `src/features/recurrences/RecurrencesCard.tsx:81`
+- [x] `src/features/budgets/BudgetDetailSheet.tsx:34` (→ `AmountText size="amountLg" weight="semibold"`), `:37`
+- [x] `src/features/budgets/BudgetForm.tsx:146` (median hint)
+- [x] `src/features/import/ImportWizard.tsx:251-255` (→ `AmountText align="end"`)
+- [x] `src/features/stats/TagSpendCard.tsx:91`
+- [x] `src/features/transactions/TransactionForm.tsx:204` (`money` = `format`, so the a11y label masks too)
+- [x] Trailing `AmountText`s in rows get `align="end"`: `transactions.tsx:209`, `CategorySplitRows.tsx:51`,
   `TagSpendCard.tsx:80`, `recurrences.tsx:103,169,178`, `recurrence/[id].tsx:197,270`, `account/[id].tsx:206,217,268`,
   `category/[id].tsx:260,272,292`, `tag/[id].tsx:129,157`, `budgets.tsx:118`, `accounts.tsx:56,103`.
-- [ ] `rtk proxy grep -rn "formatMoney(" apps/mobile/src apps/mobile/app` → only `AmountInput.tsx` (symbol only),
+- [x] `rtk proxy grep -rn "formatMoney(" apps/mobile/src apps/mobile/app` → only `AmountInput.tsx` (symbol only),
   `profile/currency.tsx` (sample figure), `useHiddenMoney` itself.
-- [ ] Commit `feat(mobile): every rendered amount follows hidden mode`.
+- [x] Commit `feat(mobile): every rendered amount follows hidden mode`.
 
 ## Task 8 — charts and bars
 
 All read `useHiddenAmounts().hidden`; no prop changes at call sites.
 
-- [ ] `CashflowChart.tsx`: label `hidden ? MASK : formatMajor(...)` in `textMuted`; `barHeight` returns a fixed
+- [x] `CashflowChart.tsx`: label `hidden ? MASK : formatMajor(...)` in `textMuted`; `barHeight` returns a fixed
   `Math.round(HALF_HEIGHT * 0.35)` for both halves when hidden.
-- [ ] `SpendHistoryChart.tsx`: label `MASK`; column fill height `COLUMN_HEIGHT * 0.4`.
-- [ ] `SplitBar.tsx`: `if (hidden || total <= 0)` → track.
-- [ ] `ProgressBar.tsx`: target `hidden ? 0 : clamped`; `pace` ignored when hidden; `accessibilityValue` only when
+- [x] `SpendHistoryChart.tsx`: label `MASK`; column fill height `COLUMN_HEIGHT * 0.4`.
+- [x] `SplitBar.tsx`: `if (hidden || total <= 0)` → track.
+- [x] `ProgressBar.tsx`: target `hidden ? 0 : clamped`; `pace` ignored when hidden; `accessibilityValue` only when
   visible.
-- [ ] `CycleTrendChart.tsx`, `Sparkline.tsx`: hidden → one `Polyline` at mid-height, `strokeDasharray="3 4"`,
+- [x] `CycleTrendChart.tsx`, `Sparkline.tsx`: hidden → one `Polyline` at mid-height, `strokeDasharray="3 4"`,
   `borderStrong`, no dot.
-- [ ] `charts.test.tsx`: `SplitBar` and `CashflowChart` under a hidden provider render no segments / `••••` labels.
-- [ ] Commit `feat(mobile): charts draw a placeholder in hidden mode`.
+- [x] `charts.test.tsx`: `SplitBar` and `CashflowChart` under a hidden provider render no segments / `••••` labels.
+- [x] Commit `feat(mobile): charts draw a placeholder in hidden mode`.
 
 ## Task 9 — docs and gates
 
-- [ ] `TODO.md`: replace the "To settle before planning" list with a "Decided 2026-09-22" list pointing at this
+- [x] `TODO.md`: replace the "To settle before planning" list with a "Decided 2026-09-22" list pointing at this
   plan; keep the section open until the user has tested on device.
-- [ ] `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck`, `rtk proxy pnpm test` — read the output, not the exit code.
-- [ ] Commit `docs(todo): hidden mode decisions`. Stop: the user rebases onto `main` and tests on device.
+- [x] `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck`, `rtk proxy pnpm test` — read the output, not the exit code.
+- [x] Commit `docs(todo): hidden mode decisions`. Stop: the user rebases onto `main` and tests on device.
