@@ -50,6 +50,7 @@ describe('NewTagSheet', () => {
       </Host>,
     );
     fireEvent.changeText(screen.getByLabelText('Name'), '  Trip ');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
     await userEvent.press(screen.getByText('Save'));
     expect(mockCreate).toHaveBeenCalledWith({ name: 'Trip' });
     expect(onClose).toHaveBeenCalled();
