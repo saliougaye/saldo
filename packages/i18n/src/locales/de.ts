@@ -72,7 +72,8 @@ export const de: Messages = {
   },
   onboarding: {
     periodTitle: 'Wie behältst du deine Ausgaben im Blick?',
-    periodBody: 'Wähle den Zeitraum, nach dem die Zahlen neu beginnen. Du kannst ihn jederzeit ändern.',
+    periodBody:
+      'Wähle den Zeitraum, nach dem die Zahlen neu beginnen. Du kannst ihn jederzeit ändern.',
     periodTimeline: 'Gerade läuft er vom {{start}} bis {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
@@ -343,7 +344,8 @@ export const de: Messages = {
     stopTitle: '„{{name}}“ nicht mehr wiederholen?',
     stopBodyNone: 'Vergangene Vorkommen bleiben.',
     stopBody_one: 'Vergangene Vorkommen bleiben. Das bereits geplante wird entfernt.',
-    stopBody_other: 'Vergangene Vorkommen bleiben. Die {{count}} bereits geplanten werden entfernt.',
+    stopBody_other:
+      'Vergangene Vorkommen bleiben. Die {{count}} bereits geplanten werden entfernt.',
     stopped: 'Wiederholung beendet',
     ruleChanged: 'Rhythmus aktualisiert',
     endChanged: 'Ende aktualisiert',
@@ -519,7 +521,8 @@ export const de: Messages = {
     createAccount: 'Konto erstellen',
     signOut: 'Abmelden',
     signOutTitle: 'Von diesem Server abmelden?',
-    signOutBody: 'Die Daten bleiben auf diesem Handy. Der Sync pausiert, bis du dich wieder anmeldest.',
+    signOutBody:
+      'Die Daten bleiben auf diesem Handy. Der Sync pausiert, bis du dich wieder anmeldest.',
     firstSync: 'Deine Daten werden geladen…',
     unreachableTitle: 'Server nicht erreichbar',
     unreachableBody:
@@ -530,7 +533,8 @@ export const de: Messages = {
     foreignDataBody_other:
       'Auf diesem Handy liegen Daten eines anderen Kontos, die zum Anmelden gelöscht werden müssen. {{count}} noch nicht gesendete Änderungen gehen verloren; alles andere bleibt auf dem Server dieses Kontos.',
     foreignDataConfirm: 'Löschen und anmelden',
-    foreignDeviceData: 'Anmeldung abgebrochen: Die Daten auf diesem Handy gehören einem anderen Konto.',
+    foreignDeviceData:
+      'Anmeldung abgebrochen: Die Daten auf diesem Handy gehören einem anderen Konto.',
     pending_one: '{{count}} Änderung wartet auf Sync',
     pending_other: '{{count}} Änderungen warten auf Sync',
     rejected_one: '{{count}} Änderung vom Server abgelehnt',
@@ -659,7 +663,8 @@ export const de: Messages = {
     moveTo: 'Buchungen verschieben nach',
     moveAndArchive: 'Verschieben und archivieren',
     empty: 'Keine Kategorien',
-    subtitle: 'Kategorien fassen deine Ausgaben zusammen. Öffne eine, um zu sehen, wohin das Geld ging.',
+    subtitle:
+      'Kategorien fassen deine Ausgaben zusammen. Öffne eine, um zu sehen, wohin das Geld ging.',
     emptyNote:
       'Kategorien fassen deine Ausgaben zusammen, damit die Statistik etwas aufzuteilen hat.',
     subcategories: 'Unterkategorien',
@@ -667,8 +672,7 @@ export const de: Messages = {
     subcategoriesCount_other: '{{count}} Unterkategorien',
     inParent: 'In {{name}}',
     archived: 'Archivierte Kategorien',
-    archivedNote:
-      'Sie bleiben an alten Buchungen, aber du kannst sie für neue nicht mehr wählen.',
+    archivedNote: 'Sie bleiben an alten Buchungen, aber du kannst sie für neue nicht mehr wählen.',
     archivedEmpty: 'Keine archivierten Kategorien',
     restored: '„{{name}}“ wiederhergestellt',
     moveUp: '„{{name}}“ nach oben',
@@ -689,8 +693,7 @@ export const de: Messages = {
       'Die Buchung von „{{name}}“ wandert zu „{{target}}“, und „{{name}}“ verschwindet. Das lässt sich nicht rückgängig machen.',
     mergeNote_other:
       'Die {{count}} Buchungen von „{{name}}“ wandern zu „{{target}}“, und „{{name}}“ verschwindet. Das lässt sich nicht rückgängig machen.',
-    mergeNoteUnused:
-      '„{{name}}“ geht in „{{target}}“ auf. Das lässt sich nicht rückgängig machen.',
+    mergeNoteUnused: '„{{name}}“ geht in „{{target}}“ auf. Das lässt sich nicht rückgängig machen.',
     delete: 'Tag löschen',
     deleteTitle: '„{{name}}“ löschen?',
     deleteNote_one: 'Die Buchung, die ihn trägt, bleibt – ohne diesen Tag.',

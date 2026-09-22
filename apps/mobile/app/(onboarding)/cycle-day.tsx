@@ -7,9 +7,9 @@ import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
-import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
+import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 

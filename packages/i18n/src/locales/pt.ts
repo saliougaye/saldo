@@ -82,7 +82,8 @@ export const pt: Messages = {
     welcomeOffline:
       'Para iniciar sessão tens de chegar ao teu servidor uma vez. Depois, o Saldo funciona offline.',
     cycleTitle: 'Quando começa o teu mês?',
-    cycleBody: 'Escolhe o dia em que recebes o salário: o Saldo conta os ciclos a partir desse dia.',
+    cycleBody:
+      'Escolhe o dia em que recebes o salário: o Saldo conta os ciclos a partir desse dia.',
     cycleTimeline: 'O teu mês vai de {{start}} a {{end}}',
     accountTitle: 'A tua primeira conta',
     accountBody: 'Podes adicionar outras quando quiseres.',
@@ -114,8 +115,7 @@ export const pt: Messages = {
     importBalancesBody:
       'O saldo atual de cada conta importada. Parte da soma do histórico: corrige-o se o banco disser outra coisa.',
     permissionsTitle: 'Só mais três coisas',
-    permissionsBody:
-      'Pedimos agora para não te interrompermos depois. Cada uma muda-se no Perfil.',
+    permissionsBody: 'Pedimos agora para não te interrompermos depois. Cada uma muda-se no Perfil.',
     permissionsNote: 'Uma de cada vez. O que saltares fica à tua espera no Perfil.',
   },
   accountTypes: {
@@ -170,7 +170,8 @@ export const pt: Messages = {
     filteredTotal_one: '{{count}} movimento · {{spent}} em despesas',
     filteredTotal_other: '{{count}} movimentos · {{spent}} em despesas',
     filteredTotalMixed_one: '{{count}} movimento · {{spent}} em despesas, {{income}} em receitas',
-    filteredTotalMixed_other: '{{count}} movimentos · {{spent}} em despesas, {{income}} em receitas',
+    filteredTotalMixed_other:
+      '{{count}} movimentos · {{spent}} em despesas, {{income}} em receitas',
     onlyExpenses: 'Só despesas',
     onlyIncome: 'Só receitas',
     onlyTransfers: 'Só transferências',
@@ -345,7 +346,8 @@ export const pt: Messages = {
     stopTitle: 'Deixar de repetir «{{name}}»?',
     stopBodyNone: 'As ocorrências passadas ficam.',
     stopBody_one: 'As ocorrências passadas ficam. A futura já agendada é removida.',
-    stopBody_other: 'As ocorrências passadas ficam. As {{count}} futuras já agendadas são removidas.',
+    stopBody_other:
+      'As ocorrências passadas ficam. As {{count}} futuras já agendadas são removidas.',
     stopped: 'Repetição parada',
     ruleChanged: 'Frequência atualizada',
     endChanged: 'Fim atualizado',
@@ -521,8 +523,7 @@ export const pt: Messages = {
     createAccount: 'Criar conta',
     signOut: 'Terminar sessão',
     signOutTitle: 'Terminar sessão neste servidor?',
-    signOutBody:
-      'Os dados ficam neste telemóvel. A sincronização para até voltares a entrar.',
+    signOutBody: 'Os dados ficam neste telemóvel. A sincronização para até voltares a entrar.',
     firstSync: 'A descarregar os teus dados…',
     unreachableTitle: 'Servidor inacessível',
     unreachableBody:
@@ -663,15 +664,13 @@ export const pt: Messages = {
     moveAndArchive: 'Mover e arquivar',
     empty: 'Sem categorias',
     subtitle: 'As categorias agrupam as tuas despesas. Abre uma para ver para onde foi o dinheiro.',
-    emptyNote:
-      'As categorias agrupam as tuas despesas, para as estatísticas terem o que repartir.',
+    emptyNote: 'As categorias agrupam as tuas despesas, para as estatísticas terem o que repartir.',
     subcategories: 'Subcategorias',
     subcategoriesCount_one: '{{count}} subcategoria',
     subcategoriesCount_other: '{{count}} subcategorias',
     inParent: 'Em {{name}}',
     archived: 'Categorias arquivadas',
-    archivedNote:
-      'Continuam nos movimentos passados, mas já não as podes escolher para um novo.',
+    archivedNote: 'Continuam nos movimentos passados, mas já não as podes escolher para um novo.',
     archivedEmpty: 'Sem categorias arquivadas',
     restored: '«{{name}}» restaurada',
     moveUp: 'Subir «{{name}}»',

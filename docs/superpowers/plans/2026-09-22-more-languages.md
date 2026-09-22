@@ -421,8 +421,8 @@ it('never falls back to English for a round million', async () => {
 
 ### Task 7: Gates
 
-- [ ] `rtk proxy pnpm lint` — no `lint/…` lines, no `× Some errors were emitted`.
-- [ ] `rtk proxy pnpm typecheck`, `rtk proxy pnpm test` — read the output.
+- [x] `rtk proxy pnpm lint` — no `lint/…` lines, no `× Some errors were emitted`.
+- [x] `rtk proxy pnpm typecheck`, `rtk proxy pnpm test` — read the output.
 
 ---
 

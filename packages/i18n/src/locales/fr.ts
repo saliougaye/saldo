@@ -81,7 +81,8 @@ export const fr: Messages = {
     welcomeOffline:
       'Pour te connecter, tu dois joindre ton serveur une fois. Ensuite, Saldo fonctionne hors ligne.',
     cycleTitle: 'Quand commence ton mois ?',
-    cycleBody: 'Choisis le jour où tu reçois ton salaire : Saldo compte les cycles à partir de ce jour.',
+    cycleBody:
+      'Choisis le jour où tu reçois ton salaire : Saldo compte les cycles à partir de ce jour.',
     cycleTimeline: 'Ton mois va du {{start}} au {{end}}',
     accountTitle: 'Ton premier compte',
     accountBody: 'Tu pourras en ajouter d’autres quand tu veux.',
@@ -132,7 +133,8 @@ export const fr: Messages = {
   },
   permissions: {
     notificationsTitle: 'Notifications',
-    notificationsBody: 'On te prévient quand un budget est sur le point de s’épuiser, avant que ça arrive.',
+    notificationsBody:
+      'On te prévient quand un budget est sur le point de s’épuiser, avant que ça arrive.',
     notificationsOn: 'Activées',
     notificationsDenied: 'Non autorisées',
     cameraTitle: 'Appareil photo',
@@ -417,8 +419,7 @@ export const fr: Messages = {
   },
   csvImport: {
     title: 'Importer un CSV',
-    pickBody:
-      'Choisis un fichier CSV exporté d’une autre app. Tu verras un aperçu avant l’import.',
+    pickBody: 'Choisis un fichier CSV exporté d’une autre app. Tu verras un aperçu avant l’import.',
     pick: 'Choisir le fichier',
     reading: 'Lecture…',
     empty: 'Ce fichier n’a aucune ligne à importer',
@@ -474,7 +475,8 @@ export const fr: Messages = {
     backupJsonHint: 'Tout : comptes, catégories, opérations, budgets.',
     backupZip: 'Sauvegarde complète avec pièces jointes (ZIP)',
     backupZipHint: 'Tout, plus les photos et les PDF de ce téléphone.',
-    zipMissing_one: '{{count}} pièce jointe n’est pas sur ce téléphone et n’est pas dans le fichier',
+    zipMissing_one:
+      '{{count}} pièce jointe n’est pas sur ce téléphone et n’est pas dans le fichier',
     zipMissing_other:
       '{{count}} pièces jointes ne sont pas sur ce téléphone et ne sont pas dans le fichier',
     csvPeriod: 'Opérations de la période (CSV)',
@@ -549,8 +551,7 @@ export const fr: Messages = {
     serverFound: 'Saldo {{version}}',
     registrationClosed: 'Ce serveur n’accepte pas de nouveaux comptes',
     nameRequired: 'Choisis d’abord un nom',
-    passkeyNote:
-      'La clé d’accès reste sur ce téléphone ; le serveur ne garde que sa clé publique.',
+    passkeyNote: 'La clé d’accès reste sur ce téléphone ; le serveur ne garde que sa clé publique.',
   },
   budgets: {
     title: 'Budgets',
@@ -663,7 +664,8 @@ export const fr: Messages = {
     moveTo: 'Déplacer les opérations vers',
     moveAndArchive: 'Déplacer et archiver',
     empty: 'Aucune catégorie',
-    subtitle: 'Les catégories regroupent tes dépenses. Ouvres-en une pour voir où est passé l’argent.',
+    subtitle:
+      'Les catégories regroupent tes dépenses. Ouvres-en une pour voir où est passé l’argent.',
     emptyNote:
       'Les catégories regroupent tes dépenses, pour que les statistiques aient de quoi répartir.',
     subcategories: 'Sous-catégories',

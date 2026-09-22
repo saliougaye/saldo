@@ -72,7 +72,8 @@ export const es: Messages = {
   },
   onboarding: {
     periodTitle: '¿Cómo sigues tus gastos?',
-    periodBody: 'Elige el periodo tras el que los números empiezan de cero. Puedes cambiarlo cuando quieras.',
+    periodBody:
+      'Elige el periodo tras el que los números empiezan de cero. Puedes cambiarlo cuando quieras.',
     periodTimeline: 'Ahora mismo va del {{start}} al {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
@@ -131,7 +132,8 @@ export const es: Messages = {
   },
   permissions: {
     notificationsTitle: 'Notificaciones',
-    notificationsBody: 'Te avisamos cuando un presupuesto está a punto de agotarse, antes de que pase.',
+    notificationsBody:
+      'Te avisamos cuando un presupuesto está a punto de agotarse, antes de que pase.',
     notificationsOn: 'Activadas',
     notificationsDenied: 'No permitidas',
     cameraTitle: 'Cámara',
@@ -139,8 +141,7 @@ export const es: Messages = {
     cameraOn: 'Activada',
     cameraDenied: 'No permitida',
     appLockTitle: 'Bloqueo biométrico',
-    appLockBody:
-      'Saldo solo se abre con tu cara o tu huella. Es un ajuste, no un permiso.',
+    appLockBody: 'Saldo solo se abre con tu cara o tu huella. Es un ajuste, no un permiso.',
     appLockOn: 'Activado',
     appLockDenied: 'Desactivado',
     appLockPrompt: 'Activa el bloqueo de Saldo',
@@ -515,8 +516,7 @@ export const es: Messages = {
     hoursAgo: 'hace {{count}} h',
     syncNow: 'Sincronizar',
     syncing: 'Sincronizando…',
-    pullFailed:
-      'No se pudo sincronizar. Todo se queda en este teléfono hasta que lo consiga.',
+    pullFailed: 'No se pudo sincronizar. Todo se queda en este teléfono hasta que lo consiga.',
     signIn: 'Entrar con llave de acceso',
     createAccount: 'Crear cuenta',
     signOut: 'Cerrar sesión',
@@ -663,8 +663,7 @@ export const es: Messages = {
     moveAndArchive: 'Mover y archivar',
     empty: 'Sin categorías',
     subtitle: 'Las categorías agrupan tus gastos. Abre una para ver adónde fue el dinero.',
-    emptyNote:
-      'Las categorías agrupan tus gastos, para que las estadísticas tengan qué repartir.',
+    emptyNote: 'Las categorías agrupan tus gastos, para que las estadísticas tengan qué repartir.',
     subcategories: 'Subcategorías',
     subcategoriesCount_one: '{{count}} subcategoría',
     subcategoriesCount_other: '{{count}} subcategorías',
@@ -678,8 +677,7 @@ export const es: Messages = {
   },
   tags: {
     title: 'Etiquetas',
-    footnote:
-      'Las etiquetas cruzan los periodos: un viaje, una mudanza, un reembolso por pedir.',
+    footnote: 'Las etiquetas cruzan los periodos: un viaje, una mudanza, un reembolso por pedir.',
     editTag: 'Editar etiqueta',
     newTag: 'Nueva etiqueta',
     name: 'Nombre',

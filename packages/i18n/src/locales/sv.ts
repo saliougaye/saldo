@@ -393,8 +393,7 @@ export const sv: Messages = {
     tags: 'Taggar',
     tagsAll: 'Alla taggar',
     tagsEmpty: 'Inga taggar för perioden',
-    tagsOverlap:
-      'En post med flera taggar räknas i varje, så summan blir större än cykelns total.',
+    tagsOverlap: 'En post med flera taggar räknas i varje, så summan blir större än cykelns total.',
     tagsUntagged_one: '{{count}} post utan tagg · {{amount}}',
     tagsUntagged_other: '{{count}} poster utan tagg · {{amount}}',
   },
@@ -545,8 +544,7 @@ export const sv: Messages = {
     serverFound: 'Saldo {{version}}',
     registrationClosed: 'Servern tar inte emot nya konton',
     nameRequired: 'Välj ett namn först',
-    passkeyNote:
-      'Nyckeln stannar på den här telefonen; servern sparar bara dess publika nyckel.',
+    passkeyNote: 'Nyckeln stannar på den här telefonen; servern sparar bara dess publika nyckel.',
   },
   budgets: {
     title: 'Budgetar',
@@ -735,8 +733,7 @@ export const sv: Messages = {
     deleteAllData: 'Radera all data',
     currencyConfirmTitle: 'Byta valuta?',
     currencyConfirmBody: 'Beloppen formateras om, de räknas inte om.',
-    currencyConfirmScale:
-      '{{before}} blir {{after}}. Beloppen formateras om, de räknas inte om.',
+    currencyConfirmScale: '{{before}} blir {{after}}. Beloppen formateras om, de räknas inte om.',
   },
   currencyPicker: {
     search: 'Sök på namn eller kod',
