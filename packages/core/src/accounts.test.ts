@@ -280,7 +280,9 @@ describe('creditStatementDue', () => {
 
   it('has no statement without a close day, and no charge date without a charge day', () => {
     expect(creditStatementDue({ ...CARD, creditCloseDay: null }, [], TODAY)).toBeNull();
-    expect(creditStatementDue({ ...CARD, creditChargeDay: null }, [], TODAY)?.chargeDate).toBeNull();
+    expect(
+      creditStatementDue({ ...CARD, creditChargeDay: null }, [], TODAY)?.chargeDate,
+    ).toBeNull();
   });
 
   it('is only about credit cards', () => {
@@ -363,9 +365,9 @@ describe('creditChargeReminders', () => {
   });
 
   it('includes the charge day itself', () => {
-    expect(creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-05-05')).toHaveLength(
-      1,
-    );
+    expect(
+      creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-05-05'),
+    ).toHaveLength(1);
   });
 
   it('skips a paid statement and a charge day already past', () => {

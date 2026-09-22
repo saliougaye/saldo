@@ -17,21 +17,21 @@ export default function TabsLayout() {
       {/* Here rather than on Home: the reminders follow every write, whichever screen made it. */}
       <CardRemindersGate />
       <Tabs
-      screenOptions={{ headerShown: false }}
-      tabBar={(props) => (
-        <TabBar
-          {...props}
-          label={(name) => t(`tabs.${name === 'index' ? 'home' : name}`)}
-          fabLabel={t('transactions.newTransaction')}
-          onFabPress={() => router.push('/transaction/new')}
-        />
-      )}
-    >
-      <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
-      <Tabs.Screen name="transactions" options={{ title: t('tabs.transactions') }} />
-      <Tabs.Screen name="stats" options={{ title: t('tabs.stats') }} />
-      <Tabs.Screen name="accounts" options={{ title: t('tabs.accounts') }} />
-    </Tabs>
+        screenOptions={{ headerShown: false }}
+        tabBar={(props) => (
+          <TabBar
+            {...props}
+            label={(name) => t(`tabs.${name === 'index' ? 'home' : name}`)}
+            fabLabel={t('transactions.newTransaction')}
+            onFabPress={() => router.push('/transaction/new')}
+          />
+        )}
+      >
+        <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
+        <Tabs.Screen name="transactions" options={{ title: t('tabs.transactions') }} />
+        <Tabs.Screen name="stats" options={{ title: t('tabs.stats') }} />
+        <Tabs.Screen name="accounts" options={{ title: t('tabs.accounts') }} />
+      </Tabs>
     </>
   );
 }

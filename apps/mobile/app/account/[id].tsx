@@ -40,11 +40,12 @@ import { useDelayed } from '../../src/components/useDelayed';
 import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import { Sparkline } from '../../src/features/accounts/Sparkline';
 import {
   SETTLEMENT_LOOKAHEAD_DAYS,
   settlementParams,
 } from '../../src/features/accounts/settlement';
-import { Sparkline } from '../../src/features/accounts/Sparkline';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -77,10 +78,7 @@ export default function AccountDetail() {
     '1970-01-01',
     addDays(today, SETTLEMENT_LOOKAHEAD_DAYS),
   );
-  const rows = useMemo(
-    () => withUpcoming.filter((tx) => tx.date <= today),
-    [withUpcoming, today],
-  );
+  const rows = useMemo(() => withUpcoming.filter((tx) => tx.date <= today), [withUpcoming, today]);
   // The figures sum these rows: before they land, a balance would paint as 0.
   const loaded = entityLoaded && rowsLoaded;
   const slow = useDelayed(!loaded);
