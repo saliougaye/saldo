@@ -73,6 +73,57 @@ describe('AccountForm', () => {
     expect(screen.getByText('Charged on')).toBeTruthy();
   });
 
+  it('picks the payment account of a credit card among live accounts that are not cards', async () => {
+    const base: Account = {
+      id: 'a1',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      updatedAt: '0',
+      deletedAt: null,
+      name: 'Conto BPM',
+      type: 'checking',
+      institution: null,
+      openingBalance: 0,
+      includeInSpendable: true,
+      colorIndex: 0,
+      icon: 'landmark',
+      creditCloseDay: null,
+      creditChargeDay: null,
+      creditPaymentAccountId: null,
+      archivedAt: null,
+      sortOrder: 0,
+    };
+    const accounts: Account[] = [
+      base,
+      { ...base, id: 'a2', name: 'Amex', type: 'credit_card' },
+      { ...base, id: 'a3', name: 'Vecchio', archivedAt: '2026-09-02T00:00:00.000Z' },
+    ];
+    const onChange = jest.fn();
+    await render(
+      <Host>
+        <AccountForm
+          values={{ ...emptyAccountForm(), type: 'credit_card' }}
+          onChange={onChange}
+          mode="new"
+          onSubmit={jest.fn()}
+          accounts={accounts}
+        />
+      </Host>,
+    );
+    expect(screen.getByText('Paid from')).toBeTruthy();
+    await userEvent.press(screen.getByText('Paid from'));
+    expect(screen.queryByText('Amex')).toBeNull();
+    expect(screen.queryByText('Vecchio')).toBeNull();
+    await userEvent.press(screen.getByText('Conto BPM'));
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ creditPaymentAccountId: 'a1' }),
+    );
+  });
+
+  it('keeps the payment account row off an account that is not a credit card', async () => {
+    await renderForm();
+    expect(screen.queryByText('Paid from')).toBeNull();
+  });
+
   it('says what it is waiting for instead of only greying the button out', async () => {
     await renderForm();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();

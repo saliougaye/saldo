@@ -90,6 +90,8 @@ export default function EditAccount() {
       values={values}
       onChange={setEdited}
       mode="edit"
+      accounts={accounts}
+      accountId={account.id}
       onSubmit={() => {
         repos.accounts.update(account.id, {
           name: values.name.trim(),
@@ -108,6 +110,8 @@ export default function EditAccount() {
           icon: values.icon,
           creditCloseDay: values.type === 'credit_card' ? values.creditCloseDay : null,
           creditChargeDay: values.type === 'credit_card' ? values.creditChargeDay : null,
+          creditPaymentAccountId:
+            values.type === 'credit_card' ? values.creditPaymentAccountId : null,
         });
         router.back();
       }}

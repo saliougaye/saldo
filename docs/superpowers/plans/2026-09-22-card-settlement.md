@@ -456,7 +456,7 @@ export function transferOverpaysCard(
 **Files:** create `apps/mobile/src/features/accounts/PaymentAccountSheet.tsx`; modify `AccountForm.tsx`,
 `AccountForm.test.tsx`, `app/account/new.tsx`, `app/account/edit/[id].tsx`
 
-- [ ] **Step 1: failing test** in `AccountForm.test.tsx`:
+- [x] **Step 1: failing test** in `AccountForm.test.tsx`:
 
 ```tsx
 it('picks the payment account of a credit card from live non-card accounts', async () => {
@@ -483,8 +483,8 @@ it('picks the payment account of a credit card from live non-card accounts', asy
 
 (`accountFixture` = the file's existing account literal, or a new full `Account` constant in the test.)
 
-- [ ] **Step 2:** run `rtk proxy pnpm --filter mobile test -- AccountForm` → FAIL.
-- [ ] **Step 3: implement.**
+- [x] **Step 2:** run `rtk proxy pnpm --filter mobile test -- AccountForm` → FAIL.
+- [x] **Step 3: implement.**
   - `AccountFormValues.creditPaymentAccountId: string | null` (empty form `null`, `accountFormFrom` copies it).
   - `AccountFormProps.accounts?: readonly Account[]` (default `[]`) and `accountId?: string | null` (edit: the card's
     own id, excluded). Candidates = `paymentAccountCandidates(accounts, accountId)`.
@@ -495,7 +495,7 @@ it('picks the payment account of a credit card from live non-card accounts', asy
     candidate (icon box in its colour), a check on the selected one, `selected` for VoiceOver, closes on pick.
   - `new.tsx`: pass `accounts`, write `creditPaymentAccountId: values.type === 'credit_card' ? values.creditPaymentAccountId : null`.
   - `edit/[id].tsx`: pass `accounts` and `accountId={account.id}`, write the same field in `update`.
-- [ ] **Step 4:** run → PASS. Commit `feat(mobile): pick the account a credit card is charged to`.
+- [x] **Step 4:** run → PASS. Commit `feat(mobile): pick the account a credit card is charged to`.
 
 ### Task 5: pre-filled transfer ("Salda carta" params)
 

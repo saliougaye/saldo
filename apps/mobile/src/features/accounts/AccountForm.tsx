@@ -3,6 +3,7 @@ import {
   amountBufferToMinor,
   minorToAmountBuffer,
   openingBalanceForCurrent,
+  paymentAccountCandidates,
 } from '@saldo/core';
 import { accountIconOptions, type IconName } from '@saldo/ui';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { AccountTypeSheet } from './AccountTypeSheet';
+import { PaymentAccountSheet } from './PaymentAccountSheet';
 
 export interface AccountFormValues {
   name: string;
@@ -35,6 +37,8 @@ export interface AccountFormValues {
   icon: IconName;
   creditCloseDay: number | null;
   creditChargeDay: number | null;
+  /** Credit cards only: the account the card is charged to (§4, §6.22). */
+  creditPaymentAccountId: string | null;
 }
 
 export function emptyAccountForm(): AccountFormValues {
@@ -48,6 +52,7 @@ export function emptyAccountForm(): AccountFormValues {
     icon: 'landmark',
     creditCloseDay: null,
     creditChargeDay: null,
+    creditPaymentAccountId: null,
   };
 }
 
@@ -66,6 +71,7 @@ export function accountFormFrom(
     icon: account.icon as IconName,
     creditCloseDay: account.creditCloseDay,
     creditChargeDay: account.creditChargeDay,
+    creditPaymentAccountId: account.creditPaymentAccountId,
   };
 }
 
@@ -106,10 +112,23 @@ export interface AccountFormProps {
   onChange: (values: AccountFormValues) => void;
   mode: 'new' | 'edit';
   onSubmit: () => void;
+  /** Every account, for the payment-account picker; it offers only `paymentAccountCandidates`. */
+  accounts?: readonly Account[];
+  /** The account being edited, which is never its own payment account. */
+  accountId?: string | null;
 }
 
+const NO_ACCOUNTS: readonly Account[] = [];
+
 /** §6.22. Same shape for new and edit: two required fields is not a wizard. */
-export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormProps) {
+export function AccountForm({
+  values,
+  onChange,
+  mode,
+  onSubmit,
+  accounts = NO_ACCOUNTS,
+  accountId = null,
+}: AccountFormProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
@@ -119,9 +138,15 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
   const missing = accountMissingForSave(values);
   const colour = theme.categoryColor(values.colorIndex);
 
-  const [sheet, setSheet] = useState<'none' | 'type' | 'appearance' | 'close' | 'charge'>('none');
+  const [sheet, setSheet] = useState<
+    'none' | 'type' | 'appearance' | 'close' | 'charge' | 'payment'
+  >('none');
   const close = () => setSheet('none');
   const day = (value: number | null) => (value === null ? t('categories.noParent') : String(value));
+  // Looked up in every account, so one archived since it was picked still reads by its name.
+  const paymentName =
+    accounts.find((account) => account.id === values.creditPaymentAccountId)?.name ??
+    t('accounts.noPaymentAccount');
 
   return (
     <Screen
@@ -208,6 +233,12 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
                 onPress={() => setSheet('charge')}
                 chevron
               />
+              <ListRow
+                title={t('accounts.creditPaymentAccount')}
+                subtitle={paymentName}
+                onPress={() => setSheet('payment')}
+                chevron
+              />
             </>
           ) : null}
         </View>
@@ -259,6 +290,14 @@ export function AccountForm({ values, onChange, mode, onSubmit }: AccountFormPro
         title={t('accounts.creditChargeDay')}
         value={values.creditChargeDay}
         onSelect={(creditChargeDay) => set({ creditChargeDay })}
+      />
+
+      <PaymentAccountSheet
+        visible={sheet === 'payment'}
+        onClose={close}
+        accounts={paymentAccountCandidates(accounts, accountId)}
+        selected={values.creditPaymentAccountId}
+        onSelect={(creditPaymentAccountId) => set({ creditPaymentAccountId })}
       />
     </Screen>
   );

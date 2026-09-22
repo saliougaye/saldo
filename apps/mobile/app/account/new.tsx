@@ -22,6 +22,7 @@ export default function NewAccount() {
       values={values}
       onChange={setValues}
       mode="new"
+      accounts={accounts}
       onSubmit={() => {
         repos.accounts.create({
           name: values.name.trim(),
@@ -34,7 +35,8 @@ export default function NewAccount() {
           icon: values.icon,
           creditCloseDay: values.type === 'credit_card' ? values.creditCloseDay : null,
           creditChargeDay: values.type === 'credit_card' ? values.creditChargeDay : null,
-          creditPaymentAccountId: null,
+          creditPaymentAccountId:
+            values.type === 'credit_card' ? values.creditPaymentAccountId : null,
           archivedAt: null,
           sortOrder: accounts.length,
         });
