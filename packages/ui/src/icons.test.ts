@@ -30,9 +30,10 @@ describe('parseIconMarkup', () => {
 
 describe('icon set', () => {
   it('contains the 74 design icons plus the Lucide additions, each with at least one node', () => {
-    expect(ICON_NAMES).toHaveLength(138);
+    expect(ICON_NAMES).toHaveLength(139);
     // Added beyond the design's set; see the comment on `iconMarkup`.
     expect(ICON_NAMES).toContain('chevUD');
+    expect(ICON_NAMES).toContain('merge');
     for (const name of ICON_NAMES) {
       expect(iconNodes[name].length, name).toBeGreaterThan(0);
     }
