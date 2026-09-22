@@ -10,6 +10,7 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
 import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { HideAmountsButton } from '../../src/features/hidden/HideAmountsButton';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -54,7 +55,12 @@ export default function AccountsTab() {
       }
       onPress={() => router.push({ pathname: '/account/[id]', params: { id: account.id } })}
       trailing={
-        <AmountText minor={balances.get(account.id) ?? 0} currency={currency} locale={locale} />
+        <AmountText
+          minor={balances.get(account.id) ?? 0}
+          currency={currency}
+          locale={locale}
+          align="end"
+        />
       }
     />
   );
@@ -65,6 +71,7 @@ export default function AccountsTab() {
         <Text size="display" weight="semibold" tracking="tighter" style={{ flex: 1 }}>
           {t('accounts.title')}
         </Text>
+        <HideAmountsButton />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('accounts.newAccount')}

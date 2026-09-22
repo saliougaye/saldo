@@ -697,9 +697,6 @@ export const it = {
     importCsv: 'Importa transazioni (CSV)',
     exportData: 'Esporta i dati',
     restoreBackup: 'Ripristina backup',
-    hideAmountsButton: 'Tasto per nascondere gli importi',
-    hideAmountsButtonHint:
-      'Un occhio nell’intestazione nasconde saldi, totali e grafici. Le singole transazioni restano leggibili.',
     appLock: 'Blocco con biometria',
     version: 'Versione {{version}}',
     deleteAllData: 'Elimina tutti i dati',

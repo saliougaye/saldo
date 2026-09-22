@@ -690,9 +690,6 @@ export const en: Messages = {
     importCsv: 'Import transactions (CSV)',
     exportData: 'Export your data',
     restoreBackup: 'Restore a backup',
-    hideAmountsButton: 'Button to hide amounts',
-    hideAmountsButtonHint:
-      'An eye in the header hides balances, totals and charts. Single transactions stay readable.',
     appLock: 'Biometric lock',
     version: 'Version {{version}}',
     deleteAllData: 'Delete all data',

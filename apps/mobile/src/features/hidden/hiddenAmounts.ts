@@ -20,9 +20,6 @@ export interface HiddenAmounts {
   tick: number;
   setHidden(next: boolean): void;
   toggle(): void;
-  /** Whether the eye button sits in the tab headers. Off by default; a Profile row turns it on. */
-  buttonShown: boolean;
-  setButtonShown(next: boolean): void;
 }
 
 /** Without a provider (tests, previews) the figures are simply visible. */
@@ -32,8 +29,6 @@ export const VISIBLE: HiddenAmounts = {
   tick: 0,
   setHidden: () => {},
   toggle: () => {},
-  buttonShown: false,
-  setButtonShown: () => {},
 };
 
 export const HiddenAmountsContext = createContext<HiddenAmounts>(VISIBLE);

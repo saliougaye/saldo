@@ -20,7 +20,6 @@ import { seedDemoData } from '../src/db/demo';
 import { useAccounts, useSettings } from '../src/db/hooks';
 import { runMaterialiser } from '../src/db/recurrenceService';
 import { wipeDevice } from '../src/db/wipe';
-import { useHiddenAmounts } from '../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import { startOver } from '../src/navigation/history';
 import { Text } from '../src/theme/Text';
@@ -41,7 +40,6 @@ export default function ProfileScreen() {
   const accounts = useAccounts();
   const { today, def } = usePeriod();
   const [lockEnabled, setLockEnabled] = useState(kv.get('appLockEnabled') === 'true');
-  const { buttonShown: hideButtonShown, setButtonShown: setHideButtonShown } = useHiddenAmounts();
   const [resetOpen, setResetOpen] = useState(false);
 
   const currency = settings?.currency ?? 'EUR';
@@ -176,19 +174,6 @@ export default function ProfileScreen() {
             leading={lead('inbox')}
             onPress={() => router.push('/profile/restore')}
             chevron
-          />
-          <ListRow
-            title={t('profile.hideAmountsButton')}
-            subtitle={t('profile.hideAmountsButtonHint')}
-            subtitleLines={3}
-            leading={lead('eye')}
-            trailing={
-              <Toggle
-                value={hideButtonShown}
-                onChange={setHideButtonShown}
-                accessibilityLabel={t('profile.hideAmountsButton')}
-              />
-            }
           />
           <ListRow
             title={t('profile.appLock')}

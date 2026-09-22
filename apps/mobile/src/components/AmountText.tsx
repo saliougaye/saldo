@@ -80,20 +80,20 @@ export function AmountText({
         </Text>
       </Animated.View>
       <Animated.View
-        style={[StyleSheet.absoluteFill, cipher.maskStyle]}
+        // The mask is narrower than the figure it covers, so which edge it keeps is decided here,
+        // not by whatever the parent does with its children.
+        style={[
+          StyleSheet.absoluteFill,
+          { justifyContent: 'center', alignItems: align === 'end' ? 'flex-end' : 'flex-start' },
+          cipher.maskStyle,
+        ]}
         pointerEvents="none"
         accessible={hidden}
         accessibilityLabel={t('common.amountHidden')}
         accessibilityElementsHidden={!hidden}
         importantForAccessibility={hidden ? 'yes' : 'no-hide-descendants'}
       >
-        <Text
-          {...rest}
-          color="textMuted"
-          tabular
-          numberOfLines={1}
-          style={{ textAlign: align === 'end' ? 'right' : 'left' }}
-        >
+        <Text {...rest} color="textMuted" tabular numberOfLines={1}>
           {mask}
         </Text>
       </Animated.View>

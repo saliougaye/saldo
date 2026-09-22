@@ -5,11 +5,7 @@ import { Pressable, Text as RNText } from 'react-native';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { CIPHER } from './cipher';
-import {
-  AMOUNTS_HIDDEN_KEY,
-  HIDE_BUTTON_KEY,
-  HiddenAmountsProvider,
-} from './HiddenAmountsProvider';
+import { AMOUNTS_HIDDEN_KEY, HiddenAmountsProvider } from './HiddenAmountsProvider';
 import { useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
 
 const mockStore = new Map<string, string>();
@@ -40,22 +36,13 @@ afterEach(() => {
 });
 
 function Probe() {
-  const { hidden, phase, toggle, buttonShown, setButtonShown } = useHiddenAmounts();
+  const { hidden, phase, toggle } = useHiddenAmounts();
   const { format } = useHiddenMoney();
   return (
-    <>
-      <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel="toggle">
-        <RNText testID="state">{`${hidden ? 'hidden' : 'visible'}/${phase}`}</RNText>
-        <RNText testID="money">{format(128_450, 'EUR', 'it')}</RNText>
-      </Pressable>
-      <Pressable
-        onPress={() => setButtonShown(!buttonShown)}
-        accessibilityRole="button"
-        accessibilityLabel="button-setting"
-      >
-        <RNText testID="button">{buttonShown ? 'shown' : 'off'}</RNText>
-      </Pressable>
-    </>
+    <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel="toggle">
+      <RNText testID="state">{`${hidden ? 'hidden' : 'visible'}/${phase}`}</RNText>
+      <RNText testID="money">{format(128_450, 'EUR', 'it')}</RNText>
+    </Pressable>
   );
 }
 
@@ -110,25 +97,5 @@ describe('HiddenAmountsProvider', () => {
       jest.advanceTimersByTime(CIPHER.steps * CIPHER.stepMs);
     });
     expect(screen.getByTestId('money')).toHaveTextContent('1.284,50 €');
-  });
-
-  it('keeps the header button off until Profile turns it on, and reveals when it goes away', async () => {
-    mockStore.set(AMOUNTS_HIDDEN_KEY, 'true');
-    await renderProbe();
-    expect(screen.getByTestId('button')).toHaveTextContent('off');
-    await act(async () => {
-      fireEvent.press(screen.getByLabelText('button-setting'));
-    });
-    expect(mockStore.get(HIDE_BUTTON_KEY)).toBe('true');
-    expect(screen.getByTestId('state')).toHaveTextContent('hidden/hidden');
-    await act(async () => {
-      fireEvent.press(screen.getByLabelText('button-setting'));
-    });
-    expect(mockStore.get(HIDE_BUTTON_KEY)).toBe('false');
-    expect(mockStore.get(AMOUNTS_HIDDEN_KEY)).toBe('false');
-    await act(async () => {
-      jest.advanceTimersByTime(CIPHER.steps * CIPHER.stepMs);
-    });
-    expect(screen.getByTestId('state')).toHaveTextContent('visible/visible');
   });
 });

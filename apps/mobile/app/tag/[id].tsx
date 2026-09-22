@@ -128,7 +128,9 @@ export default function TagView() {
                 key={row.id}
                 title={row.name}
                 leading={<IconBox name={row.icon} colour={row.colour} />}
-                trailing={<AmountText minor={row.amount} currency={currency} locale={locale} />}
+                trailing={
+                  <AmountText minor={row.amount} currency={currency} locale={locale} align="end" />
+                }
               />
             ))}
           </View>
