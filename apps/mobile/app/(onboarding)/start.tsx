@@ -34,6 +34,7 @@ export default function StartStep() {
               }}
               chevron
             />
+            <View style={{ height: 1, backgroundColor: theme.palette.border }} />
             <ListRow
               testID="onboarding-start-import"
               title={t('onboarding.startImport')}
@@ -45,6 +46,7 @@ export default function StartStep() {
               }}
               chevron
             />
+            <View style={{ height: 1, backgroundColor: theme.palette.border }} />
             <ListRow
               testID="onboarding-start-restore"
               title={t('onboarding.startRestore')}

@@ -1,7 +1,7 @@
 import { PERIOD_KINDS, type PeriodKind, periodContaining, todayLocal } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
@@ -52,18 +52,23 @@ export default function PeriodStep() {
       <StepChunk>
         <Card padded={false}>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
-            {PERIOD_KINDS.map((value) => (
-              <ListRow
-                key={value}
-                title={t(`period.kind_${value}`)}
-                subtitle={t(`period.kindBody_${value}`)}
-                trailing={
-                  value === kind ? (
-                    <Icon name="check" size={18} color={theme.palette.accent} />
-                  ) : undefined
-                }
-                onPress={() => setKind(value)}
-              />
+            {PERIOD_KINDS.map((value, index) => (
+              <Fragment key={value}>
+                {/* A rule between choices, as the design draws them (1616–1717). */}
+                {index > 0 ? (
+                  <View style={{ height: 1, backgroundColor: theme.palette.border }} />
+                ) : null}
+                <ListRow
+                  title={t(`period.kind_${value}`)}
+                  subtitle={t(`period.kindBody_${value}`)}
+                  trailing={
+                    value === kind ? (
+                      <Icon name="check" size={18} color={theme.palette.accent} />
+                    ) : undefined
+                  }
+                  onPress={() => setKind(value)}
+                />
+              </Fragment>
             ))}
           </View>
         </Card>
