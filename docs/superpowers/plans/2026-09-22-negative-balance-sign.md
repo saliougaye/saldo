@@ -38,4 +38,4 @@ From `TODO.md` → Bugs. Diagnosed from code and tests, not on a device.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` green.
 - [x] Product decision on the card hero: A, keep "Da rimborsare" + absolute value.
 - [x] Remove the bottom balance caption from `apps/mobile/app/account/[id].tsx`.
-- [ ] Manual test on device (user).
+- [x] Manual test on device (user).
