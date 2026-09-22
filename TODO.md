@@ -14,15 +14,8 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### Onboarding: a better UI, and a step for the system permissions
+### Onboarding: a step for the system permissions
 
-- [x] Rework the onboarding screens (§6.29) — done as "Fuoco" (`docs/superpowers/plans/2026-09-22-onboarding-fuoco.md`):
-      the old step dissolves, the new one arrives block by block, progress is 2px segments.
-- [ ] Let the pay cycle start on the 29th–31st. §5.2 caps `cycleStartDay` at 28 "because February", but the core
-      already clamps (`effectiveStart = min(S, daysInMonth)`, the S=31 example is in the spec). Offer the full 1–31 in
-      the onboarding `cycle-day` grid and in Profile's day sheet, most likely as an "Ultimo giorno del mese" key
-      standing for S=31 (that is the real question of anyone paid at month end), plus a one-line explanation that
-      February counts the 28th. Touches §5.2, `DayOfMonthSheet`, `cycle-day.tsx` and one i18n key in both locales.
 - [ ] Add a step that asks for the system permissions up front, each one with a sentence saying what it is for and
       a "Più tardi" that skips it. Today every permission is asked at the moment it is first needed:
   - **notifications** — budget alerts (§5.8), requested by `src/features/budgets/BudgetAlertsGate.tsx`;
@@ -119,3 +112,6 @@ Kept so they are not re-derived.
 - **Native passkeys (§9.4).** D13 still holds: a free Apple ID cannot sign Associated Domains, and the app is
   sideloaded. Pointless until there is a store build.
 - **Multi-currency.** §1.2 excludes it with a reason (historical rates per transaction date). A decision, not a gap.
+- **A pay cycle starting on the 29th–31st.** §5.2 caps `cycleStartDay` at 28 on purpose: the core would clamp, but
+  "the 31st" means the 28th in February and the explanation costs more than the three days it buys. Decided on
+  2026-09-22 with the onboarding rework; 28 stays.
