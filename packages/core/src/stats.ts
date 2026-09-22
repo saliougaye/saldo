@@ -16,10 +16,15 @@ export function mean(values: readonly number[]): number | null {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-/** Rounded percentage change vs a baseline; null when there is no usable baseline. */
+/**
+ * Rounded percentage change vs a baseline; null when there is no usable baseline.
+ *
+ * Measured against the baseline's size, so the sign always says which way the value moved: a
+ * balance going from −500 to −120 rose (+76%), even though dividing by −500 would say it fell.
+ */
 export function deltaPercent(value: number, baseline: number | null): number | null {
   if (baseline === null || baseline === 0) return null;
-  return Math.round(((value - baseline) / baseline) * 100);
+  return Math.round(((value - baseline) / Math.abs(baseline)) * 100);
 }
 
 /** Cumulative counted expenses per elapsed day of the range (index 0 = start day). */

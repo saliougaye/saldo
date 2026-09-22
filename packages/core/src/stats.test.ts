@@ -35,6 +35,15 @@ describe('deltaPercent', () => {
     expect(deltaPercent(5, null)).toBeNull();
     expect(deltaPercent(5, 0)).toBeNull();
   });
+
+  it('follows the direction of the change when the baseline is below zero', () => {
+    // A card from −500,00 € to −120,00 €: the balance went up, by 76% of its size.
+    expect(deltaPercent(-12_000, -50_000)).toBe(76);
+    // An overdraft deepening from −100,00 € to −300,00 €: the balance went down.
+    expect(deltaPercent(-30_000, -10_000)).toBe(-200);
+    // Out of the red: from −100,00 € to +50,00 € is a rise.
+    expect(deltaPercent(5_000, -10_000)).toBe(150);
+  });
 });
 
 describe('dailyCumulative', () => {
