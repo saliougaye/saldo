@@ -271,6 +271,20 @@ export const motion = {
   stepWordStaggerMs: 80,
   /** How far a chunk rises while fading in. */
   stepEnterOffset: 12,
+  /**
+   * The onboarding permissions list (2026-09-22 plan): one row open at a time. The row grows over
+   * `expandMs`, its body fades in `revealDelayMs` later, so the text never appears in a row that is
+   * still too short for it.
+   */
+  expandMs: 300,
+  revealDelayMs: 80,
+  /**
+   * A status replacing the buttons that produced it (better-ui swap): from `swapFromScale` and
+   * transparent, the icon from `swapIconFromScale`, on this curve.
+   */
+  swapEasing: [0.2, 0, 0, 1] as const,
+  swapFromScale: 0.96,
+  swapIconFromScale: 0.25,
   toastMs: 4000,
   undoToastMs: 5000,
 } as const;

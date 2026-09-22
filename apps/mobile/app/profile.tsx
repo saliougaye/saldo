@@ -176,6 +176,12 @@ export default function ProfileScreen() {
             chevron
           />
           <ListRow
+            title={t('profile.permissions')}
+            leading={lead('bell')}
+            onPress={() => router.push('/profile/permissions')}
+            chevron
+          />
+          <ListRow
             title={t('profile.appLock')}
             leading={lead('key')}
             trailing={

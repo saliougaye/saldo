@@ -109,6 +109,10 @@ export const en: Messages = {
     importBalancesTitle: 'What’s there now?',
     importBalancesBody:
       'The current balance of each imported account. It starts at what the history adds up to: correct it if your bank says otherwise.',
+    permissionsTitle: 'Three more things',
+    permissionsBody:
+      'We ask now so we don’t interrupt you later. You can change each one from your Profile.',
+    permissionsNote: 'One at a time. Anything you skip is waiting in your Profile.',
   },
   accountTypes: {
     cash: 'Cash',
@@ -122,6 +126,26 @@ export const en: Messages = {
     title: 'Saldo is locked',
     unlock: 'Unlock',
     failed: 'Unlock failed',
+  },
+  permissions: {
+    notificationsTitle: 'Notifications',
+    notificationsBody: 'We let you know when a budget is about to run out, before it does.',
+    notificationsOn: 'On',
+    notificationsDenied: 'Not allowed',
+    cameraTitle: 'Camera',
+    cameraBody: 'To photograph a receipt and attach it to the expense.',
+    cameraOn: 'On',
+    cameraDenied: 'Not allowed',
+    appLockTitle: 'Biometric lock',
+    appLockBody:
+      'Saldo only opens with your face or fingerprint. It’s a setting, not a permission.',
+    appLockOn: 'On',
+    appLockDenied: 'Not turned on',
+    appLockPrompt: 'Turn on the Saldo lock',
+    activate: 'Turn on',
+    later: 'Later',
+    openSettings: 'Settings',
+    openSettingsLabel: 'Open the system Settings',
   },
   placeholders: {
     comingSoon: 'Coming in the next phase',
@@ -691,6 +715,9 @@ export const en: Messages = {
     exportData: 'Export your data',
     restoreBackup: 'Restore a backup',
     appLock: 'Biometric lock',
+    permissions: 'Permissions',
+    permissionsBody:
+      'What Saldo can use on this phone. Anything you denied comes back from the system Settings.',
     version: 'Version {{version}}',
     deleteAllData: 'Delete all data',
     currencyConfirmTitle: 'Change currency?',

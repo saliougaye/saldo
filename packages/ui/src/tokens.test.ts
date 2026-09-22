@@ -173,3 +173,14 @@ describe('onboarding step motion', () => {
     expect(layout.stepSegmentGap).toBeGreaterThan(0);
   });
 });
+
+describe('permissions list motion', () => {
+  it('reveals the body inside the row growth and swaps within the UI budget', () => {
+    expect(motion.revealDelayMs).toBeLessThan(motion.expandMs);
+    expect(motion.expandMs).toBeLessThanOrEqual(300);
+    // better-ui: a swap never starts from nothing, and the icon travels further than the text.
+    expect(motion.swapFromScale).toBeGreaterThanOrEqual(0.95);
+    expect(motion.swapIconFromScale).toBeLessThan(motion.swapFromScale);
+    expect(motion.swapEasing).toHaveLength(4);
+  });
+});

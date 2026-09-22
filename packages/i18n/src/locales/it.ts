@@ -109,6 +109,10 @@ export const it = {
     importBalancesTitle: 'Quanto c’è adesso?',
     importBalancesBody:
       'Il saldo attuale di ogni conto importato. Parte da quanto somma lo storico: correggilo se la banca dice altro.',
+    permissionsTitle: 'Ancora tre cose',
+    permissionsBody:
+      'Te le chiediamo adesso, così non ti interrompiamo dopo. Ognuna si cambia dal Profilo.',
+    permissionsNote: 'Una alla volta. Quello che salti lo ritrovi nel Profilo.',
   },
   accountTypes: {
     cash: 'Contanti',
@@ -122,6 +126,26 @@ export const it = {
     title: 'Saldo è bloccato',
     unlock: 'Sblocca',
     failed: 'Sblocco non riuscito',
+  },
+  permissions: {
+    notificationsTitle: 'Notifiche',
+    notificationsBody: 'Ti avvisiamo quando un budget sta per finire, prima che succeda.',
+    notificationsOn: 'Attive',
+    notificationsDenied: 'Non consentite',
+    cameraTitle: 'Fotocamera',
+    cameraBody: 'Per fotografare uno scontrino e allegarlo alla spesa.',
+    cameraOn: 'Attiva',
+    cameraDenied: 'Non consentita',
+    appLockTitle: 'Blocco con biometria',
+    appLockBody:
+      'Saldo si apre solo con il tuo volto o la tua impronta. È un’impostazione, non un permesso.',
+    appLockOn: 'Attivo',
+    appLockDenied: 'Non attivato',
+    appLockPrompt: 'Attiva il blocco di Saldo',
+    activate: 'Attiva',
+    later: 'Più tardi',
+    openSettings: 'Impostazioni',
+    openSettingsLabel: 'Apri le Impostazioni di sistema',
   },
   placeholders: {
     comingSoon: 'Arriva nella prossima fase',
@@ -698,6 +722,9 @@ export const it = {
     exportData: 'Esporta i dati',
     restoreBackup: 'Ripristina backup',
     appLock: 'Blocco con biometria',
+    permissions: 'Permessi',
+    permissionsBody:
+      'Cosa può usare Saldo su questo telefono. Quelli negati si riattivano dalle Impostazioni di sistema.',
     version: 'Versione {{version}}',
     deleteAllData: 'Elimina tutti i dati',
     currencyConfirmTitle: 'Cambiare valuta?',

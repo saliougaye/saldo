@@ -15,6 +15,7 @@ export * from './io';
 export * from './ledger';
 export * from './money';
 export * from './period';
+export * from './permissions';
 export * from './recents';
 export * from './recurrence';
 export * from './rollover';

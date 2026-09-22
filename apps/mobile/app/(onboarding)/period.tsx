@@ -9,7 +9,7 @@ import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -47,7 +47,7 @@ export default function PeriodStep() {
       }
     >
       <StepHeader
-        step={{ current: 1, total: 4 }}
+        step={{ current: 1, total: ONBOARDING_STEPS }}
         title={t('onboarding.periodTitle')}
         body={t('onboarding.periodBody')}
       />

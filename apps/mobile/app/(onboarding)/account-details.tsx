@@ -8,7 +8,7 @@ import { TextField } from '../../src/components/TextField';
 import { AccountTypeGrid } from '../../src/features/accounts/AccountTypeGrid';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
 
 /** §6.29 step 2: what the account *is*. Its balance and currency are step 3. */
@@ -33,7 +33,7 @@ export default function AccountDetailsStep() {
       }
     >
       <StepHeader
-        step={{ current: 2, total: 4 }}
+        step={{ current: 2, total: ONBOARDING_STEPS }}
         title={t('onboarding.accountTitle')}
         body={t('onboarding.accountBody')}
       />

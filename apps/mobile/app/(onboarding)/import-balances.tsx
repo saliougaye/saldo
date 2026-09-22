@@ -1,10 +1,4 @@
-import {
-  amountBufferToMinor,
-  getCurrency,
-  importedBalances,
-  minorToAmountBuffer,
-  todayLocal,
-} from '@saldo/core';
+import { getCurrency, importedBalances, minorToAmountBuffer, todayLocal } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,29 +6,24 @@ import { View } from 'react-native';
 import { AmountInput } from '../../src/components/AmountInput';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
-import { db } from '../../src/db/client';
-import { useRepositories } from '../../src/db/DatabaseProvider';
-import { seedFromImport } from '../../src/features/onboarding/importOnboarding';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
-import { enterTabs } from '../../src/navigation/history';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 /**
  * §6.29 import step 4: today's balance of every imported account. Each field starts at what the
- * history adds up to, so "Inizia" untouched keeps the file as the whole story; a different number
- * becomes the opening balance that reaches it (§6.22).
+ * history adds up to, so «Continua» untouched keeps the file as the whole story; a different number
+ * becomes the opening balance that reaches it (§6.22), written by «Inizia» on step 5.
  */
 export default function ImportBalancesStep() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
   const locale = useAppLocale();
-  const repos = useRepositories();
-  const { draft } = useOnboarding();
+  const { draft, setDraft } = useOnboarding();
   const plan = draft.importPlan;
   const { minorDigits } = getCurrency(draft.currency);
   const today = useMemo(() => todayLocal(), []);
@@ -47,47 +36,22 @@ export default function ImportBalancesStep() {
       [...imported].map(([name, balance]) => [name, minorToAmountBuffer(balance, minorDigits)]),
     ),
   );
-  const [saving, setSaving] = useState(false);
-
-  const finish = () => {
-    if (plan === null) return;
-    setSaving(true);
-    // False means a sync delivered the account's own settings meanwhile; those win (§8.3), and the
-    // app is ready either way.
-    seedFromImport(db, repos, {
-      periodKind: draft.periodKind,
-      cycleStartDay: draft.cycleStartDay,
-      currency: draft.currency,
-      language: 'system',
-      theme: 'system',
-      translate: (key) => t(`seed.${key}`),
-      completedAt: new Date().toISOString(),
-      plan,
-      today,
-      currentBalances: new Map(
-        [...imported.keys()].map((name) => [
-          name,
-          amountBufferToMinor(buffers[name] ?? '', minorDigits),
-        ]),
-      ),
-    });
-    enterTabs(router);
-  };
-
   return (
     <Screen
       footer={
         <StepFooter
-          testID="onboarding-import-start"
-          label={t('common.start')}
-          loading={saving}
+          testID="onboarding-import-balances-continue"
+          label={t('common.continue')}
           disabled={plan === null}
-          onPress={finish}
+          onPress={() => {
+            setDraft({ importBalanceBuffers: buffers });
+            router.push('/permissions');
+          }}
         />
       }
     >
       <StepHeader
-        step={{ current: 4, total: 4 }}
+        step={{ current: 4, total: ONBOARDING_STEPS }}
         title={t('onboarding.importBalancesTitle')}
         body={t('onboarding.importBalancesBody')}
       />

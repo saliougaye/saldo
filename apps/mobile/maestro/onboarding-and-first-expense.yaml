@@ -46,12 +46,12 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "onboarding-start-fresh"
 
-# Step 1 of 4 — how you track spending. The month is already selected (`INITIAL.periodKind` in
+# Step 1 of 5 — how you track spending. The month is already selected (`INITIAL.periodKind` in
 # `src/features/onboarding/state.tsx`), so there is nothing to choose.
 - tapOn:
     id: "onboarding-period-continue"
 
-# Step 2 of 4 — the first account. The field is autofocused, and the button is in the pinned
+# Step 2 of 5 — the first account. The field is autofocused, and the button is in the pinned
 # footer, which `Screen` keeps above the keyboard on both platforms.
 - tapOn:
     id: "onboarding-account-name"
@@ -59,15 +59,27 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "onboarding-account-continue"
 
-# Step 3 of 4 — opening balance. 1000 in an EUR account's buffer is 10,00 €; nothing asserts on it.
+# Step 3 of 5 — opening balance. 1000 in an EUR account's buffer is 10,00 €; nothing asserts on it.
 - tapOn:
     id: "onboarding-balance-amount"
 - inputText: "1000"
 - tapOn:
     id: "onboarding-balance-continue"
 
-# Step 4 of 4 — the category grid, every tile selected by default. "Inizia" writes settings, the
-# account and the categories, then replaces the route with the tabs.
+# Step 4 of 5 — the category grid, every tile selected by default.
+- tapOn:
+    id: "onboarding-categories-continue"
+
+# Step 5 of 5 — the permissions, one row open at a time. «Più tardi» on each: the flow must not
+# depend on a system prompt it cannot answer. On a fresh install all three rows are pending; a
+# permission the OS already decided starts closed and has no «Più tardi». "Inizia" writes settings,
+# the account and the categories, then replaces the route with the tabs.
+- tapOn:
+    id: "permission-notifications-later"
+- tapOn:
+    id: "permission-camera-later"
+- tapOn:
+    id: "permission-appLock-later"
 - tapOn:
     id: "onboarding-start"
 
