@@ -78,7 +78,7 @@ describe('TagEditSheet', () => {
     const onClose = jest.fn();
     await render(
       <Host>
-        <TagEditSheet visible tag={tag} onClose={onClose} onDeleted={jest.fn()} />
+        <TagEditSheet visible tag={tag} onClose={onClose} onDelete={jest.fn()} />
       </Host>,
     );
     // `changeText` rather than `userEvent.type`: the component only reads the final value, and
@@ -92,7 +92,7 @@ describe('TagEditSheet', () => {
   it('will not save a name that is only whitespace, and says so', async () => {
     await render(
       <Host>
-        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDeleted={jest.fn()} />
+        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDelete={jest.fn()} />
       </Host>,
     );
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
@@ -105,7 +105,7 @@ describe('TagEditSheet', () => {
   it('will not rename a tag onto the name of another one', async () => {
     await render(
       <Host>
-        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDeleted={jest.fn()} />
+        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDelete={jest.fn()} />
       </Host>,
     );
     fireEvent.changeText(screen.getByLabelText('Name'), 'move');
@@ -118,35 +118,22 @@ describe('TagEditSheet', () => {
   it('does not offer merging: that is its own action', async () => {
     await render(
       <Host>
-        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDeleted={jest.fn()} />
+        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDelete={jest.fn()} />
       </Host>,
     );
     expect(screen.queryByText('Move')).toBeNull();
     expect(screen.queryByText('Merge into another tag')).toBeNull();
   });
 
-  it('asks inline before deleting, and can step back', async () => {
-    const onDeleted = jest.fn();
+  it('hands delete over to its own confirmation, deleting nothing itself', async () => {
+    const onDelete = jest.fn();
     await render(
       <Host>
-        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDeleted={onDeleted} />
+        <TagEditSheet visible tag={tag} onClose={jest.fn()} onDelete={onDelete} />
       </Host>,
     );
     await userEvent.press(screen.getByText('Delete tag'));
-    expect(screen.getByText('Delete “Holiday”? The transactions stay.')).toBeTruthy();
+    expect(onDelete).toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
-
-    // The sheet's own Cancel comes first; the confirmation's is the last one.
-    const cancels = screen.getAllByRole('button', { name: 'Cancel' });
-    const stepBack = cancels[cancels.length - 1];
-    if (stepBack === undefined) throw new Error('no inline Cancel');
-    await userEvent.press(stepBack);
-    expect(screen.queryByText('Delete “Holiday”? The transactions stay.')).toBeNull();
-    expect(screen.getByText('Delete tag')).toBeTruthy();
-
-    await userEvent.press(screen.getByText('Delete tag'));
-    await userEvent.press(screen.getByRole('button', { name: 'Delete' }));
-    expect(mockDelete).toHaveBeenCalledWith({}, {}, 'a');
-    expect(onDeleted).toHaveBeenCalled();
   });
 });

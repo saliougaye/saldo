@@ -5,8 +5,7 @@ import { Pressable, View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import { deleteTag, renameTag } from '../../db/adminService';
-import { db } from '../../db/client';
+import { renameTag } from '../../db/adminService';
 import { useRepositories } from '../../db/DatabaseProvider';
 import { useTags } from '../../db/hooks';
 import { Icon } from '../../theme/Icon';
@@ -18,33 +17,35 @@ export interface TagEditSheetProps {
   visible: boolean;
   onClose: () => void;
   tag: Pick<Tag, 'id' | 'name'>;
-  /** Called after a delete, when there is no tag left to show. */
-  onDeleted: () => void;
+  /**
+   * "Elimina tag" was pressed. The screen closes this sheet and opens `DeleteTagSheet` once it is
+   * gone: iOS drops a modal presented while another is still dismissing.
+   */
+  onDelete: () => void;
+  /** Passed through to `Sheet`: runs once the sheet has finished going away. */
+  onDismissed?: () => void;
 }
 
 /**
- * §5.10 "Modifica tag": rename, or delete while keeping the transactions.
+ * §5.10 "Modifica tag": rename, and the way to delete.
  *
  * The twin of "Nuovo tag" — same field, same Save and Cancel — so editing a tag looks like making
- * one. Delete lives here as it does in every other edit of the app, behind the inline confirmation
- * §5.10 asks for. Merging does not: it is its own action with its own sheet (`MergeTagSheet`), so
- * the one irreversible choice that rewrites other transactions is never a tap away from Save.
+ * one. Delete starts here as it does in every other edit of the app, but is confirmed in a sheet of
+ * its own (`DeleteTagSheet`) rather than inline, the way merging is (`MergeTagSheet`): the two
+ * irreversible actions share one confirmation shape, and neither is a tap away from Save.
  */
-export function TagEditSheet({ visible, onClose, tag, onDeleted }: TagEditSheetProps) {
+export function TagEditSheet({ visible, onClose, tag, onDelete, onDismissed }: TagEditSheetProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const repos = useRepositories();
   const tags = useTags();
   const [name, setName] = useState(tag.name);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const missing = tagMissingForSave(name, tags, tag.id);
 
-  // Each opening starts from the tag as it is now: a draft or a half-asked delete left behind by
-  // Cancel would otherwise greet the next visit.
+  // Each opening starts from the tag as it is now: a draft left behind by Cancel would otherwise
+  // greet the next visit.
   useEffect(() => {
-    if (!visible) return;
-    setName(tag.name);
-    setConfirmDelete(false);
+    if (visible) setName(tag.name);
   }, [visible, tag.name]);
 
   const save = () => {
@@ -54,7 +55,7 @@ export function TagEditSheet({ visible, onClose, tag, onDeleted }: TagEditSheetP
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('tags.editTag')}>
+    <Sheet visible={visible} onClose={onClose} title={t('tags.editTag')} onDismissed={onDismissed}>
       <TextField
         label={t('tags.name')}
         value={name}
@@ -81,53 +82,21 @@ export function TagEditSheet({ visible, onClose, tag, onDeleted }: TagEditSheetP
           paddingTop: 4,
         }}
       >
-        {confirmDelete ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
-              {t('tags.deleteConfirm', { name: tag.name })}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={12}
-              onPress={() => setConfirmDelete(false)}
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            >
-              <Text size="footnote" color="textMuted">
-                {t('common.cancel')}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={12}
-              onPress={() => {
-                deleteTag(db, repos, tag.id);
-                onClose();
-                onDeleted();
-              }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            >
-              <Text size="footnote" weight="semibold">
-                {t('common.delete')}
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={() => setConfirmDelete(true)}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              alignSelf: 'flex-start',
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Icon name="trash" size={16} color={theme.palette.textMuted} />
-            <Text color="textMuted">{t('tags.delete')}</Text>
-          </Pressable>
-        )}
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={onDelete}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            alignSelf: 'flex-start',
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Icon name="trash" size={16} color={theme.palette.textMuted} />
+          <Text color="textMuted">{t('tags.delete')}</Text>
+        </Pressable>
       </View>
     </Sheet>
   );

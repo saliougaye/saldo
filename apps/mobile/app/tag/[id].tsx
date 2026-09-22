@@ -23,6 +23,7 @@ import {
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
+import { DeleteTagSheet } from '../../src/features/tags/DeleteTagSheet';
 import { MergeTagSheet } from '../../src/features/tags/MergeTagSheet';
 import { TagEditSheet } from '../../src/features/tags/TagEditSheet';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
@@ -46,7 +47,10 @@ export default function TagView() {
   const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
-  const [sheet, setSheet] = useState<'edit' | 'merge' | null>(null);
+  const [sheet, setSheet] = useState<'edit' | 'merge' | 'delete' | null>(null);
+  // "Elimina tag" in the edit sheet: its confirmation opens once the edit sheet is gone, since iOS
+  // drops a modal presented while another is still dismissing.
+  const [deletePending, setDeletePending] = useState(false);
 
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
   // The figures sum these rows: before they land, a total would paint as 0.
@@ -206,6 +210,21 @@ export default function TagView() {
       <TagEditSheet
         visible={sheet === 'edit'}
         tag={tag}
+        onClose={() => setSheet(null)}
+        onDelete={() => {
+          setDeletePending(true);
+          setSheet(null);
+        }}
+        onDismissed={() => {
+          if (!deletePending) return;
+          setDeletePending(false);
+          setSheet('delete');
+        }}
+      />
+      <DeleteTagSheet
+        visible={sheet === 'delete'}
+        tag={tag}
+        uses={tagged.length}
         onClose={() => setSheet(null)}
         onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })}
       />

@@ -12,8 +12,12 @@ once: irreversible, rewriting every transaction the tag carries, one mis-hit awa
 ## Decisions
 
 - **Edit is a sheet** (§6.24 "Tag edit sheet"), the twin of "Nuovo tag": title, Name, Save, Cancel.
-- **Delete stays in the edit**, as in every other edit of the app, behind §5.10's inline
-  confirmation ("Eliminare «X»? Le transazioni restano.") under a divider.
+- **Delete starts in the edit**, as in every other edit of the app ("Elimina tag" under a divider),
+  but is confirmed in a **bottom sheet of its own** ("Eliminare «X»?" · "Le N transazioni che lo
+  portano restano, senza questo tag." · Elimina / Annulla), the same shape as merge. This departs
+  from §5.10's "confirm inline" by the user's decision (2026-09-22, after trying the inline one):
+  the two irreversible actions share one confirmation. The edit sheet closes first and the delete
+  sheet opens on its `onDismissed`, since iOS drops a modal presented while another dismisses.
 - **Merge is a separate action** with its own sheet: pick a tag (a check, no side effect), read
   what will happen ("Le N transazioni di «X» passeranno a «Y»… Non si può annullare."), confirm
   with "Unisci". Hidden when there is no other tag.
@@ -26,6 +30,7 @@ once: irreversible, rewriting every transaction the tag carries, one mis-hit awa
 - [x] i18n: `tags.merge`, `tags.mergeTitle`, `tags.mergeNote_{one,other}`, `tags.mergeNoteUnused`.
 - [x] `TagEditSheet` (+ tests) replaces `TagEditCard`.
 - [x] `MergeTagSheet` (+ tests).
+- [x] `DeleteTagSheet` (+ tests); i18n `tags.deleteTitle`, `tags.deleteNote_{one,other}`, `tags.deleteNoteUnused` replace `tags.deleteConfirm`.
 - [x] `HeaderIconButton` in `ScreenHeader.tsx`; `app/tag/[id].tsx` wires both sheets.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` green.
 - [ ] Manual test on device (user).
