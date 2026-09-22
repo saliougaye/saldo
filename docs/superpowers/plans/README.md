@@ -618,6 +618,15 @@ small enough to land on its own branch without a plan file of its own.
   stored as an opening balance; nothing is written until "Inizia". `applyImport` no longer twins a name that exists
   by the time it writes.
 
+### Picked up from `TODO.md` on 2026-09-22
+
+**Plan:** `2026-09-22-card-settlement.md` · **Spec:** §5.3, §6.10, §6.16, §6.22
+
+- **Credit cards: settle the card from its payment account.** "Addebitata su" in the account sheet; the card box
+  shows the closed statement still due (`creditStatementDue`) and "Salda carta" opens a pre-filled transfer
+  (statement or whole balance, dated on the charge day); a 09:00 reminder on the charge day opens the card; a
+  transfer that takes a card into credit is flagged, not blocked. No schema change. Awaiting a device check.
+
 ### 12 — Recurring transactions ✅ done
 
 **Plan:** `2026-09-19-12-recurring-transactions.md` · **Spec:** §4 (Recurrence), §5.9, §6.2, §6.6, §6.16, §6.33, §6.34

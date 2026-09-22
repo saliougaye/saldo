@@ -725,13 +725,13 @@ export function reminderAccountId(data: unknown): string | null {
 
 ### Task 8: docs and gates
 
-- [ ] **Step 1:** spec §5.3 credit-card bullet (statement due rule, settlement, reminder), §6.10 (card box),
+- [x] **Step 1:** spec §5.3 credit-card bullet (statement due rule, settlement, reminder), §6.10 (card box),
   §6.16 (pre-fill + chips + overpay warning), §6.22 (Addebitata su). Plans `README.md` gets a "Picked up from
   `TODO.md` on 2026-09-22" entry. Remove the item from `TODO.md`.
-- [ ] **Step 2:** `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck`, `rtk proxy pnpm test`; read the output (no
+- [x] **Step 2:** `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck`, `rtk proxy pnpm test`; read the output (no
   `lint/…` lines, no `×`).
-- [ ] **Step 3:** commit `docs: card settlement in the spec; leaves TODO`.
+- [x] **Step 3:** commit `docs: card settlement in the spec; leaves TODO`.
 
 ## Status
 
-Not started.
+Implemented on `feat/card-settlement`. Lint clean, typecheck green, tests green (core, i18n, ui, web, mobile 524). The first full run had two unrelated jest timeouts (`TagEditSheet`, `RecurrenceSheet`, 5 s under parallel load) that passed alone and on the rerun. Not tried on a device yet: the user tests on device. No migration.
