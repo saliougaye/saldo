@@ -1691,7 +1691,7 @@ rtk proxy pnpm test
 
 Expected: no `lint/…` lines and no `× Some errors were emitted`; typecheck clean; every package's tests pass.
 
-- [ ] **Step 2: Simulator — fresh path**
+- [x] **Step 2: Simulator — fresh path**
 
 Wipe the simulator's app data or start from "Elimina tutti i dati" → onboarding. Walk *Da zero* to step 4: the segments say 4 of 5, «Continua» leads to step 5. On step 5:
 
@@ -1700,10 +1700,10 @@ Wipe the simulator's app data or start from "Elimina tutti i dati" → onboardin
 - Lock «Attiva» → Face ID (or passcode) → «Attivo». «Inizia» → tabs. Kill and relaunch the app: the lock screen appears.
 - Settings → Accessibility → Reduce Motion on: the rows change with no growth or scale, only the instant state change.
 
-- [ ] **Step 3: Simulator — import path and Profile**
+- [x] **Step 3: Simulator — import path and Profile**
 
 Walk the import path with the sample CSV to step 5 (5 of 5); «Più tardi» ×3, «Inizia» → the imported accounts show the balances entered on step 4. Profile → Permessi lists both permissions with their state; an «Attiva» row prompts, a denied row opens Settings.
 
-- [ ] **Step 4: Review**
+- [x] **Step 4: Review**
 
 Use **requesting-code-review** on the branch. Then tick this plan's checkboxes and merge `feat/onboarding-permissions` into `main` when accepted.

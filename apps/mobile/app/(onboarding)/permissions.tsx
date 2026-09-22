@@ -8,7 +8,7 @@ import {
 } from '@saldo/core';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '../../src/components/Screen';
 import { db } from '../../src/db/client';
@@ -44,7 +44,8 @@ export default function PermissionsStep() {
     camera: 'pending',
     appLock: draft.appLock ? 'granted' : 'pending',
   });
-  const [asking, setAsking] = useState(false);
+  // A ref, not state: two taps in one frame would both read a stale `false` and prompt twice.
+  const asking = useRef(false);
   const [saving, setSaving] = useState(false);
 
   // What the OS already decided fills the rows, and a return from the settings may upgrade them.
@@ -65,8 +66,8 @@ export default function PermissionsStep() {
     setAnswers((current) => ({ ...current, [kind]: value }));
 
   const activate = async (kind: PermissionKey) => {
-    if (asking) return;
-    setAsking(true);
+    if (asking.current) return;
+    asking.current = true;
     try {
       if (kind === 'appLock') {
         const result = await LocalAuthentication.authenticateAsync({
@@ -81,7 +82,7 @@ export default function PermissionsStep() {
         answer(kind, answerFromRequest(await requestSystemPermission(kind)));
       }
     } finally {
-      setAsking(false);
+      asking.current = false;
     }
   };
 
