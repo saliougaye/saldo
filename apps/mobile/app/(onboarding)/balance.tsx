@@ -7,9 +7,8 @@ import { AmountInput } from '../../src/components/AmountInput';
 import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { CurrencyChips } from '../../src/components/CurrencyChips';
-import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { BackButton } from '../../src/components/ScreenHeader';
+import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Text } from '../../src/theme/Text';
@@ -36,42 +35,42 @@ export default function BalanceStep() {
         />
       }
     >
-      <BackButton />
-      <ProgressBar ratio={3 / 4} />
-      <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 3, total: 4 })}
-      </Text>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('onboarding.balanceTitle')}
-      </Text>
-      <Text color="textMuted">{t('onboarding.balanceBody')}</Text>
+      <StepHeader
+        step={{ current: 3, total: 4 }}
+        title={t('onboarding.balanceTitle')}
+        body={t('onboarding.balanceBody')}
+      />
 
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('onboarding.accountBalance')}
-        </Text>
-        <View style={{ marginTop: 6 }}>
-          <AmountInput
-            testID="onboarding-balance-amount"
-            buffer={buffer}
-            onChange={setBuffer}
-            currency={currency}
-            locale={locale}
-            autoFocus
-            label={t('onboarding.accountBalance')}
-            doneLabel={t('common.done')}
-            allowNegative
-            negativeLabel={t('common.negative')}
-          />
-        </View>
-      </Card>
+      <StepChunk>
+        <Card>
+          <Text size="footnote" color="textMuted">
+            {t('onboarding.accountBalance')}
+          </Text>
+          <View style={{ marginTop: 6 }}>
+            <AmountInput
+              testID="onboarding-balance-amount"
+              buffer={buffer}
+              onChange={setBuffer}
+              currency={currency}
+              locale={locale}
+              autoFocus
+              label={t('onboarding.accountBalance')}
+              doneLabel={t('common.done')}
+              allowNegative
+              negativeLabel={t('common.negative')}
+            />
+          </View>
+        </Card>
+      </StepChunk>
 
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('onboarding.accountCurrency')}
-        </Text>
-        <CurrencyChips value={currency} onChange={setCurrency} />
-      </Card>
+      <StepChunk index={CHUNK.content + 1}>
+        <Card>
+          <Text size="footnote" color="textMuted">
+            {t('onboarding.accountCurrency')}
+          </Text>
+          <CurrencyChips value={currency} onChange={setCurrency} />
+        </Card>
+      </StepChunk>
     </Screen>
   );
 }

@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
+import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { ConnectForm } from '../../src/features/server/ConnectForm';
 import { Text } from '../../src/theme/Text';
 
@@ -18,24 +19,27 @@ export default function Welcome() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }} style={{ flex: 1 }}>
-        <View style={{ paddingTop: 24, gap: 12 }}>
-          <Text size="display" weight="semibold" tracking="tighter">
-            {t('onboarding.welcomeTitle')}
+        <StepHeader
+          back={false}
+          title={t('onboarding.welcomeTitle')}
+          body={t('onboarding.welcomeBody')}
+        />
+        <StepChunk>
+          <Card>
+            <ConnectForm
+              onConnected={() => {
+                // Where to go next is the boot router's decision: a device joining an account that
+                // already has settings must skip onboarding entirely (§6.29).
+                router.replace('/');
+              }}
+            />
+          </Card>
+        </StepChunk>
+        <StepChunk index={CHUNK.content + 1}>
+          <Text size="caption" color="textFaint">
+            {t('onboarding.welcomeOffline')}
           </Text>
-          <Text color="textMuted">{t('onboarding.welcomeBody')}</Text>
-        </View>
-        <Card>
-          <ConnectForm
-            onConnected={() => {
-              // Where to go next is the boot router's decision: a device joining an account that
-              // already has settings must skip onboarding entirely (§6.29).
-              router.replace('/');
-            }}
-          />
-        </Card>
-        <Text size="caption" color="textFaint">
-          {t('onboarding.welcomeOffline')}
-        </Text>
+        </StepChunk>
       </ScrollView>
     </Screen>
   );
