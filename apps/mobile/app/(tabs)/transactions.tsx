@@ -209,6 +209,7 @@ export default function TransactionsTab() {
                     upcoming={tx.date > today}
                     trailing={
                       <AmountText
+                        plain
                         align="end"
                         minor={row.amount.minor}
                         currency={currency}

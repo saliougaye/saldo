@@ -21,6 +21,12 @@ export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular'>
   align?: 'start' | 'end';
   /** Position in the Home stagger (0 = the hero); other screens leave it at 0. */
   stagger?: number;
+  /**
+   * Never masked. For a single transaction — a list row, its detail, an occurrence — which stays
+   * readable in hidden mode: it is small and contextual, and the list has to remain usable. The
+   * figures hidden mode is for are the aggregates: balances, totals, budgets, charts.
+   */
+  plain?: boolean;
 }
 
 /**
@@ -38,12 +44,13 @@ export function AmountText({
   signDisplay = 'negative',
   align = 'start',
   stagger = 0,
+  plain = false,
   style,
   color = 'text',
   ...rest
 }: AmountTextProps) {
   const { t } = useTranslation();
-  const { hidden } = useHiddenAmounts();
+  const hidden = useHiddenAmounts().hidden && !plain;
   const parts = formatMoneyParts(minor, currency, locale, signDisplay);
   const cipher = useCipher(parts.integer, hidden, stagger);
   const tail =

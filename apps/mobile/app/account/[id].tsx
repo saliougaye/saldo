@@ -269,6 +269,7 @@ export default function AccountDetail() {
                   }
                   trailing={
                     <AmountText
+                      plain
                       align="end"
                       minor={row.amount.minor}
                       currency={currency}

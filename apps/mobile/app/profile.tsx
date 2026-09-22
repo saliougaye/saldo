@@ -41,7 +41,7 @@ export default function ProfileScreen() {
   const accounts = useAccounts();
   const { today, def } = usePeriod();
   const [lockEnabled, setLockEnabled] = useState(kv.get('appLockEnabled') === 'true');
-  const { hidden: amountsHidden, setHidden: setAmountsHidden } = useHiddenAmounts();
+  const { buttonShown: hideButtonShown, setButtonShown: setHideButtonShown } = useHiddenAmounts();
   const [resetOpen, setResetOpen] = useState(false);
 
   const currency = settings?.currency ?? 'EUR';
@@ -178,15 +178,15 @@ export default function ProfileScreen() {
             chevron
           />
           <ListRow
-            title={t('profile.hideAmounts')}
-            subtitle={t('profile.hideAmountsHint')}
-            subtitleLines={2}
-            leading={lead('eyeOff')}
+            title={t('profile.hideAmountsButton')}
+            subtitle={t('profile.hideAmountsButtonHint')}
+            subtitleLines={3}
+            leading={lead('eye')}
             trailing={
               <Toggle
-                value={amountsHidden}
-                onChange={setAmountsHidden}
-                accessibilityLabel={t('profile.hideAmounts')}
+                value={hideButtonShown}
+                onChange={setHideButtonShown}
+                accessibilityLabel={t('profile.hideAmountsButton')}
               />
             }
           />

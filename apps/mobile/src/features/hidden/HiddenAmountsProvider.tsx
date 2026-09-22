@@ -8,6 +8,8 @@ import { type HiddenAmounts, HiddenAmountsContext, type HiddenPhase } from './hi
 
 /** Device-local (§7): a phone hidden in public must not blank the tablet at home. */
 export const AMOUNTS_HIDDEN_KEY = 'amountsHidden';
+/** Device-local too: whether the eye button is in the headers at all. */
+export const HIDE_BUTTON_KEY = 'hideAmountsButton';
 
 export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
   const { kv } = useDatabase();
@@ -16,6 +18,7 @@ export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
   const [hidden, setHiddenState] = useState(() => kv.get(AMOUNTS_HIDDEN_KEY) === 'true');
   const [phase, setPhase] = useState<HiddenPhase>(hidden ? 'hidden' : 'visible');
   const [tick, setTick] = useState(0);
+  const [buttonShown, setButtonShownState] = useState(() => kv.get(HIDE_BUTTON_KEY) === 'true');
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   // The latest value, for `setHidden` to compare against without going through an updater: the
   // write to `kv`, the announcement and the timers are side effects and must run exactly once.
@@ -52,6 +55,16 @@ export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
     [kv, t, reduced, clearTimers],
   );
 
+  const setButtonShown = useCallback(
+    (next: boolean) => {
+      kv.set(HIDE_BUTTON_KEY, next ? 'true' : 'false');
+      setButtonShownState(next);
+      // Taking the button away while the figures are hidden would leave no way back.
+      if (!next) setHidden(false);
+    },
+    [kv, setHidden],
+  );
+
   const value = useMemo<HiddenAmounts>(
     () => ({
       hidden,
@@ -59,8 +72,10 @@ export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
       tick,
       setHidden,
       toggle: () => setHidden(!hidden),
+      buttonShown,
+      setButtonShown,
     }),
-    [hidden, phase, tick, setHidden],
+    [hidden, phase, tick, setHidden, buttonShown, setButtonShown],
   );
 
   return <HiddenAmountsContext.Provider value={value}>{children}</HiddenAmountsContext.Provider>;

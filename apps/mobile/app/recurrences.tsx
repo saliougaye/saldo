@@ -101,6 +101,7 @@ export default function RecurrencesScreen() {
         leading={<IconBox name={icon} colour={colour} badge="repeat" />}
         trailing={
           <AmountText
+            plain
             align="end"
             minor={template.kind === 'transfer' ? template.amount : signed}
             currency={currency}

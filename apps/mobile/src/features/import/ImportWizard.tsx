@@ -253,6 +253,7 @@ export function ImportWizard({
                       locale={locale}
                       color={row.kind === 'income' ? 'positive' : 'textMuted'}
                       align="end"
+                      plain
                     />
                   }
                 />

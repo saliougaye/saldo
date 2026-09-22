@@ -197,6 +197,7 @@ export default function RecurrenceDetail() {
           </View>
           <View style={{ marginTop: 8 }}>
             <AmountText
+              plain
               align="end"
               minor={template.kind === 'transfer' ? template.amount : signed}
               currency={currency}
@@ -271,6 +272,7 @@ export default function RecurrenceDetail() {
                 upcoming={tx.date > today}
                 trailing={
                   <AmountText
+                    plain
                     align="end"
                     minor={tx.kind === 'income' ? tx.amount : -tx.amount}
                     currency={currency}

@@ -8,6 +8,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useHiddenAmounts } from '../hidden/hiddenAmounts';
 import { initialsFrom } from '../profile/initials';
 import { usePeriod } from './PeriodProvider';
 import { PeriodSheet } from './PeriodSheet';
@@ -29,6 +30,7 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
   const router = useRouter();
   const { user } = useServer();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { hidden, toggle, buttonShown } = useHiddenAmounts();
 
   // A custom range reads the same way a period does; only the subtitle below tells them apart.
   const label = formatCycleRange(period.range, locale, today);
@@ -114,6 +116,34 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
           {subtitle}
         </Text>
       </Pressable>
+      {buttonShown ? (
+        // Hidden mode (2026-09-22 plan): the eye is only here when Profile says so. Every tab shares
+        // this header, so the figures hide from wherever you are. The icon is the state: open eye
+        // while the figures show, struck through while they hide.
+        <Pressable
+          testID="hide-amounts"
+          accessibilityRole="button"
+          accessibilityLabel={hidden ? t('common.showAmounts') : t('common.hideAmounts')}
+          accessibilityState={{ selected: hidden }}
+          hitSlop={10}
+          onPress={toggle}
+          style={({ pressed }) => ({
+            width: theme.layout.headerButton,
+            height: theme.layout.headerButton,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: theme.radii.pill,
+            backgroundColor: theme.palette.raised,
+            transform: [{ scale: pressed ? 0.96 : 1 }],
+          })}
+        >
+          <Icon
+            name={hidden ? 'eyeOff' : 'eye'}
+            size={16}
+            color={hidden ? theme.palette.text : theme.palette.textMuted}
+          />
+        </Pressable>
+      ) : null}
       {navButton(-1)}
       {navButton(1)}
       <PeriodSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />

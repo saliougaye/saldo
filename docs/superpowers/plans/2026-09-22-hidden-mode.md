@@ -3,9 +3,9 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One device-local switch hides every amount in the app behind `•••• €` while the app keeps working. A
-long-press on the Home balance hides, a tap on it reveals, a row in Profile declares the feature. Charts stop
-drawing magnitudes. Hidden figures leave the accessibility tree. The change animates with the **Cipher** motion
+**Goal:** One device-local switch hides the *aggregates* — balances, totals, budgets, charts — behind `•••• €`
+while the app keeps working; single transactions stay readable. An eye button in the tab headers toggles it; a
+row in Profile decides whether that button exists (off by default). Charts stop drawing magnitudes. Hidden figures leave the accessibility tree. The change animates with the **Cipher** motion
 chosen from `docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html` (variant 4, slowed).
 
 **Architecture:** A `HiddenAmountsProvider` (React context over `kv.amountsHidden`) is the single source of truth:
@@ -30,12 +30,16 @@ touches `@saldo/core`: this is presentation.
 - Motion: **Cipher**, slowed — 4 scramble steps × 60 ms, 160 ms crossfade, settle 30 ms per digit from the right,
   40 ms stagger between Home cards.
 - The user tests on device after the code lands on `main`; no simulator run by the implementer.
+- **Revised after the first device check (2026-09-22):** no long-press — "it needs a real button". The eye sits
+  in `PeriodHeader`, so on all four tabs, and only when the Profile row "Tasto per nascondere gli importi" is on
+  (default off, like the biometric lock). **Scope = aggregates only:** single transactions (list rows, detail,
+  occurrences, import preview) keep their figure via `AmountText plain`; everything summed, a balance, a budget or
+  a chart hides. Turning the button off while hidden reveals, so there is always a way back.
 
 **Decisions where the TODO left options open** (recorded per AGENTS.md):
 
-- **Trigger = both.** Long-press (450 ms) on the Home balance card hides; a tap on it while hidden reveals. A
-  "Nascondi gli importi" toggle row in Profile (with a hint about the gesture) declares the feature. No header
-  eye button: the Home header is full.
+- ~~**Trigger = both.** Long-press on the Home balance + a Profile toggle.~~ Superseded by the revision above:
+  header eye button, gated by a Profile setting.
 - **Survives a relaunch.** `kv.amountsHidden` (`'true' | 'false'`), device-local, never synced. Someone who hides
   on the same train every morning should not redo it per launch; reveal is one tap. `wipeDevice` clears it with
   the rest of `kv`; `wipeAccountData` keeps it, like `appLockEnabled`.

@@ -157,6 +157,7 @@ export default function TagView() {
                 }
                 trailing={
                   <AmountText
+                    plain
                     align="end"
                     minor={rowMeta.amount.minor}
                     currency={currency}

@@ -38,8 +38,11 @@ Decided on 2026-09-22 and implemented on `feat/hidden-mode-variants` (plan:
 `docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html`, variant **Cipher**). Awaiting the device test
 before this section closes:
 
-- **Trigger = both.** Long-press (450 ms) on the Home balance hides, a tap on it reveals; a toggle row in Profile
-  declares the feature and is the accessible route. No header button, no haptics (`expo-haptics` not added).
+- **Trigger = a button, not a gesture.** An eye in the header of every tab (`PeriodHeader`) toggles hidden mode;
+  the Profile row "Tasto per nascondere gli importi" decides whether the button exists (off by default). The
+  long-press on the Home balance was tried first and dropped after the device check.
+- **Scope = aggregates only.** Balances, totals, budgets, statistics and charts hide; single transactions (list
+  rows, detail, occurrences, import preview) stay readable via `AmountText plain`.
 - **Survives a relaunch.** `kv.amountsHidden`, per device, never synced; kept by `wipeAccountData`, cleared by
   `wipeDevice` like the rest of `kv`.
 - **A hidden figure is `•••• €`**, fixed four dots (a dot per digit leaks magnitude), `textMuted`; the real text

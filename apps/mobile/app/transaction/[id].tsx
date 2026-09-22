@@ -136,6 +136,7 @@ export default function TransactionDetail() {
 
       <View style={{ gap: 10, paddingTop: 10 }}>
         <AmountText
+          plain
           minor={transaction.kind === 'income' ? transaction.amount : -transaction.amount}
           currency={currency}
           locale={locale}

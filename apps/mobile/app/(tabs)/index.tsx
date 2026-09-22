@@ -2,13 +2,8 @@ import { isUpcoming, previousPeriods, summarizePeriod } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
 import { CardHeader } from '../../src/components/CardHeader';
@@ -25,7 +20,7 @@ import {
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
-import { useHiddenAmounts, useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
+import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { DevTools } from '../../src/features/home/DevTools';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -34,7 +29,7 @@ import {
   transactionRow,
 } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
-import { appearing, EASE, entering, leaving, reflowing, useMotion } from '../../src/theme/motion';
+import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -43,7 +38,6 @@ const UPCOMING_SHOWN = 5;
 
 export default function HomeTab() {
   const theme = useTheme();
-  const { hidden, setHidden } = useHiddenAmounts();
   const { format: money } = useHiddenMoney();
   const router = useRouter();
   const { t } = useTranslation();
@@ -112,47 +106,35 @@ export default function HomeTab() {
       <PeriodHeader showProfile />
 
       <Animated.View entering={entering(0)}>
-        {/*
-          Hidden mode's gesture (2026-09-22 plan): hold the balance to hide every figure, tap it to
-          bring them back. The Profile row says the feature exists; this is what gets used on a
-          train. `accessible={false}` keeps the figures readable one by one for a screen reader —
-          the toggle in Profile is the accessible route.
-        */}
-        <HoldToHide
-          hidden={hidden}
-          onHide={() => setHidden(true)}
-          onReveal={() => setHidden(false)}
-        >
-          <Card>
-            <Text size="footnote" color="textMuted">
-              {period.isCurrent ? t('home.remaining') : t('home.leftover')}
-            </Text>
-            <AnimatedAmount
-              minor={summary.remaining}
-              currency={currency}
-              locale={locale}
-              size="hero"
-              weight="semibold"
-              tracking="tightest"
-              style={{ marginTop: 2 }}
+        <Card>
+          <Text size="footnote" color="textMuted">
+            {period.isCurrent ? t('home.remaining') : t('home.leftover')}
+          </Text>
+          <AnimatedAmount
+            minor={summary.remaining}
+            currency={currency}
+            locale={locale}
+            size="hero"
+            weight="semibold"
+            tracking="tightest"
+            style={{ marginTop: 2 }}
+          />
+          <View style={{ marginTop: 14 }}>
+            <ProgressBar
+              ratio={summary.ratio}
+              pace={period.isCurrent ? summary.pace : undefined}
+              overPace={summary.overPace}
             />
-            <View style={{ marginTop: 14 }}>
-              <ProgressBar
-                ratio={summary.ratio}
-                pace={period.isCurrent ? summary.pace : undefined}
-                overPace={summary.overPace}
-              />
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              <Text size="footnote" color="textMuted" tabular>
-                {`${t('home.income')} ${money(summary.income, currency, locale)}`}
-              </Text>
-              <Text size="footnote" color="textMuted" tabular>
-                {`${t('home.expenses')} ${money(summary.spent, currency, locale)}`}
-              </Text>
-            </View>
-          </Card>
-        </HoldToHide>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+            <Text size="footnote" color="textMuted" tabular>
+              {`${t('home.income')} ${money(summary.income, currency, locale)}`}
+            </Text>
+            <Text size="footnote" color="textMuted" tabular>
+              {`${t('home.expenses')} ${money(summary.spent, currency, locale)}`}
+            </Text>
+          </View>
+        </Card>
       </Animated.View>
 
       {upcomingAll.length === 0 ? null : (
@@ -186,6 +168,7 @@ export default function HomeTab() {
                     }
                     trailing={
                       <AmountText
+                        plain
                         align="end"
                         minor={row.amount.minor}
                         currency={currency}
@@ -246,6 +229,7 @@ export default function HomeTab() {
                       }
                       trailing={
                         <AmountText
+                          plain
                           align="end"
                           minor={row.amount.minor}
                           currency={currency}
@@ -266,54 +250,5 @@ export default function HomeTab() {
       <DevTools />
       <BudgetAlertsGate views={views} />
     </Screen>
-  );
-}
-
-/** How long the balance has to be held before the figures hide. */
-const HOLD_MS = 450;
-
-/**
- * Hold-to-hide, tap-to-reveal. The card sinks to 0.98 for the length of the hold (linear: the
- * user is deciding) and springs back in 200ms once it lets go or the hold lands (the system is
- * answering). Reduce Motion keeps the gesture and drops the sink.
- */
-function HoldToHide({
-  hidden,
-  onHide,
-  onReveal,
-  children,
-}: {
-  hidden: boolean;
-  onHide: () => void;
-  onReveal: () => void;
-  children: React.ReactNode;
-}) {
-  const { reduced } = useMotion();
-  const scale = useSharedValue(1);
-  const sink = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const release = () => {
-    scale.value = withTiming(1, { duration: 200, easing: EASE });
-  };
-  return (
-    <Animated.View style={sink}>
-      <Pressable
-        accessible={false}
-        delayLongPress={HOLD_MS}
-        onPressIn={() => {
-          if (!reduced && !hidden)
-            scale.value = withTiming(0.98, { duration: HOLD_MS, easing: Easing.linear });
-        }}
-        onPressOut={release}
-        onLongPress={() => {
-          release();
-          if (!hidden) onHide();
-        }}
-        onPress={() => {
-          if (hidden) onReveal();
-        }}
-      >
-        {children}
-      </Pressable>
-    </Animated.View>
   );
 }

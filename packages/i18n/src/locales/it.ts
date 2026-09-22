@@ -31,6 +31,8 @@ export const it = {
     amountHidden: 'Importo nascosto',
     amountsHidden: 'Importi nascosti',
     amountsShown: 'Importi visibili',
+    hideAmounts: 'Nascondi gli importi',
+    showAmounts: 'Mostra gli importi',
   },
   tabs: {
     home: 'Home',
@@ -695,8 +697,9 @@ export const it = {
     importCsv: 'Importa transazioni (CSV)',
     exportData: 'Esporta i dati',
     restoreBackup: 'Ripristina backup',
-    hideAmounts: 'Nascondi gli importi',
-    hideAmountsHint: 'Tieni premuto il saldo in Home per nasconderli, tocca per mostrarli.',
+    hideAmountsButton: 'Tasto per nascondere gli importi',
+    hideAmountsButtonHint:
+      'Un occhio nell’intestazione nasconde saldi, totali e grafici. Le singole transazioni restano leggibili.',
     appLock: 'Blocco con biometria',
     version: 'Versione {{version}}',
     deleteAllData: 'Elimina tutti i dati',
