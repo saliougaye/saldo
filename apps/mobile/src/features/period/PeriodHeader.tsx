@@ -56,12 +56,13 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
         disabled={!allowed}
         onPress={() => shift(direction)}
         style={{
-          width: theme.layout.headerButton,
+          width: 36,
           height: theme.layout.headerButton,
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: theme.radii.pill,
-          backgroundColor: theme.palette.raised,
+          // The pair shares one rounded-square shell (below); the second button draws the divider.
+          borderStartWidth: direction === 1 ? 1 : 0,
+          borderStartColor: theme.palette.border,
           opacity: allowed ? 1 : 0.4,
         }}
       >
@@ -121,8 +122,22 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
         </Text>
       </Pressable>
       {hideAmounts ? <HideAmountsButton /> : null}
-      {navButton(-1)}
-      {navButton(1)}
+      {/* ‹ › as one control, the shape the design gives it (`Spese.dc.html` line 66): a 9px
+          rounded square holding two buttons, not two circles. */}
+      <View
+        style={{
+          flexDirection: 'row',
+          height: theme.layout.headerButton,
+          borderRadius: theme.radii.chipSmall,
+          borderWidth: 1,
+          borderColor: theme.palette.border,
+          backgroundColor: theme.palette.raised,
+          overflow: 'hidden',
+        }}
+      >
+        {navButton(-1)}
+        {navButton(1)}
+      </View>
       <PeriodSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
     </View>
   );

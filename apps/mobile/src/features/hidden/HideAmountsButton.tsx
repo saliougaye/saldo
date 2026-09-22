@@ -6,8 +6,8 @@ import { useHiddenAmounts } from './hiddenAmounts';
 
 /**
  * The eye that toggles hidden mode, in every tab header (2026-09-22 plan). The icon is the state:
- * open while the figures show, struck through while they hide. Same pill as the period arrows,
- * so it reads as one row of controls.
+ * open while the figures show, struck through while they hide. A rounded square (the design's 9px
+ * control radius), so it reads as a mode switch beside the period arrows rather than a third arrow.
  */
 export function HideAmountsButton() {
   const theme = useTheme();
@@ -26,7 +26,9 @@ export function HideAmountsButton() {
         height: theme.layout.headerButton,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: theme.radii.pill,
+        borderRadius: theme.radii.chipSmall,
+        borderWidth: 1,
+        borderColor: theme.palette.border,
         backgroundColor: theme.palette.raised,
         transform: [{ scale: pressed ? 0.96 : 1 }],
       })}

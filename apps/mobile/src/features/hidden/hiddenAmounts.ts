@@ -1,7 +1,7 @@
 import type { CurrencyCode } from '@saldo/core';
 import { type AppLocale, formatMoney, type SignDisplay } from '@saldo/i18n';
 import { createContext, useCallback, useContext } from 'react';
-import { maskedMoney } from './cipher';
+import { maskedMoney } from './mask';
 
 /**
  * Split from `HiddenAmountsProvider` so that a component reading the flag does not drag the

@@ -3,11 +3,12 @@ import { type AppLocale, formatMoneyParts, type SignDisplay } from '@saldo/i18n'
 import { useTranslation } from 'react-i18next';
 import { Text as RnText, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { MASK } from '../features/hidden/cipher';
 import { useHiddenAmounts } from '../features/hidden/hiddenAmounts';
-import { useCipher } from '../features/hidden/useCipher';
+import { MASK } from '../features/hidden/mask';
+import { useRoll } from '../features/hidden/useRoll';
 import { useCountUp } from '../theme/motion';
 import { Text, type TextProps } from '../theme/Text';
+import { useTheme } from '../theme/ThemeProvider';
 
 export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular'> {
   minor: number;
@@ -36,6 +37,7 @@ export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular'>
  * In hidden mode the figure is `•••• €` (fixed four dots: a dot per digit would say how many digits
  * the balance has). Two layers: the real text keeps its place at opacity 0, so nothing shifts, and
  * leaves the accessibility tree; the mask sits on top as one element labelled "Importo nascosto".
+ * The swap rolls like an odometer (`useRoll`), entirely on the UI thread.
  */
 export function AmountText({
   minor,
@@ -46,13 +48,14 @@ export function AmountText({
   stagger = 0,
   plain = false,
   style,
-  color = 'text',
+  size = 'body',
   ...rest
 }: AmountTextProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const hidden = useHiddenAmounts().hidden && !plain;
   const parts = formatMoneyParts(minor, currency, locale, signDisplay);
-  const cipher = useCipher(parts.integer, hidden, stagger);
+  const roll = useRoll(hidden, theme.fontSize[size], stagger);
   const tail =
     parts.fraction === ''
       ? ` ${parts.symbol}`
@@ -62,14 +65,15 @@ export function AmountText({
     parts.symbolPosition === 'prefix' ? `${parts.symbol}${MASK}` : `${MASK} ${parts.symbol}`;
 
   return (
-    <View style={style} accessible={false}>
+    // `overflow: 'hidden'` clips the drum: a layer rolling out disappears at the line's edge.
+    <View style={[style, { overflow: 'hidden' }]} accessible={false}>
       <Animated.View
-        style={cipher.realStyle}
+        style={roll.realStyle}
         accessibilityElementsHidden={hidden}
         importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
       >
-        <Text {...rest} color={cipher.scrambling ? 'textMuted' : color} tabular>
-          {`${parts.sign}${prefix}${cipher.integer}`}
+        <Text {...rest} size={size} tabular>
+          {`${parts.sign}${prefix}${parts.integer}`}
           <RnText style={{ opacity: 0.5 }}>
             {parts.symbolPosition === 'prefix'
               ? parts.fraction === ''
@@ -85,7 +89,7 @@ export function AmountText({
         style={[
           StyleSheet.absoluteFill,
           { justifyContent: 'center', alignItems: align === 'end' ? 'flex-end' : 'flex-start' },
-          cipher.maskStyle,
+          roll.maskStyle,
         ]}
         pointerEvents="none"
         accessible={hidden}
@@ -93,7 +97,7 @@ export function AmountText({
         accessibilityElementsHidden={!hidden}
         importantForAccessibility={hidden ? 'yes' : 'no-hide-descendants'}
       >
-        <Text {...rest} color="textMuted" tabular numberOfLines={1}>
+        <Text {...rest} size={size} color="textMuted" tabular numberOfLines={1}>
           {mask}
         </Text>
       </Animated.View>
@@ -108,7 +112,7 @@ export function AmountText({
  * A number that animates tells you it **was** something else, which is exactly what you want to
  * know after adding a transaction; a list where fifty of them count at once is a slot machine.
  *
- * The roll pauses while the figures are hidden: nobody sees it, and it would fight the cipher.
+ * The count-up pauses while the figures are hidden: nobody sees it, and it would fight the roll.
  */
 export function AnimatedAmount({ minor, ...rest }: AmountTextProps) {
   const { hidden } = useHiddenAmounts();

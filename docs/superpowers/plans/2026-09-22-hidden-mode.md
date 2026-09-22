@@ -40,6 +40,10 @@ touches `@saldo/core`: this is presentation.
   of the feature altogether (no eye in its header, totals plain). Statistics and Accounts unchanged. The motion
   clock (`phase`, `tick`) moves to its own context (`HiddenMotionContext`) so the four scramble steps re-render
   only the sentences that follow them, not every `AmountText`, chart or `plain` row.
+- **Fifth check: motion = Roll (mockup variant 2), not Cipher.** Whole-figure odometer on the UI thread
+  (`useRoll`: 200 ms per layer, 60 ms handover, travel 0.6 em, same direction both ways), no JS state at all. The
+  per-glyph stagger of the mockup is dropped on purpose: one `Text` per glyph is the cost that lagged. `cipher.ts`
+  and `useCipher` are gone; `mask.ts` keeps `MASK` / `maskedMoney`. The eye is a rounded square (`radii.chipSmall`).
 - **Fourth check: still laggy.** `useHiddenMoney` is called at the top of Home, Statistics, Accounts and the
   detail screens, so following the scramble meant five full renders of a screen per toggle. The clock is gone:
   the provider holds one boolean, sentences swap to the dots at once, and only each `AmountText` animates. The

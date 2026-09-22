@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { MASK } from '../hidden/cipher';
 import { useHiddenAmounts } from '../hidden/hiddenAmounts';
+import { MASK } from '../hidden/mask';
 
 export interface SpendHistoryBar {
   key: string;

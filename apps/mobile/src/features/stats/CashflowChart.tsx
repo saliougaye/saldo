@@ -5,8 +5,8 @@ import { View } from 'react-native';
 import { Defs, Path, Pattern, Rect, Svg } from 'react-native-svg';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { MASK } from '../hidden/cipher';
 import { useHiddenAmounts } from '../hidden/hiddenAmounts';
+import { MASK } from '../hidden/mask';
 
 export interface CashflowBar {
   key: string;

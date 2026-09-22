@@ -35,7 +35,7 @@ What it can stand on:
 
 Decided on 2026-09-22 and implemented on `feat/hidden-mode-variants` (plan:
 `docs/superpowers/plans/2026-09-22-hidden-mode.md`, motion picked from
-`docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html`, variant **Cipher**). Awaiting the device test
+`docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html`, variant **Roll**, after trying Cipher). Awaiting the device test
 before this section closes:
 
 - **Trigger = a button, not a gesture.** An eye in the header of every tab (`PeriodHeader`, and the Accounts
