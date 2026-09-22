@@ -336,7 +336,7 @@ describe('languages', () => {
 **Files:** `packages/i18n/src/locales.test.ts`, `packages/i18n/src/plurals.ts`, `packages/i18n/src/plurals.test.ts`,
 `packages/i18n/src/index.ts`
 
-- [ ] **Step 1: Failing tests.** `locales.test.ts` iterates `SUPPORTED_LOCALES` over `resources`' source catalogs
+- [x] **Step 1: Failing tests.** `locales.test.ts` iterates `SUPPORTED_LOCALES` over `resources`' source catalogs
   (`catalogs: Record<AppLocale, Messages>` exported from `index.ts`) and, for each non-`it` one, compares `keyPaths`
   and the `{{variables}}` of each leaf *by key path* (not by position). `plurals.test.ts`:
 
@@ -355,10 +355,10 @@ describe('withManyPlurals', () => {
 });
 ```
 
-- [ ] **Step 2: Run, expect failures** (catalogs missing).
-- [ ] **Step 3: Implement** `withManyPlurals` (recursive copy) and `resources = { it: { translation:
+- [x] **Step 2: Run, expect failures** (catalogs missing).
+- [x] **Step 3: Implement** `withManyPlurals` (recursive copy) and `resources = { it: { translation:
   withManyPlurals(it) }, … }`.
-- [ ] **Step 4–5:** run, commit `test(i18n): check every catalog against it`.
+- [x] **Step 4–5:** run, commit `test(i18n): check every catalog against it`.
 
 ### Task 4: The five catalogs
 
@@ -373,9 +373,9 @@ Rules for every catalog (the content is the step; `Messages` makes `tsc` reject 
 - Keep brand/tech words: Saldo, Spendee, CSV, JSON, ZIP, PDF, passkey (fr/es/pt/sv/de each use the platform term:
   fr `clé d’accès`, de `Passkey`, sv `nyckel`, es `llave de acceso`, pt `chave de acesso`).
 
-- [ ] **Step 1:** write `fr.ts`, `de.ts`, `sv.ts`, `es.ts`, `pt.ts`; register them in `index.ts`.
-- [ ] **Step 2:** `rtk proxy pnpm --filter @saldo/i18n test` and `typecheck` → green.
-- [ ] **Step 3:** commit one `feat(i18n): … catalog` per language.
+- [x] **Step 1:** write `fr.ts`, `de.ts`, `sv.ts`, `es.ts`, `pt.ts`; register them in `index.ts`.
+- [x] **Step 2:** `rtk proxy pnpm --filter @saldo/i18n test` and `typecheck` → green.
+- [x] **Step 3:** commit one `feat(i18n): … catalog` per language.
 
 ### Task 5: Mobile wiring
 

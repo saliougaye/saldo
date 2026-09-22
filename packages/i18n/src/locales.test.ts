@@ -1,47 +1,59 @@
 import { describe, expect, it as test } from 'vitest';
-import { resources } from './index';
-import { en } from './locales/en';
+import { SUPPORTED_LOCALES } from './format';
+import { catalogs, resources } from './index';
 import { it } from './locales/it';
 
-function keyPaths(value: object, prefix = ''): string[] {
-  return Object.entries(value)
-    .flatMap(([key, child]) =>
-      typeof child === 'object' && child !== null
-        ? keyPaths(child, `${prefix}${key}.`)
-        : [`${prefix}${key}`],
-    )
-    .sort();
+/** Every leaf of a catalog, keyed by its dotted path. */
+function leaves(value: object, prefix = ''): Map<string, unknown> {
+  const out = new Map<string, unknown>();
+  for (const [key, child] of Object.entries(value)) {
+    if (typeof child === 'object' && child !== null) {
+      for (const [path, leaf] of leaves(child, `${prefix}${key}.`)) out.set(path, leaf);
+    } else {
+      out.set(`${prefix}${key}`, child);
+    }
+  }
+  return out;
 }
 
-function leaves(value: object): unknown[] {
-  return Object.values(value).flatMap((child) =>
-    typeof child === 'object' && child !== null ? leaves(child) : [child],
-  );
-}
+const variables = (text: string) => [...text.matchAll(/{{(\w+)}}/g)].map((m) => m[1]).sort();
+
+const source = leaves(it);
+const translations = SUPPORTED_LOCALES.filter((locale) => locale !== 'it');
 
 describe('message catalogs', () => {
-  test('have identical key structure in it and en', () => {
-    expect(keyPaths(en)).toEqual(keyPaths(it));
+  test('cover every supported locale', () => {
+    expect(Object.keys(catalogs).sort()).toEqual([...SUPPORTED_LOCALES].sort());
+    expect(translations.length).toBeGreaterThan(0);
   });
 
-  test('contain only non-empty strings', () => {
-    for (const value of [...leaves(it), ...leaves(en)]) {
-      expect(typeof value).toBe('string');
-      expect((value as string).length).toBeGreaterThan(0);
+  test.each(translations)('%s has the key structure of it', (locale) => {
+    expect([...leaves(catalogs[locale]).keys()].sort()).toEqual([...source.keys()].sort());
+  });
+
+  test.each(SUPPORTED_LOCALES)('%s contains only non-empty strings', (locale) => {
+    for (const [path, value] of leaves(catalogs[locale])) {
+      expect(typeof value, path).toBe('string');
+      expect(String(value).trim().length, path).toBeGreaterThan(0);
     }
   });
 
-  test('keep interpolation variables consistent between languages', () => {
-    const variables = (text: string) => [...text.matchAll(/{{(\w+)}}/g)].map((m) => m[1]).sort();
-    const itLeaves = leaves(it) as string[];
-    const enLeaves = leaves(en) as string[];
-    itLeaves.forEach((text, index) => {
-      expect(variables(enLeaves[index] ?? ''), text).toEqual(variables(text));
-    });
+  test.each(translations)('%s keeps the interpolation variables of it', (locale) => {
+    const target = leaves(catalogs[locale]);
+    for (const [path, text] of source) {
+      expect(variables(String(target.get(path) ?? '')), `${locale} ${path}`).toEqual(
+        variables(String(text)),
+      );
+    }
   });
 
-  test('are exposed as i18next resources', () => {
-    expect(resources.it.translation).toBe(it);
-    expect(resources.en.translation).toBe(en);
+  test('are exposed as i18next resources, with the _many plural filled in', () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const translation: object = resources[locale].translation;
+      const flat = leaves(translation);
+      expect(flat.get('home.upcomingCount_many'), locale).toBe(
+        flat.get('home.upcomingCount_other'),
+      );
+    }
   });
 });

@@ -722,8 +722,6 @@ export const it = {
     language: 'Lingua',
     theme: 'Tema',
     system: 'Sistema',
-    italian: 'Italiano',
-    english: 'English',
     dark: 'Scuro',
     light: 'Chiaro',
     archivedAccounts: 'Conti archiviati',

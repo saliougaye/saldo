@@ -715,8 +715,6 @@ export const en: Messages = {
     language: 'Language',
     theme: 'Theme',
     system: 'System',
-    italian: 'Italiano',
-    english: 'English',
     dark: 'Dark',
     light: 'Light',
     archivedAccounts: 'Archived accounts',
