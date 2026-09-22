@@ -83,21 +83,3 @@ The cheap shape is therefore: keep the vector set for icons and splashes, and us
 README, docs, a future landing page. Whether the character stays a raccoon or becomes a panda is a free choice
 either way. The empty states (§13) already have a mascot variant waiting: variant D of their design review, the
 raccoon peeking over the ghost stack, would replace `GhostStack` alone.
-
-### Considered on 2026-09-18 and not planned
-
-Kept so they are not re-derived.
-
-- **Settling an account ("Controlla il saldo").** Analysed in
-  `docs/superpowers/analysis/2026-09-17-settle-an-account.md` (a balance checkpoint after an import). Dropped on
-  2026-09-21: onboarding's import path already asks each imported account's current balance (§6.29), and the
-  account sheet's balance field covers a balance that drifts later.
-- **Field-level merge.** `packages/core/src/sync/merge.ts` is whole-row last-writer-wins; the settle analysis
-  shows the cost (a rename on one phone can undo a balance edit on another). Rare in practice — rename against
-  colour, one settings toggle against another. Not worth the machinery.
-- **Native passkeys (§9.4).** D13 still holds: a free Apple ID cannot sign Associated Domains, and the app is
-  sideloaded. Pointless until there is a store build.
-- **Multi-currency.** §1.2 excludes it with a reason (historical rates per transaction date). A decision, not a gap.
-- **A pay cycle starting on the 29th–31st.** §5.2 caps `cycleStartDay` at 28 on purpose: the core would clamp, but
-  "the 31st" means the 28th in February and the explanation costs more than the three days it buys. Decided on
-  2026-09-22 with the onboarding rework; 28 stays.
