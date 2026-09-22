@@ -1,15 +1,25 @@
 import {
   accountBalances,
+  addDays,
   creditCardDue,
+  creditSettlementDraft,
   creditStatementAccrued,
+  creditStatementDue,
   deltaPercent,
   isWithin,
   monthEndBalances,
   nextCreditChargeDate,
+  parseLocalDate,
   periodContaining,
   summarizePeriod,
 } from '@saldo/core';
-import { formatDayMonth, formatLongDate, formatSignedPercent } from '@saldo/i18n';
+import {
+  formatDayMonth,
+  formatDayMonthLong,
+  formatLongDate,
+  formatMonthYear,
+  formatSignedPercent,
+} from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -30,6 +40,10 @@ import { useDelayed } from '../../src/components/useDelayed';
 import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import {
+  SETTLEMENT_LOOKAHEAD_DAYS,
+  settlementParams,
+} from '../../src/features/accounts/settlement';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
@@ -57,7 +71,16 @@ export default function AccountDetail() {
   const currency = settings?.currency ?? 'EUR';
   const [confirmArchive, setConfirmArchive] = useState(false);
 
-  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  // A little past today as well: a card payment already scheduled for the charge day settles the
+  // statement. Everything else on the screen reads up to today only, as before.
+  const { rows: withUpcoming, loaded: rowsLoaded } = useTransactionsInRangeQuery(
+    '1970-01-01',
+    addDays(today, SETTLEMENT_LOOKAHEAD_DAYS),
+  );
+  const rows = useMemo(
+    () => withUpcoming.filter((tx) => tx.date <= today),
+    [withUpcoming, today],
+  );
   // The figures sum these rows: before they land, a balance would paint as 0.
   const loaded = entityLoaded && rowsLoaded;
   const slow = useDelayed(!loaded);
@@ -101,6 +124,29 @@ export default function AccountDetail() {
   const balance = balances.get(account.id) ?? 0;
   const first = series[0] ?? 0;
   const delta = deltaPercent(balance, first === 0 ? null : first);
+
+  // The card box (§6.10, §5.3): what the closed statement still owes and when, and "Salda carta",
+  // which opens the transfer sheet filled in — nothing is written until the user saves it.
+  const isCard = account.type === 'credit_card';
+  const statement = isCard ? creditStatementDue(account, withUpcoming, today) : null;
+  const draft = isCard ? creditSettlementDraft(account, accounts, withUpcoming, today) : null;
+  const due = statement?.due ?? 0;
+  const dueDate = due > 0 ? (statement?.chargeDate ?? null) : null;
+  const statementPaid = statement !== null && statement.statement > 0 && statement.due === 0;
+  const paymentName =
+    accounts.find((candidate) => candidate.id === account.creditPaymentAccountId)?.name ?? null;
+  const canSettle = !archived && draft !== null && draft.balanceAmount > 0;
+  const showCardBox =
+    isCard && (account.creditCloseDay !== null || account.creditChargeDay !== null || canSettle);
+  const settle = () => {
+    if (draft === null) return;
+    const { year, month } = parseLocalDate(draft.statementDate);
+    const description = t('accounts.settleDescription', {
+      card: account.name,
+      month: formatMonthYear({ year, month }, locale),
+    });
+    router.push({ pathname: '/transaction/new', params: settlementParams(draft, description) });
+  };
 
   return (
     <Screen
@@ -177,20 +223,37 @@ export default function AccountDetail() {
         </View>
       </Card>
 
-      {account.type === 'credit_card' && account.creditCloseDay !== null ? (
+      {showCardBox ? (
         <Card>
-          <ListRow
-            title={t('accounts.accruedInCycle')}
-            trailing={
-              <AmountText
-                align="end"
-                minor={creditStatementAccrued(account.id, account.creditCloseDay, rows, today)}
-                currency={currency}
-                locale={locale}
-              />
-            }
-          />
-          {account.creditChargeDay === null ? null : (
+          {account.creditCloseDay === null ? null : (
+            <ListRow
+              title={t('accounts.accruedInCycle')}
+              trailing={
+                <AmountText
+                  align="end"
+                  minor={creditStatementAccrued(account.id, account.creditCloseDay, rows, today)}
+                  currency={currency}
+                  locale={locale}
+                />
+              }
+            />
+          )}
+          {dueDate !== null ? (
+            // The same date as "Prossimo addebito", so it takes that row's place rather than
+            // repeating it: the date the bank takes the money, and how much.
+            <ListRow
+              title={t('accounts.dueOn', { date: formatDayMonthLong(dueDate, locale) })}
+              trailing={
+                <AmountText
+                  align="end"
+                  minor={due}
+                  currency={currency}
+                  locale={locale}
+                  weight="medium"
+                />
+              }
+            />
+          ) : account.creditChargeDay === null ? null : (
             <ListRow
               title={t('accounts.nextCharge')}
               trailing={
@@ -200,6 +263,27 @@ export default function AccountDetail() {
               }
             />
           )}
+          {statementPaid ? (
+            <Text size="caption" color="textFaint">
+              {t('accounts.statementPaid')}
+            </Text>
+          ) : null}
+          {account.creditCloseDay !== null &&
+          account.creditChargeDay !== null &&
+          paymentName !== null ? (
+            <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+              {t('accounts.creditNote', {
+                close: account.creditCloseDay,
+                charge: account.creditChargeDay,
+                account: paymentName,
+              })}
+            </Text>
+          ) : null}
+          {canSettle ? (
+            <View style={{ marginTop: 12 }}>
+              <SecondaryButton label={t('accounts.settleCard')} onPress={settle} />
+            </View>
+          ) : null}
         </Card>
       ) : null}
 

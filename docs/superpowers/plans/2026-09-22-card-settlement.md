@@ -626,12 +626,12 @@ export function settlementForm(
 
 **Files:** `apps/mobile/app/account/[id].tsx`
 
-- [ ] **Step 1:** load rows up to the far end of the settlement window as well:
+- [x] **Step 1:** load rows up to the far end of the settlement window as well:
   `useTransactionsInRangeQuery('1970-01-01', addDays(today, 62))` feeds a `future` list; the existing
   `rows` becomes `future.filter(tx => tx.date <= today)` so the balance, sparkline and recent list are unchanged.
-- [ ] **Step 2:** compute `statement = creditStatementDue(account, future, today)` and
+- [x] **Step 2:** compute `statement = creditStatementDue(account, future, today)` and
   `draft = creditSettlementDraft(account, accounts, future, today)` for credit cards.
-- [ ] **Step 3:** render the box for a credit card when any of these exist: accrued row (close day), the
+- [x] **Step 3:** render the box for a credit card when any of these exist: accrued row (close day), the
   charge/settlement row (charge day), the note (both days + payment account), the button (not archived and
   `draft.balanceAmount > 0`).
   - charge row: `statement?.due > 0 && statement.chargeDate !== null` → `ListRow` title
@@ -641,7 +641,7 @@ export function settlementForm(
   - note: caption `textFaint` `t('accounts.creditNote', { close, charge, account: paymentName })`.
   - button: `SecondaryButton label={t('accounts.settleCard')}` (marginTop 8) →
     `router.push({ pathname: '/transaction/new', params: settlementParams(draft, t('accounts.settleDescription', { card: account.name, month: formatMonthYear(ym(draft.statementDate), locale) })) })`.
-- [ ] **Step 4:** typecheck; commit `feat(mobile): statement due and Salda carta on the card box`.
+- [x] **Step 4:** typecheck; commit `feat(mobile): statement due and Salda carta on the card box`.
 
 ### Task 7: charge-day reminder
 

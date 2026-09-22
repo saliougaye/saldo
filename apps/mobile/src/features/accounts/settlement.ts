@@ -14,6 +14,13 @@ import { emptyForm, type TransactionFormValues } from '../transactions/useTransa
  */
 export type SettlementParams = Record<string, string>;
 
+/**
+ * How far past today the screens that settle a card read transactions. A payment already scheduled
+ * for the charge day settles the statement (`creditStatementDue`), and the charge day is at most a
+ * month after the close, so two months is enough with room to spare.
+ */
+export const SETTLEMENT_LOOKAHEAD_DAYS = 62;
+
 /** A one-tap amount next to the field: the closed statement, or the whole balance. */
 export interface AmountShortcut {
   key: 'statement' | 'balance';
