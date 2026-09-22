@@ -648,7 +648,7 @@ export function settlementForm(
 **Files:** create `apps/mobile/src/features/accounts/cardReminders.ts` + `cardReminders.test.ts`,
 `CardRemindersGate.tsx`, `apps/mobile/src/navigation/useNotificationRoutes.ts`; modify `app/(tabs)/_layout.tsx`
 
-- [ ] **Step 1: failing tests** (`cardReminders.test.ts`, node project):
+- [x] **Step 1: failing tests** (`cardReminders.test.ts`, node project):
 
 ```ts
 import { isReminderId, reminderAccountId, reminderId, reminderTrigger } from './cardReminders';
@@ -676,8 +676,8 @@ describe('card reminders', () => {
 });
 ```
 
-- [ ] **Step 2:** run → FAIL.
-- [ ] **Step 3: implement** `cardReminders.ts`:
+- [x] **Step 2:** run → FAIL.
+- [x] **Step 3: implement** `cardReminders.ts`:
 
 ```ts
 import { type LocalDate, parseLocalDate } from '@saldo/core';
@@ -721,7 +721,7 @@ export function reminderAccountId(data: unknown): string | null {
   `addNotificationResponseReceivedListener`.
 
   `(tabs)/_layout.tsx`: `useNotificationRoutes();` and render `<CardRemindersGate />` next to `<Tabs>` in a fragment.
-- [ ] **Step 4:** run → PASS; typecheck. Commit `feat(mobile): remind on a credit card's charge day`.
+- [x] **Step 4:** run → PASS; typecheck. Commit `feat(mobile): remind on a credit card's charge day`.
 
 ### Task 8: docs and gates
 
