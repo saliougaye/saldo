@@ -19,7 +19,11 @@ From `TODO.md` → Bugs. Diagnosed from code and tests, not on a device.
   the credit card (`demoData.generated.ts`, `−412,35 €`), which the accounts list shows as
   `−412,35 €` and the detail as "Da rimborsare 412,35 €" — most likely the report. The faint caption
   at the bottom of the same screen prints the signed balance, `−412,35 €`, so the screen shows the
-  same figure both ways. **Open: product decision, see below.**
+  same figure both ways.
+- **Decision (user, 2026-09-22): option A.** The report was on the card. The hero keeps "Da
+  rimborsare" with the absolute value, as §5.3 says. The bottom caption goes: it is not in the
+  prototype and contradicts the hero. It used no i18n key (`money(balance, …)`), so no catalog
+  entry leaves, and no test covered it.
 - **The sparkline delta had its sign inverted for a balance below zero.** `deltaPercent` divided
   by the signed baseline: a card going from `−500` to `−120` read `−76%`, an overdraft deepening
   from `−100` to `−300` read `+200%`. It now divides by the baseline's size. The other callers
@@ -32,5 +36,6 @@ From `TODO.md` → Bugs. Diagnosed from code and tests, not on a device.
 - [x] Regression tests: `AnimatedAmount` keeps the `−`, at rest and after crossing zero
       (`apps/mobile/src/components/AmountText.test.tsx`).
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` green.
-- [ ] Product decision on the card hero (see `TODO.md`), then its fix.
+- [x] Product decision on the card hero: A, keep "Da rimborsare" + absolute value.
+- [x] Remove the bottom balance caption from `apps/mobile/app/account/[id].tsx`.
 - [ ] Manual test on device (user).

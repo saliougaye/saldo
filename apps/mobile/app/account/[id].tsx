@@ -31,7 +31,6 @@ import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
-import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -48,7 +47,6 @@ export default function AccountDetail() {
   const router = useRouter();
   const leaveGone = useLeaveGone();
   const { t } = useTranslation();
-  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const repos = useRepositories();
@@ -292,9 +290,6 @@ export default function AccountDetail() {
       {archived ? null : (
         <SecondaryButton label={t('accounts.archive')} onPress={() => setConfirmArchive(true)} />
       )}
-      <Text size="caption" color="textFaint">
-        {money(balance, currency, locale)}
-      </Text>
 
       <ConfirmDialog
         visible={confirmArchive}

@@ -8,18 +8,7 @@ shared ledger, AI, web app, going public, releases — live in [`ROADMAP.md`](RO
 
 Something that works wrong today.
 
-### Account detail: a card in the red shows its debt without the "−"
-
-- [ ] Reported on 2026-09-22; diagnosed the same day (`docs/superpowers/plans/2026-09-22-negative-balance-sign.md`).
-  One product decision away from the fix.
-
-The hero keeps the `−` for every account type (now pinned by tests, count-up across zero included) except a
-`credit_card`, where it reads "Da rimborsare" with the absolute value by design (spec §5.3). The demo's only negative
-account is its card: `−412,35 €` in the accounts list, "Da rimborsare 412,35 €" on the detail, and `−412,35 €` again in
-the faint caption at the bottom of the same screen (`[id].tsx:296`). The sparkline delta's inverted sign is fixed.
-
-Decide: keep "Da rimborsare" + absolute value (then make the caption agree, or drop the caption), or show the signed
-balance under "Saldo" like any other account (and amend §5.3).
+None open.
 
 ## Features
 
