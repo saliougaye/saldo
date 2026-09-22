@@ -15,6 +15,8 @@ import { Card } from '../../src/components/Card';
 import { EmptyState } from '../../src/components/EmptyState';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { SectionLabel } from '../../src/components/SectionLabel';
+import { SkeletonList } from '../../src/components/Skeleton';
+import { useDelayed } from '../../src/components/useDelayed';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useCategoriesQuery, useCategoryUsage } from '../../src/db/hooks';
 import { SettingScreen } from '../../src/features/profile/SettingScreen';
@@ -38,6 +40,7 @@ export default function CategoriesAdmin() {
   const { t } = useTranslation();
   const repos = useRepositories();
   const { rows: all, loaded } = useCategoriesQuery();
+  const slow = useDelayed(!loaded);
   const direct = useCategoryUsage();
   const [reordering, setReordering] = useState(false);
 
@@ -149,7 +152,11 @@ export default function CategoriesAdmin() {
         <SectionLabel>
           {direction === 'expense' ? t('categories.expenses') : t('categories.income')}
         </SectionLabel>
-        {!loaded ? null : parents.length === 0 ? (
+        {!loaded ? (
+          slow ? (
+            <SkeletonList rows={direction === 'expense' ? 5 : 2} label={t('common.loading')} />
+          ) : null
+        ) : parents.length === 0 ? (
           <EmptyState
             kind="yet"
             ghost="chips"

@@ -7,16 +7,18 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
+import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
+import { useDelayed } from '../../src/components/useDelayed';
 import {
   useAccounts,
   useCategories,
   useSettings,
   useTagsQuery,
-  useTransactionsInRange,
+  useTransactionsInRangeQuery,
 } from '../../src/db/hooks';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -38,13 +40,16 @@ export default function TagView() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
-  const { rows: tags, loaded } = useTagsQuery();
+  const { rows: tags, loaded: entityLoaded } = useTagsQuery();
   const categories = useCategories();
   const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
-  const rows = useTransactionsInRange('1970-01-01', today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  // The figures sum these rows: before they land, a total would paint as 0.
+  const loaded = entityLoaded && rowsLoaded;
+  const slow = useDelayed(!loaded);
   const tag = tags.find((candidate) => candidate.id === id);
 
   const tagged = useMemo(
@@ -76,7 +81,7 @@ export default function TagView() {
       });
   }, [tagged, categories, today, theme]);
 
-  if (!loaded) return null;
+  if (!loaded) return <DetailSkeleton show={slow} />;
   if (tag === undefined) {
     return <NotFoundScreen />;
   }

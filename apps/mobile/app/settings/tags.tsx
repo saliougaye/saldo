@@ -7,6 +7,8 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
+import { SkeletonList } from '../../src/components/Skeleton';
+import { useDelayed } from '../../src/components/useDelayed';
 import { useTagsQuery, useTagUsage } from '../../src/db/hooks';
 import { NewTagSheet } from '../../src/features/tags/NewTagSheet';
 import { Text } from '../../src/theme/Text';
@@ -18,6 +20,7 @@ export default function TagsAdmin() {
   const router = useRouter();
   const { t } = useTranslation();
   const { rows: tags, loaded } = useTagsQuery();
+  const slow = useDelayed(!loaded);
   const usage = useTagUsage();
   const [creating, setCreating] = useState(false);
 
@@ -40,7 +43,11 @@ export default function TagsAdmin() {
       </View>
       <Text color="textMuted">{t('tags.footnote')}</Text>
 
-      {!loaded ? null : tags.length === 0 ? (
+      {!loaded ? (
+        slow ? (
+          <SkeletonList rows={4} label={t('common.loading')} />
+        ) : null
+      ) : tags.length === 0 ? (
         <EmptyState
           kind="yet"
           ghost="chips"

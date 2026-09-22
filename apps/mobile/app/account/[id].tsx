@@ -20,14 +20,16 @@ import { PrimaryButton, SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { CardHeader } from '../../src/components/CardHeader';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
+import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useToast } from '../../src/components/Toast';
+import { useDelayed } from '../../src/components/useDelayed';
 import { archiveAccount, restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useAccountsQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { Sparkline } from '../../src/features/accounts/Sparkline';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -52,12 +54,15 @@ export default function AccountDetail() {
   const repos = useRepositories();
   const toast = useToast();
   const settings = useSettings();
-  const { accounts, loaded } = useAccountsQuery();
+  const { accounts, loaded: entityLoaded } = useAccountsQuery();
   const { today, def } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [confirmArchive, setConfirmArchive] = useState(false);
 
-  const rows = useTransactionsInRange('1970-01-01', today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  // The figures sum these rows: before they land, a balance would paint as 0.
+  const loaded = entityLoaded && rowsLoaded;
+  const slow = useDelayed(!loaded);
   const account = accounts.find((candidate) => candidate.id === id);
 
   const balances = useMemo(() => accountBalances(accounts, rows, today), [accounts, rows, today]);
@@ -86,7 +91,7 @@ export default function AccountDetail() {
     [rows, id],
   );
 
-  if (!loaded) return null;
+  if (!loaded) return <DetailSkeleton show={slow} />;
   if (account === undefined) {
     return <NotFoundScreen />;
   }

@@ -11,13 +11,15 @@ import { IconBox } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
+import { useDelayed } from '../src/components/useDelayed';
 import {
   useBudgetsQuery,
   useCategories,
   useSettings,
-  useTransactionsInRange,
+  useTransactionsInRangeQuery,
 } from '../src/db/hooks';
 import { BudgetDetailSheet } from '../src/features/budgets/BudgetDetailSheet';
+import { BudgetsSkeleton } from '../src/features/budgets/BudgetsSkeleton';
 import { budgetViews } from '../src/features/budgets/useBudgetProgress';
 import { useHiddenMoney } from '../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../src/features/period/PeriodProvider';
@@ -36,7 +38,7 @@ export default function BudgetsScreen() {
   const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
-  const { rows: budgets, loaded } = useBudgetsQuery();
+  const { rows: budgets, loaded: budgetsLoaded } = useBudgetsQuery();
   const categories = useCategories();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
@@ -44,7 +46,10 @@ export default function BudgetsScreen() {
 
   const start =
     previousPeriods(def, period.range, CARRY_LOOKBACK).at(-1)?.start ?? period.range.start;
-  const rows = useTransactionsInRange(start, period.range.end);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(start, period.range.end);
+  // A budget's spent sums these rows: before they land, every card would read 0.
+  const loaded = budgetsLoaded && rowsLoaded;
+  const slow = useDelayed(!loaded);
 
   const views = useMemo(
     () =>
@@ -78,18 +83,20 @@ export default function BudgetsScreen() {
         </Pressable>
       </View>
 
-      {views.length === 0 ? (
-        // Nothing until the query answers: an existing budget list would otherwise open on the
-        // empty state and collapse a frame later.
-        !loaded ? null : (
-          <EmptyState
-            kind="yet"
-            ghost="bar"
-            title={t('budgets.empty')}
-            body={t('budgets.emptyBody')}
-            action={{ label: t('budgets.newBudget'), onPress: () => router.push('/budget/new') }}
-          />
-        )
+      {!loaded ? (
+        // Never the empty state before the query answers: an existing budget list would open on
+        // it and collapse a frame later.
+        slow ? (
+          <BudgetsSkeleton />
+        ) : null
+      ) : views.length === 0 ? (
+        <EmptyState
+          kind="yet"
+          ghost="bar"
+          title={t('budgets.empty')}
+          body={t('budgets.emptyBody')}
+          action={{ label: t('budgets.newBudget'), onPress: () => router.push('/budget/new') }}
+        />
       ) : (
         views.map((view) => {
           const category = categories.find((row) => row.id === view.budget.categoryIds[0]);

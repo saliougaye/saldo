@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Chip } from '../../src/components/Chip';
+import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
+import { useDelayed } from '../../src/components/useDelayed';
 import {
   useAccounts,
   useAttachments,
@@ -47,8 +49,9 @@ export default function TransactionDetail() {
   const attachments = useAttachments(id ?? '');
 
   const { transaction, loaded } = useTransactionQuery(id ?? '');
+  const slow = useDelayed(!loaded);
   const recurrence = useRecurrence(transaction?.recurrenceId ?? '');
-  if (!loaded) return null;
+  if (!loaded) return <DetailSkeleton show={slow} />;
   if (transaction === null) {
     return <NotFoundScreen />;
   }
