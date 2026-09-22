@@ -14,49 +14,6 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### Hidden mode: hide the figures in public
-
-The idea: a gesture or a toggle hides every amount while the app keeps working — balances, transaction
-amounts, budget figures, charts — and a tap brings them back. It is for using the app on a train, not a
-second lock.
-
-What it can stand on:
-
-- `AmountText`/`AnimatedAmount` (`apps/mobile/src/components/AmountText.tsx`) is the single place money reaches
-  a screen. Masking there covers most of the app in one change.
-- Not all of it: 22 files still call `formatMoney` directly, and the charts draw magnitudes rather than text
-  (`src/features/stats/CashflowChart.tsx`, `SpendHistoryChart.tsx`, `SplitBar.tsx`, the budget progress bars).
-  A bar chart with the axis labels hidden still shows the shape of the month. The audit is the work; the
-  component change is small.
-- The privacy machinery already exists and this is a sibling of it, not a variant: §6.32's `PrivacyOverlay`
-  blanks the app in the switcher, and `appLockEnabled` in `kv` (`src/db/kv.ts`) is the pattern for a
-  device-local flag. The hidden-mode flag belongs in `kv` too — per device, never synced; a phone hidden in
-  public must not blank the tablet at home.
-
-Decided on 2026-09-22 and implemented on `feat/hidden-mode-variants` (plan:
-`docs/superpowers/plans/2026-09-22-hidden-mode.md`, motion picked from
-`docs/superpowers/mockups/2026-09-22-hidden-mode-variants.html`, variant **Roll**, after trying Cipher). Awaiting the device test
-before this section closes:
-
-- **Trigger = a button, not a gesture.** An eye in the header of every tab (`PeriodHeader`, and the Accounts
-  header) toggles hidden mode. Always there: no Profile setting. The long-press on the Home balance and a setting
-  gating the button were tried first and dropped after the device checks.
-- **Scope = aggregates only, and not everywhere.** Home hides the "left to spend" card alone; Statistics and
-  Accounts hide balances, totals, budgets and charts; the Transactions tab is out of the feature. Single
-  transactions (list rows, detail, occurrences, import preview) stay readable via `AmountText plain`. Narrowed
-  after the toggle lagged with every figure on screen animating at once.
-- **Survives a relaunch.** `kv.amountsHidden`, per device, never synced; kept by `wipeAccountData`, cleared by
-  `wipeDevice` like the rest of `kv`.
-- **A hidden figure is `•••• €`**, fixed four dots (a dot per digit leaks magnitude), `textMuted`; the real text
-  stays in layout at opacity 0, so nothing shifts. Sentences that embed an amount go through
-  `useHiddenMoney().format`.
-- **Inputs stay visible.** `AmountInput` untouched; the "balance after" line in the form masks, including its
-  accessibility label.
-- **Charts draw a placeholder**: equal stubs and `••••` labels, `SplitBar`'s empty track, `ProgressBar` empties,
-  line charts a flat dashed baseline.
-- **Accessibility.** Hidden text leaves the tree; the mask is one element labelled "Importo nascosto"; the
-  toggle announces the state. Reduce Motion crossfades without the scramble.
-
 ### Onboarding: a better UI, and a step for the system permissions
 
 - [ ] Rework the onboarding screens (§6.29). Today they follow the prototype's step layout (1616–1717) and have not
