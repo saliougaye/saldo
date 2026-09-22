@@ -106,7 +106,7 @@ instead of repeating the union. Catalogs are typed `Messages`, so a missing key 
 
 **Files:** Modify `packages/i18n/src/format.ts`, `packages/i18n/src/format.test.ts`
 
-- [ ] **Step 1: Write the failing tests.** Append to `format.test.ts` (and change the `fr-FR` expectation of the
+- [x] **Step 1: Write the failing tests.** Append to `format.test.ts` (and change the `fr-FR` expectation of the
   existing `resolveLocale` test, which becomes `fr`):
 
 ```ts
@@ -155,7 +155,7 @@ describe('formatMoney in the new locales', () => {
     expect(formatMoney(1234560, 'EUR', 'es')).toBe('12.345,60 €');
     expect(formatMoney(184260, 'EUR', 'pt')).toBe('1842,60 €');
     expect(formatMoney(1234560, 'EUR', 'pt')).toBe(`12${NBSP}345,60 €`);
-    expect(formatMajor(184260, 'EUR', 'es')).toBe('+1842');
+    expect(formatMajor(184260, 'EUR', 'es')).toBe('+1843');
     expect(formatMajor(1234560, 'EUR', 'es')).toBe('+12.346');
   });
 
@@ -222,9 +222,9 @@ describe('dates in the new locales', () => {
 });
 ```
 
-- [ ] **Step 2: Run, expect failures** — `rtk proxy pnpm --filter @saldo/i18n test` → type errors / FAIL on the new
+- [x] **Step 2: Run, expect failures** — `rtk proxy pnpm --filter @saldo/i18n test` → type errors / FAIL on the new
   locales.
-- [ ] **Step 3: Implement.** Replace the per-table records and every `locale === 'it'` in `format.ts` with:
+- [x] **Step 3: Implement.** Replace the per-table records and every `locale === 'it'` in `format.ts` with:
 
 ```ts
 export const SUPPORTED_LOCALES = ['it', 'en', 'fr', 'de', 'sv', 'es', 'pt'] as const;
@@ -280,8 +280,8 @@ function groupThousands(digits: string, conventions: Conventions): string {
 }
 ```
 
-- [ ] **Step 4: Run** `rtk proxy pnpm --filter @saldo/i18n test` → all green, old and new cases.
-- [ ] **Step 5: Commit** `feat(i18n): formatting tables for fr, de, sv, es, pt`.
+- [x] **Step 4: Run** `rtk proxy pnpm --filter @saldo/i18n test` → all green, old and new cases.
+- [x] **Step 5: Commit** `feat(i18n): formatting tables for fr, de, sv, es, pt`.
 
 ### Task 2: Language setting and autonyms
 

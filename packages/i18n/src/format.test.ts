@@ -12,6 +12,8 @@ import {
   formatPeriodTick,
   formatSignedPercent,
   formatWeekday,
+  i18nextLanguage,
+  matchLocale,
   resolveLocale,
   weekdayLabels,
 } from './format';
@@ -20,7 +22,8 @@ describe('resolveLocale', () => {
   it('uses the explicit preference or the first device language', () => {
     expect(resolveLocale('en', ['it-IT'])).toBe('en');
     expect(resolveLocale('system', ['it-IT', 'en-US'])).toBe('it');
-    expect(resolveLocale('system', ['fr-FR'])).toBe('en');
+    expect(resolveLocale('system', ['fr-FR'])).toBe('fr');
+    expect(resolveLocale('system', ['nl-NL'])).toBe('en');
     expect(resolveLocale('system', [])).toBe('en');
   });
 });
@@ -177,5 +180,115 @@ describe('formatWeekday / formatDayMonthLong', () => {
   it('writes day and long month without the year', () => {
     expect(formatDayMonthLong('2026-09-18', 'it')).toBe('18 settembre');
     expect(formatDayMonthLong('2026-09-18', 'en')).toBe('September 18');
+  });
+});
+describe('resolveLocale / matchLocale', () => {
+  it('maps a regional tag to its base language', () => {
+    expect(resolveLocale('system', ['pt-BR'])).toBe('pt');
+    expect(resolveLocale('system', ['pt-PT'])).toBe('pt');
+    expect(resolveLocale('system', ['es-MX'])).toBe('es');
+    expect(resolveLocale('system', ['de-AT'])).toBe('de');
+    expect(resolveLocale('system', ['fr-CA'])).toBe('fr');
+    expect(resolveLocale('system', ['sv-FI'])).toBe('sv');
+    expect(resolveLocale('system', ['zh-Hans-CN'])).toBe('en');
+  });
+
+  it('takes the first device language it supports', () => {
+    expect(resolveLocale('system', ['nl-NL', 'de-DE'])).toBe('de');
+    expect(resolveLocale('system', ['en-GB', 'it-IT'])).toBe('en');
+    expect(resolveLocale('sv', ['de-DE'])).toBe('sv');
+  });
+
+  it('reads underscores and case as Android and iOS report them', () => {
+    expect(matchLocale('pt_BR')).toBe('pt');
+    expect(matchLocale('DE')).toBe('de');
+    expect(matchLocale('nb-NO')).toBeUndefined();
+  });
+
+  it('hands i18next the Portuguese of Portugal, for its plural rules', () => {
+    expect(i18nextLanguage('pt')).toBe('pt-PT');
+    expect(i18nextLanguage('de')).toBe('de');
+  });
+});
+
+describe('formatMoney in the new locales', () => {
+  const NNBSP = ' ';
+  const NBSP = ' ';
+
+  it('separates thousands the way each locale does', () => {
+    expect(formatMoney(184260, 'EUR', 'fr')).toBe(`1${NNBSP}842,60 €`);
+    expect(formatMoney(184260, 'EUR', 'de')).toBe('1.842,60 €');
+    expect(formatMoney(184260, 'EUR', 'sv')).toBe(`1${NBSP}842,60 €`);
+    expect(formatMoney(-1234567, 'SEK', 'sv')).toBe(`−12${NBSP}345,67 kr`);
+  });
+
+  it('leaves four digits ungrouped in Spanish and Portuguese', () => {
+    expect(formatMoney(184260, 'EUR', 'es')).toBe('1842,60 €');
+    expect(formatMoney(1234560, 'EUR', 'es')).toBe('12.345,60 €');
+    expect(formatMoney(184260, 'EUR', 'pt')).toBe('1842,60 €');
+    expect(formatMoney(1234560, 'EUR', 'pt')).toBe(`12${NBSP}345,60 €`);
+    expect(formatMajor(184260, 'EUR', 'es')).toBe('+1843');
+    expect(formatMajor(1234560, 'EUR', 'es')).toBe('+12.346');
+  });
+
+  it('puts the symbol after the amount', () => {
+    expect(formatMoneyParts(500, 'USD', 'de').symbolPosition).toBe('suffix');
+    expect(formatMoney(500, 'USD', 'fr', 'always')).toBe('+5,00 $');
+  });
+});
+
+describe('dates in the new locales', () => {
+  it('formats day and month', () => {
+    expect(formatDayMonth('2026-04-18', 'fr')).toBe('18 avr.');
+    expect(formatDayMonth('2026-04-18', 'de')).toBe('18. Apr.');
+    expect(formatDayMonth('2026-04-18', 'sv')).toBe('18 apr.');
+    expect(formatDayMonth('2026-04-18', 'es')).toBe('18 abr');
+    expect(formatDayMonth('2026-04-18', 'pt')).toBe('18 abr.');
+  });
+
+  it('formats long dates', () => {
+    expect(formatLongDate('2026-04-18', 'fr')).toBe('18 avril 2026');
+    expect(formatLongDate('2026-04-18', 'de')).toBe('18. April 2026');
+    expect(formatLongDate('2026-04-18', 'sv')).toBe('18 april 2026');
+    expect(formatLongDate('2026-04-18', 'es')).toBe('18 de abril de 2026');
+    expect(formatLongDate('2026-04-18', 'pt')).toBe('18 de abril de 2026');
+  });
+
+  it('writes day and long month, and the month over the grid', () => {
+    expect(formatDayMonthLong('2026-09-18', 'de')).toBe('18. September');
+    expect(formatDayMonthLong('2026-09-18', 'es')).toBe('18 de septiembre');
+    expect(formatMonthYear({ year: 2026, month: 4 }, 'pt')).toBe('abril de 2026');
+    expect(formatMonthYear({ year: 2026, month: 4 }, 'fr')).toBe('avril 2026');
+  });
+
+  it('names the year in a range the same way', () => {
+    const range = { start: '2025-12-27', end: '2026-01-26' };
+    expect(formatCycleRange(range, 'de', '2026-09-11')).toBe('27. Dez. 2025 – 26. Jan.');
+    expect(formatCycleRange(range, 'fr', '2026-09-11')).toBe('27 déc. 2025 – 26 janv.');
+  });
+
+  it('ticks German months with the stand-alone forms', () => {
+    expect(formatPeriodTick('2026-03-01', 'month', 'de')).toBe('Mär');
+    expect(formatDayMonth('2026-03-18', 'de')).toBe('18. März');
+    expect(formatPeriodTick('2026-09-01', 'month', 'fr')).toBe('sept.');
+  });
+
+  it('names weekdays', () => {
+    expect(formatWeekday('2026-09-18', 'fr')).toBe('vendredi');
+    expect(formatWeekday('2026-09-18', 'de')).toBe('Freitag');
+    expect(formatWeekday('2026-09-18', 'sv')).toBe('fredag');
+    expect(formatWeekday('2026-09-18', 'es')).toBe('viernes');
+    expect(formatWeekday('2026-09-18', 'pt')).toBe('sexta-feira');
+  });
+
+  it('starts the grid where each locale does', () => {
+    expect(firstWeekdayFor('fr')).toBe('monday');
+    expect(firstWeekdayFor('de')).toBe('monday');
+    expect(firstWeekdayFor('sv')).toBe('monday');
+    expect(firstWeekdayFor('es')).toBe('monday');
+    expect(firstWeekdayFor('pt')).toBe('sunday');
+    expect(weekdayLabels('es', 'monday')).toEqual(['L', 'M', 'X', 'J', 'V', 'S', 'D']);
+    expect(weekdayLabels('sv', 'monday')).toEqual(['M', 'T', 'O', 'T', 'F', 'L', 'S']);
+    expect(weekdayLabels('pt', 'sunday')).toEqual(['D', 'S', 'T', 'Q', 'Q', 'S', 'S']);
   });
 });
