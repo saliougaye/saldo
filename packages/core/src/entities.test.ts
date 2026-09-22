@@ -102,6 +102,13 @@ describe('settingsSchema', () => {
     expect(settingsSchema.safeParse({ ...settings, currency: 'KWD' }).success).toBe(true);
     expect(settingsSchema.safeParse({ ...settings, currency: 'XYZ' }).success).toBe(false);
   });
+
+  it('accepts every language the app speaks', () => {
+    for (const language of ['system', 'it', 'en', 'fr', 'de', 'sv', 'es', 'pt']) {
+      expect(settingsSchema.safeParse({ ...settings, language }).success).toBe(true);
+    }
+    expect(settingsSchema.safeParse({ ...settings, language: 'nl' }).success).toBe(false);
+  });
 });
 
 describe('recurrenceSchema', () => {

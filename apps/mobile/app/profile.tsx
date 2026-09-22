@@ -1,4 +1,5 @@
 import { getCurrency } from '@saldo/core';
+import { LANGUAGE_NAMES } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
@@ -49,11 +50,8 @@ export default function ProfileScreen() {
   // plain text rows, which is what made it read as a different app (§13).
   const lead = (name: IconName) => <IconBox name={name} colour={theme.palette.textMuted} small />;
 
-  const languageLabel = {
-    system: t('profile.system'),
-    it: t('profile.italian'),
-    en: t('profile.english'),
-  }[settings?.language ?? 'system'];
+  const language = settings?.language ?? 'system';
+  const languageLabel = language === 'system' ? t('profile.system') : LANGUAGE_NAMES[language];
   const themeLabel = {
     system: t('profile.system'),
     dark: t('profile.dark'),

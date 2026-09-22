@@ -39,6 +39,13 @@ export const BUDGET_ALERT_THRESHOLDS = [75, 90, 100] as const;
 
 export const periodKindSchema = z.enum(PERIOD_KINDS);
 
+/**
+ * The `language` setting: `system`, then every locale `@saldo/i18n` has a catalog for (its tests
+ * keep the two lists in step). Widening it means an older build rejects a settings row a newer one
+ * wrote; accepted while no build is public (`SYNC_SCHEMA_VERSION` stays frozen until then).
+ */
+export const LANGUAGE_PREFERENCES = ['system', 'it', 'en', 'fr', 'de', 'sv', 'es', 'pt'] as const;
+
 export const settingsSchema = z.object({
   ...syncMeta,
   id: z.literal('settings'),
@@ -47,7 +54,7 @@ export const settingsSchema = z.object({
   /** Read only when `periodKind === 'cycle'`, and kept so switching back remembers the day. */
   cycleStartDay: dayOfMonth,
   currency: z.enum(CURRENCY_CODES),
-  language: z.enum(['system', 'it', 'en']),
+  language: z.enum(LANGUAGE_PREFERENCES),
   theme: z.enum(['system', 'dark', 'light']),
   onboardingCompletedAt: isoTimestamp.nullable(),
 });

@@ -5,6 +5,7 @@ import type {
   PeriodKind,
   Recurrence,
   RecurrenceFrequency,
+  Settings,
 } from '@saldo/core';
 import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
@@ -30,7 +31,7 @@ export const settings = sqliteTable(
     periodKind: text('period_kind').$type<PeriodKind>().notNull(),
     cycleStartDay: integer('cycle_start_day').notNull(),
     currency: text('currency').$type<CurrencyCode>().notNull(),
-    language: text('language').$type<'system' | 'it' | 'en'>().notNull(),
+    language: text('language').$type<Settings['language']>().notNull(),
     theme: text('theme').$type<'system' | 'dark' | 'light'>().notNull(),
     onboardingCompletedAt: text('onboarding_completed_at'),
   },

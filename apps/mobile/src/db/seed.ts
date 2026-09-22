@@ -1,4 +1,4 @@
-import type { AccountType, CurrencyCode, PeriodKind } from '@saldo/core';
+import type { AccountType, CurrencyCode, PeriodKind, Settings } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import type { Repositories } from './repositories';
 
@@ -71,7 +71,7 @@ export interface SeedInput {
   periodKind: PeriodKind;
   cycleStartDay: number;
   currency: CurrencyCode;
-  language: 'system' | 'it' | 'en';
+  language: Settings['language'];
   theme: 'system' | 'dark' | 'light';
   /** Null when the accounts come from somewhere else — an import (§6.29). */
   account: {

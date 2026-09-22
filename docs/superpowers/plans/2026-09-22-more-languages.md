@@ -289,7 +289,7 @@ function groupThousands(digits: string, conventions: Conventions): string {
 `packages/i18n/src/format.test.ts`, `packages/i18n/src/index.ts`, `apps/mobile/src/db/schema.ts`,
 `apps/mobile/src/db/seed.ts`
 
-- [ ] **Step 1: Failing tests.** In `entities.test.ts`:
+- [x] **Step 1: Failing tests.** In `entities.test.ts`:
 
 ```ts
 it('accepts every language the app speaks', () => {
@@ -322,14 +322,14 @@ describe('languages', () => {
 });
 ```
 
-- [ ] **Step 2: Run, expect failures.**
-- [ ] **Step 3: Implement.** `entities.ts`:
+- [x] **Step 2: Run, expect failures.**
+- [x] **Step 3: Implement.** `entities.ts`:
   `export const LANGUAGE_PREFERENCES = ['system', 'it', 'en', 'fr', 'de', 'sv', 'es', 'pt'] as const;` and
   `language: z.enum(LANGUAGE_PREFERENCES)`. `languageNames.ts` exports `LANGUAGE_NAMES: Record<AppLocale, string>`,
   re-exported from `index.ts`. `schema.ts` → `text('language').$type<Settings['language']>()`; `seed.ts` →
   `language: Settings['language']`.
-- [ ] **Step 4: Run** core + i18n tests, `rtk proxy pnpm typecheck`.
-- [ ] **Step 5: Commit** `feat(core): widen the language setting to seven languages`.
+- [x] **Step 4: Run** core + i18n tests, `rtk proxy pnpm typecheck`.
+- [x] **Step 5: Commit** `feat(core): widen the language setting to seven languages`.
 
 ### Task 3: Parity test for every catalog, `_many` plurals
 
