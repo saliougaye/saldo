@@ -1,5 +1,5 @@
 import { getCurrency, newId } from '@saldo/core';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { removeAttachment } from '../../src/attachments/attachmentService';
@@ -8,6 +8,7 @@ import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../src/db/hooks';
 import { startRecurrence } from '../../src/db/recurrenceService';
+import { settlementForm } from '../../src/features/accounts/settlement';
 import { PrivacyOverlay } from '../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
@@ -22,7 +23,13 @@ export default function NewTransaction() {
   const accounts = useAccounts();
   const { today, def } = usePeriod();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
-  const [values, setValues] = useState(() => emptyForm(today, accounts[0]?.id ?? null));
+  // "Salda carta" (§6.10) opens this same sheet with the transfer filled in. Read once: after the
+  // first render the fields are the user's.
+  const params = useLocalSearchParams();
+  const [settlement] = useState(() => settlementForm(params, today, minorDigits));
+  const [values, setValues] = useState(
+    () => settlement?.values ?? emptyForm(today, accounts[0]?.id ?? null),
+  );
   const [saving, setSaving] = useState(false);
   const savedRef = useRef(false);
   // Generated here rather than by the repository: an attachment picked before the first save needs
@@ -49,6 +56,13 @@ export default function NewTransaction() {
         values={values}
         onChange={setValues}
         mode="new"
+        amountShortcuts={settlement?.shortcuts.map((shortcut) => ({
+          ...shortcut,
+          label:
+            shortcut.key === 'statement'
+              ? t('accounts.settleStatement')
+              : t('accounts.settleBalance'),
+        }))}
         submitting={saving}
         onSubmit={() => {
           setSaving(true);

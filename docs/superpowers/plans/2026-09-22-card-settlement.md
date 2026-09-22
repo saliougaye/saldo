@@ -502,7 +502,7 @@ it('picks the payment account of a credit card from live non-card accounts', asy
 **Files:** create `apps/mobile/src/features/accounts/settlement.ts` + `settlement.test.ts`; modify
 `app/transaction/new.tsx`, `src/features/transactions/TransactionForm.tsx`
 
-- [ ] **Step 1: failing tests** (`settlement.test.ts`, node project):
+- [x] **Step 1: failing tests** (`settlement.test.ts`, node project):
 
 ```ts
 import { settlementForm, settlementParams } from './settlement';
@@ -517,7 +517,7 @@ describe('settlement params', () => {
     const params = settlementParams(draft, 'Saldo Visa · aprile 2026');
     const form = settlementForm(params, '2026-04-25', 2);
     expect(form?.values).toMatchObject({
-      kind: 'transfer', buffer: '300.00', date: '2026-05-05', accountId: 'acc-checking',
+      kind: 'transfer', buffer: '300', date: '2026-05-05', accountId: 'acc-checking',
       toAccountId: 'acc-card', description: 'Saldo Visa · aprile 2026', categoryId: null,
     });
     expect(form?.shortcuts).toEqual([
@@ -546,8 +546,8 @@ describe('settlement params', () => {
 });
 ```
 
-- [ ] **Step 2:** run → FAIL.
-- [ ] **Step 3: implement** `settlement.ts`:
+- [x] **Step 2:** run → FAIL.
+- [x] **Step 3: implement** `settlement.ts`:
 
 ```ts
 import {
@@ -616,11 +616,11 @@ export function settlementForm(
   - `TransactionForm`: optional prop `amountShortcuts?: readonly { key: string; label: string; minor: number }[]`,
     rendered as a row of `Chip`s under the `AmountInput` (gap 6, marginTop 10) when non-empty; a chip is `active` when
     `amountBufferToMinor(values.buffer, minorDigits) === shortcut.minor` and sets `buffer` to
-    `minorToAmountBuffer(minor, minorDigits)`; its `accessibilityLabel` is `"{label}, {amount}"` via `spoken`.
+    `minorToAmountBuffer(minor, minorDigits)`; its label reads `"{label} · {amount}"` (via `spoken`, so hidden mode masks it) so the choice is readable before it is made.
   - `TransactionForm`: `const overpays = transferOverpaysCard(accounts.find(a => a.id === values.toAccountId), transferPreview.to);`
     and in the footer, when `overpays`, a muted footnote `t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })`
     after the missing line. Save stays enabled.
-- [ ] **Step 4:** run settlement + TransactionForm tests → PASS. Commit `feat(mobile): open the transfer sheet pre-filled to settle a card`.
+- [x] **Step 4:** run settlement + TransactionForm tests → PASS. Commit `feat(mobile): open the transfer sheet pre-filled to settle a card`.
 
 ### Task 6: card box on the account detail
 

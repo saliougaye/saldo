@@ -1,5 +1,5 @@
 import type { Account, Category } from '@saldo/core';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
@@ -22,6 +22,7 @@ jest.mock('../../db/DatabaseProvider', () => ({ useRepositories: () => ({}) }));
 const mockAccounts: Account[] = [
   account('acc-1', 'Conto corrente'),
   account('acc-2', 'Contanti', { type: 'cash' }),
+  account('acc-3', 'Visa', { type: 'credit_card', openingBalance: -5_000 }),
 ];
 
 const mockCategories: Category[] = [category('cat-1', 'Spesa')];
@@ -101,16 +102,21 @@ function Host({ children }: { children: React.ReactNode }) {
   );
 }
 
-function renderForm(values: TransactionFormValues = emptyForm(TODAY, 'acc-1')) {
+function renderForm(
+  values: TransactionFormValues = emptyForm(TODAY, 'acc-1'),
+  amountShortcuts?: { key: string; label: string; minor: number }[],
+  onChange: (values: TransactionFormValues) => void = jest.fn(),
+) {
   return render(
     <Host>
       <TransactionForm
         today={TODAY}
         transactionId="tx-1"
         values={values}
-        onChange={jest.fn()}
+        onChange={onChange}
         mode="new"
         onSubmit={jest.fn()}
+        amountShortcuts={amountShortcuts}
       />
     </Host>,
   );
@@ -133,5 +139,30 @@ describe('TransactionForm', () => {
     await renderForm({ ...emptyForm(TODAY, 'acc-1'), kind: 'transfer', buffer: '12.50' });
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
     expect(screen.getByText('Choose the destination account.')).toBeTruthy();
+  });
+
+  it('warns, without blocking, when a transfer pays a card past zero', async () => {
+    const transfer = { ...emptyForm(TODAY, 'acc-1'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-3', buffer: '100' });
+    expect(screen.getByText(/The card will be .*50\.00 in credit\./)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
+  });
+
+  it('says nothing when the transfer only pays the card off', async () => {
+    const transfer = { ...emptyForm(TODAY, 'acc-1'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-3', buffer: '50' });
+    expect(screen.queryByText(/in credit/)).toBeNull();
+  });
+
+  it('fills the amount from a one-tap shortcut', async () => {
+    const onChange = jest.fn();
+    const shortcuts = [
+      { key: 'statement', label: 'Statement', minor: 30_000 },
+      { key: 'balance', label: 'Whole balance', minor: 35_000 },
+    ];
+    await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '300' }, shortcuts, onChange);
+    expect(screen.getByRole('button', { name: /^Statement/ })).toBeSelected();
+    await userEvent.press(screen.getByRole('button', { name: /^Whole balance/ }));
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ buffer: '350' }));
   });
 });

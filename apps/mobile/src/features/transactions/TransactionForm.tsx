@@ -2,9 +2,11 @@ import {
   amountBufferToMinor,
   type BalancePreview,
   getCurrency,
+  minorToAmountBuffer,
   topCategories,
   transferBalancePreview,
   transferOverdrawsSource,
+  transferOverpaysCard,
 } from '@saldo/core';
 import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
@@ -73,6 +75,11 @@ export interface TransactionFormProps {
    * recurrence, because a rule change is a change to the whole series, not to this row (§5.9).
    */
   recurrenceId?: string | null;
+  /**
+   * One-tap amounts under the field — "Salda carta" offers the closed statement and the whole
+   * balance. A chip reads as chosen while the field holds its amount.
+   */
+  amountShortcuts?: readonly { key: string; label: string; minor: number }[];
 }
 
 const KINDS = ['expense', 'income', 'transfer'] as const;
@@ -89,6 +96,7 @@ export function TransactionForm({
   onDelete,
   submitting = false,
   recurrenceId = null,
+  amountShortcuts = [],
 }: TransactionFormProps) {
   const theme = useTheme();
   const router = useRouter();
@@ -186,6 +194,13 @@ export function TransactionForm({
     transferPreview.from,
   );
   const missing = missingForSave(values, minorDigits, overdrawn);
+  // The other end of the same check: paying a card past zero is allowed (a refund or an
+  // overpayment does that for real), so it is a line to read, never a disabled button.
+  const overpays = transferOverpaysCard(
+    accounts.find((account) => account.id === values.toAccountId),
+    transferPreview.to,
+  );
+  const typed = amountBufferToMinor(values.buffer, minorDigits);
   const ready = missing === null;
 
   const set = (patch: Partial<TransactionFormValues>) => onChange({ ...values, ...patch });
@@ -298,6 +313,11 @@ export function TransactionForm({
               })}
             </Text>
           )}
+          {overpays ? (
+            <Text size="footnote" color="textMuted">
+              {t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })}
+            </Text>
+          ) : null}
           {values.recurrence !== null && occurrenceOf === null ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Icon name="repeat" size={12} color={theme.palette.textMuted} />
@@ -348,6 +368,19 @@ export function TransactionForm({
             doneLabel={t('common.done')}
           />
         </View>
+        {amountShortcuts.length === 0 ? null : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {amountShortcuts.map((shortcut) => (
+              <Chip
+                key={shortcut.key}
+                // The figure on the chip, so the choice is readable before it is made.
+                label={`${shortcut.label} · ${spoken(shortcut.minor)}`}
+                active={typed === shortcut.minor}
+                onPress={() => set({ buffer: minorToAmountBuffer(shortcut.minor, minorDigits) })}
+              />
+            ))}
+          </View>
+        )}
       </Card>
 
       <Card>
