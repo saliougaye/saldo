@@ -1,6 +1,9 @@
 import type { AccountType, CurrencyCode, ImportPlan, PeriodKind } from '@saldo/core';
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
+/** Every numbered step on either path: period, two of the path's own, balance(s), permissions. */
+export const ONBOARDING_STEPS = 5;
+
 /** What the onboarding steps collect before anything is written (§6.29). */
 export interface OnboardingDraft {
   /** Chosen on the first screen: today's four steps, or an import in their place (§6.29). */
@@ -17,6 +20,10 @@ export interface OnboardingDraft {
   /** Keypad buffer, converted to minor units on save. */
   balanceBuffer: string;
   selectedCategoryKeys: string[];
+  /** Import step 4: what each imported account holds now, as keypad buffers by account name. */
+  importBalanceBuffers: Record<string, string>;
+  /** Step 5: the biometric lock, turned on after a successful authentication. Device-only (kv). */
+  appLock: boolean;
 }
 
 export interface OnboardingValue {
@@ -34,6 +41,8 @@ const INITIAL: OnboardingDraft = {
   accountType: 'checking',
   balanceBuffer: '',
   selectedCategoryKeys: [],
+  importBalanceBuffers: {},
+  appLock: false,
 };
 
 const OnboardingContext = createContext<OnboardingValue | null>(null);
