@@ -233,6 +233,13 @@ export const layout = {
   toggleKnob: 16,
   keypadKeyHeight: 52,
   keypadSaveWidth: 80,
+  /** The keypad of §5.1: three digit columns plus the action column, 6pt apart. */
+  keypadGap: 6,
+  keypadPaddingX: 12,
+  keypadPaddingY: 8,
+  /** The sign in front of the digits: a 38pt line needs a 30×40 tile beside it. */
+  signTileWidth: 30,
+  signTileHeight: 40,
   progressHeight: 4,
   /** The onboarding progress: one 2px segment per step (§6.29). */
   stepSegmentHeight: 2,
