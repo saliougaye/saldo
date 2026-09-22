@@ -9,11 +9,13 @@ import { AmountText } from '../../src/components/AmountText';
 import { SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
+import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
 import { useToast } from '../../src/components/Toast';
+import { useDelayed } from '../../src/components/useDelayed';
 import { db } from '../../src/db/client';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import {
@@ -49,6 +51,7 @@ export default function RecurrenceDetail() {
   const accounts = useAccounts();
   const { today, def } = usePeriod();
   const { recurrence, loaded } = useRecurrenceQuery(id ?? '');
+  const slow = useDelayed(!loaded);
   const occurrences = useOccurrences(id ?? '');
   // The sheet edits a draft: every tap in it reports a whole rule, and a cadence change splits the
   // series, so the database is written once, when the sheet closes (§5.9).
@@ -56,7 +59,7 @@ export default function RecurrenceDetail() {
   const [ruleOpen, setRuleOpen] = useState(false);
   const [confirmingStop, setConfirmingStop] = useState(false);
 
-  if (!loaded) return null;
+  if (!loaded) return <DetailSkeleton show={slow} />;
   if (recurrence === null) {
     return <NotFoundScreen />;
   }

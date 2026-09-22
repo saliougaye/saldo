@@ -12,6 +12,8 @@ import { IconBox, ListRow } from '../src/components/ListRow';
 import { ProgressBar } from '../src/components/ProgressBar';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
+import { SkeletonList } from '../src/components/Skeleton';
+import { useDelayed } from '../src/components/useDelayed';
 import { useCategories, useRecurrencesQuery, useSettings } from '../src/db/hooks';
 import { usePeriod } from '../src/features/period/PeriodProvider';
 import {
@@ -46,6 +48,7 @@ export default function RecurrencesScreen() {
   const settings = useSettings();
   const categories = useCategories();
   const { rows: recurrences, loaded } = useRecurrencesQuery();
+  const slow = useDelayed(!loaded);
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -138,7 +141,11 @@ export default function RecurrencesScreen() {
         </Text>
       </View>
 
-      {!loaded ? null : views.length === 0 ? (
+      {!loaded ? (
+        slow ? (
+          <SkeletonList rows={4} label={t('common.loading')} />
+        ) : null
+      ) : views.length === 0 ? (
         <EmptyState
           kind="yet"
           ghost="row"

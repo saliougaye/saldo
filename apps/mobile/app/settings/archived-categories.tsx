@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { SkeletonList } from '../../src/components/Skeleton';
 import { useToast } from '../../src/components/Toast';
+import { useDelayed } from '../../src/components/useDelayed';
 import { restoreCategory } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useCategories } from '../../src/db/hooks';
+import { useCategoriesQuery } from '../../src/db/hooks';
 import { SettingScreen } from '../../src/features/profile/SettingScreen';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -24,7 +26,8 @@ export default function ArchivedCategories() {
   const { t } = useTranslation();
   const repos = useRepositories();
   const toast = useToast();
-  const all = useCategories();
+  const { rows: all, loaded } = useCategoriesQuery();
+  const slow = useDelayed(!loaded);
   const archived = all.filter((category) => category.archivedAt !== null);
 
   const parentName = (parentId: string | null): string | undefined => {
@@ -44,6 +47,18 @@ export default function ArchivedCategories() {
     restoreCategory(repos, categoryId);
     toast.show(t('categories.restored', { name }));
   };
+
+  if (!loaded) {
+    return (
+      <SettingScreen
+        title={t('categories.archived')}
+        subtitle={t('categories.archivedNote')}
+        card={false}
+      >
+        {slow ? <SkeletonList rows={3} label={t('common.loading')} /> : null}
+      </SettingScreen>
+    );
+  }
 
   if (archived.length === 0) {
     return (

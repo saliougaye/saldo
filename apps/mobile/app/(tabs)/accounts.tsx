@@ -9,7 +9,9 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
-import { useAccounts, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useDelayed } from '../../src/components/useDelayed';
+import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import { AccountsSkeleton } from '../../src/features/accounts/AccountsSkeleton';
 import { HideAmountsButton } from '../../src/features/hidden/HideAmountsButton';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
@@ -27,12 +29,14 @@ export default function AccountsTab() {
   const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
-  const accounts = useAccounts();
+  const { accounts, loaded: accountsLoaded } = useAccountsQuery();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   // A balance covers the whole history, so the range is deliberately unbounded (§5.3).
-  const rows = useTransactionsInRange('1970-01-01', today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  const loaded = accountsLoaded && rowsLoaded;
+  const slow = useDelayed(!loaded);
   const balances = useMemo(() => accountBalances(accounts, rows, today), [accounts, rows, today]);
 
   const live = accounts.filter((account) => account.archivedAt === null);
@@ -82,83 +86,91 @@ export default function AccountsTab() {
         </Pressable>
       </View>
 
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('accounts.netWorth')}
-        </Text>
-        <AnimatedAmount
-          minor={netWorth(accounts, balances)}
-          currency={currency}
-          locale={locale}
-          size="hero"
-          weight="semibold"
-          tracking="tightest"
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'baseline',
-            gap: 8,
-            marginTop: 14,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: theme.palette.border,
-          }}
-        >
-          <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
-            {t('accounts.spendable')}
-          </Text>
-          <AmountText
-            align="end"
-            minor={spendableTotal(accounts, balances)}
-            currency={currency}
-            locale={locale}
-            weight="medium"
-          />
-        </View>
-        <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
-          {t('accounts.spendableNote')}
-        </Text>
-      </Card>
-
-      {spendable.length + others.length === 0 ? null : (
-        <Card padded={false}>
-          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
-            {[...spendable, ...others].map(row)}
-          </View>
-        </Card>
-      )}
-
-      {savings.length === 0 ? null : (
+      {!loaded ? (
+        slow ? (
+          <AccountsSkeleton />
+        ) : null
+      ) : (
         <>
-          <SectionLabel>{t('accounts.savings')}</SectionLabel>
-          <Card padded={false}>
-            <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
-              {savings.map(row)}
+          <Card>
+            <Text size="footnote" color="textMuted">
+              {t('accounts.netWorth')}
+            </Text>
+            <AnimatedAmount
+              minor={netWorth(accounts, balances)}
+              currency={currency}
+              locale={locale}
+              size="hero"
+              weight="semibold"
+              tracking="tightest"
+            />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'baseline',
+                gap: 8,
+                marginTop: 14,
+                paddingTop: 12,
+                borderTopWidth: 1,
+                borderTopColor: theme.palette.border,
+              }}
+            >
+              <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+                {t('accounts.spendable')}
+              </Text>
+              <AmountText
+                align="end"
+                minor={spendableTotal(accounts, balances)}
+                currency={currency}
+                locale={locale}
+                weight="medium"
+              />
             </View>
+            <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+              {t('accounts.spendableNote')}
+            </Text>
           </Card>
+
+          {spendable.length + others.length === 0 ? null : (
+            <Card padded={false}>
+              <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
+                {[...spendable, ...others].map(row)}
+              </View>
+            </Card>
+          )}
+
+          {savings.length === 0 ? null : (
+            <>
+              <SectionLabel>{t('accounts.savings')}</SectionLabel>
+              <Card padded={false}>
+                <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
+                  {savings.map(row)}
+                </View>
+              </Card>
+            </>
+          )}
+
+          {archived.length === 0 ? null : (
+            // One door, not two: the accordion used to open here and the Profile row opened a screen,
+            // and the two showed the same list with different actions. This row leads to the screen.
+            <Card padded={false}>
+              <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+                <ListRow
+                  title={t('accounts.archived')}
+                  leading={<IconBox name="archive" colour={theme.palette.textFaint} small />}
+                  trailing={<Text color="textMuted">{String(archived.length)}</Text>}
+                  onPress={() => router.push('/settings/archived-accounts')}
+                  chevron
+                />
+              </View>
+            </Card>
+          )}
+
+          <Text size="caption" color="textFaint">
+            {money(netWorth(accounts, balances), currency, locale)}
+          </Text>
         </>
       )}
-
-      {archived.length === 0 ? null : (
-        // One door, not two: the accordion used to open here and the Profile row opened a screen,
-        // and the two showed the same list with different actions. This row leads to the screen.
-        <Card padded={false}>
-          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
-            <ListRow
-              title={t('accounts.archived')}
-              leading={<IconBox name="archive" colour={theme.palette.textFaint} small />}
-              trailing={<Text color="textMuted">{String(archived.length)}</Text>}
-              onPress={() => router.push('/settings/archived-accounts')}
-              chevron
-            />
-          </View>
-        </Card>
-      )}
-
-      <Text size="caption" color="textFaint">
-        {money(netWorth(accounts, balances), currency, locale)}
-      </Text>
     </Screen>
   );
 }

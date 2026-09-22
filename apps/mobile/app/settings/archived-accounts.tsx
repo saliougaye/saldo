@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { SkeletonList } from '../../src/components/Skeleton';
 import { useToast } from '../../src/components/Toast';
+import { useDelayed } from '../../src/components/useDelayed';
 import { restoreAccount } from '../../src/db/adminService';
 import { useRepositories } from '../../src/db/DatabaseProvider';
-import { useAccounts } from '../../src/db/hooks';
+import { useAccountsQuery } from '../../src/db/hooks';
 import { SettingScreen } from '../../src/features/profile/SettingScreen';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -26,7 +28,21 @@ export default function ArchivedAccounts() {
   const { t } = useTranslation();
   const repos = useRepositories();
   const toast = useToast();
-  const archived = useAccounts().filter((account) => account.archivedAt !== null);
+  const { accounts, loaded } = useAccountsQuery();
+  const slow = useDelayed(!loaded);
+  const archived = accounts.filter((account) => account.archivedAt !== null);
+
+  if (!loaded) {
+    return (
+      <SettingScreen
+        title={t('profile.archivedAccounts')}
+        subtitle={t('accounts.archivedNote')}
+        card={false}
+      >
+        {slow ? <SkeletonList rows={3} label={t('common.loading')} /> : null}
+      </SettingScreen>
+    );
+  }
 
   if (archived.length === 0) {
     return (

@@ -10,18 +10,20 @@ import { CardHeader } from '../../src/components/CardHeader';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
+import { useDelayed } from '../../src/components/useDelayed';
 import {
   useAccounts,
-  useBudgets,
+  useBudgetsQuery,
   useCategories,
   useSettings,
-  useTransactionsInRange,
+  useTransactionsInRangeQuery,
 } from '../../src/db/hooks';
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { DevTools } from '../../src/features/home/DevTools';
+import { HomeSkeleton } from '../../src/features/home/HomeSkeleton';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import {
@@ -45,13 +47,16 @@ export default function HomeTab() {
   const settings = useSettings();
   const categories = useCategories();
   const accounts = useAccounts();
-  const budgets = useBudgets();
+  const { rows: budgets, loaded: budgetsLoaded } = useBudgetsQuery();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   // Load the selected cycle plus the previous six, which is all the baselines need (§7).
   const historyStart = previousPeriods(def, period.range, 6).at(-1)?.start ?? period.range.start;
-  const rows = useTransactionsInRange(historyStart, period.range.end);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  // Before both answer, the hero would read "0 €" and the recent card "no transactions yet".
+  const loaded = rowsLoaded && budgetsLoaded;
+  const slow = useDelayed(!loaded);
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -105,150 +110,161 @@ export default function HomeTab() {
     <Screen underTabBar refreshable>
       <PeriodHeader showProfile />
 
-      <Animated.View entering={entering(0)}>
-        <Card>
-          <Text size="footnote" color="textMuted">
-            {period.isCurrent ? t('home.remaining') : t('home.leftover')}
-          </Text>
-          <AnimatedAmount
-            minor={summary.remaining}
-            currency={currency}
-            locale={locale}
-            size="hero"
-            weight="semibold"
-            tracking="tightest"
-            style={{ marginTop: 2 }}
-          />
-          <View style={{ marginTop: 14 }}>
-            <ProgressBar
-              ratio={summary.ratio}
-              pace={period.isCurrent ? summary.pace : undefined}
-              overPace={summary.overPace}
-            />
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-            <Text size="footnote" color="textMuted" tabular>
-              {`${t('home.income')} ${money(summary.income, currency, locale)}`}
-            </Text>
-            <Text size="footnote" color="textMuted" tabular>
-              {`${t('home.expenses')} ${money(summary.spent, currency, locale)}`}
-            </Text>
-          </View>
-        </Card>
-      </Animated.View>
-
-      {upcomingAll.length === 0 ? null : (
-        <Animated.View entering={entering(1)}>
-          <Card padded={false}>
-            <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-              <CardHeader
-                title={t('home.upcoming')}
-                status={t('home.upcomingCount', { count: upcomingAll.length })}
-                onPress={() => router.push('/(tabs)/transactions')}
+      {!loaded ? (
+        slow ? (
+          <HomeSkeleton heroLabel={period.isCurrent ? t('home.remaining') : t('home.leftover')} />
+        ) : null
+      ) : (
+        <>
+          <Animated.View entering={entering(0)}>
+            <Card>
+              <Text size="footnote" color="textMuted">
+                {period.isCurrent ? t('home.remaining') : t('home.leftover')}
+              </Text>
+              <AnimatedAmount
+                minor={summary.remaining}
+                currency={currency}
+                locale={locale}
+                size="hero"
+                weight="semibold"
+                tracking="tightest"
+                style={{ marginTop: 2 }}
               />
-            </View>
-            <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-              {upcoming.map((tx) => {
-                const row = transactionRow(tx, rowDeps);
-                return (
-                  <ListRow
-                    key={tx.id}
-                    upcoming
-                    title={row.title}
-                    subtitle={row.subtitle}
-                    leading={
-                      <IconBox
-                        name={row.icon}
-                        colour={theme.categoryColor(row.colorIndex)}
-                        badge={tx.recurrenceId === null ? undefined : 'repeat'}
-                      />
-                    }
-                    onPress={() =>
-                      router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                    }
-                    trailing={
-                      <AmountText
-                        plain
-                        align="end"
-                        minor={row.amount.minor}
-                        currency={currency}
-                        locale={locale}
-                        signDisplay={row.amount.signDisplay}
-                        color="textMuted"
-                      />
-                    }
+              <View style={{ marginTop: 14 }}>
+                <ProgressBar
+                  ratio={summary.ratio}
+                  pace={period.isCurrent ? summary.pace : undefined}
+                  overPace={summary.overPace}
+                />
+              </View>
+              <View
+                style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}
+              >
+                <Text size="footnote" color="textMuted" tabular>
+                  {`${t('home.income')} ${money(summary.income, currency, locale)}`}
+                </Text>
+                <Text size="footnote" color="textMuted" tabular>
+                  {`${t('home.expenses')} ${money(summary.spent, currency, locale)}`}
+                </Text>
+              </View>
+            </Card>
+          </Animated.View>
+
+          {upcomingAll.length === 0 ? null : (
+            <Animated.View entering={entering(1)}>
+              <Card padded={false}>
+                <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
+                  <CardHeader
+                    title={t('home.upcoming')}
+                    status={t('home.upcomingCount', { count: upcomingAll.length })}
+                    onPress={() => router.push('/(tabs)/transactions')}
                   />
-                );
-              })}
-            </View>
-          </Card>
-        </Animated.View>
+                </View>
+                <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+                  {upcoming.map((tx) => {
+                    const row = transactionRow(tx, rowDeps);
+                    return (
+                      <ListRow
+                        key={tx.id}
+                        upcoming
+                        title={row.title}
+                        subtitle={row.subtitle}
+                        leading={
+                          <IconBox
+                            name={row.icon}
+                            colour={theme.categoryColor(row.colorIndex)}
+                            badge={tx.recurrenceId === null ? undefined : 'repeat'}
+                          />
+                        }
+                        onPress={() =>
+                          router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                        }
+                        trailing={
+                          <AmountText
+                            plain
+                            align="end"
+                            minor={row.amount.minor}
+                            currency={currency}
+                            locale={locale}
+                            signDisplay={row.amount.signDisplay}
+                            color="textMuted"
+                          />
+                        }
+                      />
+                    );
+                  })}
+                </View>
+              </Card>
+            </Animated.View>
+          )}
+
+          <Animated.View entering={entering(2)}>
+            <HomeBudgetCard views={views} />
+          </Animated.View>
+
+          <Animated.View entering={entering(3)}>
+            <Card padded={false}>
+              <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
+                <CardHeader
+                  title={t('home.recent')}
+                  status={t('home.allTransactions')}
+                  onPress={() => router.push('/(tabs)/transactions')}
+                />
+              </View>
+              <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+                {recent.length === 0 ? (
+                  <Text color="textMuted" style={{ paddingVertical: 12 }}>
+                    {t('transactions.empty')}
+                  </Text>
+                ) : (
+                  recent.map((tx) => {
+                    const row = transactionRow(tx, rowDeps);
+                    return (
+                      // A transaction added elsewhere slides this list down rather than snapping it.
+                      <Animated.View
+                        key={tx.id}
+                        layout={reflowing}
+                        entering={appearing}
+                        exiting={leaving}
+                      >
+                        <ListRow
+                          title={row.title}
+                          subtitle={row.subtitle}
+                          leading={
+                            <IconBox
+                              name={row.icon}
+                              colour={theme.categoryColor(row.colorIndex)}
+                              badge={tx.recurrenceId === null ? undefined : 'repeat'}
+                            />
+                          }
+                          onPress={() =>
+                            router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                          }
+                          trailing={
+                            <AmountText
+                              plain
+                              align="end"
+                              minor={row.amount.minor}
+                              currency={currency}
+                              locale={locale}
+                              signDisplay={row.amount.signDisplay}
+                              color={row.amount.muted ? 'textMuted' : undefined}
+                            />
+                          }
+                        />
+                      </Animated.View>
+                    );
+                  })
+                )}
+              </View>
+            </Card>
+          </Animated.View>
+        </>
       )}
 
-      <Animated.View entering={entering(2)}>
-        <HomeBudgetCard views={views} />
-      </Animated.View>
-
-      <Animated.View entering={entering(3)}>
-        <Card padded={false}>
-          <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
-            <CardHeader
-              title={t('home.recent')}
-              status={t('home.allTransactions')}
-              onPress={() => router.push('/(tabs)/transactions')}
-            />
-          </View>
-          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
-            {recent.length === 0 ? (
-              <Text color="textMuted" style={{ paddingVertical: 12 }}>
-                {t('transactions.empty')}
-              </Text>
-            ) : (
-              recent.map((tx) => {
-                const row = transactionRow(tx, rowDeps);
-                return (
-                  // A transaction added elsewhere slides this list down rather than snapping it.
-                  <Animated.View
-                    key={tx.id}
-                    layout={reflowing}
-                    entering={appearing}
-                    exiting={leaving}
-                  >
-                    <ListRow
-                      title={row.title}
-                      subtitle={row.subtitle}
-                      leading={
-                        <IconBox
-                          name={row.icon}
-                          colour={theme.categoryColor(row.colorIndex)}
-                          badge={tx.recurrenceId === null ? undefined : 'repeat'}
-                        />
-                      }
-                      onPress={() =>
-                        router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                      }
-                      trailing={
-                        <AmountText
-                          plain
-                          align="end"
-                          minor={row.amount.minor}
-                          currency={currency}
-                          locale={locale}
-                          signDisplay={row.amount.signDisplay}
-                          color={row.amount.muted ? 'textMuted' : undefined}
-                        />
-                      }
-                    />
-                  </Animated.View>
-                );
-              })
-            )}
-          </View>
-        </Card>
-      </Animated.View>
-
       <DevTools />
-      <BudgetAlertsGate views={views} />
+      {/* An empty `views` before the query answers is not "no budget over its limit". */}
+      {loaded ? <BudgetAlertsGate views={views} /> : null}
     </Screen>
   );
 }

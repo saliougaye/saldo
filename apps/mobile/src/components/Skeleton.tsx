@@ -100,3 +100,17 @@ export function SkeletonList({ rows = 4, label }: { rows?: number; label: string
     </Card>
   );
 }
+
+/** The shape of a budget line: name and spent on one row, its progress bar below. */
+export function SkeletonBudgetRow() {
+  const theme = useTheme();
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Skeleton width="40%" />
+        <Skeleton width={70} />
+      </View>
+      <Skeleton width="100%" height={theme.layout.progressHeight} />
+    </View>
+  );
+}

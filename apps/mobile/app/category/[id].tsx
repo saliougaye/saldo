@@ -16,11 +16,13 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
 import { Card } from '../../src/components/Card';
+import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
-import { useCategoriesQuery, useSettings, useTransactionsInRange } from '../../src/db/hooks';
+import { useDelayed } from '../../src/components/useDelayed';
+import { useCategoriesQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SpendHistoryChart } from '../../src/features/stats/SpendHistoryChart';
@@ -39,7 +41,7 @@ export default function CategoryDetail() {
   const locale = useAppLocale();
   const { id } = useLocalSearchParams<{ id: string }>();
   const settings = useSettings();
-  const { rows: categories, loaded } = useCategoriesQuery();
+  const { rows: categories, loaded: entityLoaded } = useCategoriesQuery();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -60,7 +62,10 @@ export default function CategoryDetail() {
 
   const historyStart =
     previousPeriods(def, period.range, HISTORY_CYCLES).at(-1)?.start ?? period.range.start;
-  const rows = useTransactionsInRange(historyStart, period.range.end);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  // The figures sum these rows: before they land, a total would paint as 0.
+  const loaded = entityLoaded && rowsLoaded;
+  const slow = useDelayed(!loaded);
 
   const inRange = useMemo(
     () =>
@@ -129,7 +134,7 @@ export default function CategoryDetail() {
     return { direct, listed };
   }, [rows, period.range, today, id, children]);
 
-  if (!loaded) return null;
+  if (!loaded) return <DetailSkeleton show={slow} />;
   if (category === undefined) {
     return <NotFoundScreen />;
   }
