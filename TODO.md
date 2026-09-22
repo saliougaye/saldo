@@ -14,20 +14,6 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### Onboarding: a step for the system permissions
-
-- [ ] Add a step that asks for the system permissions up front, each one with a sentence saying what it is for and
-      a "Più tardi" that skips it. Today every permission is asked at the moment it is first needed:
-  - **notifications** — budget alerts (§5.8), requested by `src/features/budgets/BudgetAlertsGate.tsx`;
-  - **camera and photos** — attachments, requested by `src/attachments/capture.ts`;
-  - **Face ID / biometrics** — the app lock (`app/lock.tsx`); this one is an opt-in setting, so the step offers to
-    turn the lock on rather than asking for a permission.
-
-  Open points: whether the step sits on both paths (*Da zero* and the import) or only after "Inizia"; that a denied
-  permission cannot be asked again by iOS, so the step must not burn the one prompt the in-context request relies on
-  (show our own explanation first, call the system prompt only on "Attiva"); and that Profile needs a place to see
-  and change each one afterwards (a denied one links to the system settings).
-
 ### Loading states where they are missing
 
 - [ ] Asked for on 2026-09-22. Give every screen that reads the database a loading state, with the primitives that

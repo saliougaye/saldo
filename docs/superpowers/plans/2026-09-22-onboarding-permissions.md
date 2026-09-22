@@ -58,7 +58,7 @@
 - Modify: `packages/ui/src/icons.ts` (end of `iconMarkup`, after `eyeOff`)
 - Modify: `packages/ui/src/icons.test.ts:37`
 
-- [ ] **Step 1: Update the count in the test**
+- [x] **Step 1: Update the count in the test**
 
 In `packages/ui/src/icons.test.ts` replace `expect(ICON_NAMES).toHaveLength(136);` with:
 
@@ -66,12 +66,12 @@ In `packages/ui/src/icons.test.ts` replace `expect(ICON_NAMES).toHaveLength(136)
     expect(ICON_NAMES).toHaveLength(138);
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: FAIL — `expected [...] to have a length of 138 but got 136`.
 
-- [ ] **Step 3: Add the icons**
+- [x] **Step 3: Add the icons**
 
 In `packages/ui/src/icons.ts`, after the `eyeOff` entry and before `} as const satisfies`, add:
 
@@ -82,12 +82,12 @@ In `packages/ui/src/icons.ts`, after the `eyeOff` entry and before `} as const s
     '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/>',
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/icons.ts packages/ui/src/icons.test.ts
@@ -102,7 +102,7 @@ git commit -m "feat(ui): bell and scan-face icons for the permissions step"
 - Modify: `packages/ui/src/tokens.ts` (`motion`, after `stepEnterOffset`)
 - Modify: `packages/ui/src/tokens.test.ts` (after the `onboarding step motion` block)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/ui/src/tokens.test.ts`:
 
@@ -119,12 +119,12 @@ describe('permissions list motion', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: FAIL — `motion.revealDelayMs` is undefined (typecheck in the editor, `NaN`/undefined comparison at runtime).
 
-- [ ] **Step 3: Add the tokens**
+- [x] **Step 3: Add the tokens**
 
 In `packages/ui/src/tokens.ts`, inside `motion`, after `stepEnterOffset: 12,` add:
 
@@ -145,12 +145,12 @@ In `packages/ui/src/tokens.ts`, inside `motion`, after `stepEnterOffset: 12,` ad
   swapIconFromScale: 0.25,
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -166,7 +166,7 @@ git commit -m "feat(ui): motion tokens for the permissions list"
 - Create: `packages/core/src/permissions.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/core/src/permissions.test.ts`:
 
@@ -255,12 +255,12 @@ describe('nextPending', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter @saldo/core test -- permissions`
 Expected: FAIL — `Failed to resolve import "./permissions"`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/permissions.ts`:
 
@@ -333,12 +333,12 @@ In `packages/core/src/index.ts`, after `export * from './period';` add:
 export * from './permissions';
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @saldo/core test -- permissions`
 Expected: PASS (13 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/permissions.ts packages/core/src/permissions.test.ts packages/core/src/index.ts
@@ -353,7 +353,7 @@ git commit -m "feat(core): rules for the onboarding permissions step"
 - Modify: `packages/i18n/src/locales/it.ts` (`onboarding`, `profile`, new `permissions` block after `lock`)
 - Modify: `packages/i18n/src/locales/en.ts` (same places)
 
-- [ ] **Step 1: Italian**
+- [x] **Step 1: Italian**
 
 In `it.ts`, inside `onboarding`, after `importBalancesBody: …,` add:
 
@@ -396,7 +396,7 @@ Inside `profile`, after `appLock: 'Blocco con biometria',` add:
       'Cosa può usare Saldo su questo telefono. Quelli negati si riattivano dalle Impostazioni di sistema.',
 ```
 
-- [ ] **Step 2: English**
+- [x] **Step 2: English**
 
 In `en.ts`, inside `onboarding`, after `importBalancesBody: …,` add:
 
@@ -439,12 +439,12 @@ Inside `profile`, after `appLock: 'Biometric lock',` add:
       'What Saldo can use on this phone. Anything you denied comes back from the system Settings.',
 ```
 
-- [ ] **Step 3: Run the parity test**
+- [x] **Step 3: Run the parity test**
 
 Run: `pnpm --filter @saldo/i18n test`
 Expected: PASS (it and en have the same keys).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/i18n/src/locales/it.ts packages/i18n/src/locales/en.ts
@@ -460,7 +460,7 @@ git commit -m "feat(i18n): copy for the permissions step and Profile → Permess
 
 No unit test: these are Reanimated builders with no logic of their own, and their values are covered by Task 2. They are checked on the simulator in Task 12.
 
-- [ ] **Step 1: Add the builders**
+- [x] **Step 1: Add the builders**
 
 In `apps/mobile/src/theme/motion.ts`, extend the Reanimated import to:
 
@@ -515,12 +515,12 @@ export function swapIn(fromScale: number, delay = 0) {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `pnpm --filter mobile typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/mobile/src/theme/motion.ts
@@ -535,7 +535,7 @@ git commit -m "feat(mobile): motion builders for the permissions list"
 - Create: `apps/mobile/src/features/permissions/systemPermissions.ts`
 - Create: `apps/mobile/src/features/permissions/systemPermissions.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/permissions/systemPermissions.test.tsx`:
 
@@ -592,12 +592,12 @@ describe('useSystemPermissions', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter mobile test -- systemPermissions`
 Expected: FAIL — `Cannot find module './systemPermissions'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `apps/mobile/src/features/permissions/systemPermissions.ts`:
 
@@ -660,12 +660,12 @@ export function useSystemPermissions(): {
 }
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 Run: `pnpm --filter mobile test -- systemPermissions`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/permissions/systemPermissions.ts apps/mobile/src/features/permissions/systemPermissions.test.tsx
@@ -680,7 +680,7 @@ git commit -m "feat(mobile): read and request the system permissions"
 - Create: `apps/mobile/src/features/permissions/PermissionsList.tsx`
 - Create: `apps/mobile/src/features/permissions/PermissionsList.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/permissions/PermissionsList.test.tsx`:
 
@@ -765,12 +765,12 @@ describe('PermissionsList', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter mobile test -- PermissionsList`
 Expected: FAIL — `Cannot find module './PermissionsList'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `apps/mobile/src/features/permissions/PermissionsList.tsx`:
 
@@ -985,12 +985,12 @@ function Status({
 }
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 Run: `pnpm --filter mobile test -- PermissionsList`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/permissions/PermissionsList.tsx apps/mobile/src/features/permissions/PermissionsList.test.tsx
@@ -1006,7 +1006,7 @@ git commit -m "feat(mobile): the permissions list, one row open at a time"
 - Create: `apps/mobile/src/features/onboarding/finish.ts`
 - Create: `apps/mobile/src/features/onboarding/finish.test.ts`
 
-- [ ] **Step 1: Draft fields**
+- [x] **Step 1: Draft fields**
 
 In `apps/mobile/src/features/onboarding/state.tsx`, add after the imports:
 
@@ -1031,7 +1031,7 @@ In `INITIAL`, after `selectedCategoryKeys: [],` add:
   appLock: false,
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `apps/mobile/src/features/onboarding/finish.test.ts`:
 
@@ -1113,12 +1113,12 @@ describe('finishOnboarding', () => {
 });
 ```
 
-- [ ] **Step 3: Run it to see it fail**
+- [x] **Step 3: Run it to see it fail**
 
 Run: `pnpm --filter mobile test -- finish`
 Expected: FAIL — `Cannot find module './finish'`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 Create `apps/mobile/src/features/onboarding/finish.ts`:
 
@@ -1198,12 +1198,12 @@ export function finishOnboarding(
 
 Note: `translate('firstAccount')` resolves through the same `seed.*` translator as the categories, which is what `categories.tsx` did with `t('seed.firstAccount')`.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `pnpm --filter mobile test -- finish`
 Expected: PASS (3 tests). The buffers are decimal strings (`amountBufferToMinor('10.00', 2) === 1000`, `packages/core/src/money.ts:82`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/features/onboarding/state.tsx apps/mobile/src/features/onboarding/finish.ts apps/mobile/src/features/onboarding/finish.test.ts
@@ -1220,11 +1220,11 @@ git commit -m "feat(mobile): finish onboarding from one place, lock flag include
 - Modify: `apps/mobile/app/(onboarding)/import-balances.tsx`
 - Modify: `apps/mobile/app/(onboarding)/{period,cycle-day,account-details,balance,import-currency,import-file}.tsx`
 
-- [ ] **Step 1: Step totals**
+- [x] **Step 1: Step totals**
 
 In each of `period.tsx`, `cycle-day.tsx`, `account-details.tsx`, `balance.tsx`, `import-currency.tsx`, `import-file.tsx`, `categories.tsx`, `import-balances.tsx`, replace `total: 4` with `total: ONBOARDING_STEPS`, and add `ONBOARDING_STEPS` to the existing import from `'../../src/features/onboarding/state'` (add the import where the file does not have one yet: `import { ONBOARDING_STEPS } from '../../src/features/onboarding/state';`).
 
-- [ ] **Step 2: Categories hands over instead of finishing**
+- [x] **Step 2: Categories hands over instead of finishing**
 
 Replace `apps/mobile/app/(onboarding)/categories.tsx` with:
 
@@ -1321,7 +1321,7 @@ export default function CategoriesStep() {
 }
 ```
 
-- [ ] **Step 3: Import balances hands over instead of finishing**
+- [x] **Step 3: Import balances hands over instead of finishing**
 
 In `apps/mobile/app/(onboarding)/import-balances.tsx`:
 
@@ -1346,7 +1346,7 @@ In `apps/mobile/app/(onboarding)/import-balances.tsx`:
 
 5. Update the doc comment's last sentence to: `so «Continua» untouched keeps the file as the whole story; a different number becomes the opening balance that reaches it (§6.22), written by «Inizia» on step 5.`
 
-- [ ] **Step 4: The step 5 screen**
+- [x] **Step 4: The step 5 screen**
 
 Create `apps/mobile/app/(onboarding)/permissions.tsx`:
 
@@ -1490,19 +1490,19 @@ export default function PermissionsStep() {
 }
 ```
 
-- [ ] **Step 5: Regenerate the typed routes and typecheck**
+- [x] **Step 5: Regenerate the typed routes and typecheck**
 
 `typedRoutes` is on (`app.config.ts`), so `/permissions` and `/profile/permissions` (Task 10) only type once the route types are regenerated. From `apps/mobile`, start Metro (`npx expo start`), wait until it is ready, then stop it: that rewrites `.expo/types/router.d.ts`.
 
 Run: `pnpm --filter mobile typecheck`
 Expected: no errors.
 
-- [ ] **Step 6: Run the mobile tests**
+- [x] **Step 6: Run the mobile tests**
 
 Run: `rtk proxy pnpm --filter mobile test`
 Expected: every suite passes.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add "apps/mobile/app/(onboarding)"
@@ -1517,7 +1517,7 @@ git commit -m "feat(mobile): step 5 of onboarding asks for the permissions"
 - Create: `apps/mobile/app/profile/permissions.tsx`
 - Modify: `apps/mobile/app/profile.tsx` (before the `profile.appLock` row)
 
-- [ ] **Step 1: The screen**
+- [x] **Step 1: The screen**
 
 Create `apps/mobile/app/profile/permissions.tsx`:
 
@@ -1586,7 +1586,7 @@ export default function PermissionsSetting() {
 }
 ```
 
-- [ ] **Step 2: The Profile row**
+- [x] **Step 2: The Profile row**
 
 In `apps/mobile/app/profile.tsx`, immediately before `<ListRow title={t('profile.appLock')}`, add:
 
@@ -1599,12 +1599,12 @@ In `apps/mobile/app/profile.tsx`, immediately before `<ListRow title={t('profile
           />
 ```
 
-- [ ] **Step 3: Typecheck and tests**
+- [x] **Step 3: Typecheck and tests**
 
 Run: `pnpm --filter mobile typecheck && rtk proxy pnpm --filter mobile test`
 Expected: no type errors; every suite passes. (If `/profile/permissions` does not type, regenerate the route types as in Task 9 Step 5.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/mobile/app/profile/permissions.tsx apps/mobile/app/profile.tsx
@@ -1621,7 +1621,7 @@ git commit -m "feat(mobile): Profile → Permessi"
 - Modify: `TODO.md`
 - Delete: `docs/superpowers/mockups/2026-09-22-onboarding-permissions-variants.html`
 
-- [ ] **Step 1: Maestro**
+- [x] **Step 1: Maestro**
 
 In the flow, rename every `Step n of 4` comment to `Step n of 5`. Replace the block that starts `# Step 4 of 4 — the category grid` and ends at `id: "onboarding-start"` with:
 
@@ -1645,7 +1645,7 @@ In the flow, rename every `Step n of 4` comment to `Step n of 5`. Replace the bl
 
 Note: on a simulator whose notifications or camera were already decided, those rows start closed and their «Più tardi» is not there. The flow runs on a fresh install, so they are pending.
 
-- [ ] **Step 2: Spec §6.29**
+- [x] **Step 2: Spec §6.29**
 
 In the §6.29 row of `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`:
 
@@ -1656,11 +1656,11 @@ In the §6.29 row of `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`:
 - After `Progress bar 2px.` insert: ` Step 5, **permissions**, is the same on both paths: notifications (budget alerts, §5.8), camera (attachments, §10) and the biometric app lock (§6.32), one row open at a time with a sentence, «Attiva» and «Più tardi». The system prompt is called only from «Attiva», so the one prompt iOS allows is never spent before the user has read why; a permission the OS already decided shows its state instead of asking, and a denied one links to the system settings. «Più tardi» leaves the in-context request as it was (§5.8, §10). «Inizia» is on this step. Profile → **Permessi** shows and changes notifications and camera afterwards.`
 - Replace `"Inizia" writes settings + account + categories.` with `"Inizia" (step 5) writes settings + account + categories, and the lock flag when step 5 turned it on.`
 
-- [ ] **Step 3: TODO**
+- [x] **Step 3: TODO**
 
 In `TODO.md`, delete the whole `### Onboarding: a step for the system permissions` section (heading, the checkbox item, the three bullets and the "Open points" paragraph).
 
-- [ ] **Step 4: Delete the harness**
+- [x] **Step 4: Delete the harness**
 
 ```bash
 git rm docs/superpowers/mockups/2026-09-22-onboarding-permissions-variants.html
@@ -1668,7 +1668,7 @@ git rm docs/superpowers/mockups/2026-09-22-onboarding-permissions-variants.html
 
 (If it was never committed: `rm docs/superpowers/mockups/2026-09-22-onboarding-permissions-variants.html`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/maestro/onboarding-and-first-expense.yaml docs/superpowers/specs/2026-09-10-saldo-poc-spec.md TODO.md docs/superpowers/plans/2026-09-22-onboarding-permissions.md
