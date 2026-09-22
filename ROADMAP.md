@@ -65,6 +65,41 @@ already model "money set aside"; what is missing is the target, the deadline and
   - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
 - [ ] Spec section (`§5.x Goals`), then the plan.
 
+### Period recap: close the last period before the next one starts
+
+Asked for on 2026-09-22. On the first day of a new period — the day after the old one ended — the app shows a recap
+of the period that just closed, and only then the Home of the new one. Today the switch is silent: at midnight the
+Home, the budgets and the stats move to the new period and the closed one is only reachable by paging back.
+
+"Period" is whichever the user picked (§5.2: month, week, pay cycle, year), not only the pay cycle; the recap follows it.
+
+What the recap shows, all of it already computable from what exists:
+
+- income, expenses and the net, against the previous period and the 6-period average (`stats.ts`, `previousPeriods`);
+- the top categories, and the one that moved the most against its average;
+- budgets: which stayed within the limit, which went over, and what rolls over into the new period
+  (`rollover.ts`);
+- the biggest single expense, and the net-worth change over the period.
+
+How it behaves:
+
+- **When.** On the first open on or after the first day of the new period, once per period (remember the last
+  period recapped device-locally, like the budget alerts' `lastAlertPeriodStart`). An optional local notification
+  the morning of that day ("Il tuo {periodo} si è chiuso: guarda il riepilogo") reuses the §5.8 permission.
+- **Where.** A full-screen sheet over the Home, dismissed with one button ("Inizia il nuovo {periodo}"). After that
+  the recap stays reachable from the Home (a card for the first days) and from the period history.
+- **Computed, never stored.** A transaction entered late for the old period changes the recap, as it changes the
+  stats. One pure function in `@saldo/core` (`periodRecap(def, range, txs, budgets, …)`), TDD, and the screen only
+  renders it.
+
+- [ ] Decide before planning:
+  - the weekly period: a recap every Monday may be too often (suggested: a lighter card, no sheet, no notification);
+  - full-screen sheet, or a Home card only;
+  - whether the recap can be shared as an image (a nice-to-have, not the POC's habit).
+- [ ] Spec section (`§5.x Period recap`) and a design pass (not in the prototype), then the plan.
+
+Later, the AI insights of 0.5 can add a sentence to it; the recap itself needs no server.
+
 ### A first run with no server (local-only), sign-in later
 
 Spec §1.1 goal 2 keeps «a server-less variant» as a later option, and the code still carries half of it:
@@ -88,6 +123,15 @@ This reopens a decision taken at 08 (sign-in required), so it is a product call,
   wording; §1.1 goal 2 loses its «later».
 - A build with an empty `SALDO_SERVER_URL` becomes a legitimate local-only build instead of one that «can only
   say so» (§15).
+
+### Mascot states
+
+Moved here from `TODO.md` on 2026-09-22. The mark is Rocky, the 3D raccoon generated in
+github.com/saliougaye/mascots (branch `mascot/saldo`); the app icons, splash and favicon in `apps/mobile/assets/`
+are copies of its `out/saldo/icons/`.
+
+The kit also carries Lottie state animations and illustrations (empty, loading, error, success, thinking, idle).
+The empty states (§13) are the obvious first use: variant D of their design review would replace `GhostStack`.
 
 ---
 
