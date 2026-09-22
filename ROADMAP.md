@@ -18,17 +18,17 @@ milestone bends one of them, the bend is written down here before it is built.
 ## The order, and what actually constrains it
 
 ```
-0.1 Forecast ──> 0.2 Web app ──> 0.3 MCP server ──> 0.4 AI on the server ──> 0.5 Shared ledger ──> 0.6 Public ──> 0.7 Releases
+0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared ledger ──> 0.7 Public ──> 0.8 Releases
 ```
 
 Only four things in this order are dependencies; everything else is preference and can move.
 
 | Before | After | Why |
 |---|---|---|
-| Forecast (0.1) | AI insights (0.4), the MCP forecast tool (0.3) | they consume its aggregates |
-| **Deciding** the shape of the shared ledger | Web app (0.2), MCP (0.3) | every server-side query is scoped by the answer |
+| Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
+| **Deciding** the shape of the shared ledger | Web app (0.3), MCP (0.4) | every server-side query is scoped by the answer |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
-| Everything | Public (0.6) → Releases (0.7) | a decision, taken 2026-09-22 |
+| Everything | Public (0.7) → Releases (0.8) | a decision, taken 2026-09-22 |
 
 Two decisions taken on 2026-09-22 shape the whole list:
 
@@ -36,12 +36,62 @@ Two decisions taken on 2026-09-22 shape the whole list:
   `SECURITY.md` already says «you trust your own server». So the web app renders server-side, the AI key
   lives on the server, and the MCP endpoint answers from the server. The server stops being a blob store and
   gains its first application logic on rows: one **typed projection** of `sync_rows` through `@saldo/core`
-  (D11 foresaw it), built once by 0.2 and reused by 0.3 and 0.4.
+  (D11 foresaw it), built once by 0.3 and reused by 0.4 and 0.5.
 - **Therefore no end-to-end encryption.** Encrypted rows cannot be projected, aggregated or sent to a model.
   Recorded in «Considered and not planned» at the end with the reasoning, so it is not re-derived.
 ---
 
-## 0.1 — Forecast: the next three months, from what already repeats
+## 0.1 — Everyday features: small, useful, self-contained
+
+Features a user notices on the first day, each one plan on its own and independent of the server-side work
+that follows. Moved here from `TODO.md` on 2026-09-22.
+
+### Goals: saving towards a target
+
+Example: putting money aside to buy a car — «Macchina, 12.000 € entro giugno 2027».
+
+Budgets cannot do this, and bending them would break them: a budget is a **ceiling on spending** — `spent` is the sum
+of counted expenses in a category (§5.8), the bar fills as money goes *out*, and rollover only carries the unspent part
+of a limit. A goal is the opposite shape: a **target to accumulate**, with a deadline, filled by money put aside.
+
+What exists today is half of it: a `savings` account (§3, excluded from Totale spendibile) plus transfers into it
+already model "money set aside"; what is missing is the target, the deadline and the progress.
+
+- [ ] Decide the model before planning:
+  - a goal **linked to an account** (progress = the account's balance, or its growth since the goal started), or
+    a goal with its **own contributions** (so one account can hold several goals);
+  - the "on track" rule: required per period = (target − saved) / periods left, against the pace of the budget bars;
+  - where it lives: a Home card like budgets, a row in Profile, or on the account detail;
+  - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
+- [ ] Spec section (`§5.x Goals`), then the plan.
+
+### A first run with no server (local-only), sign-in later
+
+Spec §1.1 goal 2 keeps «a server-less variant» as a later option, and the code still carries half of it:
+`apps/mobile/src/boot/decide.ts:31,74` sends a signed-in phone with no scheduler straight to onboarding,
+`src/sync/SyncProvider.tsx:51` reads a null scheduler as «local-only», and `src/sync/scheduler.ts:50` and
+`src/sync/syncContext.ts:6` document the same state. None of it is reachable: `decide.ts:70` routes every
+signed-out session to welcome, and welcome offers only sign-in (phase 08).
+
+Why it matters for an open-source app: the README's quick start asks for an HTTPS domain, a running server, an
+invite code and a self-built app **before the first transaction**. For something described as local-first and
+«own your data», that is the highest bar in the category, and the first five minutes decide whether anybody comes
+back. The offline part already works; what is missing is the door.
+
+This reopens a decision taken at 08 (sign-in required), so it is a product call, recorded here rather than argued:
+
+- Welcome gains «Start on this phone»; sign-in stays on the same screen and in Profile for later.
+- Phase 10b's ownership question gets a third case: local rows exist, no `kv.accountId`, and somebody signs in —
+  adopt the rows into the account (push them) or discard them. Today's `ownershipVerdict` only knows a device with
+  a recorded account and a device with none.
+- §1.2's last bullet («a first run with no network … says so instead of appearing broken») and §6.29 step 0 change
+  wording; §1.1 goal 2 loses its «later».
+- A build with an empty `SALDO_SERVER_URL` becomes a legitimate local-only build instead of one that «can only
+  say so» (§15).
+
+---
+
+## 0.2 — Forecast: the next three months, from what already repeats
 
 Discussed on 2026-09-21. The ask: a simple forecast of the coming months from past spending. The app already
 computes every input it needs, so this is a projection layer on top of §5.5 and §5.7, not a new model.
@@ -88,7 +138,7 @@ one, drawn dimmed and hatched like the current cycle is today. For each forecast
 - **Seasonality** (weighting the same month last year) needs ≥ 12 cycles and most users will not have them for a
   year. Note only.
 - **"What if" slider** (add a hypothetical recurring expense, watch the balance move). Good demo, scope creep.
-- These aggregates are exactly what the AI insights in 0.4 would consume; whichever ships first should expose
+- These aggregates are exactly what the AI insights in 0.5 would consume; whichever ships first should expose
   them from `@saldo/core` in a shape the other can reuse.
 
 **To decide before planning:** nothing — the decisions above are taken.
@@ -101,17 +151,17 @@ one, drawn dimmed and hatched like the current cycle is today. For each forecast
 
 ---
 
-## 0.2 — Web app (spec §17.1)
+## 0.3 — Web app (spec §17.1)
 
 D3 says `apps/web` «becomes the web app later»; today `apps/web/app/page.tsx` is fifteen lines. The spec
 offered two data paths — query `sync_rows` server-side through `@saldo/core`, or run local-first in the
 browser with SQLite WASM and the same sync client — and left the choice to a dedicated spec. **Decided
 2026-09-22: server-side.** The browser path would duplicate the phone's engine; the server path builds the
-projection that 0.3 and 0.4 need anyway.
+projection that 0.4 and 0.5 need anyway.
 
 **What it builds for everyone after it:** the typed projection. Route handlers (or server components) load a
 user's rows from `sync_rows`, validate them against `entitySchemas`, and hand them to the same pure functions
-the phone calls — cycle totals, budgets, «Quota impegnata», the forecast of 0.1. No calculation is written
+the phone calls — cycle totals, budgets, «Quota impegnata», the forecast of 0.2. No calculation is written
 twice; if the web app shows a number the phone does not, one of them is wrong.
 
 **Shape:**
@@ -119,13 +169,13 @@ twice; if the web app shows a number the phone does not, one of them is wrong.
 - Same passkey login (the browser ceremony already exists for the phone's sign-in), cookie session.
 - DOM components on `@saldo/ui` tokens and `@saldo/i18n`; the mobile screens are the reference, not a
   template — the web app can be read-mostly at first.
-- Every query is scoped the way the shared ledger (0.5) will need. Its **shape is decided before this
+- Every query is scoped the way the shared ledger (0.6) will need. Its **shape is decided before this
   milestone starts**, even though it is built last: «two passkeys, one account» means `where user_id = ?`
-  stays; «spaces» means every query takes a space id from day one, so 0.5 does not rewrite the web app.
+  stays; «spaces» means every query takes a space id from day one, so 0.6 does not rewrite the web app.
 
 **To decide before planning:**
 
-- [ ] The shared-ledger shape (see 0.5). This is the one decision that cannot wait.
+- [ ] The shared-ledger shape (see 0.6). This is the one decision that cannot wait.
 - [ ] Read-only first, or transaction entry from the start.
 - [ ] Spec: §17.1 records the server-side decision, the projection gets a section of its own, then the plan.
 
@@ -133,16 +183,16 @@ twice; if the web app shows a number the phone does not, one of them is wrong.
 Statistics matching the phone to the cent, and the projection is the only way server code reads rows.
 ---
 
-## 0.3 — MCP server: the user's own assistant reads the ledger
+## 0.4 — MCP server: the user's own assistant reads the ledger
 
 Idea from 2026-09-22. The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint so
 an assistant the user already runs (Claude, or any MCP client) can ask «quanto ho speso in Spesa questo ciclo?»
-and get the answer from the user's own instance. It is the mirror image of the AI milestone (0.4): there the
+and get the answer from the user's own instance. It is the mirror image of the AI milestone (0.5): there the
 server holds a key and calls a model; here the user's model calls the server, and no key ever touches Saldo.
 
-**What it stands on.** The projection built by 0.2. MCP is its second consumer, not a new model.
+**What it stands on.** The projection built by 0.3. MCP is its second consumer, not a new model.
 Everything money-related is already a pure function in core (cycle totals, budgets, «Quota impegnata», the
-forecast of 0.1), so the tools are thin wrappers that load rows, call core and return numbers as integer minor
+forecast of 0.2), so the tools are thin wrappers that load rows, call core and return numbers as integer minor
 units plus the currency.
 
 **Shape to aim for:**
@@ -159,9 +209,9 @@ units plus the currency.
 
 **To decide before planning:**
 
-- [ ] Whether this replaces the spending insights half of 0.4 or sits beside it. A user with Claude on the
+- [ ] Whether this replaces the spending insights half of 0.5 or sits beside it. A user with Claude on the
       desktop gets insights through MCP without giving Saldo a key at all; receipt analysis still needs the
-      in-app flow, so 0.4 does not disappear. Answer this before planning 0.4, not before planning this.
+      in-app flow, so 0.5 does not disappear. Answer this before planning 0.5, not before planning this.
 - [ ] Token model: one token per client, expiry, and what a revoked token does to an in-flight conversation.
 - [ ] Rate limits and the audit trail: a token that reads everything deserves a «last used» column in Profile.
 - [ ] Spec section (`§17.4 MCP server`), then the plan.
@@ -171,7 +221,7 @@ answer matches Statistics to the cent, and revoking the token in Profile stops t
 
 ---
 
-## 0.4 — AI on the server, bring your own key (spec §17.2, §17.3)
+## 0.5 — AI on the server, bring your own key (spec §17.2, §17.3)
 
 Spec §17.2 stored the provider key in the phone's `expo-secure-store`, never synced, never sent to the Saldo
 server; the phone would call the model directly. **Decided 2026-09-22: the key lives on the server.** Saldo is
@@ -179,7 +229,7 @@ self-hosted, the server is the user's; one key, one place, every client — phon
 user typing it twice. The server calls the provider; the app keeps talking only to its own server, so §18's
 «no third-party network calls from the app» stays literally true and gains a sibling line about the server.
 
-**What it stands on.** The projection of 0.2 for aggregates; phase 09b for receipts (capture, compression,
+**What it stands on.** The projection of 0.3 for aggregates; phase 09b for receipts (capture, compression,
 the local file store, the viewer, the category list the prompt needs). The `ReceiptAnalyzer` and
 `InsightsProvider` interfaces stay in `@saldo/core/ai` as the spec says; their drivers move server-side, behind
 routes the phone calls with its session.
@@ -197,8 +247,8 @@ URL, model id configurable.
 
 ### Spending insights (§17.3)
 
-Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.1 — never raw
-descriptions unless the user opts in; results cached per cycle. **Only if 0.3 has not made it redundant**: a
+Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.2 — never raw
+descriptions unless the user opts in; results cached per cycle. **Only if 0.4 has not made it redundant**: a
 user whose assistant already reads the ledger through MCP may not need Saldo to hold a key for this.
 
 **To decide before planning:**
@@ -206,9 +256,9 @@ user whose assistant already reads the ledger through MCP may not need Saldo to 
 - [ ] Key **per instance** (the admin sets it in the server environment, everyone uses it, the admin pays)
       or **per user** (each user saves their own in Profile, the server keeps it in Postgres). One household
       needs the first; an instance hosting several does not.
-- [ ] Whether insights ship at all, given 0.3.
+- [ ] Whether insights ship at all, given 0.4.
 - [ ] The wording of the §18 change and of the consent screen.
-- [ ] The local-only mode (`TODO.md`, «A first run with no server») has no AI. Write that down where that
+- [ ] The local-only mode (0.1, «A first run with no server») has no AI. Write that down where that
       idea is planned.
 - [ ] Spike, then spec update (§17.2, §17.3, §18), then the plan.
 
@@ -216,13 +266,13 @@ user whose assistant already reads the ledger through MCP may not need Saldo to 
 key never contacts a provider, and §18 says exactly what leaves the server and when.
 ---
 
-## 0.5 — Shared ledger
+## 0.6 — Shared ledger
 
 Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
 households from the POC; this is the note that it is the next non-goal to fall.
 
 **Built last among the product milestones, decided first.** Its shape fixes how every server-side query is
-scoped, so 0.2 and 0.3 need the answer before they start — and once they have it, building the ledger itself
+scoped, so 0.3 and 0.4 need the answer before they start — and once they have it, building the ledger itself
 finds the web app and the MCP tools already reading the right rows.
 
 Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
@@ -244,7 +294,7 @@ below) there is no shared key to distribute, which is the part that made «space
 **To decide before planning:**
 
 - [ ] Which shape, or which first. This is the decision that unblocks the proper fix to 10b, and it is due
-      **before 0.2 starts**.
+      **before 0.3 starts**.
 - [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
       server are not served. A shared ledger either keeps that line or has to earn its removal.
 - [ ] Spec section (`§5.x Shared ledger`), then the plan.
@@ -254,7 +304,7 @@ below) there is no shared key to distribute, which is the part that made «space
 
 ---
 
-## 0.6 — Public repository
+## 0.7 — Public repository
 
 What stands between this repository and its first public push. Audited on 2026-09-18. The repository has
 no remote yet, so the first push publishes all 316 commits at once.
@@ -312,7 +362,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.7 — Releases & distribution
+## 0.8 — Releases & distribution
 
 Self-hosting currently means building the server from source, and installing the app means owning a Mac
 or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found
@@ -358,14 +408,14 @@ Kept so they are not re-derived.
 - **End-to-end encryption.** The server was nearly a blob store — `packages/core/src/sync/protocol.ts:27`
   carries `data: z.unknown()`, D11 stores it opaquely — and only `apps/web/src/server/sync/push.ts:16`
   (schema validation), attachment bytes in clear and a visible `deletedAt` stood in the way. Dropped on
-  2026-09-22 because 0.2, 0.3 and 0.4 all need the server to read rows: a server-rendered web app, an MCP
+  2026-09-22 because 0.3, 0.4 and 0.5 all need the server to read rows: a server-rendered web app, an MCP
   endpoint and a server-held AI key cannot work on ciphertext. Key handling was the other reason: the passkey
   PRF extension is out of reach through the browser ceremony, so it would have been a separate key the user
   must keep, with the recovery story that implies. The trust model stays the one `SECURITY.md` states: you
   trust your own server.
 - **Web app local-first in the browser (SQLite WASM).** The other half of §17.1's choice. Dropped with the
-  server-side decision of 0.2; it would duplicate the phone's engine and give the server nothing to project
-  for 0.3 and 0.4.
-- **Provider key on the phone (§17.2 as written).** Replaced by the server-side key in 0.4 on 2026-09-22.
+  server-side decision of 0.3; it would duplicate the phone's engine and give the server nothing to project
+  for 0.4 and 0.5.
+- **Provider key on the phone (§17.2 as written).** Replaced by the server-side key in 0.5 on 2026-09-22.
   Safer against a compromised server, but the self-hoster owns the server, and a key per device means typing
   it on every phone and again in the web app.

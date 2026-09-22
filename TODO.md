@@ -30,25 +30,6 @@ Asked for and shaped enough to plan, or one decision away from it.
   (show our own explanation first, call the system prompt only on "Attiva"); and that Profile needs a place to see
   and change each one afterwards (a denied one links to the system settings).
 
-### Goals: saving towards a target
-
-Example: putting money aside to buy a car — «Macchina, 12.000 € entro giugno 2027».
-
-Budgets cannot do this, and bending them would break them: a budget is a **ceiling on spending** — `spent` is the sum
-of counted expenses in a category (§5.8), the bar fills as money goes *out*, and rollover only carries the unspent part
-of a limit. A goal is the opposite shape: a **target to accumulate**, with a deadline, filled by money put aside.
-
-What exists today is half of it: a `savings` account (§3, excluded from Totale spendibile) plus transfers into it
-already model "money set aside"; what is missing is the target, the deadline and the progress.
-
-- [ ] Decide the model before planning:
-  - a goal **linked to an account** (progress = the account's balance, or its growth since the goal started), or
-    a goal with its **own contributions** (so one account can hold several goals);
-  - the "on track" rule: required per period = (target − saved) / periods left, against the pace of the budget bars;
-  - where it lives: a Home card like budgets, a row in Profile, or on the account detail;
-  - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
-- [ ] Spec section (`§5.x Goals`), then the plan.
-
 ### Five more languages: French, German, Swedish, Spanish, Portuguese
 
 - [ ] Asked for on 2026-09-21. Scope the catalogs and the formatting tables, then plan.
@@ -79,30 +60,6 @@ Suggested: one `pt` (European) for now.
 ## Ideas
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
-
-### A first run with no server (local-only), sign-in later
-
-Spec §1.1 goal 2 keeps «a server-less variant» as a later option, and the code still carries half of it:
-`apps/mobile/src/boot/decide.ts:31,74` sends a signed-in phone with no scheduler straight to onboarding,
-`src/sync/SyncProvider.tsx:51` reads a null scheduler as «local-only», and `src/sync/scheduler.ts:50` and
-`src/sync/syncContext.ts:6` document the same state. None of it is reachable: `decide.ts:70` routes every
-signed-out session to welcome, and welcome offers only sign-in (phase 08).
-
-Why it matters for an open-source app: the README's quick start asks for an HTTPS domain, a running server, an
-invite code and a self-built app **before the first transaction**. For something described as local-first and
-«own your data», that is the highest bar in the category, and the first five minutes decide whether anybody comes
-back. The offline part already works; what is missing is the door.
-
-This reopens a decision taken at 08 (sign-in required), so it is a product call, recorded here rather than argued:
-
-- Welcome gains «Start on this phone»; sign-in stays on the same screen and in Profile for later.
-- Phase 10b's ownership question gets a third case: local rows exist, no `kv.accountId`, and somebody signs in —
-  adopt the rows into the account (push them) or discard them. Today's `ownershipVerdict` only knows a device with
-  a recorded account and a device with none.
-- §1.2's last bullet («a first run with no network … says so instead of appearing broken») and §6.29 step 0 change
-  wording; §1.1 goal 2 loses its «later».
-- A build with an empty `SALDO_SERVER_URL` becomes a legitimate local-only build instead of one that «can only
-  say so» (§15).
 
 ### A mascotte in 3D — scope undecided
 
