@@ -100,7 +100,7 @@ exists in §4, the SQLite table and the sync payload, so **no migration** and `S
 
 **Files:** `packages/core/src/accounts.ts`, `packages/core/src/accounts.test.ts`
 
-- [ ] **Step 1: failing tests** (fixtures: `acc-card` closes on the 20th, is charged on the 5th, `TODAY` 2026-04-18,
+- [x] **Step 1: failing tests** (fixtures: `acc-card` closes on the 20th, is charged on the 5th, `TODAY` 2026-04-18,
   so the last close is 2026-03-20 and the statement is charged 2026-04-05).
 
 ```ts
@@ -183,8 +183,8 @@ describe('creditStatementDue', () => {
 });
 ```
 
-- [ ] **Step 2:** `rtk proxy pnpm --filter @saldo/core test -- accounts` → FAIL, `creditStatementDue` not exported.
-- [ ] **Step 3: implement** in `accounts.ts`, after `nextCreditChargeDate`:
+- [x] **Step 2:** `rtk proxy pnpm --filter @saldo/core test -- accounts` → FAIL, `creditStatementDue` not exported.
+- [x] **Step 3: implement** in `accounts.ts`, after `nextCreditChargeDate`:
 
 ```ts
 /** A credit card's closed statement and what is left to pay of it (§5.3). */
@@ -224,14 +224,14 @@ export function creditStatementDue(
 }
 ```
 
-- [ ] **Step 4:** same command → PASS.
-- [ ] **Step 5:** commit `feat(core): creditStatementDue for a card's closed statement`.
+- [x] **Step 4:** same command → PASS.
+- [x] **Step 5:** commit `feat(core): creditStatementDue for a card's closed statement`.
 
 ### Task 2: settlement draft, candidates, reminders, overpay check in core
 
 **Files:** `packages/core/src/accounts.ts`, `packages/core/src/accounts.test.ts`
 
-- [ ] **Step 1: failing tests**
+- [x] **Step 1: failing tests**
 
 ```ts
 describe('paymentAccountCandidates', () => {
@@ -336,8 +336,8 @@ describe('transferOverpaysCard', () => {
 });
 ```
 
-- [ ] **Step 2:** run → FAIL.
-- [ ] **Step 3: implement** (after `creditStatementDue`, and `transferOverpaysCard` after `transferOverdrawsSource`):
+- [x] **Step 2:** run → FAIL.
+- [x] **Step 3: implement** (after `creditStatementDue`, and `transferOverpaysCard` after `transferOverdrawsSource`):
 
 ```ts
 export const CREDIT_REMINDER_HOUR = 9;
@@ -425,8 +425,8 @@ export function transferOverpaysCard(
 }
 ```
 
-- [ ] **Step 4:** run → PASS; `rtk proxy pnpm --filter @saldo/core typecheck`.
-- [ ] **Step 5:** commit `feat(core): card settlement draft, charge reminders, overpay check`.
+- [x] **Step 4:** run → PASS; `rtk proxy pnpm --filter @saldo/core typecheck`.
+- [x] **Step 5:** commit `feat(core): card settlement draft, charge reminders, overpay check`.
 
 ### Task 3: i18n keys
 

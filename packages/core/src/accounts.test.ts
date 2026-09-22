@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { ACCOUNTS, APRIL_CYCLE, aprilTransactions, TODAY, tx } from './__tests__/fixtures';
 import {
+  type AccountRef,
   accountBalances,
   creditCardDue,
+  creditChargeReminders,
+  creditSettlementDraft,
   creditStatementAccrued,
+  creditStatementDue,
   netWorth,
   nextCreditChargeDate,
+  paymentAccountCandidates,
   spendableTotal,
   transferBalancePreview,
   transferOverdrawsSource,
+  transferOverpaysCard,
 } from './accounts';
 
 describe('accountBalances', () => {
@@ -197,5 +203,206 @@ describe('transferOverdrawsSource', () => {
   it('has no opinion without a source account or a preview', () => {
     expect(transferOverdrawsSource(undefined, { now: 5000, after: -1000 })).toBe(false);
     expect(transferOverdrawsSource(checking, null)).toBe(false);
+  });
+});
+
+/** `acc-card` closes on the 20th and is charged on the 5th. */
+const CARD = ACCOUNTS[0] as AccountRef;
+const spend = (date: string, amount: number) => tx({ date, amount, accountId: 'acc-card' });
+const pay = (date: string, amount: number) =>
+  tx({
+    date,
+    amount,
+    kind: 'transfer',
+    accountId: 'acc-checking',
+    toAccountId: 'acc-card',
+    categoryId: null,
+  });
+const refund = (date: string, amount: number) =>
+  tx({ date, amount, kind: 'income', accountId: 'acc-card', categoryId: 'cat-salary' });
+
+describe('creditStatementDue', () => {
+  it('owes the balance at the last close day, charged on the next charge day', () => {
+    const txs = [spend('2026-03-10', 30000), spend('2026-03-20', 2000), spend('2026-04-01', 5000)];
+    expect(creditStatementDue(CARD, txs, TODAY)).toEqual({
+      closeDate: '2026-03-20',
+      chargeDate: '2026-04-05',
+      statement: 32000,
+      due: 32000,
+    });
+  });
+
+  it('counts a payment made before the close in the statement itself', () => {
+    const txs = [spend('2026-03-10', 30000), pay('2026-03-15', 30000), spend('2026-03-25', 5000)];
+    expect(creditStatementDue(CARD, txs, TODAY)?.due).toBe(0);
+  });
+
+  it('subtracts a partial payment made after the close', () => {
+    const txs = [spend('2026-03-10', 30000), pay('2026-04-02', 10000)];
+    expect(creditStatementDue(CARD, txs, TODAY)?.due).toBe(20000);
+  });
+
+  it('counts a payment already scheduled for the charge day', () => {
+    const txs = [spend('2026-03-10', 30000), pay('2026-04-05', 30000)];
+    expect(creditStatementDue(CARD, txs, '2026-03-25')?.due).toBe(0);
+  });
+
+  it('counts a payment made after the charge day, until the next close', () => {
+    const txs = [spend('2026-03-10', 30000), pay('2026-04-10', 30000)];
+    expect(creditStatementDue(CARD, txs, TODAY)?.due).toBe(0);
+  });
+
+  it('keeps a refund after the close for the next statement, unless the card owes less', () => {
+    const withSpending = [
+      spend('2026-03-10', 30000),
+      spend('2026-04-01', 20000),
+      refund('2026-04-02', 10000),
+    ];
+    expect(creditStatementDue(CARD, withSpending, TODAY)?.due).toBe(30000);
+    const refundOnly = [spend('2026-03-10', 30000), refund('2026-04-02', 10000)];
+    expect(creditStatementDue(CARD, refundOnly, TODAY)?.due).toBe(20000);
+  });
+
+  it('counts a refund before the close in the statement', () => {
+    const txs = [spend('2026-03-10', 30000), refund('2026-03-12', 10000)];
+    expect(creditStatementDue(CARD, txs, TODAY)?.statement).toBe(20000);
+  });
+
+  it('owes nothing when the card was in credit at the close', () => {
+    const txs = [spend('2026-03-10', 1000), pay('2026-03-12', 5000)];
+    expect(creditStatementDue(CARD, txs, TODAY)).toMatchObject({ statement: 0, due: 0 });
+  });
+
+  it('never owes more than the card owes today', () => {
+    const txs = [spend('2026-03-10', 30000), pay('2026-04-02', 50000)];
+    expect(creditStatementDue(CARD, txs, TODAY)?.due).toBe(0);
+  });
+
+  it('has no statement without a close day, and no charge date without a charge day', () => {
+    expect(creditStatementDue({ ...CARD, creditCloseDay: null }, [], TODAY)).toBeNull();
+    expect(creditStatementDue({ ...CARD, creditChargeDay: null }, [], TODAY)?.chargeDate).toBeNull();
+  });
+
+  it('is only about credit cards', () => {
+    expect(creditStatementDue({ ...CARD, type: 'checking' }, [], TODAY)).toBeNull();
+  });
+
+  it('closes today on the close day', () => {
+    expect(creditStatementDue(CARD, [spend('2026-04-20', 1000)], '2026-04-20')).toMatchObject({
+      closeDate: '2026-04-20',
+      chargeDate: '2026-05-05',
+      statement: 1000,
+    });
+  });
+});
+
+describe('paymentAccountCandidates', () => {
+  it('offers live accounts that are not cards and not the card itself', () => {
+    const list = [...ACCOUNTS, { ...CARD, id: 'acc-card-2' }];
+    expect(paymentAccountCandidates(list, 'acc-card').map((account) => account.id)).toEqual([
+      'acc-checking',
+      'acc-savings',
+    ]);
+  });
+});
+
+describe('creditSettlementDraft', () => {
+  const card = { ...CARD, creditPaymentAccountId: 'acc-checking' };
+
+  it('pays the statement from the payment account on the charge day', () => {
+    const txs = [spend('2026-04-10', 30000), spend('2026-04-22', 5000)];
+    expect(creditSettlementDraft(card, ACCOUNTS, txs, '2026-04-25')).toEqual({
+      fromAccountId: 'acc-checking',
+      toAccountId: 'acc-card',
+      statementAmount: 30000,
+      balanceAmount: 35000,
+      amount: 30000,
+      date: '2026-05-05',
+      statementDate: '2026-04-20',
+    });
+  });
+
+  it('pays an overdue statement today', () => {
+    const txs = [spend('2026-03-10', 30000)];
+    expect(creditSettlementDraft(card, ACCOUNTS, txs, TODAY)).toMatchObject({
+      amount: 30000,
+      date: TODAY,
+    });
+  });
+
+  it('offers the whole balance, today, once the statement is paid', () => {
+    const txs = [spend('2026-04-01', 5000)];
+    expect(creditSettlementDraft(card, ACCOUNTS, txs, TODAY)).toMatchObject({
+      statementAmount: 0,
+      balanceAmount: 5000,
+      amount: 5000,
+      date: TODAY,
+    });
+  });
+
+  it('falls back to the whole balance without a close day', () => {
+    const txs = [spend('2026-04-01', 5000)];
+    expect(
+      creditSettlementDraft({ ...card, creditCloseDay: null }, ACCOUNTS, txs, TODAY),
+    ).toMatchObject({ statementAmount: null, amount: 5000, date: TODAY, statementDate: TODAY });
+  });
+
+  it('leaves the source empty when the payment account is gone or archived', () => {
+    const archived = { ...card, creditPaymentAccountId: 'acc-old' };
+    expect(creditSettlementDraft(archived, ACCOUNTS, [], TODAY).fromAccountId).toBeNull();
+    const none = { ...card, creditPaymentAccountId: null };
+    expect(creditSettlementDraft(none, ACCOUNTS, [], TODAY).fromAccountId).toBeNull();
+  });
+});
+
+describe('creditChargeReminders', () => {
+  it('reminds on the charge day of a statement still due', () => {
+    expect(creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-04-25')).toEqual([
+      { accountId: 'acc-card', date: '2026-05-05', amount: 30000 },
+    ]);
+  });
+
+  it('includes the charge day itself', () => {
+    expect(creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-05-05')).toHaveLength(
+      1,
+    );
+  });
+
+  it('skips a paid statement and a charge day already past', () => {
+    const paid = [spend('2026-04-10', 30000), pay('2026-05-05', 30000)];
+    expect(creditChargeReminders(ACCOUNTS, paid, '2026-04-25')).toEqual([]);
+    expect(creditChargeReminders(ACCOUNTS, [spend('2026-03-10', 30000)], TODAY)).toEqual([]);
+  });
+
+  it('skips a card with no charge day, and an archived card', () => {
+    const txs = [spend('2026-04-10', 30000)];
+    const noCharge = ACCOUNTS.map((account) =>
+      account.id === 'acc-card' ? { ...account, creditChargeDay: null } : account,
+    );
+    expect(creditChargeReminders(noCharge, txs, '2026-04-25')).toEqual([]);
+    const archived = ACCOUNTS.map((account) =>
+      account.id === 'acc-card' ? { ...account, archivedAt: '2026-04-01T00:00:00.000Z' } : account,
+    );
+    expect(creditChargeReminders(archived, txs, '2026-04-25')).toEqual([]);
+  });
+});
+
+describe('transferOverpaysCard', () => {
+  const card = { type: 'credit_card' } as const;
+
+  it('flags a transfer that takes a card into credit', () => {
+    expect(transferOverpaysCard(card, { now: -5000, after: 1000 })).toBe(true);
+  });
+
+  it('lets a card be paid off exactly, or stay in debt', () => {
+    expect(transferOverpaysCard(card, { now: -5000, after: 0 })).toBe(false);
+    expect(transferOverpaysCard(card, { now: -5000, after: -1000 })).toBe(false);
+  });
+
+  it('is quiet when the transfer moves nothing, for other accounts, or without a preview', () => {
+    expect(transferOverpaysCard(card, { now: 1000, after: 1000 })).toBe(false);
+    expect(transferOverpaysCard({ type: 'checking' }, { now: -5000, after: 1000 })).toBe(false);
+    expect(transferOverpaysCard(undefined, { now: -5000, after: 1000 })).toBe(false);
+    expect(transferOverpaysCard(card, null)).toBe(false);
   });
 });
