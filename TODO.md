@@ -66,20 +66,10 @@ Suggested: one `pt` (European) for now.
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
 
-### A mascotte in 3D — scope undecided
+### Mascot states
 
-The idea is a 3D character, possibly a panda. The brand today is a raccoon: `docs/brand/mascotte/procione*.svg`
-plus thirteen generator pages that render nine outputs (iOS light, dark and tinted; Android background, foreground
-and monochrome; splash light and dark; favicon).
+The mark is Rocky, the 3D raccoon generated in github.com/saliougaye/mascots (branch `mascot/saldo`); the app icons,
+splash and favicon in `apps/mobile/assets/` are copies of its `out/saldo/icons/`.
 
-Two constraints to decide against, recorded so they are not re-derived:
-
-- **Android monochrome and iOS tinted flatten to a single-channel silhouette.** Shading does not survive them, so
-  those variants stay vector whatever the hero art becomes.
-- **The current pipeline is HTML/CSS/SVG → PNG.** A 3D render needs a renderer alongside it, and 3D sits against
-  an interface drawn in flat 1.5px strokes.
-
-The cheap shape is therefore: keep the vector set for icons and splashes, and use 3D only where shading survives —
-README, docs, a future landing page. Whether the character stays a raccoon or becomes a panda is a free choice
-either way. The empty states (§13) already have a mascot variant waiting: variant D of their design review, the
-raccoon peeking over the ghost stack, would replace `GhostStack` alone.
+The kit also carries Lottie state animations and illustrations (empty, loading, error, success, thinking, idle).
+The empty states (§13) are the obvious first use: variant D of their design review would replace `GhostStack`.

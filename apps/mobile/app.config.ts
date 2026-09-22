@@ -14,14 +14,19 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'automatic',
   assetBundlePatterns: ['**/*'],
   /**
-   * Saldo's mark is the raccoon mascot; `docs/design/logo/mascotte/README.md` is its character
-   * sheet. This fallback covers web and anything that ignores the per-platform icons below.
+   * Saldo's mark is Rocky, the raccoon mascot. Its asset kit is generated in
+   * github.com/saliougaye/mascots (branch `mascot/saldo`, `out/saldo/icons/`); the files here are
+   * copies of it, so change the mascot there and copy them back. This fallback covers web and
+   * anything that ignores the per-platform icons below.
    */
   icon: './assets/icon.png',
   ios: {
     bundleIdentifier: bundleId,
     supportsTablet: false,
-    // iOS 18 picks one of the three by appearance. All must be opaque: iOS rejects an alpha channel.
+    /**
+     * iOS 18 picks one of the three by appearance. Light must be opaque (iOS rejects its alpha
+     * channel); dark and tinted keep theirs, because iOS paints its own background behind them.
+     */
     icon: {
       light: './assets/icon.png',
       dark: './assets/ios-icon-dark.png',
@@ -37,7 +42,7 @@ const config: ExpoConfig = {
     /**
      * The launcher crops the foreground to its own shape, so the mascot is drawn smaller and
      * centred here than in `icon.png`, inside the 66/108 safe zone. `monochromeImage` carries
-     * alpha only: Android tints it for themed icons, and the mask reads as the hole in the face.
+     * alpha only: Android tints it for themed icons, and the mask band, eyes and tail rings are holes.
      */
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
@@ -64,18 +69,16 @@ const config: ExpoConfig = {
       'expo-splash-screen',
       {
         /**
-         * The splash images carry alpha and no background of their own, so the colours below are
-         * the only thing painted behind them: `palettes.light.page` and `palettes.dark.page` from
+         * The splash image carries alpha and no background of its own, so the colours below are
+         * the only thing painted behind it: `palettes.light.page` and `palettes.dark.page` from
          * `packages/ui/src/tokens.ts`, which is what the first screen shows underneath its cards.
-         * The dark mascot is the variant whose ears take the head's grey — the black ones vanish
-         * against `#050505`.
          */
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',
         backgroundColor: '#E9E9E7',
         dark: {
-          image: './assets/splash-icon-dark.png',
+          image: './assets/splash-icon.png',
           backgroundColor: '#050505',
         },
       },
