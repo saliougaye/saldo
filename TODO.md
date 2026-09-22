@@ -8,22 +8,18 @@ shared ledger, AI, web app, going public, releases — live in [`ROADMAP.md`](RO
 
 Something that works wrong today.
 
-### Account detail: a negative balance shows without its "−"
+### Account detail: a card in the red shows its debt without the "−"
 
-- [ ] Reported on 2026-09-22. Reproduce on the simulator, then fix test-first.
+- [ ] Reported on 2026-09-22; diagnosed the same day (`docs/superpowers/plans/2026-09-22-negative-balance-sign.md`).
+  One product decision away from the fix.
 
-The hero figure on the account detail (`apps/mobile/app/account/[id].tsx:161`) should read `−120,00 €` when the
-account is in the red. On paper the chain keeps the sign — `AnimatedAmount` → `AmountText` with
-`signDisplay = 'negative'` → `formatMoneyParts` sets `MINUS` for `minor < 0` — so the loss is somewhere the reading
-did not reach. Places to check first:
+The hero keeps the `−` for every account type (now pinned by tests, count-up across zero included) except a
+`credit_card`, where it reads "Da rimborsare" with the absolute value by design (spec §5.3). The demo's only negative
+account is its card: `−412,35 €` in the accounts list, "Da rimborsare 412,35 €" on the detail, and `−412,35 €` again in
+the faint caption at the bottom of the same screen (`[id].tsx:296`). The sparkline delta's inverted sign is fixed.
 
-- **Which account.** On a `credit_card` the hero swaps to "Da rimborsare" and prints `creditCardDue(balance)`, the
-  absolute value, by design (spec §5.3). If the report is about a card, the bug is the label, not the sign.
-- **`useCountUp`** (`apps/mobile/src/theme/motion.ts:76`) and `countUpValue` crossing zero or starting from 0.
-- **The layout.** `parts.sign` is printed inside the integer `Text`; check it is not clipped or hidden by the mask
-  overlay (`StyleSheet.absoluteFill`) when the figures are visible.
-
-Also check the sparkline delta and the caption at the bottom (`[id].tsx:296`) for the same account.
+Decide: keep "Da rimborsare" + absolute value (then make the caption agree, or drop the caption), or show the signed
+balance under "Saldo" like any other account (and amend §5.3).
 
 ## Features
 
