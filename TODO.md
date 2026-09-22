@@ -18,6 +18,11 @@ Asked for and shaped enough to plan, or one decision away from it.
 
 - [x] Rework the onboarding screens (§6.29) — done as "Fuoco" (`docs/superpowers/plans/2026-09-22-onboarding-fuoco.md`):
       the old step dissolves, the new one arrives block by block, progress is 2px segments.
+- [ ] Let the pay cycle start on the 29th–31st. §5.2 caps `cycleStartDay` at 28 "because February", but the core
+      already clamps (`effectiveStart = min(S, daysInMonth)`, the S=31 example is in the spec). Offer the full 1–31 in
+      the onboarding `cycle-day` grid and in Profile's day sheet, most likely as an "Ultimo giorno del mese" key
+      standing for S=31 (that is the real question of anyone paid at month end), plus a one-line explanation that
+      February counts the 28th. Touches §5.2, `DayOfMonthSheet`, `cycle-day.tsx` and one i18n key in both locales.
 - [ ] Add a step that asks for the system permissions up front, each one with a sentence saying what it is for and
       a "Più tardi" that skips it. Today every permission is asked at the moment it is first needed:
   - **notifications** — budget alerts (§5.8), requested by `src/features/budgets/BudgetAlertsGate.tsx`;
