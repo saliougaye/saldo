@@ -10,18 +10,18 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AmountInput } from '../../src/components/AmountInput';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
-import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { BackButton } from '../../src/components/ScreenHeader';
 import { db } from '../../src/db/client';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { seedFromImport } from '../../src/features/onboarding/importOnboarding';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { enterTabs } from '../../src/navigation/history';
 import { Text } from '../../src/theme/Text';
+import { useTheme } from '../../src/theme/ThemeProvider';
 
 /**
  * §6.29 import step 4: today's balance of every imported account. Each field starts at what the
@@ -29,6 +29,7 @@ import { Text } from '../../src/theme/Text';
  * becomes the opening balance that reaches it (§6.22).
  */
 export default function ImportBalancesStep() {
+  const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
   const locale = useAppLocale();
@@ -76,7 +77,7 @@ export default function ImportBalancesStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-import-start"
           label={t('common.start')}
           loading={saving}
@@ -85,35 +86,35 @@ export default function ImportBalancesStep() {
         />
       }
     >
-      <BackButton />
-      <ProgressBar ratio={1} />
-      <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 4, total: 4 })}
-      </Text>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('onboarding.importBalancesTitle')}
-      </Text>
-      <Text color="textMuted">{t('onboarding.importBalancesBody')}</Text>
+      <StepHeader
+        step={{ current: 4, total: 4 }}
+        title={t('onboarding.importBalancesTitle')}
+        body={t('onboarding.importBalancesBody')}
+      />
 
-      {[...imported.keys()].map((name) => (
-        <Card key={name}>
-          <Text size="footnote" color="textMuted">
-            {name}
-          </Text>
-          <View style={{ marginTop: 6 }}>
-            <AmountInput
-              buffer={buffers[name] ?? ''}
-              onChange={(buffer) => setBuffers((current) => ({ ...current, [name]: buffer }))}
-              currency={draft.currency}
-              locale={locale}
-              label={name}
-              doneLabel={t('common.done')}
-              allowNegative
-              negativeLabel={t('common.negative')}
-            />
-          </View>
-        </Card>
-      ))}
+      <StepChunk>
+        <View style={{ gap: theme.layout.cardGap }}>
+          {[...imported.keys()].map((name) => (
+            <Card key={name}>
+              <Text size="footnote" color="textMuted">
+                {name}
+              </Text>
+              <View style={{ marginTop: 6 }}>
+                <AmountInput
+                  buffer={buffers[name] ?? ''}
+                  onChange={(buffer) => setBuffers((current) => ({ ...current, [name]: buffer }))}
+                  currency={draft.currency}
+                  locale={locale}
+                  label={name}
+                  doneLabel={t('common.done')}
+                  allowNegative
+                  negativeLabel={t('common.negative')}
+                />
+              </View>
+            </Card>
+          ))}
+        </View>
+      </StepChunk>
     </Screen>
   );
 }

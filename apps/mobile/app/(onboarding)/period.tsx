@@ -1,26 +1,23 @@
 import { PERIOD_KINDS, type PeriodKind, periodContaining, todayLocal } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
-import { PrimaryButton } from '../../src/components/Button';
+import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
-import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { BackButton } from '../../src/components/ScreenHeader';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-const DAYS = Array.from({ length: 28 }, (_, index) => index + 1);
-
 /**
  * §6.29 step 1: how the user tracks spending. The month is the default because it needs no
- * decision; the pay cycle is the one kind that asks a second question, so its day grid appears
- * only when it is chosen — and it stops at 28 for the reason §5.2 gives.
+ * decision; the pay cycle is the one kind that asks a second question, and that question gets a
+ * screen of its own (`cycle-day`) under the same step number — one screen, one thing to decide.
  */
 export default function PeriodStep() {
   const theme = useTheme();
@@ -28,93 +25,77 @@ export default function PeriodStep() {
   const { t, i18n } = useTranslation();
   const { draft, setDraft } = useOnboarding();
   const [kind, setKind] = useState<PeriodKind>(draft.periodKind);
-  const [day, setDay] = useState(draft.cycleStartDay);
   const locale = i18n.language === 'it' ? 'it' : 'en';
-  const preview = periodContaining({ kind, startDay: day }, todayLocal());
+  // The cycle has no day yet; its timeline waits for the next screen.
+  const preview =
+    kind === 'cycle'
+      ? null
+      : periodContaining({ kind, startDay: draft.cycleStartDay }, todayLocal());
 
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-period-continue"
           label={t('common.continue')}
           onPress={() => {
-            setDraft({ periodKind: kind, cycleStartDay: day });
-            router.push(draft.path === 'import' ? '/import-currency' : '/account-details');
+            setDraft({ periodKind: kind });
+            if (kind === 'cycle') router.push('/cycle-day');
+            else router.push(draft.path === 'import' ? '/import-currency' : '/account-details');
           }}
         />
       }
     >
-      <BackButton />
-      <ProgressBar ratio={1 / 4} />
-      <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 1, total: 4 })}
-      </Text>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('onboarding.periodTitle')}
-      </Text>
-      <Text color="textMuted">{t('onboarding.periodBody')}</Text>
-
-      <Card padded={false}>
-        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
-          {PERIOD_KINDS.map((value) => (
-            <ListRow
-              key={value}
-              title={t(`period.kind_${value}`)}
-              subtitle={t(`period.kindBody_${value}`)}
-              trailing={
-                value === kind ? (
-                  <Icon name="check" size={18} color={theme.palette.accent} />
-                ) : undefined
-              }
-              onPress={() => setKind(value)}
-            />
-          ))}
-        </View>
-      </Card>
-
-      {kind === 'cycle' ? (
-        <Card>
-          <Text size="footnote" color="textMuted">
-            {t('period.cycleStartDay')}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {DAYS.map((value) => {
-              const selected = value === day;
-              return (
-                <Pressable
-                  key={value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={String(value)}
-                  // 40pt keys, 6 apart — the same grid, and the same two points, as the sheet.
-                  hitSlop={{ top: 2, bottom: 2 }}
-                  onPress={() => setDay(value)}
-                  style={{
-                    width: `${100 / 7}%`,
-                    height: 40,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: theme.radii.chipSmall,
-                    backgroundColor: selected ? theme.palette.accent : theme.palette.raised,
-                  }}
-                >
-                  <Text tabular color={selected ? 'onAccent' : 'text'}>
-                    {value}
-                  </Text>
-                </Pressable>
-              );
-            })}
+      <StepHeader
+        step={{ current: 1, total: 4 }}
+        title={t('onboarding.periodTitle')}
+        body={t('onboarding.periodBody')}
+      />
+      <StepChunk>
+        <Card padded={false}>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+            {PERIOD_KINDS.map((value, index) => (
+              <Fragment key={value}>
+                {/* A rule between choices, as the design draws them (1616–1717). */}
+                {index > 0 ? (
+                  <View style={{ height: 1, backgroundColor: theme.palette.border }} />
+                ) : null}
+                {/* 13pt above and below, the design's row height for a choice list. */}
+                <View style={{ paddingVertical: 5 }}>
+                  <ListRow
+                    title={t(`period.kind_${value}`)}
+                    subtitle={t(`period.kindBody_${value}`)}
+                    trailing={
+                      value === kind ? (
+                        <Icon name="check" size={18} color={theme.palette.accent} />
+                      ) : undefined
+                    }
+                    onPress={() => setKind(value)}
+                  />
+                </View>
+              </Fragment>
+            ))}
           </View>
+          {/* What the choice means today, as the card's last line: it belongs to the choice. */}
+          {preview === null ? null : (
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: theme.palette.border,
+                paddingHorizontal: theme.layout.cardPadding,
+                paddingVertical: 12,
+              }}
+            >
+              <Text color="textMuted" size="footnote">
+                {t('onboarding.periodTimeline', {
+                  start: formatDayMonth(preview.start, locale),
+                  end: formatDayMonth(preview.end, locale),
+                })}
+              </Text>
+            </View>
+          )}
         </Card>
-      ) : null}
-
-      <Text color="textMuted" size="footnote">
-        {t('onboarding.periodTimeline', {
-          start: formatDayMonth(preview.start, locale),
-          end: formatDayMonth(preview.end, locale),
-        })}
-      </Text>
+      </StepChunk>
     </Screen>
   );
 }

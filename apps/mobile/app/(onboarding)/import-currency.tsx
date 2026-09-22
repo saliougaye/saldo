@@ -2,12 +2,11 @@ import type { CurrencyCode } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { CurrencyChips } from '../../src/components/CurrencyChips';
-import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { BackButton } from '../../src/components/ScreenHeader';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
 
@@ -24,7 +23,7 @@ export default function ImportCurrencyStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-import-currency-continue"
           label={t('common.continue')}
           onPress={() => {
@@ -35,22 +34,19 @@ export default function ImportCurrencyStep() {
         />
       }
     >
-      <BackButton />
-      <ProgressBar ratio={2 / 4} />
-      <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 2, total: 4 })}
-      </Text>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('onboarding.importCurrencyTitle')}
-      </Text>
-      <Text color="textMuted">{t('onboarding.importCurrencyBody')}</Text>
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('onboarding.accountCurrency')}
-        </Text>
-        <CurrencyChips value={currency} onChange={setCurrency} />
-      </Card>
+      <StepHeader
+        step={{ current: 2, total: 4 }}
+        title={t('onboarding.importCurrencyTitle')}
+        body={t('onboarding.importCurrencyBody')}
+      />
+      <StepChunk>
+        <Card>
+          <Text size="footnote" color="textMuted">
+            {t('onboarding.accountCurrency')}
+          </Text>
+          <CurrencyChips value={currency} onChange={setCurrency} />
+        </Card>
+      </StepChunk>
     </Screen>
   );
 }

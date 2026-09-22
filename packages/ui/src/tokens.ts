@@ -234,6 +234,9 @@ export const layout = {
   keypadKeyHeight: 52,
   keypadSaveWidth: 80,
   progressHeight: 4,
+  /** The onboarding progress: one 2px segment per step (§6.29). */
+  stepSegmentHeight: 2,
+  stepSegmentGap: 6,
   paceTickOverhang: 3,
   minHitTarget: 44,
 } as const;
@@ -257,6 +260,17 @@ export const motion = {
   toggleMs: 180,
   snapBackMs: 240,
   progressMs: 300,
+  /**
+   * Onboarding steps (§6.29, "Fuoco"): the old step dissolves in place, the new one arrives chunk
+   * by chunk — segments, title, body, content — and the title word by word. Seen once, so the
+   * entrance may take its time; the exit never does.
+   */
+  stepEnterMs: 400,
+  stepExitMs: 150,
+  stepChunkStaggerMs: 100,
+  stepWordStaggerMs: 80,
+  /** How far a chunk rises while fading in. */
+  stepEnterOffset: 12,
   toastMs: 4000,
   undoToastMs: 5000,
 } as const;

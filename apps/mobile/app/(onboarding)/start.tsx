@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
-import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 /**
@@ -20,47 +20,51 @@ export default function StartStep() {
 
   return (
     <Screen>
-      <View style={{ paddingTop: 24, gap: 12 }}>
-        <Text size="display" weight="semibold" tracking="tighter">
-          {t('onboarding.startTitle')}
-        </Text>
-        <Text color="textMuted">{t('onboarding.startBody')}</Text>
-      </View>
-
-      <Card padded={false}>
-        <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
-          <ListRow
-            testID="onboarding-start-fresh"
-            title={t('onboarding.startFresh')}
-            subtitle={t('onboarding.startFreshHint')}
-            onPress={() => {
-              setDraft({ path: 'fresh', importPlan: null });
-              router.push('/period');
-            }}
-            chevron
-          />
-          <ListRow
-            testID="onboarding-start-import"
-            title={t('onboarding.startImport')}
-            subtitle={t('onboarding.startImportHint')}
-            subtitleLines={2}
-            onPress={() => {
-              setDraft({ path: 'import' });
-              router.push('/period');
-            }}
-            chevron
-          />
-          <ListRow
-            testID="onboarding-start-restore"
-            title={t('onboarding.startRestore')}
-            subtitle={t('onboarding.startRestoreHint')}
-            subtitleLines={2}
-            // The backup carries its own settings, so the boot router takes it to the tabs.
-            onPress={() => router.push('/profile/restore')}
-            chevron
-          />
-        </View>
-      </Card>
+      <StepHeader title={t('onboarding.startTitle')} body={t('onboarding.startBody')} />
+      <StepChunk>
+        <Card padded={false}>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-fresh"
+                title={t('onboarding.startFresh')}
+                subtitle={t('onboarding.startFreshHint')}
+                onPress={() => {
+                  setDraft({ path: 'fresh', importPlan: null });
+                  router.push('/period');
+                }}
+                chevron
+              />
+            </View>
+            <View style={{ height: 1, backgroundColor: theme.palette.border }} />
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-import"
+                title={t('onboarding.startImport')}
+                subtitle={t('onboarding.startImportHint')}
+                subtitleLines={2}
+                onPress={() => {
+                  setDraft({ path: 'import' });
+                  router.push('/period');
+                }}
+                chevron
+              />
+            </View>
+            <View style={{ height: 1, backgroundColor: theme.palette.border }} />
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-restore"
+                title={t('onboarding.startRestore')}
+                subtitle={t('onboarding.startRestoreHint')}
+                subtitleLines={2}
+                // The backup carries its own settings, so the boot router takes it to the tabs.
+                onPress={() => router.push('/profile/restore')}
+                chevron
+              />
+            </View>
+          </View>
+        </Card>
+      </StepChunk>
     </Screen>
   );
 }

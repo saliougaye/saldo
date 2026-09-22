@@ -100,3 +100,21 @@ export function useCountUp(value: number, enabled = true): number {
 
   return shown;
 }
+
+/** When the `chunk`-th block of an onboarding step — or its `word`-th word — starts arriving. */
+export function stepDelay(chunk: number, word?: number): number {
+  return chunk * motion.stepChunkStaggerMs + (word ?? 0) * motion.stepWordStaggerMs;
+}
+
+/**
+ * A block of an onboarding step arriving (§6.29): rises `stepEnterOffset` while fading in, later
+ * blocks later. Reduce Motion skips to the end state, and the fade transition of the Stack is the
+ * only exit, so nothing here has a leaving counterpart.
+ */
+export function stepEntering(chunk: number, word?: number) {
+  return FadeInUp.duration(motion.stepEnterMs)
+    .delay(stepDelay(chunk, word))
+    .easing(EASE)
+    .withInitialValues({ opacity: 0, transform: [{ translateY: motion.stepEnterOffset }] })
+    .reduceMotion(ReduceMotion.System);
+}

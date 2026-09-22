@@ -2,17 +2,18 @@ import type { CurrencyCode } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { AmountInput } from '../../src/components/AmountInput';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
-import { CurrencyChips } from '../../src/components/CurrencyChips';
-import { ProgressBar } from '../../src/components/ProgressBar';
+import { CurrencySheet } from '../../src/components/CurrencySheet';
 import { Screen } from '../../src/components/Screen';
-import { BackButton } from '../../src/components/ScreenHeader';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
+import { useTheme } from '../../src/theme/ThemeProvider';
 
 /** §6.29 step 3: current balance and currency, on their own so the amount gets the whole screen. */
 export default function BalanceStep() {
@@ -22,11 +23,13 @@ export default function BalanceStep() {
   const { draft, setDraft } = useOnboarding();
   const [buffer, setBuffer] = useState(draft.balanceBuffer);
   const [currency, setCurrency] = useState<CurrencyCode>(draft.currency);
+  const [pickingCurrency, setPickingCurrency] = useState(false);
+  const theme = useTheme();
 
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-balance-continue"
           label={t('common.continue')}
           onPress={() => {
@@ -36,42 +39,74 @@ export default function BalanceStep() {
         />
       }
     >
-      <BackButton />
-      <ProgressBar ratio={3 / 4} />
-      <Text size="caption" color="textFaint">
-        {t('onboarding.step', { current: 3, total: 4 })}
-      </Text>
-      <Text size="display" weight="semibold" tracking="tighter">
-        {t('onboarding.balanceTitle')}
-      </Text>
-      <Text color="textMuted">{t('onboarding.balanceBody')}</Text>
+      <StepHeader
+        step={{ current: 3, total: 4 }}
+        title={t('onboarding.balanceTitle')}
+        body={t('onboarding.balanceBody')}
+      />
 
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('onboarding.accountBalance')}
-        </Text>
-        <View style={{ marginTop: 6 }}>
-          <AmountInput
-            testID="onboarding-balance-amount"
-            buffer={buffer}
-            onChange={setBuffer}
-            currency={currency}
-            locale={locale}
-            autoFocus
-            label={t('onboarding.accountBalance')}
-            doneLabel={t('common.done')}
-            allowNegative
-            negativeLabel={t('common.negative')}
-          />
-        </View>
-      </Card>
-
-      <Card>
-        <Text size="footnote" color="textMuted">
-          {t('onboarding.accountCurrency')}
-        </Text>
-        <CurrencyChips value={currency} onChange={setCurrency} />
-      </Card>
+      <StepChunk>
+        <Card>
+          <Text size="footnote" color="textMuted">
+            {t('onboarding.accountBalance')}
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              gap: 12,
+              marginTop: 6,
+            }}
+          >
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <AmountInput
+                testID="onboarding-balance-amount"
+                buffer={buffer}
+                onChange={setBuffer}
+                currency={currency}
+                locale={locale}
+                autoFocus
+                label={t('onboarding.accountBalance')}
+                doneLabel={t('common.done')}
+                allowNegative
+                negativeLabel={t('common.negative')}
+              />
+            </View>
+            {/* The currency beside the amount, as in the design (1662–1665): one row asks one thing. */}
+            <Pressable
+              testID="onboarding-balance-currency"
+              accessibilityRole="button"
+              accessibilityLabel={`${t('onboarding.accountCurrency')}: ${currency}`}
+              onPress={() => setPickingCurrency(true)}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                height: 34,
+                paddingHorizontal: 10,
+                marginBottom: 4,
+                borderRadius: theme.radii.input,
+                borderWidth: 1,
+                borderColor: theme.palette.border,
+                backgroundColor: theme.palette.raised,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text size="footnote" color="textMuted">
+                {currency}
+              </Text>
+              <Icon name="chevD" size={14} color={theme.palette.textMuted} />
+            </Pressable>
+          </View>
+        </Card>
+      </StepChunk>
+      <CurrencySheet
+        visible={pickingCurrency}
+        onClose={() => setPickingCurrency(false)}
+        value={currency}
+        onSelect={setCurrency}
+      />
     </Screen>
   );
 }
