@@ -1,38 +1,24 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo } from 'react-native';
 import { useDatabase } from '../../db/DatabaseProvider';
-import { useMotion } from '../../theme/motion';
-import { CIPHER } from './cipher';
-import {
-  type HiddenAmounts,
-  HiddenAmountsContext,
-  type HiddenMotion,
-  HiddenMotionContext,
-  type HiddenPhase,
-} from './hiddenAmounts';
+import { type HiddenAmounts, HiddenAmountsContext } from './hiddenAmounts';
 
 /** Device-local (§7): a phone hidden in public must not blank the tablet at home. */
 export const AMOUNTS_HIDDEN_KEY = 'amountsHidden';
 
+/**
+ * One boolean over `kv.amountsHidden`. Deliberately nothing else: every consumer re-renders when
+ * the value changes, so the value must change exactly once per toggle. The motion is each
+ * `AmountText`'s own business (`useCipher`).
+ */
 export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
   const { kv } = useDatabase();
   const { t } = useTranslation();
-  const { reduced } = useMotion();
   const [hidden, setHiddenState] = useState(() => kv.get(AMOUNTS_HIDDEN_KEY) === 'true');
-  const [phase, setPhase] = useState<HiddenPhase>(hidden ? 'hidden' : 'visible');
-  const [tick, setTick] = useState(0);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  // The latest value, for `setHidden` to compare against without going through an updater: the
-  // write to `kv`, the announcement and the timers are side effects and must run exactly once.
+  // The latest value, so the write to `kv` and the announcement run exactly once per change.
   const current = useRef(hidden);
   current.current = hidden;
-
-  const clearTimers = useCallback(() => {
-    for (const timer of timers.current) clearTimeout(timer);
-    timers.current = [];
-  }, []);
-  useEffect(() => clearTimers, [clearTimers]);
 
   const setHidden = useCallback(
     (next: boolean) => {
@@ -42,31 +28,15 @@ export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
       AccessibilityInfo.announceForAccessibility(
         t(next ? 'common.amountsHidden' : 'common.amountsShown'),
       );
-      clearTimers();
       setHiddenState(next);
-      const settled: HiddenPhase = next ? 'hidden' : 'visible';
-      if (reduced) {
-        setPhase(settled);
-        return;
-      }
-      setPhase('scrambling');
-      for (let step = 1; step < CIPHER.steps; step++) {
-        timers.current.push(setTimeout(() => setTick((n) => n + 1), step * CIPHER.stepMs));
-      }
-      timers.current.push(setTimeout(() => setPhase(settled), CIPHER.steps * CIPHER.stepMs));
     },
-    [kv, t, reduced, clearTimers],
+    [kv, t],
   );
 
   const value = useMemo<HiddenAmounts>(
     () => ({ hidden, setHidden, toggle: () => setHidden(!hidden) }),
     [hidden, setHidden],
   );
-  const clock = useMemo<HiddenMotion>(() => ({ phase, tick }), [phase, tick]);
 
-  return (
-    <HiddenAmountsContext.Provider value={value}>
-      <HiddenMotionContext.Provider value={clock}>{children}</HiddenMotionContext.Provider>
-    </HiddenAmountsContext.Provider>
-  );
+  return <HiddenAmountsContext.Provider value={value}>{children}</HiddenAmountsContext.Provider>;
 }

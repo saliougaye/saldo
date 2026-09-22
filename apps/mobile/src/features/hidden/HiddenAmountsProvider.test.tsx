@@ -1,13 +1,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
-import { useContext } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { Pressable, Text as RNText } from 'react-native';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { CIPHER } from './cipher';
 import { AMOUNTS_HIDDEN_KEY, HiddenAmountsProvider } from './HiddenAmountsProvider';
-import { HiddenMotionContext, useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
+import { useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
 
 const mockStore = new Map<string, string>();
 
@@ -29,26 +27,24 @@ beforeAll(async () => {
 
 beforeEach(() => {
   mockStore.clear();
-  jest.useFakeTimers();
 });
 
-afterEach(() => {
-  jest.useRealTimers();
-});
+let renders = 0;
 
 function Probe() {
   const { hidden, toggle } = useHiddenAmounts();
-  const { phase } = useContext(HiddenMotionContext);
   const { format } = useHiddenMoney();
+  renders += 1;
   return (
     <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel="toggle">
-      <RNText testID="state">{`${hidden ? 'hidden' : 'visible'}/${phase}`}</RNText>
+      <RNText testID="state">{hidden ? 'hidden' : 'visible'}</RNText>
       <RNText testID="money">{format(128_450, 'EUR', 'it')}</RNText>
     </Pressable>
   );
 }
 
 function renderProbe() {
+  renders = 0;
   return render(
     <ThemeProvider preference="dark">
       <I18nextProvider i18n={i18n}>
@@ -64,40 +60,32 @@ describe('HiddenAmountsProvider', () => {
   it('starts from the device flag', async () => {
     mockStore.set(AMOUNTS_HIDDEN_KEY, 'true');
     await renderProbe();
-    expect(screen.getByTestId('state')).toHaveTextContent('hidden/hidden');
+    expect(screen.getByTestId('state')).toHaveTextContent('hidden');
     expect(screen.getByTestId('money')).toHaveTextContent('•••• €');
   });
 
   it('is visible on a fresh install', async () => {
     await renderProbe();
-    expect(screen.getByTestId('state')).toHaveTextContent('visible/visible');
+    expect(screen.getByTestId('state')).toHaveTextContent('visible');
     expect(screen.getByTestId('money')).toHaveTextContent('1.284,50 €');
   });
 
-  it('scrambles for the length of the cipher, then settles and persists', async () => {
+  it('toggles in exactly one render per direction and persists', async () => {
     await renderProbe();
+    const before = renders;
     await act(async () => {
       fireEvent.press(screen.getByLabelText('toggle'));
     });
     expect(mockStore.get(AMOUNTS_HIDDEN_KEY)).toBe('true');
-    expect(screen.getByTestId('state')).toHaveTextContent('hidden/scrambling');
-    const noisy = screen.getByTestId('money').props.children as string;
-    expect(noisy).toMatch(/^\d\.\d{3},\d{2} €$/);
-
-    await act(async () => {
-      jest.advanceTimersByTime(CIPHER.steps * CIPHER.stepMs);
-    });
-    expect(screen.getByTestId('state')).toHaveTextContent('hidden/hidden');
     expect(screen.getByTestId('money')).toHaveTextContent('•••• €');
+    // A screen calls these hooks at its top: every extra render here is a render of the whole screen.
+    expect(renders - before).toBe(1);
 
     await act(async () => {
       fireEvent.press(screen.getByLabelText('toggle'));
     });
     expect(mockStore.get(AMOUNTS_HIDDEN_KEY)).toBe('false');
-    expect(screen.getByTestId('state')).toHaveTextContent('visible/scrambling');
-    await act(async () => {
-      jest.advanceTimersByTime(CIPHER.steps * CIPHER.stepMs);
-    });
     expect(screen.getByTestId('money')).toHaveTextContent('1.284,50 €');
+    expect(renders - before).toBe(2);
   });
 });

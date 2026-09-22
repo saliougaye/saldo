@@ -40,6 +40,10 @@ touches `@saldo/core`: this is presentation.
   of the feature altogether (no eye in its header, totals plain). Statistics and Accounts unchanged. The motion
   clock (`phase`, `tick`) moves to its own context (`HiddenMotionContext`) so the four scramble steps re-render
   only the sentences that follow them, not every `AmountText`, chart or `plain` row.
+- **Fourth check: still laggy.** `useHiddenMoney` is called at the top of Home, Statistics, Accounts and the
+  detail screens, so following the scramble meant five full renders of a screen per toggle. The clock is gone:
+  the provider holds one boolean, sentences swap to the dots at once, and only each `AmountText` animates. The
+  provider test asserts one render per toggle.
 
 **Decisions where the TODO left options open** (recorded per AGENTS.md):
 
