@@ -35,6 +35,27 @@ Asked for and shaped enough to plan, or one decision away from it.
   (show our own explanation first, call the system prompt only on "Attiva"); and that Profile needs a place to see
   and change each one afterwards (a denied one links to the system settings).
 
+### Loading states where they are missing
+
+- [ ] Asked for on 2026-09-22. Give every screen that reads the database a loading state, with the primitives that
+      already exist.
+
+The pieces are there: `SkeletonList`/`SkeletonRow` (`src/components/Skeleton.tsx`), `LoadingScreen`, `useDelayed`
+(no flash on a fast load) and the `loaded` flag of the `use*Query` hooks (`src/db/hooks.ts`). Only three screens use
+them: Transazioni (`SkeletonList`), Statistiche (`StatsSkeleton` behind `useDelayed`) and `account/edit/[id]`
+(`LoadingScreen`). The rest, as of today:
+
+- **Blank while loading** (`!loaded ? null`) — `budgets.tsx`, `recurrences.tsx`, `settings/categories.tsx`, and the
+  detail screens `account/[id]`, `category/[id]`, `transaction/[id]` (`if (!loaded) return null`). Also check
+  `recurrence/[id]` and `tag/[id]`, `settings/tags.tsx`.
+- **No `loaded` check at all** — Home (`(tabs)/index.tsx`), Conti (`(tabs)/accounts.tsx`), `budget/[id]`,
+  `category/edit/[id]`, `transaction/edit/[id]`, `settings/archived-accounts.tsx`, `settings/archived-categories.tsx`.
+  These may show the empty state (or an empty form) for a frame before the data lands — verify on the simulator.
+
+Lists get a skeleton shaped like their rows; detail and edit screens get `LoadingScreen`; everything goes through
+`useDelayed`. Never the empty state before `loaded`. Home and Conti may want their own skeletons (hero balance,
+account cards) like `StatsSkeleton`.
+
 ### Five more languages: French, German, Swedish, Spanish, Portuguese
 
 - [ ] Asked for on 2026-09-21. Scope the catalogs and the formatting tables, then plan.
