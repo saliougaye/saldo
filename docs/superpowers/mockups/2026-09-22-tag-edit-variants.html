@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saldo — Modifica tag · 4 varianti</title>
+<style>
+  /* ---------- Saldo tokens (packages/ui/src/tokens.ts) ---------- */
+  :root, [data-theme="dark"] {
+    --page:#050505; --bg:#0A0A0A; --surface:#121212; --raised:#1A1A1A;
+    --border:rgba(255,255,255,0.07); --text:#EDEDED; --text-muted:#8C8C8C; --text-faint:#5C5C5C;
+    --accent:#C7C7C7; --positive:#5FBF7F; --on-accent:#0A0A0A; --bar-grey:#3A3A3A; --track:#1E1E1E;
+  }
+  [data-theme="light"] {
+    --page:#E9E9E7; --bg:#FFFFFF; --surface:#FAFAF9; --raised:#F1F1EF;
+    --border:rgba(0,0,0,0.08); --text:#171717; --text-muted:#6E6E6E; --text-faint:#9A9A9A;
+    --accent:#4A4A46; --positive:#2E8A50; --on-accent:#FFFFFF; --bar-grey:#C9C9C6; --track:#EDEDEB;
+  }
+  :root {
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --r-card:14px; --r-input:10px; --r-chip:9px; --r-icon:8px;
+    --pad:16px; --gap:10px;
+  }
+  * { box-sizing:border-box; margin:0; }
+  :root { --border-strong:rgba(255,255,255,0.14); }
+  [data-theme="light"] { --border-strong:rgba(0,0,0,0.14); }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; gap:18px;
+    padding:28px 16px 110px; background:#2a2a2a;
+    font-family: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; text-align:inherit; }
+  .caption { font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:rgb(255 255 255 / .72); max-width:420px; text-align:center; text-wrap:pretty; }
+  .caption b { color:#fff; font-weight:600; }
+
+  .phone { width:390px; height:844px; border-radius:54px; overflow:hidden; position:relative; background:var(--bg); color:var(--text);
+    box-shadow:0 0 0 10px #000, 0 0 0 11px #333, 0 30px 80px rgb(0 0 0 / .5); display:flex; flex-direction:column; }
+  .status { height:54px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:14px 32px 0 40px; font-size:16px; font-weight:600; }
+  .island { position:absolute; top:11px; left:50%; translate:-50% 0; width:124px; height:36px; border-radius:20px; background:#000; z-index:30; }
+  .scroll { flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; padding-bottom:60px; }
+  .scroll::-webkit-scrollbar { display:none; }
+
+  .hdr { display:flex; align-items:center; gap:10px; padding:8px 16px 14px; }
+  .circ { width:36px; height:36px; border-radius:18px; background:var(--raised); display:grid; place-items:center; color:var(--text); flex:0 0 auto; transition:scale 120ms var(--ease); }
+  .circ:active, .pill:active, .btn:active, .chiprow:active, .li.tap:active { scale:.96; }
+  .circ svg { width:16px; height:16px; }
+  .hdr .title { flex:1; min-width:0; font-size:20px; font-weight:600; letter-spacing:-0.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .content { padding:0 16px; display:flex; flex-direction:column; gap:var(--gap); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:var(--pad); }
+  .card.flush { padding:0; }
+  .muted { color:var(--text-muted); } .faint { color:var(--text-faint); }
+  .foot { font-size:13px; } .cap { font-size:11px; }
+  .hero { font-size:44px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:52px; }
+  .dec { opacity:.5; }
+  .split { height:6px; border-radius:3px; background:#A77BA8; }
+  .list { padding:4px var(--pad); }
+  .li { display:flex; align-items:center; gap:12px; min-height:44px; padding:8px 0; }
+  .li + .li.div { border-top:1px solid var(--border); }
+  .ib { width:32px; height:32px; border-radius:var(--r-icon); display:grid; place-items:center; flex:0 0 auto; }
+  .ib svg { width:16px; height:16px; }
+  .li .txt { flex:1; min-width:0; }
+  .li .ttl { font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .li .sub { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .li .chev { color:var(--text-faint); display:flex; }
+  .li .chev svg { width:14px; height:14px; }
+  .amt { font-size:15px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .section { font-size:13px; color:var(--text-muted); margin:10px 4px 0; }
+
+  .field { height:44px; width:100%; padding:0 12px; border-radius:var(--r-input); background:var(--raised); border:1px solid var(--border); color:var(--text); font:inherit; font-size:15px; }
+  .field:focus { outline:none; border-color:var(--border-strong); }
+  .label { font-size:13px; color:var(--text-muted); margin-bottom:6px; }
+  .btn { height:48px; border-radius:12px; font-size:15px; font-weight:500; display:grid; place-items:center; transition:scale 120ms var(--ease), opacity 120ms; }
+  .btn.primary { background:var(--accent); color:var(--on-accent); }
+  .btn.secondary { border:1px solid var(--border-strong); }
+  .btn[disabled] { opacity:.4; pointer-events:none; }
+  .row2 { display:flex; gap:8px; } .row2 > * { flex:1; }
+  .pills { display:flex; gap:8px; }
+  .pill { flex:1; height:56px; border-radius:12px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:12px; color:var(--text-muted); transition:scale 120ms var(--ease); }
+  .pill svg { width:18px; height:18px; color:var(--text); }
+  .chiprow { width:100%; display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:var(--r-input); background:var(--raised); border:1px solid var(--border); }
+  .chiprow .txt { flex:1; min-width:0; }
+  .radio { width:20px; height:20px; border-radius:10px; border:1.5px solid var(--border-strong); flex:0 0 auto; display:grid; place-items:center; }
+  .radio.on { border-color:var(--text); }
+  .radio.on::after { content:''; width:10px; height:10px; border-radius:5px; background:var(--text); }
+
+  /* Sheet + dialog */
+  .scrim { position:absolute; inset:0; background:rgb(0 0 0 / .45); z-index:20; opacity:0; pointer-events:none; transition:opacity 200ms var(--ease); }
+  .scrim.on { opacity:1; pointer-events:auto; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; z-index:21; background:var(--surface); border-top:1px solid var(--border-strong); border-radius:14px 14px 0 0;
+    box-shadow:0 -16px 48px rgb(0 0 0 / .5); padding:8px 16px 34px; translate:0 105%; transition:translate 280ms var(--ease); }
+  .sheet.on { translate:0 0; }
+  .grab { width:36px; height:4px; border-radius:2px; background:var(--border-strong); margin:0 auto 14px; }
+  .sheet h3 { font-size:17px; font-weight:600; letter-spacing:-0.02em; }
+  .note { font-size:13px; color:var(--text-muted); text-wrap:pretty; line-height:1.4; }
+  .dialog { position:absolute; left:32px; right:32px; top:50%; z-index:23; translate:0 -50%; scale:.96; opacity:0; pointer-events:none; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-card); padding:18px 16px 14px; transition:opacity 150ms var(--ease), scale 150ms var(--ease); }
+  .dialog.on { opacity:1; scale:1; pointer-events:auto; }
+  .dialog .t { font-size:15px; font-weight:600; text-wrap:pretty; }
+  .toast { position:absolute; left:16px; right:16px; bottom:36px; z-index:25; background:var(--raised); border:1px solid var(--border-strong); border-radius:12px; padding:12px 14px; font-size:13px; opacity:0; translate:0 8px; transition:opacity 150ms var(--ease), translate 150ms var(--ease); pointer-events:none; }
+  .toast.on { opacity:1; translate:0 0; }
+  .menu { position:absolute; top:100px; right:16px; z-index:22; width:236px; background:var(--raised); border:1px solid var(--border-strong); border-radius:var(--r-card); box-shadow:0 16px 40px rgb(0 0 0 / .45); overflow:hidden; opacity:0; scale:.96; transform-origin:top right; pointer-events:none; transition:opacity 150ms var(--ease), scale 150ms var(--ease); }
+  .menu.on { opacity:1; scale:1; pointer-events:auto; }
+  .menu button { width:100%; display:flex; align-items:center; gap:12px; padding:13px 14px; font-size:15px; }
+  .menu button + button { border-top:1px solid var(--border); }
+  .menu svg { width:16px; height:16px; color:var(--text-muted); margin-inline-start:auto; }
+
+  .variant-picker { position:fixed; bottom:24px; left:50%; translate:-50% 0; z-index:2147483647; display:flex; gap:2px; padding:4px; border-radius:999px; background:rgb(20 20 20 / .9); box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1), 0 8px 24px rgb(0 0 0 / .25); font:13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; user-select:none; }
+  .variant-picker button { white-space:nowrap; padding:7px 12px; border-radius:999px; color:rgb(255 255 255 / .6); }
+  .variant-picker button:hover { color:rgb(255 255 255 / .85); }
+  .variant-picker button[aria-current="true"] { background:rgb(255 255 255 / .14); color:#fff; }
+  .variant-picker .sep { width:1px; margin:4px; background:rgb(255 255 255 / .15); }
+</style>
+</head>
+<body>
+<p class="caption" id="caption"></p>
+<div class="phone" id="phone" data-theme="dark">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+  <div class="scroll" id="scroll"></div>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="menu" id="menu"></div>
+  <div class="dialog" id="dialog"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<div class="variant-picker">
+  <button data-variant="E">A1 · Unisci in header</button>
+  <button data-variant="F">A2 · Unisci sotto il totale</button>
+  <span class="sep"></span>
+  <button data-variant="A">A</button><button data-variant="B">B</button><button data-variant="C">C</button><button data-variant="D">D</button>
+  <span class="sep"></span>
+  <button id="theme">Tema</button>
+</div>
+
+<script>
+const I = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  chevR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  chevD:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  merge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v5a5 5 0 0 0 5 5h7"/><path d="M15 11l3 3-3 3"/><path d="M6 20v-3"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  bag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>',
+};
+const OTHERS = ['Rimborsabile', 'Trasloco', 'Vacanza Grecia'];
+const TX = [['Decathlon','16 ago','42','90'],['Amazon — cuffie','9 set','39','90'],['Zara','19 set','64','95']];
+const CAPTIONS = {
+  E: '<b>A1 · Unisci in header</b> — matita → sheet “Modifica tag” gemello di “Nuovo tag” (nome, Salva, Annulla) + “Elimina tag” in fondo con conferma inline. L’icona <i>unisci</i> accanto alla matita apre un suo sheet: scegli il tag, leggi cosa succede, confermi con “Unisci”.',
+  F: '<b>A2 · Unisci sotto il totale</b> — stesso sheet di modifica dalla matita. L’unione è una riga “Unisci a un altro tag” sotto il totale, più scopribile di un’icona; apre lo stesso sheet di conferma.',
+  A: '<b>A · Sheet “Modifica tag”</b> — come il prototipo di design. La matita apre uno sheet: nome, “Unisci a” (selettore), Annulla/Salva; il bottone diventa “Unisci” se scegli un tag. Elimina in fondo con conferma inline. La schermata torna solo dati.',
+  B: '<b>B · Schermata dedicata</b> — come Modifica conto. La matita porta a una schermata: Nome + Salva, riga “Unisci a un altro tag” → elenco con conferma, “Elimina tag” in fondo con dialog. Coerente con la regola: azione con conferma = schermata.',
+  C: '<b>C · Menu ···</b> — azioni rare nascoste dietro un menu in header: Rinomina (mini-sheet col campo), Unisci a… (sheet con elenco + conferma), Elimina (dialog). Zero ingombro sulla schermata.',
+  D: '<b>D · Riga di azioni</b> — tre pulsanti compatti sotto il totale: Rinomina, Unisci, Elimina. Visibili senza occupare mezza schermata; ognuno apre il suo sheet/dialog.',
+};
+const $ = (id) => document.getElementById(id);
+const S = { v:'A', name:'Regalo', screen:'view', target:null, askDel:false };
+
+function header(trailing) {
+  return `<div class="hdr"><button class="circ" onclick="back()" aria-label="Indietro">${I.back}</button><div class="title">${S.name}</div>${trailing ?? ''}</div>`;
+}
+function body(extra = '') {
+  return `<div class="content">
+    ${extra}
+    <div><div class="foot muted">Totale speso</div>
+    <div class="hero">€147<span class="dec">,75</span></div>
+    <div class="foot faint" style="margin-top:2px">Tutte le date, fuori dal periodo selezionato</div>
+    <div class="muted" style="margin-top:8px;font-size:15px">3 transazioni · 16 ago – 19 set</div></div>
+    ${S.v === 'D' ? actionsRow() : ''}
+    ${S.v === 'F' ? `<div class="card flush"><div class="list"><button class="li tap" style="width:100%" onclick="openMerge()"><div class="ib" style="background:var(--raised);color:var(--text-muted)">${I.merge}</div><div class="txt"><div class="ttl">Unisci a un altro tag</div></div><span class="chev">${I.chevR}</span></button></div></div>` : ''}
+    <div class="card"><div class="split"></div>
+      <div class="li" style="margin-top:6px"><div class="ib" style="background:rgb(167 123 168 / .15);color:#A77BA8">${I.bag}</div><div class="txt"><div class="ttl">Shopping</div></div><div class="amt">€147<span class="dec">,75</span></div></div></div>
+    <div class="card flush"><div class="list">${TX.map(([t,d,i,c]) => `<div class="li"><div class="txt"><div class="ttl">${t}</div><div class="sub">${d}</div></div><div class="amt">−€${i}<span class="dec">,${c}</span></div></div>`).join('')}</div></div>
+  </div>`;
+}
+function actionsRow() {
+  return `<div class="pills">
+    <button class="pill" onclick="openRename()">${I.pencil}Rinomina</button>
+    <button class="pill" onclick="openMerge()">${I.merge}Unisci</button>
+    <button class="pill" onclick="openDelete()">${I.trash}Elimina</button></div>`;
+}
+function mergeList(onPick) {
+  return `<div class="card flush" style="background:var(--raised)"><div class="list">${OTHERS.map((o) =>
+    `<button class="li tap div" style="width:100%" onclick="${onPick}('${o}')"><div class="txt"><div class="ttl">${o}</div></div><div class="radio ${S.target === o ? 'on' : ''}"></div></button>`).join('')}</div></div>`;
+}
+function mergeNote() {
+  return S.target ? `<div class="note">Le 3 transazioni di «${S.name}» passeranno a «${S.target}», e «${S.name}» sparirà. Non si può annullare.</div>` : '';
+}
+
+/* ---------- render ---------- */
+function render() {
+  closeAll(true);
+  $('caption').innerHTML = CAPTIONS[S.v];
+  document.querySelectorAll('[data-variant]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.variant === S.v)));
+  const sc = $('scroll');
+  if (S.v === 'B' && S.screen === 'edit') { sc.innerHTML = editScreen(); return; }
+  if (S.v === 'B' && S.screen === 'pick') { sc.innerHTML = pickScreen(); return; }
+  const trailing = { A:`<button class="circ" onclick="openSheetA()" aria-label="Modifica">${I.pencil}</button>`,
+                     B:`<button class="circ" onclick="go('edit')" aria-label="Modifica">${I.pencil}</button>`,
+                     C:`<button class="circ" onclick="toggleMenu()" aria-label="Altro">${I.more}</button>`, D:'',
+                     E:`<button class="circ" onclick="openMerge()" aria-label="Unisci">${I.merge}</button><button class="circ" onclick="openEdit()" aria-label="Modifica">${I.pencil}</button>`,
+                     F:`<button class="circ" onclick="openEdit()" aria-label="Modifica">${I.pencil}</button>` }[S.v];
+  sc.innerHTML = header(trailing) + body();
+}
+
+/* A — sheet */
+function openSheetA() { S.target = null; S.askDel = false; drawSheetA(); show('sheet'); }
+function drawSheetA() {
+  const del = S.askDel
+    ? `<div style="display:flex;align-items:center;gap:12px"><div class="note" style="flex:1">Eliminare «${S.name}»? Le transazioni restano.</div>
+       <button class="foot muted" onclick="S.askDel=false;drawSheetA()">Annulla</button><button class="foot" style="font-weight:600" onclick="done('Tag eliminato')">Elimina</button></div>`
+    : `<button style="display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text-muted)" onclick="S.askDel=true;drawSheetA()"><span style="width:16px;display:flex">${I.trash}</span>Elimina tag</button>`;
+  $('sheet').innerHTML = `<div class="grab"></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><h3>Modifica tag</h3><span class="cap faint">3 transazioni</span></div>
+    <input class="field" style="margin-top:16px" value="${S.name}" ${S.target ? 'disabled style="margin-top:16px;opacity:.5"' : ''} id="nm">
+    <button class="chiprow" style="margin-top:10px" onclick="S.picking=!S.picking;drawSheetA()">
+      <div class="txt"><div class="cap faint">Unisci a</div><div style="font-size:15px;margin-top:3px">${S.target ?? 'Nessuno'}</div></div><span class="faint" style="display:flex;width:16px">${I.chevD}</span></button>
+    ${S.picking ? `<div style="margin-top:8px">${mergeList('pickA')}</div>` : ''}
+    ${S.target ? `<div style="margin-top:10px">${mergeNote()}</div>` : ''}
+    <div class="row2" style="margin-top:18px"><button class="btn secondary" onclick="closeAll()">Annulla</button>
+      <button class="btn primary" onclick="${S.target ? `done('Unito a «${S.target}»')` : 'saveName()'}">${S.target ? 'Unisci' : 'Salva'}</button></div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">${del}</div>`;
+}
+function pickA(o) { S.target = S.target === o ? null : o; S.picking = false; drawSheetA(); }
+
+/* A1/A2 — edit sheet mirrors “Nuovo tag” */
+function openEdit() { S.askDel = false; drawEdit(); show('sheet'); }
+function drawEdit() {
+  const del = S.askDel
+    ? `<div style="display:flex;align-items:center;gap:12px"><div class="note" style="flex:1">Eliminare «${S.name}»? Le transazioni restano.</div>
+       <button class="foot muted" style="padding:8px 4px" onclick="S.askDel=false;drawEdit()">Annulla</button><button class="foot" style="font-weight:600;padding:8px 4px" onclick="done('Tag eliminato')">Elimina</button></div>`
+    : `<button style="display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text-muted);min-height:44px" onclick="S.askDel=true;drawEdit()"><span style="width:16px;display:flex">${I.trash}</span>Elimina tag</button>`;
+  $('sheet').innerHTML = `<div class="grab"></div><h3>Modifica tag</h3>
+    <div class="label" style="margin-top:16px">Nome</div><input class="field" id="nm" value="${S.name}">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <button class="btn primary" onclick="saveName()">Salva</button>
+      <button class="btn secondary" onclick="closeAll()">Annulla</button></div>
+    <div style="margin-top:14px;padding-top:6px;border-top:1px solid var(--border)">${del}</div>`;
+}
+
+/* B — pushed screens */
+function editScreen() {
+  return `<div class="hdr"><button class="circ" onclick="go('view')" aria-label="Indietro">${I.back}</button><div class="title">Modifica tag</div>
+    <button class="foot" style="font-weight:600;padding:8px" onclick="saveName();go('view')">Salva</button></div>
+    <div class="content">
+      <div class="card"><div class="label">Nome</div><input class="field" id="nm" value="${S.name}"></div>
+      <div class="section">Unisci</div>
+      <div class="card flush"><div class="list"><button class="li tap" style="width:100%" onclick="go('pick')"><div class="txt"><div class="ttl">Unisci a un altro tag</div><div class="sub">Sposta le 3 transazioni e toglie «${S.name}»</div></div><span class="chev">${I.chevR}</span></button></div></div>
+      <div class="section">Elimina</div>
+      <div class="card flush"><div class="list"><button class="li tap" style="width:100%" onclick="openDelete()"><div class="txt"><div class="ttl">Elimina tag</div><div class="sub">Le transazioni restano, senza questo tag</div></div></button></div></div>
+    </div>`;
+}
+function pickScreen() {
+  return `<div class="hdr"><button class="circ" onclick="S.target=null;go('edit')" aria-label="Indietro">${I.back}</button><div class="title">Unisci a</div></div>
+    <div class="content">${mergeList('pickB')}${mergeNote()}
+    <button class="btn primary" ${S.target ? '' : 'disabled'} onclick="done('Unito a «${S.target}»')">Unisci</button></div>`;
+}
+function pickB(o) { S.target = o; $('scroll').innerHTML = pickScreen(); }
+
+/* C — menu */
+function toggleMenu() {
+  $('menu').innerHTML = `<button onclick="openRename()">Rinomina${I.pencil}</button><button onclick="openMerge()">Unisci a un altro tag${I.merge}</button><button onclick="openDelete()">Elimina tag${I.trash}</button>`;
+  $('menu').classList.contains('on') ? closeAll() : show('menu', false);
+}
+
+/* shared C/D sheets */
+function openRename() {
+  closeAll(true);
+  $('sheet').innerHTML = `<div class="grab"></div><h3>Rinomina tag</h3>
+    <input class="field" id="nm" style="margin-top:16px" value="${S.name}">
+    <div class="row2" style="margin-top:18px"><button class="btn secondary" onclick="closeAll()">Annulla</button><button class="btn primary" onclick="saveName()">Salva</button></div>`;
+  show('sheet');
+}
+function openMerge() {
+  closeAll(true); S.target = null; drawMerge(); show('sheet');
+}
+function drawMerge() {
+  $('sheet').innerHTML = `<div class="grab"></div><h3>Unisci «${S.name}» a…</h3>
+    <div style="margin-top:14px">${mergeList('pickM')}</div>
+    <div style="margin-top:10px;min-height:36px">${mergeNote()}</div>
+    <div class="row2" style="margin-top:14px"><button class="btn secondary" onclick="closeAll()">Annulla</button><button class="btn primary" ${S.target ? '' : 'disabled'} onclick="done('Unito a «${S.target}»')">Unisci</button></div>`;
+}
+function pickM(o) { S.target = o; drawMerge(); }
+function openDelete() {
+  closeAll(true);
+  $('dialog').innerHTML = `<div class="t">Eliminare «${S.name}»?</div><div class="note" style="margin-top:6px">Le 3 transazioni restano, senza questo tag.</div>
+    <div class="row2" style="margin-top:16px"><button class="btn secondary" style="height:44px" onclick="closeAll()">Annulla</button><button class="btn primary" style="height:44px" onclick="done('Tag eliminato')">Elimina</button></div>`;
+  show('dialog');
+}
+
+/* plumbing */
+function show(id, scrim = true) { if (scrim) $('scrim').classList.add('on'); else $('scrim').classList.add('on'); $(id).classList.add('on'); }
+function closeAll(silent) { ['scrim','sheet','menu','dialog'].forEach((i) => $(i).classList.remove('on')); S.picking = false; }
+function saveName() { const v = $('nm')?.value.trim(); if (v) S.name = v; closeAll(); if (S.v !== 'B') render(); toast('Tag rinominato'); }
+function done(msg) { closeAll(); toast(msg + ' — torni alla schermata precedente'); S.name = 'Regalo'; S.screen = 'view'; setTimeout(render, 300); }
+function toast(m) { $('toast').textContent = m; $('toast').classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => $('toast').classList.remove('on'), 2200); }
+function go(s) { S.screen = s; render(); }
+function back() { toast('Indietro'); }
+function select(v) { S.v = v; S.screen = 'view'; S.target = null; const u = new URL(location); u.searchParams.set('variant', v); history.replaceState(null, '', u); render(); }
+$('scrim').addEventListener('click', () => closeAll());
+document.querySelectorAll('[data-variant]').forEach((b) => b.addEventListener('click', () => select(b.dataset.variant)));
+$('theme').addEventListener('click', () => { $('phone').dataset.theme = $('phone').dataset.theme === 'dark' ? 'light' : 'dark'; });
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (/^[1-2]$/.test(e.key)) select('EF'[Number(e.key) - 1]);
+  if (e.key === 't') $('theme').click();
+  if (e.key === 'Escape') closeAll();
+});
+S.v = new URL(location).searchParams.get('variant') ?? 'E';
+select(S.v);
+</script>
+</body>
+</html>
