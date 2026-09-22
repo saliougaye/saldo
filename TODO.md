@@ -66,14 +66,10 @@ Suggested: one `pt` (European) for now.
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
 
-### Mascot variants and states — waiting on the mascot kit
+### Mascot states
 
-The mark is now Rocky, the 3D raccoon generated in github.com/saliougaye/mascots (branch `mascot/saldo`). App icon,
-Android adaptive icon, splash and favicon come from its `out/saldo/icons/`. The kit has no iOS dark or tinted icon
-and no Android monochrome (themed) icon yet, so the app ships without them: iOS shows the light icon in every
-appearance and Android has no themed icon. Add them to the kit, copy them into `apps/mobile/assets/` and restore
-`ios.icon.{dark,tinted}` and `android.adaptiveIcon.monochromeImage`. Monochrome and tinted flatten to one channel,
-so the face has to survive as holes (mask band, eyes, tail rings), not as shading.
+The mark is Rocky, the 3D raccoon generated in github.com/saliougaye/mascots (branch `mascot/saldo`); the app icons,
+splash and favicon in `apps/mobile/assets/` are copies of its `out/saldo/icons/`.
 
 The kit also carries Lottie state animations and illustrations (empty, loading, error, success, thinking, idle).
 The empty states (§13) are the obvious first use: variant D of their design review would replace `GhostStack`.

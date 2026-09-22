@@ -16,12 +16,22 @@ const config: ExpoConfig = {
   /**
    * Saldo's mark is Rocky, the raccoon mascot. Its asset kit is generated in
    * github.com/saliougaye/mascots (branch `mascot/saldo`, `out/saldo/icons/`); the files here are
-   * copies of it, so change the mascot there and copy them back. Opaque: iOS rejects an alpha channel.
+   * copies of it, so change the mascot there and copy them back. This fallback covers web and
+   * anything that ignores the per-platform icons below.
    */
   icon: './assets/icon.png',
   ios: {
     bundleIdentifier: bundleId,
     supportsTablet: false,
+    /**
+     * iOS 18 picks one of the three by appearance. Light must be opaque (iOS rejects its alpha
+     * channel); dark and tinted keep theirs, because iOS paints its own background behind them.
+     */
+    icon: {
+      light: './assets/icon.png',
+      dark: './assets/ios-icon-dark.png',
+      tinted: './assets/ios-icon-tinted.png',
+    },
     infoPlist: {
       NSFaceIDUsageDescription: 'Unlock Saldo with Face ID.',
     },
@@ -31,11 +41,13 @@ const config: ExpoConfig = {
     package: bundleId,
     /**
      * The launcher crops the foreground to its own shape, so the mascot is drawn smaller and
-     * centred here than in `icon.png`, inside the 66/108 safe zone.
+     * centred here than in `icon.png`, inside the 66/108 safe zone. `monochromeImage` carries
+     * alpha only: Android tints it for themed icons, and the mask band, eyes and tail rings are holes.
      */
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
+      monochromeImage: './assets/android-icon-monochrome.png',
     },
   },
   /**
