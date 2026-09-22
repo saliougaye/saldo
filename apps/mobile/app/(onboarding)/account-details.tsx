@@ -60,7 +60,7 @@ export default function AccountDetailsStep() {
             </View>
           </View>
         </Card>
-      </StepChunk>{' '}
+      </StepChunk>
     </Screen>
   );
 }

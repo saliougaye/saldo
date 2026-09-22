@@ -34,7 +34,7 @@ export default function ImportFileStep() {
             router.push('/import-balances');
           }}
         />
-      </StepChunk>{' '}
+      </StepChunk>
     </Screen>
   );
 }

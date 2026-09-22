@@ -46,7 +46,7 @@ export default function ImportCurrencyStep() {
           </Text>
           <CurrencyChips value={currency} onChange={setCurrency} />
         </Card>
-      </StepChunk>{' '}
+      </StepChunk>
     </Screen>
   );
 }

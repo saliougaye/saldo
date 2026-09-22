@@ -112,7 +112,7 @@ export default function PeriodStep() {
             end: formatDayMonth(preview.end, locale),
           })}
         </Text>
-      </StepChunk>{' '}
+      </StepChunk>
     </Screen>
   );
 }

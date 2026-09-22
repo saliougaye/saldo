@@ -60,7 +60,7 @@ export default function StartStep() {
             />
           </View>
         </Card>
-      </StepChunk>{' '}
+      </StepChunk>
     </Screen>
   );
 }
