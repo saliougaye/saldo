@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { BackButton } from '../../components/ScreenHeader';
 import { stepEntering } from '../../theme/motion';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -16,23 +15,22 @@ export interface StepHeaderProps {
   step?: { current: number; total: number };
   title: string;
   body: string;
-  /** Hides the back affordance where the screen is the first of its stack. */
-  back?: boolean;
 }
 
 /**
- * The top of every onboarding screen (§6.29): back, the 2px segments, the title one word at a
- * time, the body. Each block arrives after the previous one; the Stack's fade takes the old
- * screen away. Pair with {@link StepChunk} for the content underneath.
+ * The top of every onboarding screen (§6.29): the 2px segments right under the status bar, then
+ * the title one word at a time, then the body, each block arriving after the previous one. The
+ * Stack's fade takes the old screen away; the way back is the footer's "Indietro"
+ * ({@link StepFooter}), so there is no back button up here. Pair with {@link StepChunk} for the
+ * content underneath.
  */
-export function StepHeader({ step, title, body, back = true }: StepHeaderProps) {
+export function StepHeader({ step, title, body }: StepHeaderProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const words = title.split(' ');
   const size = theme.fontSize.display;
   return (
-    <View style={{ gap: 12 }}>
-      {back ? <BackButton /> : null}
+    <View style={{ paddingBottom: 16 }}>
       {step === undefined ? null : (
         <Animated.View entering={stepEntering(CHUNK.segments)}>
           <StepSegments
@@ -51,7 +49,8 @@ export function StepHeader({ step, title, body, back = true }: StepHeaderProps) 
           flexWrap: 'wrap',
           // A word's worth of space at this size: the row lays the words out, not the text.
           columnGap: Math.round(size * 0.24),
-          marginTop: step === undefined ? 12 : 4,
+          // The title sits low: the eye lands on it, not on the strip above.
+          marginTop: step === undefined ? 24 : 44,
         }}
       >
         {words.map((word, index) => (
@@ -68,7 +67,7 @@ export function StepHeader({ step, title, body, back = true }: StepHeaderProps) 
           </Animated.View>
         ))}
       </View>
-      <Animated.View entering={stepEntering(CHUNK.body)}>
+      <Animated.View entering={stepEntering(CHUNK.body)} style={{ marginTop: 24 }}>
         <Text color="textMuted">{body}</Text>
       </Animated.View>
     </View>

@@ -2,10 +2,10 @@ import type { CurrencyCode } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { CurrencyChips } from '../../src/components/CurrencyChips';
 import { Screen } from '../../src/components/Screen';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
@@ -23,7 +23,7 @@ export default function ImportCurrencyStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-import-currency-continue"
           label={t('common.continue')}
           onPress={() => {

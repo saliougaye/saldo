@@ -4,10 +4,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Icon } from '../../src/theme/Icon';
@@ -34,7 +34,7 @@ export default function PeriodStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-period-continue"
           label={t('common.continue')}
           onPress={() => {

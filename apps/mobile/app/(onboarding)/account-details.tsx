@@ -2,11 +2,11 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { TextField } from '../../src/components/TextField';
 import { AccountTypeGrid } from '../../src/features/accounts/AccountTypeGrid';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
@@ -22,7 +22,7 @@ export default function AccountDetailsStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-account-continue"
           label={t('common.continue')}
           onPress={() => {

@@ -10,12 +10,12 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AmountInput } from '../../src/components/AmountInput';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { db } from '../../src/db/client';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { seedFromImport } from '../../src/features/onboarding/importOnboarding';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -77,7 +77,7 @@ export default function ImportBalancesStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-import-start"
           label={t('common.start')}
           loading={saving}

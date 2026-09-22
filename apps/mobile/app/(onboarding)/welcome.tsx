@@ -19,11 +19,7 @@ export default function Welcome() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }} style={{ flex: 1 }}>
-        <StepHeader
-          back={false}
-          title={t('onboarding.welcomeTitle')}
-          body={t('onboarding.welcomeBody')}
-        />
+        <StepHeader title={t('onboarding.welcomeTitle')} body={t('onboarding.welcomeBody')} />
         <StepChunk>
           <Card>
             <ConnectForm

@@ -6,10 +6,6 @@ import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { StepChunk, StepHeader } from './StepHeader';
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: jest.fn(), canGoBack: () => true }),
-}));
-
 let i18n: I18nInstance;
 
 beforeAll(async () => {

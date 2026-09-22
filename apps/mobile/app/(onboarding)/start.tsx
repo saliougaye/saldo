@@ -20,11 +20,7 @@ export default function StartStep() {
 
   return (
     <Screen>
-      <StepHeader
-        back={false}
-        title={t('onboarding.startTitle')}
-        body={t('onboarding.startBody')}
-      />
+      <StepHeader title={t('onboarding.startTitle')} body={t('onboarding.startBody')} />
       <StepChunk>
         <Card padded={false}>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>

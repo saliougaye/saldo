@@ -3,12 +3,12 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
-import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { PICKABLE_SEED_CATEGORIES, seedFromOnboarding } from '../../src/db/seed';
 import { ACCOUNT_TYPE_ICONS } from '../../src/features/accounts/accountTypeIcon';
+import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { useOnboarding } from '../../src/features/onboarding/state';
 import { enterTabs } from '../../src/navigation/history';
@@ -61,7 +61,7 @@ export default function CategoriesStep() {
   return (
     <Screen
       footer={
-        <PrimaryButton
+        <StepFooter
           testID="onboarding-start"
           label={t('common.start')}
           loading={saving}
