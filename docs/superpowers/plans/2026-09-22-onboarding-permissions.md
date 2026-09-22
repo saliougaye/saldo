@@ -1679,7 +1679,7 @@ git commit -m "docs: §6.29 step 5, permissions; the TODO item leaves the list"
 
 ### Task 12: Verification
 
-- [ ] **Step 1: Gates**
+- [x] **Step 1: Gates**
 
 Run from the repository root, through `rtk proxy` so the output is not filtered:
 
