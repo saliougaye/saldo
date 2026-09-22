@@ -24,38 +24,44 @@ export default function StartStep() {
       <StepChunk>
         <Card padded={false}>
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
-            <ListRow
-              testID="onboarding-start-fresh"
-              title={t('onboarding.startFresh')}
-              subtitle={t('onboarding.startFreshHint')}
-              onPress={() => {
-                setDraft({ path: 'fresh', importPlan: null });
-                router.push('/period');
-              }}
-              chevron
-            />
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-fresh"
+                title={t('onboarding.startFresh')}
+                subtitle={t('onboarding.startFreshHint')}
+                onPress={() => {
+                  setDraft({ path: 'fresh', importPlan: null });
+                  router.push('/period');
+                }}
+                chevron
+              />
+            </View>
             <View style={{ height: 1, backgroundColor: theme.palette.border }} />
-            <ListRow
-              testID="onboarding-start-import"
-              title={t('onboarding.startImport')}
-              subtitle={t('onboarding.startImportHint')}
-              subtitleLines={2}
-              onPress={() => {
-                setDraft({ path: 'import' });
-                router.push('/period');
-              }}
-              chevron
-            />
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-import"
+                title={t('onboarding.startImport')}
+                subtitle={t('onboarding.startImportHint')}
+                subtitleLines={2}
+                onPress={() => {
+                  setDraft({ path: 'import' });
+                  router.push('/period');
+                }}
+                chevron
+              />
+            </View>
             <View style={{ height: 1, backgroundColor: theme.palette.border }} />
-            <ListRow
-              testID="onboarding-start-restore"
-              title={t('onboarding.startRestore')}
-              subtitle={t('onboarding.startRestoreHint')}
-              subtitleLines={2}
-              // The backup carries its own settings, so the boot router takes it to the tabs.
-              onPress={() => router.push('/profile/restore')}
-              chevron
-            />
+            <View style={{ paddingVertical: 5 }}>
+              <ListRow
+                testID="onboarding-start-restore"
+                title={t('onboarding.startRestore')}
+                subtitle={t('onboarding.startRestoreHint')}
+                subtitleLines={2}
+                // The backup carries its own settings, so the boot router takes it to the tabs.
+                onPress={() => router.push('/profile/restore')}
+                chevron
+              />
+            </View>
           </View>
         </Card>
       </StepChunk>

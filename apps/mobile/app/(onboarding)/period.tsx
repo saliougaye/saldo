@@ -58,16 +58,19 @@ export default function PeriodStep() {
                 {index > 0 ? (
                   <View style={{ height: 1, backgroundColor: theme.palette.border }} />
                 ) : null}
-                <ListRow
-                  title={t(`period.kind_${value}`)}
-                  subtitle={t(`period.kindBody_${value}`)}
-                  trailing={
-                    value === kind ? (
-                      <Icon name="check" size={18} color={theme.palette.accent} />
-                    ) : undefined
-                  }
-                  onPress={() => setKind(value)}
-                />
+                {/* 13pt above and below, the design's row height for a choice list. */}
+                <View style={{ paddingVertical: 5 }}>
+                  <ListRow
+                    title={t(`period.kind_${value}`)}
+                    subtitle={t(`period.kindBody_${value}`)}
+                    trailing={
+                      value === kind ? (
+                        <Icon name="check" size={18} color={theme.palette.accent} />
+                      ) : undefined
+                    }
+                    onPress={() => setKind(value)}
+                  />
+                </View>
               </Fragment>
             ))}
           </View>
