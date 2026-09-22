@@ -33,4 +33,4 @@ once: irreversible, rewriting every transaction the tag carries, one mis-hit awa
 - [x] `DeleteTagSheet` (+ tests); i18n `tags.deleteTitle`, `tags.deleteNote_{one,other}`, `tags.deleteNoteUnused` replace `tags.deleteConfirm`.
 - [x] `HeaderIconButton` in `ScreenHeader.tsx`; `app/tag/[id].tsx` wires both sheets.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` green.
-- [ ] Manual test on device (user).
+- [x] Manual test on device (user, 2026-09-22).
