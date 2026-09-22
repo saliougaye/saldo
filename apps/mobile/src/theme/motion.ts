@@ -9,6 +9,8 @@ import {
   LinearTransition,
   ReduceMotion,
   useReducedMotion,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
 import { countUpValue } from './countUp';
 
@@ -117,4 +119,36 @@ export function stepEntering(chunk: number, word?: number) {
     .easing(EASE)
     .withInitialValues({ opacity: 0, transform: [{ translateY: motion.stepEnterOffset }] })
     .reduceMotion(ReduceMotion.System);
+}
+
+const SWAP_EASE = Easing.bezier(...motion.swapEasing);
+
+/** A row of the permissions list growing or shrinking as it opens and closes. */
+export const expanding = LinearTransition.duration(motion.expandMs)
+  .easing(EASE)
+  .reduceMotion(ReduceMotion.System);
+
+/** The body of the row that just opened, once the row has started to make room for it. */
+export const revealing = FadeIn.duration(motion.fadeMs)
+  .delay(motion.revealDelayMs)
+  .easing(EASE)
+  .reduceMotion(ReduceMotion.System);
+
+/**
+ * A status taking the place of the controls that produced it (better-ui swap): opacity from 0 and
+ * scale from `fromScale`, never from nothing. A custom entering because Reanimated's `FadeIn`
+ * animates opacity only and `ZoomIn` starts at scale 0.
+ */
+export function swapIn(fromScale: number, delay = 0) {
+  return () => {
+    'worklet';
+    const config = { duration: motion.fadeMs, easing: SWAP_EASE, reduceMotion: ReduceMotion.System };
+    return {
+      initialValues: { opacity: 0, transform: [{ scale: fromScale }] },
+      animations: {
+        opacity: withDelay(delay, withTiming(1, config), ReduceMotion.System),
+        transform: [{ scale: withDelay(delay, withTiming(1, config), ReduceMotion.System) }],
+      },
+    };
+  };
 }
