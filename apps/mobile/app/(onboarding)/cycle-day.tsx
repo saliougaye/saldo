@@ -7,6 +7,7 @@ import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
@@ -25,10 +26,10 @@ const WEEKS = Array.from({ length: 4 }, (_, week) =>
 export default function CycleDayStep() {
   const theme = useTheme();
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { draft, setDraft } = useOnboarding();
   const [day, setDay] = useState(draft.cycleStartDay);
-  const locale = i18n.language === 'it' ? 'it' : 'en';
+  const locale = useAppLocale();
   const preview = periodContaining({ kind: 'cycle', startDay: day }, todayLocal());
 
   return (

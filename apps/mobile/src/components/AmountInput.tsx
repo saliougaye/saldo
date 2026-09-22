@@ -63,7 +63,7 @@ export function AmountInput({
   const accessoryId = 'saldo-amount-accessory';
   const { minorDigits } = getCurrency(currency);
   const parts = formatMoneyParts(amountBufferToMinor(buffer, minorDigits), currency, locale);
-  const separator = locale === 'it' ? ',' : '.';
+  const separator = parts.decimalSeparator;
   const negative = buffer.startsWith('-');
 
   return (

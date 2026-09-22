@@ -382,7 +382,7 @@ Rules for every catalog (the content is the step; `Messages` makes `tsc` reject 
 **Files:** `apps/mobile/src/i18n/index.ts`, `useAppLocale.ts`, `i18n.test.ts`, `app/(onboarding)/period.tsx`,
 `app/(onboarding)/cycle-day.tsx`, `src/components/AmountInput.tsx`, `app/profile/language.tsx`, `app/profile.tsx`
 
-- [ ] **Step 1: Failing tests** in `apps/mobile/src/i18n/i18n.test.ts`:
+- [x] **Step 1: Failing tests** in `apps/mobile/src/i18n/i18n.test.ts`:
 
 ```ts
 it('follows a regional device language to its base catalog', async () => {
@@ -402,14 +402,14 @@ it('never falls back to English for a round million', async () => {
 });
 ```
 
-- [ ] **Step 2: Implement.** `createI18n` passes `lng: i18nextLanguage(language)`; `useAppLocale` returns
+- [x] **Step 2: Implement.** `createI18n` passes `lng: i18nextLanguage(language)`; `useAppLocale` returns
   `matchLocale(i18n.language) ?? 'en'`; the two onboarding screens call `useAppLocale()`; `AmountInput` uses
   `parts.decimalSeparator`; the Language screen maps
   `['system', 'it', 'en', 'de', 'es', 'fr', 'pt', 'sv']` to `t('profile.system')` or `LANGUAGE_NAMES[value]`, and the
   Profile row does the same. Delete `profile.italian` / `profile.english` from every catalog.
-- [ ] **Step 3:** `rtk proxy pnpm --filter @saldo/mobile test` → green (the keys test proves nothing asks for the
+- [x] **Step 3:** `rtk proxy pnpm --filter @saldo/mobile test` → green (the keys test proves nothing asks for the
   deleted keys).
-- [ ] **Step 4:** commit `feat(mobile): offer the five new languages`.
+- [x] **Step 4:** commit `feat(mobile): offer the five new languages`.
 
 ### Task 6: iOS permission prompts, spec, TODO
 

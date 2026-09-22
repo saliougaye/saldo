@@ -1,4 +1,11 @@
-import { type AppLocale, type LanguagePreference, resolveLocale, resources } from '@saldo/i18n';
+import {
+  type AppLocale,
+  i18nextLanguage,
+  type LanguagePreference,
+  resolveLocale,
+  resources,
+  SUPPORTED_LOCALES,
+} from '@saldo/i18n';
 import i18next, { type i18n as I18nInstance } from 'i18next';
 import { NativeModules, Platform } from 'react-native';
 
@@ -27,8 +34,12 @@ export async function createI18n(
   const language: AppLocale = resolveLocale(preference, languages);
   const instance = i18next.createInstance();
   await instance.init({
-    resources,
-    lng: language,
+    // Keyed by the code i18next runs under (`pt-PT`, not `pt`): it picks the plural suffix per
+    // resource language, so the catalog has to sit under the code whose plural rules it follows.
+    resources: Object.fromEntries(
+      SUPPORTED_LOCALES.map((locale) => [i18nextLanguage(locale), resources[locale]]),
+    ),
+    lng: i18nextLanguage(language),
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
     returnNull: false,

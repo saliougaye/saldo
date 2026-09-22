@@ -8,6 +8,7 @@ import { Card } from '../../src/components/Card';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
+import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Icon } from '../../src/theme/Icon';
@@ -22,10 +23,10 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 export default function PeriodStep() {
   const theme = useTheme();
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { draft, setDraft } = useOnboarding();
   const [kind, setKind] = useState<PeriodKind>(draft.periodKind);
-  const locale = i18n.language === 'it' ? 'it' : 'en';
+  const locale = useAppLocale();
   // The cycle has no day yet; its timeline waits for the next screen.
   const preview =
     kind === 'cycle'
