@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { HiddenAmountsProvider } from '../features/hidden/HiddenAmountsProvider';
 import { createI18n } from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
-import { AmountText } from './AmountText';
+import { AmountText, AnimatedAmount } from './AmountText';
 
 let mockHidden = 'false';
 
@@ -62,5 +62,35 @@ describe('AmountText', () => {
       </ThemeProvider>,
     );
     expect(screen.getByText('$5', { exact: false })).toBeTruthy();
+  });
+});
+
+describe('AnimatedAmount', () => {
+  afterEach(() => jest.useRealTimers());
+
+  function hero(minor: number) {
+    return (
+      <ThemeProvider preference="dark">
+        <I18nextProvider i18n={i18n}>
+          <AnimatedAmount minor={minor} currency="EUR" locale="it" size="hero" />
+        </I18nextProvider>
+      </ThemeProvider>
+    );
+  }
+
+  it('keeps the minus of a balance in the red', async () => {
+    await render(hero(-12_000));
+    expect(screen.getByText('−120', { exact: false })).toBeTruthy();
+  });
+
+  it('lands on the minus after counting down across zero', async () => {
+    jest.useFakeTimers();
+    const view = await render(hero(5_000));
+    expect(screen.getByText('50', { exact: false })).toBeTruthy();
+    await view.rerender(hero(-12_000));
+    await act(async () => {
+      jest.advanceTimersByTime(2_000);
+    });
+    expect(screen.getByText('−120', { exact: false })).toBeTruthy();
   });
 });
