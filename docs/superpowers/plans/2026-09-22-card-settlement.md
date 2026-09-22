@@ -433,7 +433,7 @@ export function transferOverpaysCard(
 **Files:** `packages/i18n/src/locales/it.ts`, `en.ts` (in `accounts`, after `transferTo`; in `txForm` after
 `missing_insufficientFunds`)
 
-- [ ] **Step 1:** add
+- [x] **Step 1:** add
 
 | key | it | en |
 | --- | --- | --- |
@@ -449,7 +449,7 @@ export function transferOverpaysCard(
 | `accounts.reminderTitle` | Carta {{name}}: {{amount}} da saldare oggi | Card {{name}}: {{amount}} due today |
 | `txForm.cardInCredit` | La carta andrà in attivo di {{amount}}. | The card will be {{amount}} in credit. |
 
-- [ ] **Step 2:** `rtk proxy pnpm --filter @saldo/i18n test` → parity PASS. Commit `feat(i18n): card settlement copy`.
+- [x] **Step 2:** `rtk proxy pnpm --filter @saldo/i18n test` → parity PASS. Commit `feat(i18n): card settlement copy`.
 
 ### Task 4: "Addebitata su" in the account sheet
 
