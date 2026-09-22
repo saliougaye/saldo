@@ -2,7 +2,7 @@ import { rollupToParents, spendingByCategory } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AmountText } from '../../src/components/AmountText';
@@ -11,7 +11,7 @@ import { DetailSkeleton } from '../../src/components/DetailSkeleton';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
-import { ScreenHeader } from '../../src/components/ScreenHeader';
+import { HeaderIconButton, ScreenHeader } from '../../src/components/ScreenHeader';
 import { useDelayed } from '../../src/components/useDelayed';
 import {
   useAccounts,
@@ -23,7 +23,8 @@ import {
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SplitBar } from '../../src/features/stats/SplitBar';
-import { TagEditCard } from '../../src/features/tags/TagEditCard';
+import { MergeTagSheet } from '../../src/features/tags/MergeTagSheet';
+import { TagEditSheet } from '../../src/features/tags/TagEditSheet';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { useLeaveGone } from '../../src/navigation/leave';
@@ -45,6 +46,7 @@ export default function TagView() {
   const accounts = useAccounts();
   const { today } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
+  const [sheet, setSheet] = useState<'edit' | 'merge' | null>(null);
 
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
   // The figures sum these rows: before they land, a total would paint as 0.
@@ -92,10 +94,28 @@ export default function TagView() {
 
   return (
     <Screen refreshable>
-      <ScreenHeader title={tag.name} />
-      {/* First, under the header: at the bottom it sat past every transaction the tag carries,
-          and a tag with a long history made rename, merge and delete a scroll away. */}
-      <TagEditCard tag={tag} onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })} />
+      <ScreenHeader
+        title={tag.name}
+        trailing={
+          // In the header, not in the body: a card of controls above the total pushed the figures
+          // the screen is for halfway down, for actions taken a handful of times in a tag's life.
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {/* Merging needs somewhere to go: with one tag there is nothing to merge into. */}
+            {tags.length < 2 ? null : (
+              <HeaderIconButton
+                icon="merge"
+                label={t('tags.mergeInto')}
+                onPress={() => setSheet('merge')}
+              />
+            )}
+            <HeaderIconButton
+              icon="pencil"
+              label={t('tags.editTag')}
+              onPress={() => setSheet('edit')}
+            />
+          </View>
+        }
+      />
       <Text size="footnote" color="textMuted">
         {t('tags.total')}
       </Text>
@@ -182,6 +202,20 @@ export default function TagView() {
       <Text size="caption" color="textFaint">
         {money(total, currency, locale)}
       </Text>
+
+      <TagEditSheet
+        visible={sheet === 'edit'}
+        tag={tag}
+        onClose={() => setSheet(null)}
+        onDeleted={() => leaveGone({ kind: 'tag', ids: [tag.id] })}
+      />
+      <MergeTagSheet
+        visible={sheet === 'merge'}
+        tag={tag}
+        uses={tagged.length}
+        onClose={() => setSheet(null)}
+        onMerged={() => leaveGone({ kind: 'tag', ids: [tag.id] })}
+      />
     </Screen>
   );
 }

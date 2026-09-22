@@ -676,6 +676,13 @@ export const en: Messages = {
     missing_name: 'Enter a name to save.',
     missing_taken: 'A tag with this name already exists.',
     mergeInto: 'Merge into another tag',
+    merge: 'Merge',
+    mergeTitle: 'Merge “{{name}}” into…',
+    mergeNote_one:
+      'The transaction tagged “{{name}}” moves to “{{target}}”, and “{{name}}” goes away. This can’t be undone.',
+    mergeNote_other:
+      'The {{count}} transactions tagged “{{name}}” move to “{{target}}”, and “{{name}}” goes away. This can’t be undone.',
+    mergeNoteUnused: '“{{name}}” goes away into “{{target}}”. This can’t be undone.',
     delete: 'Delete tag',
     deleteConfirm: 'Delete “{{name}}”? The transactions stay.',
     uses_one: '{{count}} transaction',

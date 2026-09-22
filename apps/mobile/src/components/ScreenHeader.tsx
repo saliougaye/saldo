@@ -1,3 +1,4 @@
+import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -42,6 +43,37 @@ export function BackButton({ onPress, icon = 'chevL' }: BackButtonProps) {
         borderRadius: theme.radii.pill,
         backgroundColor: theme.palette.raised,
       }}
+    >
+      <Icon name={icon} size={16} color={theme.palette.text} />
+    </Pressable>
+  );
+}
+
+export interface HeaderIconButtonProps {
+  icon: IconName;
+  /** Read aloud in place of the icon, which has no text of its own. */
+  label: string;
+  onPress: () => void;
+}
+
+/** An icon-only action on the trailing edge of a `ScreenHeader`, the same disc as the back button. */
+export function HeaderIconButton({ icon, label, onPress }: HeaderIconButtonProps) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: theme.layout.headerButton,
+        height: theme.layout.headerButton,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: theme.radii.pill,
+        backgroundColor: theme.palette.raised,
+        transform: [{ scale: pressed ? 0.96 : 1 }],
+      })}
     >
       <Icon name={icon} size={16} color={theme.palette.text} />
     </Pressable>

@@ -683,6 +683,13 @@ export const it = {
     missing_name: 'Inserisci un nome per salvare.',
     missing_taken: 'Esiste già un tag con questo nome.',
     mergeInto: 'Unisci a un altro tag',
+    merge: 'Unisci',
+    mergeTitle: 'Unisci «{{name}}» a…',
+    mergeNote_one:
+      'La transazione di «{{name}}» passerà a «{{target}}», e «{{name}}» sparirà. Non si può annullare.',
+    mergeNote_other:
+      'Le {{count}} transazioni di «{{name}}» passeranno a «{{target}}», e «{{name}}» sparirà. Non si può annullare.',
+    mergeNoteUnused: '«{{name}}» sparirà dentro «{{target}}». Non si può annullare.',
     delete: 'Elimina tag',
     deleteConfirm: 'Eliminare «{{name}}»? Le transazioni restano.',
     uses_one: '{{count}} transazione',
