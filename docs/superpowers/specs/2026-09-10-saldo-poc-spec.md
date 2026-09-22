@@ -29,7 +29,8 @@ cycle, and am I going faster than I should?*
 4. **Sync** of all data between devices through that server.
 5. **Attachments** (receipt photos/PDFs) on transactions, synced.
 6. **Import & export:** full JSON backup/restore, CSV export, CSV import (generic mapping + Spendee preset).
-7. **i18n:** Italian (source copy from the design) and English.
+7. **i18n:** Italian (source copy from the design), English, French, German, Swedish, Spanish and (European)
+   Portuguese.
 8. **Monorepo** with domain logic and design tokens shared across the mobile app and the (future) web app.
 9. Documented local builds for the **Android APK** and **iOS sideload**. No app stores.
 
@@ -172,7 +173,7 @@ All synced entities share **sync metadata**:
 | `periodKind` | `month \| week \| cycle \| year` | How the user tracks spending (§5.2). Default `month`; onboarding step 1 asks. |
 | `cycleStartDay` | int 1–28 | Default 27 in design; asked only when `periodKind` is `cycle`, and remembered when it is not. Clamped per month (§5.2). |
 | `currency` | `CurrencyCode` | Any of the 162 ISO 4217 codes CLDR can format (`CURRENCY_CODES`). One for the whole app; `EUR/USD/GBP/CHF` are shown first in the picker. |
-| `language` | `system \| it \| en` | |
+| `language` | `system \| it \| en \| fr \| de \| sv \| es \| pt` | `LANGUAGE_PREFERENCES`. Widened from `system \| it \| en` before any public build, so `SYNC_SCHEMA_VERSION` did not move; a later widening needs a changelog line. |
 | `theme` | `system \| dark \| light` | Design default dark. |
 | `onboardingCompletedAt` | ISO \| null | |
 
@@ -1070,18 +1071,29 @@ Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
 ## 12. Internationalisation
 
 - `packages/i18n/src/locales/it.ts` is the **source catalog** (strings copied verbatim from the design).
-  `en.ts` must have the identical key structure (type-checked and unit-tested).
+  `en.ts`, `fr.ts`, `de.ts`, `sv.ts`, `es.ts` and `pt.ts` are typed `Messages` and unit-tested against it: same key
+  paths, same `{{variables}}` per key. `pt` is European Portuguese; Brazilian devices get it too. The five newer
+  catalogs are machine-drafted and each needs a native read before release.
 - Keys are namespaced by feature: `common.*`, `tabs.*`, `home.*`, `transactions.*`, `txForm.*`, `stats.*`,
   `budgets.*`, `accounts.*`, `categories.*`, `tags.*`, `settings.*`, `profile.*`, `onboarding.*`, `sync.*`,
   `auth.*`, `import.*`, `export.*`, `errors.*`, `seed.*` (seed category names), `icons.*` (icon search labels).
-- Interpolation `{{name}}`. Plurals use i18next `_one` / `_other` suffixes (Italian and English both need only these).
-- Guillemets «» are used in Italian copy. English uses curly double quotes “ ”.
-- `resolveLocale(preference, deviceLanguages)` → `it` if preference `it`, or `system` and the first device language
-  starts with `it`; otherwise `en`.
+- Interpolation `{{name}}`. Catalogs write i18next `_one` / `_other` plurals only; `resources` copies each `_other` to
+  `_many`, the CLDR category Italian, French, Spanish and Portuguese use for round millions (missing, i18next fell
+  back to English). i18next runs `pt` as `pt-PT` so that `0` takes the plural, as in Portugal.
+- Quotes: Italian, Spanish and Portuguese «»; French « » with narrow no-break spaces (also before `? ! : ;`);
+  German „“; Swedish ”…”; English curly double quotes “ ”.
+- Language names are autonyms (`LANGUAGE_NAMES`: Italiano, English, Français, Deutsch, Svenska, Español, Português),
+  never translated; the Language screen (§6.8) lists Sistema, Italiano, English, then the rest alphabetically.
+- `resolveLocale(preference, deviceLanguages)` → the preference if it is not `system`; otherwise the first device
+  language whose language subtag the app speaks (`pt-BR` → `pt`, `de-AT` → `de`, `sv-FI` → `sv`); otherwise `en`.
 - Deterministic formatters (`@saldo/i18n/format`): `formatMoney`, `formatMoneyParts`, `formatDayMonth`
-  (it `18 apr`, en `Apr 18`), `formatCycleRange` (it `27 mar – 26 apr`, en `Mar 27 – Apr 26`), `formatLongDate`
+  (it `18 apr`, en `Apr 18`, de `18. Apr.`, es `18 abr`), `formatCycleRange` (it `27 mar – 26 apr`, en `Mar 27 – Apr 26`), `formatLongDate`
   (it `18 aprile 2026`, en `April 18, 2026`), `formatPercent`, `formatRelativeTime` (sync status, coarse:
   now / N min / N h / date).
+- The formatters read one hand-written `CONVENTIONS` table per locale (CLDR values, no `Intl` at runtime): thousands
+  separator (fr U+202F, sv and pt U+00A0, de/es/it `.`, en `,`), CLDR minimum grouping (es and pt leave four digits
+  ungrouped: `1234,50 €`), symbol after the amount everywhere but `en`, first weekday (Sunday for `en` and `pt`),
+  month and weekday names, and the date patterns (`18 de abril de 2026` in es/pt).
 - The mobile app initialises i18next (`react-i18next`) with `resources` from the package and reacts to settings changes.
 
 ---

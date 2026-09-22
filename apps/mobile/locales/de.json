@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo nutzt die Kamera, um einen Beleg zu fotografieren und an eine Buchung zu hängen.",
+  "NSPhotoLibraryUsageDescription": "Saldo greift auf deine Fotos zu, damit du einen Beleg anhängen kannst, den du schon fotografiert hast.",
+  "NSFaceIDUsageDescription": "Entsperre Saldo mit Face ID."
+}

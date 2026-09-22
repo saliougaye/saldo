@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo utilise l’appareil photo pour photographier un ticket et le joindre à une opération.",
+  "NSPhotoLibraryUsageDescription": "Saldo accède à tes photos pour joindre un ticket que tu as déjà photographié.",
+  "NSFaceIDUsageDescription": "Déverrouille Saldo avec Face ID."
+}

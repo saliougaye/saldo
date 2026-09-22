@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "O Saldo usa a câmara para fotografar um talão e anexá-lo a um movimento.",
+  "NSPhotoLibraryUsageDescription": "O Saldo acede às tuas fotos para anexares um talão que já fotografaste.",
+  "NSFaceIDUsageDescription": "Desbloqueia o Saldo com o Face ID."
+}

@@ -61,6 +61,8 @@ instead of repeating the union. Catalogs are typed `Messages`, so a missing key 
 - **i18next is given `pt-PT`, not `pt`,** as its language code (`i18nextLanguage`). The catalog stays under `pt` and
   i18next falls back to it, but plural rules then come from `Intl.PluralRules('pt-PT')`: `0` is plural in Portugal
   (`0 transações`) and singular in Brazil. `matchLocale('pt-PT')` is `pt`, so `useAppLocale` is unaffected.
+  *Found while executing:* i18next picks the plural suffix per **resource** language, so falling back to a `pt`
+  resource still used Brazil's rules. `createI18n` therefore keys `resources` by `i18nextLanguage(locale)`.
 - **`_many` plurals.** CLDR gives `fr`, `es`, `pt` — and `it`, already today — a `many` category for round millions,
   and i18next then asks for `key_many`; missing, it falls back to *English*. Catalogs keep `_one`/`_other` only (the
   parity test compares key sets), and `resources` copies every `_other` to a `_many` sibling (`withManyPlurals`), which
@@ -413,9 +415,9 @@ it('never falls back to English for a round million', async () => {
 
 ### Task 6: iOS permission prompts, spec, TODO
 
-- [ ] Add `apps/mobile/locales/{fr,de,sv,es,pt}.json` (same three keys) and list them in `app.config.ts` `locales`.
-- [ ] Spec: §1 item 7, §4 `language` row, §12 (catalogs, plurals, `resolveLocale`, formatter examples).
-- [ ] Remove the TODO item. Commit `docs: five more languages in the spec`.
+- [x] Add `apps/mobile/locales/{fr,de,sv,es,pt}.json` (same three keys) and list them in `app.config.ts` `locales`.
+- [x] Spec: §1 item 7, §4 `language` row, §12 (catalogs, plurals, `resolveLocale`, formatter examples).
+- [x] Remove the TODO item. Commit `docs: five more languages in the spec`.
 
 ### Task 7: Gates
 

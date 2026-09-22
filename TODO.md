@@ -14,33 +14,6 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### Five more languages: French, German, Swedish, Spanish, Portuguese
-
-- [ ] Asked for on 2026-09-21. Scope the catalogs and the formatting tables, then plan.
-
-Today the app speaks `it` and `en` only (`SUPPORTED_LOCALES` in
-`packages/i18n/src/format.ts:13`). A language is more than a catalog:
-
-- **The catalog.** `packages/i18n/src/locales/{fr,de,sv,es,pt}.ts`, ~760 keys each, registered in `resources`
-  (`packages/i18n/src/index.ts`). The parity test (`locales.test.ts`) only compares `it` against `en`; it has to
-  check every catalog against `it`, keys and `{{variables}}` both.
-- **The formatting tables.** `format.ts` hand-writes, per locale, the separators, short and long months and short and
-  long weekdays (`Record<AppLocale, …>`, no `Intl`). Each new locale fills all five, and the separators differ:
-  `de`/`es`/`pt` `.` and `,`, `fr` and `sv` a (narrow) no-break space and `,`. Pin them with `format.test.ts` cases.
-- **The setting.** `language` is `z.enum(['system', 'it', 'en'])` in `packages/core/src/entities.ts:50`, a synced
-  field, plus the column type in `apps/mobile/src/db/schema.ts:33` and `seed.ts`. Widening the enum means an older
-  build rejects a settings row written by a newer one — acceptable before release (see the frozen
-  `SYNC_SCHEMA_VERSION`), worth a line in the changelog after. `resolveLocale` must map `pt-BR`/`pt-PT`, `es-*`
-  etc. to the base language.
-- **The Language screen** (`app/profile/language.tsx`) grows from three rows to seven; each language named in its
-  own tongue, not translated.
-- **Quality.** Machine-drafted text is fine for a start, but the Italian copy is written with care (tone, short
-  labels that fit the design). Each catalog needs a native read before it ships, and German will overflow some
-  buttons and chips — check the longest strings on the simulator.
-
-Open point: `pt` as one catalog, or `pt-PT` and `pt-BR` separately (they differ in vocabulary more than in grammar).
-Suggested: one `pt` (European) for now.
-
 ### Credit cards: settle the card from its payment account
 
 - [ ] Asked for on 2026-09-22, shaped the same day. Ready to plan.

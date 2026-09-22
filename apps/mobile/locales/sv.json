@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo använder kameran för att fotografera ett kvitto och bifoga det till en transaktion.",
+  "NSPhotoLibraryUsageDescription": "Saldo behöver dina foton så att du kan bifoga ett kvitto du redan har fotograferat.",
+  "NSFaceIDUsageDescription": "Lås upp Saldo med Face ID."
+}

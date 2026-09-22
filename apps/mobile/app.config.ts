@@ -57,6 +57,12 @@ const config: ExpoConfig = {
   locales: {
     en: './locales/en.json',
     it: './locales/it.json',
+    fr: './locales/fr.json',
+    de: './locales/de.json',
+    sv: './locales/sv.json',
+    es: './locales/es.json',
+    // European Portuguese, like the app's `pt` catalog; iOS falls back to it from pt-BR.
+    pt: './locales/pt.json',
   },
   web: {
     favicon: './assets/favicon.png',

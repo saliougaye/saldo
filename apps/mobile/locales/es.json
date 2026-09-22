@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Saldo usa la cámara para fotografiar un tique y adjuntarlo a un movimiento.",
+  "NSPhotoLibraryUsageDescription": "Saldo accede a tus fotos para adjuntar un tique que ya has fotografiado.",
+  "NSFaceIDUsageDescription": "Desbloquea Saldo con Face ID."
+}
