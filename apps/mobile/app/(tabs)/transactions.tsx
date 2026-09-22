@@ -23,14 +23,12 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionDivider } from '../../src/components/SectionDivider';
-import { SkeletonList } from '../../src/components/Skeleton';
 import { TextField } from '../../src/components/TextField';
 import { useToast } from '../../src/components/Toast';
-import { useDelayed } from '../../src/components/useDelayed';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import {
-  useAccounts,
-  useCategories,
+  useAccountsQuery,
+  useCategoriesQuery,
   useSettings,
   useTags,
   useTransactionsInRangeQuery,
@@ -41,6 +39,7 @@ import { RecurrencesCard } from '../../src/features/recurrences/RecurrencesCard'
 import { AccountFilterSheet } from '../../src/features/transactions/AccountFilterSheet';
 import { SwipeRow } from '../../src/features/transactions/SwipeRow';
 import { TagFilterSheet } from '../../src/features/transactions/TagFilterSheet';
+import { TransactionsSkeleton } from '../../src/features/transactions/TransactionsSkeleton';
 import {
   type TransactionRowDeps,
   transactionRow,
@@ -59,8 +58,8 @@ export default function TransactionsTab() {
   const repos = useRepositories();
   const toast = useToast();
   const settings = useSettings();
-  const accounts = useAccounts();
-  const categories = useCategories();
+  const { accounts, loaded: accountsLoaded } = useAccountsQuery();
+  const { rows: categories, loaded: categoriesLoaded } = useCategoriesQuery();
   const tags = useTags();
   const { today, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
@@ -91,8 +90,12 @@ export default function TransactionsTab() {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [upcomingOpen, setUpcomingOpen] = useState(false);
 
-  const { rows, loaded } = useTransactionsInRangeQuery(period.range.start, period.range.end);
-  const slow = useDelayed(!loaded);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(
+    period.range.start,
+    period.range.end,
+  );
+  // Rows need their names: before accounts and categories answer they would paint as "—".
+  const loaded = rowsLoaded && accountsLoaded && categoriesLoaded;
 
   const lookup = useMemo<FilterLookup>(() => {
     const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
@@ -373,11 +376,10 @@ export default function TransactionsTab() {
         <RecurrencesCard />
 
         {!loaded ? (
-          // Nothing at all until the query has been slow enough to be worth mentioning: on a warm
-          // database it answers in a frame, and a skeleton that flashes reads as a glitch.
-          slow ? (
-            <SkeletonList rows={5} label={t('common.loading')} />
-          ) : null
+          // At once, not behind `useDelayed`: the header and the filters are already up, and an
+          // empty band under them read as a broken screen on every app open. The blocks sit where
+          // the rows land, so a fast answer fills them in rather than flashing.
+          <TransactionsSkeleton />
         ) : groups.length === 0 && upcoming.length === 0 ? (
           active ? (
             <EmptyState

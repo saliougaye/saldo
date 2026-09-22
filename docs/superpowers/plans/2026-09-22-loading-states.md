@@ -28,6 +28,11 @@ says so and nothing else otherwise — never the empty state and never a zero fi
 - Variant **Etichette** out of four (Spinner, Cornici, Blocchi, Etichette); one axis — how much of the finished
   screen is on screen while it loads.
 - The user tests on device; the implementer runs lint, typecheck and tests.
+- **Revised after the first device check (2026-09-22):** "when I open the app I see it empty for a moment,
+  then it loads". The 120 ms grace left a blank band under the tab headers on every open. The three tabs (Home,
+  Transazioni, Conti) now show their skeleton **at once** while `!loaded`, without `useDelayed`; pushed screens
+  keep the grace, their push animation covers it. Transazioni gets day-card blocks (`TransactionsSkeleton`) and
+  also waits for accounts and categories, whose names its rows print.
 
 **Taken while planning (spec silent):**
 

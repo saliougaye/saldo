@@ -10,7 +10,6 @@ import { CardHeader } from '../../src/components/CardHeader';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { ProgressBar } from '../../src/components/ProgressBar';
 import { Screen } from '../../src/components/Screen';
-import { useDelayed } from '../../src/components/useDelayed';
 import {
   useAccounts,
   useBudgetsQuery,
@@ -55,8 +54,9 @@ export default function HomeTab() {
   const historyStart = previousPeriods(def, period.range, 6).at(-1)?.start ?? period.range.start;
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
   // Before both answer, the hero would read "0 €" and the recent card "no transactions yet".
+  // The skeleton shows at once rather than behind `useDelayed`: this is the screen the app opens
+  // on, and a blank band under the header read as a hang. Its blocks sit where the figures land.
   const loaded = rowsLoaded && budgetsLoaded;
-  const slow = useDelayed(!loaded);
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -111,9 +111,7 @@ export default function HomeTab() {
       <PeriodHeader showProfile />
 
       {!loaded ? (
-        slow ? (
-          <HomeSkeleton heroLabel={period.isCurrent ? t('home.remaining') : t('home.leftover')} />
-        ) : null
+        <HomeSkeleton heroLabel={period.isCurrent ? t('home.remaining') : t('home.leftover')} />
       ) : (
         <>
           <Animated.View entering={entering(0)}>

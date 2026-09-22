@@ -9,7 +9,6 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
-import { useDelayed } from '../../src/components/useDelayed';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { AccountsSkeleton } from '../../src/features/accounts/AccountsSkeleton';
 import { HideAmountsButton } from '../../src/features/hidden/HideAmountsButton';
@@ -35,8 +34,8 @@ export default function AccountsTab() {
 
   // A balance covers the whole history, so the range is deliberately unbounded (§5.3).
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  // At once, like Home: a tab's chrome is already up, and an empty band under it reads as broken.
   const loaded = accountsLoaded && rowsLoaded;
-  const slow = useDelayed(!loaded);
   const balances = useMemo(() => accountBalances(accounts, rows, today), [accounts, rows, today]);
 
   const live = accounts.filter((account) => account.archivedAt === null);
@@ -87,9 +86,7 @@ export default function AccountsTab() {
       </View>
 
       {!loaded ? (
-        slow ? (
-          <AccountsSkeleton />
-        ) : null
+        <AccountsSkeleton />
       ) : (
         <>
           <Card>
