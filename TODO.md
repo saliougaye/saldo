@@ -102,8 +102,8 @@ one, drawn dimmed and hatched like the current cycle is today. For each forecast
 
 ### Onboarding: a better UI, and a step for the system permissions
 
-- [ ] Rework the onboarding screens (§6.29). Today they follow the prototype's step layout (1616–1717) and have not
-      had a design pass since; scope the redesign before planning it.
+- [x] Rework the onboarding screens (§6.29) — done as "Fuoco" (`docs/superpowers/plans/2026-09-22-onboarding-fuoco.md`):
+      the old step dissolves, the new one arrives block by block, progress is 2px segments.
 - [ ] Add a step that asks for the system permissions up front, each one with a sentence saying what it is for and
       a "Più tardi" that skips it. Today every permission is asked at the moment it is first needed:
   - **notifications** — budget alerts (§5.8), requested by `src/features/budgets/BudgetAlertsGate.tsx`;

@@ -39,7 +39,7 @@
 - Modify: `packages/ui/src/tokens.ts`
 - Modify: `packages/ui/src/tokens.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/ui/src/tokens.test.ts`, inside the existing top-level `describe` (or at the end of the file if the tests are flat):
 
@@ -62,12 +62,12 @@ describe('onboarding step motion', () => {
 
 Make sure `motion` and `layout` are imported at the top of the test file (`import { layout, motion, … } from './tokens';`).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @saldo/ui test -- --run tokens`
 Expected: FAIL — `motion.stepExitMs` is `undefined` (TypeScript will also complain; vitest still runs).
 
-- [ ] **Step 3: Add the tokens**
+- [x] **Step 3: Add the tokens**
 
 In `packages/ui/src/tokens.ts`, inside `export const motion = { … }`, after `progressMs: 300,`:
 
@@ -93,12 +93,12 @@ Inside `export const layout = { … }`, after `progressHeight: 4,`:
   stepSegmentGap: 6,
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @saldo/ui test -- --run tokens`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -113,7 +113,7 @@ git commit -m "feat(ui): tokens for the onboarding step entrance"
 - Modify: `apps/mobile/src/theme/motion.ts`
 - Create: `apps/mobile/src/theme/stepDelay.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/theme/stepDelay.test.ts`:
 
@@ -134,12 +134,12 @@ describe('stepDelay', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns stepDelay`
 Expected: FAIL — `stepDelay` is not exported from `./motion`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `apps/mobile/src/theme/motion.ts`, add `FadeInUp` to the existing import from `react-native-reanimated` (it is already there — check; if it is, leave the import alone), then append after `reflowing`:
 
@@ -163,12 +163,12 @@ export function stepEntering(chunk: number, word?: number) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns stepDelay`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/theme/motion.ts apps/mobile/src/theme/stepDelay.test.ts
@@ -183,7 +183,7 @@ git commit -m "feat(mobile): stepEntering, the onboarding block entrance"
 - Create: `apps/mobile/src/features/onboarding/StepSegments.tsx`
 - Create: `apps/mobile/src/features/onboarding/StepSegments.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/features/onboarding/StepSegments.test.tsx`:
 
@@ -214,12 +214,12 @@ describe('StepSegments', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns StepSegments`
 Expected: FAIL — cannot find module `./StepSegments`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/features/onboarding/StepSegments.tsx`:
 
@@ -298,12 +298,12 @@ function Segment({ filled }: { filled: boolean }) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns StepSegments`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/onboarding/StepSegments.tsx apps/mobile/src/features/onboarding/StepSegments.test.tsx
@@ -318,7 +318,7 @@ git commit -m "feat(mobile): StepSegments, the onboarding progress"
 - Create: `apps/mobile/src/features/onboarding/StepHeader.tsx`
 - Create: `apps/mobile/src/features/onboarding/StepHeader.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/features/onboarding/StepHeader.test.tsx`:
 
@@ -376,12 +376,12 @@ describe('StepHeader', () => {
 
 The component reads the "Passo n di m" copy through `react-i18next`. Check how other `src/features/**/*.test.tsx` files get translations (search for `i18n` in an existing feature test, e.g. `grep -rl "initI18n\|i18n" apps/mobile/src --include=*.test.tsx | head -3`) and copy that setup at the top of this test; if none initialises i18n and `t` returns the key, assert `name: 'onboarding.step'` instead and say so in a comment.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns StepHeader`
 Expected: FAIL — cannot find module `./StepHeader`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/features/onboarding/StepHeader.tsx`:
 
@@ -476,12 +476,12 @@ export function StepChunk({ index = CHUNK.content, children }: StepChunkProps) {
 
 Note on `Text` and `tracking`: `Text` applies `letterSpacing` per word, which is what the single-line title did too, so the measure is unchanged.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @saldo/mobile test -- --selectProjects app --testPathPatterns StepHeader`
 Expected: PASS (3 tests). If `getByRole('header', { name })` fails because the row is not treated as accessible, confirm `accessible` is set on the row (it is required for the label to name the group).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/onboarding/StepHeader.tsx apps/mobile/src/features/onboarding/StepHeader.test.tsx
@@ -495,7 +495,7 @@ git commit -m "feat(mobile): StepHeader, the onboarding step header that arrives
 **Files:**
 - Modify: `apps/mobile/app/(onboarding)/_layout.tsx`
 
-- [ ] **Step 1: Change the transition**
+- [x] **Step 1: Change the transition**
 
 Replace the file's content with:
 
@@ -525,12 +525,12 @@ export default function OnboardingLayout() {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `pnpm --filter @saldo/mobile typecheck`
 Expected: no errors. (If `animationDuration` is not in the option type of the installed `react-native-screens`, remove that line and keep `animation: 'fade'`; note it in the commit body.)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add "apps/mobile/app/(onboarding)/_layout.tsx"
@@ -550,7 +550,7 @@ git commit -m "feat(mobile): onboarding steps dissolve instead of pushing"
 
 Same edit in each: remove the `BackButton`, `ProgressBar`, `Text` caption/title/body block; render `StepHeader`; wrap each content `Card` (and the categories count caption) in `StepChunk`, incrementing the index per block. Remove the imports that fall unused (`ProgressBar`, `BackButton`, and `Text` where nothing else uses it — `period.tsx` and `categories.tsx` still use `Text` inside cards; check before deleting).
 
-- [ ] **Step 1: `start.tsx`**
+- [x] **Step 1: `start.tsx`**
 
 Replace the header block
 
@@ -571,7 +571,7 @@ with
 
 and wrap the `<Card padded={false}>…</Card>` in `<StepChunk>…</StepChunk>`. Imports: add `import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';`; remove `Text` if unused (it is: delete the import). `back={false}`: the chooser is the first screen after sign-in; there is nothing to go back to and `BackButton` would return `null` anyway, but the intent is clearer stated.
 
-- [ ] **Step 2: `period.tsx`**
+- [x] **Step 2: `period.tsx`**
 
 Replace
 
@@ -599,7 +599,7 @@ with
 
 Wrap the kinds `<Card padded={false}>` in `<StepChunk>`; wrap the conditional cycle card in `<StepChunk index={CHUNK.content + 1}>` **inside** the `kind === 'cycle' ? (…) : null` so it also animates in when the pay cycle is picked; wrap the timeline `Text`/`Card` that follows (read the rest of the file: whatever renders `onboarding.periodTimeline`) in `<StepChunk index={CHUNK.content + 2}>`. Import `CHUNK, StepChunk, StepHeader`.
 
-- [ ] **Step 3: `account-details.tsx`**
+- [x] **Step 3: `account-details.tsx`**
 
 Replace the five-line block (`BackButton`, `ProgressBar ratio={2 / 4}`, caption, title, body) with
 
@@ -613,7 +613,7 @@ Replace the five-line block (`BackButton`, `ProgressBar ratio={2 / 4}`, caption,
 
 and wrap the `<Card>` in `<StepChunk>`. `TextField` has `autoFocus`: keep it — the keyboard rising during the entrance is the iOS behaviour on every form and the chunk is on screen at `stepDelay(3) = 300ms`, well inside the keyboard's own animation.
 
-- [ ] **Step 4: `balance.tsx`**
+- [x] **Step 4: `balance.tsx`**
 
 Replace the header block (`ratio={3 / 4}`, `current: 3`) with
 
@@ -627,7 +627,7 @@ Replace the header block (`ratio={3 / 4}`, `current: 3`) with
 
 Wrap the amount `<Card>` in `<StepChunk>` and the currency `<Card>` in `<StepChunk index={CHUNK.content + 1}>`.
 
-- [ ] **Step 5: `categories.tsx`**
+- [x] **Step 5: `categories.tsx`**
 
 Replace the header block (`ratio={1}`, `current: 4`) with
 
@@ -641,12 +641,12 @@ Replace the header block (`ratio={1}`, `current: 4`) with
 
 Wrap the `categoriesSelected` caption `Text` in `<StepChunk>` and the grid `<Card>` in `<StepChunk index={CHUNK.content + 1}>`.
 
-- [ ] **Step 6: Lint, typecheck, tests**
+- [x] **Step 6: Lint, typecheck, tests**
 
 Run: `rtk proxy pnpm lint && pnpm --filter @saldo/mobile typecheck && pnpm --filter @saldo/mobile test -- --selectProjects app`
 Expected: no `lint/…` lines, no type errors, tests green. Unused-import errors from Biome point at the `Text`/`View` imports to delete.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add "apps/mobile/app/(onboarding)/start.tsx" "apps/mobile/app/(onboarding)/period.tsx" "apps/mobile/app/(onboarding)/account-details.tsx" "apps/mobile/app/(onboarding)/balance.tsx" "apps/mobile/app/(onboarding)/categories.tsx"
@@ -663,7 +663,7 @@ git commit -m "feat(mobile): the fresh onboarding path arrives block by block"
 - Modify: `apps/mobile/app/(onboarding)/import-balances.tsx`
 - Modify: `apps/mobile/app/(onboarding)/welcome.tsx`
 
-- [ ] **Step 1: `import-currency.tsx`**
+- [x] **Step 1: `import-currency.tsx`**
 
 Replace the header block (`ratio={2 / 4}`, `current: 2`, `importCurrencyTitle`, `importCurrencyBody`) with
 
@@ -677,15 +677,15 @@ Replace the header block (`ratio={2 / 4}`, `current: 2`, `importCurrencyTitle`, 
 
 and wrap the content card(s) in `StepChunk` (first at default index, any second at `CHUNK.content + 1`).
 
-- [ ] **Step 2: `import-file.tsx`**
+- [x] **Step 2: `import-file.tsx`**
 
 Header: `step={{ current: 3, total: 4 }}`, `importFileTitle`, `importFileBody`. The screen renders `ImportWizard` below: wrap it in `<StepChunk>`. `ImportWizard` is also rendered from `profile/import`, which is not onboarding; leave the wizard itself untouched.
 
-- [ ] **Step 3: `import-balances.tsx`**
+- [x] **Step 3: `import-balances.tsx`**
 
 Header: `step={{ current: 4, total: 4 }}`, `importBalancesTitle`, `importBalancesBody`. Wrap the per-account list (whatever renders the rows — read the file; it is one `Card` or a `View` of cards) in `<StepChunk>`. If it maps accounts to cards, wrap the container once rather than each row: rows are data, not blocks.
 
-- [ ] **Step 4: `welcome.tsx`**
+- [x] **Step 4: `welcome.tsx`**
 
 Replace
 
@@ -710,12 +710,12 @@ with
 
 and wrap the `<Card>` holding `ConnectForm` in `<StepChunk>` and the offline caption in `<StepChunk index={CHUNK.content + 1}>`. `Text` stays imported (the caption uses it). Note: the title is one word ("Saldo"); the word split degrades to one block, which is fine.
 
-- [ ] **Step 5: Lint, typecheck, tests**
+- [x] **Step 5: Lint, typecheck, tests**
 
 Run: `rtk proxy pnpm lint && pnpm --filter @saldo/mobile typecheck && pnpm --filter @saldo/mobile test -- --selectProjects app`
 Expected: clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/mobile/app/(onboarding)/import-currency.tsx" "apps/mobile/app/(onboarding)/import-file.tsx" "apps/mobile/app/(onboarding)/import-balances.tsx" "apps/mobile/app/(onboarding)/welcome.tsx"
@@ -731,18 +731,18 @@ git commit -m "feat(mobile): import path and welcome share the step header"
 - Modify: `TODO.md:103-106`
 - Check: `apps/mobile/src/components/ProgressBar.tsx` still has callers (budgets); do **not** delete it.
 
-- [ ] **Step 1: Delete the harness**
+- [x] **Step 1: Delete the harness**
 
 ```bash
 git rm docs/superpowers/mockups/2026-09-22-onboarding-variants.html
 ```
 
-- [ ] **Step 2: Tick the rework bullet in `TODO.md`**
+- [x] **Step 2: Tick the rework bullet in `TODO.md`**
 
 Change
 
 ```markdown
-- [ ] Rework the onboarding screens (§6.29). Today they follow the prototype's step layout (1616–1717) and have not
+- [x] Rework the onboarding screens (§6.29). Today they follow the prototype's step layout (1616–1717) and have not
       had a design pass since; scope the redesign before planning it.
 ```
 
@@ -755,7 +755,7 @@ to
 
 The permissions bullet and the "Open points" paragraph stay as they are.
 
-- [ ] **Step 3: Full gates, read the output not the exit code**
+- [x] **Step 3: Full gates, read the output not the exit code**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -766,14 +766,14 @@ Expected: every package/app passes.
 Run: `rtk proxy pnpm test`
 Expected: every project green, including `@saldo/i18n`'s parity test (no strings were added, so it cannot move) and `apps/mobile` `db` + `app`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A docs/superpowers/mockups TODO.md
 git commit -m "chore: promote the Fuoco onboarding, drop the variants harness"
 ```
 
-- [ ] **Step 5: Hand back**
+- [x] **Step 5: Hand back**
 
 Stop. The user checks the flow on the simulator themselves (memory: no emulator runs by Claude). Things worth looking at there, in order: the title wrap at 34pt on `categoriesTitle`; the keyboard rising under the balance step while its blocks are still arriving; Reduce Motion on (Settings → Accessibility → Motion) leaves every block visible at once.
 
