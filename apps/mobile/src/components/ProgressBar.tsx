@@ -12,12 +12,14 @@ export interface ProgressBarProps {
   /** Where the cycle pace sits, drawn as a tick (§5.8). */
   pace?: number;
   overPace?: boolean;
+  /** Whether hidden mode empties this bar. The Home budget card opts out. */
+  hideable?: boolean;
 }
 
-export function ProgressBar({ ratio, pace, overPace = false }: ProgressBarProps) {
+export function ProgressBar({ ratio, pace, overPace = false, hideable = true }: ProgressBarProps) {
   const theme = useTheme();
   const { reduced } = useMotion();
-  const { hidden } = useHiddenAmounts();
+  const hidden = useHiddenAmounts().hidden && hideable;
   // A bar full to the brim beside a masked figure still says "over budget", so it empties too.
   const clamped = hidden ? 0 : Math.min(1, Math.max(0, ratio));
   // `scaleX` rather than `width`: a width animation re-runs layout on every frame, a transform

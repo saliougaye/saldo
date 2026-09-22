@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
+import { useContext } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { Pressable, Text as RNText } from 'react-native';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { CIPHER } from './cipher';
 import { AMOUNTS_HIDDEN_KEY, HiddenAmountsProvider } from './HiddenAmountsProvider';
-import { useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
+import { HiddenMotionContext, useHiddenAmounts, useHiddenMoney } from './hiddenAmounts';
 
 const mockStore = new Map<string, string>();
 
@@ -36,7 +37,8 @@ afterEach(() => {
 });
 
 function Probe() {
-  const { hidden, phase, toggle } = useHiddenAmounts();
+  const { hidden, toggle } = useHiddenAmounts();
+  const { phase } = useContext(HiddenMotionContext);
   const { format } = useHiddenMoney();
   return (
     <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel="toggle">

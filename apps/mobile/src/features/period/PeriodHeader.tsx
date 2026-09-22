@@ -19,10 +19,15 @@ export interface PeriodHeaderProps {
    * not the avatar, which the design puts on the home screen alone.
    */
   showProfile?: boolean;
+  /**
+   * The eye that toggles hidden mode. Off on the Transactions tab, where nothing hides: single
+   * transactions stay readable by decision, and a button that does nothing visible is a broken one.
+   */
+  hideAmounts?: boolean;
 }
 
 /** Header of §6.1: the period label with its subtitle, plus ‹ › cycle navigation. */
-export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
+export function PeriodHeader({ showProfile = false, hideAmounts = true }: PeriodHeaderProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
@@ -115,8 +120,7 @@ export function PeriodHeader({ showProfile = false }: PeriodHeaderProps) {
           {subtitle}
         </Text>
       </Pressable>
-      {/* Hidden mode: the figures hide from whichever tab you are on. */}
-      <HideAmountsButton />
+      {hideAmounts ? <HideAmountsButton /> : null}
       {navButton(-1)}
       {navButton(1)}
       <PeriodSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />

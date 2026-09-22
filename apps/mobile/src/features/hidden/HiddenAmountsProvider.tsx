@@ -4,7 +4,13 @@ import { AccessibilityInfo } from 'react-native';
 import { useDatabase } from '../../db/DatabaseProvider';
 import { useMotion } from '../../theme/motion';
 import { CIPHER } from './cipher';
-import { type HiddenAmounts, HiddenAmountsContext, type HiddenPhase } from './hiddenAmounts';
+import {
+  type HiddenAmounts,
+  HiddenAmountsContext,
+  type HiddenMotion,
+  HiddenMotionContext,
+  type HiddenPhase,
+} from './hiddenAmounts';
 
 /** Device-local (§7): a phone hidden in public must not blank the tablet at home. */
 export const AMOUNTS_HIDDEN_KEY = 'amountsHidden';
@@ -53,15 +59,14 @@ export function HiddenAmountsProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<HiddenAmounts>(
-    () => ({
-      hidden,
-      phase,
-      tick,
-      setHidden,
-      toggle: () => setHidden(!hidden),
-    }),
-    [hidden, phase, tick, setHidden],
+    () => ({ hidden, setHidden, toggle: () => setHidden(!hidden) }),
+    [hidden, setHidden],
   );
+  const clock = useMemo<HiddenMotion>(() => ({ phase, tick }), [phase, tick]);
 
-  return <HiddenAmountsContext.Provider value={value}>{children}</HiddenAmountsContext.Provider>;
+  return (
+    <HiddenAmountsContext.Provider value={value}>
+      <HiddenMotionContext.Provider value={clock}>{children}</HiddenMotionContext.Provider>
+    </HiddenAmountsContext.Provider>
+  );
 }

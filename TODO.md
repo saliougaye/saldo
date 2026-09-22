@@ -41,8 +41,10 @@ before this section closes:
 - **Trigger = a button, not a gesture.** An eye in the header of every tab (`PeriodHeader`, and the Accounts
   header) toggles hidden mode. Always there: no Profile setting. The long-press on the Home balance and a setting
   gating the button were tried first and dropped after the device checks.
-- **Scope = aggregates only.** Balances, totals, budgets, statistics and charts hide; single transactions (list
-  rows, detail, occurrences, import preview) stay readable via `AmountText plain`.
+- **Scope = aggregates only, and not everywhere.** Home hides the "left to spend" card alone; Statistics and
+  Accounts hide balances, totals, budgets and charts; the Transactions tab is out of the feature. Single
+  transactions (list rows, detail, occurrences, import preview) stay readable via `AmountText plain`. Narrowed
+  after the toggle lagged with every figure on screen animating at once.
 - **Survives a relaunch.** `kv.amountsHidden`, per device, never synced; kept by `wipeAccountData`, cleared by
   `wipeDevice` like the rest of `kv`.
 - **A hidden figure is `•••• €`**, fixed four dots (a dot per digit leaks magnitude), `textMuted`; the real text

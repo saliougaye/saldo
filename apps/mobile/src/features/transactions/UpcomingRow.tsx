@@ -1,5 +1,5 @@
 import type { CurrencyCode } from '@saldo/core';
-import type { AppLocale } from '@saldo/i18n';
+import { type AppLocale, formatMoney } from '@saldo/i18n';
 import { motion } from '@saldo/ui';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,6 @@ import { Icon } from '../../theme/Icon';
 import { EASE, useMotion } from '../../theme/motion';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { useHiddenMoney } from '../hidden/hiddenAmounts';
 
 /**
  * The one row that stands in for everything dated after today (§5.12).
@@ -38,7 +37,6 @@ export function UpcomingRow({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { format: money } = useHiddenMoney();
   const { reduced } = useMotion();
   const turn = useSharedValue(open ? 1 : 0);
 
@@ -76,7 +74,7 @@ export function UpcomingRow({
           </Text>
         </View>
         <Text color="textMuted" tabular>
-          {money(net, currency, locale)}
+          {formatMoney(net, currency, locale)}
         </Text>
         <Animated.View style={chevron}>
           <Icon name="chevD" size={16} color={theme.palette.textFaint} />

@@ -35,6 +35,11 @@ touches `@saldo/core`: this is presentation.
   setting gating the button was tried and dropped in the second device check. **Scope = aggregates only:** single transactions (list rows, detail,
   occurrences, import preview) keep their figure via `AmountText plain`; everything summed, a balance, a budget or
   a chart hides. Masks keep the edge the figure keeps (`align`), decided inside `AmountText`, not by the parent.
+- **Third device check (2026-09-22): lag on toggle, scope narrowed again.** Home hides only the "left to spend"
+  card (hero, its bar, income/expenses); the budget card and the upcoming net stay. The Transactions tab is out
+  of the feature altogether (no eye in its header, totals plain). Statistics and Accounts unchanged. The motion
+  clock (`phase`, `tick`) moves to its own context (`HiddenMotionContext`) so the four scramble steps re-render
+  only the sentences that follow them, not every `AmountText`, chart or `plain` row.
 
 **Decisions where the TODO left options open** (recorded per AGENTS.md):
 

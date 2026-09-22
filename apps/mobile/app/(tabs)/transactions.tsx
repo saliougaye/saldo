@@ -9,7 +9,7 @@ import {
   type TransactionFilters,
   totalsOf,
 } from '@saldo/core';
-import { formatDayMonth } from '@saldo/i18n';
+import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import { router as routerApi, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +35,6 @@ import {
   useTags,
   useTransactionsInRangeQuery,
 } from '../../src/db/hooks';
-import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { RecurrencesCard } from '../../src/features/recurrences/RecurrencesCard';
@@ -56,7 +55,6 @@ export default function TransactionsTab() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
-  const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const repos = useRepositories();
   const toast = useToast();
@@ -168,7 +166,7 @@ export default function TransactionsTab() {
             {formatDayMonth(group.date, locale)}
           </Text>
           <Text size="footnote" color="textMuted" tabular>
-            {money(group.expenseTotal, currency, locale)}
+            {formatMoney(group.expenseTotal, currency, locale)}
           </Text>
         </View>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
@@ -265,7 +263,7 @@ export default function TransactionsTab() {
             nothing and the chips sat against the search field.
           */}
           <View style={{ gap: theme.layout.cardGap }}>
-            <PeriodHeader />
+            <PeriodHeader hideAmounts={false} />
             <TextField
               label={t('transactions.searchPlaceholder')}
               placeholder={t('transactions.searchPlaceholder')}
@@ -362,8 +360,8 @@ export default function TransactionsTab() {
                       : 'transactions.filteredTotal',
                     {
                       count: filterTotals.count,
-                      spent: money(filterTotals.expense, currency, locale),
-                      income: money(filterTotals.income, currency, locale),
+                      spent: formatMoney(filterTotals.expense, currency, locale),
+                      income: formatMoney(filterTotals.income, currency, locale),
                     },
                   )}
                 </Text>
