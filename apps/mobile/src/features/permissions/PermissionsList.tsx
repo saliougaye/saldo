@@ -11,9 +11,9 @@ import Animated from 'react-native-reanimated';
 import { Card } from '../../components/Card';
 import { IconBox } from '../../components/ListRow';
 import { Icon } from '../../theme/Icon';
+import { expanding, leaving, revealing, swapIn } from '../../theme/motion';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { expanding, leaving, revealing, swapIn } from '../../theme/motion';
 
 export const PERMISSION_ICONS: Record<PermissionKey, IconName> = {
   notifications: 'bell',
@@ -33,7 +33,12 @@ export interface PermissionsListProps {
  * the first still pending — with its sentence and «Attiva» / «Più tardi». An answered row closes
  * to its title and a status, so the card always shows how many are left.
  */
-export function PermissionsList({ answers, onActivate, onLater, onOpenSettings }: PermissionsListProps) {
+export function PermissionsList({
+  answers,
+  onActivate,
+  onLater,
+  onOpenSettings,
+}: PermissionsListProps) {
   const theme = useTheme();
   const open = nextPending(answers);
   return (
@@ -111,7 +116,11 @@ function PermissionRow({
         )}
       </View>
       {open ? (
-        <Animated.View entering={revealing} exiting={leaving} style={{ paddingStart: 44, paddingBottom: 16 }}>
+        <Animated.View
+          entering={revealing}
+          exiting={leaving}
+          style={{ paddingStart: 44, paddingBottom: 16 }}
+        >
           <Text size="footnote" color="textMuted" style={{ lineHeight: 18 }}>
             {t(`permissions.${kind}Body`)}
           </Text>

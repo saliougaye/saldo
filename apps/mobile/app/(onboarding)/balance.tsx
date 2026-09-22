@@ -9,7 +9,7 @@ import { CurrencySheet } from '../../src/components/CurrencySheet';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
@@ -40,7 +40,7 @@ export default function BalanceStep() {
       }
     >
       <StepHeader
-        step={{ current: 3, total: 4 }}
+        step={{ current: 3, total: ONBOARDING_STEPS }}
         title={t('onboarding.balanceTitle')}
         body={t('onboarding.balanceBody')}
       />

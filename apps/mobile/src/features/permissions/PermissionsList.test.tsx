@@ -67,7 +67,10 @@ describe('PermissionsList', () => {
 
   it('links a denied permission to the system settings, but not the lock', async () => {
     const onOpenSettings = jest.fn();
-    await renderList({ notifications: 'denied', camera: 'granted', appLock: 'denied' }, { onOpenSettings });
+    await renderList(
+      { notifications: 'denied', camera: 'granted', appLock: 'denied' },
+      { onOpenSettings },
+    );
     const links = screen.getAllByRole('button', { name: 'Apri le Impostazioni di sistema' });
     expect(links).toHaveLength(1);
     const [link] = links;

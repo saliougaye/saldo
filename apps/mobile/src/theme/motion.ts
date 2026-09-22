@@ -142,7 +142,11 @@ export const revealing = FadeIn.duration(motion.fadeMs)
 export function swapIn(fromScale: number, delay = 0) {
   return () => {
     'worklet';
-    const config = { duration: motion.fadeMs, easing: SWAP_EASE, reduceMotion: ReduceMotion.System };
+    const config = {
+      duration: motion.fadeMs,
+      easing: SWAP_EASE,
+      reduceMotion: ReduceMotion.System,
+    };
     return {
       initialValues: { opacity: 0, transform: [{ scale: fromScale }] },
       animations: {

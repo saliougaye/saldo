@@ -7,7 +7,7 @@ import { CurrencyChips } from '../../src/components/CurrencyChips';
 import { Screen } from '../../src/components/Screen';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Text } from '../../src/theme/Text';
 
 /**
@@ -35,7 +35,7 @@ export default function ImportCurrencyStep() {
       }
     >
       <StepHeader
-        step={{ current: 2, total: 4 }}
+        step={{ current: 2, total: ONBOARDING_STEPS }}
         title={t('onboarding.importCurrencyTitle')}
         body={t('onboarding.importCurrencyBody')}
       />

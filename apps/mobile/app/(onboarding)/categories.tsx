@@ -1,76 +1,47 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
-import { useRepositories } from '../../src/db/DatabaseProvider';
-import { PICKABLE_SEED_CATEGORIES, seedFromOnboarding } from '../../src/db/seed';
-import { ACCOUNT_TYPE_ICONS } from '../../src/features/accounts/accountTypeIcon';
+import { PICKABLE_SEED_CATEGORIES } from '../../src/db/seed';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
-import { enterTabs } from '../../src/navigation/history';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** §6.29 step 3: the 12-tile grid, all selected by default; "Inizia" writes everything. */
+/** §6.29 step 4: the 12-tile grid, all selected by default. «Inizia» is on step 5 now. */
 export default function CategoriesStep() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
-  const repos = useRepositories();
-  const { draft } = useOnboarding();
+  const { setDraft } = useOnboarding();
   const [selected, setSelected] = useState<string[]>(
     PICKABLE_SEED_CATEGORIES.map((category) => category.nameKey),
   );
-  const [saving, setSaving] = useState(false);
 
   const toggle = (key: string) =>
     setSelected((current) =>
       current.includes(key) ? current.filter((value) => value !== key) : [...current, key],
     );
 
-  const finish = () => {
-    setSaving(true);
-    const { minorDigits } = getCurrency(draft.currency);
-    // The return value is deliberately ignored: false means a sync delivered the account's own
-    // settings while the user was stepping through onboarding, and those rows win (§8.3). Either
-    // way the app is ready, so the destination is the same.
-    seedFromOnboarding(repos, {
-      periodKind: draft.periodKind,
-      cycleStartDay: draft.cycleStartDay,
-      currency: draft.currency,
-      language: 'system',
-      theme: 'system',
-      account: {
-        name: draft.accountName.length > 0 ? draft.accountName : t('seed.firstAccount'),
-        type: draft.accountType,
-        openingBalance: amountBufferToMinor(draft.balanceBuffer, minorDigits),
-        icon: ACCOUNT_TYPE_ICONS[draft.accountType],
-      },
-      selectedCategoryKeys: selected,
-      translate: (key) => t(`seed.${key}`),
-      completedAt: new Date().toISOString(),
-    });
-    enterTabs(router);
-  };
-
   return (
     <Screen
       footer={
         <StepFooter
-          testID="onboarding-start"
-          label={t('common.start')}
-          loading={saving}
-          onPress={finish}
+          testID="onboarding-categories-continue"
+          label={t('common.continue')}
+          onPress={() => {
+            setDraft({ selectedCategoryKeys: selected });
+            router.push('/permissions');
+          }}
         />
       }
     >
       <StepHeader
-        step={{ current: 4, total: 4 }}
+        step={{ current: 4, total: ONBOARDING_STEPS }}
         title={t('onboarding.categoriesTitle')}
         body={t('onboarding.categoriesBody')}
       />

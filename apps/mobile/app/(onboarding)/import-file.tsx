@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Screen } from '../../src/components/Screen';
 import { ImportWizard } from '../../src/features/import/ImportWizard';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
-import { useOnboarding } from '../../src/features/onboarding/state';
+import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
 
 /** §6.29 import step 3: the §11.3 wizard, kept in the draft instead of written. */
 export default function ImportFileStep() {
@@ -14,7 +14,7 @@ export default function ImportFileStep() {
   return (
     <Screen>
       <StepHeader
-        step={{ current: 3, total: 4 }}
+        step={{ current: 3, total: ONBOARDING_STEPS }}
         title={t('onboarding.importFileTitle')}
         body={t('onboarding.importFileBody')}
       />

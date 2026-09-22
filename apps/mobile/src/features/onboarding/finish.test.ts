@@ -60,7 +60,12 @@ describe('finishOnboarding', () => {
     });
     finishOnboarding(db, repos, kv, {
       ...input,
-      draft: { ...DRAFT, path: 'import', importPlan: plan, importBalanceBuffers: { 'My Money': '20.00' } },
+      draft: {
+        ...DRAFT,
+        path: 'import',
+        importPlan: plan,
+        importBalanceBuffers: { 'My Money': '20.00' },
+      },
     });
     // The history adds up to −5,00 €; the user says 20,00 € now.
     expect(repos.accounts.list()[0]?.openingBalance).toBe(2500);
