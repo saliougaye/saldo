@@ -29,8 +29,7 @@ import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { Segmented } from '../../src/components/Segmented';
 import { Sheet } from '../../src/components/Sheet';
-import { useDelayed } from '../../src/components/useDelayed';
-import { useCategories, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import { useCategoriesQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
@@ -67,7 +66,7 @@ export default function StatsTab() {
   const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const settings = useSettings();
-  const categories = useCategories();
+  const { rows: categories, loaded: categoriesLoaded } = useCategoriesQuery();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [direction, setDirection] = useState<'expense' | 'income'>('expense');
@@ -82,8 +81,10 @@ export default function StatsTab() {
     previousPeriods(def, period.range, CASHFLOW_CYCLES).at(-1)?.start ?? period.range.start;
   // The query, not just its rows: this screen reads six cycles, and rendering it against an empty
   // array first is what made it jump when the data landed.
-  const { rows, loaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
-  const loading = useDelayed(!loaded);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  // The split prints category names. The skeleton shows at once, as on every tab: a blank band
+  // under the header read as a hang.
+  const loaded = rowsLoaded && categoriesLoaded;
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -194,7 +195,7 @@ export default function StatsTab() {
     return (
       <Screen underTabBar>
         <PeriodHeader />
-        {loading ? <StatsSkeleton /> : null}
+        <StatsSkeleton />
       </Screen>
     );
   }

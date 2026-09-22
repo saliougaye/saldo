@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Card } from '../../components/Card';
 import { Skeleton, SkeletonRow } from '../../components/Skeleton';
+import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /** The cashflow chart's own height (`HALF_HEIGHT` × 2 plus its axis), so nothing moves later. */
@@ -12,7 +13,7 @@ const CHART_HEIGHT = 109;
  *
  * Shaped like the cards it stands in for, to the pixel where that is cheap: this screen reads six
  * periods of transactions, long enough that laying it out twice — once empty, once with data — is
- * visible as a jump.
+ * visible as a jump. The card titles are real, as on every skeleton: only the figures are blocks.
  */
 export function StatsSkeleton() {
   const { t } = useTranslation();
@@ -24,9 +25,20 @@ export function StatsSkeleton() {
       accessibilityLabel={t('common.loading')}
     >
       <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Skeleton width={80} />
-          <Skeleton width={70} height={10} />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 8,
+          }}
+        >
+          <Text weight="medium" tracking="tight">
+            {t('stats.cashflow')}
+          </Text>
+          <Text size="caption" color="textFaint" numberOfLines={1}>
+            {t('stats.lastCycles')}
+          </Text>
         </View>
         <View style={{ marginTop: 18 }}>
           <Skeleton width="100%" height={CHART_HEIGHT} radius={theme.radii.input} />
@@ -49,7 +61,9 @@ export function StatsSkeleton() {
       </Card>
 
       <Card>
-        <Skeleton width={110} />
+        <Text weight="medium" tracking="tight">
+          {t('stats.cycleTrend')}
+        </Text>
         <View style={{ marginTop: 12 }}>
           <Skeleton width="100%" height={theme.layout.progressHeight * 2} />
         </View>
