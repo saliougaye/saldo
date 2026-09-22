@@ -1,7 +1,7 @@
 import type { CurrencyCode } from '@saldo/core';
 import { type AppLocale, formatMoneyParts, type SignDisplay } from '@saldo/i18n';
 import { useTranslation } from 'react-i18next';
-import { Text as RnText, StyleSheet, View } from 'react-native';
+import { Text as RnText, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useHiddenAmounts } from '../features/hidden/hiddenAmounts';
 import { MASK } from '../features/hidden/mask';
@@ -10,7 +10,12 @@ import { useCountUp } from '../theme/motion';
 import { Text, type TextProps } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 
-export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular'> {
+export interface AmountTextProps extends Omit<TextProps, 'children' | 'tabular' | 'style'> {
+  /**
+   * Lands on the wrapper that clips the hidden-mode roll, not on the text: layout only (margins,
+   * flex). Colour and size have their own props.
+   */
+  style?: StyleProp<ViewStyle>;
   minor: number;
   currency: CurrencyCode;
   locale: AppLocale;
