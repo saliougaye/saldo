@@ -59,12 +59,20 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "onboarding-account-continue"
 
-# Step 3 of 5 — opening balance. 1000 in an EUR account's buffer is 10,00 €; nothing asserts on it.
+# Step 3 of 5 — opening balance, typed on Saldo's own keypad (D23). The pad is pinned open on this
+# step, so its tall key is «Continua» and the footer's button steps aside while it is up.
 - tapOn:
     id: "onboarding-balance-amount"
-- inputText: "1000"
 - tapOn:
-    id: "onboarding-balance-continue"
+    id: "keypad-key-1"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
 
 # Step 4 of 5 — the category grid, every tile selected by default.
 - tapOn:
@@ -91,16 +99,25 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "tab-fab"
 
-# The form opens as a sheet with the amount field autofocused (§6.16).
+# The form opens as a sheet with the amount field autofocused (§6.16), so Saldo's keypad is already
+# up and the digits below are its keys.
 #
-# `hideKeyboard` is not decoration: the category grid is content, not footer, and on a small screen
-# its first row sits about where the keyboard starts. If this flow ever fails on the tile below,
-# this is the line to suspect — on iOS Maestro hides the keyboard by swiping, and a swipe over a
-# form that scrolls can move the form instead.
+# «Fatto» is not decoration: the category grid is content, not footer, and on a small screen its
+# first row sits about where the keypad starts. If this flow ever fails on the tile below, this is
+# the line to suspect.
 - tapOn:
     id: "txform-amount"
-- inputText: "12.50"
-- hideKeyboard
+- tapOn:
+    id: "keypad-key-1"
+- tapOn:
+    id: "keypad-key-2"
+- tapOn:
+    id: "keypad-key-separator"
+- tapOn:
+    id: "keypad-key-5"
+# «Fatto» puts the keypad away, which is what frees the category grid below it.
+- tapOn:
+    id: "keypad-action"
 # Whichever category the grid ranks first; an expense cannot be saved without one.
 - tapOn:
     id: "txform-category-0"

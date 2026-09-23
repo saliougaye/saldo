@@ -40,9 +40,15 @@ name: Edit a recurring transaction, this one and the following ones
     id: "tab-fab"
 - tapOn:
     id: "txform-amount"
-- inputText: "200"
-# See the note in `onboarding-and-first-expense.yaml`: the category grid is content, not footer.
-- hideKeyboard
+- tapOn:
+    id: "keypad-key-2"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+# «Fatto» puts the keypad away, which is what frees the category grid below it.
+- tapOn:
+    id: "keypad-action"
 - tapOn:
     id: "txform-category-0"
 - tapOn:
