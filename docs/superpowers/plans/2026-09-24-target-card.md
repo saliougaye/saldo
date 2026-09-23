@@ -10,6 +10,10 @@
 
 **Scope:** Plan A only. Goals, pockets and the Obiettivi card are Plan B (ROADMAP 0.1 «Goals»). Budget rules (§5.8: range, spent, rollover, alerts) do not change.
 
+**Found while executing:** `budgetAlerts.test.ts` also builds a `BudgetView` and needed `pace` (fixed in Task 6's
+commit); `TargetRing.test.tsx` queries with `includeHiddenElements`, since the ring is hidden from assistive technology
+on purpose.
+
 **Found while planning, fixed here (Task 9):** `app/budgets.tsx` draws the pace tick at `view.spent / limitWithCarry` — the budget's own ratio, so the tick always sits at the end of the fill (visible in `docs/screenshots/budgets.png`). `BudgetView` gains a real `pace` in Task 4, and the list uses it.
 
 **Decisions recorded here (AGENTS.md "spec silent → note it in the plan"):**
@@ -51,7 +55,7 @@
 **Files:**
 - Modify: `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md` (§5.13)
 
-- [ ] **Step 1: Replace the hidden-mode and motion bullets of §5.13**
+- [x] **Step 1: Replace the hidden-mode and motion bullets of §5.13**
 
 Find:
 
@@ -76,7 +80,7 @@ Replace with:
   animate. Rows keep the usual press feedback.
 ```
 
-- [ ] **Step 2: Say how the per-day amount rounds**
+- [x] **Step 2: Say how the per-day amount rounds**
 
 Find:
 
@@ -91,7 +95,7 @@ Replace with:
      it is a ceiling and rounding up would let the last day overshoot.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md
@@ -106,7 +110,7 @@ rtk git commit -m "docs(spec): target cards keep hidden mode's Home scope, anima
 - Modify: `packages/ui/src/tokens.ts` (the `layout` object)
 - Test: `packages/ui/src/tokens.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/ui/src/tokens.test.ts`:
 
@@ -126,12 +130,12 @@ describe('target card layout', () => {
 
 (`layout` is already imported at the top of the file.)
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: FAIL — `expected undefined to be 8`.
 
-- [ ] **Step 3: Add the tokens**
+- [x] **Step 3: Add the tokens**
 
 In `packages/ui/src/tokens.ts`, inside `export const layout = {`, after `paceTickOverhang: 3,`:
 
@@ -144,12 +148,12 @@ In `packages/ui/src/tokens.ts`, inside `export const layout = {`, after `paceTic
   targetRingSmall: 28,
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -165,7 +169,7 @@ rtk git commit -m "feat(ui): layout tokens for target cards"
 - Test: `packages/core/src/targets.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/core/src/targets.test.ts`:
 
@@ -219,12 +223,12 @@ describe('featuredTarget', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- targets`
 Expected: FAIL — `Cannot find module './targets'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/targets.ts`:
 
@@ -283,12 +287,12 @@ Add to `packages/core/src/index.ts`, keeping the alphabetical order (after `./st
 export * from './targets';
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- targets`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src/targets.ts packages/core/src/targets.test.ts packages/core/src/index.ts
@@ -304,7 +308,7 @@ rtk git commit -m "feat(core): featuredTarget ranks target-card items with hyste
 - Test: `packages/core/src/budgetTargets.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/core/src/budgetTargets.test.ts`:
 
@@ -440,12 +444,12 @@ describe('budgetAdvice', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- budgetTargets`
 Expected: FAIL — `Cannot find module './budgetTargets'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/budgetTargets.ts`:
 
@@ -548,12 +552,12 @@ Add to `packages/core/src/index.ts` after `export * from './budgetRanges';`:
 export * from './budgetTargets';
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- budgetTargets`
 Expected: PASS, 14 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src/budgetTargets.ts packages/core/src/budgetTargets.test.ts packages/core/src/index.ts
@@ -568,7 +572,7 @@ rtk git commit -m "feat(core): rank, list and advise budgets for the target card
 - Modify: `apps/mobile/src/features/budgets/useBudgetProgress.ts`
 - Test: `apps/mobile/src/features/budgets/useBudgetProgress.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `useBudgetProgress.test.ts`, change the test `'reports the days left and whether the range is still open'` to:
 
@@ -582,12 +586,12 @@ In `useBudgetProgress.test.ts`, change the test `'reports the days left and whet
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/budgets/useBudgetProgress.test.ts`
 Expected: FAIL — `expected undefined to be close to 0.7419…`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `useBudgetProgress.ts`, add to `BudgetView` after `daysLeft`:
 
@@ -625,12 +629,12 @@ with:
 
 and add `pace,` to the returned object, after `daysLeft: Math.max(0, length - elapsed),`.
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/budgets`
 Expected: `useBudgetProgress.test.ts` PASS. `HomeBudgetCard.test.tsx` now fails typecheck on its `view()` helper only at `pnpm typecheck` time (jest does not type-check); it is rewritten in Task 11.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/budgets/useBudgetProgress.ts apps/mobile/src/features/budgets/useBudgetProgress.test.ts
@@ -644,7 +648,7 @@ rtk git commit -m "feat(mobile): budget views carry their pace"
 **Files:**
 - Modify: `apps/mobile/src/components/ProgressBar.tsx`
 
-- [ ] **Step 1: Add the prop**
+- [x] **Step 1: Add the prop**
 
 In `ProgressBarProps`, after `hideable?: boolean;`:
 
@@ -687,12 +691,12 @@ Then replace every `theme.layout.progressHeight` in the JSX with `height` (three
         />
 ```
 
-- [ ] **Step 2: Check nothing else moved**
+- [x] **Step 2: Check nothing else moved**
 
 Run: `rtk proxy pnpm --filter mobile test` and `rtk proxy pnpm --filter mobile typecheck`
 Expected: no new failures (the default path is unchanged). If `mobile` has no `typecheck` script, run `rtk proxy pnpm typecheck` at the root.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/ProgressBar.tsx
@@ -707,7 +711,7 @@ rtk git commit -m "feat(mobile): thick progress bar for featured targets"
 - Create: `apps/mobile/src/components/ringGeometry.ts`, `apps/mobile/src/components/ringGeometry.test.ts`
 - Create: `apps/mobile/src/components/TargetRing.tsx`, `apps/mobile/src/components/TargetRing.test.tsx`
 
-- [ ] **Step 1: Write the failing geometry test**
+- [x] **Step 1: Write the failing geometry test**
 
 Create `apps/mobile/src/components/ringGeometry.test.ts`:
 
@@ -744,12 +748,12 @@ describe('ringGeometry', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/ringGeometry.test.ts`
 Expected: FAIL — `Cannot find module './ringGeometry'`.
 
-- [ ] **Step 3: Implement the geometry**
+- [x] **Step 3: Implement the geometry**
 
 Create `apps/mobile/src/components/ringGeometry.ts`:
 
@@ -803,12 +807,12 @@ export function ringGeometry(size: number, ratio: number, pace: number | null): 
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/ringGeometry.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Write the failing component test**
+- [x] **Step 5: Write the failing component test**
 
 Create `apps/mobile/src/components/TargetRing.test.tsx`:
 
@@ -840,12 +844,12 @@ describe('TargetRing', () => {
 });
 ```
 
-- [ ] **Step 6: Run it and see it fail**
+- [x] **Step 6: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/TargetRing.test.tsx`
 Expected: FAIL — `Cannot find module './TargetRing'`.
 
-- [ ] **Step 7: Implement the ring**
+- [x] **Step 7: Implement the ring**
 
 Create `apps/mobile/src/components/TargetRing.tsx`:
 
@@ -960,12 +964,12 @@ with:
  *    margins or padding.
 ```
 
-- [ ] **Step 8: Run it and see it pass**
+- [x] **Step 8: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/TargetRing.test.tsx src/components/ringGeometry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/ringGeometry.ts apps/mobile/src/components/ringGeometry.test.ts apps/mobile/src/components/TargetRing.tsx apps/mobile/src/components/TargetRing.test.tsx apps/mobile/src/theme/motion.ts
@@ -981,7 +985,7 @@ rtk git commit -m "feat(mobile): TargetRing draws progress, pace and icon, anima
 
 Each catalog gets a `targets` block right after its `home: { … },` block (before the closing `};`). `<b>…</b>` marks the part of the sentence rendered at weight 500 through `Trans` (Task 10). The parity test (`locales.test.ts`) checks the keys and the `{{variables}}` against `it.ts`.
 
-- [ ] **Step 1: Italian (the source)**
+- [x] **Step 1: Italian (the source)**
 
 In `packages/i18n/src/locales/it.ts`, after the `home` block:
 
@@ -1010,7 +1014,7 @@ In `packages/i18n/src/locales/it.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 2: English**
+- [x] **Step 2: English**
 
 In `en.ts`, after the `home` block:
 
@@ -1039,7 +1043,7 @@ In `en.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 3: French**
+- [x] **Step 3: French**
 
 In `fr.ts`, after the `home` block:
 
@@ -1068,7 +1072,7 @@ In `fr.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 4: German**
+- [x] **Step 4: German**
 
 In `de.ts`, after the `home` block:
 
@@ -1097,7 +1101,7 @@ In `de.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 5: Swedish**
+- [x] **Step 5: Swedish**
 
 In `sv.ts`, after the `home` block:
 
@@ -1126,7 +1130,7 @@ In `sv.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 6: Spanish**
+- [x] **Step 6: Spanish**
 
 In `es.ts`, after the `home` block:
 
@@ -1155,7 +1159,7 @@ In `es.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 7: Portuguese (European, "tu")**
+- [x] **Step 7: Portuguese (European, "tu")**
 
 In `pt.ts`, after the `home` block:
 
@@ -1184,12 +1188,12 @@ In `pt.ts`, after the `home` block:
   },
 ```
 
-- [ ] **Step 8: Run the parity test**
+- [x] **Step 8: Run the parity test**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS (same keys and variables in all seven catalogs).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add packages/i18n/src/locales
@@ -1205,7 +1209,7 @@ rtk git commit -m "feat(i18n): target card strings"
 
 The Home card's featured budget and event rows open the budget detail sheet (§5.13 "Taps"). The sheet lives on the budgets screen, so Home pushes `/budgets?open={id}`.
 
-- [ ] **Step 1: Seed the open sheet from the route**
+- [x] **Step 1: Seed the open sheet from the route**
 
 Change the import `import { useRouter } from 'expo-router';` to:
 
@@ -1227,7 +1231,7 @@ with:
   const [openId, setOpenId] = useState<string | null>(open ?? null);
 ```
 
-- [ ] **Step 2: Draw the pace tick at the pace**
+- [x] **Step 2: Draw the pace tick at the pace**
 
 Replace:
 
@@ -1241,12 +1245,12 @@ with:
                     pace={view.open ? view.pace : undefined}
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm typecheck`
 Expected: only the `HomeBudgetCard.test.tsx` error about `pace` missing in its `view()` helper (fixed in Task 11). Nothing in `budgets.tsx`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/mobile/app/budgets.tsx
@@ -1264,7 +1268,7 @@ rtk git commit -m "fix(mobile): budget list draws the pace tick at the pace, ope
 
 Both components are exercised through `HomeBudgetCard.test.tsx` (Task 11); the one piece of logic they own, which labels show under the bar, is tested here.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/targets/endLabels.test.ts`:
 
@@ -1290,12 +1294,12 @@ describe('endLabels', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/targets`
 Expected: FAIL — `Cannot find module './endLabels'`.
 
-- [ ] **Step 3: Implement `endLabels`**
+- [x] **Step 3: Implement `endLabels`**
 
 Create `apps/mobile/src/features/targets/endLabels.ts`:
 
@@ -1317,12 +1321,12 @@ export function endLabels(pace: number | null): EndLabels {
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/targets`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Create `FeaturedTarget`**
+- [x] **Step 5: Create `FeaturedTarget`**
 
 Create `apps/mobile/src/features/targets/FeaturedTarget.tsx`:
 
@@ -1451,7 +1455,7 @@ export function FeaturedTarget(props: FeaturedTargetProps) {
 }
 ```
 
-- [ ] **Step 6: Create `SeeAllRow`**
+- [x] **Step 6: Create `SeeAllRow`**
 
 Create `apps/mobile/src/features/targets/SeeAllRow.tsx`:
 
@@ -1518,12 +1522,12 @@ export function SeeAllRow({ label, count, rings = [], onPress }: SeeAllRowProps)
 }
 ```
 
-- [ ] **Step 7: Typecheck**
+- [x] **Step 7: Typecheck**
 
 Run: `rtk proxy pnpm typecheck`
 Expected: no errors in the new files (the `HomeBudgetCard.test.tsx` one remains until Task 11). If `theme.layout` does not expose the new tokens, check that the theme spreads `layout` from `@saldo/ui` (`src/theme/ThemeProvider.tsx`) — it does for `progressHeight`, so the new keys come with it.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/targets
@@ -1538,7 +1542,7 @@ rtk git commit -m "feat(mobile): FeaturedTarget and SeeAllRow for target cards"
 - Rewrite: `apps/mobile/src/features/budgets/HomeBudgetCard.tsx`
 - Rewrite: `apps/mobile/src/features/budgets/HomeBudgetCard.test.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace the whole of `HomeBudgetCard.test.tsx` with:
 
@@ -1700,12 +1704,12 @@ describe('HomeBudgetCard', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/budgets/HomeBudgetCard.test.tsx`
 Expected: FAIL — `FEATURED_BUDGET_KEY` is not exported, and the old card renders "top 3" rows.
 
-- [ ] **Step 3: Rewrite the card**
+- [x] **Step 3: Rewrite the card**
 
 Replace the whole of `HomeBudgetCard.tsx` with:
 
@@ -1969,14 +1973,14 @@ function BudgetSentence({
 }
 ```
 
-- [ ] **Step 4: Run the tests and see them pass**
+- [x] **Step 4: Run the tests and see them pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/budgets`
 Expected: PASS, including the 7 `HomeBudgetCard` tests.
 
 If the sentence test fails on whitespace, print what rendered with `screen.debug()` and compare: the only join between action and state is the `{' '}`; `formatMoney` in `en` gives `€12.50`, `formatDayMonth('2026-04-26', 'en')` gives `Apr 26`. Fix the component, not the expectation, unless the difference is in `@saldo/i18n`'s documented output.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/budgets/HomeBudgetCard.tsx apps/mobile/src/features/budgets/HomeBudgetCard.test.tsx
@@ -1987,24 +1991,25 @@ rtk git commit -m "feat(mobile): Home budget card becomes a target card"
 
 ### Task 12: Verify the whole repository
 
-- [ ] **Step 1: Lint**
+- [x] **Step 1: Lint**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.` (AGENTS.md: the exit code alone is not a pass). Fix formatting with `pnpm biome check --write <file>` if Biome reports only formatting.
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm typecheck`
 Expected: every package and app passes.
 
-- [ ] **Step 3: Tests**
+- [x] **Step 3: Tests**
 
 Run: `rtk proxy pnpm test`
 Expected: every package and app passes; read the summary lines, not the exit code.
 
 - [ ] **Step 4: On the simulator**
 
-Start the app (`pnpm --filter mobile start`, then `i`) with the demo data (`DevTools` on Home seeds it) and check, in dark and light:
+**Not done by the implementer (2026-09-24):** `xcrun simctl` hung on `launch` and `screenshot` and Simulator.app
+is not installed on this machine; the checks below are left to a device run. Start the app (`pnpm --filter mobile start`, then `i`) with the demo data (`DevTools` on Home seeds it) and check, in dark and light:
 
 1. Home → Budget card: one budget featured with the 8pt bar, `oggi` under the tick, and the sentence with its amount in bold.
 2. A budget over its limit (add an expense larger than what is left): it takes the featured slot at once, the header reads «1 oltre il limite», the sentence reads «Hai superato il limite di …».
@@ -2015,7 +2020,7 @@ Start the app (`pnpm --filter mobile start`, then `i`) with the demo data (`DevT
 6. Hidden mode (eye in the header): the Budget card does not change.
 7. VoiceOver: the featured block reads «{name}, {speso} di {limite}, {stato}»; the rings are not announced.
 
-- [ ] **Step 5: Tick the roadmap**
+- [x] **Step 5: Tick the roadmap**
 
 In `ROADMAP.md`, under «Goals: saving towards a target», change `- [ ] Plan A: the target card, …` to `- [x] Plan A: …` and commit:
 
