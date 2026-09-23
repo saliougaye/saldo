@@ -28,16 +28,17 @@ RNTL for the app, Vitest for packages, i18next.
   separator now comes from `formatMoneyParts().decimalSeparator` rather than an `it` check, so every language gets its
   own key glyph.
 
-**Decisions taken here (flagged for the user):**
+**Decisions taken here (2 and 3 confirmed by the user on 2026-09-23):**
 
 1. **D23 is rewritten**, not annotated: the spec now says amounts are typed on Saldo's own keypad. §5.1, §6.16, §6.22
    and the testing table are updated with it.
 2. **The field stays a `TextInput`** with the soft keyboard suppressed, rather than becoming a `Pressable`. Same visual
-   result, but the accessibility tree, the caret, text selection and most existing tests survive.
+   result, but the accessibility tree, the caret, text selection, paste, hardware-keyboard typing and most existing
+   tests survive. **Confirmed by the user on 2026-09-23.**
 3. **Onboarding steps:** the pad's tall key is «Continua» and the pad never closes (per the chosen mockup). To avoid
    two «Continua» buttons, `StepFooter` hides its primary button while the pad is open **and keeps «Indietro»**, so the
-   way back is never lost. (The mockup hid the whole footer; losing Back on two onboarding steps is a regression, hence
-   this arrangement. Easy to change if the user prefers the mockup exactly.)
+   way back is never lost. The mockup hid the whole footer; losing Back on two onboarding steps would be a regression,
+   hence this arrangement. **Confirmed by the user on 2026-09-23**, and written into §6.29.
 4. **No haptics.** The app uses none today (no `expo-haptics` dependency anywhere), so adding one for key presses would
    be the only haptic in the product. Left out deliberately; one line in `AmountKeypad` adds it later.
 
