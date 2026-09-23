@@ -832,7 +832,8 @@ describe('TargetRing', () => {
         />
       </ThemeProvider>,
     );
-    const ring = screen.getByTestId('ring');
+    // Hidden from assistive technology on purpose, so the default query would not find it.
+    const ring = screen.getByTestId('ring', { includeHiddenElements: true });
     expect(ring.props.accessibilityElementsHidden).toBe(true);
     expect(ring.props.importantForAccessibility).toBe('no-hide-descendants');
   });

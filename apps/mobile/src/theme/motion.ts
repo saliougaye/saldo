@@ -18,7 +18,9 @@ import { countUpValue } from './countUp';
  * The app's motion, in one place (§13 says nothing about timing, so this is the scale).
  *
  * Three rules hold everywhere:
- *  - **Only `transform` and `opacity`.** Everything else costs layout on every frame.
+ *  - **Nothing that costs layout on every frame.** `transform` and `opacity`, plus SVG props driven
+ *    by `useAnimatedProps` on the UI thread (a ring's `strokeDashoffset`); never width, height,
+ *    margins or padding.
  *  - **Enter and exit are asymmetric.** Something arriving is worth watching; something leaving is
  *    in the way, so it goes at `pressMs`.
  *  - **Motion is never the only cue.** Every animation here decorates a change that is already
