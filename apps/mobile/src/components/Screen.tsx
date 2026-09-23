@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,6 +8,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeProvider';
+import { AmountKeypad } from './keypad/AmountKeypad';
+import { AmountKeypadProvider, useAmountKeypad } from './keypad/AmountKeypadProvider';
+import { revealOffset } from './keypad/revealOffset';
 import { ScrollFade } from './ScrollFade';
 import { SyncScrollView } from './SyncScrollView';
 
@@ -40,8 +43,22 @@ export interface ScreenProps {
   keyboardDismissMode?: ScrollViewProps['keyboardDismissMode'];
 }
 
-/** Screen frame: theme background, safe-area insets and the §6 horizontal padding. */
-export function Screen({
+/**
+ * Screen frame: theme background, safe-area insets and the §6 horizontal padding.
+ *
+ * It also hosts the amount keypad (§5.1, D23), which is why every amount field works without a
+ * host provider of its own: the pad is drawn in the same bottom stack as the footer, so the footer
+ * rides above it and the content reserves room for both.
+ */
+export function Screen(props: ScreenProps) {
+  return (
+    <AmountKeypadProvider>
+      <ScreenBody {...props} />
+    </AmountKeypadProvider>
+  );
+}
+
+function ScreenBody({
   children,
   scroll = true,
   footer,
@@ -57,6 +74,30 @@ export function Screen({
   // footer covers. Measured rather than assumed: it is one button on most screens and three
   // stacked elements on the transaction form.
   const [footerHeight, setFooterHeight] = useState(0);
+  // The keypad is the other thing drawn over the content, and the only one that comes and goes.
+  const { session, version } = useAmountKeypad();
+  const [padHeight, setPadHeight] = useState(0);
+  const scroller = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
+  const viewport = useRef({ top: 0, bottom: 0 });
+  const padded = session === null ? 0 : padHeight;
+
+  // Bring the focused field out from under the pad. `measureInWindow` does nothing under RNTL,
+  // which is why this is a no-op in tests and the maths it feeds is tested on its own.
+  useEffect(() => {
+    const node = session?.node.current;
+    if (node === null || node === undefined || padHeight === 0) return;
+    node.measureInWindow((_x, y, _width, height) => {
+      const offset = revealOffset({
+        fieldTop: y,
+        fieldBottom: y + height,
+        top: viewport.current.top,
+        bottom: viewport.current.bottom,
+      });
+      if (offset !== 0) scroller.current?.scrollTo({ y: scrollY.current + offset, animated: true });
+    });
+  }, [session, padHeight]);
+
   const padding = {
     paddingHorizontal: theme.layout.screenPaddingX,
     paddingTop: sheet ? 12 : insets.top + 8,
@@ -77,7 +118,16 @@ export function Screen({
       >
         {scroll ? (
           <Scroller
+            ref={scroller}
             testID="screen-scroll"
+            onScroll={(event) => {
+              scrollY.current = event.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
+            onLayout={(event) => {
+              const { y, height } = event.nativeEvent.layout;
+              viewport.current = { top: y, bottom: y + height - footerHeight - padded };
+            }}
             /*
              * The top inset sits outside the scroll view, not inside its content. A pull's spinner
              * is drawn at the top of the scroll view's own frame: with the frame starting at the
@@ -95,7 +145,7 @@ export function Screen({
             stickyHeaderIndices={stickyHeaderIndices}
             contentContainerStyle={{
               paddingHorizontal: padding.paddingHorizontal,
-              paddingBottom: 24 + tabBarSpace + footerHeight,
+              paddingBottom: 24 + tabBarSpace + footerHeight + padded,
               gap: theme.layout.cardGap,
             }}
           >
@@ -106,30 +156,50 @@ export function Screen({
             style={{
               flex: 1,
               ...padding,
-              paddingBottom: tabBarSpace + footerHeight,
+              paddingBottom: tabBarSpace + footerHeight + padded,
               gap: theme.layout.cardGap,
             }}
           >
             {children}
           </View>
         )}
-        {footer === undefined ? null : (
-          <View
-            onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}
-          >
-            <ScrollFade />
-            <View
-              style={{
-                backgroundColor: theme.palette.bg,
-                paddingHorizontal: theme.layout.screenPaddingX,
-                paddingBottom: insets.bottom + 16,
-                paddingTop: 4,
-                gap: 8,
-              }}
-            >
-              {footer}
-            </View>
+        {footer === undefined && session === null ? null : (
+          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+            {footer === undefined ? null : (
+              <View onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}>
+                <ScrollFade />
+                <View
+                  style={{
+                    backgroundColor: theme.palette.bg,
+                    paddingHorizontal: theme.layout.screenPaddingX,
+                    // The keypad below brings its own bottom inset; the footer only keeps one
+                    // while it is the last thing on the screen.
+                    paddingBottom: session === null ? insets.bottom + 16 : 16,
+                    paddingTop: 4,
+                    gap: 8,
+                  }}
+                >
+                  {footer}
+                </View>
+              </View>
+            )}
+            {session === null ? null : (
+              <View
+                // Re-mounted per field, so the pad slides in again when a new one takes it over.
+                key={session.id}
+                style={{
+                  backgroundColor: theme.palette.bg,
+                  paddingBottom: insets.bottom + theme.layout.keypadPaddingY,
+                }}
+              >
+                <AmountKeypad
+                  session={session}
+                  // `version` changes on every press, which is what re-reads the sign.
+                  negative={version >= 0 && session.isNegative()}
+                  onLayoutHeight={setPadHeight}
+                />
+              </View>
+            )}
           </View>
         )}
       </KeyboardAvoidingView>

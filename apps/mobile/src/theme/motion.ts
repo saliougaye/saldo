@@ -121,7 +121,7 @@ export function stepEntering(chunk: number, word?: number) {
     .reduceMotion(ReduceMotion.System);
 }
 
-const SWAP_EASE = Easing.bezier(...motion.swapEasing);
+export const SWAP_EASE = Easing.bezier(...motion.swapEasing);
 
 /** A row of the permissions list growing or shrinking as it opens and closes. */
 export const expanding = LinearTransition.duration(motion.expandMs)
