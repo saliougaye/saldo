@@ -40,6 +40,7 @@ import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
+import { AmountChoice } from './AmountChoice';
 import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
 import { RecurrenceSheet } from './RecurrenceSheet';
@@ -313,11 +314,6 @@ export function TransactionForm({
               })}
             </Text>
           )}
-          {overpays ? (
-            <Text size="footnote" color="textMuted">
-              {t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })}
-            </Text>
-          ) : null}
           {values.recurrence !== null && occurrenceOf === null ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Icon name="repeat" size={12} color={theme.palette.textMuted} />
@@ -369,18 +365,37 @@ export function TransactionForm({
           />
         </View>
         {amountShortcuts.length === 0 ? null : (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {amountShortcuts.map((shortcut) => (
-              <Chip
-                key={shortcut.key}
-                // The figure on the chip, so the choice is readable before it is made.
-                label={`${shortcut.label} · ${spoken(shortcut.minor)}`}
-                active={typed === shortcut.minor}
-                onPress={() => set({ buffer: minorToAmountBuffer(shortcut.minor, minorDigits) })}
-              />
-            ))}
-          </View>
+          <>
+            <AmountChoice
+              accessibilityLabel={t('txForm.amount')}
+              options={amountShortcuts.map((shortcut) => ({
+                ...shortcut,
+                amount: spoken(shortcut.minor),
+              }))}
+              value={amountShortcuts.find((shortcut) => shortcut.minor === typed)?.key ?? null}
+              onSelect={(option) => set({ buffer: minorToAmountBuffer(option.minor, minorDigits) })}
+            />
+            {amountShortcuts.some((shortcut) => shortcut.minor === typed) ? null : (
+              // The state a segmented control does not have: the field holds neither figure, and
+              // the thumb has faded away, so the line says what is on screen.
+              <Text size="footnote" color="textMuted" style={{ marginTop: 8 }}>
+                {t('txForm.customAmount')}
+              </Text>
+            )}
+          </>
         )}
+        {overpays ? (
+          // Next to its cause rather than in the footer: it is about the amount, and it never
+          // blocks save.
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10 }}>
+            <View style={{ marginTop: 1 }}>
+              <Icon name="info" size={14} color={theme.palette.textMuted} />
+            </View>
+            <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+              {t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })}
+            </Text>
+          </View>
+        ) : null}
       </Card>
 
       <Card>

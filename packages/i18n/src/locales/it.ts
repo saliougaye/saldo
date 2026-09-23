@@ -217,6 +217,7 @@ export const it = {
     missing_sameAccount: 'Il conto di destinazione deve essere diverso.',
     missing_insufficientFunds: 'Sul conto di partenza ci sono solo {{available}}.',
     cardInCredit: 'La carta andrà in attivo di {{amount}}.',
+    customAmount: 'Importo personalizzato',
     otherCategory: 'Altro',
     account: 'Conto',
     from: 'Da',
@@ -633,8 +634,8 @@ export const it = {
     noPaymentAccount: 'Nessuno',
     creditNote:
       'Il ciclo chiude il {{close}} di ogni mese, l’addebito parte il {{charge}} su {{account}}.',
-    dueOn: 'Da saldare il {{date}}',
-    statementPaid: 'Estratto conto saldato',
+    statementShort: 'Estratto conto',
+    paidShort: 'Saldato',
     settleCard: 'Salda carta',
     settleDescription: 'Saldo {{card}} · {{month}}',
     settleStatement: 'Estratto conto',

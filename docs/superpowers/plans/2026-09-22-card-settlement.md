@@ -47,12 +47,19 @@ exists in §4, the SQLite table and the sync payload, so **no migration** and `S
   statement's close date ("Saldo Visa · aprile 2026"); without a statement, the month of the transfer date.
 - **Payment account.** Only non-card, non-archived accounts, and never the card itself. If the stored one has since
   been archived (or is a card), the sheet opens with "Da" empty rather than on a hidden account.
-- **Card box** (account detail). Shown for every non-archived-or-archived credit card that has something to show.
-  When a statement is due and there is a charge date, the "Prossimo addebito" row becomes "Da saldare il {date}" with
-  the amount on the right (same date, so not both); when the statement is paid, a muted "Estratto conto saldato" line.
-  The prototype's credit note (`Spese.dc.html` 3061: "…l'addebito parte il {charge} su {account}") is shown when both
-  days and the payment account are set. "Salda carta" is a `SecondaryButton` at the bottom of the box, shown when the
-  card owes anything and is not archived.
+- **Card box** (account detail) — **variant "Sobria"**, chosen by the user on 2026-09-23 from
+  `docs/design/mockups/card-settlement-variants.html` (`?section=box&box=quiet`, branch `design/card-settlement`).
+  One list with hairlines between the rows, no button:
+  - "Maturato nel ciclo di fatturazione" keeps its row (close day set).
+  - "Prossimo addebito" keeps its title and gains a subtitle. While a statement is due: "5 ottobre · Estratto conto"
+    (`accounts.statementShort`) with the amount due as the row's trailing figure, at the ordinary weight — the
+    subtitle, not a bolder number, is what tells the two figures apart. Otherwise the subtitle is the charge date
+    alone, and a paid statement puts "✓ Saldato" (`accounts.paidShort`, `check` at 14) where the amount was. The row
+    is keyed on that state, so paying the card **swaps it in** (`swapIn(0.96)`, `motion.fadeMs` on `swapEasing`).
+  - "Salda carta" is the last row of the list: a navigation row with a `swap` icon box and a chevron, like the
+    prototype's "Trasferisci verso un altro conto". Shown when the card owes anything and is not archived.
+  - The prototype's credit note (`Spese.dc.html` 3061) closes the card, when both days and the payment account are
+    set. `accounts.dueOn` and `accounts.statementPaid` are gone with the button variant they belonged to.
 - **Reminder.** One `DATE` trigger per card, id `card-charge:{accountId}`, at 09:00 of the charge date. Every run
   cancels all `card-charge:*` requests and schedules the current set, skipped when the set (ids, times, titles) has not
   changed since the last run. Skipped when due is 0, the charge date is past, the trigger time has passed (today after
@@ -65,12 +72,22 @@ exists in §4, the SQLite table and the sync payload, so **no migration** and `S
   if the tabs have unmounted: a tap that also re-locks the app replaces the tabs with the lock (`startOver`), and the
   account must not open over it. A foreground presentation handler is still not set (same as budget alerts): a
   reminder that fires while the app is open is not shown. Noted, not changed.
-- **Overpay warning.** `transferOverpaysCard` mirrors `transferOverdrawsSource` on the destination: a muted footer
-  line "La carta andrà in attivo di {amount}." that never disables save. Like the funds check, it only speaks when the
-  transfer moves today's balance (a future-dated one does not, `after === now`).
-- **Motion / press feedback.** No new motion. Amount shortcuts are `Chip`s (scale 0.96 + opacity on press, the
-  better-ui value); "Salda carta" reuses `SecondaryButton` (opacity on press) to stay consistent with every other
-  button — adding scale to the button primitives is an app-wide change outside this item.
+- **The amount in the settle sheet** — **variant "Segmenti"**, chosen on 2026-09-23
+  (`?section=sheet&sheet=segments`). Under the field, two 48pt segments in the `Segmented` look (`AmountChoice`,
+  `src/features/transactions/AmountChoice.tsx`): label over figure, a thumb that slides between them. Shown only when
+  the statement and the whole balance differ, as the chips were. The typed amount decides which is checked; when it
+  matches neither, the thumb fades out and a footnote reads "Importo personalizzato" (`txForm.customAmount`) — the
+  state a segmented control does not have, which is why the segments carry `radio` roles rather than `Segmented`'s
+  tabs. The chips (`Chip` + `amountShortcuts` as a label list) are gone.
+- **Overpay warning.** `transferOverpaysCard` mirrors `transferOverdrawsSource` on the destination: "La carta andrà
+  in attivo di {amount}.", muted, never disabling save. Per the chosen variant it sits **inline in the amount card**,
+  under the segments, with an `info` glyph at 14 — next to its cause rather than in the footer. Like the funds check,
+  it only speaks when the transfer moves today's balance (a future-dated one does not, `after === now`).
+- **Motion / press feedback.** From the mockup's notes: the thumb travels on `motion.toggleMs` (180ms) with
+  `motion.easing` and fades on the same duration when the amount is custom; the segments press to **0.97** (the
+  mockup's `--press-scale` for these new controls, where the older `Chip` uses 0.96); the charge row swaps in over
+  `motion.fadeMs` from `swapFromScale`. Reduce Motion is honoured by `useMotion().duration` and `ReduceMotion.System`.
+  "Salda carta" is a row, so its feedback is `ListRow`'s own press.
 - **Import** keeps `creditPaymentAccountId: null`: neither the Spendee CSV nor the generic one carries it.
 
 ---
@@ -86,7 +103,8 @@ exists in §4, the SQLite table and the sync payload, so **no migration** and `S
 | `apps/mobile/app/account/new.tsx`, `app/account/edit/[id].tsx` | write it |
 | `apps/mobile/src/features/accounts/settlement.ts` (+ test) | draft ↔ route params ↔ form |
 | `apps/mobile/app/transaction/new.tsx` | read the pre-fill params |
-| `apps/mobile/src/features/transactions/TransactionForm.tsx` | `amountShortcuts` chips, overpay warning |
+| `apps/mobile/src/features/transactions/AmountChoice.tsx` | the two-way amount choice ("Segmenti") |
+| `apps/mobile/src/features/transactions/TransactionForm.tsx` | `amountShortcuts` → `AmountChoice`, inline overpay warning |
 | `apps/mobile/app/account/[id].tsx` | card box: settlement line, note, "Salda carta" |
 | `apps/mobile/src/features/accounts/cardReminders.ts` (+ test) | ids, trigger date, plan, tap payload |
 | `apps/mobile/src/features/accounts/CardRemindersGate.tsx` | schedule the reminders |
@@ -430,8 +448,9 @@ export function transferOverpaysCard(
 
 ### Task 3: i18n keys
 
-**Files:** `packages/i18n/src/locales/it.ts`, `en.ts` (in `accounts`, after `transferTo`; in `txForm` after
-`missing_insufficientFunds`)
+**Files:** `packages/i18n/src/locales/{it,en,fr,de,sv,es,pt}.ts` (in `accounts`, after `transferTo`; in `txForm`
+after `missing_insufficientFunds`). Since 2026-09-22 the app speaks seven languages and `locales.test.ts` checks
+every catalog against `it` — keys and `{{variables}}` — so a key lands in all seven at once.
 
 - [x] **Step 1:** add
 
@@ -440,14 +459,19 @@ export function transferOverpaysCard(
 | `accounts.creditPaymentAccount` | Addebitata su | Paid from |
 | `accounts.noPaymentAccount` | Nessuno | None |
 | `accounts.creditNote` | Il ciclo chiude il {{close}} di ogni mese, l’addebito parte il {{charge}} su {{account}}. | The statement closes on day {{close}} of each month and is charged on day {{charge}} to {{account}}. |
-| `accounts.dueOn` | Da saldare il {{date}} | Due on {{date}} |
-| `accounts.statementPaid` | Estratto conto saldato | Statement paid |
+| `accounts.statementShort` | Estratto conto | Statement |
+| `accounts.paidShort` | Saldato | Paid |
 | `accounts.settleCard` | Salda carta | Pay off card |
 | `accounts.settleDescription` | Saldo {{card}} · {{month}} | {{card}} payment · {{month}} |
 | `accounts.settleStatement` | Estratto conto | Statement |
 | `accounts.settleBalance` | Tutto il saldo | Whole balance |
 | `accounts.reminderTitle` | Carta {{name}}: {{amount}} da saldare oggi | Card {{name}}: {{amount}} due today |
 | `txForm.cardInCredit` | La carta andrà in attivo di {{amount}}. | The card will be {{amount}} in credit. |
+| `txForm.customAmount` | Importo personalizzato | Custom amount |
+
+The other five catalogs carry the same keys, in the tone of their neighbours: fr `Prélevée sur` / `Régler la carte`,
+de `Abbuchung von` / `Karte ausgleichen`, sv `Dras från` / `Betala kortet`, es `Se carga en` / `Pagar la tarjeta`,
+pt `Debitada em` / `Pagar o cartão`.
 
 - [x] **Step 2:** `rtk proxy pnpm --filter @saldo/i18n test` → parity PASS. Commit `feat(i18n): card settlement copy`.
 
@@ -614,12 +638,13 @@ export function settlementForm(
     `const [settlement] = useState(() => settlementForm(params, today, minorDigits));` and seed
     `values` from `settlement?.values ?? emptyForm(...)`; pass `amountShortcuts={settlement?.shortcuts.map(s => ({ ...s, label: t(\`accounts.settle${s.key === 'statement' ? 'Statement' : 'Balance'}\`) }))}`.
   - `TransactionForm`: optional prop `amountShortcuts?: readonly { key: string; label: string; minor: number }[]`,
-    rendered as a row of `Chip`s under the `AmountInput` (gap 6, marginTop 10) when non-empty; a chip is `active` when
-    `amountBufferToMinor(values.buffer, minorDigits) === shortcut.minor` and sets `buffer` to
-    `minorToAmountBuffer(minor, minorDigits)`; its label reads `"{label} · {amount}"` (via `spoken`, so hidden mode masks it) so the choice is readable before it is made.
+    rendered under the `AmountInput` when non-empty. **Variant "Segmenti" (2026-09-23):** as `AmountChoice`, whose
+    `options` carry the figure already formatted through `spoken` (hidden mode masks it), whose `value` is the key
+    whose `minor` equals `amountBufferToMinor(values.buffer, minorDigits)` (or null), and whose `onSelect` sets
+    `buffer` to `minorToAmountBuffer(minor, minorDigits)`; a null value adds the footnote `txForm.customAmount`.
   - `TransactionForm`: `const overpays = transferOverpaysCard(accounts.find(a => a.id === values.toAccountId), transferPreview.to);`
-    and in the footer, when `overpays`, a muted footnote `t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })`
-    after the missing line. Save stays enabled.
+    and, when `overpays`, an inline line **in the amount card** (`info` glyph 14, muted footnote,
+    `t('txForm.cardInCredit', { amount: spoken(transferPreview.to?.after ?? 0) })`). Save stays enabled.
 - [x] **Step 4:** run settlement + TransactionForm tests → PASS. Commit `feat(mobile): open the transfer sheet pre-filled to settle a card`.
 
 ### Task 6: card box on the account detail
@@ -632,14 +657,17 @@ export function settlementForm(
 - [x] **Step 2:** compute `statement = creditStatementDue(account, future, today)` and
   `draft = creditSettlementDraft(account, accounts, future, today)` for credit cards.
 - [x] **Step 3:** render the box for a credit card when any of these exist: accrued row (close day), the
-  charge/settlement row (charge day), the note (both days + payment account), the button (not archived and
-  `draft.balanceAmount > 0`).
-  - charge row: `statement?.due > 0 && statement.chargeDate !== null` → `ListRow` title
-    `t('accounts.dueOn', { date: formatDayMonth(chargeDate, locale) })`, trailing `AmountText` of `due`;
-    else the existing "Prossimo addebito" row; plus, when `statement.statement > 0 && statement.due === 0`, a caption
-    `accounts.statementPaid` in `textFaint`.
-  - note: caption `textFaint` `t('accounts.creditNote', { close, charge, account: paymentName })`.
-  - button: `SecondaryButton label={t('accounts.settleCard')}` (marginTop 8) →
+  charge row (charge day), the note (both days + payment account), the settle row (not archived and
+  `draft.balanceAmount > 0`). **Variant "Sobria" (2026-09-23):** a `Card padded={false}` holding one list, each row
+  after the first separated by a 1px `border` hairline, and the note under the list.
+  - charge row (`ListRow` title `accounts.nextCharge`), wrapped in an `Animated.View` keyed on its state with
+    `entering={swapIn(0.96)}`: with a due statement, subtitle
+    `${formatDayMonthLong(dueDate, locale)} · ${t('accounts.statementShort')}` and trailing `AmountText` of `due`;
+    otherwise subtitle `formatDayMonthLong(nextCreditChargeDate(chargeDay, today), locale)` and, when
+    `statement.statement > 0 && statement.due === 0`, a trailing `check` (14) + `accounts.paidShort`.
+  - note: caption `textFaint` `t('accounts.creditNote', { close, charge, account: paymentName })`, under the list.
+  - settle row: `ListRow title={t('accounts.settleCard')}` with `leading={<IconBox name="swap" colour={textMuted} />}`
+    and `chevron` →
     `router.push({ pathname: '/transaction/new', params: settlementParams(draft, t('accounts.settleDescription', { card: account.name, month: formatMonthYear(ym(draft.statementDate), locale) })) })`.
 - [x] **Step 4:** typecheck; commit `feat(mobile): statement due and Salda carta on the card box`.
 
@@ -734,4 +762,8 @@ export function reminderAccountId(data: unknown): string | null {
 
 ## Status
 
-Implemented on `feat/card-settlement`. Lint clean, typecheck green, tests green (core, i18n, ui, web, mobile 524). The first full run had two unrelated jest timeouts (`TagEditSheet`, `RecurrenceSheet`, 5 s under parallel load) that passed alone and on the rerun. Not tried on a device yet: the user tests on device. No migration.
+Implemented on `feat/card-settlement`, then rebased onto `main` (the negative-balance fix and the five new
+locales) and reworked to the design variants the user chose on 2026-09-23: card box **"Sobria"**, settle sheet
+**"Segmenti"**, "Addebitata su" unchanged. Lint clean, typecheck green; core 413, i18n 39, ui 26, web 182 and
+mobile 529 of 531 tests pass — the two failures are the known `TagEditSheet` / `RecurrenceSheet` 5 s timeouts that
+fail on `main` too and pass when run alone. Not tried on a device yet: the user tests on device. No migration.

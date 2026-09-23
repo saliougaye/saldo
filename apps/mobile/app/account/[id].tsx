@@ -16,7 +16,6 @@ import {
 import {
   formatDayMonth,
   formatDayMonthLong,
-  formatLongDate,
   formatMonthYear,
   formatSignedPercent,
 } from '@saldo/i18n';
@@ -25,6 +24,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { AmountText, AnimatedAmount } from '../../src/components/AmountText';
 import { PrimaryButton, SecondaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
@@ -45,11 +45,12 @@ import {
   SETTLEMENT_LOOKAHEAD_DAYS,
   settlementParams,
 } from '../../src/features/accounts/settlement';
-import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { useLeaveGone } from '../../src/navigation/leave';
+import { Icon } from '../../src/theme/Icon';
+import { swapIn } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -136,6 +137,8 @@ export default function AccountDetail() {
   const canSettle = !archived && draft !== null && draft.balanceAmount > 0;
   const showCardBox =
     isCard && (account.creditCloseDay !== null || account.creditChargeDay !== null || canSettle);
+  // The hairline between two rows of the card box, as the design's list draws it.
+  const rowDivider = { borderTopWidth: 1, borderTopColor: theme.palette.border } as const;
   const settle = () => {
     if (draft === null) return;
     const { year, month } = parseLocalDate(draft.statementDate);
@@ -222,65 +225,87 @@ export default function AccountDetail() {
       </Card>
 
       {showCardBox ? (
-        <Card>
-          {account.creditCloseDay === null ? null : (
-            <ListRow
-              title={t('accounts.accruedInCycle')}
-              trailing={
-                <AmountText
-                  align="end"
-                  minor={creditStatementAccrued(account.id, account.creditCloseDay, rows, today)}
-                  currency={currency}
-                  locale={locale}
+        // "Sobria" (design 2026-09-23): one list, no button. What the bank will take is the
+        // charge row's own figure, with the date and "Estratto conto" as its subtitle, and
+        // settling the card is a row like the prototype's "Trasferisci", not a second button
+        // under the hero.
+        <Card padded={false}>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
+            {account.creditCloseDay === null ? null : (
+              <ListRow
+                title={t('accounts.accruedInCycle')}
+                trailing={
+                  <AmountText
+                    align="end"
+                    minor={creditStatementAccrued(account.id, account.creditCloseDay, rows, today)}
+                    currency={currency}
+                    locale={locale}
+                  />
+                }
+              />
+            )}
+            {account.creditChargeDay === null ? null : (
+              <View style={rowDivider}>
+                {/* Keyed on the state, so paying the card swaps the row in rather than
+                    replacing it silently (better-ui swap, `motion.fadeMs`). */}
+                <Animated.View key={dueDate === null ? 'plain' : 'due'} entering={swapIn(0.96)}>
+                  <ListRow
+                    title={t('accounts.nextCharge')}
+                    subtitle={
+                      dueDate === null
+                        ? formatDayMonthLong(
+                            nextCreditChargeDate(account.creditChargeDay, today),
+                            locale,
+                          )
+                        : `${formatDayMonthLong(dueDate, locale)} · ${t('accounts.statementShort')}`
+                    }
+                    trailing={
+                      dueDate === null ? (
+                        statementPaid ? (
+                          <View
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                            accessible
+                            accessibilityLabel={t('accounts.paidShort')}
+                          >
+                            <Icon name="check" size={14} color={theme.palette.textMuted} />
+                            <Text size="footnote" color="textMuted">
+                              {t('accounts.paidShort')}
+                            </Text>
+                          </View>
+                        ) : undefined
+                      ) : (
+                        <AmountText align="end" minor={due} currency={currency} locale={locale} />
+                      )
+                    }
+                  />
+                </Animated.View>
+              </View>
+            )}
+            {canSettle ? (
+              <View style={rowDivider}>
+                <ListRow
+                  title={t('accounts.settleCard')}
+                  leading={<IconBox name="swap" colour={theme.palette.textMuted} />}
+                  chevron
+                  onPress={settle}
                 />
-              }
-            />
-          )}
-          {dueDate !== null ? (
-            // The same date as "Prossimo addebito", so it takes that row's place rather than
-            // repeating it: the date the bank takes the money, and how much.
-            <ListRow
-              title={t('accounts.dueOn', { date: formatDayMonthLong(dueDate, locale) })}
-              trailing={
-                <AmountText
-                  align="end"
-                  minor={due}
-                  currency={currency}
-                  locale={locale}
-                  weight="medium"
-                />
-              }
-            />
-          ) : account.creditChargeDay === null ? null : (
-            <ListRow
-              title={t('accounts.nextCharge')}
-              trailing={
-                <Text color="textMuted">
-                  {formatLongDate(nextCreditChargeDate(account.creditChargeDay, today), locale)}
-                </Text>
-              }
-            />
-          )}
-          {statementPaid ? (
-            <Text size="caption" color="textFaint">
-              {t('accounts.statementPaid')}
-            </Text>
-          ) : null}
+              </View>
+            ) : null}
+          </View>
           {account.creditCloseDay !== null &&
           account.creditChargeDay !== null &&
           paymentName !== null ? (
-            <Text size="caption" color="textFaint" style={{ marginTop: 4 }}>
+            <Text
+              size="caption"
+              color="textFaint"
+              style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 12 }}
+            >
               {t('accounts.creditNote', {
                 close: account.creditCloseDay,
                 charge: account.creditChargeDay,
                 account: paymentName,
               })}
             </Text>
-          ) : null}
-          {canSettle ? (
-            <View style={{ marginTop: 12 }}>
-              <SecondaryButton label={t('accounts.settleCard')} onPress={settle} />
-            </View>
           ) : null}
         </Card>
       ) : null}

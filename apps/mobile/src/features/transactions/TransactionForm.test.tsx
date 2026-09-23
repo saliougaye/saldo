@@ -154,15 +154,32 @@ describe('TransactionForm', () => {
     expect(screen.queryByText(/in credit/)).toBeNull();
   });
 
-  it('fills the amount from a one-tap shortcut', async () => {
+  it('picks the amount from the two-way choice, and names a custom one', async () => {
     const onChange = jest.fn();
     const shortcuts = [
       { key: 'statement', label: 'Statement', minor: 30_000 },
       { key: 'balance', label: 'Whole balance', minor: 35_000 },
     ];
     await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '300' }, shortcuts, onChange);
-    expect(screen.getByRole('button', { name: /^Statement/ })).toBeSelected();
-    await userEvent.press(screen.getByRole('button', { name: /^Whole balance/ }));
+    expect(screen.getByRole('radio', { name: /^Statement/ })).toBeChecked();
+    expect(screen.queryByText('Custom amount')).toBeNull();
+    await userEvent.press(screen.getByRole('radio', { name: /^Whole balance/ }));
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ buffer: '350' }));
+  });
+
+  it('says so when the typed amount is neither of the two', async () => {
+    const shortcuts = [
+      { key: 'statement', label: 'Statement', minor: 30_000 },
+      { key: 'balance', label: 'Whole balance', minor: 35_000 },
+    ];
+    await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '120' }, shortcuts);
+    expect(screen.getByText('Custom amount')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /^Statement/ })).not.toBeChecked();
+  });
+
+  it('leaves the choice out of an ordinary new transaction', async () => {
+    await renderForm();
+    expect(screen.queryByRole('radio', { name: /^Statement/ })).toBeNull();
+    expect(screen.queryByText('Custom amount')).toBeNull();
   });
 });

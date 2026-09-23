@@ -216,6 +216,7 @@ export const en: Messages = {
     missing_sameAccount: 'The destination account must be a different one.',
     missing_insufficientFunds: 'The source account only holds {{available}}.',
     cardInCredit: 'The card will be {{amount}} in credit.',
+    customAmount: 'Custom amount',
     otherCategory: 'Other',
     account: 'Account',
     from: 'From',
@@ -626,8 +627,8 @@ export const en: Messages = {
     noPaymentAccount: 'None',
     creditNote:
       'The statement closes on day {{close}} of each month and is charged on day {{charge}} to {{account}}.',
-    dueOn: 'Due on {{date}}',
-    statementPaid: 'Statement paid',
+    statementShort: 'Statement',
+    paidShort: 'Paid',
     settleCard: 'Pay off card',
     settleDescription: '{{card}} payment · {{month}}',
     settleStatement: 'Statement',
