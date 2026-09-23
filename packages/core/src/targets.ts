@@ -39,8 +39,7 @@ export function featuredTarget(
     }
   }
   if (best === undefined) return null;
-  const previous =
-    previousId === null ? undefined : items.find((item) => item.id === previousId);
+  const previous = previousId === null ? undefined : items.find((item) => item.id === previousId);
   if (previous === undefined || best.tier > previous.tier) return best.id;
   return best.score - previous.score > previous.margin ? best.id : previous.id;
 }

@@ -7,7 +7,10 @@ describe('ringGeometry', () => {
   });
 
   it('never fills past the whole circle, nor below nothing', () => {
-    expect(ringGeometry(36, 1.4, null).dash).toBeCloseTo(ringGeometry(36, 1, null).circumference, 10);
+    expect(ringGeometry(36, 1.4, null).dash).toBeCloseTo(
+      ringGeometry(36, 1, null).circumference,
+      10,
+    );
     expect(ringGeometry(36, -0.2, null).dash).toBe(0);
   });
 

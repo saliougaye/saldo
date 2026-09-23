@@ -1,6 +1,6 @@
 import {
-  budgetAdvice,
   type BudgetTargetInput,
+  budgetAdvice,
   budgetCardStatus,
   budgetEventIds,
   featuredTarget,
@@ -196,13 +196,7 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
 }
 
 /** Action (with its amount in bold), then state, muted (§5.13). */
-function BudgetSentence({
-  view,
-  money,
-}: {
-  view: BudgetView;
-  money: (minor: number) => string;
-}) {
+function BudgetSentence({ view, money }: { view: BudgetView; money: (minor: number) => string }) {
   const { t } = useTranslation();
   const locale = useAppLocale();
   const end = formatDayMonth(view.range.end, locale);

@@ -69,9 +69,10 @@ describe('budgetEventIds', () => {
 
 describe('budgetCardStatus', () => {
   it('counts the budgets over their limit first', () => {
-    expect(
-      budgetCardStatus([budget('a', 43080, 42000), budget('b', 8900, 10000)]),
-    ).toEqual({ kind: 'overLimit', count: 1 });
+    expect(budgetCardStatus([budget('a', 43080, 42000), budget('b', 8900, 10000)])).toEqual({
+      kind: 'overLimit',
+      count: 1,
+    });
   });
 
   it('then the budgets over pace', () => {

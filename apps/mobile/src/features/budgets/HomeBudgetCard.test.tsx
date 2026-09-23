@@ -97,9 +97,7 @@ describe('HomeBudgetCard', () => {
       ]),
     );
     expect(screen.getByText('2 over the limit')).toBeTruthy();
-    expect(
-      screen.getByLabelText('Spesa, €430.80 of €420.00, €10.80 over the limit'),
-    ).toBeTruthy();
+    expect(screen.getByLabelText('Spesa, €430.80 of €420.00, €10.80 over the limit')).toBeTruthy();
     expect(screen.getByText('Ristoranti')).toBeTruthy();
     expect(screen.getByText('€8.00 over the limit')).toBeTruthy();
     // Neither featured nor an exception: only a ring in the «All budgets» row.

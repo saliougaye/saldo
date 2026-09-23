@@ -1,5 +1,5 @@
-import { motion } from '@saldo/ui';
 import type { IconName } from '@saldo/ui';
+import { motion } from '@saldo/ui';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
