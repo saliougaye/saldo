@@ -15,7 +15,7 @@
 **Decisions recorded here (AGENTS.md "spec silent → note it in the plan"):**
 
 - **Hidden mode leaves the Home target cards alone.** The hidden-mode plan narrowed Home to the «Rimasto da spendere» card on the third device check (2026-09-22); the budget card has stayed visible since. The first draft of §5.13 said the opposite; Task 1 corrects the spec.
-- **Rings are drawn, not animated.** `src/theme/motion.ts` allows only `transform` and `opacity`; a ring fill would animate `strokeDashoffset`. Home already animates each card in (`entering`), and the featured bar keeps `ProgressBar`'s `scaleX`. Task 1 corrects the spec.
+- **Rings animate a change of value, never their arrival** (decided with the animation framework, 2026-09-24). Home is opened tens of times a day and its cards already fade in, so a ring filling on every open is noise; a ring moving from its old value to its new one after a new expense is feedback on a state change. Same rule, curve and duration as `ProgressBar`: start at the current value, `withTiming` to the next (`motion.progressMs`, `EASE`, interruptible), instant under Reduce Motion. The pace tick and a change of featured item do not animate. `strokeDashoffset` through `useAnimatedProps` runs on the UI thread and costs no layout, so `theme/motion.ts`'s rule is restated as "nothing that costs layout per frame" (Task 7). Task 1 records it in the spec.
 - **Per day is rounded down** (`Math.floor`): the advice is a ceiling, and rounding up would let the last day overshoot the limit.
 - **The sentence's action is bold through `Trans`** (`<b>…</b>` in the catalog), so translators move the emphasis with the words.
 - **The empty card keeps its header static** and gains the row «Crea un budget» → `/budgets`, where the dashed «Nuovo budget» lives (§6.4).
@@ -35,7 +35,8 @@
 | `apps/mobile/src/features/budgets/useBudgetProgress.ts` / `.test.ts` | Modify: `BudgetView.pace` |
 | `apps/mobile/src/components/ProgressBar.tsx` | Modify: `thick` prop (8pt, tick overhang 4) |
 | `apps/mobile/src/components/ringGeometry.ts` / `.test.ts` | Create: pure ring maths |
-| `apps/mobile/src/components/TargetRing.tsx` / `.test.tsx` | Create: ring + icon, decorative for a11y |
+| `apps/mobile/src/components/TargetRing.tsx` / `.test.tsx` | Create: ring + icon, decorative for a11y, animates value changes |
+| `apps/mobile/src/theme/motion.ts` | Modify: restate the motion rule (no layout per frame) |
 | `packages/i18n/src/locales/{it,en,fr,de,sv,es,pt}.ts` | Modify: `targets` namespace |
 | `apps/mobile/src/features/targets/endLabels.ts` / `.test.ts` | Create: which bar labels show |
 | `apps/mobile/src/features/targets/FeaturedTarget.tsx` | Create: the featured block |
@@ -68,10 +69,11 @@ Replace with:
 - **Hidden mode leaves the Home target cards alone**, as it left the Home budget card since the third device check of
   hidden mode (2026-09-22): on Home only «Rimasto da spendere» hides. The goal list and detail (§6.35, §6.36) follow the
   aggregate rule like any balance.
-- **Motion:** no motion of its own beyond Home's card entrance. The featured bar is a `ProgressBar` (`scaleX`,
-  `motion.progressMs`); rings are drawn, not animated, because only `transform` and `opacity` animate (motion rules in
-  `apps/mobile/src/theme/motion.ts`) and a ring fill would animate `strokeDashoffset`. Rows keep the usual press
-  feedback.
+- **Motion:** nothing animates in beyond Home's card entrance: Home is opened tens of times a day. A **change of
+  value** animates — the featured bar (`ProgressBar`, `scaleX`) and every ring (`strokeDashoffset` through
+  `useAnimatedProps`, on the UI thread, no layout) move from the old value to the new one, `motion.progressMs` with the
+  shared easing, interruptible, instant under Reduce Motion. The pace tick and a change of featured item do not
+  animate. Rows keep the usual press feedback.
 ```
 
 - [ ] **Step 2: Say how the per-day amount rounds**
@@ -93,7 +95,7 @@ Replace with:
 
 ```bash
 rtk git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md
-rtk git commit -m "docs(spec): target cards keep hidden mode's Home scope and draw rings statically"
+rtk git commit -m "docs(spec): target cards keep hidden mode's Home scope, animate changes only"
 ```
 
 ---
@@ -847,12 +849,18 @@ Expected: FAIL — `Cannot find module './TargetRing'`.
 Create `apps/mobile/src/components/TargetRing.tsx`:
 
 ```tsx
+import { motion } from '@saldo/ui';
 import type { IconName } from '@saldo/ui';
+import { useEffect } from 'react';
 import { View } from 'react-native';
+import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Circle, G, Line, Svg } from 'react-native-svg';
 import { Icon } from '../theme/Icon';
+import { EASE, useMotion } from '../theme/motion';
 import { useTheme } from '../theme/ThemeProvider';
 import { ringGeometry } from './ringGeometry';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /**
  * `attention`: over pace or over the limit (a budget), behind or expired (a goal). Colour carries
@@ -874,12 +882,29 @@ export interface TargetRingProps {
 }
 
 /**
- * Progress, pace and icon in one mark: the icon box of a row that has a target. Drawn, not
- * animated — only transform and opacity animate (`theme/motion.ts`).
+ * Progress, pace and icon in one mark: the icon box of a row that has a target.
+ *
+ * Starts at its value and animates only a **change** of it, as `ProgressBar` does: Home is opened
+ * tens of times a day, so a ring filling on every open would be noise, while one moving after a
+ * new expense confirms what changed. `strokeDashoffset` runs on the UI thread and costs no layout.
  */
 export function TargetRing({ size, ratio, pace, tone, icon, colour, testID }: TargetRingProps) {
   const theme = useTheme();
+  const { reduced } = useMotion();
   const ring = ringGeometry(size, ratio, pace);
+  const target = Math.min(1, Math.max(0, ratio));
+  const progress = useSharedValue(target);
+  useEffect(() => {
+    progress.value = reduced
+      ? target
+      : withTiming(target, { duration: motion.progressMs, easing: EASE });
+  }, [target, reduced, progress]);
+  const { circumference } = ring;
+  const arc = useAnimatedProps(() => ({
+    strokeDashoffset: circumference * (1 - progress.value),
+    // A zero-length dash still draws its round cap as a dot.
+    opacity: progress.value > 0 ? 1 : 0,
+  }));
   const fill = tone === 'attention' ? theme.palette.accent : theme.palette.barGrey;
   return (
     <View
@@ -898,18 +923,17 @@ export function TargetRing({ size, ratio, pace, tone, icon, colour, testID }: Ta
             strokeWidth={ring.stroke}
             fill="none"
           />
-          {ring.dash > 0 ? (
-            <Circle
-              cx={ring.centre}
-              cy={ring.centre}
-              r={ring.radius}
-              stroke={fill}
-              strokeWidth={ring.stroke}
-              strokeDasharray={`${ring.dash} ${ring.circumference}`}
-              strokeLinecap="round"
-              fill="none"
-            />
-          ) : null}
+          <AnimatedCircle
+            cx={ring.centre}
+            cy={ring.centre}
+            r={ring.radius}
+            stroke={fill}
+            strokeWidth={ring.stroke}
+            strokeDasharray={`${circumference} ${circumference}`}
+            strokeLinecap="round"
+            fill="none"
+            animatedProps={arc}
+          />
           {ring.tick === null ? null : (
             <Line {...ring.tick} stroke={theme.palette.textFaint} strokeWidth={1.25} />
           )}
@@ -921,6 +945,20 @@ export function TargetRing({ size, ratio, pace, tone, icon, colour, testID }: Ta
 }
 ```
 
+Then restate the motion rule in `apps/mobile/src/theme/motion.ts`. Replace:
+
+```ts
+ *  - **Only `transform` and `opacity`.** Everything else costs layout on every frame.
+```
+
+with:
+
+```ts
+ *  - **Nothing that costs layout on every frame.** `transform` and `opacity`, plus SVG props driven
+ *    by `useAnimatedProps` on the UI thread (a ring's `strokeDashoffset`); never width, height,
+ *    margins or padding.
+```
+
 - [ ] **Step 8: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/TargetRing.test.tsx src/components/ringGeometry.test.ts`
@@ -929,8 +967,8 @@ Expected: PASS.
 - [ ] **Step 9: Commit**
 
 ```bash
-rtk git add apps/mobile/src/components/ringGeometry.ts apps/mobile/src/components/ringGeometry.test.ts apps/mobile/src/components/TargetRing.tsx apps/mobile/src/components/TargetRing.test.tsx
-rtk git commit -m "feat(mobile): TargetRing draws progress, pace and icon in one mark"
+rtk git add apps/mobile/src/components/ringGeometry.ts apps/mobile/src/components/ringGeometry.test.ts apps/mobile/src/components/TargetRing.tsx apps/mobile/src/components/TargetRing.test.tsx apps/mobile/src/theme/motion.ts
+rtk git commit -m "feat(mobile): TargetRing draws progress, pace and icon, animating changes only"
 ```
 
 ---
@@ -1972,6 +2010,7 @@ Start the app (`pnpm --filter mobile start`, then `i`) with the demo data (`DevT
 3. A second budget over its limit appears as a row with a 36pt ring; the others are 28pt rings in «Tutti i budget · N», which opens the list.
 4. Tapping the featured budget or a row opens the budget list with that budget's detail sheet up.
 5. The budget list's pace tick now sits at the day of the period, not at the end of each fill.
+5b. Add an expense to a budget shown as a ring, go back to Home: the ring moves to its new value in ~300ms; reopening Home does not replay it; with Reduce Motion on it jumps.
 6. Hidden mode (eye in the header): the Budget card does not change.
 7. VoiceOver: the featured block reads «{name}, {speso} di {limite}, {stato}»; the rings are not announced.
 
