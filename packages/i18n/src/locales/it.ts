@@ -835,6 +835,28 @@ export const it = {
     vsUsualAbove: '+{{amount}} rispetto al solito',
     vsUsualBelow: '−{{amount}} rispetto al solito',
   },
+  targets: {
+    today: 'oggi',
+    percent: '{{value}}%',
+    ofLimit: 'di {{amount}} · {{percent}}',
+    left: '{{amount}} rimasti',
+    overLimitMeta: 'limite superato',
+    closedMeta: 'periodo chiuso',
+    overLimit_one: '{{count}} oltre il limite',
+    overLimit_other: '{{count}} oltre il limite',
+    overLimitBy: '{{amount}} oltre il limite',
+    overPaceBy: '{{amount}} oltre il ritmo',
+    inLine: 'in linea',
+    perDay: 'Puoi spendere ancora <b>{{amount}} al giorno</b> fino al {{end}}.',
+    stateOverPace: 'Sei {{amount}} oltre il ritmo.',
+    stateUnderPace: 'Sei {{amount}} sotto il ritmo.',
+    overLimitAction: 'Hai superato il limite di <b>{{amount}}</b>.',
+    overLimitState: 'Ogni altra spesa in {{name}} si aggiunge, fino al {{end}}.',
+    closed: 'Periodo chiuso al <b>{{percent}}</b> del limite.',
+    allBudgets: 'Tutti i budget',
+    createBudget: 'Crea un budget',
+    itemLabel: '{{name}}, {{amount}} di {{limit}}, {{status}}',
+  },
 };
 
 export type Messages = typeof it;
