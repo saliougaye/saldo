@@ -245,7 +245,7 @@ export default function AccountDetail() {
               />
             )}
             {account.creditChargeDay === null ? null : (
-              <View style={rowDivider}>
+              <View style={account.creditCloseDay === null ? undefined : rowDivider}>
                 {/* Keyed on the state, so paying the card swaps the row in rather than
                     replacing it silently (better-ui swap, `motion.fadeMs`). */}
                 <Animated.View key={dueDate === null ? 'plain' : 'due'} entering={swapIn(0.96)}>
@@ -282,7 +282,13 @@ export default function AccountDetail() {
               </View>
             )}
             {canSettle ? (
-              <View style={rowDivider}>
+              <View
+                style={
+                  account.creditCloseDay === null && account.creditChargeDay === null
+                    ? undefined
+                    : rowDivider
+                }
+              >
                 <ListRow
                   title={t('accounts.settleCard')}
                   leading={<IconBox name="swap" colour={theme.palette.textMuted} />}
