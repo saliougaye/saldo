@@ -93,12 +93,11 @@ export function AmountInput({
       separator: minorDigits === 0 ? null : separator,
       actionLabel: keypadActionLabel ?? doneLabel,
       node: field,
-      isNegative: () => state.current.buffer.startsWith('-'),
+      negative: state.current.buffer.startsWith('-'),
       onKey: (key: AmountKeypadKey) => {
-        state.current.onChange(
-          pressAmountKey(state.current.buffer, key, minorDigits, { allowNegative }),
-        );
-        keypad.bump();
+        const next = pressAmountKey(state.current.buffer, key, minorDigits, { allowNegative });
+        state.current.onChange(next);
+        keypad.setNegative(id, next.startsWith('-'));
       },
       onAction: () => {
         if (state.current.onKeypadAction !== undefined) {
@@ -114,12 +113,18 @@ export function AmountInput({
 
   // Opening the pad changes the context, so neither the controller nor `open` can be a dependency
   // here: the cleanup would run on the very change the opening caused and close it again.
-  const latest = useRef({ open, close: keypad.close });
-  latest.current = { open, close: keypad.close };
+  const latest = useRef({ open, close: keypad.close, setNegative: keypad.setNegative });
+  latest.current = { open, close: keypad.close, setNegative: keypad.setNegative };
   useEffect(() => {
     if (autoFocus) latest.current.open();
     return () => latest.current.close(id);
   }, [autoFocus, id]);
+
+  // A sign the screen changed on its own — the budget suggestion, a form reset — still reaches
+  // the pad's sign key.
+  useEffect(() => {
+    latest.current.setNegative(id, negative);
+  }, [id, negative]);
 
   return (
     <Pressable

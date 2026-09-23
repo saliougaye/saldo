@@ -75,7 +75,7 @@ function ScreenBody({
   // stacked elements on the transaction form.
   const [footerHeight, setFooterHeight] = useState(0);
   // The keypad is the other thing drawn over the content, and the only one that comes and goes.
-  const { session, version } = useAmountKeypad();
+  const { session, negative } = useAmountKeypad();
   const [padHeight, setPadHeight] = useState(0);
   const scroller = useRef<ScrollView>(null);
   const scrollY = useRef(0);
@@ -192,12 +192,7 @@ function ScreenBody({
                   paddingBottom: insets.bottom + theme.layout.keypadPaddingY,
                 }}
               >
-                <AmountKeypad
-                  session={session}
-                  // `version` changes on every press, which is what re-reads the sign.
-                  negative={version >= 0 && session.isNegative()}
-                  onLayoutHeight={setPadHeight}
-                />
+                <AmountKeypad session={session} negative={negative} onLayoutHeight={setPadHeight} />
               </View>
             )}
           </View>

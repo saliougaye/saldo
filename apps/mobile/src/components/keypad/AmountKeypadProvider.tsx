@@ -22,8 +22,8 @@ export interface AmountKeypadSession {
   actionLabel: string;
   onKey: (key: AmountKeypadKey) => void;
   onAction: () => void;
-  /** Read on every render, so the sign key shows the state it toggles. */
-  isNegative: () => boolean;
+  /** Whether the amount is negative as the pad opens; `setNegative` keeps it current after that. */
+  negative: boolean;
   /** The field's own view, so the screen can scroll it clear of the pad. */
   node: RefObject<View | null>;
 }
@@ -33,9 +33,10 @@ export interface AmountKeypadController {
   open: (session: AmountKeypadSession) => void;
   /** Closes only if the caller still owns the pad: a field losing focus to the next one is a no-op. */
   close: (id: string) => void;
-  /** Bumped on every press, so whatever reads the buffer through the session re-renders. */
-  version: number;
-  bump: () => void;
+  /** Whether the amount the pad serves is negative right now, so the sign key can show it. */
+  negative: boolean;
+  /** From the field that owns the pad, on every change of its sign. */
+  setNegative: (id: string, value: boolean) => void;
 }
 
 const noop = () => undefined;
@@ -44,8 +45,8 @@ const AmountKeypadContext = createContext<AmountKeypadController>({
   session: null,
   open: noop,
   close: noop,
-  version: 0,
-  bump: noop,
+  negative: false,
+  setNegative: noop,
 });
 
 export function useAmountKeypad(): AmountKeypadController {
@@ -58,11 +59,12 @@ export function useAmountKeypad(): AmountKeypadController {
  */
 export function AmountKeypadProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AmountKeypadSession | null>(null);
-  const [version, setVersion] = useState(0);
+  const [negative, setNegativeState] = useState(false);
   const owner = useRef<string | null>(null);
 
   const open = useCallback((next: AmountKeypadSession) => {
     owner.current = next.id;
+    setNegativeState(next.negative);
     setSession((current) => (current !== null && current.id === next.id ? current : next));
   }, []);
 
@@ -72,11 +74,14 @@ export function AmountKeypadProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
-  const bump = useCallback(() => setVersion((n) => n + 1), []);
+  const setNegative = useCallback((id: string, value: boolean) => {
+    if (owner.current !== id) return;
+    setNegativeState(value);
+  }, []);
 
   const value = useMemo(
-    () => ({ session, open, close, version, bump }),
-    [session, open, close, version, bump],
+    () => ({ session, open, close, negative, setNegative }),
+    [session, open, close, negative, setNegative],
   );
   return <AmountKeypadContext.Provider value={value}>{children}</AmountKeypadContext.Provider>;
 }
