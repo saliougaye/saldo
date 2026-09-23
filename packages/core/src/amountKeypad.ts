@@ -1,4 +1,4 @@
-import { maxIntegerDigits, type MinorDigits, toggleAmountBufferSign } from './money';
+import { type MinorDigits, maxIntegerDigits, toggleAmountBufferSign } from './money';
 
 /** What a keypad can send. Digits are their own characters; the rest are named. */
 export type AmountKeypadKey =

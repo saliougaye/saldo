@@ -17,6 +17,17 @@ keyboard. A negative-capable field renders a sign tile (faint `+` / full `−`) 
 **Tech Stack:** TypeScript strict, React Native 0.86 / Expo 57, Reanimated (`react-native-reanimated`), jest-expo +
 RNTL for the app, Vitest for packages, i18next.
 
+**What execution changed relative to this plan (all gates green afterwards):**
+
+- The field also **closes the pad when it loses focus**, unless the pad is pinned, so tapping a description or a name
+  never stacks the device keyboard on top of the pad. `pinned` therefore lives on the field, not in the session.
+- `SyncScrollView` now forwards its ref, which is how `Screen` scrolls a covered field back into view.
+- The keypad's `−` key is hidden from assistive technology, so RNTL only finds it with `includeHiddenElements`; the
+  test that proves there is exactly one "Negativo" switch relies on that.
+- `main` moved under this branch twice: the five new catalogs (fr/de/sv/es/pt) each carry the three new keys, and the
+  separator now comes from `formatMoneyParts().decimalSeparator` rather than an `it` check, so every language gets its
+  own key glyph.
+
 **Decisions taken here (flagged for the user):**
 
 1. **D23 is rewritten**, not annotated: the spec now says amounts are typed on Saldo's own keypad. §5.1, §6.16, §6.22
@@ -64,7 +75,7 @@ RNTL for the app, Vitest for packages, i18next.
 - Test: `packages/core/src/amountKeypad.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -117,12 +128,12 @@ describe('pressAmountKey', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- --run amountKeypad`
 Expected: FAIL, "Failed to resolve import ./amountKeypad".
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 import { maxIntegerDigits, type MinorDigits, toggleAmountBufferSign } from './money';
@@ -174,12 +185,12 @@ function editBody(body: string, key: Exclude<AmountKeypadKey, 'sign'>, minorDigi
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- --run amountKeypad`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Export it**
+- [x] **Step 5: Export it**
 
 In `packages/core/src/index.ts`, beside `export * from './money';`:
 
@@ -187,7 +198,7 @@ In `packages/core/src/index.ts`, beside `export * from './money';`:
 export * from './amountKeypad';
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/amountKeypad.ts packages/core/src/amountKeypad.test.ts packages/core/src/index.ts
@@ -201,7 +212,7 @@ git commit -m "feat(core): one pure reducer for every amount keypad press"
 **Files:**
 - Modify: `packages/ui/src/tokens.ts` (the `layout` object)
 
-- [ ] **Step 1: Add the tokens**
+- [x] **Step 1: Add the tokens**
 
 In `layout`, after `keypadSaveWidth: 80,`:
 
@@ -215,12 +226,12 @@ In `layout`, after `keypadSaveWidth: 80,`:
   signTileHeight: 40,
 ```
 
-- [ ] **Step 2: Run the token tests**
+- [x] **Step 2: Run the token tests**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test -- --run`
 Expected: PASS (the suite checks colours and ranges, not this list).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts
@@ -234,7 +245,7 @@ git commit -m "feat(ui): keypad and sign-tile geometry tokens"
 **Files:**
 - Modify: `packages/i18n/src/locales/it.ts`, `packages/i18n/src/locales/en.ts`
 
-- [ ] **Step 1: Add them to `it.ts`, in `common`, after `negative: 'Negativo',`**
+- [x] **Step 1: Add them to `it.ts`, in `common`, after `negative: 'Negativo',`**
 
 ```ts
     amountKeypad: 'Tastierino',
@@ -242,7 +253,7 @@ git commit -m "feat(ui): keypad and sign-tile geometry tokens"
     decimalPoint: 'Virgola',
 ```
 
-- [ ] **Step 2: Add the same keys to `en.ts`, in `common`, after `negative: 'Negative',`**
+- [x] **Step 2: Add the same keys to `en.ts`, in `common`, after `negative: 'Negative',`**
 
 ```ts
     amountKeypad: 'Keypad',
@@ -250,12 +261,12 @@ git commit -m "feat(ui): keypad and sign-tile geometry tokens"
     decimalPoint: 'Decimal point',
 ```
 
-- [ ] **Step 3: Run the parity test**
+- [x] **Step 3: Run the parity test**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test -- --run`
 Expected: PASS — `locales.test.ts` compares the key sets.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/i18n/src/locales/it.ts packages/i18n/src/locales/en.ts
@@ -270,7 +281,7 @@ git commit -m "feat(i18n): names for the keypad, its delete and its separator ke
 - Create: `apps/mobile/src/components/keypad/revealOffset.ts`
 - Test: `apps/mobile/src/components/keypad/revealOffset.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { revealOffset } from './revealOffset';
@@ -296,12 +307,12 @@ describe('revealOffset', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- revealOffset`
 Expected: FAIL, "Cannot find module './revealOffset'".
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 /** Breathing room between the field and the edge of what the keypad leaves visible. */
@@ -327,12 +338,12 @@ export function revealOffset({ fieldTop, fieldBottom, top, bottom }: RevealBox):
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- revealOffset`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/components/keypad/revealOffset.ts apps/mobile/src/components/keypad/revealOffset.test.ts
@@ -349,7 +360,7 @@ git commit -m "feat(mobile): scroll maths that keeps a field out from under the 
 A field registers a *session* when it is focused; the provider keeps the active one and hands it to the pad. Callbacks
 arrive through a ref inside `AmountInput`, so a session object stays stable across the caller's re-renders.
 
-- [ ] **Step 1: Write the provider (no test of its own: Task 7 drives it through the real components)**
+- [x] **Step 1: Write the provider (no test of its own: Task 7 drives it through the real components)**
 
 ```tsx
 import { type AmountKeypadKey } from '@saldo/core';
@@ -425,7 +436,7 @@ export function AmountKeypadProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/mobile/src/components/keypad/AmountKeypadProvider.tsx
@@ -444,7 +455,7 @@ Layout: three digit columns on the left, an 80pt column on the right holding `�
 bottom-left cell empty rather than reshuffling the keys. The `−` key is hidden from assistive technology: the field's
 own sign tile is the one switch (Task 7).
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 ```tsx
 import { type AmountKeypadKey } from '@saldo/core';
@@ -599,7 +610,7 @@ export function AmountKeypad({ session, negative, onLayoutHeight }: AmountKeypad
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/mobile/src/components/keypad/AmountKeypad.tsx
@@ -618,7 +629,7 @@ The footer and the pad share one absolutely-positioned stack, so the footer sits
 screen together. Content reserves `footerHeight + padHeight`. The `KeyboardAvoidingView` stays: a screen can still hold
 a text field (name, description) that opens the real keyboard.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen, userEvent } from '@testing-library/react-native';
@@ -720,12 +731,12 @@ describe('AmountKeypad', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- AmountKeypad`
 Expected: FAIL — no `amount-keypad` testID yet.
 
-- [ ] **Step 3: Host the provider and the pad in `Screen`**
+- [x] **Step 3: Host the provider and the pad in `Screen`**
 
 In `apps/mobile/src/components/Screen.tsx`, add to the imports:
 
@@ -842,12 +853,12 @@ Finally, put the pad below the footer inside the same absolute stack. Replace th
   void version;
 ```
 
-- [ ] **Step 4: Run the tests (they still fail: `AmountInput` has not been rewritten)**
+- [x] **Step 4: Run the tests (they still fail: `AmountInput` has not been rewritten)**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- AmountKeypad`
 Expected: FAIL — the field does not open the pad yet. Task 8 makes these pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/components/Screen.tsx apps/mobile/src/components/keypad/AmountKeypad.test.tsx
@@ -862,7 +873,7 @@ git commit -m "feat(mobile): the screen hosts the amount keypad under its footer
 - Modify: `apps/mobile/src/components/AmountInput.tsx`
 - Test: `apps/mobile/src/components/AmountInput.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen, userEvent } from '@testing-library/react-native';
@@ -946,12 +957,12 @@ describe('AmountInput', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- AmountInput`
 Expected: FAIL — `showSoftInputOnFocus` is undefined, no sign tile.
 
-- [ ] **Step 3: Rewrite the component**
+- [x] **Step 3: Rewrite the component**
 
 ```tsx
 import {
@@ -1200,7 +1211,7 @@ function SignTile({
 }
 ```
 
-- [ ] **Step 4: Add `SWAP_EASE` to the motion module**
+- [x] **Step 4: Add `SWAP_EASE` to the motion module**
 
 In `apps/mobile/src/theme/motion.ts`, beside `export const EASE`:
 
@@ -1211,12 +1222,12 @@ export const SWAP_EASE = Easing.bezier(...motion.swapEasing);
 
 (If a private `SWAP_EASE` already exists in that file, export it instead of declaring a second one.)
 
-- [ ] **Step 5: Run both suites**
+- [x] **Step 5: Run both suites**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- AmountInput AmountKeypad`
 Expected: PASS, all tests in both files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/components/AmountInput.tsx apps/mobile/src/components/AmountInput.test.tsx apps/mobile/src/theme/motion.ts
@@ -1232,7 +1243,7 @@ git commit -m "feat(mobile): the amount field opens Saldo's keypad and wears its
 - Modify: `apps/mobile/app/(onboarding)/balance.tsx`
 - Modify: `apps/mobile/app/(onboarding)/import-balances.tsx`
 
-- [ ] **Step 1: Let `StepFooter` step aside for the keypad**
+- [x] **Step 1: Let `StepFooter` step aside for the keypad**
 
 In `StepFooter.tsx`, import the context and hide the primary button while a keypad is up (the keypad's tall key is the
 step's «Continua»), keeping «Indietro»:
@@ -1259,7 +1270,7 @@ and wrap the primary button:
       ) : null}
 ```
 
-- [ ] **Step 2: Pin the pad on the balance step**
+- [x] **Step 2: Pin the pad on the balance step**
 
 In `app/(onboarding)/balance.tsx`, extract the continue handler and pass it to the field:
 
@@ -1278,7 +1289,7 @@ The `StepFooter` keeps `onPress={goOn}`, and the field gains:
                 onKeypadAction={goOn}
 ```
 
-- [ ] **Step 3: Pin the pad on the import-balances step**
+- [x] **Step 3: Pin the pad on the import-balances step**
 
 In `app/(onboarding)/import-balances.tsx`, the same shape:
 
@@ -1297,13 +1308,13 @@ with `StepFooter … onPress={goOn}` and, on every `AmountInput` in the list:
                   onKeypadAction={goOn}
 ```
 
-- [ ] **Step 4: Run the onboarding tests**
+- [x] **Step 4: Run the onboarding tests**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- onboarding`
 Expected: PASS. If a test asserted «Continua» exactly once while a field was focused, update it to look for
 `keypad-action`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/onboarding/StepFooter.tsx "apps/mobile/app/(onboarding)/balance.tsx" "apps/mobile/app/(onboarding)/import-balances.tsx"
@@ -1317,7 +1328,7 @@ git commit -m "feat(mobile): the onboarding amount steps continue from the keypa
 **Files:**
 - Modify: `apps/mobile/src/components/a11y.test.tsx`
 
-- [ ] **Step 1: Update the `AmountInput` block**
+- [x] **Step 1: Update the `AmountInput` block**
 
 The field renders inside a `Screen` now (that is what hosts the keypad), the switch is the sign tile, and the value no
 longer carries the minus. Replace the `describe('AmountInput', …)` block with:
@@ -1399,12 +1410,12 @@ describe('AmountInput', () => {
 
 Add the imports the block needs at the top of the file (`Screen`, and `userEvent` if it is not already imported).
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `rtk proxy pnpm --filter @saldo/mobile test -- a11y`
 Expected: PASS. `keypadKeyHeight` is 52, so the target check passes without slop.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/mobile/src/components/a11y.test.tsx
@@ -1421,7 +1432,7 @@ git commit -m "test(mobile): the keypad and the sign tile answer to a screen rea
 
 `inputText` needs a system keyboard, and there is none any more.
 
-- [ ] **Step 1: Replace the balance entry in `onboarding-and-first-expense.yaml`**
+- [x] **Step 1: Replace the balance entry in `onboarding-and-first-expense.yaml`**
 
 ```yaml
 - tapOn:
@@ -1436,7 +1447,7 @@ git commit -m "test(mobile): the keypad and the sign tile answer to a screen rea
     id: "keypad-key-0"
 ```
 
-- [ ] **Step 2: Replace the amount entry in the same file (12.50)**
+- [x] **Step 2: Replace the amount entry in the same file (12.50)**
 
 ```yaml
 - tapOn:
@@ -1453,7 +1464,7 @@ git commit -m "test(mobile): the keypad and the sign tile answer to a screen rea
     id: "keypad-action"
 ```
 
-- [ ] **Step 3: Replace the amount entry in `edit-recurring-following.yaml` (200)**
+- [x] **Step 3: Replace the amount entry in `edit-recurring-following.yaml` (200)**
 
 ```yaml
 - tapOn:
@@ -1468,7 +1479,7 @@ git commit -m "test(mobile): the keypad and the sign tile answer to a screen rea
     id: "keypad-action"
 ```
 
-- [ ] **Step 4: Commit** (the flows run on a device, not in CI here)
+- [x] **Step 4: Commit** (the flows run on a device, not in CI here)
 
 ```bash
 git add apps/mobile/maestro
@@ -1482,13 +1493,13 @@ git commit -m "test(mobile): maestro types amounts on the keypad"
 **Files:**
 - Modify: `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`
 
-- [ ] **Step 1: Rewrite D23 (line 77)**
+- [x] **Step 1: Rewrite D23 (line 77)**
 
 ```markdown
 | D23 | Amounts are typed on **Saldo's own keypad**, not on the device keyboard | The keys are then the same on both platforms, the decimal separator follows the *app's* language instead of the device's, and a balance gets a `−` key where a calculator has one — none of which `decimal-pad` can offer (it has no minus key on iOS, and Android has no `InputAccessoryView` to add one). The field stays a `TextInput` with `showSoftInputOnFocus={false}`, so it keeps its caret, its selection and its screen-reader semantics, and a hardware keyboard still types into it; `sanitizeAmountInput` still accepts `.` and `,` for those edits and for imports. The cost is the ~270pt the pad occupies, which is why the screens that own one reserve it (`Screen`) and the onboarding steps keep it up. |
 ```
 
-- [ ] **Step 2: Rewrite the two §5.1 bullets (lines 295–296 and 305)**
+- [x] **Step 2: Rewrite the two §5.1 bullets (lines 295–296 and 305)**
 
 ```markdown
 - **Input is Saldo's own keypad** (D23), not the device's: 3 digit columns, `⌫` and a tall action key
@@ -1513,24 +1524,24 @@ and
   `minorToAmountBuffer` keeps the sign, so editing a credit card below zero keeps it below zero.
 ```
 
-- [ ] **Step 3: Fix §6.16 (line 589) — replace the sentence about the amount field**
+- [x] **Step 3: Fix §6.16 (line 589) — replace the sentence about the amount field**
 
 ```markdown
 The amount is the big figure, focused automatically on a new transaction, typed on Saldo's keypad (D23); there is no separate save column.
 ```
 
-- [ ] **Step 4: Fix §6.22 (line 595) — replace `(`±` switch, §5.1)` with**
+- [x] **Step 4: Fix §6.22 (line 595) — replace `(`±` switch, §5.1)` with**
 
 ```markdown
 (sign tile in front of the digits, §5.1)
 ```
 
-- [ ] **Step 5: Check no other line still promises the device keyboard**
+- [x] **Step 5: Check no other line still promises the device keyboard**
 
 Run: `rtk proxy grep -n "decimal-pad\|in-app keypad\|device keyboard" docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`
 Expected: only the rewritten D23 mentions `decimal-pad`, and only to say it is not used.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-09-10-saldo-poc-spec.md
@@ -1544,7 +1555,7 @@ git commit -m "docs(spec): D23 reversed — amounts are typed on Saldo's keypad"
 **Files:**
 - Modify: `TODO.md`, this plan
 
-- [ ] **Step 1: Run the three gates and read the output, not the exit code**
+- [x] **Step 1: Run the three gates and read the output, not the exit code**
 
 ```bash
 rtk proxy pnpm lint
@@ -1554,12 +1565,12 @@ rtk proxy pnpm test
 
 Expected: no `lint/…` lines, no `× Some errors were emitted`, every suite green.
 
-- [ ] **Step 2: Remove the TODO item**
+- [x] **Step 2: Remove the TODO item**
 
 Delete the whole "### A better sign switch on the balance field" section from `TODO.md` (heading, checkbox and the two
 paragraphs), leaving the surrounding sections untouched.
 
-- [ ] **Step 3: Tick every box in this plan and commit**
+- [x] **Step 3: Tick every box in this plan and commit**
 
 ```bash
 git add TODO.md docs/superpowers/plans/2026-09-22-amount-keypad.md

@@ -438,7 +438,9 @@ describe('AmountInput', () => {
 
   it('flips the sign from the switch, keypad or no keypad', async () => {
     const onChange = jest.fn();
-    await render(<Field buffer="-12.34" onChange={onChange} allowNegative negativeLabel="Negative" />);
+    await render(
+      <Field buffer="-12.34" onChange={onChange} allowNegative negativeLabel="Negative" />,
+    );
     await userEvent.press(screen.getByRole('switch', { name: 'Negative' }));
     expect(onChange).toHaveBeenCalledWith('12.34');
   });

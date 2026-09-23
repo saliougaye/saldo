@@ -20,8 +20,6 @@ export interface AmountKeypadSession {
   separator: string | null;
   /** Label of the tall key: «Fatto» normally, «Continua» on an onboarding step. */
   actionLabel: string;
-  /** A pinned pad stays up when its field loses focus (the onboarding steps). */
-  pinned: boolean;
   onKey: (key: AmountKeypadKey) => void;
   onAction: () => void;
   /** Read on every render, so the sign key shows the state it toggles. */

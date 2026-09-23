@@ -91,6 +91,23 @@ describe('AmountInput', () => {
     expect(screen.getByTestId('amount-keypad')).toBeTruthy();
   });
 
+  it('puts the keypad away when the field is left for another one', async () => {
+    await show({ autoFocus: true });
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+    await act(async () => {
+      fireEvent(screen.getByTestId('amount'), 'blur');
+    });
+    expect(screen.queryByTestId('amount-keypad')).toBeNull();
+  });
+
+  it('keeps a pinned keypad up even then: it belongs to the step, not to the field', async () => {
+    await show({ autoFocus: true, keypadPinned: true, keypadActionLabel: 'Continua' });
+    await act(async () => {
+      fireEvent(screen.getByTestId('amount'), 'blur');
+    });
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+  });
+
   it('accepts text from a hardware keyboard, keeping the sign the tile owns', async () => {
     const onChange = jest.fn();
     await show({ buffer: '-1', onChange, allowNegative: true, negativeLabel: 'Negativo' });

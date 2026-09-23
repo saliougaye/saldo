@@ -1,6 +1,6 @@
 import {
-  amountBufferToMinor,
   type AmountKeypadKey,
+  amountBufferToMinor,
   type CurrencyCode,
   getCurrency,
   pressAmountKey,
@@ -92,7 +92,6 @@ export function AmountInput({
       allowNegative,
       separator: minorDigits === 0 ? null : separator,
       actionLabel: keypadActionLabel ?? doneLabel,
-      pinned: keypadPinned,
       node: field,
       isNegative: () => state.current.buffer.startsWith('-'),
       onKey: (key: AmountKeypadKey) => {
@@ -111,16 +110,7 @@ export function AmountInput({
         state.current.onDone?.();
       },
     });
-  }, [
-    keypad,
-    id,
-    allowNegative,
-    minorDigits,
-    separator,
-    keypadActionLabel,
-    doneLabel,
-    keypadPinned,
-  ]);
+  }, [keypad, id, allowNegative, minorDigits, separator, keypadActionLabel, doneLabel]);
 
   // Opening the pad changes the context, so neither the controller nor `open` can be a dependency
   // here: the cleanup would run on the very change the opening caused and close it again.
@@ -174,6 +164,12 @@ export function AmountInput({
             onChange(keepsSign && typed.length > 0 ? `-${typed}` : typed);
           }}
           onFocus={open}
+          // Leaving the field for a text one — a description, a name — puts the pad away, so the
+          // device keyboard never opens on top of it. A pinned pad is the screen's, not the
+          // field's, and stays (§6.29).
+          onBlur={() => {
+            if (!keypadPinned) latest.current.close(id);
+          }}
           // Saldo draws the keys; the device keyboard would cover them with its own.
           showSoftInputOnFocus={false}
           keyboardType="decimal-pad"
@@ -252,11 +248,23 @@ function SignTile({
     >
       <View style={{ width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
         <View
-          style={{ position: 'absolute', width: 18, height: 3.5, borderRadius: 2, backgroundColor: colour }}
+          style={{
+            position: 'absolute',
+            width: 18,
+            height: 3.5,
+            borderRadius: 2,
+            backgroundColor: colour,
+          }}
         />
         <Animated.View
           style={[
-            { position: 'absolute', width: 3.5, height: 18, borderRadius: 2, backgroundColor: colour },
+            {
+              position: 'absolute',
+              width: 3.5,
+              height: 18,
+              borderRadius: 2,
+              backgroundColor: colour,
+            },
             stroke,
           ]}
         />
