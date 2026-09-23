@@ -14,10 +14,20 @@ export interface ProgressBarProps {
   overPace?: boolean;
   /** Whether hidden mode empties this bar. The Home budget card opts out. */
   hideable?: boolean;
+  /** The featured item of a target card (§5.13): 8pt with a longer pace tick. */
+  thick?: boolean;
 }
 
-export function ProgressBar({ ratio, pace, overPace = false, hideable = true }: ProgressBarProps) {
+export function ProgressBar({
+  ratio,
+  pace,
+  overPace = false,
+  hideable = true,
+  thick = false,
+}: ProgressBarProps) {
   const theme = useTheme();
+  const height = thick ? theme.layout.progressHeightThick : theme.layout.progressHeight;
+  const overhang = thick ? theme.layout.paceTickOverhangThick : theme.layout.paceTickOverhang;
   const { reduced } = useMotion();
   const hidden = useHiddenAmounts().hidden && hideable;
   // A bar full to the brim beside a masked figure still says "over budget", so it empties too.
@@ -36,7 +46,7 @@ export function ProgressBar({ ratio, pace, overPace = false, hideable = true }: 
       accessibilityRole="progressbar"
       accessibilityValue={hidden ? undefined : { min: 0, max: 100, now: Math.round(ratio * 100) }}
       style={{
-        height: theme.layout.progressHeight,
+        height,
         borderRadius: theme.radii.pill,
         backgroundColor: theme.palette.track,
         overflow: 'visible',
@@ -47,7 +57,7 @@ export function ProgressBar({ ratio, pace, overPace = false, hideable = true }: 
         style={[
           {
             width: '100%',
-            height: theme.layout.progressHeight,
+            height,
             borderRadius: theme.radii.pill,
             transformOrigin: 'left',
             backgroundColor: overPace ? theme.palette.accent : theme.palette.barGrey,
@@ -60,9 +70,9 @@ export function ProgressBar({ ratio, pace, overPace = false, hideable = true }: 
           style={{
             position: 'absolute',
             left: `${Math.min(1, Math.max(0, pace)) * 100}%`,
-            top: -theme.layout.paceTickOverhang,
+            top: -overhang,
             width: 1,
-            height: theme.layout.progressHeight + theme.layout.paceTickOverhang * 2,
+            height: height + overhang * 2,
             backgroundColor: theme.palette.textFaint,
           }}
         />

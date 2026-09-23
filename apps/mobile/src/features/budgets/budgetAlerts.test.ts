@@ -19,6 +19,7 @@ function view(overrides: Partial<BudgetView> = {}): BudgetView {
     },
     range: { start: '2026-03-27', end: '2026-04-26' },
     daysLeft: 8,
+    pace: 23 / 31,
     open: true,
     limitWithCarry: 40000,
     spent: 38000,
