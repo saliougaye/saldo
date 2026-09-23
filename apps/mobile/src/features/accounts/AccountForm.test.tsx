@@ -1,5 +1,5 @@
 import type { Account } from '@saldo/core';
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
@@ -139,6 +139,19 @@ describe('AccountForm', () => {
   it('offers a sign switch, so a balance can be entered below zero', async () => {
     await renderForm();
     expect(screen.getByRole('switch', { name: 'Negative' })).not.toBeChecked();
+  });
+
+  // The rows under the balance open sheets over the keypad; a sheet must not be the reason the
+  // balance loses its keypad, and the keypad must not be the reason a row is out of reach.
+  it('opens a sheet over the keypad, and still has the keypad behind it', async () => {
+    await renderForm({ ...emptyAccountForm(), type: 'credit_card' });
+    await act(async () => {
+      fireEvent(screen.getByLabelText('Current balance'), 'focus');
+    });
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+    await userEvent.press(screen.getByText('Appearance'));
+    expect(screen.getByLabelText('Close')).toBeTruthy();
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
   });
 });
 

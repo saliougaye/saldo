@@ -1,5 +1,5 @@
 import type { Account, Category } from '@saldo/core';
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
@@ -175,6 +175,58 @@ describe('TransactionForm', () => {
     await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '120' }, shortcuts);
     expect(screen.getByText('Custom amount')).toBeTruthy();
     expect(screen.getByRole('radio', { name: /^Statement/ })).not.toBeChecked();
+  });
+
+  // The keypad and the two-way choice share one buffer: whichever moves it, the other one follows.
+  it('types on the keypad and lets the choice follow the figure', async () => {
+    const onChange = jest.fn();
+    const shortcuts = [
+      { key: 'statement', label: 'Statement', minor: 30_000 },
+      { key: 'balance', label: 'Whole balance', minor: 35_000 },
+    ];
+    await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '300' }, shortcuts, onChange);
+    // The form opens with the amount focused (mode "new"), so the keypad is already up.
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /^Statement/ })).toBeChecked();
+
+    // A key press goes through `pressAmountKey`, the same buffer the choice writes.
+    await userEvent.press(screen.getByTestId('keypad-key-5'));
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ buffer: '3005' }));
+  });
+
+  it('keeps the keypad up while a segment sets the amount', async () => {
+    const onChange = jest.fn();
+    const shortcuts = [
+      { key: 'statement', label: 'Statement', minor: 30_000 },
+      { key: 'balance', label: 'Whole balance', minor: 35_000 },
+    ];
+    await renderForm({ ...emptyForm(TODAY, 'acc-1'), buffer: '300' }, shortcuts, onChange);
+    await userEvent.press(screen.getByRole('radio', { name: /^Whole balance/ }));
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ buffer: '350' }));
+    // The choice is next to the figure, so the pad stays: the amount is still being decided.
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+  });
+
+  it('shows the choice, the custom-amount line and the warning above the keypad', async () => {
+    const shortcuts = [
+      { key: 'statement', label: 'Statement', minor: 30_000 },
+      { key: 'balance', label: 'Whole balance', minor: 35_000 },
+    ];
+    const transfer = { ...emptyForm(TODAY, 'acc-1'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-3', buffer: '120' }, shortcuts);
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /^Statement/ })).toBeTruthy();
+    expect(screen.getByText('Custom amount')).toBeTruthy();
+    expect(screen.getByText(/in credit/)).toBeTruthy();
+  });
+
+  it('puts the keypad away when the form moves on to the description', async () => {
+    await renderForm();
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+    await act(async () => {
+      fireEvent(screen.getByTestId('txform-amount'), 'blur');
+    });
+    expect(screen.queryByTestId('amount-keypad')).toBeNull();
   });
 
   it('leaves the choice out of an ordinary new transaction', async () => {

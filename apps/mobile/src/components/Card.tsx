@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -8,10 +8,14 @@ export interface CardProps extends ViewProps {
   padded?: boolean;
 }
 
-export function Card({ children, padded = true, style, ...rest }: CardProps) {
+export const Card = forwardRef<View, CardProps>(function Card(
+  { children, padded = true, style, ...rest },
+  ref,
+) {
   const theme = useTheme();
   return (
     <View
+      ref={ref}
       {...rest}
       style={[
         {
@@ -27,4 +31,4 @@ export function Card({ children, padded = true, style, ...rest }: CardProps) {
       {children}
     </View>
   );
-}
+});

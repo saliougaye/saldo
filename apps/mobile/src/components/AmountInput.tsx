@@ -9,7 +9,7 @@ import {
 } from '@saldo/core';
 import { type AppLocale, formatMoneyParts } from '@saldo/i18n';
 import { motion } from '@saldo/ui';
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { type RefObject, useCallback, useEffect, useId, useRef } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SWAP_EASE, useMotion } from '../theme/motion';
@@ -36,6 +36,13 @@ export interface AmountInputProps {
   allowNegative?: boolean;
   /** What the sign tile announces, e.g. "Negative". Required with `allowNegative`. */
   negativeLabel?: string;
+  /**
+   * What the screen scrolls clear of the keypad, when the field is not the whole story: the
+   * transaction form's amount card also holds the statement/whole-balance choice, the
+   * custom-amount line and the overpay warning (§6.16), and all of that has to stay visible.
+   * Defaults to the field itself.
+   */
+  keypadRevealRef?: RefObject<View | null>;
   /** The onboarding steps keep the keypad up: their tall key continues the flow (§6.29). */
   keypadPinned?: boolean;
   keypadActionLabel?: string;
@@ -65,6 +72,7 @@ export function AmountInput({
   onDone,
   allowNegative = false,
   negativeLabel,
+  keypadRevealRef,
   keypadPinned = false,
   keypadActionLabel,
   onKeypadAction,
@@ -92,7 +100,7 @@ export function AmountInput({
       allowNegative,
       separator: minorDigits === 0 ? null : separator,
       actionLabel: keypadActionLabel ?? doneLabel,
-      node: field,
+      node: keypadRevealRef ?? field,
       negative: state.current.buffer.startsWith('-'),
       onKey: (key: AmountKeypadKey) => {
         const next = pressAmountKey(state.current.buffer, key, minorDigits, { allowNegative });
@@ -109,7 +117,16 @@ export function AmountInput({
         state.current.onDone?.();
       },
     });
-  }, [keypad, id, allowNegative, minorDigits, separator, keypadActionLabel, doneLabel]);
+  }, [
+    keypad,
+    id,
+    allowNegative,
+    minorDigits,
+    separator,
+    keypadActionLabel,
+    doneLabel,
+    keypadRevealRef,
+  ]);
 
   // Opening the pad changes the context, so neither the controller nor `open` can be a dependency
   // here: the cleanup would run on the very change the opening caused and close it again.

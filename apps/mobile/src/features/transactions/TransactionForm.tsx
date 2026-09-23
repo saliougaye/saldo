@@ -11,7 +11,7 @@ import {
 import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AmountInput } from '../../components/AmountInput';
@@ -102,6 +102,8 @@ export function TransactionForm({
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  // What the keypad scrolls clear of itself: the whole amount card, not only the figure.
+  const amountCard = useRef<View>(null);
   const { format: money } = useHiddenMoney();
   const locale = useAppLocale();
   const repos = useRepositories();
@@ -348,13 +350,16 @@ export function TransactionForm({
         onChange={(kind) => onChange(changeKind(values, kind))}
       />
 
-      <Card>
+      {/* The keypad clears the whole card, not just the figure: the choice, the custom-amount
+          line and the overpay warning under it are all about the amount being typed. */}
+      <Card ref={amountCard}>
         <Text size="footnote" color="textMuted">
           {t('txForm.amount')}
         </Text>
         <View style={{ marginTop: 6 }}>
           <AmountInput
             testID="txform-amount"
+            keypadRevealRef={amountCard}
             buffer={values.buffer}
             onChange={(buffer: string) => set({ buffer })}
             currency={currency}
