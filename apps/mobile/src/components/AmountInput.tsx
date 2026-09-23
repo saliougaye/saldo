@@ -167,9 +167,11 @@ export function AmountInput({
           }
           value={shown}
           onChangeText={(text) => {
-            // Only a hardware keyboard or a paste reaches this; the sign stays the tile's business.
-            const next = sanitizeAmountInput(text, minorDigits);
-            onChange(negative && next.length > 0 ? `-${next}` : next);
+            // Only a hardware keyboard or a paste reaches this. The field shows no sign, so a
+            // buffer that had one keeps it; a minus that arrives in the text still sets it.
+            const typed = sanitizeAmountInput(text, minorDigits, { allowNegative });
+            const keepsSign = allowNegative && negative && !typed.startsWith('-');
+            onChange(keepsSign && typed.length > 0 ? `-${typed}` : typed);
           }}
           onFocus={open}
           // Saldo draws the keys; the device keyboard would cover them with its own.

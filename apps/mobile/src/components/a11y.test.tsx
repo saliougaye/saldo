@@ -1,5 +1,5 @@
 import { fontSize, layout } from '@saldo/ui';
-import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Insets, StyleSheet } from 'react-native';
@@ -13,6 +13,7 @@ import { Calendar } from './Calendar';
 import { CardHeader } from './CardHeader';
 import { Chip } from './Chip';
 import { ListRow } from './ListRow';
+import { Screen } from './Screen';
 import { BackButton } from './ScreenHeader';
 import { Segmented } from './Segmented';
 import { Sheet } from './Sheet';
@@ -383,28 +384,39 @@ describe('Calendar', () => {
 });
 
 describe('AmountInput', () => {
-  async function showAmount() {
-    await render(
+  // The keypad lives in the screen, so the field is shown inside one — that is how it is used.
+  function Field(props: Partial<React.ComponentProps<typeof AmountInput>>) {
+    return (
       <Host>
-        <AmountInput
-          buffer="12.34"
-          onChange={jest.fn()}
-          currency="EUR"
-          locale="en"
-          label="Amount"
-          doneLabel="Done"
-        />
-      </Host>,
+        <Screen>
+          <AmountInput
+            testID="amount"
+            buffer="12.34"
+            onChange={jest.fn()}
+            currency="EUR"
+            locale="en"
+            label="Amount"
+            doneLabel="Done"
+            {...props}
+          />
+        </Screen>
+      </Host>
     );
   }
 
+  async function focusField() {
+    await act(async () => {
+      fireEvent(screen.getByTestId('amount'), 'focus');
+    });
+  }
+
   it('names the field for what it holds, not for the key that dismisses it', async () => {
-    await showAmount();
+    await render(<Field />);
     expect(screen.getByLabelText('Amount').props.value).toBe('12.34');
   });
 
   it('leaves the field reachable through the box that focuses it', async () => {
-    await showAmount();
+    await render(<Field />);
     // The surrounding `Pressable` is a convenience for the sighted: a `Pressable` is accessible by
     // default, and one wrapped round a field swallows the field whole.
     expect(screen.getByLabelText('Amount')).toBeTruthy();
@@ -412,44 +424,49 @@ describe('AmountInput', () => {
   });
 
   it('offers no sign switch unless the amount may be negative', async () => {
-    await showAmount();
+    await render(<Field />);
     expect(screen.queryByRole('switch', { name: 'Negative' })).toBeNull();
   });
 
-  async function showBalance(buffer: string, onChange = jest.fn()) {
-    await render(
-      <Host>
-        <AmountInput
-          buffer={buffer}
-          onChange={onChange}
-          currency="EUR"
-          locale="en"
-          label="Balance"
-          doneLabel="Done"
-          allowNegative
-          negativeLabel="Negative"
-        />
-      </Host>,
-    );
-    return onChange;
-  }
-
-  it('shows a negative balance with a real minus and a checked sign switch', async () => {
-    await showBalance('-12.34');
-    expect(screen.getByLabelText('Balance').props.value).toBe('\u221212.34');
+  it('reads a negative balance out with its minus, and checks the sign switch', async () => {
+    await render(<Field buffer="-12.34" allowNegative negativeLabel="Negative" />);
     expect(screen.getByRole('switch', { name: 'Negative' })).toBeChecked();
+    expect(screen.getByLabelText('Amount').props.accessibilityValue).toEqual({
+      text: '\u221212.34',
+    });
   });
 
-  it('flips the sign from the switch', async () => {
-    const onChange = await showBalance('-12.34');
+  it('flips the sign from the switch, keypad or no keypad', async () => {
+    const onChange = jest.fn();
+    await render(<Field buffer="-12.34" onChange={onChange} allowNegative negativeLabel="Negative" />);
     await userEvent.press(screen.getByRole('switch', { name: 'Negative' }));
     expect(onChange).toHaveBeenCalledWith('12.34');
   });
 
-  it('keeps a minus typed into a balance', async () => {
-    const onChange = await showBalance('');
-    fireEvent.changeText(screen.getByLabelText('Balance'), '\u22125');
+  it('keeps a minus pasted into a balance', async () => {
+    const onChange = jest.fn();
+    await render(<Field buffer="" onChange={onChange} allowNegative negativeLabel="Negative" />);
+    fireEvent.changeText(screen.getByLabelText('Amount'), '\u22125');
     expect(onChange).toHaveBeenCalledWith('-5');
+  });
+
+  it('gives the sign switch and the keys a target a finger can hit', async () => {
+    await render(<Field allowNegative negativeLabel="Negative" />);
+    const sign = touchTarget(screen.getByRole('switch', { name: 'Negative' }));
+    expect(sign.width).toBeGreaterThanOrEqual(MIN);
+    expect(sign.height).toBeGreaterThanOrEqual(MIN);
+    await focusField();
+    expect(touchTarget(screen.getByLabelText('7')).height).toBeGreaterThanOrEqual(MIN);
+    expect(touchTarget(screen.getByLabelText('Delete')).height).toBeGreaterThanOrEqual(MIN);
+  });
+
+  it('names the keys that are glyphs, and exposes one sign switch only', async () => {
+    await render(<Field allowNegative negativeLabel="Negative" />);
+    await focusField();
+    expect(screen.getByLabelText('Delete')).toBeTruthy();
+    expect(screen.getByLabelText('Decimal point')).toBeTruthy();
+    // The keypad's own sign key is the thumb's shortcut to the tile, not a second switch.
+    expect(screen.getAllByRole('switch', { name: 'Negative' })).toHaveLength(1);
   });
 });
 
