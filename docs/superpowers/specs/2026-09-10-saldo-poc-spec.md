@@ -578,7 +578,8 @@ reach**, so a full bar means opposite things. The card therefore never lets full
    the tick, range end; an end label drops out when `oggi` is within 22% of it, the start within 18%, and a reached or
    expired goal shows no `oggi`); then **the sentence**, its action at weight 500 and its state muted:
    - budget, within limit: «Puoi spendere ancora **{left ÷ daysLeft} al giorno** fino al {end}. Sei {gap} {oltre |
-     sotto} il ritmo.» `daysLeft` counts today and the range's last day.
+     sotto} il ritmo.» `daysLeft` counts today and the range's last day; the amount per day is rounded **down**, since
+     it is a ceiling and rounding up would let the last day overshoot.
    - budget, over limit: «Hai superato il limite di **{overrun}**. Ogni altra spesa in {name} si aggiunge, fino al
      {end}.»
    - budget, range closed (a past period): «Periodo chiuso a {pct}% del limite.»
@@ -608,11 +609,14 @@ replaced. The previous featured id is remembered **device-locally**, per card.
 
 - The Budget card follows the period selected on Home. **The Obiettivi card always reads today**: a goal is not a
   period aggregate.
-- **Hidden mode:** every amount masks (the big figure, the sentence, statuses that carry money), `pct` hides, bars and
-  rings empty, as `ProgressBar` does.
-- **Motion:** Home is seen every day, so nothing animates in. Ring fills follow the progress-bar rule
-  (`motion.progressMs`, the shared easing, instant under Reduce Motion), on `strokeDashoffset`. Rows keep the usual
-  press feedback.
+- **Hidden mode leaves the Home target cards alone**, as it left the Home budget card since the third device check of
+  hidden mode (2026-09-22): on Home only «Rimasto da spendere» hides. The goal list and detail (§6.35, §6.36) follow the
+  aggregate rule like any balance.
+- **Motion:** nothing animates in beyond Home's card entrance: Home is opened tens of times a day. A **change of
+  value** animates — the featured bar (`ProgressBar`, `scaleX`) and every ring (`strokeDashoffset` through
+  `useAnimatedProps`, on the UI thread, no layout) move from the old value to the new one, `motion.progressMs` with the
+  shared easing, interruptible, instant under Reduce Motion. The pace tick and a change of featured item do not
+  animate. Rows keep the usual press feedback.
 - **Taps:** the featured item and an event row open the item (budget detail sheet §6.17, goal detail §6.36).
 
 ### 5.14 Goals and pockets
