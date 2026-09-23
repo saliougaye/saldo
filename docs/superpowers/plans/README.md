@@ -643,50 +643,6 @@ its cadence from the detail; stop it and see only the future go; `SYNC_SCHEMA_VE
 on the simulator with Maestro (see the plan's status section). Changing the cadence from the detail is covered by
 `recurrenceService.test.ts` and was not tapped through on the device. Android unverified, as for every phase.
 
-### 13 — In-app explanations: first-run intro and «Guida» 🔍 analysis, then build
-
-**Plan:** not written yet — the analysis below produces it. · **Spec:** §4 (Account types), §5.2, §5.3, §5.8, §5.9,
-§6.8, §6.29, §12 · **Asked for:** 2026-09-24
-
-Saldo has concepts a Spendee user does not bring with them — six account types, periods that start on a chosen day,
-what counts towards totals, budgets against a period, transfers, credit cards settled from another account, hidden
-mode — and today nothing in the app explains them. The goal is the kind of short introduction an Apple app gives on
-first launch (a few feature cards, "Continua", done), plus a place to read the same explanations again later.
-
-**Analysis (first, in the plan or a short write-up next to it):**
-
-- **Inventory of concepts.** Walk every screen and list what a new user has to understand to use it: account types
-  (`cash`, `checking`, `debit_card`, `credit_card`, `savings`, `investment` — when to pick which, and what changes,
-  e.g. the card's statement and "Addebitata su"), periods and the cycle start day, what counts (§5.3: transfers and
-  excluded categories), budgets (per category, per period, what happens when exceeded), recurring transactions,
-  tags vs categories, hidden mode, sync and the server. Rank them by how often a misunderstanding would cost the user.
-- **Three surfaces, decide which each concept gets:**
-  1. **First-run intro** — 3–4 cards, Apple "What's New"-style (icon, title, one sentence), shown once after
-     onboarding and skippable. Only the ideas that change how the app is used from day one.
-  2. **Contextual hints** — an ⓘ next to the field or section it explains (account type tiles, cycle day, budget
-     sheet, "Ripeti"), opening a sheet with the same text as the guide. No tooltips that cover the UI, no coach marks.
-  3. **«Guida» section** — reachable from Profilo, one page per concept, the same entries the ⓘ open.
-- **Decide what is *not* explained** because the screen should explain itself instead; a hint that compensates for
-  an unclear label is a label to fix.
-- **Versioning.** Whether the intro doubles as a "Novità" sheet after an update (Apple does both with one pattern),
-  and where "already seen" is stored (device-local preference, not synced).
-- **Design.** A mockup in `docs/superpowers/mockups/` for the intro cards, the ⓘ sheet and the Guida list before any
-  code; reuse `Sheet`, `EmptyState` and the existing icons — no new primitives unless the mockup shows one is needed.
-
-**Build:**
-
-- The explanations are content, not code: one `guide.<concept>.{title,body}` set in `it.ts` **and** `en.ts` (and
-  every other catalogue — the parity test enforces it). Screens only reference a concept id.
-- Concept ids and "which concepts the intro shows" live in one typed list, so the intro, the ⓘ sheets and the Guida
-  cannot drift apart.
-- The intro is gated on a stored "seen" flag; resetting onboarding or "Elimina tutti i dati" shows it again.
-- Accessibility: each card and ⓘ is a labelled button, text scales with Dynamic Type, and the intro honours Reduce
-  Motion like every other presentation.
-
-**Acceptance:** a fresh install shows the intro once after onboarding and never again after "Continua" or "Salta";
-every account-type tile, the cycle-day step, the budget sheet and "Ripeti" have an ⓘ opening the right entry; Profilo
-→ Guida lists every concept; all strings exist in every catalogue; Maestro flow covers intro → Guida → one ⓘ.
-
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

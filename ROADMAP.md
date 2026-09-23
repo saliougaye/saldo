@@ -141,6 +141,37 @@ are copies of its `out/saldo/icons/`.
 The kit also carries Lottie state animations and illustrations (empty, loading, error, success, thinking, idle).
 The empty states (§13) are the obvious first use: variant D of their design review would replace `GhostStack`.
 
+### In-app explanations: a first-run intro and a «Guida»
+
+Asked for on 2026-09-24. Saldo has ideas a new user does not bring with them — six account types, a period that
+starts on a chosen day, what counts towards the totals, budgets as a ceiling per period, goals and pockets, transfers,
+a credit card settled from another account, recurring transactions, tags next to categories, hidden mode — and today
+nothing in the app explains them. The model is what Apple does when a new app opens: a few cards (icon, title, one
+sentence), «Continua», done; and a place to read the same explanations again later.
+
+Three surfaces, one text:
+
+- **First-run intro.** 3–4 cards shown once after onboarding, skippable. Only the ideas that change how the app is
+  used from day one.
+- **Contextual ⓘ.** Next to what it explains — the account-type tiles, the cycle day, the budget sheet, «Ripeti» —
+  opening a sheet. No tooltips over the UI, no coach marks.
+- **«Guida» in Profile.** One page per concept; the same entries the ⓘ open.
+
+How it is built:
+
+- The explanations are content, not code: `guide.<concept>.{title,body}` in every catalogue (the parity test
+  enforces it). One typed list of concept ids feeds the intro, the ⓘ and the Guida, so they cannot drift apart.
+- «Already seen» is a device-local flag, not synced; resetting onboarding or «Elimina tutti i dati» shows the intro
+  again.
+- Cards and ⓘ are labelled buttons, text follows Dynamic Type, the intro honours Reduce Motion.
+
+- [ ] Analysis before planning:
+  - walk every screen and list what a new user must understand to use it, ranked by what a misunderstanding costs;
+  - for each concept, decide intro, ⓘ, Guida or none — a hint that compensates for an unclear label is a label to
+    fix instead;
+  - whether the intro doubles as a «Novità» sheet after an update (Apple uses one pattern for both).
+- [ ] Spec section and a mockup in `docs/superpowers/mockups/` (intro cards, ⓘ sheet, Guida list), then the plan.
+
 ---
 
 ## 0.2 — Forecast: the next three months, from what already repeats
