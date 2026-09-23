@@ -4,10 +4,11 @@ import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { HomeBudgetCard } from './HomeBudgetCard';
+import { FEATURED_BUDGET_KEY, HomeBudgetCard } from './HomeBudgetCard';
 import type { BudgetView } from './useBudgetProgress';
 
 const mockPush = jest.fn();
+const mockKv = new Map<string, string>();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -18,6 +19,17 @@ jest.mock('../../db/hooks', () => ({
   useCategories: () => [{ id: 'cat-groceries', name: 'Spesa', colorIndex: 2 }],
 }));
 
+jest.mock('../../db/DatabaseProvider', () => ({
+  useDatabase: () => ({
+    kv: {
+      get: (key: string) => mockKv.get(key) ?? null,
+      set: (key: string, value: string) => {
+        mockKv.set(key, value);
+      },
+    },
+  }),
+}));
+
 let i18n: I18nInstance;
 
 beforeAll(async () => {
@@ -26,10 +38,13 @@ beforeAll(async () => {
 
 beforeEach(() => {
   mockPush.mockClear();
+  mockKv.clear();
 });
 
-function budget(overrides: Partial<Budget> & Pick<Budget, 'id' | 'name'>): Budget {
+function budget(id: string, name: string): Budget {
   return {
+    id,
+    name,
     createdAt: '2026-04-01T00:00:00.000Z',
     updatedAt: '1',
     deletedAt: null,
@@ -40,22 +55,25 @@ function budget(overrides: Partial<Budget> & Pick<Budget, 'id' | 'name'>): Budge
     rollover: false,
     icon: 'cart',
     sortOrder: 0,
-    ...overrides,
   };
 }
 
-function view(overrides: Partial<BudgetView> & Pick<BudgetView, 'budget' | 'ratio'>): BudgetView {
+/** A budget in the cycle 27 Mar – 26 Apr, today 18 Apr: pace 0.5 for round numbers. */
+function view(id: string, name: string, spent: number, limit = 40_000, pace = 0.5): BudgetView {
+  const ratio = spent / limit;
   return {
-    spent: 10_000,
-    limit: 40_000,
-    overPace: false,
-    overLimit: false,
+    budget: budget(id, name),
+    spent,
+    limit,
+    ratio,
+    overPace: ratio > pace,
+    overLimit: ratio > 1,
     alertReached: false,
     range: { start: '2026-03-27', end: '2026-04-26' },
-    daysLeft: 8,
+    daysLeft: 7,
+    pace,
     open: true,
-    limitWithCarry: 40_000,
-    ...overrides,
+    limitWithCarry: limit,
   };
 }
 
@@ -70,39 +88,68 @@ function card(views: readonly BudgetView[]) {
 }
 
 describe('HomeBudgetCard', () => {
-  it('ranks the budgets by ratio and keeps the top three', async () => {
+  it('features the budget furthest over its limit and gives the other one a row', async () => {
     await render(
       card([
-        view({ budget: budget({ id: 'b1', name: 'Spesa' }), ratio: 0.2 }),
-        view({ budget: budget({ id: 'b2', name: 'Bollette' }), ratio: 0.9 }),
-        view({ budget: budget({ id: 'b3', name: 'Ristoranti' }), ratio: 0.5 }),
-        view({ budget: budget({ id: 'b4', name: 'Benzina' }), ratio: 0.1 }),
+        view('b1', 'Spesa', 43_080, 42_000),
+        view('b2', 'Ristoranti', 20_800, 20_000),
+        view('b3', 'Trasporti', 11_780, 25_000),
       ]),
     );
-    expect(screen.getByText('Bollette')).toBeTruthy();
+    expect(screen.getByText('2 over the limit')).toBeTruthy();
+    expect(
+      screen.getByLabelText('Spesa, €430.80 of €420.00, €10.80 over the limit'),
+    ).toBeTruthy();
     expect(screen.getByText('Ristoranti')).toBeTruthy();
-    expect(screen.getByText('Spesa')).toBeTruthy();
-    expect(screen.queryByText('Benzina')).toBeNull();
+    expect(screen.getByText('€8.00 over the limit')).toBeTruthy();
+    // Neither featured nor an exception: only a ring in the «All budgets» row.
+    expect(screen.queryByText('Trasporti')).toBeNull();
   });
 
-  it('opens the full list from the header', async () => {
-    await render(card([view({ budget: budget({ id: 'b1', name: 'Spesa' }), ratio: 0.2 })]));
-    await userEvent.press(screen.getByText('Budget'));
+  it('features the budget furthest past its pace and says how much is left per day', async () => {
+    await render(card([view('b1', 'Spesa', 30_000), view('b2', 'Svago', 4_000)]));
+    expect(screen.getByText('1 over pace')).toBeTruthy();
+    // 100,00 € left over 8 days (today included); 300,00 € spent against 200,00 € of pace.
+    expect(
+      screen.getByText("You can still spend €12.50 a day until Apr 26. You're €100.00 over pace."),
+    ).toBeTruthy();
+    expect(screen.queryByText('Svago')).toBeNull();
+  });
+
+  it('opens the list from the «All budgets» row, which counts every budget', async () => {
+    await render(
+      card([view('b1', 'Spesa', 30_000), view('b2', 'Svago', 4_000), view('b3', 'Bar', 1_000)]),
+    );
+    await userEvent.press(screen.getByLabelText('All budgets, 3'));
     expect(mockPush).toHaveBeenCalledWith('/budgets');
+  });
+
+  it('opens the featured budget on the budgets screen', async () => {
+    await render(card([view('b1', 'Spesa', 30_000)]));
+    await userEvent.press(screen.getByLabelText(/^Spesa, /));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/budgets', params: { open: 'b1' } });
+  });
+
+  it('keeps the budget it featured last while a rival is only slightly further along', async () => {
+    mockKv.set(FEATURED_BUDGET_KEY, 'b2');
+    // Both over pace: 0.62 − 0.5 against 0.60 − 0.5, two points apart, under the five-point margin.
+    await render(card([view('b1', 'Spesa', 24_800), view('b2', 'Bollette', 24_000)]));
+    expect(screen.getByLabelText(/^Bollette, /)).toBeTruthy();
+  });
+
+  it('remembers the budget it features', async () => {
+    await render(card([view('b1', 'Spesa', 30_000), view('b2', 'Svago', 4_000)]));
+    expect(mockKv.get(FEATURED_BUDGET_KEY)).toBe('b1');
   });
 
   /**
    * The card used to render nothing without budgets, which left the Budgets screen — and with it
    * the new-budget wizard — unreachable on a fresh install.
    */
-  it('says there is no budget yet rather than disappearing', async () => {
+  it('says there is no budget yet and still leads to the budgets screen', async () => {
     await render(card([]));
     expect(screen.getByText('No budgets')).toBeTruthy();
-  });
-
-  it('leads to the budgets screen from the empty state, where the wizard lives', async () => {
-    await render(card([]));
-    await userEvent.press(screen.getByText('No budgets'));
+    await userEvent.press(screen.getByLabelText('Create a budget'));
     expect(mockPush).toHaveBeenCalledWith('/budgets');
   });
 });
