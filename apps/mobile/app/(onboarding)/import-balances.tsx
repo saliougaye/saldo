@@ -36,6 +36,12 @@ export default function ImportBalancesStep() {
       [...imported].map(([name, balance]) => [name, minorToAmountBuffer(balance, minorDigits)]),
     ),
   );
+  // The keypad stays up on this step, so its tall key is what continues the flow (§5.1).
+  const goOn = () => {
+    setDraft({ importBalanceBuffers: buffers });
+    router.push('/permissions');
+  };
+
   return (
     <Screen
       footer={
@@ -43,10 +49,7 @@ export default function ImportBalancesStep() {
           testID="onboarding-import-balances-continue"
           label={t('common.continue')}
           disabled={plan === null}
-          onPress={() => {
-            setDraft({ importBalanceBuffers: buffers });
-            router.push('/permissions');
-          }}
+          onPress={goOn}
         />
       }
     >
@@ -73,6 +76,9 @@ export default function ImportBalancesStep() {
                   doneLabel={t('common.done')}
                   allowNegative
                   negativeLabel={t('common.negative')}
+                  keypadPinned
+                  keypadActionLabel={t('common.continue')}
+                  onKeypadAction={goOn}
                 />
               </View>
             </Card>

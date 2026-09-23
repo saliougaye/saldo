@@ -26,16 +26,19 @@ export default function BalanceStep() {
   const [pickingCurrency, setPickingCurrency] = useState(false);
   const theme = useTheme();
 
+  // The keypad stays up on this step, so its tall key is what continues the flow (§5.1).
+  const goOn = () => {
+    setDraft({ balanceBuffer: buffer, currency });
+    router.push('/categories');
+  };
+
   return (
     <Screen
       footer={
         <StepFooter
           testID="onboarding-balance-continue"
           label={t('common.continue')}
-          onPress={() => {
-            setDraft({ balanceBuffer: buffer, currency });
-            router.push('/categories');
-          }}
+          onPress={goOn}
         />
       }
     >
@@ -71,6 +74,9 @@ export default function BalanceStep() {
                 doneLabel={t('common.done')}
                 allowNegative
                 negativeLabel={t('common.negative')}
+                keypadPinned
+                keypadActionLabel={t('common.continue')}
+                onKeypadAction={goOn}
               />
             </View>
             {/* The currency beside the amount, as in the design (1662–1665): one row asks one thing. */}
