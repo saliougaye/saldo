@@ -1,6 +1,6 @@
 import { previousPeriods } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
@@ -42,7 +42,9 @@ export default function BudgetsScreen() {
   const categories = useCategories();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
-  const [openId, setOpenId] = useState<string | null>(null);
+  // Home's target card opens a budget here (§5.13): the detail sheet belongs to this screen.
+  const { open } = useLocalSearchParams<{ open?: string }>();
+  const [openId, setOpenId] = useState<string | null>(open ?? null);
 
   const start =
     previousPeriods(def, period.range, CARRY_LOOKBACK).at(-1)?.start ?? period.range.start;
@@ -141,7 +143,7 @@ export default function BudgetsScreen() {
                 <View style={{ marginTop: 12 }}>
                   <ProgressBar
                     ratio={view.ratio}
-                    pace={view.open ? view.spent / Math.max(1, view.limitWithCarry) : undefined}
+                    pace={view.open ? view.pace : undefined}
                     overPace={view.overPace}
                   />
                 </View>
