@@ -90,10 +90,11 @@ describe('budgetViews', () => {
     expect(result.spent).toBe(0);
   });
 
-  it('reports the days left and whether the range is still open', () => {
+  it('reports the days left, the pace and whether the range is still open', () => {
     const result = view({}, []);
     // Cycle is 31 days and today is day 23.
     expect(result.daysLeft).toBe(8);
+    expect(result.pace).toBeCloseTo(23 / 31, 10);
     expect(result.open).toBe(true);
   });
 

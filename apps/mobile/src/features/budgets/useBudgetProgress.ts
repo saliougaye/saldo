@@ -21,6 +21,8 @@ export interface BudgetView extends BudgetProgress {
   range: { start: LocalDate; end: LocalDate };
   /** Days left in the range, floored at 0 (§6.4). */
   daysLeft: number;
+  /** elapsed / length of the range: where the pace tick sits (§5.2). */
+  pace: number;
   /** True while the range still contains today. */
   open: boolean;
   /** `amount` plus any rollover carry (§5.8). */
@@ -72,11 +74,12 @@ export function budgetViews(input: BudgetProgressInput): BudgetView[] {
 
     const length = cycleLength(range);
     const elapsed = elapsedDays(range, today);
+    const pace = length === 0 ? 0 : elapsed / length;
     const progress = budgetProgress(
       { ...budget, amount: limitWithCarry },
       spending,
       categories,
-      length === 0 ? 0 : elapsed / length,
+      pace,
     );
 
     return {
@@ -84,6 +87,7 @@ export function budgetViews(input: BudgetProgressInput): BudgetView[] {
       budget,
       range,
       daysLeft: Math.max(0, length - elapsed),
+      pace,
       open: today >= range.start && today <= range.end,
       limitWithCarry,
     };
