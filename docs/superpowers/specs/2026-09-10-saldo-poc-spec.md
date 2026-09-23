@@ -77,6 +77,8 @@ cycle, and am I going faster than I should?*
 | D21 | Scheduled occurrences of recurring transactions have **deterministic ids** `${recurrenceId}:${occurrenceDate}` | Two devices generating the same occurrence offline converge to one row after sync. |
 | D23 | Amounts are typed on **Saldo's own keypad**, not on the device keyboard (reversed 2026-09-22; it said the opposite before) | Saldo then draws the keys, so they are identical on iOS and Android, the decimal separator follows the *app's* language instead of the device's, and a balance gets a `−` key where a calculator has one — none of which `decimal-pad` could offer: it has no minus key on iOS, and Android has no `InputAccessoryView` to add one beside a «Fatto». The field stays a `TextInput` with `showSoftInputOnFocus={false}`, so it keeps its caret, its selection and its screen-reader semantics, and a hardware keyboard or a paste still reaches it through `sanitizeAmountInput`, which still accepts `.` and `,`. The cost is the room the pad takes: `Screen` hosts it under the footer and reserves its height, and the two onboarding amount steps keep it up with «Continua» on its tall key. |
 | D22 | **TanStack Query is used for the network layer only** (auth + sync, phases 06–07), never for local reads | Local reads are already reactive through the `expo-sqlite` change listener, with SQLite as the single source of truth; a query cache on top would have to be invalidated by hand on every mutation, re-implementing what the listener does for free and inviting stale-screen bugs. React Query caches *server* state, and on a local-first device there is none. It earns its place on retries, backoff, dedup and `onlineManager` for the sync and auth calls, driven imperatively through `QueryClient` rather than by component mounts (§8.5 runs sync on app start, foreground and after writes, not on mount). |
+| D24 | **A goal is a pocket**: an account of type `pocket` that lives inside a real account and carries the goal's target and deadline (decided 2026-09-24) | Setting money aside is then a transfer into the pocket, so a goal reuses the whole ledger: balances, Totale spendibile, recurrences (an automatic contribution is a recurring transfer), export and sync. It is the only model considered that is both backed by real balances and usable by someone whose only account is a current account. A goal pointing at an existing savings account fails that user and holds one goal per account; earmarks kept outside the ledger re-implement pockets with a new entity, a new recurrence kind and a new spendable formula; a target with a hand-typed "saved so far" is a reminder, not a goal. Pocket and goal are one to one and are created and closed together, so the goal's fields live on the pocket's own row and no goal can dangle. Investment accounts cannot hold pockets: their returns land on the parent, so a pocket inside one would never grow. |
+| D25 | Budget and Obiettivi on Home share one **target card** (§5.13): one item featured with a sentence that says what to do, the exceptions as rows, everything else behind one «Tutti …» row of rings (decided 2026-09-24 over three rounds of mockups) | A list of bars says where each item is, not what to do about it. The sentence turns the pace into an amount — per day for a budget, per period for a goal — and a single featured item keeps Home to one large figure per card. The exceptions (a budget over its limit, a goal reached or past its deadline) are the things that must not hide behind a tap, so they get rows of their own; being over *pace* is common and stays a dark ring. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -185,7 +187,7 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | Field | Type | Rules |
 | --- | --- | --- |
 | `name` | string 1–60 | |
-| `type` | `cash \| checking \| debit_card \| credit_card \| savings \| investment` | Labels: Contanti, Conto, Carta di debito, Carta di credito, Risparmi, Investimenti. A debit card is its own account with its own balance, and behaves like `checking`. |
+| `type` | `cash \| checking \| debit_card \| credit_card \| savings \| investment \| pocket` | Labels: Contanti, Conto, Carta di debito, Carta di credito, Risparmi, Investimenti. A debit card is its own account with its own balance, and behaves like `checking`. A `pocket` is a goal (D24, §5.14): it is never offered in the account type grid and is created only by the goal wizard. |
 | `institution` | string ≤60 \| null | Shown as subtitle ("Intesa Sanpaolo"). |
 | `openingBalance` | minor int | Balance at creation (may be negative for credit cards). |
 | `includeInSpendable` | boolean | Default `true` for cash/checking/debit_card/credit_card, `false` for savings/investment. |
@@ -194,6 +196,10 @@ Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLoc
 | `creditCloseDay` / `creditChargeDay` | int 1–28 \| null | Only for `credit_card`. |
 | `creditPaymentAccountId` | id \| null | Account the card is charged to. |
 | `archivedAt` | ISO \| null | Archived accounts are hidden from pickers and totals; history stays. |
+| `parentAccountId` | id \| null | Required iff `pocket`: the real account the pocket's money sits in. The parent is `cash`, `checking`, `debit_card` or `savings`, not archived, and never itself a pocket. It cannot change after creation. |
+| `goalTarget` | minor int > 0 \| null | Required iff `pocket`. |
+| `goalDeadline` | LocalDate \| null | `pocket` only. Optional: a goal without a deadline has no pace (§5.14). |
+| `goalStartDate` | LocalDate \| null | Required iff `pocket`: the day the goal was created, the origin of its pace. |
 | `sortOrder` | int | |
 
 **Category**
@@ -462,9 +468,9 @@ Let `today = todayLocal()`.
 - **Rollover** (`period` only): `effectiveLimit = amount + carry`, `carry = max(0, prevEffectiveLimit − prevSpent)`
   computed recursively back to the period the budget was created in. For week/month/year, rollover is ignored and the
   toggle is hidden: a carry between two windows of a different shape than the period has no defined meaning.
-- **Home card:** top 3 budgets by `ratio` desc. Note: `"{n} oltre il ritmo"` if n > 0, else `"nei limiti"`.
-  With **no budgets** the card stays, reduced to its header with the note `"Nessun budget"`: it is the way into
-  §6.4, and hiding it left the budget list — and the wizard behind it — unreachable on a fresh install.
+- **Home card:** a target card (§5.13, D25). With **no budgets** the card stays, reduced to its header with the note
+  `"Nessun budget"` and the row «Crea un budget»: it is the way into §6.4, and hiding it left the budget list — and the
+  wizard behind it — unreachable on a fresh install.
 - **Alerts:** when a write makes `ratio × 100` cross `alertThreshold` (from below), schedule an immediate **local
   notification** (`expo-notifications`): "Budget {name}: {pct}% usato". Notify once per budget per period (remember
   `lastAlertPeriodStart` device-locally).
@@ -553,6 +559,126 @@ Let `today = todayLocal()`.
 - **Empty states:** with filters → "Nessun risultato" + "Azzera filtri"; without → "Nessuna transazione" +
   "Nuova transazione".
 
+### 5.13 Target cards (Home: Budget and Obiettivi)
+
+One card shape for everything on Home that has a target (D25). A budget is a **ceiling** and a goal is a **target to
+reach**, so a full bar means opposite things. The card therefore never lets fullness carry meaning: colour does.
+**`accent` = needs attention** (a budget over pace or over its limit, a goal behind or past its deadline), **`positive`
+= a goal reached** — the only place green appears — and `barGrey` for everything else, "ahead" and "in line" included.
+
+**Structure, top to bottom.**
+
+1. **Header:** title and status line, **not pressable** and without a chevron. The card has one action, and it is the
+   last row. Status: budgets `"{n} oltre il limite"`, else `"{n} oltre il ritmo"`, else `"nei limiti"`; goals up to two
+   of `"{n} scaduti"`, `"{n} indietro"`, `"{n} raggiunti"`, in that order, else `"nei tempi"`. `accent` when anything
+   needs attention, muted otherwise.
+2. **Featured item** (one, always, while the card has any item): icon, name and a short meta on one line; the big
+   figure (`amountLg`, fraction and symbol at 50%) is **what fills the bar** — spent for a budget, saved for a goal —
+   under it `"di {limit} · {pct}%"`; an 8pt bar with the pace tick and three labels under it (range start, `oggi` at
+   the tick, range end; an end label drops out when `oggi` is within 22% of it, the start within 18%, and a reached or
+   expired goal shows no `oggi`); then **the sentence**, its action at weight 500 and its state muted:
+   - budget, within limit: «Puoi spendere ancora **{left ÷ daysLeft} al giorno** fino al {end}. Sei {gap} {oltre |
+     sotto} il ritmo.» `daysLeft` counts today and the range's last day.
+   - budget, over limit: «Hai superato il limite di **{overrun}**. Ogni altra spesa in {name} si aggiunge, fino al
+     {end}.»
+   - budget, range closed (a past period): «Periodo chiuso a {pct}% del limite.»
+   - goal sentences: §5.14.
+3. **Event rows**, at most **3**: the exceptions that must not hide behind a tap. Budgets: over their **limit**, by
+   overrun in money, desc. Goals: expired, then reached (most recently reached first). Over-*pace* is not an event.
+   Each row: a 36pt ring with the icon inside, name, meta, and on the right `{pct}%` over the status in its tone.
+4. **«Tutti …» row**, the card's only action (→ §6.4 / §6.35): a 28pt ring per remaining item (sort order), then
+   `"Tutti i budget · {n}"` / `"Tutti gli obiettivi · {n}"`, where `n` is the total count, and a chevron. With nothing
+   left to preview it shows the label alone.
+
+**Rings** carry progress (`ratio`, clamped to 1), the pace tick on the circle, and the icon in the centre in the
+item's colour; they are the icon box of a row with a target. They are decorative for assistive technology: the row's
+label says everything.
+
+**Which item is featured** (`featuredTarget` in `@saldo/core`, pure, taking the previous featured id):
+
+| Card | Tiers, highest first, and the score that ranks inside a tier |
+| --- | --- |
+| Budget | over limit (overrun, money) → over pace (`ratio − pace`) → the rest (`ratio ÷ pace`, closest to pace first) |
+| Obiettivi | expired (missing, money) → behind (`−gap ÷ target`) → in line with a deadline (smallest `gap ÷ target`) → no deadline (lowest `ratio`) → all reached: the most recently reached |
+
+**Hysteresis**, so the card does not change face at every transaction: a candidate in a **higher** tier replaces the
+previous item at once; in the **same** tier it replaces it only when its score beats the previous one's by 5% of the
+previous item's limit or target; a previous item that no longer exists, is archived, or (a goal) is reached is
+replaced. The previous featured id is remembered **device-locally**, per card.
+
+- The Budget card follows the period selected on Home. **The Obiettivi card always reads today**: a goal is not a
+  period aggregate.
+- **Hidden mode:** every amount masks (the big figure, the sentence, statuses that carry money), `pct` hides, bars and
+  rings empty, as `ProgressBar` does.
+- **Motion:** Home is seen every day, so nothing animates in. Ring fills follow the progress-bar rule
+  (`motion.progressMs`, the shared easing, instant under Reduce Motion), on `strokeDashoffset`. Rows keep the usual
+  press feedback.
+- **Taps:** the featured item and an event row open the item (budget detail sheet §6.17, goal detail §6.36).
+
+### 5.14 Goals and pockets
+
+A goal is a **pocket** (D24): an account of type `pocket` inside a parent account, with a target and an optional
+deadline. Example: «Macchina, 12.000 € entro giugno 2027» inside «Conto corrente».
+
+**Money.**
+
+- `saved` = the pocket's balance (§5.3). Money goes in and out **only by transfers** — «Accantona» (parent → pocket)
+  and «Preleva» (pocket → parent), each opening the new-transaction sheet prefilled — or by an expense recorded from
+  the pocket. A recurring transfer into the pocket is an automatic contribution.
+- A pocket is created with `openingBalance = 0` and `includeInSpendable = false`, always. What the user already has
+  aside («Già da parte») becomes a **transfer from the parent** dated on creation: an opening balance would count the
+  same money twice in Patrimonio complessivo.
+- **Totale spendibile and Patrimonio complessivo do not change**: the transfer already moved the money out of the
+  parent's balance and into an account that is not spendable. «Rimasto da spendere» does not change either: transfers
+  are not counted (§5.3).
+- **The parent reads like the bank.** Wherever an account with pockets shows a balance, it shows the **bank balance** =
+  its own balance + its non-archived pockets' balances. In Conti (§6.5) its pockets are listed indented under it,
+  each with its ring, and a last line «liberi» carries the own balance — the part that is actually spendable.
+
+**Progress** (`goalProgress` in `@saldo/core`, with injected `today`):
+
+- `reached` = `saved ≥ goalTarget`. `reachedOn` = the first day of the latest run of days with the balance at or above
+  the target, computed from the ledger and never stored.
+- `expired` = a deadline before today and not reached.
+- **Pace**, only with a deadline: `pace = elapsedDays(goalStartDate … goalDeadline, today) ÷ length` (§5.2);
+  `startSaved` = the balance at the end of `goalStartDate`; `expected = startSaved + (goalTarget − startSaved) × pace`;
+  `gap = saved − expected`; `behind = gap < 0`. Starting from `startSaved` keeps a goal created with money already aside
+  from reading as far ahead.
+- **Per period**: `periodsLeft` = the number of app periods (`settings.periodKind`, §5.2) from the one containing today
+  to the one containing the deadline, both included; `perPeriod = ⌈(goalTarget − saved) ÷ periodsLeft⌉` in minor
+  units, rounded **up** so that following the advice reaches the target.
+
+**Sentences** (featured item, goal detail, list):
+
+| State | Sentence |
+| --- | --- |
+| deadline, `periodsLeft > 1` | «Metti da parte **{perPeriod} {al mese \| a settimana \| a ciclo \| all'anno}** per arrivarci. Sei {gap} {indietro \| avanti}.» |
+| deadline in the current period | «Mancano **{missing} in {n} giorni**.» |
+| no deadline | «Mancano **{missing}**.» |
+| expired | «Scaduto il {deadline}: mancano **{missing}**. Sposta la scadenza o chiudilo.» |
+| reached | «Hai messo da parte **{goalTarget}**. Chiudilo quando usi i soldi.» |
+
+**Closing a goal** («Chiudi obiettivo», goal detail, and the reached event row): the close sheet (§6.38) asks what
+happened to the money. «Registra la spesa» opens the new-transaction sheet prefilled — an expense from the pocket, the
+whole balance, the goal's name as description — as «Salda carta» does (§6.10), nothing written until it is saved.
+«Riporta in {parent}» writes a transfer of the whole balance back to the parent. Whatever is left after the expense is
+returned the same way. Then the pocket is **archived**. **An archived pocket always has a zero balance**, so archiving
+never hides money from the totals. Restoring it (Ripristina, §6.5) reopens the goal empty.
+
+**Rules around pockets.**
+
+- Editing a goal changes name, target, deadline, icon and colour; never the parent.
+- Archiving a parent that still holds open pockets is refused with «Chiudi prima gli obiettivi in questo conto».
+- Pockets are **not** offered in the account chips of the new-transaction sheet (§6.16); they appear in the transfer
+  pickers grouped under their parent, and prefilled by the goal's own actions. A credit card cannot be charged to a
+  pocket (`creditPaymentAccountId`).
+- CSV import (§11.3) never maps a row to a pocket; CSV export and the JSON backup include pockets like any account.
+- **Notification:** when a write makes a goal reached, one local notification — «Obiettivo {name} raggiunto: {goalTarget}»
+  (the amount follows hidden mode) — with the same permission flow as the budget alerts (§5.8). Once per goal,
+  remembered device-locally.
+- **Sync:** `account.type` gains `pocket` and the account gains four nullable fields. Saldo has no public build yet, so
+  `SYNC_SCHEMA_VERSION` does not move, as with `settings.language` (§4.1).
+
 ---
 
 ## 6. Screens (mobile) — inventory & behaviour
@@ -590,14 +716,16 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 
 | # | Screen | Design lines | POC notes |
 | --- | --- | --- | --- |
-| 6.1 | **Home** | 54–178 | Header: avatar initials (from display name, or "S" when there is none) → Profile — the only entry point the design gives the profile, and it belongs to the home header alone, not to the shared period header the other tabs use; period button (label + "giorno X di Y" / "ciclo chiuso") → Period sheet; ‹ › cycle nav. Cards, in this order: Remaining; **In arrivo** (only if upcoming exist, at most 5 shown, the header counting them all) — it sits second because it is what corrects the figure above it; Budget (top 3, **always shown**: with none it reads "Nessun budget" and still opens §6.4); Ultime transazioni (5). Each list card's **header is its action** (title, status, chevron, whole row tappable) rather than an accent line of text at the bottom. **Andamento del ciclo moved to Statistics** (§6.3), next to the six cycles it is a close-up of: it is the one card here that is read rather than glanced at. |
+| 6.1 | **Home** | 54–178 | Header: avatar initials (from display name, or "S" when there is none) → Profile — the only entry point the design gives the profile, and it belongs to the home header alone, not to the shared period header the other tabs use; period button (label + "giorno X di Y" / "ciclo chiuso") → Period sheet; ‹ › cycle nav. Cards, in this order: Remaining; **In arrivo** (only if upcoming exist, at most 5 shown, the header counting them all) — it sits second because it is what corrects the figure above it; Budget and **Obiettivi**, both target cards (§5.13), **always shown**: with none they read "Nessun budget" /
+"Nessun obiettivo" and their row opens §6.4 / the goal wizard (§6.37); Ultime transazioni (5). Each list card's **header is its action** (title, status, chevron, whole row tappable) rather than an accent line of text at the bottom — except the target cards, whose one action is their last row, «Tutti …» (§5.13), a full row with rings rather than a line of text. **Andamento del ciclo moved to Statistics** (§6.3), next to the six cycles it is a close-up of: it is the one card here that is read rather than glanced at. |
 | 6.2 | **Transazioni** | 180–251 | §5.12. Title + period button, sticky search + chips. **The list shows what has happened**: everything dated after today is folded behind one "In arrivo" row carrying the count and the net, which expands the upcoming days in place rather than opening a screen — same rows, same swipes, and you are looking to glance, not to navigate. Only the selected period's upcoming, since that is all the query holds. Expanded, the two runs are separated by labelled rules ("Dopo oggi" / "Già registrate"), since the toggle row has scrolled away by the time the future ends. An **account filter** chip opens a single-select sheet (all accounts, archived included, one check) and is also seeded by the `accountId` route param, which is how "Ultime transazioni" on an account detail opens this list. A **Ricorrenti** row under "In arrivo" (only when a recurrence exists) opens §6.33. |
 | 6.3 | **Statistiche** | 253–350 | §5.7. |
 | 6.4 | **Budget list** | 352–392 | Cards with icon, name, "N giorni rimasti" / "Periodo chiuso", spent/limit, bottom bar + pace tick; "+" and dashed "Nuovo budget". Tap → Budget detail sheet. |
-| 6.5 | **Conti** | 394–469 | **Patrimonio complessivo first**, as the hero — it is the question the screen answers and it needs no explanation — with Totale spendibile under it on its own line plus a sentence saying what it leaves out (savings and investments); spendable list, "Risparmi e investimenti" list, Patrimonio complessivo, a **"Conti archiviati" row** with the count, opening `settings/archived-accounts` (the collapsible list of the prototype became that screen, so the Accounts tab and the Profile row lead to the same place). An archived account offers **Ripristina and nothing else**: its detail hides edit, transfer and archive, and `account/edit` refuses with the same restore button, since a deep link can still reach it. Header: settings gear, "+". |
+| 6.5 | **Conti** | 394–469 | **Patrimonio complessivo first**, as the hero — it is the question the screen answers and it needs no explanation — with Totale spendibile under it on its own line plus a sentence saying what it leaves out (savings and investments); spendable list, "Risparmi e investimenti" list — an account holding pockets shows its **bank balance**, with its pockets
+indented under it (ring, name, balance) and a last «liberi» line for its own balance (§5.14) — Patrimonio complessivo, a **"Conti archiviati" row** with the count, opening `settings/archived-accounts` (the collapsible list of the prototype became that screen, so the Accounts tab and the Profile row lead to the same place). An archived account offers **Ripristina and nothing else**: its detail hides edit, transfer and archive, and `account/edit` refuses with the same restore button, since a deep link can still reach it. Header: settings gear, "+". |
 | 6.6 | **Transaction detail** | 471–536 | Amount (44px), title, rows Categoria (dot), Conto (transfer: "A → B"), Data (long format with year), Nota (note, or the cadence — "Ricorrente, ogni mese, il 18" — / "Registrata manualmente"), a **Ricorrenza** row (the end) that opens §6.34, Esclusa dai totali. Tag chips → Tag view. **Attachments:** "Scontrino"/"Allegati" horizontal list of 96×124 thumbnails, tap → full-screen viewer (pinch-zoom; PDFs open in the system viewer). "Modifica" → edit sheet. |
 | 6.7 | **Impostazioni** | 538–584 | **Not built as a separate screen.** Every row of it is already in 6.8 Profilo — categories, tags, the period, the currency — and in the prototype the two screens differ only in how you reach them. The gear on Accounts opens the Profile, and "Rivedi la configurazione iniziale" moved there. One list, one place to change a setting. |
-| 6.8 | **Profilo** | 586–669 | Inizio del ciclo, Valuta (row shows the **symbol** next to the code), Lingua, Tema — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; **Budget** (→ §6.4, the second way in now that the home card is not the only one), Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; **Elimina tutti i dati** (NEW → `profile/delete-data`, §8.6); Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. |
+| 6.8 | **Profilo** | 586–669 | Inizio del ciclo, Valuta (row shows the **symbol** next to the code), Lingua, Tema — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; **Budget** (→ §6.4, the second way in now that the home card is not the only one), **Obiettivi** (→ §6.35), Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; **Elimina tutti i dati** (NEW → `profile/delete-data`, §8.6); Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. |
 | 6.9 | **Categorie** | 671–727 | §5.11. |
 | 6.10 | **Account detail** | 729–804 | Edit, archive (confirm toast), icon/name/kind, balance, delta over last 8 months, sparkline of month-end balances over 8 months (labels first/last month), credit card box (one list: Maturato; "Prossimo addebito" with the charge date as its subtitle — "5 ottobre · Estratto conto" and the amount due on the right while a statement is due, "✓ Saldato" once it is paid; the prototype's note naming the close and charge days and the payment account; a **Salda carta** row, which opens the new-transaction sheet as a transfer from the payment account to the card, for the statement due, dated on its charge day — or today if that has passed — with the description "Saldo {card} · {month}", every field editable and nothing written until saved), cycle income/expense tiles, "Trasferisci verso un altro conto" → new transfer sheet, last 6 transactions. |
 | 6.11 | **Tag view** | 807–857 | §5.10. |
@@ -624,6 +752,10 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |
 | 6.33 | **Ricorrenti** (NEW) | — | Reached from the Transactions tab. "Ogni mese, in media": Σ amount × occurrences-per-month over live recurrences, expenses and income apart, transfers left out; bar = expense/income when there is income. Then one card per cadence ("Ogni mese", "Ogni 2 settimane", …) with rows name · cadence · prossima date · signed amount → §6.34; ended series in a last card. Empty state points at "Ripeti". |
 | 6.34 | **Recurrence detail** (NEW) | — | Name, amount, cadence and next date; rows Cadenza › and Fine › (both open the Ripeti sheet on a draft, applied on close per §5.9), Prima occorrenza; every occurrence, newest first, upcoming ones with the 2px rule; "Modifica" opens the edit sheet of the next upcoming occurrence (or the latest), which asks the scope; "Smetti di ripetere" confirms with the real count of scheduled rows. |
+| 6.35 | **Obiettivi** (NEW) | — | `goals.tsx`, push. One card per open goal, in sort order: icon, name, "entro {deadline}" / "senza scadenza", saved over target, 4pt bar with pace tick, the sentence of §5.14. "+" and dashed "Nuovo obiettivo" → §6.37. A last row «Obiettivi chiusi · {n}» lists the archived ones, each with Ripristina. |
+| 6.36 | **Goal detail** (NEW) | — | `goal/[id].tsx` for a pocket's id. The featured block of §5.13 at full width, then «Accantona» and «Preleva» (prefilled transfers, §5.14), rows Conto (the parent), Scadenza, Creato il, then the pocket's transactions, newest first. Header: «Modifica» (§6.37 on one page) and a «Chiudi obiettivo» row at the bottom (§6.38). An archived goal shows Ripristina only, as an archived account does (§6.5). |
+| 6.37 | **New goal sheet** (NEW) | — | A **wizard** like the new budget (§6.18): 1 name and look (icon and colour, the account picker's grid); 2 target (keypad, D23); 3 deadline, optional (Saldo's calendar, «Senza scadenza»); 4 «Da quale conto» (cash, checking, debit card, savings; non-archived) and «Già da parte» (keypad, 0 allowed; the parent's own balance shows as a hint, and more is accepted, since a parent may go negative). «Crea obiettivo» writes the pocket and, when «Già da parte» > 0, the transfer from the parent, in one database transaction. Edit is one page without step 4. |
+| 6.38 | **Close goal sheet** (NEW) | — | «Hai usato i soldi?» with the balance; «Registra la spesa» and «Riporta in {parent}» (§5.14); with a zero balance it only confirms. Archives the pocket and returns to the list with the toast «Obiettivo chiuso». |
 
 Visual rules for NEW screens: use only tokens from `@saldo/ui` and the component primitives built for the design
 screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, SecondaryButton, TextField). No new colours.
@@ -664,7 +796,8 @@ screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, Secondar
 ### 8.1 Model
 
 - Unit of sync = one entity row (whole-row last-writer-wins).
-- Entity names: `settings, account, category, tag, transaction, recurrence, budget, attachment`.
+- Entity names: `settings, account, category, tag, transaction, recurrence, budget, attachment`. Goals are accounts
+  (D24) and add no entity.
 - Order of application doesn't matter for integrity (no FK constraints across synced tables locally; the UI tolerates
   dangling references by showing "—" and repositories filter tombstoned parents).
 - **Unknown enum values on pull — decided: a schema-version gate, with per-row error state as the backstop.**

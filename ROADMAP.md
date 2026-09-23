@@ -57,13 +57,21 @@ of a limit. A goal is the opposite shape: a **target to accumulate**, with a dea
 What exists today is half of it: a `savings` account (§3, excluded from Totale spendibile) plus transfers into it
 already model "money set aside"; what is missing is the target, the deadline and the progress.
 
-- [ ] Decide the model before planning:
-  - a goal **linked to an account** (progress = the account's balance, or its growth since the goal started), or
-    a goal with its **own contributions** (so one account can hold several goals);
-  - the "on track" rule: required per period = (target − saved) / periods left, against the pace of the budget bars;
-  - where it lives: a Home card like budgets, a row in Profile, or on the account detail;
-  - reaching the target, missing the deadline, and what happens to the money when the goal is closed.
-- [ ] Spec section (`§5.x Goals`), then the plan.
+- [x] Decide the model before planning (2026-09-24, spec D24, D25, §5.13, §5.14):
+  - **A goal is a pocket**: an account of type `pocket` inside a real account (cash, checking, debit card, savings),
+    carrying the target and an optional deadline. Setting money aside is a transfer into it, so one current account is
+    enough and one account can hold several goals. Pocket and goal are created and closed together. Investment
+    accounts cannot hold pockets.
+  - The **on-track rule** runs from the balance on the day the goal was created to the target on the deadline; the
+    sentence asks for `(target − saved) ÷ periods left`, in the app's own period.
+  - It lives on **Home**, in a target card shared with Budget (one featured item, exceptions as rows, «Tutti …» row of
+    rings), in its own list reached from Profile, and on the goal detail.
+  - Reached goals stay on Home until closed; expired ones ask to move the deadline or close. Closing offers «Registra
+    la spesa» or returns the money to the parent, then archives the pocket, always at zero balance.
+  - Accounts holding pockets show the bank balance, with the pockets indented under them and a «liberi» line.
+- [x] Spec section (§5.13 Target cards, §5.14 Goals and pockets).
+- [ ] Plan A: the target card, with the Home Budget card moved onto it (budget rules unchanged).
+- [ ] Plan B: pockets and goals, reusing the target card.
 
 ### Period recap: close the last period before the next one starts
 
