@@ -245,6 +245,12 @@ export const layout = {
   stepSegmentHeight: 2,
   stepSegmentGap: 6,
   paceTickOverhang: 3,
+  /** The featured item of a target card (§5.13): twice a row's bar, with a longer pace tick. */
+  progressHeightThick: 8,
+  paceTickOverhangThick: 4,
+  /** Progress rings of a target card: an event row's (icon box size) and the «Tutti …» preview. */
+  targetRing: 36,
+  targetRingSmall: 28,
   minHitTarget: 44,
 } as const;
 

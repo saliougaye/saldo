@@ -184,3 +184,15 @@ describe('permissions list motion', () => {
     expect(motion.swapEasing).toHaveLength(4);
   });
 });
+
+describe('target card layout', () => {
+  it('draws the featured bar twice as thick as a row bar, with a longer pace tick', () => {
+    expect(layout.progressHeightThick).toBe(layout.progressHeight * 2);
+    expect(layout.paceTickOverhangThick).toBeGreaterThan(layout.paceTickOverhang);
+  });
+
+  it('sizes the event-row ring like an icon box and the preview ring smaller', () => {
+    expect(layout.targetRing).toBeGreaterThanOrEqual(layout.iconBox);
+    expect(layout.targetRingSmall).toBeLessThan(layout.targetRing);
+  });
+});
