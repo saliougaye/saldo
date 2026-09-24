@@ -1615,7 +1615,7 @@ describe('goal links', () => {
     expect(form?.values).toMatchObject({
       kind: 'expense',
       accountId: 'car',
-      buffer: '12000.00',
+      buffer: '12000',
       description: 'Macchina',
       categoryId: null,
     });

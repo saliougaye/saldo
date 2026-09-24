@@ -6,9 +6,11 @@ import { removeAttachment } from '../../src/attachments/attachmentService';
 import { useToast } from '../../src/components/Toast';
 import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
+import { closeGoal } from '../../src/db/goalService';
 import { useAccounts, useSettings } from '../../src/db/hooks';
 import { startRecurrence } from '../../src/db/recurrenceService';
 import { settlementForm } from '../../src/features/accounts/settlement';
+import { goalExpenseForm } from '../../src/features/goals/goalLinks';
 import { PrivacyOverlay } from '../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
@@ -27,8 +29,10 @@ export default function NewTransaction() {
   // first render the fields are the user's.
   const params = useLocalSearchParams();
   const [settlement] = useState(() => settlementForm(params, today, minorDigits));
+  // «Registra la spesa» (§5.14): saving this expense closes the goal; leaving does not.
+  const [closing] = useState(() => goalExpenseForm(params, today, minorDigits));
   const [values, setValues] = useState(
-    () => settlement?.values ?? emptyForm(today, accounts[0]?.id ?? null),
+    () => settlement?.values ?? closing?.values ?? emptyForm(today, accounts[0]?.id ?? null),
   );
   const [saving, setSaving] = useState(false);
   const savedRef = useRef(false);
@@ -75,6 +79,12 @@ export default function NewTransaction() {
           // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
           if (values.recurrence !== null) {
             startRecurrence(db, repos, created, values.recurrence, today, def);
+          }
+          if (closing !== null) {
+            closeGoal(db, repos, closing.closeGoalId, today, new Date().toISOString());
+            toast.show(t('goals.closed'));
+            router.back();
+            return;
           }
           toast.show(t('transactions.created'));
           router.back();
