@@ -72,3 +72,20 @@ export function accountChoices<T extends PocketFields>(
   if (kept !== undefined) out.push(kept);
   return out;
 }
+
+/**
+ * A row in or out of a closed goal. Closing leaves the pocket at zero (§5.14); editing or deleting
+ * one of its rows afterwards would change a balance the totals no longer show, so such rows are
+ * read-only.
+ */
+export function touchesClosedGoal(
+  tx: { accountId: string; toAccountId: string | null },
+  accounts: readonly PocketFields[],
+): boolean {
+  return accounts.some(
+    (account) =>
+      isPocket(account) &&
+      account.archivedAt !== null &&
+      (account.id === tx.accountId || account.id === tx.toAccountId),
+  );
+}

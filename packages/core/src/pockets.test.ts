@@ -6,6 +6,7 @@ import {
   isPocket,
   pocketParentCandidates,
   pocketsOf,
+  touchesClosedGoal,
 } from './pockets';
 
 type Row = {
@@ -80,5 +81,19 @@ describe('accountChoices', () => {
     expect(
       accountChoices(ROWS, { includePockets: false, keepId: 'car' }).map((row) => row.id),
     ).toEqual(['checking', 'car', 'card', 'deposit', 'degiro']);
+  });
+});
+
+describe('touchesClosedGoal', () => {
+  const tx = (accountId: string, toAccountId: string | null = null) => ({ accountId, toAccountId });
+
+  it('flags a row in or out of a closed goal, whose balance must stay at zero', () => {
+    expect(touchesClosedGoal(tx('sofa'), ROWS)).toBe(true);
+    expect(touchesClosedGoal(tx('deposit', 'sofa'), ROWS)).toBe(true);
+  });
+
+  it('leaves rows of open goals and ordinary accounts alone', () => {
+    expect(touchesClosedGoal(tx('checking', 'car'), ROWS)).toBe(false);
+    expect(touchesClosedGoal(tx('checking'), ROWS)).toBe(false);
   });
 });
