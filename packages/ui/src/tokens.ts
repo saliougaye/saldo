@@ -340,16 +340,21 @@ export const emptyState = {
  * is how much of him shows above it, and he rises `peekFromRatio` of his height to get there.
  */
 export const mascot = {
-  /** Over the back of the ghost stack. */
+  /** Transparent margin above his ears in both PNGs (their alpha starts at 18%), cut away. */
+  trimTop: 0.16,
+  /** Over the back of the ghost stack: from his ears to his coin. */
   emptySize: 104,
   emptyWindow: 60,
-  /** How far the window runs under the back ghost: that ghost is translucent, so keep it small. */
-  emptyOverlap: 6,
+  /**
+   * How far the window runs into the stack's box. The tilt puts the ghosts' visible top edge well
+   * below the box's top, so this is measured on device, not derived.
+   */
+  emptyOverlap: 41,
   /** Starts while the back ghosts settle; lands after the whole stack (`enterMs` + 2 staggers). */
   emptyDelayMs: 240,
   /** Over a reached goal's card, near its trailing corner. */
-  cardSize: 76,
-  cardWindow: 44,
+  cardSize: 84,
+  cardWindow: 48,
   cardInset: 18,
   peekFromRatio: 0.62,
   peekMs: 520,
