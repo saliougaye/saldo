@@ -205,6 +205,7 @@ export default function GoalDetail() {
       <GoalCloseSheet
         visible={closing}
         onClose={() => setClosing(false)}
+        reached={view.progress.state === 'reached'}
         balanceLabel={balance > 0 ? text.money(balance) : null}
         parentName={parent?.name ?? ''}
         onRecordExpense={() => {

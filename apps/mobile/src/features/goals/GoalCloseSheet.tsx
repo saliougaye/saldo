@@ -1,12 +1,16 @@
+import { mascot } from '@saldo/ui';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
+import { MascotCelebrate } from '../../components/Mascot';
 import { Sheet } from '../../components/Sheet';
 import { Text } from '../../theme/Text';
 
 export interface GoalCloseSheetProps {
   visible: boolean;
   onClose: () => void;
+  /** A reached goal opens with Rocky celebrating (§6.38, D26); one closed early does not. */
+  reached: boolean;
   /** The pocket's balance, formatted; null when it is empty. */
   balanceLabel: string | null;
   parentName: string;
@@ -18,6 +22,7 @@ export interface GoalCloseSheetProps {
 export function GoalCloseSheet({
   visible,
   onClose,
+  reached,
   balanceLabel,
   parentName,
   onRecordExpense,
@@ -27,6 +32,7 @@ export function GoalCloseSheet({
   return (
     <Sheet visible={visible} onClose={onClose} title={t('goals.close')}>
       <View style={{ gap: 12 }}>
+        {reached ? <MascotCelebrate size={mascot.celebrateSize} /> : null}
         {balanceLabel === null ? (
           <>
             <Text color="textMuted">{t('goals.closeEmpty')}</Text>
