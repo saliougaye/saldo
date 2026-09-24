@@ -66,23 +66,88 @@ export const accountTypeSchema = z.enum([
   'credit_card',
   'savings',
   'investment',
+  /** A goal (D24, §5.14): money set aside inside another account. Created by the goal wizard only. */
+  'pocket',
 ]);
 
-export const accountSchema = z.object({
-  ...syncMeta,
-  name: z.string().min(1).max(60),
-  type: accountTypeSchema,
-  institution: z.string().max(60).nullable(),
-  openingBalance: minorUnits,
-  includeInSpendable: z.boolean(),
-  colorIndex,
-  icon: z.string().min(1),
-  creditCloseDay: z.number().int().min(1).max(28).nullable(),
-  creditChargeDay: z.number().int().min(1).max(28).nullable(),
-  creditPaymentAccountId: id.nullable(),
-  archivedAt: isoTimestamp.nullable(),
-  sortOrder: z.number().int(),
-});
+const present = (value: unknown): boolean => value !== null && value !== undefined;
+
+const GOAL_FIELDS = ['parentAccountId', 'goalTarget', 'goalDeadline', 'goalStartDate'] as const;
+
+interface AccountShape {
+  type: z.infer<typeof accountTypeSchema>;
+  includeInSpendable: boolean;
+  parentAccountId?: string | null;
+  goalTarget?: number | null;
+  goalDeadline?: string | null;
+  goalStartDate?: string | null;
+}
+
+/**
+ * §4.1, §5.14: a pocket needs its parent, its target and its start, is never spendable, and its
+ * deadline (optional) is not before its start; every other account carries none of the four.
+ */
+function refineAccountShape(account: AccountShape, ctx: z.RefinementCtx): void {
+  if (account.type !== 'pocket') {
+    for (const field of GOAL_FIELDS) {
+      if (present(account[field])) {
+        ctx.addIssue({ code: 'custom', message: 'Only a pocket carries a goal', path: [field] });
+      }
+    }
+    return;
+  }
+  for (const field of ['parentAccountId', 'goalTarget', 'goalStartDate'] as const) {
+    if (!present(account[field])) {
+      ctx.addIssue({ code: 'custom', message: 'A pocket needs this field', path: [field] });
+    }
+  }
+  if (account.includeInSpendable) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'A pocket is never spendable',
+      path: ['includeInSpendable'],
+    });
+  }
+  const { goalDeadline, goalStartDate } = account;
+  if (
+    typeof goalDeadline === 'string' &&
+    typeof goalStartDate === 'string' &&
+    goalDeadline < goalStartDate
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'The deadline comes after the start',
+      path: ['goalDeadline'],
+    });
+  }
+}
+
+export const accountSchema = z
+  .object({
+    ...syncMeta,
+    name: z.string().min(1).max(60),
+    type: accountTypeSchema,
+    institution: z.string().max(60).nullable(),
+    openingBalance: minorUnits,
+    includeInSpendable: z.boolean(),
+    colorIndex,
+    icon: z.string().min(1),
+    creditCloseDay: z.number().int().min(1).max(28).nullable(),
+    creditChargeDay: z.number().int().min(1).max(28).nullable(),
+    creditPaymentAccountId: id.nullable(),
+    archivedAt: isoTimestamp.nullable(),
+    sortOrder: z.number().int(),
+    /**
+     * The four goal fields (§5.14). Optional as well as nullable: a row written before they
+     * existed still parses on pull (§8.1). Widened before any public build, so
+     * `SYNC_SCHEMA_VERSION` does not move.
+     */
+    parentAccountId: id.nullable().optional(),
+    goalTarget: positiveMinorUnits.nullable().optional(),
+    goalDeadline: localDate.nullable().optional(),
+    goalStartDate: localDate.nullable().optional(),
+  })
+  .superRefine(refineAccountShape);
 
 export const categoryDirectionSchema = z.enum(['expense', 'income']);
 

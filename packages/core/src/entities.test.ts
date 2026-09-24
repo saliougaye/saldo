@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountSchema,
   accountTypeSchema,
   BUDGET_ALERT_THRESHOLDS,
   budgetSchema,
@@ -228,7 +229,7 @@ describe('entitySchemas', () => {
 });
 
 describe('accountTypeSchema', () => {
-  it('knows a debit card, between a current account and a credit card', () => {
+  it('knows a debit card, between a current account and a credit card, and ends with pockets', () => {
     expect(accountTypeSchema.options).toEqual([
       'cash',
       'checking',
@@ -236,6 +237,7 @@ describe('accountTypeSchema', () => {
       'credit_card',
       'savings',
       'investment',
+      'pocket',
     ]);
   });
 });
@@ -266,5 +268,63 @@ describe('colorIndex', () => {
     expect(categorySchema.safeParse({ ...category, colorIndex: MAX_COLOR_INDEX + 1 }).success).toBe(
       false,
     );
+  });
+});
+
+describe('accountSchema and pockets', () => {
+  const base = {
+    id: 'acc-1',
+    createdAt: '2026-09-24T10:00:00.000Z',
+    updatedAt: '0000000000000-0000-a',
+    deletedAt: null,
+    name: 'Macchina',
+    institution: null,
+    openingBalance: 0,
+    colorIndex: 5,
+    icon: 'car',
+    creditCloseDay: null,
+    creditChargeDay: null,
+    creditPaymentAccountId: null,
+    archivedAt: null,
+    sortOrder: 0,
+  };
+  const pocket = {
+    ...base,
+    type: 'pocket' as const,
+    includeInSpendable: false,
+    parentAccountId: 'acc-checking',
+    goalTarget: 1_200_000,
+    goalDeadline: '2027-06-30',
+    goalStartDate: '2026-09-24',
+  };
+
+  it('accepts a pocket with its parent, target and start', () => {
+    expect(accountSchema.safeParse(pocket).success).toBe(true);
+  });
+
+  it('accepts a pocket without a deadline', () => {
+    expect(accountSchema.safeParse({ ...pocket, goalDeadline: null }).success).toBe(true);
+  });
+
+  it('refuses a pocket without a parent, a target or a start', () => {
+    expect(accountSchema.safeParse({ ...pocket, parentAccountId: null }).success).toBe(false);
+    expect(accountSchema.safeParse({ ...pocket, goalTarget: null }).success).toBe(false);
+    expect(accountSchema.safeParse({ ...pocket, goalStartDate: null }).success).toBe(false);
+  });
+
+  it('refuses a spendable pocket and a deadline before the start', () => {
+    expect(accountSchema.safeParse({ ...pocket, includeInSpendable: true }).success).toBe(false);
+    expect(accountSchema.safeParse({ ...pocket, goalDeadline: '2026-09-01' }).success).toBe(false);
+  });
+
+  it('refuses goal fields on an account that is not a pocket', () => {
+    const checking = { ...base, type: 'checking' as const, includeInSpendable: true };
+    expect(accountSchema.safeParse({ ...checking, goalTarget: 1000 }).success).toBe(false);
+    expect(accountSchema.safeParse({ ...checking, parentAccountId: 'acc-2' }).success).toBe(false);
+  });
+
+  it('parses a row written before the goal fields existed', () => {
+    const checking = { ...base, type: 'checking' as const, includeInSpendable: true };
+    expect(accountSchema.safeParse(checking).success).toBe(true);
   });
 });
