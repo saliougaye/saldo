@@ -124,6 +124,7 @@ export const en: Messages = {
     credit_card: 'Credit card',
     savings: 'Savings',
     investment: 'Investments',
+    pocket: 'Goal',
   },
   lock: {
     title: 'Saldo is locked',
@@ -849,5 +850,8 @@ export const en: Messages = {
     allBudgets: 'All budgets',
     createBudget: 'Create a budget',
     itemLabel: '{{name}}, {{amount}} of {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Close the goals in this account first',
   },
 };

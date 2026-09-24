@@ -7,7 +7,8 @@ import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /** Every account type, in the order of the enum. */
-export const ACCOUNT_TYPES = accountTypeSchema.options;
+/** A pocket is a goal (§5.14): made by the goal wizard, never picked as a type. */
+export const ACCOUNT_TYPES = accountTypeSchema.options.filter((type) => type !== 'pocket');
 
 /** A handful of options, chosen and closed: a sheet. */
 export function AccountTypeSheet({

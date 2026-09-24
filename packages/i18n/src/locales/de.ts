@@ -127,6 +127,7 @@ export const de: Messages = {
     credit_card: 'Kreditkarte',
     savings: 'Sparen',
     investment: 'Anlagen',
+    pocket: 'Ziel',
   },
   lock: {
     title: 'Saldo ist gesperrt',
@@ -858,5 +859,8 @@ export const de: Messages = {
     allBudgets: 'Alle Budgets',
     createBudget: 'Budget erstellen',
     itemLabel: '{{name}}, {{amount}} von {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Schließe zuerst die Ziele in diesem Konto',
   },
 };

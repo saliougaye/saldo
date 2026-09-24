@@ -13,4 +13,5 @@ export const ACCOUNT_TYPE_ICONS = {
   credit_card: 'card',
   savings: 'piggy',
   investment: 'trend',
+  pocket: 'target',
 } as const satisfies Record<AccountType, IconName>;

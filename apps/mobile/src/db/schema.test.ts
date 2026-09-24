@@ -81,4 +81,38 @@ describe('schema', () => {
     const [row] = db.select().from(kv).where(eq(kv.key, 'deviceId')).all();
     expect(row?.value).toBe('abc');
   });
+
+  it('round-trips a pocket with its goal fields', () => {
+    const db = createTestDatabase();
+    db.insert(accounts)
+      .values({
+        ...meta,
+        id: 'goal-car',
+        name: 'Macchina',
+        type: 'pocket',
+        institution: null,
+        openingBalance: 0,
+        includeInSpendable: false,
+        colorIndex: 5,
+        icon: 'car',
+        creditCloseDay: null,
+        creditChargeDay: null,
+        creditPaymentAccountId: null,
+        archivedAt: null,
+        sortOrder: 0,
+        parentAccountId: 'acc-1',
+        goalTarget: 1_200_000,
+        goalDeadline: '2027-06-30',
+        goalStartDate: '2026-09-24',
+      })
+      .run();
+    const [row] = db.select().from(accounts).where(eq(accounts.id, 'goal-car')).all();
+    expect(row).toMatchObject({
+      type: 'pocket',
+      parentAccountId: 'acc-1',
+      goalTarget: 1_200_000,
+      goalDeadline: '2027-06-30',
+      goalStartDate: '2026-09-24',
+    });
+  });
 });

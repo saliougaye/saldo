@@ -54,6 +54,11 @@ export const accounts = sqliteTable(
     creditPaymentAccountId: text('credit_payment_account_id'),
     archivedAt: text('archived_at'),
     sortOrder: integer('sort_order').notNull(),
+    /** §5.14: a pocket's parent and goal. Null on every other account. */
+    parentAccountId: text('parent_account_id'),
+    goalTarget: integer('goal_target'),
+    goalDeadline: text('goal_deadline'),
+    goalStartDate: text('goal_start_date'),
   },
   (table) => [index('accounts_pending').on(table.syncState).where(sql`sync_state = 1`)],
 );

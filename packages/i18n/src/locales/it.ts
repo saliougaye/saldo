@@ -124,6 +124,7 @@ export const it = {
     credit_card: 'Carta di credito',
     savings: 'Risparmi',
     investment: 'Investimenti',
+    pocket: 'Obiettivo',
   },
   lock: {
     title: 'Saldo è bloccato',
@@ -856,6 +857,9 @@ export const it = {
     allBudgets: 'Tutti i budget',
     createBudget: 'Crea un budget',
     itemLabel: '{{name}}, {{amount}} di {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Chiudi prima gli obiettivi in questo conto',
   },
 };
 

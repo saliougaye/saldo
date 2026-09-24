@@ -126,6 +126,7 @@ export const sv: Messages = {
     credit_card: 'Kreditkort',
     savings: 'Sparande',
     investment: 'Investeringar',
+    pocket: 'Mål',
   },
   lock: {
     title: 'Saldo är låst',
@@ -850,5 +851,8 @@ export const sv: Messages = {
     allBudgets: 'Alla budgetar',
     createBudget: 'Skapa en budget',
     itemLabel: '{{name}}, {{amount}} av {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Stäng först målen i det här kontot',
   },
 };

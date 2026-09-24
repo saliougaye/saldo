@@ -128,6 +128,7 @@ export const fr: Messages = {
     credit_card: 'Carte de crédit',
     savings: 'Épargne',
     investment: 'Placements',
+    pocket: 'Objectif',
   },
   lock: {
     title: 'Saldo est verrouillé',
@@ -863,5 +864,8 @@ export const fr: Messages = {
     allBudgets: 'Tous les budgets',
     createBudget: 'Créer un budget',
     itemLabel: '{{name}}, {{amount}} sur {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Ferme d’abord les objectifs de ce compte',
   },
 };

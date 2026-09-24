@@ -128,6 +128,7 @@ export const pt: Messages = {
     credit_card: 'Cartão de crédito',
     savings: 'Poupança',
     investment: 'Investimentos',
+    pocket: 'Objetivo',
   },
   lock: {
     title: 'O Saldo está bloqueado',
@@ -859,5 +860,8 @@ export const pt: Messages = {
     allBudgets: 'Todos os orçamentos',
     createBudget: 'Criar um orçamento',
     itemLabel: '{{name}}, {{amount}} de {{limit}}, {{status}}',
+  },
+  goals: {
+    closeFirst: 'Fecha primeiro os objetivos desta conta',
   },
 };
