@@ -1,6 +1,7 @@
 import {
   accountBalances,
   addDays,
+  bankBalance,
   canArchiveAccount,
   creditCardDue,
   creditSettlementDraft,
@@ -209,7 +210,12 @@ export default function AccountDetail() {
             : t('accounts.balance')}
         </Text>
         <AnimatedAmount
-          minor={account.type === 'credit_card' && balance < 0 ? creditCardDue(balance) : balance}
+          minor={
+            account.type === 'credit_card' && balance < 0
+              ? creditCardDue(balance)
+              : // What the bank shows: its goals are part of it (§5.14).
+                bankBalance(accounts, balances, account.id)
+          }
           currency={currency}
           locale={locale}
           size="hero"

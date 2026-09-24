@@ -31,6 +31,9 @@ export function GoalAlertsGate({ views }: { views: readonly GoalView[] }) {
       const granted = permission.granted || (await Notifications.requestPermissionsAsync()).granted;
       if (!granted || cancelled) return;
       for (const view of pending) {
+        // Marked first: this effect re-runs on every write, and a second run must not find the
+        // goal still pending while the first is awaiting the scheduler.
+        kv.set(goalAlertKey(view.account.id), today);
         await Notifications.scheduleNotificationAsync({
           content: {
             title: t('goals.reachedTitle', {
@@ -40,7 +43,6 @@ export function GoalAlertsGate({ views }: { views: readonly GoalView[] }) {
           },
           trigger: null,
         });
-        kv.set(goalAlertKey(view.account.id), today);
       }
     })();
     return () => {

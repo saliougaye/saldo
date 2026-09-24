@@ -30,5 +30,7 @@ describe('goalStepMissing', () => {
     expect(goalStepMissing('account', { ...filled, name: '' }, TODAY, 2)).toBe('name');
     expect(goalStepMissing('edit', { ...filled, parentAccountId: null }, TODAY, 2)).toBeNull();
     expect(goalStepMissing('edit', { ...filled, buffer: '0' }, TODAY, 2)).toBe('target');
+    // An expired goal can be renamed without moving its deadline first.
+    expect(goalStepMissing('edit', { ...filled, deadline: '2026-09-01' }, TODAY, 2)).toBeNull();
   });
 });

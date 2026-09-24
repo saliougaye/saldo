@@ -23,7 +23,9 @@ export function goalStepMissing(
     ['deadline', 'deadline', values.deadline === null || values.deadline > today],
     ['account', 'parent', values.parentAccountId !== null],
   ];
-  const upTo = step === 'edit' ? 2 : GOAL_STEPS.indexOf(step);
+  // Editing checks the name and the target only: an expired goal must be renamable without first
+  // being given a new deadline, and the parent never changes (§5.14).
+  const upTo = step === 'edit' ? 1 : GOAL_STEPS.indexOf(step);
   for (const [, missing, ok] of checks.slice(0, upTo + 1)) {
     if (!ok) return missing;
   }
