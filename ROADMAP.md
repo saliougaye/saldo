@@ -71,7 +71,7 @@ already model "money set aside"; what is missing is the target, the deadline and
   - Accounts holding pockets show the bank balance, with the pockets indented under them and a «liberi» line.
 - [x] Spec section (§5.13 Target cards, §5.14 Goals and pockets).
 - [x] Plan A: the target card, with the Home Budget card moved onto it (budget rules unchanged).
-- [ ] Plan B: pockets and goals, reusing the target card.
+- [x] Plan B: pockets and goals, reusing the target card (B1 rules and data, B2 screens; device check pending).
 
 ### Period recap: close the last period before the next one starts
 

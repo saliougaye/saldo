@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript strict, Expo Router, react-i18next (`Trans`), jest-expo + React Native Testing Library.
 
+**Found while executing:** `minorToAmountBuffer` writes `12000`, not `12000.00`, so the closing-expense test follows it; the typed routes (`.expo/types/router.d.ts`, gitignored) only know `/goal/…` and `/goals` after Expo starts once, so `pnpm typecheck` needs one `expo start` on a fresh checkout after this plan.
+
 **Decisions recorded here (AGENTS.md):**
 
 - **A deadline in the current year reads as a day («entro 15 ott»), a later one as a month («entro giugno 2027»).**
@@ -48,7 +50,7 @@
 **Files:**
 - Modify: `apps/mobile/src/components/TargetRing.tsx`, `apps/mobile/src/components/ProgressBar.tsx`, `apps/mobile/src/features/targets/FeaturedTarget.tsx`
 
-- [ ] **Step 1: Ring**
+- [x] **Step 1: Ring**
 
 In `TargetRing.tsx`, change the tone type and its doc:
 
@@ -71,7 +73,7 @@ and the fill:
         : theme.palette.barGrey;
 ```
 
-- [ ] **Step 2: Bar**
+- [x] **Step 2: Bar**
 
 In `ProgressBar.tsx`, add to the props after `thick?: boolean;`:
 
@@ -91,7 +93,7 @@ add `done = false,` to the destructured props, and replace the fill colour
                 : theme.palette.barGrey,
 ```
 
-- [ ] **Step 3: Featured block**
+- [x] **Step 3: Featured block**
 
 In `FeaturedTarget.tsx`: make `onPress` optional (`onPress?: () => void;`), pass `done={props.tone === 'done'}` to `ProgressBar`, and render a `View` instead of the `Pressable` when there is nothing to press. Replace the opening `<Pressable …>` and its closing tag with:
 
@@ -123,12 +125,12 @@ In `FeaturedTarget.tsx`: make `onPress` optional (`onPress?: () => void;`), pass
 
 (Move the existing children — the head row through the sentence — into `body`.)
 
-- [ ] **Step 4: Check**
+- [x] **Step 4: Check**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components src/features/budgets src/features/targets` and `rtk proxy pnpm typecheck`
 Expected: pass (budgets never use `done`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/TargetRing.tsx apps/mobile/src/components/ProgressBar.tsx apps/mobile/src/features/targets/FeaturedTarget.tsx
@@ -144,7 +146,7 @@ rtk git commit -m "feat(mobile): a done tone for reached goals"
 
 Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the block below. `<b>` is rendered at weight 500 through `Trans`.
 
-- [ ] **Step 1: Italian**
+- [x] **Step 1: Italian**
 
 ```ts
   goals: {
@@ -226,7 +228,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 2: English**
+- [x] **Step 2: English**
 
 ```ts
   goals: {
@@ -308,7 +310,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 3: French** (` ` = narrow no-break space before `:` and `?`, as the catalog's header asks)
+- [x] **Step 3: French** (` ` = narrow no-break space before `:` and `?`, as the catalog's header asks)
 
 ```ts
   goals: {
@@ -390,7 +392,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 4: German**
+- [x] **Step 4: German**
 
 ```ts
   goals: {
@@ -472,7 +474,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 5: Swedish**
+- [x] **Step 5: Swedish**
 
 ```ts
   goals: {
@@ -554,7 +556,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 6: Spanish**
+- [x] **Step 6: Spanish**
 
 ```ts
   goals: {
@@ -636,7 +638,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 7: Portuguese (European, "tu")**
+- [x] **Step 7: Portuguese (European, "tu")**
 
 ```ts
   goals: {
@@ -718,7 +720,7 @@ Replace each catalog's `goals: { closeFirst: … },` block (Plan B1) with the bl
   },
 ```
 
-- [ ] **Step 8: Check and commit**
+- [x] **Step 8: Check and commit**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`, then check each catalog's `goals.title` differs from Italian except where the word is the same (`es`/`pt` «Objetivos») — the parity test cannot catch a copied block.
 
@@ -734,7 +736,7 @@ rtk git commit -m "feat(i18n): goal strings"
 **Files:**
 - Create: `apps/mobile/src/features/goals/goalViews.ts`, `goalViews.test.ts`, `useGoalViews.ts`, `useGoalText.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/goals/goalViews.test.ts`:
 
@@ -811,12 +813,12 @@ describe('goalViews', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals`
 Expected: FAIL — `Cannot find module './goalViews'`.
 
-- [ ] **Step 3: Implement the mapper**
+- [x] **Step 3: Implement the mapper**
 
 Create `apps/mobile/src/features/goals/goalViews.ts`:
 
@@ -871,12 +873,12 @@ export function goalViews(
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals`
 Expected: PASS.
 
-- [ ] **Step 5: The data hook**
+- [x] **Step 5: The data hook**
 
 Create `apps/mobile/src/features/goals/useGoalViews.ts`:
 
@@ -899,7 +901,7 @@ export function useGoalViews() {
 }
 ```
 
-- [ ] **Step 6: The strings hook**
+- [x] **Step 6: The strings hook**
 
 Create `apps/mobile/src/features/goals/useGoalText.tsx`:
 
@@ -1080,7 +1082,7 @@ export function useGoalText() {
 }
 ```
 
-- [ ] **Step 7: Typecheck and commit**
+- [x] **Step 7: Typecheck and commit**
 
 Run: `rtk proxy pnpm typecheck`
 Expected: pass.
@@ -1098,7 +1100,7 @@ rtk git commit -m "feat(mobile): goal views and the strings every goal screen sh
 - Create: `apps/mobile/src/features/goals/HomeGoalsCard.tsx`, `HomeGoalsCard.test.tsx`, `goalAlerts.ts`, `goalAlerts.test.ts`, `GoalAlertsGate.tsx`
 - Modify: `apps/mobile/app/(tabs)/index.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `apps/mobile/src/features/goals/HomeGoalsCard.test.tsx`:
 
@@ -1299,12 +1301,12 @@ describe('pendingGoalAlerts', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals`
 Expected: FAIL — `./HomeGoalsCard` and `./goalAlerts` missing.
 
-- [ ] **Step 3: The card**
+- [x] **Step 3: The card**
 
 Create `apps/mobile/src/features/goals/HomeGoalsCard.tsx`:
 
@@ -1469,7 +1471,7 @@ export function HomeGoalsCard({ views }: { views: readonly GoalView[] }) {
 }
 ```
 
-- [ ] **Step 4: The notification**
+- [x] **Step 4: The notification**
 
 Create `apps/mobile/src/features/goals/goalAlerts.ts`:
 
@@ -1550,7 +1552,7 @@ export function GoalAlertsGate({ views }: { views: readonly GoalView[] }) {
 }
 ```
 
-- [ ] **Step 5: Home**
+- [x] **Step 5: Home**
 
 In `app/(tabs)/index.tsx`:
 - import `HomeGoalsCard`, `GoalAlertsGate` and `useGoalViews` from `../../src/features/goals/…`;
@@ -1567,12 +1569,12 @@ In `app/(tabs)/index.tsx`:
 - change the recent card's `entering(3)` to `entering(4)`;
 - next to `<BudgetAlertsGate views={views} />`: `{loaded ? <GoalAlertsGate views={goals.views} /> : null}`.
 
-- [ ] **Step 6: Run and see them pass**
+- [x] **Step 6: Run and see them pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals` then `rtk proxy pnpm typecheck`
 Expected: PASS. If a sentence test fails on text, `screen.debug()` it: `formatMoney(73_100, 'EUR', 'en')` is `€731.00`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/goals "apps/mobile/app/(tabs)/index.tsx"
@@ -1587,7 +1589,7 @@ rtk git commit -m "feat(mobile): the Obiettivi target card on Home, and the reac
 - Create: `apps/mobile/src/features/goals/goalLinks.ts`, `goalLinks.test.ts`
 - Modify: `apps/mobile/app/transaction/new.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/goals/goalLinks.test.ts`:
 
@@ -1627,12 +1629,12 @@ describe('goal links', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/goalLinks.test.ts`
 Expected: FAIL — `./goalLinks` missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `apps/mobile/src/features/goals/goalLinks.ts`:
 
@@ -1686,12 +1688,12 @@ export function goalExpenseForm(
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/goalLinks.test.ts`
 Expected: PASS. If `minorToAmountBuffer(1_200_000, 2)` is `'12000'` rather than `'12000.00'`, keep the function and change the expectation to what `@saldo/core` documents.
 
-- [ ] **Step 5: The sheet closes the goal when the expense is saved**
+- [x] **Step 5: The sheet closes the goal when the expense is saved**
 
 In `app/transaction/new.tsx`:
 - import `closeGoal` from `../../src/db/goalService` and `goalExpenseForm` from `../../src/features/goals/goalLinks`;
@@ -1714,7 +1716,7 @@ In `app/transaction/new.tsx`:
           }
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/goals/goalLinks.ts apps/mobile/src/features/goals/goalLinks.test.ts apps/mobile/app/transaction/new.tsx
@@ -1729,7 +1731,7 @@ rtk git commit -m "feat(mobile): goal transfers and the closing expense open the
 - Create: `apps/mobile/src/features/goals/goalFormValues.ts`, `steps.ts`, `steps.test.ts`, `GoalForm.tsx`
 - Create: `apps/mobile/app/goal/new.tsx`, `apps/mobile/app/goal/edit/[id].tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/goals/steps.test.ts`:
 
@@ -1770,12 +1772,12 @@ describe('goalStepMissing', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/steps.test.ts`
 Expected: FAIL — modules missing.
 
-- [ ] **Step 3: Values and steps**
+- [x] **Step 3: Values and steps**
 
 Create `apps/mobile/src/features/goals/goalFormValues.ts`:
 
@@ -1859,12 +1861,12 @@ export function goalStepMissing(
 
 (Step `edit` checks name, target and deadline; the parent never changes on edit, §5.14.)
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/steps.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: The form**
+- [x] **Step 5: The form**
 
 Create `apps/mobile/src/features/goals/GoalForm.tsx`:
 
@@ -2117,7 +2119,7 @@ export function GoalForm({ values, onChange, mode, onSubmit }: GoalFormProps) {
 }
 ```
 
-- [ ] **Step 6: Routes**
+- [x] **Step 6: Routes**
 
 Create `apps/mobile/app/goal/new.tsx`:
 
@@ -2225,7 +2227,7 @@ export default function EditGoal() {
 }
 ```
 
-- [ ] **Step 7: Typecheck and commit**
+- [x] **Step 7: Typecheck and commit**
 
 Run: `rtk proxy pnpm typecheck` and `rtk proxy pnpm --filter mobile test -- src/features/goals`
 Expected: pass. If `AppearanceSheet`, `DateSheet`, `Chip` or `TextField` props differ from what is written here, follow the component (AGENTS.md) and fix this plan in the same commit.
@@ -2242,7 +2244,7 @@ rtk git commit -m "feat(mobile): the goal wizard"
 **Files:**
 - Create: `apps/mobile/src/features/goals/GoalCloseSheet.tsx`, `apps/mobile/app/goal/[id].tsx`, `apps/mobile/app/goals.tsx`
 
-- [ ] **Step 1: The close sheet**
+- [x] **Step 1: The close sheet**
 
 Create `apps/mobile/src/features/goals/GoalCloseSheet.tsx`:
 
@@ -2298,7 +2300,7 @@ export function GoalCloseSheet({
 }
 ```
 
-- [ ] **Step 2: The detail**
+- [x] **Step 2: The detail**
 
 Create `apps/mobile/app/goal/[id].tsx`:
 
@@ -2529,7 +2531,7 @@ export default function GoalDetail() {
 }
 ```
 
-- [ ] **Step 3: The list**
+- [x] **Step 3: The list**
 
 Create `apps/mobile/app/goals.tsx`:
 
@@ -2651,7 +2653,7 @@ export default function GoalsScreen() {
 }
 ```
 
-- [ ] **Step 4: Typecheck and commit**
+- [x] **Step 4: Typecheck and commit**
 
 Run: `rtk proxy pnpm typecheck`
 Expected: pass. Follow the components' real props where they differ (`EmptyState`'s `ghost`, `HeaderIconButton`'s icon names, `formatLongDate`), and fix the plan in the same commit.
@@ -2668,7 +2670,7 @@ rtk git commit -m "feat(mobile): goal detail, close sheet and list"
 **Files:**
 - Modify: `apps/mobile/app/(tabs)/accounts.tsx`, `apps/mobile/app/account/[id].tsx`, `apps/mobile/app/settings/archived-accounts.tsx`, `apps/mobile/app/profile.tsx`
 
-- [ ] **Step 1: Pockets under their parent, parents at the bank balance**
+- [x] **Step 1: Pockets under their parent, parents at the bank balance**
 
 In `app/(tabs)/accounts.tsx`:
 - add `bankBalance, isPocket, pocketsOf` to the `@saldo/core` import, and import `TargetRing` from `../../src/components/TargetRing`;
@@ -2755,7 +2757,7 @@ In `app/(tabs)/accounts.tsx`:
   };
 ```
 
-- [ ] **Step 2: A pocket's account link lands on its goal**
+- [x] **Step 2: A pocket's account link lands on its goal**
 
 In `app/account/[id].tsx`, add `Redirect` to the `expo-router` import, and right after the `NotFoundScreen` early return:
 
@@ -2766,7 +2768,7 @@ In `app/account/[id].tsx`, add `Redirect` to the `expo-router` import, and right
   }
 ```
 
-- [ ] **Step 3: Closed goals are not archived accounts**
+- [x] **Step 3: Closed goals are not archived accounts**
 
 In `app/settings/archived-accounts.tsx`:
 
@@ -2776,7 +2778,7 @@ In `app/settings/archived-accounts.tsx`:
   );
 ```
 
-- [ ] **Step 4: Profile row**
+- [x] **Step 4: Profile row**
 
 In `app/profile.tsx`, after the Budget `ListRow`:
 
@@ -2789,7 +2791,7 @@ In `app/profile.tsx`, after the Budget `ListRow`:
           />
 ```
 
-- [ ] **Step 5: Check and commit**
+- [x] **Step 5: Check and commit**
 
 Run: `rtk proxy pnpm typecheck` and `rtk proxy pnpm --filter mobile test`
 Expected: pass.
@@ -2803,13 +2805,13 @@ rtk git commit -m "feat(mobile): pockets under their parent in Conti, goal redir
 
 ### Task 9: Verify
 
-- [ ] **Step 1:** `rtk proxy pnpm lint` — no `lint/…`, no `×`; `pnpm exec biome check --write` for formatting.
-- [ ] **Step 2:** `rtk proxy pnpm typecheck`.
-- [ ] **Step 3:** `CI=1 rtk proxy pnpm test` — read each summary.
+- [x] **Step 1:** `rtk proxy pnpm lint` — no `lint/…`, no `×`; `pnpm exec biome check --write` for formatting.
+- [x] **Step 2:** `rtk proxy pnpm typecheck`.
+- [x] **Step 3:** `CI=1 rtk proxy pnpm test` — read each summary.
 - [ ] **Step 4:** On a device (restart Metro with `--clear` and delete `saldo.db` first — the B1 migration):
   1. Profile → Obiettivi → «Nuovo obiettivo»: four steps; a deadline before today is refused.
   2. Home shows the Obiettivi card; «Accantona» from the detail opens a transfer parent → goal.
   3. Conti: the parent reads the bank balance, the goal nested with «liberi».
   4. «Chiudi obiettivo» → «Registra la spesa» → save: the goal closes, what is left returns to the parent.
   5. Reaching a target sends one notification.
-- [ ] **Step 5:** Tick `ROADMAP.md` «Plan B» and commit.
+- [x] **Step 5:** Tick `ROADMAP.md` «Plan B» and commit.
