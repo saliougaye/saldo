@@ -1,14 +1,16 @@
-import { getCurrency } from '@saldo/core';
+import { getCurrency, touchesClosedGoal } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { removeAttachment } from '../../../src/attachments/attachmentService';
 import { ConfirmDialog } from '../../../src/components/ConfirmDialog';
 import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
+import { Screen } from '../../../src/components/Screen';
+import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import { useToast } from '../../../src/components/Toast';
 import { db } from '../../../src/db/client';
 import { useDatabase } from '../../../src/db/DatabaseProvider';
-import { useSettings } from '../../../src/db/hooks';
+import { useAccounts, useSettings } from '../../../src/db/hooks';
 import { startRecurrence } from '../../../src/db/recurrenceService';
 import { PrivacyOverlay } from '../../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
@@ -19,6 +21,7 @@ import {
   toTransactionInput,
 } from '../../../src/features/transactions/useTransactionForm';
 import { useLeaveGone, useLeaveRenamed } from '../../../src/navigation/leave';
+import { Text } from '../../../src/theme/Text';
 
 export default function EditTransaction() {
   const router = useRouter();
@@ -29,6 +32,7 @@ export default function EditTransaction() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { repos } = useDatabase();
   const settings = useSettings();
+  const accounts = useAccounts();
   const { today, def } = usePeriod();
   const { minorDigits } = getCurrency(settings?.currency ?? 'EUR');
 
@@ -41,6 +45,17 @@ export default function EditTransaction() {
 
   if (transaction === null || values === null) {
     return <NotFoundScreen />;
+  }
+
+  // A row of a closed goal is read-only: changing it would move money inside an archived pocket,
+  // which the totals no longer show (§5.14).
+  if (touchesClosedGoal(transaction, accounts)) {
+    return (
+      <Screen>
+        <ScreenHeader title={transaction.description || t('common.thisOne')} />
+        <Text color="textMuted">{t('goals.closedLocked')}</Text>
+      </Screen>
+    );
   }
 
   const name = transaction.description.length > 0 ? transaction.description : t('common.thisOne');

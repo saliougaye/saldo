@@ -8,6 +8,7 @@ import {
   splitUpcoming,
   type TransactionFilters,
   totalsOf,
+  touchesClosedGoal,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import { router as routerApi, useLocalSearchParams, useRouter } from 'expo-router';
@@ -235,6 +236,13 @@ export default function TransactionsTab() {
   const confirmDelete = () => {
     if (pendingDelete === null) return;
     const { id, name } = pendingDelete;
+    // A row of a closed goal stays: its pocket must remain at zero (§5.14).
+    const row = rows.find((tx) => tx.id === id);
+    if (row !== undefined && touchesClosedGoal(row, accounts)) {
+      setPendingDelete(null);
+      toast.show(t('goals.closedLocked'));
+      return;
+    }
     repos.transactions.remove(id);
     setPendingDelete(null);
     toast.show(t('transactions.deleted', { name }), {
