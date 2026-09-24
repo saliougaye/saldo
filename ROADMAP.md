@@ -83,7 +83,7 @@ Home, the budgets and the stats move to the new period and the closed one is onl
 
 What the recap shows, all of it already computable from what exists:
 
-- income, expenses and the net, against the previous period and the 6-period average (`stats.ts`, `previousPeriods`);
+- income, expenses and the net, against the previous period and the 6-period median (`stats.ts`, `previousPeriods`);
 - the top categories, and the one that moved the most against its average;
 - budgets: which stayed within the limit, which went over, and what rolls over into the new period
   (`rollover.ts`);
@@ -92,19 +92,27 @@ What the recap shows, all of it already computable from what exists:
 How it behaves:
 
 - **When.** On the first open on or after the first day of the new period, once per period (remember the last
-  period recapped device-locally, like the budget alerts' `lastAlertPeriodStart`). An optional local notification
-  the morning of that day ("Il tuo {periodo} si è chiuso: guarda il riepilogo") reuses the §5.8 permission.
-- **Where.** A full-screen sheet over the Home, dismissed with one button ("Inizia il nuovo {periodo}"). After that
-  the recap stays reachable from the Home (a card for the first days) and from the period history.
+  period recapped device-locally, like the budget alerts' `lastAlertPeriodStart`). A local notification at 09:00
+  that day ("Il tuo {periodo} si è chiuso: guarda il riepilogo") reuses the §5.8 permission.
+- **Where.** A full-screen sheet over the Home, dismissed with one button ("Inizia il nuovo {periodo}"), and not
+  reachable again afterwards.
 - **Computed, never stored.** A transaction entered late for the old period changes the recap, as it changes the
   stats. One pure function in `@saldo/core` (`periodRecap(def, range, txs, budgets, …)`), TDD, and the screen only
   renders it.
 
-- [ ] Decide before planning:
-  - the weekly period: a recap every Monday may be too often (suggested: a lighter card, no sheet, no notification);
-  - full-screen sheet, or a Home card only;
-  - whether the recap can be shared as an image (a nice-to-have, not the POC's habit).
-- [ ] Spec section (`§5.x Period recap`) and a design pass (not in the prototype), then the plan.
+- [x] Decide before planning (2026-09-25, spec D27, §5.15, §6.39):
+  - **A sheet for every kind, the week included**, on the first open of the new period; a 09:00 notification that
+    day, always (making it optional is a later setting).
+  - **Seen once.** No Home card and no entry in the period history: once dismissed it cannot be reopened.
+  - **Layout «Resoconto»**: one card with the net, the comparisons and income/expenses, then Categorie, Budget and
+    Altro, all open. The «usual» comparison is the §5.5 median, not an average.
+  - **Not shareable** as an image.
+- [x] Spec section (§5.15 Period recap, §6.39) and a design pass (mockup in `.variants/period-recap.html`, not
+  committed).
+- [ ] Plan, then build.
+
+Later ideas, not planned: reopening past recaps (it has to survive changes of period kind), a setting to turn the
+notification off, sharing a recap as an image.
 
 Later, the AI insights of 0.5 can add a sentence to it; the recap itself needs no server.
 

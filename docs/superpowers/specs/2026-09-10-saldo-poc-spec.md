@@ -80,6 +80,7 @@ cycle, and am I going faster than I should?*
 | D24 | **A goal is a pocket**: an account of type `pocket` that lives inside a real account and carries the goal's target and deadline (decided 2026-09-24) | Setting money aside is then a transfer into the pocket, so a goal reuses the whole ledger: balances, Totale spendibile, recurrences (an automatic contribution is a recurring transfer), export and sync. It is the only model considered that is both backed by real balances and usable by someone whose only account is a current account. A goal pointing at an existing savings account fails that user and holds one goal per account; earmarks kept outside the ledger re-implement pockets with a new entity, a new recurrence kind and a new spendable formula; a target with a hand-typed "saved so far" is a reminder, not a goal. Pocket and goal are one to one and are created and closed together, so the goal's fields live on the pocket's own row and no goal can dangle. Investment accounts cannot hold pockets: their returns land on the parent, so a pocket inside one would never grow. |
 | D25 | Budget and Obiettivi on Home share one **target card** (§5.13): one item featured with a sentence that says what to do, the exceptions as rows, everything else behind one «Tutti …» row of rings (decided 2026-09-24 over three rounds of mockups) | A list of bars says where each item is, not what to do about it. The sentence turns the pace into an amount — per day for a budget, per period for a goal — and a single featured item keeps Home to one large figure per card. The exceptions (a budget over its limit, a goal reached or past its deadline) are the things that must not hide behind a tap, so they get rows of their own; being over *pace* is common and stays a dark ring. |
 | D26 | **Rocky appears only where the user stops** (decided 2026-09-24): peeking over the «nothing yet» ghost stack, peeking over a reached goal's card, and whole in the close sheet of a reached goal. Never in a «nothing matches», a «not found», an error, a toast or the pull-to-refresh | A mascot seen ten times a day is noise, and one next to an error makes light of it. Static PNGs moved by Reanimated, no Lottie: a rise from behind an edge needs nothing more. Mockup: `docs/superpowers/mockups/2026-09-24-mascot-variants.html`, variant A+B |
+| D27 | **A closed period is recapped once, in a sheet** (decided 2026-09-25): on the first open of a new period, for every kind including the week, a full-screen sheet recaps the period that just closed (§5.15), with a 09:00 notification that day. Once dismissed it cannot be reopened, and it is not shareable as an image | The switch to a new period was silent. A sheet makes it a moment; every kind gets one because the user wants the week recapped too. Reopening past recaps and sharing them are later ideas: the first has to survive changes of period kind, the second needs a native capture dependency and a decision on what a shared image hides. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -697,6 +698,53 @@ that balance afterwards. Restoring it (Ripristina, on the goals screen) reopens 
 - **Sync:** `account.type` gains `pocket` and the account gains four nullable fields. Saldo has no public build yet, so
   `SYNC_SCHEMA_VERSION` does not move, as with `settings.language` (§4.1).
 
+### 5.15 Period recap
+
+When a period closes, the first open of the app shows a recap of it — a full-screen sheet over the Home of the new
+period (§6.39) — and only then the Home (D27). Today the switch is otherwise silent: at midnight Home, budgets and
+stats move to the new period.
+
+**When.**
+
+- On the first open **on or after the first day of a new period**, for **every kind** (§5.2: month, week, cycle, year),
+  the week included. Once per period: the period recapped is remembered **device-locally** in `kv` as
+  `lastRecapPeriod = "{kind}:{start}"`, like the budget alerts' `lastAlertPeriodStart` (§5.8). It is marked when the
+  sheet is shown, so closing the app with the sheet open does not show it again.
+- The period recapped is **the one immediately before the period containing today**, under the kind in force. Only that
+  one: after weeks without opening the app there is still a single recap, of the last period that closed.
+- **No recap** when that period has no transaction at all (a fresh install, the same emptiness rule as §5.5), or when
+  its key is already the stored one. A change of kind or of `cycleStartDay` gives a new key, so the previous period of
+  the new shape may be recapped once; nothing else follows from it.
+- **Seen once.** Once dismissed, the recap cannot be reopened: there is no Home card and no entry in the period
+  history. Reaching past recaps is a later idea (the roadmap records it), because it has to survive changes of period
+  kind.
+
+**Notification.** Always, for every kind: a local notification (`expo-notifications`, the same permission flow as the
+budget alerts of §5.8) at **09:00** on the first day of the next period, «Il tuo mese si è chiuso: guarda il
+riepilogo». The sentence is one i18n key per kind, because the noun changes gender («La tua settimana si è chiusa»).
+It carries **no amount**, so hidden mode has nothing to hide. One pending notification (`period-recap:{start}`),
+rescheduled whenever the period definition changes; none when the permission is denied. Tapping it opens the app,
+which shows the sheet by the rule above. Making it optional is a later setting.
+
+**Content** (`periodRecap` in `@saldo/core`, pure, with injected `today`; computed, never stored, so a transaction
+entered late for the closed period changes the recap as it changes the stats):
+
+| Block | Rule |
+| --- | --- |
+| Net | `income − spent` of `summarizePeriod` over the closed period (counted transactions only, §5.3). |
+| Comparisons | the net of the period before, and **«di solito»** = the median net over the history window of §5.5 (6 used periods before the closed one). No history → the comparison is left out. |
+| Income, expenses | each with `deltaPercent` against the period before; left out when the period before has none. |
+| Categories | the **top 5** by spend, at parent level (`rollupToParents`), then «Altre N categorie · {total}». The one with the largest **positive** delta against its own median (§5.5) is tagged «+X% sulla media»; a category with no history is never tagged. |
+| Budgets | budgets of kind `period`, plus week/month/year budgets **whose range ends on the closed period's last day** (a monthly budget in a month recap; never a yearly budget in a September recap). Each is measured as a closed period (§5.8): spent against its effective limit, «Nei limiti» or «Sforato di {x}», and with rollover «riporti {carry}» (`budgetCarry` into the new period). No budget → the section is left out. |
+| Biggest expense | the single counted expense with the highest amount: description (or category name), category, date. |
+| Net worth | `netWorth` at the end of the closed period minus `netWorth` at the end of the period before it. |
+
+**Screen and motion.** The sheet is described in §6.39. It is seen at most once a period, so its entrance may take its
+time: the staged chunks of the onboarding (`motion.stepEnterMs`, `stepChunkStaggerMs`, `stepEnterOffset`, title words
+at `stepWordStaggerMs`), the net rolling from zero over `motion.countMs`, the bars growing (`motion.progressMs`,
+`staggerMs`) when their section scrolls into view. Leaving is quicker than arriving. With reduced motion only the fades
+remain. The mockup is `.variants/period-recap.html` (not committed).
+
 ---
 
 ## 6. Screens (mobile) — inventory & behaviour
@@ -774,6 +822,7 @@ indented under it (ring, name, balance) and a last «liberi» line for its own b
 | 6.36 | **Goal detail** (NEW) | — | `goal/[id].tsx` for a pocket's id. The featured block of §5.13 at full width, then «Accantona» and «Preleva» (prefilled transfers, §5.14), rows Conto (the parent), Scadenza, Creato il, then the pocket's transactions, newest first. Header: «Modifica» (§6.37 on one page) and a «Chiudi obiettivo» row at the bottom (§6.38). An archived goal shows Ripristina only, as an archived account does (§6.5). A reached goal has Rocky peeking over its card (§13 *Mascot*). |
 | 6.37 | **New goal sheet** (NEW) | — | A **wizard** like the new budget (§6.18): 1 name and look (icon and colour, the account picker's grid); 2 target (keypad, D23); 3 deadline, optional (Saldo's calendar, «Senza scadenza»); 4 «Da quale conto» (cash, checking, debit card, savings; non-archived) and «Già da parte» (keypad, 0 allowed; the parent's own balance shows as a hint, and more is accepted, since a parent may go negative). «Crea obiettivo» writes the pocket and, when «Già da parte» > 0, the transfer from the parent, in one database transaction. Edit is one page without step 4. |
 | 6.38 | **Close goal sheet** (NEW) | — | «Hai usato i soldi?» with the balance; «Registra la spesa» and «Riporta in {parent}» (§5.14); with a zero balance it only confirms. Archives the pocket and returns to the list with the toast «Obiettivo chiuso». A reached goal's sheet opens with Rocky celebrating above the question (§13 *Mascot*); an unreached one has none. |
+| 6.39 | **Period recap sheet** (NEW) | — | §5.15. Full-screen sheet over the Home of the new period, shown once. Eyebrow with the closed range («1 – 30 settembre 2026»), title «{Settembre} si è chiuso». A card: «Netto del mese» (34pt, positive colour when ≥ 0, signed), the comparisons line («Agosto +195,10 € · di solito +356,80 €»), Entrate and Uscite with their deltas. Then, all open and in this order: **Categorie** (dot, name, amount, bar relative to the top one; the tagged category's bar in accent), **Budget** (name, spent «di» limit, bar, the status line; «Sforato» in accent **and** in words), **Altro** (Spesa più grande, Patrimonio with its change). Footer: «Inizia il nuovo {mese \| settimana \| ciclo \| anno}», which dismisses it; there is no other way back into it. Every amount follows hidden mode (the aggregate rule). No Rocky (D26). |
 
 Visual rules for NEW screens: use only tokens from `@saldo/ui` and the component primitives built for the design
 screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, SecondaryButton, TextField). No new colours.
