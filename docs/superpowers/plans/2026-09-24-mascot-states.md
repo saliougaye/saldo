@@ -733,7 +733,7 @@ rtk git commit -m "feat(mobile): Rocky celebrates when a reached goal is closed"
 The token values are the mockup's, measured in CSS. The real ghost stack is tilted in perspective, so where its back
 edge lands can only be seen on a device.
 
-- [ ] **Step 1: Run the app with demo data**
+- [x] **Step 1: Run the app with demo data**
 
 ```bash
 pnpm --filter mobile seed:db --reset
@@ -752,7 +752,12 @@ Open, in dark and in light theme (Profilo › Tema):
 
 Take a screenshot of each (`xcrun simctl io booted screenshot /tmp/rocky-<n>.png`) and look at it.
 
-- [ ] **Step 2: Commit any token change**
+On device (2026-09-24) the peek cut across his face and floated above the stack: the PNGs carry 18% of empty
+margin above the ears, and the tilted stack's visible top edge sits about 35pt below its box. Fixed with
+`mascot.trimTop: 0.16`, `emptyOverlap: 41`, `cardSize: 84`, `cardWindow: 48`, and a token test that keeps the cut
+below his muzzle.
+
+- [x] **Step 2: Commit any token change**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts
@@ -773,7 +778,7 @@ rtk proxy pnpm test
 
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no `error TS`; every suite passes.
 
-- [ ] **Step 4: Tick this plan's checkboxes and commit**
+- [x] **Step 4: Tick this plan's checkboxes and commit**
 
 ```bash
 rtk git add docs/superpowers/plans/2026-09-24-mascot-states.md
