@@ -113,6 +113,12 @@ export default function ProfileScreen() {
             chevron
           />
           <ListRow
+            title={t('goals.title')}
+            leading={lead('piggy')}
+            onPress={() => router.push('/goals')}
+            chevron
+          />
+          <ListRow
             title={t('settings.categories')}
             leading={lead('grip')}
             onPress={() => router.push('/settings/categories')}

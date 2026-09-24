@@ -30,7 +30,10 @@ export default function ArchivedAccounts() {
   const toast = useToast();
   const { accounts, loaded } = useAccountsQuery();
   const slow = useDelayed(!loaded);
-  const archived = accounts.filter((account) => account.archivedAt !== null);
+  // Closed goals live on the goals screen (§6.35).
+  const archived = accounts.filter(
+    (account) => account.archivedAt !== null && account.type !== 'pocket',
+  );
 
   if (!loaded) {
     return (

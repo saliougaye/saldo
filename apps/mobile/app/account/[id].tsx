@@ -21,7 +21,7 @@ import {
   formatSignedPercent,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -115,6 +115,10 @@ export default function AccountDetail() {
   if (!loaded) return <DetailSkeleton show={slow} />;
   if (account === undefined) {
     return <NotFoundScreen />;
+  }
+  // A pocket is a goal (§5.14): its screen is the goal's.
+  if (account.type === 'pocket') {
+    return <Redirect href={{ pathname: '/goal/[id]', params: { id: account.id } }} />;
   }
 
   // An archived account is history: §5.6 keeps its rows and its balance, and the only thing left

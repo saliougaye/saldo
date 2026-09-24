@@ -1,4 +1,11 @@
-import { accountBalances, netWorth, spendableTotal } from '@saldo/core';
+import {
+  accountBalances,
+  bankBalance,
+  isPocket,
+  netWorth,
+  pocketsOf,
+  spendableTotal,
+} from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -9,6 +16,7 @@ import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { SectionLabel } from '../../src/components/SectionLabel';
+import { TargetRing } from '../../src/components/TargetRing';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
 import { AccountsSkeleton } from '../../src/features/accounts/AccountsSkeleton';
 import { HideAmountsButton } from '../../src/features/hidden/HideAmountsButton';
@@ -38,8 +46,9 @@ export default function AccountsTab() {
   const loaded = accountsLoaded && rowsLoaded;
   const balances = useMemo(() => accountBalances(accounts, rows, today), [accounts, rows, today]);
 
-  const live = accounts.filter((account) => account.archivedAt === null);
-  const archived = accounts.filter((account) => account.archivedAt !== null);
+  // Pockets are goals (§5.14): they show under their parent, never as accounts of their own.
+  const live = accounts.filter((account) => account.archivedAt === null && !isPocket(account));
+  const archived = accounts.filter((account) => account.archivedAt !== null && !isPocket(account));
   const spendable = live.filter(
     (account) => !SAVINGS_TYPES.has(account.type) && account.includeInSpendable,
   );
@@ -48,25 +57,75 @@ export default function AccountsTab() {
     (account) => !SAVINGS_TYPES.has(account.type) && !account.includeInSpendable,
   );
 
-  const row = (account: (typeof accounts)[number]) => (
-    <ListRow
-      key={account.id}
-      title={account.name}
-      subtitle={account.institution ?? t(`accountTypes.${account.type}`)}
-      leading={
-        <IconBox name={account.icon as IconName} colour={theme.categoryColor(account.colorIndex)} />
-      }
-      onPress={() => router.push({ pathname: '/account/[id]', params: { id: account.id } })}
-      trailing={
-        <AmountText
-          minor={balances.get(account.id) ?? 0}
-          currency={currency}
-          locale={locale}
-          align="end"
+  const row = (account: (typeof accounts)[number]) => {
+    const pockets = pocketsOf(accounts, account.id);
+    return (
+      <View key={account.id}>
+        <ListRow
+          title={account.name}
+          subtitle={account.institution ?? t(`accountTypes.${account.type}`)}
+          leading={
+            <IconBox
+              name={account.icon as IconName}
+              colour={theme.categoryColor(account.colorIndex)}
+            />
+          }
+          onPress={() => router.push({ pathname: '/account/[id]', params: { id: account.id } })}
+          trailing={
+            <AmountText
+              minor={bankBalance(accounts, balances, account.id)}
+              currency={currency}
+              locale={locale}
+              align="end"
+            />
+          }
         />
-      }
-    />
-  );
+        {pockets.length === 0 ? null : (
+          <View style={{ paddingStart: 44, paddingBottom: 4 }}>
+            {pockets.map((pocket) => (
+              <ListRow
+                key={pocket.id}
+                title={pocket.name}
+                leading={
+                  <TargetRing
+                    size={theme.layout.targetRingSmall}
+                    ratio={(balances.get(pocket.id) ?? 0) / Math.max(1, pocket.goalTarget ?? 1)}
+                    pace={null}
+                    tone="plain"
+                    icon={pocket.icon as IconName}
+                    colour={theme.categoryColor(pocket.colorIndex)}
+                  />
+                }
+                onPress={() => router.push({ pathname: '/goal/[id]', params: { id: pocket.id } })}
+                trailing={
+                  <AmountText
+                    minor={balances.get(pocket.id) ?? 0}
+                    currency={currency}
+                    locale={locale}
+                    align="end"
+                    size="footnote"
+                  />
+                }
+              />
+            ))}
+            <View style={{ flexDirection: 'row', paddingVertical: 6 }}>
+              <Text size="footnote" color="textMuted" style={{ flex: 1 }}>
+                {t('goals.free')}
+              </Text>
+              <AmountText
+                minor={balances.get(account.id) ?? 0}
+                currency={currency}
+                locale={locale}
+                align="end"
+                size="footnote"
+                color="textMuted"
+              />
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <Screen underTabBar refreshable>
