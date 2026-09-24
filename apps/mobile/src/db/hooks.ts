@@ -9,7 +9,7 @@ import type {
   Transaction,
 } from '@saldo/core';
 import { SETTINGS_ID } from '@saldo/core';
-import { and, asc, count, desc, eq, gte, isNull, lte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from './client';
 import type { LocalAttachment } from './repositories/attachments';
@@ -220,6 +220,31 @@ export function useTransactionsInRangeQuery(start: LocalDate, end: LocalDate): T
       )
       .orderBy(desc(transactions.date), asc(transactions.createdAt)),
     [start, end],
+  );
+  return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
+}
+
+/**
+ * Every live row in or out of `accountIds`, whatever its date. What a goal's balance needs (§5.14)
+ * without reading the whole ledger on every write.
+ */
+export function useTransactionsOfAccountsQuery(accountIds: readonly string[]): TransactionsQuery {
+  const key = accountIds.join(',');
+  const { data, updatedAt } = useLiveQuery(
+    db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          isNull(transactions.deletedAt),
+          or(
+            inArray(transactions.accountId, [...accountIds]),
+            inArray(transactions.toAccountId, [...accountIds]),
+          ),
+        ),
+      )
+      .orderBy(desc(transactions.date), asc(transactions.createdAt)),
+    [key],
   );
   return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
 }
