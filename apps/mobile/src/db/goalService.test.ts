@@ -206,6 +206,20 @@ describe('closeGoalWithExpense', () => {
   });
 });
 
+describe('closeGoalWithExpense keeps the sheet’s id', () => {
+  it('so a receipt attached in the sheet belongs to the expense', () => {
+    const { db, repos } = setup();
+    const pocket = createGoal(db, repos, input);
+    closeGoalWithExpense(db, repos, {
+      goalId: pocket.id,
+      expense: { id: 'tx-sheet', ...expense(pocket.id, 500_000, TODAY) },
+      today: TODAY,
+      nowIso: NOW,
+    });
+    expect(repos.transactions.byId('tx-sheet')?.kind).toBe('expense');
+  });
+});
+
 describe('restoreGoal', () => {
   it('reopens a closed goal from today, dropping a deadline that has passed', () => {
     const { db, repos } = setup();

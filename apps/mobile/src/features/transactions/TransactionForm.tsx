@@ -82,6 +82,8 @@ export interface TransactionFormProps {
    * balance. A chip reads as chosen while the field holds its amount.
    */
   amountShortcuts?: readonly { key: string; label: string; minor: number }[];
+  /** The closing expense of a goal (§6.38): an expense and nothing else, so no kind switch. */
+  lockKind?: boolean;
 }
 
 const KINDS = ['expense', 'income', 'transfer'] as const;
@@ -99,6 +101,7 @@ export function TransactionForm({
   submitting = false,
   recurrenceId = null,
   amountShortcuts = [],
+  lockKind = false,
 }: TransactionFormProps) {
   const theme = useTheme();
   const router = useRouter();
@@ -349,12 +352,14 @@ export function TransactionForm({
         title={mode === 'new' ? t('txForm.newTitle') : t('txForm.editTitle')}
       />
 
-      <Segmented
-        accessibilityLabel={t('txForm.amount')}
-        options={KINDS.map((kind) => ({ value: kind, label: t(`kinds.${kind}`) }))}
-        value={values.kind}
-        onChange={(kind) => onChange(changeKind(values, kind))}
-      />
+      {lockKind ? null : (
+        <Segmented
+          accessibilityLabel={t('txForm.amount')}
+          options={KINDS.map((kind) => ({ value: kind, label: t(`kinds.${kind}`) }))}
+          value={values.kind}
+          onChange={(kind) => onChange(changeKind(values, kind))}
+        />
+      )}
 
       {/* The keypad clears the whole card, not just the figure: the choice, the custom-amount
           line and the overpay warning under it are all about the amount being typed. */}

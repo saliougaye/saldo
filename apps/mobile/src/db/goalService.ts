@@ -8,7 +8,9 @@ import {
 import type { Repositories } from './repositories';
 import type { RepositoryDatabase } from './repositories/support';
 
-type TransactionInput = Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+type TransactionInput = Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> & {
+  id?: string;
+};
 
 export interface NewGoalInput {
   name: string;

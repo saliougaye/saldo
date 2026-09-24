@@ -68,20 +68,35 @@ export default function NewTransaction() {
               : t('accounts.settleBalance'),
         }))}
         submitting={saving}
+        lockKind={closing !== null}
         onSubmit={() => {
           setSaving(true);
           savedRef.current = true;
           if (closing !== null) {
             // The expense and the close in one transaction (§6.38): from the goal, dated today at
-            // the latest, never repeating — whatever the sheet was changed to.
-            closeGoalWithExpense(db, repos, {
-              goalId: closing.closeGoalId,
-              expense: { ...toTransactionInput(values, minorDigits), recurrenceId: null },
-              today,
-              nowIso: new Date().toISOString(),
-            });
+            // the latest, never repeating — whatever the sheet was changed to. Its id is the
+            // sheet's, so a receipt attached here belongs to it.
+            try {
+              closeGoalWithExpense(db, repos, {
+                goalId: closing.closeGoalId,
+                expense: {
+                  id: transactionId,
+                  ...toTransactionInput(values, minorDigits),
+                  recurrenceId: null,
+                },
+                today,
+                nowIso: new Date().toISOString(),
+              });
+            } catch {
+              // Nothing was written (one transaction): the sheet stays open and usable.
+              savedRef.current = false;
+              setSaving(false);
+              return;
+            }
             toast.show(t('goals.closed'));
-            router.dismissTo('/goals');
+            // Out of the sheet, then the closed goal's detail gives way to the list.
+            router.dismiss();
+            router.replace('/goals');
             return;
           }
           const created = repos.transactions.create({
