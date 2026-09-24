@@ -300,7 +300,9 @@ describe('creditStatementDue', () => {
 
 describe('paymentAccountCandidates', () => {
   it('never charges a card to a pocket', () => {
-    const pocket = { ...ACCOUNTS[1], id: 'acc-pocket', type: 'pocket' as const };
+    const checking = ACCOUNTS.find((account) => account.id === 'acc-checking');
+    if (checking === undefined) throw new Error('fixture without acc-checking');
+    const pocket = { ...checking, id: 'acc-pocket', type: 'pocket' as const };
     expect(
       paymentAccountCandidates([...ACCOUNTS, pocket], 'acc-card').map((account) => account.id),
     ).not.toContain('acc-pocket');
