@@ -20,6 +20,9 @@ import {
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
 import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
+import { GoalAlertsGate } from '../../src/features/goals/GoalAlertsGate';
+import { HomeGoalsCard } from '../../src/features/goals/HomeGoalsCard';
+import { useGoalViews } from '../../src/features/goals/useGoalViews';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { DevTools } from '../../src/features/home/DevTools';
 import { HomeSkeleton } from '../../src/features/home/HomeSkeleton';
@@ -47,6 +50,7 @@ export default function HomeTab() {
   const categories = useCategories();
   const accounts = useAccounts();
   const { rows: budgets, loaded: budgetsLoaded } = useBudgetsQuery();
+  const goals = useGoalViews();
   const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
@@ -56,7 +60,7 @@ export default function HomeTab() {
   // Before both answer, the hero would read "0 €" and the recent card "no transactions yet".
   // The skeleton shows at once rather than behind `useDelayed`: this is the screen the app opens
   // on, and a blank band under the header read as a hang. Its blocks sit where the figures land.
-  const loaded = rowsLoaded && budgetsLoaded;
+  const loaded = rowsLoaded && budgetsLoaded && goals.loaded;
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -201,6 +205,10 @@ export default function HomeTab() {
           </Animated.View>
 
           <Animated.View entering={entering(3)}>
+            <HomeGoalsCard views={goals.views} />
+          </Animated.View>
+
+          <Animated.View entering={entering(4)}>
             <Card padded={false}>
               <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
                 <CardHeader
@@ -263,6 +271,7 @@ export default function HomeTab() {
       <DevTools />
       {/* An empty `views` before the query answers is not "no budget over its limit". */}
       {loaded ? <BudgetAlertsGate views={views} /> : null}
+      {loaded ? <GoalAlertsGate views={goals.views} /> : null}
     </Screen>
   );
 }
