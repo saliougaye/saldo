@@ -10,6 +10,8 @@
 
 **Order:** B1 before B2. B2 (the Obiettivi card on Home, the list, the detail, the wizard, the close sheet, the notification, the Conti nesting) builds on everything here.
 
+**Found while executing:** the import writer's filter first missed its file (an extraction slip, fixed in its own commit); the `paymentAccountCandidates` test finds the checking fixture by id, since `noUncheckedIndexedAccess` makes `ACCOUNTS[1]` possibly undefined.
+
 **Decisions recorded here (AGENTS.md "spec silent → note it in the plan"):**
 
 - **The four goal fields are optional in the schema** (`nullable().optional()`), not required-nullable: rows written before them parse on pull (§8.1), and the twenty existing `Account` literals in tests and seeds stay valid. A cross-field rule makes them required on a pocket and forbidden elsewhere.
@@ -48,7 +50,7 @@
 - Modify: `packages/core/src/entities.ts`
 - Test: `packages/core/src/entities.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `entities.test.ts`, change the `accountTypeSchema` test to expect `'pocket'` last:
 
@@ -130,12 +132,12 @@ describe('accountSchema and pockets', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- entities`
 Expected: FAIL — the options list lacks `pocket`, and a pocket does not parse.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `entities.ts`, replace the `accountTypeSchema` and `accountSchema` blocks with:
 
@@ -231,12 +233,12 @@ export const accountSchema = z
   .superRefine(refineAccountShape);
 ```
 
-- [ ] **Step 4: Run them and see them pass**
+- [x] **Step 4: Run them and see them pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test`
 Expected: all pass (the backup schema, `z.array(accountSchema)`, accepts both shapes).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src/entities.ts packages/core/src/entities.test.ts
@@ -253,7 +255,7 @@ rtk git commit -m "feat(core): pocket accounts carry a goal"
 - Modify: `apps/mobile/src/features/accounts/AccountTypeSheet.tsx`, `apps/mobile/src/features/accounts/accountTypeIcon.ts`
 - Modify: `packages/i18n/src/locales/{it,en,fr,de,sv,es,pt}.ts`
 
-- [ ] **Step 1: Write the failing schema test**
+- [x] **Step 1: Write the failing schema test**
 
 Append to the `describe('schema', …)` block of `schema.test.ts`:
 
@@ -293,12 +295,12 @@ Append to the `describe('schema', …)` block of `schema.test.ts`:
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db/schema.test.ts`
 Expected: FAIL (TypeScript in jest is transpile-only, so it fails at runtime: `table accounts has no column named parent_account_id`).
 
-- [ ] **Step 3: Add the columns**
+- [x] **Step 3: Add the columns**
 
 In `schema.ts`, inside `accounts`, after `sortOrder: integer('sort_order').notNull(),`:
 
@@ -310,17 +312,17 @@ In `schema.ts`, inside `accounts`, after `sortOrder: integer('sort_order').notNu
     goalStartDate: text('goal_start_date'),
 ```
 
-- [ ] **Step 4: Generate the migration**
+- [x] **Step 4: Generate the migration**
 
 Run: `cd apps/mobile && rtk proxy pnpm db:generate`
 Expected: a new `drizzle/0003_<name>.sql` with four `ALTER TABLE \`accounts\` ADD …` statements, `migrations.js` importing it as `m0003`, and `meta/_journal.json` + `meta/0003_snapshot.json` updated. Open the SQL and check it adds exactly the four nullable columns and nothing else.
 
-- [ ] **Step 5: Run the test and see it pass**
+- [x] **Step 5: Run the test and see it pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db`
 Expected: PASS (the test database replays every `drizzle/*.sql`).
 
-- [ ] **Step 6: Never offer `pocket` as a type, and give it an icon**
+- [x] **Step 6: Never offer `pocket` as a type, and give it an icon**
 
 In `AccountTypeSheet.tsx`, replace:
 
@@ -337,7 +339,7 @@ export const ACCOUNT_TYPES = accountTypeSchema.options.filter((type) => type !==
 
 In `accountTypeIcon.ts`, add `pocket: 'target',` after `investment: 'trend',`.
 
-- [ ] **Step 7: The label, and the refusal copy for Task 7**
+- [x] **Step 7: The label, and the refusal copy for Task 7**
 
 In each catalog, inside `accountTypes: { … }`, add after the `investment` line:
 
@@ -365,12 +367,12 @@ and after the `targets: { … },` block a new block:
 
 (Biome will expand each block onto several lines.)
 
-- [ ] **Step 8: Check**
+- [x] **Step 8: Check**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`, `rtk proxy pnpm --filter mobile test -- src/features/accounts`, `rtk proxy pnpm typecheck`
 Expected: all pass; the account type grid and sheet tests still list six types.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add apps/mobile/src/db/schema.ts apps/mobile/src/db/schema.test.ts apps/mobile/drizzle apps/mobile/src/features/accounts/AccountTypeSheet.tsx apps/mobile/src/features/accounts/accountTypeIcon.ts packages/i18n/src/locales
@@ -387,7 +389,7 @@ After merging, restart Metro with `--clear` and delete the simulator's `Document
 - Create: `packages/core/src/pockets.ts`, `packages/core/src/pockets.test.ts`
 - Modify: `packages/core/src/index.ts`, `packages/core/src/accounts.ts`, `packages/core/src/accounts.test.ts`, `packages/core/src/io/importPlan.ts`, `packages/core/src/io/importPlan.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/core/src/pockets.test.ts`:
 
@@ -505,12 +507,12 @@ In `io/importPlan.test.ts`, after the test `'matches an account that already exi
   });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- pockets accounts importPlan`
 Expected: FAIL — `./pockets` missing, the pocket offered as payment account, the pocket matched by the import.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/pockets.ts`:
 
@@ -624,12 +626,12 @@ with:
   const accounts = new NameRegistry(context.accounts.filter((account) => account.type !== 'pocket'));
 ```
 
-- [ ] **Step 4: Run them and see them pass**
+- [x] **Step 4: Run them and see them pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src
@@ -644,7 +646,7 @@ rtk git commit -m "feat(core): pocket helpers; cards and imports never use a poc
 - Create: `packages/core/src/goals.ts`, `packages/core/src/goals.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/core/src/goals.test.ts`:
 
@@ -775,12 +777,12 @@ describe('goalProgress', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- goals`
 Expected: FAIL — `Cannot find module './goals'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/goals.ts`:
 
@@ -910,12 +912,12 @@ export function goalProgress(
 
 Add `export * from './goals';` to `index.ts` (after `./filters`).
 
-- [ ] **Step 4: Run them and see them pass**
+- [x] **Step 4: Run them and see them pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- goals`
 Expected: PASS, 8 tests. If `pace` on 2026-07-02 is not 183/365, check `elapsedDays` counts today (it does, §5.2) and fix the implementation, not the expectation.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src/goals.ts packages/core/src/goals.test.ts packages/core/src/index.ts
@@ -930,7 +932,7 @@ rtk git commit -m "feat(core): goalProgress measures saved, pace and what is lef
 - Create: `packages/core/src/goalTargets.ts`, `packages/core/src/goalTargets.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/core/src/goalTargets.test.ts`:
 
@@ -1058,12 +1060,12 @@ describe('goalAdvice', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- goalTargets`
 Expected: FAIL — `Cannot find module './goalTargets'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `packages/core/src/goalTargets.ts`:
 
@@ -1156,12 +1158,12 @@ export function goalAdvice(progress: GoalProgress): GoalAdvice {
 
 Add `export * from './goalTargets';` to `index.ts` (after `./goals`).
 
-- [ ] **Step 4: Run them and see them pass**
+- [x] **Step 4: Run them and see them pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/core/src/goalTargets.ts packages/core/src/goalTargets.test.ts packages/core/src/index.ts
@@ -1177,7 +1179,7 @@ rtk git commit -m "feat(core): rank, list and advise goals for the target card"
 - Modify: `apps/mobile/src/db/adminService.ts`, `apps/mobile/src/db/adminService.test.ts`
 - Modify: `apps/mobile/src/io/importService.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `apps/mobile/src/db/goalService.test.ts`:
 
@@ -1287,12 +1289,12 @@ describe('archiveAccount', () => {
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail**
+- [x] **Step 2: Run them and see them fail**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db/goalService.test.ts`
 Expected: FAIL — `Cannot find module './goalService'`.
 
-- [ ] **Step 3: Implement the service**
+- [x] **Step 3: Implement the service**
 
 Create `apps/mobile/src/db/goalService.ts`:
 
@@ -1442,12 +1444,12 @@ with:
   );
 ```
 
-- [ ] **Step 4: Run them and see them pass**
+- [x] **Step 4: Run them and see them pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/db src/io`
 Expected: PASS, including the existing `adminService` and `importService` tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/db/goalService.ts apps/mobile/src/db/goalService.test.ts apps/mobile/src/db/adminService.ts apps/mobile/src/io/importService.ts
@@ -1462,7 +1464,7 @@ rtk git commit -m "feat(mobile): create and close goals; a parent with open goal
 - Modify: `apps/mobile/src/features/transactions/TransactionForm.tsx`
 - Modify: `apps/mobile/app/account/[id].tsx`
 
-- [ ] **Step 1: Chips through `accountChoices`**
+- [x] **Step 1: Chips through `accountChoices`**
 
 In `TransactionForm.tsx`, add `accountChoices` to the `@saldo/core` import. In `accountRow`, replace:
 
@@ -1481,7 +1483,7 @@ with:
         }).map((account, index) => (
 ```
 
-- [ ] **Step 2: Refuse to archive a parent with open goals**
+- [x] **Step 2: Refuse to archive a parent with open goals**
 
 In `app/account/[id].tsx`, add `canArchiveAccount` to the `@saldo/core` import and replace:
 
@@ -1502,12 +1504,12 @@ with:
         />
 ```
 
-- [ ] **Step 3: Check**
+- [x] **Step 3: Check**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/transactions` and `rtk proxy pnpm typecheck`
 Expected: pass; `TransactionForm.test.tsx` has no pocket, so its chips are unchanged.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/transactions/TransactionForm.tsx apps/mobile/app/account/[id].tsx
@@ -1518,7 +1520,7 @@ rtk git commit -m "feat(mobile): pockets only in transfer chips; archive refused
 
 ### Task 8: Verify
 
-- [ ] **Step 1:** `rtk proxy pnpm lint` — no `lint/…` lines, no `×`. Fix formatting with `pnpm exec biome check --write <paths>`.
-- [ ] **Step 2:** `rtk proxy pnpm typecheck` — every task successful.
-- [ ] **Step 3:** `CI=1 rtk proxy pnpm test` — read each package's summary line.
-- [ ] **Step 4:** Commit any formatting: `rtk git commit -m "style: biome formatting for goals B1"`.
+- [x] **Step 1:** `rtk proxy pnpm lint` — no `lint/…` lines, no `×`. Fix formatting with `pnpm exec biome check --write <paths>`.
+- [x] **Step 2:** `rtk proxy pnpm typecheck` — every task successful.
+- [x] **Step 3:** `CI=1 rtk proxy pnpm test` — read each package's summary line.
+- [x] **Step 4:** Commit any formatting: `rtk git commit -m "style: biome formatting for goals B1"`.
