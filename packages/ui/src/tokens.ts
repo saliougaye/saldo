@@ -336,8 +336,8 @@ export const emptyState = {
 } as const;
 
 /**
- * Rocky (§13 *Mascot*, D26). Sizes in pt. He peeks from a window clipped at an edge: `…Window` is how much of him
- * shows above it, and he rises `peekFromRatio` of his height to get there.
+ * Rocky (§13 *Mascot*, D26). Sizes in pt. He peeks from a window clipped at an edge: `…Window`
+ * is how much of him shows above it, and he rises `peekFromRatio` of his height to get there.
  */
 export const mascot = {
   /** Over the back of the ghost stack. */
@@ -345,7 +345,7 @@ export const mascot = {
   emptyWindow: 60,
   /** How far the window runs under the back ghost: that ghost is translucent, so keep it small. */
   emptyOverlap: 6,
-  /** Starts while the back ghosts settle, lands after the whole stack (`enterMs` + two staggers). */
+  /** Starts while the back ghosts settle; lands after the whole stack (`enterMs` + 2 staggers). */
   emptyDelayMs: 240,
   /** Over a reached goal's card, near its trailing corner. */
   cardSize: 76,
