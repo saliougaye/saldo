@@ -1,4 +1,5 @@
 import {
+  accountChoices,
   amountBufferToMinor,
   type BalancePreview,
   getCurrency,
@@ -282,7 +283,12 @@ export function TransactionForm({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 6 }}
       >
-        {liveAccounts.map((account, index) => (
+        {accountChoices(liveAccounts, {
+          // Money reaches a pocket by transfer only (§5.14); an expense from one arrives
+          // pre-selected when a goal is closed.
+          includePockets: values.kind === 'transfer',
+          keepId: selectedId,
+        }).map((account, index) => (
           <Chip
             key={account.id}
             // By position, as the category tiles: the end-to-end flows need *an* account.

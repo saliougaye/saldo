@@ -1,6 +1,7 @@
 import {
   accountBalances,
   addDays,
+  canArchiveAccount,
   creditCardDue,
   creditSettlementDraft,
   creditStatementAccrued,
@@ -401,7 +402,14 @@ export default function AccountDetail() {
       </Card>
 
       {archived ? null : (
-        <SecondaryButton label={t('accounts.archive')} onPress={() => setConfirmArchive(true)} />
+        <SecondaryButton
+          label={t('accounts.archive')}
+          onPress={() =>
+            canArchiveAccount(accounts, account.id)
+              ? setConfirmArchive(true)
+              : toast.show(t('goals.closeFirst'))
+          }
+        />
       )}
 
       <ConfirmDialog
