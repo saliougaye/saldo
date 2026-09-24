@@ -646,8 +646,10 @@ deadline. Example: «Macchina, 12.000 € entro giugno 2027» inside «Conto cor
 - `expired` = a deadline before today and not reached.
 - **Pace**, only with a deadline: `pace = elapsedDays(goalStartDate … goalDeadline, today) ÷ length` (§5.2);
   `startSaved` = the balance at the end of `goalStartDate`; `expected = startSaved + (goalTarget − startSaved) × pace`;
-  `gap = saved − expected`; `behind = gap < 0`. Starting from `startSaved` keeps a goal created with money already aside
-  from reading as far ahead.
+  `gap = saved − expected`. Starting from `startSaved` keeps a goal created with money already aside from reading as far
+  ahead. **Behind** means `gap < −allowance`, where `allowance = (goalTarget − startSaved) ÷ periods from the start to
+  the deadline` — one period's share of the plan: a goal is never behind the day it is created, nor between two monthly
+  contributions (decided 2026-09-24, after review).
 - **Per period**: `periodsLeft` = the number of app periods (`settings.periodKind`, §5.2) from the one containing today
   to the one containing the deadline, both included; `perPeriod = ⌈(goalTarget − saved) ÷ periodsLeft⌉` in minor
   units, rounded **up** so that following the advice reaches the target.
@@ -663,15 +665,24 @@ deadline. Example: «Macchina, 12.000 € entro giugno 2027» inside «Conto cor
 | reached | «Hai messo da parte **{goalTarget}**. Chiudilo quando usi i soldi.» |
 
 **Closing a goal** («Chiudi obiettivo», goal detail, and the reached event row): the close sheet (§6.38) asks what
-happened to the money. «Registra la spesa» opens the new-transaction sheet prefilled — an expense from the pocket, the
+happened to the money. Closing first **stops every recurrence in or out of the pocket and removes every row dated after
+today** that touches it, then brings the pocket to **exactly zero** in both directions: what is left returns to the
+parent, and a pocket that spent more than it held is topped up from it. «Registra la spesa» opens the new-transaction sheet prefilled — an expense from the pocket, the
 whole balance, the goal's name as description — as «Salda carta» does (§6.10), nothing written until it is saved.
+Saving records the expense and closes the goal **in one transaction**; the expense is always from the pocket, dated
+today at the latest and never repeating, whatever the sheet was changed to.
 «Riporta in {parent}» writes a transfer of the whole balance back to the parent. Whatever is left after the expense is
 returned the same way. Then the pocket is **archived**. **An archived pocket always has a zero balance**, so archiving
-never hides money from the totals. Restoring it (Ripristina, §6.5) reopens the goal empty.
+never hides money from the totals. Its rows become **read-only** (edit and delete are refused), so nothing can change
+that balance afterwards. Restoring it (Ripristina, on the goals screen) reopens the goal empty with its pace starting
+**today** and a deadline that has passed dropped; it is refused while the parent is archived.
 
 **Rules around pockets.**
 
-- Editing a goal changes name, target, deadline, icon and colour; never the parent.
+- Editing a goal changes name, target, deadline, icon and colour; never the parent. An expired goal can be renamed
+  without moving its deadline.
+- An account holding open goals can only change to another type that can hold them (cash, checking, debit card,
+  savings).
 - Archiving a parent that still holds open pockets is refused with «Chiudi prima gli obiettivi in questo conto».
 - Pockets are **not** offered in the account chips of the new-transaction sheet (§6.16); they appear in the transfer
   pickers grouped under their parent, and prefilled by the goal's own actions. A credit card cannot be charged to a
