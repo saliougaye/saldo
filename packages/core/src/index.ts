@@ -12,6 +12,7 @@ export * from './dates';
 export * from './entities';
 export * from './filters';
 export * from './goals';
+export * from './goalTargets';
 export * from './history';
 export * from './ids';
 export * from './io';
