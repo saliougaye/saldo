@@ -20,4 +20,18 @@ None open.
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.
 
-None open.
+### Fees on transfers between accounts
+
+A transfer can cost money: PayPal charges to move a balance to a bank account, a card withdrawal has a
+fee, a foreign transfer loses something on the exchange. Today a transfer moves the same amount out of
+one account and into the other, so the fee has to be entered by hand as a separate expense — or it just
+disappears, and the destination balance no longer matches the real one.
+
+Open questions before this can be planned:
+
+- Is the fee a field on the transfer (`feeMinor`, charged to the source account), or a separate expense
+  transaction linked to the transfer?
+- Which account pays it, and in which currency, when the two accounts differ?
+- Does the fee show up in the expense totals and in the category breakdown (a "Commissioni" category?),
+  or does it stay outside them like the transfer itself?
+- Does it belong in the recurring transfers too (a monthly transfer with a fixed fee)?

@@ -172,6 +172,32 @@ How it is built:
   - whether the intro doubles as a «Novità» sheet after an update (Apple uses one pattern for both).
 - [ ] Spec section and a mockup in `docs/superpowers/mockups/` (intro cards, ⓘ sheet, Guida list), then the plan.
 
+### Transfers: a button to fill the amount with the source's whole balance
+
+Asked for on 2026-09-24. Moving everything out of an account — emptying a pocket, sweeping a checking account into
+savings — means reading the source's balance and retyping it on the keypad, cents included. A button on the transfer
+sheet (§6.16) fills the amount with the source's total in one tap; the user can still edit it, and nothing is written
+until they save.
+
+- **Where.** The new/edit transaction sheet, kind Trasferimento, under the amount figure. It follows the **Da**
+  picker: change the source and the button reads that account's balance. The goal's «Accantona» (§6.36) opens the
+  same sheet prefilled as a transfer from the parent, so it gets the button too: «put aside everything the parent
+  holds». It is the parent's whole balance, not what the goal still lacks.
+- **Which total.** The source's balance today (§5.3), the same number its detail shows. For a credit card, the
+  amount the card owes — the «Tutto il saldo» choice that «Salda carta» already offers (§6.16) — so the two do not
+  disagree.
+- **Not offered** when the source's balance is 0 or negative: there is nothing to move.
+- **Pure function in `@saldo/core`**, TDD first, that returns the amount to prefill for a source and a `today`; the
+  sheet only calls it. Money stays integer minor units.
+
+- [ ] Decide before planning:
+  - the label («Tutto», «Tutto il saldo», «Svuota conto») and whether it is a chip or a text button;
+  - whether «Accantona» should also offer a second fill, «quanto manca» (target − saved), since the parent's whole
+    balance is rarely what a goal wants;
+  - whether a pocket's «Riporta in {parent}» (§6.38) and «Preleva» (§6.36) reuse it instead of their own prefill;
+  - the source being a credit card in credit (positive balance): fill with it, or hide the button.
+- [ ] Spec line in §6.16, then the plan.
+
 ---
 
 ## 0.2 — Forecast: the next three months, from what already repeats
@@ -439,9 +465,42 @@ public either way.
       state of §6.30. That index is the first thing a visitor reads, so correct it before the repository is
       public: record what was actually exercised on the device, and leave the rest listed as still open.
 
+### Visibility: a marketing site and a docs library, inside `apps/web`
+
+Asked for on 2026-09-24. A public repository is not a visible one: today a stranger's only way in is the
+README, and the only page Saldo serves is the fifteen-line landing page every instance shows
+(`apps/web/app/page.tsx`). Two things give the project a face, and both live in `apps/web` so there is one
+Next.js app, one deploy and one set of design tokens:
+
+- **Marketing site.** What Saldo is, who it is for (people leaving Spendee's paid tier, self-hosters), the
+  screenshots from `docs/screenshots/`, the local-first / own-your-data pitch, and the two calls to action:
+  the repository and the self-hosting guide.
+- **Docs library.** The guides that exist as loose Markdown in `docs/` — `self-hosting.md`,
+  `building-android.md`, `building-ios.md` — plus `SECURITY.md`, `CONTRIBUTING.md` and the user guide of 0.1
+  («Guida»), organised, searchable and linkable. The Markdown files stay the source of truth, so a page on
+  the site and the file on GitHub cannot say two things.
+
+- [ ] Decide before planning:
+  - **Instance vs. public site.** Every self-hosted instance serves `apps/web`, so its `/` must not become an
+    advert for the project. Either the marketing routes are a route group switched on by an env flag (off in a
+    self-hosted build, on for the public deploy), or the public site is its own build target of the same app.
+    The instance's root stays the small status/landing page it is now, or the web app of 0.3.
+  - Where the public site is hosted (Vercel is already ignored in `.gitignore`) and on what domain.
+  - Docs tooling: MDX in Next.js by hand, or a docs framework (Fumadocs, Nextra) — pick by whether it reads
+    the existing Markdown in place without copying it.
+  - Languages: Italian and English like the app, or English first. If both, the copy goes through
+    `@saldo/i18n` like every other user-visible string.
+  - Whether the docs carry a version selector once 0.8 has tags, so a self-hoster reads the guide that
+    matches the release they run.
+- [ ] Spec section, a design pass on `@saldo/ui` tokens (no hard-coded colours, radii or font sizes), then the
+      plan.
+
+Depends on: the slug and dead-link fixes above (the site links to the repository), and the docs being correct
+— the phase-index fix is part of that. It does **not** depend on 0.3: the marketing routes read no ledger.
+
 **Done when:** the repository is public at `github.com/saliougaye/saldo`, private vulnerability reporting
 is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
-`AGENTS.md` without hitting a 404 or a private path.
+`AGENTS.md` without hitting a 404 or a private path, and the marketing site and the docs library are live.
 
 ---
 
