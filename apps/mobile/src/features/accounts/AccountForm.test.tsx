@@ -119,6 +119,54 @@ describe('AccountForm', () => {
     );
   });
 
+  it('only offers the types that can hold goals to an account that holds some', async () => {
+    const parent: Account = {
+      id: 'a1',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      updatedAt: '0',
+      deletedAt: null,
+      name: 'Conto BPM',
+      type: 'checking',
+      institution: null,
+      openingBalance: 0,
+      includeInSpendable: true,
+      colorIndex: 0,
+      icon: 'landmark',
+      creditCloseDay: null,
+      creditChargeDay: null,
+      creditPaymentAccountId: null,
+      archivedAt: null,
+      sortOrder: 0,
+    };
+    const pocket: Account = {
+      ...parent,
+      id: 'p1',
+      name: 'Macchina',
+      type: 'pocket',
+      includeInSpendable: false,
+      parentAccountId: 'a1',
+      goalTarget: 100_000,
+      goalDeadline: null,
+      goalStartDate: '2026-09-01',
+    };
+    await render(
+      <Host>
+        <AccountForm
+          values={accountFormFrom(parent, 0, 2)}
+          onChange={jest.fn()}
+          mode="edit"
+          onSubmit={jest.fn()}
+          accounts={[parent, pocket]}
+          accountId="a1"
+        />
+      </Host>,
+    );
+    await userEvent.press(screen.getByText('Type'));
+    expect(screen.getByText('Savings')).toBeTruthy();
+    expect(screen.queryByText('Credit card')).toBeNull();
+    expect(screen.queryByText('Investments')).toBeNull();
+  });
+
   it('keeps the payment account row off an account that is not a credit card', async () => {
     await renderForm();
     expect(screen.queryByText('Paid from')).toBeNull();

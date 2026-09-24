@@ -6,7 +6,6 @@ import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
 
-/** Every account type, in the order of the enum. */
 /** A pocket is a goal (§5.14): made by the goal wizard, never picked as a type. */
 export const ACCOUNT_TYPES = accountTypeSchema.options.filter((type) => type !== 'pocket');
 
@@ -16,18 +15,21 @@ export function AccountTypeSheet({
   onClose,
   value,
   onSelect,
+  types = ACCOUNT_TYPES,
 }: {
   visible: boolean;
   onClose: () => void;
   value: Account['type'];
   onSelect: (type: Account['type']) => void;
+  /** Narrower than every type when the account holds goals (§5.14). */
+  types?: readonly Account['type'][];
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Sheet visible={visible} onClose={onClose} title={t('accounts.type')}>
       <View>
-        {ACCOUNT_TYPES.map((type) => (
+        {types.map((type) => (
           <ListRow
             key={type}
             title={t(`accountTypes.${type}`)}

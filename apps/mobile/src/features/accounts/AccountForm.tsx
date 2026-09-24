@@ -3,7 +3,9 @@ import {
   amountBufferToMinor,
   minorToAmountBuffer,
   openingBalanceForCurrent,
+  POCKET_PARENT_TYPES,
   paymentAccountCandidates,
+  pocketsOf,
 } from '@saldo/core';
 import { accountIconOptions, type IconName } from '@saldo/ui';
 import { useState } from 'react';
@@ -23,7 +25,7 @@ import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { AccountTypeSheet } from './AccountTypeSheet';
+import { ACCOUNT_TYPES, AccountTypeSheet } from './AccountTypeSheet';
 import { PaymentAccountSheet } from './PaymentAccountSheet';
 
 export interface AccountFormValues {
@@ -265,6 +267,12 @@ export function AccountForm({
         onClose={close}
         value={values.type}
         onSelect={(type) => set({ type })}
+        types={
+          // An account that holds goals stays one that can (§5.14, D24): no card, no investments.
+          accountId !== null && pocketsOf(accounts, accountId).length > 0
+            ? ACCOUNT_TYPES.filter((type) => POCKET_PARENT_TYPES.includes(type))
+            : ACCOUNT_TYPES
+        }
       />
 
       <AppearanceSheet
