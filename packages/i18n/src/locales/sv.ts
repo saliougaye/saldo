@@ -929,5 +929,7 @@ export const sv: Messages = {
     free: 'fritt',
     reachedTitle: 'Målet {{name}} nått: {{amount}}',
     itemLabel: '{{name}}, {{amount}} av {{target}}, {{status}}',
+    parentArchived: 'Målets konto är arkiverat: återställ kontot först',
+    closedLocked: 'Hör till ett stängt mål: kan inte ändras',
   },
 };

@@ -8,10 +8,9 @@ import { IconBox, ListRow } from '../src/components/ListRow';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
 import { SectionLabel } from '../src/components/SectionLabel';
-import { restoreAccount } from '../src/db/adminService';
-import { useRepositories } from '../src/db/DatabaseProvider';
 import { useGoalText } from '../src/features/goals/useGoalText';
 import { useGoalViews } from '../src/features/goals/useGoalViews';
+import { useRestoreGoal } from '../src/features/goals/useRestoreGoal';
 import { FeaturedTarget } from '../src/features/targets/FeaturedTarget';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
@@ -20,8 +19,8 @@ import { useTheme } from '../src/theme/ThemeProvider';
 export default function GoalsScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const repos = useRepositories();
   const { views, accounts, loaded } = useGoalViews();
+  const restore = useRestoreGoal();
   const text = useGoalText();
   const { t } = useTranslation();
   const closed = accounts.filter(
@@ -97,7 +96,7 @@ export default function GoalsScreen() {
                     <Pressable
                       accessibilityRole="button"
                       hitSlop={10}
-                      onPress={() => restoreAccount(repos, account.id)}
+                      onPress={() => restore(account.id)}
                     >
                       <Text color="accent" weight="medium">
                         {t('common.restore')}

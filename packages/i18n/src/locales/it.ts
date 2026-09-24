@@ -935,6 +935,8 @@ export const it = {
     free: 'liberi',
     reachedTitle: 'Obiettivo {{name}} raggiunto: {{amount}}',
     itemLabel: '{{name}}, {{amount}} di {{target}}, {{status}}',
+    parentArchived: 'Il conto di questo obiettivo è archiviato: ripristina prima il conto',
+    closedLocked: 'Fa parte di un obiettivo chiuso: non si può modificare',
   },
 };
 

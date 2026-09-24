@@ -942,5 +942,7 @@ export const fr: Messages = {
     free: 'libre',
     reachedTitle: 'Objectif {{name}} atteint : {{amount}}',
     itemLabel: '{{name}}, {{amount}} sur {{target}}, {{status}}',
+    parentArchived: 'Le compte de cet objectif est archivé\u202f: restaure d’abord le compte',
+    closedLocked: 'Fait partie d’un objectif fermé\u202f: impossible de le modifier',
   },
 };

@@ -938,5 +938,7 @@ export const pt: Messages = {
     free: 'livre',
     reachedTitle: 'Objetivo {{name}} atingido: {{amount}}',
     itemLabel: '{{name}}, {{amount}} de {{target}}, {{status}}',
+    parentArchived: 'A conta deste objetivo está arquivada: restaura primeiro a conta',
+    closedLocked: 'Faz parte de um objetivo fechado: não pode ser alterado',
   },
 };

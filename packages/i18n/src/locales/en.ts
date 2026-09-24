@@ -928,5 +928,7 @@ export const en: Messages = {
     free: 'free',
     reachedTitle: 'Goal {{name}} reached: {{amount}}',
     itemLabel: '{{name}}, {{amount}} of {{target}}, {{status}}',
+    parentArchived: "This goal's account is archived: restore the account first",
+    closedLocked: "Part of a closed goal: it can't be changed",
   },
 };

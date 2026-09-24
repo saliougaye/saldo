@@ -937,5 +937,7 @@ export const de: Messages = {
     free: 'frei',
     reachedTitle: 'Ziel {{name}} erreicht: {{amount}}',
     itemLabel: '{{name}}, {{amount}} von {{target}}, {{status}}',
+    parentArchived: 'Das Konto dieses Ziels ist archiviert: stell zuerst das Konto wieder her',
+    closedLocked: 'Gehört zu einem geschlossenen Ziel: nicht änderbar',
   },
 };

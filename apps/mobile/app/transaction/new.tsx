@@ -6,7 +6,7 @@ import { removeAttachment } from '../../src/attachments/attachmentService';
 import { useToast } from '../../src/components/Toast';
 import { db } from '../../src/db/client';
 import { useDatabase } from '../../src/db/DatabaseProvider';
-import { closeGoal } from '../../src/db/goalService';
+import { closeGoalWithExpense } from '../../src/db/goalService';
 import { useAccounts, useSettings } from '../../src/db/hooks';
 import { startRecurrence } from '../../src/db/recurrenceService';
 import { settlementForm } from '../../src/features/accounts/settlement';
@@ -71,6 +71,19 @@ export default function NewTransaction() {
         onSubmit={() => {
           setSaving(true);
           savedRef.current = true;
+          if (closing !== null) {
+            // The expense and the close in one transaction (§6.38): from the goal, dated today at
+            // the latest, never repeating — whatever the sheet was changed to.
+            closeGoalWithExpense(db, repos, {
+              goalId: closing.closeGoalId,
+              expense: { ...toTransactionInput(values, minorDigits), recurrenceId: null },
+              today,
+              nowIso: new Date().toISOString(),
+            });
+            toast.show(t('goals.closed'));
+            router.dismissTo('/goals');
+            return;
+          }
           const created = repos.transactions.create({
             id: transactionId,
             ...toTransactionInput(values, minorDigits),
@@ -79,12 +92,6 @@ export default function NewTransaction() {
           // "Ripeti" turns the saved row into the first occurrence of a new series (§5.9).
           if (values.recurrence !== null) {
             startRecurrence(db, repos, created, values.recurrence, today, def);
-          }
-          if (closing !== null) {
-            closeGoal(db, repos, closing.closeGoalId, today, new Date().toISOString());
-            toast.show(t('goals.closed'));
-            router.back();
-            return;
           }
           toast.show(t('transactions.created'));
           router.back();

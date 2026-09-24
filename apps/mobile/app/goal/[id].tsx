@@ -12,7 +12,6 @@ import { Screen } from '../../src/components/Screen';
 import { HeaderIconButton, ScreenHeader } from '../../src/components/ScreenHeader';
 import { SectionLabel } from '../../src/components/SectionLabel';
 import { useToast } from '../../src/components/Toast';
-import { restoreAccount } from '../../src/db/adminService';
 import { db } from '../../src/db/client';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { closeGoal } from '../../src/db/goalService';
@@ -21,6 +20,7 @@ import { GoalCloseSheet } from '../../src/features/goals/GoalCloseSheet';
 import { goalExpenseParams, goalTransferParams } from '../../src/features/goals/goalLinks';
 import { useGoalText } from '../../src/features/goals/useGoalText';
 import { useGoalViews } from '../../src/features/goals/useGoalViews';
+import { useRestoreGoal } from '../../src/features/goals/useRestoreGoal';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { FeaturedTarget } from '../../src/features/targets/FeaturedTarget';
 import { transactionRow } from '../../src/features/transactions/transactionRow';
@@ -40,6 +40,7 @@ export default function GoalDetail() {
   const text = useGoalText();
   const { t } = text;
   const [closing, setClosing] = useState(false);
+  const restore = useRestoreGoal();
 
   const view = views.find((candidate) => candidate.account.id === id);
   const account = accounts.find((candidate) => candidate.id === id);
@@ -56,10 +57,7 @@ export default function GoalDetail() {
     return (
       <Screen>
         <ScreenHeader title={account.name} />
-        <PrimaryButton
-          label={t('common.restore')}
-          onPress={() => restoreAccount(repos, account.id)}
-        />
+        <PrimaryButton label={t('common.restore')} onPress={() => restore(account.id)} />
       </Screen>
     );
   }
