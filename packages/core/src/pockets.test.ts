@@ -21,7 +21,12 @@ const ROWS: Row[] = [
   { id: 'card', type: 'credit_card', archivedAt: null },
   { id: 'deposit', type: 'savings', archivedAt: null },
   { id: 'trip', type: 'pocket', archivedAt: null, parentAccountId: 'deposit' },
-  { id: 'sofa', type: 'pocket', archivedAt: '2026-09-01T10:00:00.000Z', parentAccountId: 'deposit' },
+  {
+    id: 'sofa',
+    type: 'pocket',
+    archivedAt: '2026-09-01T10:00:00.000Z',
+    parentAccountId: 'deposit',
+  },
   { id: 'degiro', type: 'investment', archivedAt: null },
 ];
 

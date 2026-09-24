@@ -15,9 +15,23 @@ const goal = (overrides: Partial<GoalAccount> = {}): GoalAccount => ({
 });
 
 const into = (date: string, amount: number) =>
-  tx({ date, amount, kind: 'transfer', accountId: 'checking', toAccountId: 'goal', categoryId: null });
+  tx({
+    date,
+    amount,
+    kind: 'transfer',
+    accountId: 'checking',
+    toAccountId: 'goal',
+    categoryId: null,
+  });
 const out = (date: string, amount: number) =>
-  tx({ date, amount, kind: 'transfer', accountId: 'goal', toAccountId: 'checking', categoryId: null });
+  tx({
+    date,
+    amount,
+    kind: 'transfer',
+    accountId: 'goal',
+    toAccountId: 'checking',
+    categoryId: null,
+  });
 
 describe('goalProgress', () => {
   it('saves what went in, minus what went out and what was spent, up to today', () => {
@@ -109,11 +123,7 @@ describe('goalProgress', () => {
   it('dates the reach to the first day of the latest run at or above the target', () => {
     const progress = goalProgress(
       goal({ goalTarget: 300_000 }),
-      [
-        into('2026-03-10', 300_000),
-        out('2026-04-01', 50_000),
-        into('2026-05-05', 60_000),
-      ],
+      [into('2026-03-10', 300_000), out('2026-04-01', 50_000), into('2026-05-05', 60_000)],
       '2026-07-02',
       MONTH,
     );

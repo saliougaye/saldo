@@ -7,7 +7,8 @@ export interface GoalTargetInput {
   progress: GoalProgress;
 }
 
-const dateScore = (date: string | null): number => (date === null ? 0 : Number(date.replaceAll('-', '')));
+const dateScore = (date: string | null): number =>
+  date === null ? 0 : Number(date.replaceAll('-', ''));
 
 /**
  * Expired (missing, money) → behind (−gap ÷ target) → on track (least ahead first) → no deadline
@@ -31,7 +32,10 @@ export function rankGoal({ id, progress }: GoalTargetInput): RankedTarget {
 }
 
 /** The exceptions that get a row: expired (most missing first), then reached (newest first). */
-export function goalEventIds(items: readonly GoalTargetInput[], featuredId: string | null): string[] {
+export function goalEventIds(
+  items: readonly GoalTargetInput[],
+  featuredId: string | null,
+): string[] {
   const others = items.filter((item) => item.id !== featuredId);
   const expired = others
     .filter((item) => item.progress.state === 'expired')

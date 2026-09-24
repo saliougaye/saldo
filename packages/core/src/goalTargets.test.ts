@@ -19,7 +19,10 @@ function progress(overrides: Partial<GoalProgress>): GoalProgress {
   };
 }
 
-const item = (id: string, overrides: Partial<GoalProgress>) => ({ id, progress: progress(overrides) });
+const item = (id: string, overrides: Partial<GoalProgress>) => ({
+  id,
+  progress: progress(overrides),
+});
 
 describe('rankGoal', () => {
   it('puts an expired goal on top, by what is missing', () => {
