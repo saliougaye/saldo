@@ -335,6 +335,38 @@ export const emptyState = {
   bodyMaxWidth: 280,
 } as const;
 
+/**
+ * Rocky (§13 *Mascot*, D26). Sizes in pt. He peeks from a window clipped at an edge: `…Window`
+ * is how much of him shows above it, and he rises `peekFromRatio` of his height to get there.
+ */
+export const mascot = {
+  /** Transparent margin above his ears in both PNGs (their alpha starts at 18%), cut away. */
+  trimTop: 0.16,
+  /** Over the back of the ghost stack: from his ears to his coin. */
+  emptySize: 104,
+  emptyWindow: 60,
+  /**
+   * How far the window runs into the stack's box. The tilt puts the ghosts' visible top edge well
+   * below the box's top, so this is measured on device, not derived.
+   */
+  emptyOverlap: 41,
+  /** Starts while the back ghosts settle; lands after the whole stack (`enterMs` + 2 staggers). */
+  emptyDelayMs: 240,
+  /** Over a reached goal's card, near its trailing corner. */
+  cardSize: 84,
+  cardWindow: 48,
+  cardInset: 18,
+  peekFromRatio: 0.62,
+  peekMs: 520,
+  /** Whole, in the close sheet of a reached goal. */
+  celebrateSize: 136,
+  celebrateMs: 560,
+  celebrateFromScale: 0.9,
+  celebrateFromY: 14,
+  /** The app's only overshoot, kept for the one moment worth celebrating. */
+  overshootEasing: [0.34, 1.36, 0.64, 1] as const,
+} as const;
+
 export const gestures = {
   swipeActionThreshold: 70,
   swipeMaxTravel: 120,

@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Rocky</title>
+  <g id="mascot">
+    <g id="tail">
+      <g id="tail-fur">
+        <path d="M 352 424 C 436 430 466 352 428 300" fill="none" stroke="#4A4A46" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="tail-ring-1">
+        <path d="M 406.3 413.6 L 411.1 410.7 L 415.6 407.6 L 419.8 404.1 L 423.6 400.5" fill="none" stroke="#171717" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="tail-ring-2">
+        <path d="M 439.9 374.4 L 441.4 369.5 L 442.6 364.5 L 443.5 359.4 L 444.0 354.3" fill="none" stroke="#171717" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="tail-tip">
+        <path d="M 440.0 323.1 L 437.7 317.1 L 435.0 311.3 L 431.7 305.6 L 428.0 300.0" fill="none" stroke="#171717" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+    <g id="body">
+      <g id="foot-l">
+        <ellipse cx="210" cy="446" rx="32" ry="13" fill="#171717"/>
+      </g>
+      <g id="foot-r">
+        <ellipse cx="302" cy="446" rx="32" ry="13" fill="#171717"/>
+      </g>
+      <g id="ear-l">
+        <g id="ear-l-out">
+          <polygon points="158,92 142,184 234,136" fill="#4A4A46"/>
+        </g>
+        <g id="ear-l-in">
+          <polygon points="168,116 160,168 214,142" fill="#F1F1EF"/>
+        </g>
+      </g>
+      <g id="ear-r">
+        <g id="ear-r-out">
+          <polygon points="354,92 370,184 278,136" fill="#4A4A46"/>
+        </g>
+        <g id="ear-r-in">
+          <polygon points="344,116 352,168 298,142" fill="#F1F1EF"/>
+        </g>
+      </g>
+      <g id="egg">
+        <path d="M 256 112 C 358 112 392 220 388 310 C 384 410 330 452 256 452 C 182 452 128 410 124 310 C 120 220 154 112 256 112 Z" fill="#4A4A46"/>
+      </g>
+      <g id="belly">
+        <ellipse cx="256" cy="382" rx="74" ry="58" fill="#F1F1EF"/>
+      </g>
+      <g id="mask">
+        <path d="M 136 228 C 168 196 222 208 256 216 C 290 208 344 196 376 228 C 378 266 340 286 300 272 C 282 266 268 264 256 266 C 244 264 230 266 212 272 C 172 286 134 266 136 228 Z" fill="#171717"/>
+      </g>
+      <g id="brow-l">
+        <path d="M 206 188 Q 220 180 234 188" fill="none" stroke="#171717" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="brow-r">
+        <path d="M 278 188 Q 292 180 306 188" fill="none" stroke="#171717" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="eye-l">
+        <g id="eye-l-white">
+          <ellipse cx="218" cy="236" rx="22" ry="26" fill="#FFFFFF"/>
+        </g>
+        <g id="pupil-l">
+          <circle cx="222" cy="240" r="13" fill="#171717"/>
+          <g id="shine-l">
+            <circle cx="227" cy="233" r="5" fill="#FFFFFF"/>
+          </g>
+        </g>
+      </g>
+      <g id="eye-r">
+        <g id="eye-r-white">
+          <ellipse cx="294" cy="236" rx="22" ry="26" fill="#FFFFFF"/>
+        </g>
+        <g id="pupil-r">
+          <circle cx="298" cy="240" r="13" fill="#171717"/>
+          <g id="shine-r">
+            <circle cx="303" cy="233" r="5" fill="#FFFFFF"/>
+          </g>
+        </g>
+      </g>
+      <g id="muzzle">
+        <ellipse cx="256" cy="286" rx="44" ry="30" fill="#F1F1EF"/>
+      </g>
+      <g id="nose">
+        <ellipse cx="256" cy="276" rx="9" ry="6" fill="#171717"/>
+      </g>
+      <g id="mouth">
+        <path d="M 244 292 Q 256 302 268 292" fill="none" stroke="#171717" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g id="blush-l">
+        <ellipse cx="176" cy="288" rx="16" ry="9" fill="#E9A3A3" opacity="0.75"/>
+      </g>
+      <g id="blush-r">
+        <ellipse cx="336" cy="288" rx="16" ry="9" fill="#E9A3A3" opacity="0.75"/>
+      </g>
+      <g id="arm-l">
+        <g id="arm-l-nub" transform="rotate(22 140 342)">
+          <ellipse cx="140" cy="342" rx="22" ry="36" fill="#4A4A46"/>
+        </g>
+        <g id="paw-l">
+          <circle cx="132" cy="372" r="14" fill="#171717"/>
+        </g>
+      </g>
+      <g id="arm-r">
+        <g id="arm-r-nub" transform="rotate(-40 368 320)">
+          <ellipse cx="368" cy="320" rx="22" ry="36" fill="#4A4A46"/>
+        </g>
+        <g id="paw-r">
+          <circle cx="388" cy="288" r="14" fill="#171717"/>
+        </g>
+        <g id="coin">
+          <g id="coin-outer">
+            <circle cx="402" cy="264" r="28" fill="#B4894A"/>
+          </g>
+          <g id="coin-inner">
+            <circle cx="402" cy="264" r="20" fill="#D9B979"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

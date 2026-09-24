@@ -63,4 +63,17 @@ describe('EmptyState', () => {
     await renderState(props);
     expect(screen.queryAllByTestId('empty-ghost', { includeHiddenElements: true })).toHaveLength(0);
   });
+  it('has Rocky peek over the stack for "nothing yet", hidden from screen readers', async () => {
+    await renderState({ kind: 'yet', ghost: 'bar', ...copy });
+    expect(screen.getByTestId('mascot', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByTestId('mascot')).toBeNull();
+  });
+
+  it.each([
+    { kind: 'noMatch', icon: 'search', ...copy },
+    { kind: 'notFound', icon: 'inbox', ...copy },
+  ] as const)('$kind has no Rocky: frequent, or an error (D26)', async (props) => {
+    await renderState(props);
+    expect(screen.queryByTestId('mascot', { includeHiddenElements: true })).toBeNull();
+  });
 });

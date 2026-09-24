@@ -4,6 +4,7 @@ import {
   categoryColors,
   emptyState,
   layout,
+  mascot,
   motion,
   palettes,
   trackingPx,
@@ -156,6 +157,44 @@ describe('emptyState', () => {
 
   it('keeps the back layers more opaque on dark, where the page swallows them', () => {
     expect(emptyState.opacity.dark[2]).toBeGreaterThan(emptyState.opacity.light[2]);
+  });
+});
+
+describe('mascot', () => {
+  it('shows only part of Rocky when he peeks', () => {
+    expect(mascot.emptyWindow).toBeLessThan(mascot.emptySize);
+    expect(mascot.cardWindow).toBeLessThan(mascot.cardSize);
+  });
+
+  it('cuts him below his chin, not across his face', () => {
+    // His muzzle ends at about 60% of the PNG; the cut must fall under it.
+    expect(mascot.emptyWindow / mascot.emptySize + mascot.trimTop).toBeGreaterThan(0.68);
+    expect(mascot.cardWindow / mascot.cardSize + mascot.trimTop).toBeGreaterThan(0.68);
+  });
+
+  it('trims only the empty margin above his ears', () => {
+    expect(mascot.trimTop).toBeGreaterThan(0);
+    expect(mascot.trimTop).toBeLessThan(0.18);
+  });
+
+  it('starts below the edge, but never so far that he rises from nothing', () => {
+    expect(mascot.peekFromRatio).toBeGreaterThan(0);
+    expect(mascot.peekFromRatio).toBeLessThan(1);
+  });
+
+  it('lands after the ghost stack, so he is the last thing to settle', () => {
+    const stackLands = emptyState.enterMs + 2 * emptyState.staggerMs;
+    expect(mascot.emptyDelayMs + mascot.peekMs).toBeGreaterThan(stackLands);
+  });
+
+  it('celebrates from a visible scale, never from zero', () => {
+    expect(mascot.celebrateFromScale).toBeGreaterThanOrEqual(0.9);
+    expect(mascot.celebrateFromScale).toBeLessThan(1);
+  });
+
+  it('overshoots: the one curve in the app that goes past its target', () => {
+    const [, y1] = mascot.overshootEasing;
+    expect(y1).toBeGreaterThan(1);
   });
 });
 

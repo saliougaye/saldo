@@ -8,6 +8,7 @@ import { IconBox, ListRow } from '../src/components/ListRow';
 import { Screen } from '../src/components/Screen';
 import { BackButton } from '../src/components/ScreenHeader';
 import { SectionLabel } from '../src/components/SectionLabel';
+import { GoalCard } from '../src/features/goals/GoalCard';
 import { useGoalText } from '../src/features/goals/useGoalText';
 import { useGoalViews } from '../src/features/goals/useGoalViews';
 import { useRestoreGoal } from '../src/features/goals/useRestoreGoal';
@@ -55,7 +56,7 @@ export default function GoalsScreen() {
         />
       ) : (
         views.map((view) => (
-          <Card key={view.account.id}>
+          <GoalCard key={view.account.id} reached={view.progress.state === 'reached'}>
             <FeaturedTarget
               icon={view.account.icon as IconName}
               colour={theme.categoryColor(view.account.colorIndex)}
@@ -76,7 +77,7 @@ export default function GoalsScreen() {
                 router.push({ pathname: '/goal/[id]', params: { id: view.account.id } })
               }
             />
-          </Card>
+          </GoalCard>
         ))
       )}
 

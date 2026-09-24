@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saldo — Rocky nell'app · varianti</title>
+<style>
+  /* ---------- Saldo tokens (packages/ui/src/tokens.ts) ---------- */
+  :root, [data-theme="dark"] {
+    --page:#050505; --bg:#0A0A0A; --surface:#121212; --raised:#1A1A1A;
+    --border:rgba(255,255,255,0.07); --text:#EDEDED; --text-muted:#8C8C8C; --text-faint:#5C5C5C;
+    --accent:#C7C7C7; --positive:#5FBF7F; --negative:#E5484D; --on-accent:#0A0A0A; --track:#1E1E1E;
+    --img-outline: oklch(1 0 0 / 0.1);
+    --floor: radial-gradient(closest-side, rgb(255 255 255 / .06), transparent);
+    --gold:#C9A15E;
+  }
+  [data-theme="light"] {
+    --page:#E9E9E7; --bg:#FFFFFF; --surface:#FAFAF9; --raised:#F1F1EF;
+    --border:rgba(0,0,0,0.08); --text:#171717; --text-muted:#6E6E6E; --text-faint:#9A9A9A;
+    --accent:#4A4A46; --positive:#2E8A50; --negative:#C8322E; --on-accent:#FFFFFF; --track:#EDEDEB;
+    --img-outline: oklch(0 0 0 / 0.1);
+    --floor: radial-gradient(closest-side, rgb(0 0 0 / .10), transparent);
+    --gold:#B4894A;
+  }
+  :root {
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);   /* theme.motion EASE */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --r-card:14px; --r-input:10px; --r-chip:9px; --r-icon:8px; --r-sheet:22px;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    min-height:100vh; background:#262626; color:#fff;
+    font-family: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased; padding:28px 24px 80px;
+  }
+  button { font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer; }
+
+  /* ---------- Page chrome ---------- */
+  .top { max-width:1320px; margin:0 auto 22px; display:flex; flex-wrap:wrap; gap:14px 24px; align-items:flex-end; justify-content:space-between; }
+  .top h1 { font-size:20px; font-weight:600; letter-spacing:-0.02em; }
+  .top p { font-size:13px; color:rgb(255 255 255 / .6); margin-top:4px; max-width:620px; text-wrap:pretty; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; }
+  .seg { display:flex; background:#161616; border-radius:12px; padding:3px; gap:2px; }
+  .seg button { padding:7px 12px; border-radius:9px; font-size:13px; color:rgb(255 255 255 / .6); transition: background-color 150ms ease, color 150ms ease; }
+  .seg button[aria-pressed="true"] { background:#333; color:#fff; }
+  .ghost-btn { padding:7px 12px; border-radius:12px; background:#161616; font-size:13px; color:rgb(255 255 255 / .8); transition: transform 160ms var(--ease-out); }
+  .ghost-btn:active, .seg button:active { transform:scale(0.96); }
+
+  .brief { max-width:1320px; margin:0 auto 26px; display:grid; grid-template-columns: 1.3fr 1fr 1fr; gap:14px; }
+  .brief > div { background:#1b1b1b; border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.5; color:rgb(255 255 255 / .72); }
+  .brief b { color:#fff; font-weight:600; }
+  .brief .tag { display:block; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:rgb(255 255 255 / .45); margin-bottom:6px; }
+  .brief ul { padding-left:16px; }
+  .rec { display:inline-block; font-size:11px; padding:2px 7px; border-radius:6px; background:#2E8A50; color:#fff; margin-left:6px; vertical-align:2px; }
+
+  .row { max-width:1320px; margin:0 auto; display:flex; gap:34px; justify-content:center; flex-wrap:wrap; }
+  .shot { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .shot .cap { font-size:13px; line-height:1.4; color:rgb(255 255 255 / .65); max-width:360px; text-align:center; text-wrap:pretty; }
+  .shot .cap b { color:#fff; font-weight:600; }
+
+  /* ---------- Phone ---------- */
+  .phone {
+    width:360px; height:760px; border-radius:50px; overflow:hidden; position:relative;
+    background:var(--bg); color:var(--text);
+    box-shadow: 0 0 0 9px #000, 0 0 0 10px #333, 0 30px 80px rgb(0 0 0 / .5);
+    display:flex; flex-direction:column;
+  }
+  .status { height:50px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:12px 30px 0 38px; font-size:15px; font-weight:600; }
+  .island { position:absolute; top:10px; left:50%; translate:-50% 0; width:112px; height:32px; border-radius:18px; background:#000; z-index:5; }
+  .scroll { flex:1; overflow:hidden; position:relative; }
+  .nav-h { display:flex; align-items:center; gap:10px; padding:8px 16px 12px; }
+  .nav-h .back { width:34px; height:34px; border-radius:17px; background:var(--raised); display:grid; place-items:center; color:var(--text-muted); }
+  .nav-h .title { font-size:17px; font-weight:600; letter-spacing:-0.02em; flex:1; }
+  .nav-h .plus { width:34px; height:34px; border-radius:17px; background:var(--raised); display:grid; place-items:center; color:var(--text); }
+  .large-title { font-size:30px; font-weight:600; letter-spacing:-0.03em; padding:4px 16px 12px; }
+  svg.i { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+
+  .content { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:16px; position:relative; }
+  .muted { color:var(--text-muted); } .faint { color:var(--text-faint); }
+  .tnum { font-variant-numeric:tabular-nums; }
+  .dec { opacity:.5; }
+
+  .chips { display:flex; gap:6px; padding:0 16px 12px; }
+  .chip { padding:6px 11px; border-radius:var(--r-chip); background:var(--raised); font-size:13px; color:var(--text-muted); white-space:nowrap; }
+  .chip.on { background:var(--accent); color:var(--on-accent); }
+  .search { margin:0 16px 10px; height:38px; border-radius:var(--r-input); background:var(--raised); display:flex; align-items:center; gap:8px; padding:0 12px; font-size:15px; color:var(--text); }
+  .search .i { color:var(--text-faint); }
+
+  .tabbar { position:absolute; left:0; right:0; bottom:0; height:84px; display:flex; justify-content:space-around; padding:10px 18px 0; background:linear-gradient(to top, var(--bg) 70%, transparent); }
+  .tabbar span { width:40px; height:30px; display:grid; place-items:center; color:var(--text-faint); }
+  .tabbar span.on { color:var(--text); }
+  .fab { position:absolute; right:18px; bottom:96px; width:52px; height:52px; border-radius:26px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; box-shadow:0 8px 24px rgb(0 0 0 / .3); }
+  .fab svg.i { width:20px; height:20px; stroke-width:2; }
+
+  /* ---------- Empty state (EmptyState.tsx) ---------- */
+  .empty { display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px 32px; }
+  .empty h3 { font-size:17px; font-weight:500; letter-spacing:-0.01em; margin-top:14px; }
+  .empty p { font-size:13px; line-height:1.45; color:var(--text-muted); margin-top:6px; max-width:260px; text-wrap:pretty; }
+  .btn2 { margin-top:18px; height:38px; padding:0 16px; border-radius:var(--r-input); background:var(--raised); font-size:15px; font-weight:500; display:inline-flex; align-items:center; transition: transform 160ms var(--ease-out); }
+  .btn2:active, .btn1:active { transform:scale(0.96); }
+  .btn1 { height:48px; border-radius:var(--r-input); background:var(--accent); color:var(--on-accent); font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; width:100%; transition: transform 160ms var(--ease-out); }
+  .iconbox { width:40px; height:40px; border-radius:var(--r-icon); background:var(--raised); color:var(--text-muted); display:grid; place-items:center; }
+
+  /* Ghost stack (variant B of the empty-state review, what ships today) */
+  .ghosts { position:relative; width:180px; height:92px; }
+  .ghost { position:absolute; left:50%; height:44px; border-radius:12px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; gap:10px; padding:0 12px; }
+  .ghost i { display:block; height:8px; border-radius:4px; background:var(--track); }
+  .ghost .sq { width:22px; height:22px; border-radius:6px; background:var(--track); flex:0 0 auto; }
+  /* Opaque layers: whatever sits behind the stack must not show through */
+  .ghost:nth-child(1) { width:150px; top:0;  translate:-50% 0; background:color-mix(in srgb, var(--surface) 45%, var(--bg)); }
+  .ghost:nth-child(2) { width:166px; top:18px; translate:-50% 0; background:color-mix(in srgb, var(--surface) 72%, var(--bg)); }
+  .ghost:nth-child(1) > *, .ghost:nth-child(2) > * { opacity:.5; }
+  .ghost:nth-child(3) { width:180px; top:38px; translate:-50% 0; }
+
+  /* ---------- Rocky ---------- */
+  .rocky { display:block; user-select:none; -webkit-user-drag:none; }
+  .rocky-wrap { position:relative; display:grid; place-items:center; }
+  .rocky-wrap::after { /* soft floor, so he stands on the surface instead of floating */
+    content:""; position:absolute; bottom:2px; left:50%; translate:-50% 0; width:70%; height:14px;
+    background:var(--floor); z-index:-1;
+  }
+  /* 3D render on a dark UI: a hair of lift so the grey fur doesn't melt into #0A0A0A */
+  [data-theme="dark"] .rocky { filter: drop-shadow(0 0 18px rgb(255 255 255 / .05)); }
+
+  /* Enter: from 0.96 + 8px, never from 0. Same curve as the app (theme.motion EASE). */
+  .play .in { animation: rise 520ms var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms); }
+  @keyframes rise { from { opacity:0; transform: translateY(8px) scale(0.96); } }
+  .play .pop { animation: pop 560ms cubic-bezier(0.34, 1.36, 0.64, 1) both; }
+  @keyframes pop { from { opacity:0; transform: translateY(14px) scale(0.9); } }
+  /* Peek: he rises from behind an edge; the edge clips him */
+  .play .peek { animation: peek 700ms var(--ease) both; animation-delay: 220ms; }
+  @keyframes peek { from { transform: translateY(62%); } }
+  /* Idle breathing: only on the one screen where he waits for you (onboarding) */
+  .breathe { animation: breathe 4.8s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes breathe { 50% { transform: scale(1.015, 0.99); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .play .in, .play .pop, .play .peek { animation: fade 200ms ease both; }
+    .breathe { animation: none; }
+    @keyframes fade { from { opacity:0; } }
+  }
+
+  /* ---------- Sheets, toasts, banners ---------- */
+  .scrim { position:absolute; inset:0; background:rgb(0 0 0 / .45); z-index:3; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; z-index:4; background:var(--surface); border-radius:var(--r-sheet) var(--r-sheet) 0 0; padding:10px 20px 34px; }
+  .grabber { width:36px; height:5px; border-radius:3px; background:var(--track); margin:0 auto 10px; }
+  .toast { position:absolute; left:14px; right:14px; bottom:100px; z-index:4; background:var(--raised); border:1px solid var(--border); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px; font-size:14px; box-shadow:0 12px 30px rgb(0 0 0 / .25); }
+  .toast .undo { margin-left:auto; font-weight:600; color:var(--text); }
+  .avatar-r { width:34px; height:34px; border-radius:17px; background:var(--raised); overflow:hidden; flex:0 0 auto; display:grid; place-items:end center; outline:1px solid var(--img-outline); outline-offset:-1px; }
+  .avatar-r img { width:42px; margin-bottom:-12px; }
+
+  .bar { height:4px; border-radius:2px; background:var(--track); position:relative; margin-top:10px; }
+  .bar i { position:absolute; inset:0 auto 0 0; border-radius:2px; background:var(--accent); }
+  .bar.full i { background:var(--positive); }
+  .li { display:flex; align-items:center; gap:12px; min-height:44px; }
+  .li .txt { flex:1; min-width:0; }
+  .li .ttl { font-size:15px; }
+  .li .sub { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .li .amt { font-size:15px; }
+  .dot { width:32px; height:32px; border-radius:var(--r-icon); display:grid; place-items:center; background:var(--raised); color:var(--text-muted); flex:0 0 auto; }
+
+  .ptr { height:86px; display:flex; align-items:flex-end; justify-content:center; overflow:hidden; position:relative; }
+  .ptr .label { position:absolute; top:12px; left:0; right:0; text-align:center; font-size:12px; color:var(--text-faint); }
+
+  .lock { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  .pinrow { display:flex; gap:14px; margin-top:18px; }
+  .pinrow i { width:12px; height:12px; border-radius:6px; border:1.5px solid var(--text-muted); }
+  .pinrow i.f { background:var(--text); border-color:var(--text); }
+  .about { display:flex; flex-direction:column; align-items:center; gap:4px; padding:22px 0 10px; font-size:12px; color:var(--text-faint); }
+
+  .dots { display:flex; gap:6px; justify-content:center; }
+  .dots i { width:6px; height:6px; border-radius:3px; background:var(--track); }
+  .dots i.on { width:18px; background:var(--text); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Rocky nell'app · varianti</h1>
+    <p>Dove entra la mascotte, e quanto. Stesso Rocky (kit <code>out/saldo/illustrations/states</code>), livelli di presenza diversi.
+      Le immagini sono i fotogrammi fermi dei Lottie; l'entrata è CSS. A+B è la scelta: PNG + Reanimated, niente Lottie per ora.</p>
+  </div>
+  <div class="controls">
+    <div class="seg" id="variantSeg" role="group" aria-label="Variante">
+      <button data-v="AB" aria-pressed="true">A+B · Scelta</button>
+      <button data-v="A" aria-pressed="false">A · Momenti rari</button>
+      <button data-v="B" aria-pressed="false">B · Rocky sbuca</button>
+      <button data-v="C" aria-pressed="false">C · Compagno</button>
+      <button data-v="D" aria-pressed="false">D · Solo marchio</button>
+    </div>
+    <div class="seg" id="themeSeg" role="group" aria-label="Tema">
+      <button data-t="dark" aria-pressed="true">Scuro</button>
+      <button data-t="light" aria-pressed="false">Chiaro</button>
+    </div>
+    <button class="ghost-btn" id="replay">↻ Rigioca</button>
+  </div>
+</header>
+
+<section class="brief" id="brief"></section>
+<main class="row" id="row"></main>
+
+<script>
+const A = 'assets/rocky/';
+const ic = {
+  back:'<path d="M15 18l-6-6 6-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  home:'<path d="M4 10.5L12 4l8 6.5V20H4z"/>',
+  list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  chart:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h2"/>',
+  cloud:'<path d="M7 18a4 4 0 010-8 5 5 0 019.6-1.5A4 4 0 0117 18z"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>',
+  cart:'<path d="M4 5h2l2 11h10l2-8H7"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+};
+const svg = (n, extra='') => `<svg class="i" viewBox="0 0 24 24" ${extra} aria-hidden="true">${ic[n]}</svg>`;
+const img = (state, w, cls='', alt='') => `<img class="rocky ${cls}" src="${A}${state}.png" width="${w}" height="${w}" alt="${alt}">`;
+
+const phone = (body, {tabs=true, fab=false, active=1}={}) => `
+  <div class="phone play">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+    <div class="scroll">${body}</div>
+    ${fab ? `<div class="fab">${svg('plus')}</div>` : ''}
+    ${tabs ? `<nav class="tabbar">${['home','list','chart','wallet'].map((n,i)=>`<span class="${i===active?'on':''}">${svg(n)}</span>`).join('')}</nav>` : ''}
+  </div>`;
+const shot = (cap, html) => `<figure class="shot">${html}<figcaption class="cap">${cap}</figcaption></figure>`;
+const navH = (t, plus=true) => `<div class="nav-h"><span class="back">${svg('back')}</span><span class="title">${t}</span>${plus?`<span class="plus">${svg('plus')}</span>`:''}</div>`;
+
+/* ---------- Screens ---------- */
+
+// Budget: nothing yet, Rocky replaces GhostStack
+const budgetsEmptyRocky = (size=132) => phone(`
+  ${navH('Budget')}
+  <div class="empty" style="padding-top:70px">
+    <div class="rocky-wrap in" style="--i:0">${img('empty', size, '', '')}</div>
+    <h3 class="in" style="--i:1">Nessun budget</h3>
+    <p class="in" style="--i:2">Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul passo del mese.</p>
+    <button class="btn2 in" style="--i:3">Crea un budget</button>
+  </div>`, {tabs:false});
+
+// Transactions: no match — keeps the icon (frequent, not an emotional moment)
+const txNoMatch = () => phone(`
+  <div class="large-title">Transazioni</div>
+  <div class="search">${svg('search')}<span>pizzeria da gino</span></div>
+  <div class="chips"><span class="chip on">Uscite</span><span class="chip">Settembre</span><span class="chip">#viaggio</span></div>
+  <div class="empty" style="padding-top:60px">
+    <div class="iconbox">${svg('search')}</div>
+    <h3>Nessun risultato</h3>
+    <p>Nessuna transazione corrisponde a ricerca e filtri attivi.</p>
+    <button class="btn2">Azzera filtri</button>
+  </div>`, {fab:true, active:1});
+
+// Goal reached: sheet with Rocky celebrating
+const goalReached = () => phone(`
+  ${navH('Obiettivi')}
+  <div class="content">
+    ${goalCard('Vacanza in Giappone','3.000','3.000',100,true)}
+    ${goalCard('Fondo emergenze','1.240','5.000',25)}
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:6px">
+      <div class="rocky-wrap pop">${img('success', 150)}</div>
+      <h3 class="in" style="--i:3;font-size:20px;font-weight:600;letter-spacing:-0.02em;margin-top:8px">Vacanza in Giappone: 3.000,00 €</h3>
+      <p class="in muted" style="--i:4;font-size:14px;line-height:1.45;margin-top:6px;max-width:270px">Obiettivo raggiunto il 24 set. Quando li spendi, chiudilo: i soldi tornano disponibili nel conto.</p>
+      <div class="in" style="--i:5;display:flex;flex-direction:column;gap:8px;width:100%;margin-top:18px">
+        <button class="btn1">Chiudi obiettivo</button>
+        <button class="btn2" style="margin-top:0;justify-content:center;width:100%">Più tardi</button>
+      </div>
+    </div>
+  </div>`, {tabs:false});
+
+const goalCard = (name, cur, tgt, pct, done=false) => `
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="dot">${svg('target')}</span>
+      <div style="flex:1"><div style="font-size:15px">${name}</div><div class="muted" style="font-size:13px;margin-top:2px">${done?'raggiunto il 24 set · da chiudere':'entro 31 dic 2026'}</div></div>
+      <div class="tnum" style="font-size:15px">${cur}<span class="dec">,00</span> €</div>
+    </div>
+    <div class="bar ${done?'full':''}"><i style="width:${pct}%"></i></div>
+    <div class="muted tnum" style="font-size:12px;margin-top:6px;display:flex;justify-content:space-between"><span>${pct}%</span><span>di ${tgt},00 €</span></div>
+  </div>`;
+
+// B — Rocky peeks over the ghost stack
+const budgetsPeek = () => phone(`
+  ${navH('Budget')}
+  <div class="empty" style="padding-top:70px">
+    <div class="in" style="--i:0;position:relative;width:180px;height:172px">
+      <div style="position:absolute;left:50%;translate:-50% 0;top:0;width:112px;height:86px;overflow:hidden">
+        <div class="peek" style="position:absolute;left:0;right:0;top:0">${img('idle', 112)}</div>
+      </div>
+      <div class="ghosts" style="position:absolute;bottom:0;z-index:1">
+        <div class="ghost"><span class="sq"></span><i style="width:70px"></i></div>
+        <div class="ghost"><span class="sq"></span><i style="width:80px"></i></div>
+        <div class="ghost"><span class="sq"></span><i style="width:90px"></i></div>
+      </div>
+    </div>
+    <h3 class="in" style="--i:1">Nessun budget</h3>
+    <p class="in" style="--i:2">Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul passo del mese.</p>
+    <button class="btn2 in" style="--i:3">Crea un budget</button>
+  </div>`, {tabs:false});
+
+// B — pull to refresh: Rocky comes up from behind the list while syncing
+const ptrPeek = () => phone(`
+  <div class="large-title">Transazioni</div>
+  <div class="ptr">
+    <span class="label">Sincronizzo…</span>
+    <div class="peek" style="margin-bottom:-38px">${img('loading', 96)}</div>
+  </div>
+  <div class="card" style="margin:0 16px;padding:4px 16px;position:relative;z-index:1">
+    ${[['Esselunga','Spesa · Carta','-42,18'],['Stipendio','Lavoro · Conto','+2.150,00'],['Netflix','Abbonamenti · Carta','-13,99'],['Bar Centrale','Cibo fuori · Contanti','-3,40']].map(([t,s,a])=>`
+      <div class="li"><span class="dot">${svg('cart')}</span><div class="txt"><div class="ttl">${t}</div><div class="sub">${s}</div></div><div class="amt tnum" style="${a[0]==='+'?'color:var(--positive)':''}">${a} €</div></div>`).join('')}
+  </div>`, {fab:true, active:1});
+
+// B — goal reached: Rocky peeks over the card that just completed
+const goalPeek = () => phone(`
+  ${navH('Obiettivi')}
+  <div class="content" style="padding-top:44px">
+    <div style="position:relative">
+      <div style="position:absolute;right:18px;top:-58px;width:84px;height:60px;overflow:hidden">
+        <div class="peek">${img('success', 84)}</div>
+      </div>
+      ${goalCard('Vacanza in Giappone','3.000','3.000',100,true)}
+    </div>
+    ${goalCard('Fondo emergenze','1.240','5.000',25)}
+    ${goalCard('Bici nuova','310','900',34)}
+  </div>`, {active:3});
+
+// C — onboarding welcome with idle breathing
+const onboarding = () => phone(`
+  <div style="height:100%;display:flex;flex-direction:column;padding:30px 24px 40px">
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <div class="rocky-wrap in" style="--i:0">${img('idle', 190, 'breathe')}</div>
+      <h2 class="in" style="--i:1;font-size:26px;font-weight:600;letter-spacing:-0.03em;margin-top:18px">Ciao, sono Rocky</h2>
+      <p class="in muted" style="--i:2;font-size:15px;line-height:1.45;margin-top:8px;max-width:280px;text-wrap:pretty">Tengo in ordine i tuoi soldi. Restano su questo telefono: nessuna banca collegata, nessuno che li legge.</p>
+    </div>
+    <button class="btn1 in" style="--i:3">Iniziamo</button>
+  </div>`, {tabs:false});
+
+// C — sync error card on Home with Rocky startled
+const syncError = () => phone(`
+  <div class="nav-h" style="padding-top:10px"><span class="avatar-r">${img('idle', 42)}</span><span class="title" style="margin-left:4px">Settembre<div class="faint" style="font-size:11px;font-weight:400;letter-spacing:0">1 – 30 set</div></span></div>
+  <div class="content">
+    <div class="card in" style="--i:0;display:flex;gap:12px;align-items:center;padding:12px 14px">
+      <div style="width:56px;height:56px;flex:0 0 auto;display:grid;place-items:center">${img('error', 60)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:500">Sincronizzazione ferma</div>
+        <div class="muted" style="font-size:13px;margin-top:2px">Il server non risponde. Le modifiche restano qui finché torna.</div>
+      </div>
+    </div>
+    <div class="card in" style="--i:1">
+      <div class="muted" style="font-size:13px">Puoi spendere</div>
+      <div class="tnum" style="font-size:40px;font-weight:600;letter-spacing:-0.03em;line-height:48px">1.284<span class="dec">,50 €</span></div>
+      <div class="bar"><i style="width:58%"></i></div>
+      <div class="muted" style="font-size:13px;margin-top:10px">Puoi spendere ancora <b style="color:var(--text);font-weight:500">42,80 € al giorno</b> fino al 30 set.</div>
+    </div>
+  </div>`, {fab:true, active:0});
+
+// C — success toast with mini Rocky
+const toastSaved = () => phone(`
+  <div class="large-title">Transazioni</div>
+  <div class="card" style="margin:0 16px;padding:4px 16px">
+    ${[['Pizzeria Da Gino','Cibo fuori · Carta','-28,50'],['Esselunga','Spesa · Carta','-42,18'],['Stipendio','Lavoro · Conto','+2.150,00']].map(([t,s,a],k)=>`
+      <div class="li ${k===0?'in':''}"><span class="dot">${svg('cart')}</span><div class="txt"><div class="ttl">${t}</div><div class="sub">${s}</div></div><div class="amt tnum" style="${a[0]==='+'?'color:var(--positive)':''}">${a} €</div></div>`).join('')}
+  </div>
+  <div class="toast in" style="--i:2">
+    <span class="avatar-r">${img('success', 42)}</span>
+    <span>Spesa salvata</span>
+    <button class="undo">Annulla</button>
+  </div>`, {active:1});
+
+// D — splash / lock screen
+const lockScreen = () => phone(`
+  <div class="lock">
+    <div class="rocky-wrap in" style="--i:0">${img('idle', 120)}</div>
+    <div class="in" style="--i:1;font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-top:4px">Saldo è bloccato</div>
+    <div class="in muted" style="--i:2;font-size:14px">Usa Face ID o il PIN</div>
+    <div class="pinrow in" style="--i:3"><i class="f"></i><i class="f"></i><i></i><i></i></div>
+  </div>`, {tabs:false});
+
+// D — Profile: about footer
+const profileAbout = () => phone(`
+  ${navH('Profilo', false)}
+  <div class="content">
+    <div class="card" style="padding:4px 16px">
+      ${['Account e sincronizzazione','Valuta · EUR','Blocco con Face ID','Modalità nascosta','Esporta CSV'].map(t=>`<div class="li" style="border-bottom:1px solid var(--border)"><div class="txt ttl">${t}</div><span class="faint">›</span></div>`).join('').replace(/border-bottom:1px solid var\(--border\)(?!.*border-bottom)/s,'')}
+    </div>
+    <div class="card" style="padding:4px 16px">
+      ${['Guida','Segnala un problema','Codice sorgente'].map(t=>`<div class="li"><div class="txt ttl">${t}</div><span class="faint">›</span></div>`).join('')}
+    </div>
+    <div class="about">
+      <div class="in" style="--i:0">${img('idle', 64)}</div>
+      <div class="in" style="--i:1;color:var(--text-muted);font-size:13px;font-weight:500">Saldo 0.2.0</div>
+      <div class="in" style="--i:2">Rocky conta i centesimi. Tu decidi cosa farne.</div>
+    </div>
+  </div>`, {tabs:false});
+
+// D — budget empty stays with ghost stack (today's app)
+const budgetsGhost = () => phone(`
+  ${navH('Budget')}
+  <div class="empty" style="padding-top:90px">
+    <div class="ghosts in" style="--i:0">
+      <div class="ghost"><span class="sq"></span><i style="width:70px"></i></div>
+      <div class="ghost"><span class="sq"></span><i style="width:80px"></i></div>
+      <div class="ghost"><span class="sq"></span><i style="width:90px"></i></div>
+    </div>
+    <h3 class="in" style="--i:1">Nessun budget</h3>
+    <p class="in" style="--i:2">Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul passo del mese.</p>
+    <button class="btn2 in" style="--i:3">Crea un budget</button>
+  </div>`, {tabs:false});
+
+// A+B — goal detail with GoalCloseSheet open; Rocky celebrates only when the goal was reached
+const goalCloseReached = () => phone(`
+  ${navH('Vacanza in Giappone', false)}
+  <div class="content">
+    <div class="card">
+      <div class="muted" style="font-size:13px">Messo da parte</div>
+      <div class="tnum" style="font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:44px">3.000<span class="dec">,00 €</span></div>
+      <div class="bar full"><i style="width:100%"></i></div>
+      <div class="muted" style="font-size:13px;margin-top:8px">raggiunto il 24 set · da chiudere</div>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div style="font-size:17px;font-weight:600;letter-spacing:-0.02em;text-align:center;margin-bottom:4px">Chiudi obiettivo</div>
+    <div style="display:flex;justify-content:center">
+      <div class="rocky-wrap pop">${img('success', 136)}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+      <div class="in" style="--i:3;font-size:15px;font-weight:500">Hai usato i soldi?</div>
+      <div class="in muted" style="--i:4;font-size:15px;margin-top:-6px">Nell'obiettivo ci sono ancora 3.000,00 €.</div>
+      <button class="btn1 in" style="--i:5">Registra la spesa</button>
+      <button class="btn2 in" style="--i:6;margin-top:0;justify-content:center;width:100%;height:44px">Riporta in Conto corrente</button>
+    </div>
+  </div>`, {tabs:false});
+
+// A+B — the same sheet for a goal that was not reached: no Rocky, as it ships today
+const goalCloseNotReached = () => phone(`
+  ${navH('Bici nuova', false)}
+  <div class="content">
+    <div class="card">
+      <div class="muted" style="font-size:13px">Messo da parte</div>
+      <div class="tnum" style="font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:44px">310<span class="dec">,00 €</span></div>
+      <div class="bar"><i style="width:34%"></i></div>
+      <div class="muted" style="font-size:13px;margin-top:8px">34% di 900,00 €</div>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div style="font-size:17px;font-weight:600;letter-spacing:-0.02em;text-align:center;margin-bottom:14px">Chiudi obiettivo</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:15px;font-weight:500">Hai usato i soldi?</div>
+      <div class="muted" style="font-size:15px;margin-top:-6px">Nell'obiettivo ci sono ancora 310,00 €.</div>
+      <button class="btn1">Registra la spesa</button>
+      <button class="btn2" style="margin-top:0;justify-content:center;width:100%;height:44px">Riporta in Conto corrente</button>
+    </div>
+  </div>`, {tabs:false});
+
+/* ---------- Variants ---------- */
+const V = {
+  AB: {
+    brief: `
+      <div><span class="tag">A+B · Scelta <span class="rec">consigliata</span></span>
+        La <b>regola di A</b> (Rocky solo dove l'utente si ferma, mai nei vuoti frequenti né negli errori) con la <b>forma di B</b> (spunta da dietro un bordo). Rocky intero una volta sola: quando chiudi un obiettivo raggiunto.</div>
+      <div><span class="tag">Regola</span><ul>
+        <li>Vuoto <b>yet</b> → spunta da dietro <code>GhostStack</code> (resta).</li>
+        <li>Obiettivo raggiunto, da chiudere → spunta sopra la card. Dipende dallo stato: sparisce alla chiusura.</li>
+        <li><code>GoalCloseSheet</code> di un obiettivo raggiunto → <code>success</code> intero. Non raggiunto → come oggi.</li>
+        <li>noMatch, notFound, errori, pull-to-refresh → niente Rocky.</li></ul></div>
+      <div><span class="tag">Come</span>PNG statici + Reanimated (spostamento verticale ritagliato, già nel progetto). Niente <code>lottie-react-native</code> finché il PNG fermo nel pannello regge. Il pull-to-refresh resta il <code>RefreshControl</code> nativo di <code>SyncScrollView</code>.</div>`,
+    shots: [
+      ['<b>Budget vuoto.</b> Rocky spunta da dietro la pila fantasma di oggi. Stesso schema per obiettivi, tag, ricorrenze, categorie.', budgetsPeek()],
+      ['<b>Obiettivo raggiunto.</b> Rocky sopra la card finché l\'obiettivo è da chiudere. Nessun pannello che si apre da solo: la notifica c\'è già.', goalPeek()],
+      ['<b>Chiusura.</b> La festa arriva quando chiudi tu: <code>success</code> con un piccolo rimbalzo, poi il testo di oggi.', goalCloseReached()],
+      ['<b>Chiusura senza traguardo.</b> Obiettivo non raggiunto: niente festa, pannello invariato.', goalCloseNotReached()],
+    ],
+  },
+  A: {
+    brief: `
+      <div><span class="tag">A · Momenti rari</span>
+        Rocky compare <b>solo dove l'utente si ferma</b>: i vuoti «niente ancora» (sostituisce <code>GhostStack</code>, come la variante D già progettata) e il raggiungimento di un obiettivo. Mai nei vuoti frequenti, mai negli errori.</div>
+      <div><span class="tag">Regola</span><ul><li>Vuoto <b>yet</b> → Rocky 132px, entrata una volta.</li><li>Vuoto <b>noMatch</b> e <b>notFound</b> → icona, come oggi.</li><li>Obiettivo raggiunto → sheet con <code>success</code>.</li></ul></div>
+      <div><span class="tag">Perché</span>Si vede qualche volta al mese: resta una sorpresa, non rumore. Tocca 1 componente (<code>EmptyState</code>) + 1 sheet. Nessun testo nuovo oltre al sheet.</div>`,
+    shots: [
+      ['<b>Budget vuoto.</b> Rocky con il barattolo vuoto al posto della pila fantasma. Entrata 520ms, testo scaglionato 90ms.', budgetsEmptyRocky()],
+      ['<b>Filtri senza risultati.</b> Resta l\'icona: capita dieci volte al giorno, la mascotte stancherebbe.', txNoMatch()],
+      ['<b>Obiettivo raggiunto.</b> L\'unico momento di festa: <code>success</code> con un piccolo rimbalzo (unico uso di overshoot).', goalReached()],
+    ],
+  },
+  B: {
+    brief: `
+      <div><span class="tag">B · Rocky sbuca</span>
+        Rocky <b>sbuca da dietro un bordo</b>: sopra la pila fantasma, dietro la lista durante il pull-to-refresh, sopra la card dell'obiettivo appena completato. Mai a figura intera nell'UI funzionale.</div>
+      <div><span class="tag">Regola</span><ul><li>Solo testa/spalle, ritagliato dal bordo.</li><li>Sale di 62% della sua altezza, 700ms, ritardo 220ms dopo la card.</li><li>Pull-to-refresh: <code>loading</code> al posto dello spinner.</li></ul></div>
+      <div><span class="tag">Perché</span>Il più «Saldo»: il procione curioso che spia i conti. Tiene la pila fantasma (già spedita) invece di buttarla. Costo: ritagli per stato e un pull-to-refresh custom.</div>`,
+    shots: [
+      ['<b>Budget vuoto.</b> Variante D della review: Rocky spia da dietro la pila fantasma.', budgetsPeek()],
+      ['<b>Pull-to-refresh.</b> Rocky impila monete dietro la lista mentre sincronizza. Sostituisce lo spinner nativo.', ptrPeek()],
+      ['<b>Obiettivo raggiunto.</b> Sbuca sopra la card, una sola volta; poi resta finché l\'obiettivo non è chiuso.', goalPeek()],
+    ],
+  },
+  C: {
+    brief: `
+      <div><span class="tag">C · Compagno</span>
+        Rocky <b>è un personaggio</b>: si presenta in onboarding, è l'avatar in Home, reagisce a errori e salvataggi. Tutti e sei gli stati del kit in uso.</div>
+      <div><span class="tag">Regola</span><ul><li>Onboarding: <code>idle</code> che respira.</li><li>Errore di sync: <code>error</code> nella card.</li><li>Toast: mini-Rocky <code>success</code>.</li></ul></div>
+      <div><span class="tag">Rischio</span>In un'app di soldi un procione che festeggia ogni spesa diventa infantile, e un procione spaventato accanto a un errore minimizza il problema. Il toast si vede decine di volte al giorno.</div>`,
+    shots: [
+      ['<b>Onboarding.</b> Rocky si presenta. Respira (4,8s, scala 1,5%): l\'unica animazione in loop, solo qui.', onboarding()],
+      ['<b>Sync ferma.</b> Rocky sorpreso nella card. Avatar in alto al posto delle iniziali.', syncError()],
+      ['<b>Toast.</b> Mini-Rocky accanto a «Spesa salvata». Frequente: qui il limite di questa variante.', toastSaved()],
+    ],
+  },
+  D: {
+    brief: `
+      <div><span class="tag">D · Solo marchio</span>
+        Rocky resta <b>il logo</b>: icona, splash, blocco dell'app, pie' di pagina del Profilo. L'UI funzionale non cambia — la pila fantasma resta.</div>
+      <div><span class="tag">Regola</span><ul><li>Blocco app: <code>idle</code> 120px.</li><li>Profilo: firma con versione.</li><li>Vuoti, errori, successi: come oggi.</li></ul></div>
+      <div><span class="tag">Perché</span>Zero rischio di tono, quasi zero lavoro. Ma il kit Lottie resta inutilizzato e l'app non guadagna carattere dove ne ha bisogno.</div>`,
+    shots: [
+      ['<b>App bloccata.</b> Rocky accoglie prima del Face ID: la superficie più «di marca» dell\'app.', lockScreen()],
+      ['<b>Profilo.</b> Firma in fondo, sotto Guida e codice sorgente.', profileAbout()],
+      ['<b>Budget vuoto.</b> Invariato: pila fantasma di oggi.', budgetsGhost()],
+    ],
+  },
+};
+
+/* ---------- Wiring ---------- */
+let v = 'AB', theme = 'dark';
+function render() {
+  document.getElementById('brief').innerHTML = V[v].brief;
+  document.getElementById('row').innerHTML = V[v].shots.map(([c,h]) => shot(c,h)).join('');
+  document.querySelectorAll('.phone').forEach(p => p.dataset.theme = theme);
+}
+function replay() {
+  document.querySelectorAll('.phone').forEach(p => { p.classList.remove('play'); void p.offsetWidth; p.classList.add('play'); });
+}
+function pick(seg, attr, set) {
+  document.getElementById(seg).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll(`#${seg} button`).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    set(b.dataset[attr]);
+  });
+}
+pick('variantSeg', 'v', x => { v = x; render(); });
+pick('themeSeg', 't', x => {
+  theme = x;
+  // Theme flip snaps: no transitions or entrances while the palette swaps.
+  document.querySelectorAll('.phone').forEach(p => { p.classList.remove('play'); p.dataset.theme = theme; });
+});
+document.getElementById('replay').addEventListener('click', replay);
+render();
+</script>
+</body>
+</html>

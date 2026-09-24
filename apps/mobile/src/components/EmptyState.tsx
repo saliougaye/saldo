@@ -1,4 +1,4 @@
-import { emptyState, type IconName } from '@saldo/ui';
+import { emptyState, type IconName, mascot } from '@saldo/ui';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -14,6 +14,7 @@ import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 import { SecondaryButton } from './Button';
 import { IconBox } from './ListRow';
+import { MascotPeek } from './Mascot';
 
 /** The shape of what is missing, drawn inside each ghost. */
 export type GhostKind = 'row' | 'bar' | 'chips';
@@ -58,7 +59,17 @@ export function EmptyState(props: EmptyStateProps) {
       }}
     >
       {props.kind === 'yet' ? (
-        <GhostStack kind={props.ghost} pressed={pressed} />
+        <View style={{ alignItems: 'center' }}>
+          {/* Before the stack, so the ghosts paint over him (D26). */}
+          <MascotPeek
+            pose="idle"
+            size={mascot.emptySize}
+            window={mascot.emptyWindow}
+            delayMs={mascot.emptyDelayMs}
+            style={{ marginBottom: -mascot.emptyOverlap }}
+          />
+          <GhostStack kind={props.ghost} pressed={pressed} />
+        </View>
       ) : (
         <IconBox name={props.icon} colour={theme.palette.textMuted} />
       )}
