@@ -13,6 +13,7 @@ import {
   nextCreditChargeDate,
   parseLocalDate,
   periodContaining,
+  pocketsOf,
   summarizePeriod,
 } from '@saldo/core';
 import {
@@ -37,6 +38,7 @@ import { IconBox, ListRow } from '../../src/components/ListRow';
 import { NotFoundScreen } from '../../src/components/NotFoundScreen';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
+import { TargetRing } from '../../src/components/TargetRing';
 import { useToast } from '../../src/components/Toast';
 import { useDelayed } from '../../src/components/useDelayed';
 import { archiveAccount, restoreAccount } from '../../src/db/adminService';
@@ -127,6 +129,7 @@ export default function AccountDetail() {
   // rather than disabled — a row of dead buttons is worse than no row.
   const archived = account.archivedAt !== null;
   const balance = balances.get(account.id) ?? 0;
+  const goals = pocketsOf(accounts, account.id);
   const first = series[0] ?? 0;
   const delta = deltaPercent(balance, first === 0 ? null : first);
 
@@ -234,6 +237,55 @@ export default function AccountDetail() {
           </Text>
         </View>
       </Card>
+
+      {goals.length === 0 ? null : (
+        // Its goals, as parts of what the bank shows (§5.14, §6.5): each one opens its goal, and
+        // «liberi» is what is left to spend.
+        <Card padded={false}>
+          <View style={{ padding: theme.layout.cardPadding, paddingBottom: 4 }}>
+            <CardHeader title={t('goals.title')} />
+          </View>
+          <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}>
+            {goals.map((goal) => {
+              const saved = balances.get(goal.id) ?? 0;
+              const target = Math.max(1, goal.goalTarget ?? 1);
+              return (
+                <ListRow
+                  key={goal.id}
+                  title={goal.name}
+                  leading={
+                    <TargetRing
+                      size={theme.layout.targetRing}
+                      ratio={saved / target}
+                      pace={null}
+                      tone={saved >= target ? 'done' : 'plain'}
+                      icon={goal.icon as IconName}
+                      colour={theme.categoryColor(goal.colorIndex)}
+                    />
+                  }
+                  trailing={
+                    <AmountText align="end" minor={saved} currency={currency} locale={locale} />
+                  }
+                  onPress={() => router.push({ pathname: '/goal/[id]', params: { id: goal.id } })}
+                  chevron
+                />
+              );
+            })}
+            <ListRow
+              title={t('goals.free')}
+              trailing={
+                <AmountText
+                  align="end"
+                  minor={balance}
+                  currency={currency}
+                  locale={locale}
+                  color="textMuted"
+                />
+              }
+            />
+          </View>
+        </Card>
+      )}
 
       {showCardBox ? (
         // "Sobria" (design 2026-09-23): one list, no button. What the bank will take is the

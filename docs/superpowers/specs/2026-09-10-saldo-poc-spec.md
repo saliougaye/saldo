@@ -638,6 +638,8 @@ deadline. Example: «Macchina, 12.000 € entro giugno 2027» inside «Conto cor
 - **The parent reads like the bank.** Wherever an account with pockets shows a balance, it shows the **bank balance** =
   its own balance + its non-archived pockets' balances. In Conti (§6.5) its pockets are listed indented under it,
   each with its ring, and a last line «liberi» carries the own balance — the part that is actually spendable.
+  Its detail (§6.10) shows the bank balance too, and an «Obiettivi» card lists its goals the same way — ring, name,
+  balance, each opening its goal — with the «liberi» line last.
 
 **Progress** (`goalProgress` in `@saldo/core`, with injected `today`):
 
