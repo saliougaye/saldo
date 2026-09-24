@@ -1,4 +1,4 @@
-import type { Category, Tag } from '@saldo/core';
+import { type Category, canArchiveAccount, type Tag } from '@saldo/core';
 import { eq } from 'drizzle-orm';
 import type { Repositories } from './repositories';
 import type { RepositoryDatabase } from './repositories/support';
@@ -105,8 +105,14 @@ export function renameTag(repos: Repositories, tagId: string, name: string): Tag
   return repos.tags.rename(tagId, name);
 }
 
-/** Archives an account; its transactions stay, as they still describe money that moved. */
+/**
+ * Archives an account; its transactions stay, as they still describe money that moved. An account
+ * that still holds open goals is refused (§5.14): their pockets' money would vanish from the totals.
+ */
 export function archiveAccount(repos: Repositories, accountId: string, nowIso: string): void {
+  if (!canArchiveAccount(repos.accounts.list(), accountId)) {
+    throw new Error(`Account ${accountId} still holds open goals`);
+  }
   repos.accounts.update(accountId, { archivedAt: nowIso });
 }
 
