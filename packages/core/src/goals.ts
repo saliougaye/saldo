@@ -33,7 +33,7 @@ export interface GoalProgress {
   periodsLeft: number | null;
   /** ⌈missing / periodsLeft⌉. */
   perPeriod: MinorUnits | null;
-  /** Days from today to the deadline. */
+  /** Days left to the deadline, today and the deadline included (as a budget's). */
   daysLeft: number | null;
 }
 
@@ -50,8 +50,21 @@ function movements(goalId: string, txs: readonly LedgerTx[], today: LocalDate) {
   return [...byDate.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
+/** App periods from the one containing `from` to the one containing `to`, both included. */
+function periodsBetween(def: PeriodDef, from: LocalDate, to: LocalDate): number {
+  let period = periodContaining(def, from);
+  let count = 1;
+  while (period.end < to) {
+    period = shiftPeriod(def, period, 1);
+    count += 1;
+  }
+  return count;
+}
+
 /**
- * Where a goal stands today (§5.14). Pure: `today` and the period definition are injected.
+ * Where a goal stands today (§5.14). «Behind» means more than one period's share of the plan
+ * behind the pace: a goal is never behind the day it is created, nor between two monthly
+ * contributions (decided 2026-09-24). Pure: `today` and the period definition are injected.
  */
 export function goalProgress(
   goal: GoalAccount,
@@ -80,19 +93,17 @@ export function goalProgress(
   let periodsLeft: number | null = null;
   let perPeriod: MinorUnits | null = null;
   let daysLeft: number | null = null;
+  /** One period's share of the plan: how far behind the pace still counts as on track. */
+  let allowance = 0;
   if (deadline !== null) {
     const range = { start: goal.goalStartDate, end: deadline };
     const length = cycleLength(range);
     pace = length === 0 ? 1 : elapsedDays(range, today) / length;
     gap = Math.round(saved - (startSaved + (target - startSaved) * pace));
-    daysLeft = Math.max(0, diffDays(today, deadline));
-    let period = periodContaining(def, today);
-    periodsLeft = 1;
-    while (period.end < deadline) {
-      period = shiftPeriod(def, period, 1);
-      periodsLeft += 1;
-    }
+    daysLeft = Math.max(0, diffDays(today, deadline) + 1);
+    periodsLeft = periodsBetween(def, today, deadline);
     perPeriod = Math.ceil(missing / periodsLeft);
+    allowance = (target - startSaved) / periodsBetween(def, goal.goalStartDate, deadline);
   }
 
   const state: GoalState = reached
@@ -101,7 +112,7 @@ export function goalProgress(
       ? 'open'
       : deadline < today
         ? 'expired'
-        : gap !== null && gap < 0
+        : gap !== null && gap < -allowance
           ? 'behind'
           : 'onTrack';
 

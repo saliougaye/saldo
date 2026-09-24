@@ -75,6 +75,24 @@ describe('goalProgress', () => {
     expect(progress.gap).toBe(-6_522);
   });
 
+  it('is not behind on its first day, nor until it misses more than one period’s share', () => {
+    const created = goalProgress(
+      goal({ goalStartDate: '2026-07-01', goalTarget: 1_200_000 }),
+      [into('2026-07-01', 600_000)],
+      '2026-07-01',
+      MONTH,
+    );
+    expect(created.state).toBe('onTrack');
+    // Six months to go: one period's share is 100 000. 6 522 behind the pace is still on track.
+    const nextDay = goalProgress(
+      goal({ goalStartDate: '2026-07-01', goalTarget: 1_200_000 }),
+      [into('2026-07-01', 600_000)],
+      '2026-07-02',
+      MONTH,
+    );
+    expect(nextDay.state).toBe('onTrack');
+  });
+
   it('asks for the rest spread over the periods left, current one included, rounding up', () => {
     const progress = goalProgress(
       goal(),
@@ -94,7 +112,8 @@ describe('goalProgress', () => {
       MONTH,
     );
     expect(progress.periodsLeft).toBe(1);
-    expect(progress.daysLeft).toBe(18);
+    // Today and the deadline both count, as a budget's days do.
+    expect(progress.daysLeft).toBe(19);
   });
 
   it('has no pace and no advice per period without a deadline', () => {
