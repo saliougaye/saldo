@@ -149,6 +149,29 @@ describe('transactions repository', () => {
     expect(rows.map((row) => row.id)).toEqual(['in']);
   });
 
+  it('puts the last transaction entered on top of its day', () => {
+    // The date alone cannot order a day: everything typed today shares it. What tells two of them
+    // apart is when they were entered, and the one just saved is the one being looked for.
+    const db = createTestDatabase();
+    let now = '2026-04-18T08:00:00.000Z';
+    const repos = createRepositories(db, () => now);
+    repos.transactions.create({ ...expense, id: 'morning', date: '2026-04-18' });
+    now = '2026-04-18T19:30:00.000Z';
+    repos.transactions.create({ ...expense, id: 'evening', date: '2026-04-18' });
+    now = '2026-04-18T20:00:00.000Z';
+    repos.transactions.create({ ...expense, id: 'yesterday', date: '2026-04-17' });
+    expect(repos.transactions.inRange('2026-04-01', '2026-04-30').map((row) => row.id)).toEqual([
+      'evening',
+      'morning',
+      'yesterday',
+    ]);
+    expect(repos.transactions.list().map((row) => row.id)).toEqual([
+      'evening',
+      'morning',
+      'yesterday',
+    ]);
+  });
+
   it('undoes a delete by clearing the tombstone', () => {
     const { repos } = setup();
     const created = repos.transactions.create({ ...expense, id: 'undo-me' });

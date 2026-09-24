@@ -1,5 +1,5 @@
 import { type LocalDate, newId, type Transaction, transactionSchema } from '@saldo/core';
-import { and, asc, desc, eq, gte, isNull, lte } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { transactions } from '../schema';
 import { insertStamp, isoNow, type RepositoryContext, toEntity, updateStamp } from './support';
 
@@ -71,7 +71,7 @@ export function createTransactionsRepository(context: RepositoryContext): Transa
             lte(transactions.date, end),
           ),
         )
-        .orderBy(desc(transactions.date), asc(transactions.createdAt))
+        .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id))
         .all()
         .map(toEntity);
     },
@@ -80,7 +80,7 @@ export function createTransactionsRepository(context: RepositoryContext): Transa
         .select()
         .from(transactions)
         .where(isNull(transactions.deletedAt))
-        .orderBy(desc(transactions.date))
+        .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id))
         .all()
         .map(toEntity);
     },

@@ -218,7 +218,7 @@ export function useTransactionsInRangeQuery(start: LocalDate, end: LocalDate): T
           lte(transactions.date, end),
         ),
       )
-      .orderBy(desc(transactions.date), asc(transactions.createdAt)),
+      .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id)),
     [start, end],
   );
   return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
@@ -243,7 +243,7 @@ export function useTransactionsOfAccountsQuery(accountIds: readonly string[]): T
           ),
         ),
       )
-      .orderBy(desc(transactions.date), asc(transactions.createdAt)),
+      .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id)),
     [key],
   );
   return { rows: data.map(toEntity), loaded: updatedAt !== undefined };
@@ -323,7 +323,7 @@ export function useOccurrences(recurrenceId: string): Transaction[] {
       .select()
       .from(transactions)
       .where(and(eq(transactions.recurrenceId, recurrenceId), isNull(transactions.deletedAt)))
-      .orderBy(desc(transactions.date)),
+      .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id)),
     [recurrenceId],
   );
   return data.map(toEntity);
