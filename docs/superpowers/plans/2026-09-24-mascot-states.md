@@ -60,7 +60,7 @@ Sizes: the largest peek is 104 pt and the celebration 136 pt, so @3x needs 312 p
 **Files:**
 - Create: `apps/mobile/assets/mascot/idle.png`, `apps/mobile/assets/mascot/success.png`
 
-- [ ] **Step 1: Copy and resize**
+- [x] **Step 1: Copy and resize**
 
 ```bash
 KIT=~/sandbox/my-brand-icons-gen/out/saldo/illustrations/states
@@ -69,13 +69,13 @@ sips -Z 384 "$KIT/idle.png" --out apps/mobile/assets/mascot/idle.png
 sips -Z 480 "$KIT/success.png" --out apps/mobile/assets/mascot/success.png
 ```
 
-- [ ] **Step 2: Check them**
+- [x] **Step 2: Check them**
 
 Run: `file apps/mobile/assets/mascot/*.png`
 Expected: `idle.png: PNG image data, 384 x 384, 8-bit/color RGBA` and `success.png: PNG image data, 480 x 480, 8-bit/color RGBA`.
 RGBA matters: an opaque PNG would paint a square over the ghost stack.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add apps/mobile/assets/mascot
@@ -90,7 +90,7 @@ rtk git commit -m "chore(mobile): Rocky's idle and success poses, copied from th
 - Modify: `packages/ui/src/tokens.ts` (after `emptyState`, before `gestures`)
 - Test: `packages/ui/src/tokens.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add `mascot` to the import list at the top of `packages/ui/src/tokens.test.ts` (alphabetical, after `layout`):
 
@@ -139,13 +139,13 @@ describe('mascot', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: FAIL — `mascot` is not exported (`Cannot read properties of undefined (reading 'emptyWindow')`), or a
 TypeScript import error.
 
-- [ ] **Step 3: Add the token**
+- [x] **Step 3: Add the token**
 
 In `packages/ui/src/tokens.ts`, right after the closing `} as const;` of `emptyState`:
 
@@ -180,12 +180,12 @@ export const mascot = {
 
 `packages/ui/src/index.ts` already re-exports everything from `./tokens`; nothing to add there.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: PASS, including the five new `mascot` tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -204,7 +204,7 @@ Why a window: React Native paints later siblings on top, so a `MascotPeek` place
 covered by it. The window (`overflow: 'hidden'`) cuts him at the edge, which matters where the thing in front is
 translucent (the ghost stack).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/components/Mascot.test.tsx`:
 
@@ -243,12 +243,12 @@ describe.each([false, true])('with Reduce Motion %s', (isReduced) => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/Mascot.test.tsx`
 Expected: FAIL — `Cannot find module './Mascot'`.
 
-- [ ] **Step 3: Write the components**
+- [x] **Step 3: Write the components**
 
 Create `apps/mobile/src/components/Mascot.tsx`:
 
@@ -363,17 +363,17 @@ If `pnpm typecheck` rejects `require` (it should not: `@types/node` types it and
 both lines to `import idle from '../../assets/mascot/idle.png'` and add
 `apps/mobile/src/assets.d.ts` with `declare module '*.png' { const source: import('react-native').ImageSourcePropType; export default source; }`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/Mascot.test.tsx`
 Expected: PASS, 4 tests (2 × Reduce Motion on/off). jest-expo stubs `.png` requires, so no asset loads in tests.
 
-- [ ] **Step 5: Lint and typecheck the new file**
+- [x] **Step 5: Lint and typecheck the new file**
 
 Run: `rtk proxy pnpm lint` and `rtk proxy pnpm --filter mobile typecheck`
 Expected: no `lint/…` lines, no `× Some errors were emitted`, no `error TS`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/Mascot.tsx apps/mobile/src/components/Mascot.test.tsx
@@ -388,7 +388,7 @@ rtk git commit -m "feat(mobile): Rocky peeks from behind an edge and celebrates 
 - Modify: `apps/mobile/src/components/EmptyState.tsx` (imports; the `props.kind === 'yet'` branch of `EmptyState`)
 - Test: `apps/mobile/src/components/EmptyState.test.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append inside `describe('EmptyState', …)` in `apps/mobile/src/components/EmptyState.test.tsx`:
 
@@ -408,13 +408,13 @@ Append inside `describe('EmptyState', …)` in `apps/mobile/src/components/Empty
   });
 ```
 
-- [ ] **Step 2: Run tests to verify the first fails**
+- [x] **Step 2: Run tests to verify the first fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/EmptyState.test.tsx`
 Expected: FAIL on «has Rocky peek over the stack» (`Unable to find an element with testID: mascot`); the two `$kind has
 no Rocky` tests pass already.
 
-- [ ] **Step 3: Put Rocky behind the stack**
+- [x] **Step 3: Put Rocky behind the stack**
 
 In `apps/mobile/src/components/EmptyState.tsx`, change the `@saldo/ui` import and add the `Mascot` import:
 
@@ -452,13 +452,13 @@ with:
       ) : (
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/components/EmptyState.test.tsx`
 Expected: PASS, every test in the file (the existing ghost tests are untouched: Rocky is a sibling of the stack, not a
 layer of it).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/mobile/src/components/EmptyState.tsx apps/mobile/src/components/EmptyState.test.tsx
@@ -475,7 +475,7 @@ rtk git commit -m "feat(mobile): Rocky peeks over the nothing-yet ghost stack"
 - Modify: `apps/mobile/app/goals.tsx` (the `views.map` branch), `apps/mobile/app/goal/[id].tsx` (the `<Card>` around
   `FeaturedTarget`)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/goals/GoalCard.test.tsx`:
 
@@ -511,12 +511,12 @@ describe('GoalCard', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/GoalCard.test.tsx`
 Expected: FAIL — `Cannot find module './GoalCard'`.
 
-- [ ] **Step 3: Write `GoalCard`**
+- [x] **Step 3: Write `GoalCard`**
 
 Create `apps/mobile/src/features/goals/GoalCard.tsx`:
 
@@ -548,12 +548,12 @@ export function GoalCard({ reached, children }: { reached: boolean; children: Re
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/GoalCard.test.tsx`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 5: Use it on the goals list**
+- [x] **Step 5: Use it on the goals list**
 
 In `apps/mobile/app/goals.tsx`, replace the import `import { Card } from '../src/components/Card';` — `Card` is still
 used by the closed-goals section, so **keep it** and add:
@@ -582,7 +582,7 @@ of that map (only those two; the closed-goals `<Card padded={false}>` stays) wit
           </GoalCard>
 ```
 
-- [ ] **Step 6: Use it on the goal's detail**
+- [x] **Step 6: Use it on the goal's detail**
 
 In `apps/mobile/app/goal/[id].tsx` add:
 
@@ -594,13 +594,13 @@ Replace the `<Card>` … `</Card>` pair that wraps `<FeaturedTarget …/>` (righ
 `<GoalCard reached={view.progress.state === 'reached'}>` … `</GoalCard>`. The other two `<Card padded={false}>` in the
 file stay, so the `Card` import stays.
 
-- [ ] **Step 7: Run the goal tests, lint and typecheck**
+- [x] **Step 7: Run the goal tests, lint and typecheck**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals` then `rtk proxy pnpm lint` and
 `rtk proxy pnpm --filter mobile typecheck`
 Expected: PASS; no `lint/…` lines; no `error TS`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/goals/GoalCard.tsx apps/mobile/src/features/goals/GoalCard.test.tsx apps/mobile/app/goals.tsx "apps/mobile/app/goal/[id].tsx"
@@ -616,7 +616,7 @@ rtk git commit -m "feat(mobile): Rocky peeks over a reached goal until it is clo
 - Modify: `apps/mobile/app/goal/[id].tsx` (the `<GoalCloseSheet …/>` element)
 - Test: `apps/mobile/src/features/goals/GoalCloseSheet.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/mobile/src/features/goals/GoalCloseSheet.test.tsx`:
 
@@ -677,12 +677,12 @@ describe('GoalCloseSheet', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals/GoalCloseSheet.test.tsx`
 Expected: FAIL — TypeScript/props: the reached case finds no `mascot` testID.
 
-- [ ] **Step 3: Add `reached` to the sheet**
+- [x] **Step 3: Add `reached` to the sheet**
 
 In `apps/mobile/src/features/goals/GoalCloseSheet.tsx`:
 
@@ -706,7 +706,7 @@ Add `reached,` to the destructured parameters (after `onClose,`), and make the f
         {reached ? <MascotCelebrate size={mascot.celebrateSize} /> : null}
 ```
 
-- [ ] **Step 4: Pass it from the goal's detail**
+- [x] **Step 4: Pass it from the goal's detail**
 
 In `apps/mobile/app/goal/[id].tsx`, add to `<GoalCloseSheet` after `onClose={() => setClosing(false)}`:
 
@@ -714,12 +714,12 @@ In `apps/mobile/app/goal/[id].tsx`, add to `<GoalCloseSheet` after `onClose={() 
         reached={view.progress.state === 'reached'}
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `rtk proxy pnpm --filter mobile test -- src/features/goals`
 Expected: PASS, including the 2 new `GoalCloseSheet` tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/mobile/src/features/goals/GoalCloseSheet.tsx apps/mobile/src/features/goals/GoalCloseSheet.test.tsx "apps/mobile/app/goal/[id].tsx"
@@ -761,7 +761,7 @@ rtk git commit -m "fix(ui): Rocky's peek measured on device"
 
 (Skip if nothing changed.)
 
-- [ ] **Step 3: The gates**
+- [x] **Step 3: The gates**
 
 Run each through `rtk proxy` and read the output, not the exit code (AGENTS.md):
 
