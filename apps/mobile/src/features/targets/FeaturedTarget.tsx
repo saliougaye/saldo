@@ -36,7 +36,8 @@ export interface FeaturedTargetProps {
   /** Action, then state — the caller composes it. */
   sentence: ReactNode;
   accessibilityLabel: string;
-  onPress: () => void;
+  /** Omitted where the block is the screen itself (the goal detail). */
+  onPress?: () => void;
 }
 
 /**
@@ -47,13 +48,8 @@ export interface FeaturedTargetProps {
 export function FeaturedTarget(props: FeaturedTargetProps) {
   const { t } = useTranslation();
   const labels = endLabels(props.pace);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={props.accessibilityLabel}
-      onPress={props.onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingTop: 14, paddingBottom: 16 })}
-    >
+  const body = (
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <IconBox name={props.icon} colour={props.colour} />
         <Text style={{ flex: 1 }} numberOfLines={1}>
@@ -83,6 +79,7 @@ export function FeaturedTarget(props: FeaturedTargetProps) {
           ratio={props.ratio}
           pace={props.pace ?? undefined}
           overPace={props.tone === 'attention'}
+          done={props.tone === 'done'}
         />
       </View>
       <View
@@ -117,6 +114,24 @@ export function FeaturedTarget(props: FeaturedTargetProps) {
         ) : null}
       </View>
       <Text style={{ marginTop: 12, lineHeight: 21 }}>{props.sentence}</Text>
+    </>
+  );
+  const padding = { paddingTop: 14, paddingBottom: 16 };
+  if (props.onPress === undefined) {
+    return (
+      <View accessible accessibilityLabel={props.accessibilityLabel} style={padding}>
+        {body}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={props.accessibilityLabel}
+      onPress={props.onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, ...padding })}
+    >
+      {body}
     </Pressable>
   );
 }

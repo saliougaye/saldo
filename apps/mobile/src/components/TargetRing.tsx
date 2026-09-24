@@ -12,10 +12,10 @@ import { ringGeometry } from './ringGeometry';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /**
- * `attention`: over pace or over the limit (a budget), behind or expired (a goal). Colour carries
- * the meaning, never fullness: a full ring is bad on a budget and good on a goal (§5.13).
+ * `attention`: over pace or over the limit (a budget), behind or expired (a goal). `done`: a goal
+ * reached — the only green (§5.13). Colour carries the meaning, never fullness.
  */
-export type TargetTone = 'attention' | 'plain';
+export type TargetTone = 'attention' | 'done' | 'plain';
 
 export interface TargetRingProps {
   size: number;
@@ -54,7 +54,12 @@ export function TargetRing({ size, ratio, pace, tone, icon, colour, testID }: Ta
     // A zero-length dash still draws its round cap as a dot.
     opacity: progress.value > 0 ? 1 : 0,
   }));
-  const fill = tone === 'attention' ? theme.palette.accent : theme.palette.barGrey;
+  const fill =
+    tone === 'attention'
+      ? theme.palette.accent
+      : tone === 'done'
+        ? theme.palette.positive
+        : theme.palette.barGrey;
   return (
     <View
       testID={testID}

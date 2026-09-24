@@ -16,6 +16,8 @@ export interface ProgressBarProps {
   hideable?: boolean;
   /** The featured item of a target card (§5.13): 8pt with a longer pace tick. */
   thick?: boolean;
+  /** A goal reached (§5.13): the fill turns `positive`. */
+  done?: boolean;
 }
 
 export function ProgressBar({
@@ -24,6 +26,7 @@ export function ProgressBar({
   overPace = false,
   hideable = true,
   thick = false,
+  done = false,
 }: ProgressBarProps) {
   const theme = useTheme();
   const height = thick ? theme.layout.progressHeightThick : theme.layout.progressHeight;
@@ -60,7 +63,11 @@ export function ProgressBar({
             height,
             borderRadius: theme.radii.pill,
             transformOrigin: 'left',
-            backgroundColor: overPace ? theme.palette.accent : theme.palette.barGrey,
+            backgroundColor: done
+              ? theme.palette.positive
+              : overPace
+                ? theme.palette.accent
+                : theme.palette.barGrey,
           },
           fillStyle,
         ]}
