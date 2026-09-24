@@ -150,7 +150,8 @@ export function planImport(
   context: ImportContext,
 ): ImportPlan {
   const { minorDigits } = getCurrency(context.currency);
-  const accounts = new NameRegistry(context.accounts);
+  // A pocket is a goal, not a wallet (§5.14): an imported row never lands in one.
+  const accounts = new NameRegistry(context.accounts.filter((account) => account.type !== 'pocket'));
   const tags = new NameRegistry(context.tags);
   // Categories live in two namespaces: "Money Back" as income and as expense are different rows.
   const categories = {

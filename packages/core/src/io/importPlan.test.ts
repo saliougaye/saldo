@@ -136,6 +136,20 @@ describe('planImport, Spendee preset', () => {
     expect(plan.transactions[0]?.accountName).toBe('MY MONEY');
   });
 
+  it('never maps a row to a pocket, even one with the same name', () => {
+    const pocket: Account = {
+      ...account('My Money'),
+      type: 'pocket',
+      includeInSpendable: false,
+      parentAccountId: 'acc-checking',
+      goalTarget: 100_000,
+      goalDeadline: null,
+      goalStartDate: '2026-09-01',
+    };
+    const plan = planImport(body, spendee(), context({ accounts: [pocket] }));
+    expect(plan.newAccounts).toEqual(['My Money']);
+  });
+
   it('reuses an existing category only in the same direction', () => {
     const plan = planImport(
       body,

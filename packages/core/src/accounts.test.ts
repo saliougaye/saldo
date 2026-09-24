@@ -299,6 +299,13 @@ describe('creditStatementDue', () => {
 });
 
 describe('paymentAccountCandidates', () => {
+  it('never charges a card to a pocket', () => {
+    const pocket = { ...ACCOUNTS[1], id: 'acc-pocket', type: 'pocket' as const };
+    expect(
+      paymentAccountCandidates([...ACCOUNTS, pocket], 'acc-card').map((account) => account.id),
+    ).not.toContain('acc-pocket');
+  });
+
   it('offers live accounts that are not cards and not the card itself', () => {
     const list = [...ACCOUNTS, { ...CARD, id: 'acc-card-2' }];
     expect(paymentAccountCandidates(list, 'acc-card').map((account) => account.id)).toEqual([

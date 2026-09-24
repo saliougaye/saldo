@@ -169,14 +169,17 @@ export function creditStatementDue(
 /** The hour of the charge-day reminder, local time (decided 2026-09-22). */
 export const CREDIT_REMINDER_HOUR = 9;
 
-/** Where a card may be charged (§6.22): live accounts that hold money, never a card, never itself. */
+/** Where a card may be charged (§6.22): live accounts that hold money, never a card, a pocket or itself. */
 export function paymentAccountCandidates<T extends Pick<AccountRef, 'id' | 'type' | 'archivedAt'>>(
   accounts: readonly T[],
   cardId: string | null,
 ): T[] {
   return accounts.filter(
     (account) =>
-      account.type !== 'credit_card' && account.archivedAt === null && account.id !== cardId,
+      account.type !== 'credit_card' &&
+      account.type !== 'pocket' &&
+      account.archivedAt === null &&
+      account.id !== cardId,
   );
 }
 
