@@ -68,8 +68,12 @@ export function writeImport(
   plan: ImportPlan,
   options: ImportWriteOptions = {},
 ): ImportOutcome {
+  // Never into a pocket (§5.14), the same rule `planImport` applies.
   const accounts = new Map(
-    repos.accounts.list().map((account) => [normalizeText(account.name), account.id]),
+    repos.accounts
+      .list()
+      .filter((account) => account.type !== 'pocket')
+      .map((account) => [normalizeText(account.name), account.id]),
   );
   const tags = new Map(repos.tags.list().map((tag) => [normalizeText(tag.name), tag.id]));
   const categories = new Map(
