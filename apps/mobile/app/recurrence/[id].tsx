@@ -1,4 +1,4 @@
-import { nextOccurrence, type RecurrenceRule } from '@saldo/core';
+import { nextOccurrence, type RecurrenceRule, touchesClosedGoal } from '@saldo/core';
 import { formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -88,6 +88,8 @@ export default function RecurrenceDetail() {
       ? `${account?.name ?? ''} → ${toAccount?.name ?? ''}`
       : `${category?.name ?? ''} · ${account?.name ?? ''}`;
   const ended = nextDate === null && recurrence.endDate !== null;
+  // A contribution to a closed goal stays as it ended (§5.14): no new cadence, no new end.
+  const locked = touchesClosedGoal(recurrence.template, accounts);
 
   const stop = () => {
     stopRecurrence(db, repos, recurrence, today);
@@ -177,7 +179,7 @@ export default function RecurrenceDetail() {
           >
             {name}
           </Text>
-          {editTarget === undefined ? null : (
+          {editTarget === undefined || locked ? null : (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('common.edit')}
@@ -226,7 +228,7 @@ export default function RecurrenceDetail() {
           {factRow(
             t('recurrence.cadence'),
             cadenceLabel(recurrence, recurrence.startDate, t, locale),
-            openRule,
+            locked ? undefined : openRule,
           )}
           <View style={{ height: 1, backgroundColor: theme.palette.border }} />
           {factRow(
@@ -234,7 +236,7 @@ export default function RecurrenceDetail() {
             recurrence.endDate === null
               ? t('recurrence.endNever')
               : formatLongDate(recurrence.endDate, locale),
-            openRule,
+            locked ? undefined : openRule,
           )}
           <View style={{ height: 1, backgroundColor: theme.palette.border }} />
           {factRow(t('recurrence.firstOccurrence'), formatLongDate(recurrence.startDate, locale))}

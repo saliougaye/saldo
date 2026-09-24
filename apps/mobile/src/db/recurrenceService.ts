@@ -11,6 +11,7 @@ import {
   type RecurrenceRule,
   recurrenceHorizonEnd,
   type Transaction,
+  touchesClosedGoal,
 } from '@saldo/core';
 import { eq } from 'drizzle-orm';
 import type { Repositories } from './repositories';
@@ -225,6 +226,11 @@ export function changeRecurrenceRule(
   today: LocalDate,
   def: PeriodDef,
 ): Recurrence | null {
+  // A contribution to a closed goal stays stopped: restarting it would move money into an
+  // archived pocket, which the totals no longer show (§5.14).
+  if (touchesClosedGoal(recurrence.template, repos.accounts.list())) {
+    throw new Error(`Recurrence ${recurrence.id} belongs to a closed goal`);
+  }
   const occurrences = occurrencesOf(repos, recurrence.id);
   const sameCadence =
     rule.frequency === recurrence.frequency && rule.interval === recurrence.interval;

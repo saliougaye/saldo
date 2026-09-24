@@ -1,5 +1,6 @@
 import { archiveAccount } from './adminService';
 import { closeGoal, closeGoalWithExpense, createGoal, restoreGoal } from './goalService';
+import { changeRecurrenceRule } from './recurrenceService';
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
 
@@ -186,6 +187,41 @@ describe('closeGoal, whatever the pocket went through', () => {
     const pocket = createGoal(db, repos, input);
     closeGoal(db, repos, pocket.id, TODAY, NOW);
     expect(() => closeGoal(db, repos, pocket.id, TODAY, NOW)).toThrow(/No open goal/);
+  });
+});
+
+describe('a closed goal’s recurrence', () => {
+  it('cannot be restarted: new transfers would land in an archived pocket', () => {
+    const { db, repos } = setup();
+    const pocket = createGoal(db, repos, input);
+    const recurrence = repos.recurrences.create({
+      frequency: 'monthly',
+      interval: 1,
+      startDate: '2026-09-01',
+      endDate: null,
+      template: {
+        kind: 'transfer',
+        amount: 70_000,
+        accountId: 'checking',
+        toAccountId: pocket.id,
+        categoryId: null,
+        description: 'Accantona',
+        tagIds: [],
+        excludeFromTotals: false,
+      },
+    });
+    closeGoal(db, repos, pocket.id, TODAY, NOW);
+    const ended = repos.recurrences.byId(recurrence.id) ?? recurrence;
+    expect(() =>
+      changeRecurrenceRule(
+        db,
+        repos,
+        ended,
+        { frequency: 'monthly', interval: 1, endDate: null },
+        TODAY,
+        { kind: 'month', startDay: 1 },
+      ),
+    ).toThrow(/closed goal/);
   });
 });
 
