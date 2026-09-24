@@ -16,6 +16,7 @@ import { db } from '../../src/db/client';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { closeGoal } from '../../src/db/goalService';
 import { useCategories } from '../../src/db/hooks';
+import { GoalCard } from '../../src/features/goals/GoalCard';
 import { GoalCloseSheet } from '../../src/features/goals/GoalCloseSheet';
 import { goalExpenseParams, goalTransferParams } from '../../src/features/goals/goalLinks';
 import { useGoalText } from '../../src/features/goals/useGoalText';
@@ -83,7 +84,7 @@ export default function GoalDetail() {
           />
         }
       />
-      <Card>
+      <GoalCard reached={view.progress.state === 'reached'}>
         <FeaturedTarget
           icon={account.icon as IconName}
           colour={theme.categoryColor(account.colorIndex)}
@@ -101,7 +102,7 @@ export default function GoalDetail() {
           sentence={text.sentence(view)}
           accessibilityLabel={text.label(view)}
         />
-      </Card>
+      </GoalCard>
 
       {parent === undefined ? null : (
         <View style={{ flexDirection: 'row', gap: 8 }}>
