@@ -2,8 +2,14 @@ import type { AccountRef } from './accounts';
 import { type DateRange, isWithin } from './cycle';
 import type { LocalDate } from './dates';
 import type { Budget } from './entities';
-import { periodHistory } from './history';
-import { type CategoryRef, type LedgerTx, summarizePeriod } from './ledger';
+import { categorySpendHistory, type PeriodHistoryEntry, periodHistory } from './history';
+import {
+  type CategoryRef,
+  type LedgerTx,
+  rollupToParents,
+  spendingByCategory,
+  summarizePeriod,
+} from './ledger';
 import type { MinorUnits } from './money';
 import { type PeriodDef, periodContaining, shiftPeriod } from './period';
 import { deltaPercent, median } from './stats';
@@ -74,6 +80,51 @@ export interface PeriodRecap {
   netWorthChange: MinorUnits;
 }
 
+/** How many categories the recap lists before folding the rest into «Altre N categorie». */
+export const RECAP_TOP_CATEGORIES = 5;
+
+/**
+ * The top categories at parent level, and the one that grew most against its own median (§5.5).
+ * The tag is looked for among the listed ones only: a tag on a folded category cannot be seen.
+ * A category with no history has a zero or missing median, so `deltaPercent` gives null.
+ */
+function recapCategories(
+  inPeriod: readonly LedgerTx[],
+  period: DateRange,
+  today: LocalDate,
+  categories: readonly CategoryRef[],
+  history: readonly PeriodHistoryEntry[],
+): Pick<PeriodRecap, 'categories' | 'otherCategories'> {
+  const totals = rollupToParents(spendingByCategory(inPeriod, period, today), categories);
+  const ranked = [...totals.entries()]
+    .filter(([, amount]) => amount > 0)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const top = ranked.slice(0, RECAP_TOP_CATEGORIES);
+  const rest = ranked.slice(RECAP_TOP_CATEGORIES);
+
+  const past = categorySpendHistory(history, categories, today);
+  let mover: { categoryId: string; delta: number } | null = null;
+  for (const [categoryId, amount] of top) {
+    const usual = median(past.map((amounts) => amounts.get(categoryId) ?? 0));
+    const delta = deltaPercent(amount, usual);
+    if (delta !== null && delta > 0 && (mover === null || delta > mover.delta)) {
+      mover = { categoryId, delta };
+    }
+  }
+
+  return {
+    categories: top.map(([categoryId, amount]) => ({
+      categoryId,
+      amount,
+      aboveUsual: mover?.categoryId === categoryId ? mover.delta : null,
+    })),
+    otherCategories: {
+      count: rest.length,
+      amount: rest.reduce((sum, [, amount]) => sum + amount, 0),
+    },
+  };
+}
+
 /**
  * The period a recap is about (§5.15): the one immediately before the period containing today,
  * under the kind in force. Only that one — after weeks away there is still a single recap.
@@ -114,8 +165,7 @@ export function periodRecap(input: PeriodRecapInput): PeriodRecap | null {
     usualNet: usual === null ? null : Math.round(usual),
     incomeDelta: deltaPercent(summary.income, before?.income ?? null),
     spentDelta: deltaPercent(summary.spent, before?.spent ?? null),
-    categories: [],
-    otherCategories: { count: 0, amount: 0 },
+    ...recapCategories(inPeriod, period, today, input.categories, history),
     budgets: [],
     biggestExpense: null,
     netWorthChange: 0,

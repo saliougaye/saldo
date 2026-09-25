@@ -104,3 +104,56 @@ describe('periodRecap: totals', () => {
     });
   });
 });
+
+describe('periodRecap: categories', () => {
+  it('lists parent-level spend, largest first, with no tag when nothing grew', () => {
+    expect(recap().categories).toEqual([
+      { categoryId: 'cat-home', amount: 72000, aboveUsual: null },
+      { categoryId: 'cat-groceries', amount: 38620, aboveUsual: null },
+      { categoryId: 'cat-transport', amount: 16200, aboveUsual: null },
+    ]);
+    expect(recap().otherCategories).toEqual({ count: 0, amount: 0 });
+  });
+
+  it('tags the category that grew most against its own median', () => {
+    // Groceries 38620 + 22130 = 60750 against a median of 40500: +50%.
+    const rows = [...ledger(), tx({ date: '2026-09-20', amount: 22130 })];
+    const groceries = recap({ transactions: rows }).categories.find(
+      (row) => row.categoryId === 'cat-groceries',
+    );
+    expect(groceries?.aboveUsual).toBe(50);
+    expect(
+      recap({ transactions: rows }).categories.filter((row) => row.aboveUsual !== null),
+    ).toHaveLength(1);
+  });
+
+  it('never tags a category without history', () => {
+    const onlySeptember = ledger().filter((row) => row.date.startsWith('2026-09'));
+    expect(
+      recap({ transactions: onlySeptember }).categories.every((row) => row.aboveUsual === null),
+    ).toBe(true);
+  });
+
+  it('keeps the top five and folds the rest', () => {
+    const spend = (categoryId: string, amount: number) =>
+      tx({ date: '2026-09-12', amount, categoryId });
+    const rows = [
+      spend('cat-groceries', 700),
+      spend('cat-home', 600),
+      spend('cat-health', 500),
+      spend('cat-transport', 400),
+      spend('cat-fun', 300),
+      spend('cat-gifts', 200),
+      spend('cat-pets', 100),
+    ];
+    const result = recap({ transactions: rows });
+    expect(result.categories.map((row) => row.categoryId)).toEqual([
+      'cat-groceries',
+      'cat-home',
+      'cat-health',
+      'cat-transport',
+      'cat-fun',
+    ]);
+    expect(result.otherCategories).toEqual({ count: 2, amount: 300 });
+  });
+});
