@@ -71,7 +71,7 @@ Run everything from the worktree root `.worktrees/local-first` unless a step say
 - Modify: `apps/mobile/src/boot/decide.ts`
 - Test: `apps/mobile/src/boot/decide.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `decide.test.ts`, replace the test `'sends a signed-out device to the welcome screen'` with:
 
@@ -101,12 +101,12 @@ In `decide.test.ts`, replace the test `'sends a signed-out device to the welcome
   });
 ```
 
-- [ ] **Step 2: Run to see them fail**
+- [x] **Step 2: Run to see them fail**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "boot/decide"`
 Expected: FAIL — `opens the app on its own data…` receives `{ kind: 'welcome' }`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `decide.ts`, change the doc comment of `'welcome'` and the signed-out branch:
 
@@ -137,12 +137,12 @@ function completed(input: BootInput): boolean {
 
 Update the `hasScheduler` doc comment in `BootInput` to: `/** False while signed out or before an address is stored: no sync to wait for. */`
 
-- [ ] **Step 4: Run to see them pass**
+- [x] **Step 4: Run to see them pass**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "boot/decide"`
 Expected: PASS (all tests in the file).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/boot/decide.ts apps/mobile/src/boot/decide.test.ts
@@ -157,7 +157,7 @@ git commit -m "feat(mobile): a signed-out phone with settings opens on its own d
 - Modify: `apps/mobile/src/auth/deviceOwner.ts`
 - Test: `apps/mobile/src/auth/deviceOwner.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace the test `'adopts an install that has never recorded an account'` with:
 
@@ -173,12 +173,12 @@ Replace the test `'adopts an install that has never recorded an account'` with:
   });
 ```
 
-- [ ] **Step 2: Run to see it fail**
+- [x] **Step 2: Run to see it fail**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "deviceOwner"`
 Expected: FAIL — received `"keep"`, expected `"unowned-data"`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 export type OwnershipVerdict =
@@ -210,12 +210,12 @@ and the body:
   return storedAccountId === incomingAccountId ? 'keep' : 'foreign-data';
 ```
 
-- [ ] **Step 4: Run to see it pass**
+- [x] **Step 4: Run to see it pass**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "deviceOwner"`
 Expected: PASS. (`pnpm --filter mobile typecheck` will fail until Task 6 handles the new case in `ServerProvider`; that is expected.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/auth/deviceOwner.ts apps/mobile/src/auth/deviceOwner.test.ts
@@ -230,7 +230,7 @@ git commit -m "feat(mobile): name the case of local rows that belong to no accou
 - Create: `apps/mobile/src/features/server/serverProbe.ts`
 - Test: `apps/mobile/src/features/server/serverProbe.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```ts
 import { ApiClientError } from '../../net/apiClient';
@@ -322,12 +322,12 @@ describe('probeReducer', () => {
 });
 ```
 
-- [ ] **Step 2: Run to see them fail**
+- [x] **Step 2: Run to see them fail**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "server/serverProbe"`
 Expected: FAIL — `Cannot find module './serverProbe'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 import { normaliseServerUrl } from '../../auth/link';
@@ -396,7 +396,7 @@ export function probeReducer(state: ProbeState, event: ProbeEvent): ProbeState {
 }
 ```
 
-- [ ] **Step 4: Run to see them pass**
+- [x] **Step 4: Run to see them pass**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "server/serverProbe"`
 Expected: PASS. If the `db` project cannot import `../../auth/session` (it imports `expo-crypto` and
@@ -404,7 +404,7 @@ Expected: PASS. If the `db` project cannot import `../../auth/session` (it impor
 `healthSchema`/`ServerHealth` into a new `apps/mobile/src/auth/health.ts` (no Expo imports), re-export them from
 `session.ts`, and import the type from `health.ts` here.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/server/serverProbe.ts apps/mobile/src/features/server/serverProbe.test.ts
@@ -419,17 +419,17 @@ git commit -m "feat(mobile): the server probe as a pure state machine"
 - Modify: `packages/ui/src/icons.ts` (inside `iconMarkup`, after `merge`)
 - Test: `packages/ui/src/icons.test.ts:33`
 
-- [ ] **Step 1: Update the failing test**
+- [x] **Step 1: Update the failing test**
 
 In `icons.test.ts` change `expect(ICON_NAMES).toHaveLength(139);` to `140` and add
 `expect(ICON_NAMES).toContain('server');` below the `merge` line.
 
-- [ ] **Step 2: Run to see it fail**
+- [x] **Step 2: Run to see it fail**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: FAIL — length 139, expected 140.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
   // Lucide 1.47.0 `server`, with its dots as paths (the parser ignores <line>): the server door of
@@ -438,12 +438,12 @@ Expected: FAIL — length 139, expected 140.
     '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
 ```
 
-- [ ] **Step 4: Run to see it pass**
+- [x] **Step 4: Run to see it pass**
 
 Run: `pnpm --filter @saldo/ui test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/icons.ts packages/ui/src/icons.test.ts
@@ -457,13 +457,13 @@ git commit -m "feat(ui): server icon"
 **Files:** `packages/i18n/src/locales/{it,en,de,es,fr,pt,sv}.ts`
 Test: `packages/i18n/src/locales.test.ts` (existing parity test: every catalog must have `it`'s key structure).
 
-- [ ] **Step 1: Confirm the dead keys really are dead**
+- [x] **Step 1: Confirm the dead keys really are dead**
 
 Run: `git grep -n "welcomeOffline\|noServerConfigured\|sync.verifying\|sync.serverFound\|sync.serverIs" -- apps`
 Expected: hits only in `apps/mobile/src/features/server/ConnectForm.tsx`, `app/(onboarding)/welcome.tsx`
 and `app/profile/server.tsx` (`serverIs`). `serverIs` **stays** (Profile keeps using it). The other four go.
 
-- [ ] **Step 2: Edit `it.ts` (the source)**
+- [x] **Step 2: Edit `it.ts` (the source)**
 
 In `onboarding`: replace `welcomeBody` and `welcomeOffline` with:
 
@@ -513,7 +513,7 @@ Add a new top-level section `server` right after `sync`:
   },
 ```
 
-- [ ] **Step 3: Same keys in the other six catalogs**
+- [x] **Step 3: Same keys in the other six catalogs**
 
 Delete the same five keys (`onboarding.welcomeOffline`, `sync.verifying`, `sync.noServerConfigured`, `sync.serverFound`
 and replace `onboarding.welcomeBody`) and add the same structure. Values:
@@ -725,12 +725,12 @@ and replace `onboarding.welcomeBody`) and add the same structure. Values:
 
 (Match each catalog's existing quoting style — several use `’` inside single-quoted strings; keep them.)
 
-- [ ] **Step 4: Run the parity test**
+- [x] **Step 4: Run the parity test**
 
 Run: `pnpm --filter @saldo/i18n test`
 Expected: PASS (`… has the key structure of it`, `… keeps the interpolation variables of it`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/i18n/src/locales
@@ -750,7 +750,7 @@ No unit test: `ServerProvider` has none and needs SQLite + SecureStore; its deci
 functions (Tasks 1–3). It is exercised by the component tests of Task 8 through a mocked `useServer`, and by the
 device check in Task 12.
 
-- [ ] **Step 1: `serverKeys.ts`**
+- [x] **Step 1: `serverKeys.ts`**
 
 ```ts
 /**
@@ -764,7 +764,7 @@ export const SERVER_URL_KEY = 'serverUrl';
 export const LAST_SERVER_URL_KEY = 'lastServerUrl';
 ```
 
-- [ ] **Step 2: Drop the build input**
+- [x] **Step 2: Drop the build input**
 
 `buildServer.ts` — delete `BUILD_SERVER_URL` and its import of `readServerUrl`; keep `BUILD_REDIRECT_URI`. New file:
 
@@ -787,7 +787,7 @@ the `describe('readServerUrl', …)` block (and its import).
 `app.config.ts` — delete `const serverUrl = process.env.SALDO_SERVER_URL ?? '';` and the `serverUrl,` entry of
 `extra` (line ~125). If `extra` is left empty except for `eas`/`router` keys, leave those as they are.
 
-- [ ] **Step 3: `ServerProvider.tsx`**
+- [x] **Step 3: `ServerProvider.tsx`**
 
 Imports: remove `BUILD_SERVER_URL`; add `import { LAST_SERVER_URL_KEY, SERVER_URL_KEY } from './serverKeys';`.
 
@@ -930,18 +930,18 @@ Replace `disconnect`:
 In `value`, add `lastServerUrl: kv.get(LAST_SERVER_URL_KEY),` and add `serverUrl` to the dependency list:
 `[serverUrl, user, api, status, sessionExpired, connect, disconnect, kv]`.
 
-- [ ] **Step 4: Typecheck (expect only the callers to fail)**
+- [x] **Step 4: Typecheck (expect only the callers to fail)**
 
 Run: `pnpm --filter mobile typecheck`
 Expected: errors only in `src/features/server/ConnectForm.tsx` and `app/profile/server.tsx` (`connect` signature),
 which Tasks 8 and 10 replace. No error in `ServerProvider.tsx`, `deviceOwner.ts`, `buildServer.ts`, `session.ts`.
 
-- [ ] **Step 5: Run the auth tests**
+- [x] **Step 5: Run the auth tests**
 
 Run: `cd apps/mobile && npx jest --selectProjects db --testPathPatterns "auth/"`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/auth apps/mobile/app.config.ts
@@ -956,7 +956,7 @@ git commit -m "feat(mobile): the server address is typed and kept on the phone, 
 - Modify: `apps/mobile/src/components/ConfirmDialog.tsx`, `apps/mobile/src/features/onboarding/StepFooter.tsx`
 - Test: `apps/mobile/src/components/ConfirmDialog.test.tsx` (create), `apps/mobile/src/features/onboarding/StepFooter.test.tsx` (create)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `ConfirmDialog.test.tsx`:
 
@@ -1046,13 +1046,13 @@ describe('StepFooter', () => {
 });
 ```
 
-- [ ] **Step 2: Run to see them fail**
+- [x] **Step 2: Run to see them fail**
 
 Run: `cd apps/mobile && npx jest --selectProjects app --testPathPatterns "ConfirmDialog|StepFooter"`
 Expected: FAIL — three buttons expected, two found (the dialog ignores `alternativeLabel`); and `StepFooter`
 without a label still draws an empty primary button (two buttons, one expected).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `ConfirmDialog.tsx` — add to the props interface and the destructuring:
 
@@ -1089,12 +1089,12 @@ export function StepFooter({ label, ...rest }: Omit<ButtonProps, 'label'> & { la
       ) : null}
 ```
 
-- [ ] **Step 4: Run to see them pass**
+- [x] **Step 4: Run to see them pass**
 
 Run: `cd apps/mobile && npx jest --selectProjects app --testPathPatterns "ConfirmDialog|StepFooter"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/components/ConfirmDialog.tsx apps/mobile/src/components/ConfirmDialog.test.tsx apps/mobile/src/features/onboarding/StepFooter.tsx apps/mobile/src/features/onboarding/StepFooter.test.tsx
@@ -1112,7 +1112,7 @@ git commit -m "feat(mobile): a third answer on dialogs and a back-only step foot
 - Test: `apps/mobile/src/features/server/ServerSignIn.test.tsx`
 - Delete: `apps/mobile/src/features/server/ConnectForm.tsx`
 
-- [ ] **Step 1: `describeServerError.ts`** (the table `ConnectForm` and `profile/server.tsx` both carried)
+- [x] **Step 1: `describeServerError.ts`** (the table `ConnectForm` and `profile/server.tsx` both carried)
 
 ```ts
 import type { TFunction } from 'i18next';
@@ -1138,7 +1138,7 @@ export function describeServerError(t: TFunction, caught: unknown): string {
 }
 ```
 
-- [ ] **Step 2: `useServerSignIn.ts`**
+- [x] **Step 2: `useServerSignIn.ts`**
 
 ```ts
 import { useCallback, useReducer, useState } from 'react';
@@ -1258,7 +1258,7 @@ export type ServerSignIn = ReturnType<typeof useServerSignIn>;
 export type { ProbeState };
 ```
 
-- [ ] **Step 3: Write the failing component tests**
+- [x] **Step 3: Write the failing component tests**
 
 `ServerSignIn.test.tsx`:
 
@@ -1394,7 +1394,7 @@ describe('ServerSignInPanel', () => {
 Run: `cd apps/mobile && npx jest --selectProjects app --testPathPatterns "server/ServerSignIn"`
 Expected: FAIL — `Cannot find module './ServerSignIn'`.
 
-- [ ] **Step 4: `ServerSignIn.tsx`**
+- [x] **Step 4: `ServerSignIn.tsx`**
 
 The views are split so the onboarding screen can put «Continua» in its `StepFooter` while Profile keeps it in the card.
 
@@ -1628,14 +1628,14 @@ export function ServerSignInPanel({ onConnected }: { onConnected?: () => void })
 
 Then delete `ConnectForm.tsx`: `git rm apps/mobile/src/features/server/ConnectForm.tsx`.
 
-- [ ] **Step 5: Run to see them pass**
+- [x] **Step 5: Run to see them pass**
 
 Run: `cd apps/mobile && npx jest --selectProjects app --testPathPatterns "server/ServerSignIn"`
 Expected: PASS. If `userEvent.type` does not reach a `TextInput` whose `editable` prop is set, check RNTL's docs for
 the installed version (`pnpm --filter mobile list @testing-library/react-native`) and use `fireEvent.changeText`
 instead — follow the library, fix this plan in the same commit (AGENTS.md).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/features/server
@@ -1651,7 +1651,7 @@ git commit -m "feat(mobile): the server step — address, server row, passkey, o
 - Create: `apps/mobile/app/(onboarding)/server.tsx`
 - Modify: `apps/mobile/app/(onboarding)/start.tsx`
 
-- [ ] **Step 1: `welcome.tsx`**
+- [x] **Step 1: `welcome.tsx`**
 
 ```tsx
 import { useRouter } from 'expo-router';
@@ -1716,7 +1716,7 @@ export default function Welcome() {
 }
 ```
 
-- [ ] **Step 2: `server.tsx`** («Due passi»: one screen finds the server and signs in)
+- [x] **Step 2: `server.tsx`** («Due passi»: one screen finds the server and signs in)
 
 ```tsx
 import { useRouter } from 'expo-router';
@@ -1776,7 +1776,7 @@ export default function ServerStep() {
 }
 ```
 
-- [ ] **Step 3: `start.tsx` — back when reached from the phone door**
+- [x] **Step 3: `start.tsx` — back when reached from the phone door**
 
 Add imports `import { useServer } from '../../src/auth/ServerProvider';` and
 `import { StepFooter } from '../../src/features/onboarding/StepFooter';`, read `const { status } = useServer();`
@@ -1790,14 +1790,14 @@ in the component, and change `<Screen>` to:
     >
 ```
 
-- [ ] **Step 4: Typecheck and run the onboarding tests**
+- [x] **Step 4: Typecheck and run the onboarding tests**
 
 Run: `pnpm --filter mobile typecheck`
 Expected: errors only in `app/profile/server.tsx` (Task 10).
 Run: `cd apps/mobile && npx jest --selectProjects app --testPathPatterns "onboarding"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add "apps/mobile/app/(onboarding)"
@@ -1811,7 +1811,7 @@ git commit -m "feat(mobile): welcome with two doors and a server step that signs
 **Files:**
 - Modify: `apps/mobile/app/profile/server.tsx`, `apps/mobile/app/profile.tsx:151-161`
 
-- [ ] **Step 1: `profile/server.tsx`**
+- [x] **Step 1: `profile/server.tsx`**
 
 1. Replace the local `CODE_KEYS` and `describe` with `import { describeServerError, SERVER_ERROR_KEYS } from '../../src/features/server/describeServerError';`
    — `describe(caught)` becomes `describeServerError(t, caught)`, `CODE_KEYS[status.code]` becomes
@@ -1837,7 +1837,7 @@ git commit -m "feat(mobile): welcome with two doors and a server step that signs
    ```
    and delete the now-unused `startOver` and `useRouter` imports/`router` constant if nothing else uses them.
 
-- [ ] **Step 2: `profile.tsx` trailing text**
+- [x] **Step 2: `profile.tsx` trailing text**
 
 ```tsx
             trailing={
@@ -1847,7 +1847,7 @@ git commit -m "feat(mobile): welcome with two doors and a server step that signs
 
 Remove `serverUrl` from the `useServer()` destructuring there if it is now unused.
 
-- [ ] **Step 3: Typecheck, lint, all mobile tests**
+- [x] **Step 3: Typecheck, lint, all mobile tests**
 
 Run: `pnpm --filter mobile typecheck`
 Expected: no errors.
@@ -1857,7 +1857,7 @@ Run: `cd apps/mobile && npx jest`
 Expected: PASS, except the known `NewTagSheet` failure that also fails on `main` (check it against `main` before
 attributing it to this branch).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/mobile/app/profile apps/mobile/app/profile.tsx
@@ -1873,7 +1873,7 @@ git commit -m "feat(mobile): sign in later from Profile; «Esci» leaves a local
 `docs/self-hosting.md`, `README.md`, `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`, `ROADMAP.md`,
 `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Build scripts**
+- [x] **Step 1: Build scripts**
 
 In both scripts:
 - Header usage lines become `pnpm --filter mobile build:android [bundle.id]` / `build:ipa [bundle.id]` (drop the
@@ -1889,7 +1889,7 @@ In both scripts:
 Check: `SALDO_DRY_RUN=1 bash apps/mobile/scripts/build-ipa.sh` and `SALDO_DRY_RUN=1 bash apps/mobile/scripts/build-apk.sh`
 Expected: both print bundle/scheme/output and `dry run: stopping before prebuild.`, exit 0, no mention of a server.
 
-- [ ] **Step 2: Docs and README**
+- [x] **Step 2: Docs and README**
 
 Run: `git grep -n "SALDO_SERVER_URL" -- docs README.md apps/mobile/maestro ':!docs/superpowers/plans/2026-09-1*'`
 For every hit outside dated plans (dated plans are history — leave them): remove the variable from commands, and
@@ -1901,7 +1901,7 @@ In the maestro flow header, drop `SALDO_SERVER_URL=…` from the install line an
 tapping `welcome-server` and typing the address into `server-address` (update the flow's steps accordingly if it
 drives the welcome; if it assumes an already signed-in app, only the comment changes).
 
-- [ ] **Step 3: Spec**
+- [x] **Step 3: Spec**
 
 In `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`:
 - §1.1 goal 2 → «**Local-first, one account when you want one.** Every read and write is local, so the app is fully
@@ -1936,14 +1936,14 @@ In `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`:
 - §18 first bullet → «…except the server the user typed and signed in to (§6.29 step 0, §6.30) and, in the future,
   the user-configured AI provider.»
 
-- [ ] **Step 4: Roadmap and plans index**
+- [x] **Step 4: Roadmap and plans index**
 
 `ROADMAP.md`: mark «A first run with no server (local-only), sign-in later» done with a one-line pointer to this plan
 and the 2026-09-25 decisions (typed address, `SALDO_SERVER_URL` removed); in the AI item that says «The local-only mode
 (0.1…) has no AI. Write that down…», leave the checkbox as it is. `docs/superpowers/plans/README.md`: in the 08b entry,
 add «Reversed 2026-09-25 by `2026-09-25-local-first.md`: the address is typed again.»
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/scripts apps/mobile/maestro docs README.md ROADMAP.md
@@ -1954,7 +1954,7 @@ git commit -m "docs: the app starts without a server and asks for its address"
 
 ### Task 12: Verification
 
-- [ ] **Step 1: Gates** (read the output, not the exit code — AGENTS.md)
+- [x] **Step 1: Gates** (read the output, not the exit code — AGENTS.md)
 
 ```bash
 rtk proxy pnpm lint
@@ -1964,7 +1964,7 @@ rtk proxy pnpm test
 
 Expected: no `lint/…` lines; no type errors; all tests pass except the known `NewTagSheet` failure (confirm on `main`).
 
-- [ ] **Step 2: Leftovers**
+- [x] **Step 2: Leftovers**
 
 Run: `git grep -n "SALDO_SERVER_URL\|BUILD_SERVER_URL\|readServerUrl\|ConnectForm\|noServerConfigured\|welcomeOffline" -- ':!docs/superpowers/plans/2026-09-1*' ':!docs/superpowers/plans/2026-09-2[0-4]*'`
 Expected: only this plan file.
