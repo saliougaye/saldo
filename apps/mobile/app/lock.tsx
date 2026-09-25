@@ -1,18 +1,17 @@
+import { mascot } from '@saldo/ui';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { PrimaryButton } from '../src/components/Button';
+import { Mascot } from '../src/components/Mascot';
 import { Screen } from '../src/components/Screen';
 import { enterTabs } from '../src/navigation/history';
-import { Icon } from '../src/theme/Icon';
 import { Text } from '../src/theme/Text';
-import { useTheme } from '../src/theme/ThemeProvider';
 
 /** §6.32: prompts biometrics on mount and falls back to the device passcode. */
 export default function LockScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
@@ -35,7 +34,8 @@ export default function LockScreen() {
   return (
     <Screen scroll={false}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <Icon name="shield" size={40} color={theme.palette.textMuted} />
+        {/* §6.32: asleep until the user unlocks; the title says the same. */}
+        <Mascot state="sleep" size={mascot.lockSize} />
         <Text size="title" weight="semibold" tracking="tighter">
           {t('lock.title')}
         </Text>

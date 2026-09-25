@@ -1,8 +1,10 @@
+import { mascot } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { IconBox, ListRow } from '../../src/components/ListRow';
+import { Mascot } from '../../src/components/Mascot';
 import { Screen } from '../../src/components/Screen';
 import { CHUNK, StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { Text } from '../../src/theme/Text';
@@ -23,6 +25,8 @@ export default function Welcome() {
 
   return (
     <Screen>
+      {/* §13 *Mascot*: he greets once, then holds the wave. */}
+      <Mascot state="wave" size={mascot.welcomeSize} style={{ alignSelf: 'flex-start' }} />
       <StepHeader title={t('onboarding.welcomeTitle')} body={t('onboarding.welcomeBody')} />
       <StepChunk>
         <Card padded={false}>

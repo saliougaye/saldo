@@ -177,6 +177,12 @@ describe('mascot', () => {
     }
   });
 
+  it('stays small next to an error, smaller than wherever he is the subject', () => {
+    expect(mascot.errorSize).toBeLessThan(mascot.loadingSize);
+    expect(mascot.errorSize).toBeLessThan(mascot.welcomeSize);
+    expect(mascot.errorSize).toBeLessThan(mascot.lockSize);
+  });
+
   it('trims only the empty margin above his coin', () => {
     expect(mascot.trimTop).toBeGreaterThan(0);
     expect(mascot.trimTop).toBeLessThan(0.023);

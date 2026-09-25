@@ -12,6 +12,7 @@
       "!docs/design",
       "!docs/superpowers/mockups",
       "!apps/mobile/drizzle",
+      "!apps/mobile/assets/mascot",
       "!apps/mobile/.seed-db.cjs",
       "!apps/web/drizzle",
       "!apps/web/.next",

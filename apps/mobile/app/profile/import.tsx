@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
+import { ErrorNote } from '../../src/components/ErrorNote';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { db } from '../../src/db/client';
@@ -65,11 +66,7 @@ export default function ImportScreen() {
         </>
       )}
 
-      {error === null ? null : (
-        <Text size="footnote" color="accent">
-          {error}
-        </Text>
-      )}
+      {error === null ? null : <ErrorNote message={error} />}
     </Screen>
   );
 }

@@ -14,7 +14,7 @@ export function GoalCard({ reached, children }: { reached: boolean; children: Re
     <View style={{ paddingTop: mascot.cardWindow }}>
       {/* Before the card, so the card paints over him. */}
       <MascotPeek
-        pose="success"
+        state="success"
         size={mascot.cardSize}
         window={mascot.cardWindow}
         style={{ position: 'absolute', top: 0, end: mascot.cardInset }}
