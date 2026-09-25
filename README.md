@@ -138,8 +138,10 @@ npx expo run:ios      # or run:android
 ```
 
 The app does not know about the server until you tell it: on the welcome screen choose "With your
-Saldo server" and type `http://localhost:3000` (a bare hostname gets `https://`, so spell out
-`http://` here), or pick "Only on this phone" to work without steps 1 and 2 at all.
+Saldo server" and type `http://localhost:3000` — `http://10.0.2.2:3000` on the Android emulator. A
+bare hostname gets `https://`, so spell out `http://` here; the app accepts plain `http` only for this
+machine, never for an address on the network. Or pick "Only on this phone" to work without steps 1
+and 2 at all.
 
 Afterwards `npx expo start` is enough for JavaScript changes. Three things need the full rebuild
 above: a **new native module**, a change to **`app.config.ts`** (permissions, scheme, bundle id —

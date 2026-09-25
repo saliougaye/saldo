@@ -120,9 +120,11 @@ export function ServerAddressCard({
               ? t('server.checking')
               : hint.kind === 'will-connect'
                 ? t('server.hintConnect', { origin: hint.origin })
-                : hint.kind === 'invalid'
-                  ? t('server.hintInvalid')
-                  : t('server.hintIdle')}
+                : hint.kind === 'insecure'
+                  ? t('server.hintInsecure')
+                  : hint.kind === 'invalid'
+                    ? t('server.hintInvalid')
+                    : t('server.hintIdle')}
           </Text>
         </Animated.View>
       ) : (
@@ -189,6 +191,8 @@ export function ServerActions({ s }: { s: ServerSignIn }) {
 /** The two questions `connect` may ask before it installs the session. */
 export function ServerSignInDialogs({ s }: { s: ServerSignIn }) {
   const { t } = useTranslation();
+  // The questions are asked mid sign-in, so the probe has found the server they are about.
+  const server = s.probe.kind === 'found' ? serverLabel(s.probe.origin) : '';
   return (
     <>
       <ConfirmDialog
@@ -203,7 +207,7 @@ export function ServerSignInDialogs({ s }: { s: ServerSignIn }) {
       <ConfirmDialog
         visible={s.unownedOpen}
         title={t('sync.unownedTitle')}
-        body={t('sync.unownedBody')}
+        body={t('sync.unownedBody', { server })}
         confirmLabel={t('sync.unownedAdopt')}
         alternativeLabel={t('sync.unownedDiscard')}
         cancelLabel={t('common.cancel')}

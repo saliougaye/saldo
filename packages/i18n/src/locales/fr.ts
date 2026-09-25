@@ -547,7 +547,7 @@ export const fr: Messages = {
     foreignDeviceData: 'Connexion annulée : les données de ce téléphone sont à un autre compte.',
     unownedTitle: 'Données sur ce téléphone',
     unownedBody:
-      'Ces données ne sont encore dans aucun compte. Vous pouvez les apporter dans celui-ci, avec ce qu’il contient déjà, ou les supprimer et n’utiliser que celles du serveur.',
+      'Ces données ne sont encore dans aucun compte. Vous pouvez les apporter sur {{server}}, avec ce que le compte contient déjà, ou les supprimer et n’utiliser que celles du serveur.',
     unownedAdopt: 'Apporter dans le compte',
     unownedDiscard: 'Supprimer et utiliser le serveur',
     pending_one: '{{count}} modification à synchroniser',
@@ -573,6 +573,7 @@ export const fr: Messages = {
     hintIdle: 'Par exemple saldo.exemple.fr',
     hintConnect: 'Connexion à {{origin}}',
     hintInvalid: 'Saisissez seulement l’adresse, par exemple saldo.exemple.fr',
+    hintInsecure: 'Il faut https:// : http:// ne marche qu’avec localhost, en développement.',
     checking: 'Vérification du serveur…',
     version: 'Saldo {{version}}',
     unreachable: 'Injoignable',

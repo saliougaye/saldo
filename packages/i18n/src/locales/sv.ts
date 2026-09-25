@@ -540,7 +540,7 @@ export const sv: Messages = {
     foreignDeviceData: 'Inloggningen avbröts: datan på telefonen tillhör ett annat konto.',
     unownedTitle: 'Data på den här telefonen',
     unownedBody:
-      'Dessa data finns inte i något konto ännu. Du kan ta med dem till det här, tillsammans med det som redan finns där, eller radera dem och bara använda serverns.',
+      'Dessa data finns inte i något konto ännu. Du kan ta med dem till {{server}}, tillsammans med det som redan finns i kontot, eller radera dem och bara använda serverns.',
     unownedAdopt: 'Ta med till kontot',
     unownedDiscard: 'Radera och använd servern',
     pending_one: '{{count}} ändring väntar på synk',
@@ -566,6 +566,7 @@ export const sv: Messages = {
     hintIdle: 'Till exempel saldo.exempel.se',
     hintConnect: 'Ansluter till {{origin}}',
     hintInvalid: 'Skriv bara adressen, till exempel saldo.exempel.se',
+    hintInsecure: 'Det krävs https://: http:// fungerar bara med localhost, vid utveckling.',
     checking: 'Kontrollerar servern…',
     version: 'Saldo {{version}}',
     unreachable: 'Går inte att nå',

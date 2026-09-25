@@ -23,6 +23,14 @@ describe('addressHint', () => {
     });
   });
 
+  it('says why plain http to another machine is refused', () => {
+    expect(addressHint('http://saldo.example.org')).toEqual({ kind: 'insecure' });
+    expect(addressHint('http://localhost:3000')).toEqual({
+      kind: 'will-connect',
+      origin: 'http://localhost:3000',
+    });
+  });
+
   it('asks for only the address when there is a path', () => {
     expect(addressHint('saldo.example.org/login')).toEqual({ kind: 'invalid' });
   });

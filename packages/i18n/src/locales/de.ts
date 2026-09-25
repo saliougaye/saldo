@@ -545,7 +545,7 @@ export const de: Messages = {
       'Anmeldung abgebrochen: Die Daten auf diesem Handy gehören einem anderen Konto.',
     unownedTitle: 'Daten auf diesem Telefon',
     unownedBody:
-      'Diese Daten gehören noch zu keinem Konto. Du kannst sie in dieses übernehmen, zusammen mit dem, was es schon enthält, oder sie löschen und nur die des Servers verwenden.',
+      'Diese Daten gehören noch zu keinem Konto. Du kannst sie zu {{server}} übernehmen, zusammen mit dem, was das Konto schon enthält, oder sie löschen und nur die des Servers verwenden.',
     unownedAdopt: 'Ins Konto übernehmen',
     unownedDiscard: 'Löschen, Server verwenden',
     pending_one: '{{count}} Änderung wartet auf Sync',
@@ -572,6 +572,7 @@ export const de: Messages = {
     hintIdle: 'Zum Beispiel saldo.beispiel.de',
     hintConnect: 'Verbinde mit {{origin}}',
     hintInvalid: 'Gib nur die Adresse ein, zum Beispiel saldo.beispiel.de',
+    hintInsecure: 'Hier ist https:// nötig: http:// geht nur mit localhost, zum Entwickeln.',
     checking: 'Prüfe den Server…',
     version: 'Saldo {{version}}',
     unreachable: 'Nicht erreichbar',

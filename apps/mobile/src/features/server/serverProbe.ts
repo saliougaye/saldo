@@ -1,5 +1,5 @@
 import type { ServerHealth } from '../../auth/health';
-import { normaliseServerUrl } from '../../auth/link';
+import { isInsecureAddress, normaliseServerUrl } from '../../auth/link';
 import { ApiClientError } from '../../net/apiClient';
 
 /**
@@ -12,12 +12,15 @@ import { ApiClientError } from '../../net/apiClient';
 export type AddressHint =
   | { kind: 'idle' }
   | { kind: 'will-connect'; origin: string }
+  /** Plain `http` to another machine: refused, and the user is told why (§18). */
+  | { kind: 'insecure' }
   | { kind: 'invalid' };
 
 export function addressHint(input: string): AddressHint {
   if (input.trim().length === 0) return { kind: 'idle' };
   const origin = normaliseServerUrl(input);
-  return origin === null ? { kind: 'invalid' } : { kind: 'will-connect', origin };
+  if (origin !== null) return { kind: 'will-connect', origin };
+  return isInsecureAddress(input) ? { kind: 'insecure' } : { kind: 'invalid' };
 }
 
 export type FailureReason = 'unreachable' | 'not_saldo';

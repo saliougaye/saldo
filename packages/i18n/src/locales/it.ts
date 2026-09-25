@@ -543,7 +543,7 @@ export const it = {
     foreignDeviceData: 'Accesso annullato: i dati su questo telefono sono di un altro account.',
     unownedTitle: 'Dati su questo telefono',
     unownedBody:
-      'Questi dati non sono ancora in nessun account. Puoi portarli in questo, insieme a quello che contiene già, oppure cancellarli e usare solo quelli del server.',
+      'Questi dati non sono ancora in nessun account. Puoi portarli su {{server}}, insieme a quello che l’account contiene già, oppure cancellarli e usare solo quelli del server.',
     unownedAdopt: 'Porta nell’account',
     unownedDiscard: 'Cancella e usa il server',
     pending_one: '{{count}} modifica da sincronizzare',
@@ -570,6 +570,7 @@ export const it = {
     hintIdle: 'Per esempio saldo.esempio.it',
     hintConnect: 'Mi collego a {{origin}}',
     hintInvalid: 'Scrivi solo l’indirizzo, per esempio saldo.esempio.it',
+    hintInsecure: 'Serve https://: http:// funziona solo con localhost, in sviluppo.',
     checking: 'Controllo il server…',
     version: 'Saldo {{version}}',
     unreachable: 'Non raggiungibile',

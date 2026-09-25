@@ -12,19 +12,42 @@ export function redirectUri(scheme: string): string {
 }
 
 /**
- * What the user typed, turned into an origin. A bare hostname gets `https://`, because that is the
- * only scheme a real deployment can use (§9.2) — `http` survives only when spelled out, for
- * `http://localhost` during development.
+ * The hosts plain `http` may reach: this machine, and the Android emulator's name for it. Nothing
+ * on a network sits between the app and these, so nothing can impersonate the server (§18).
+ * WebAuthn itself only runs in a secure context or on localhost, so no other http address could
+ * sign anybody in anyway.
  */
-export function normaliseServerUrl(input: string): string | null {
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '10.0.2.2']);
+
+/** Parses what the user typed into a URL, `https://` added to a bare host; null when unusable. */
+function parseAddress(input: string): URL | null {
   const trimmed = input.trim();
   if (trimmed.length === 0) return null;
-  const withScheme = /^https?:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   if (!URL.canParse(withScheme)) return null;
   const url = new URL(withScheme);
   if (url.hostname.length === 0 || url.hostname.includes(' ')) return null;
   if (url.pathname !== '/' && url.pathname !== '') return null;
+  return url;
+}
+
+/**
+ * What the user typed, turned into an origin. A bare hostname gets `https://`, because that is the
+ * only scheme a real deployment can use (§9.2). `http` survives only when spelled out **and**
+ * pointed at this machine (`LOOPBACK_HOSTS`), for a server running beside the app in development:
+ * over a network it would let anybody on the path answer as the server.
+ */
+export function normaliseServerUrl(input: string): string | null {
+  const url = parseAddress(input);
+  if (url === null) return null;
+  if (url.protocol === 'http:' && !LOOPBACK_HOSTS.has(url.hostname)) return null;
   return `${url.protocol}//${url.host}`;
+}
+
+/** A well-formed address refused only because it is plain `http` to another machine. */
+export function isInsecureAddress(input: string): boolean {
+  const url = parseAddress(input);
+  return url !== null && url.protocol === 'http:' && !LOOPBACK_HOSTS.has(url.hostname);
 }
 
 /** What the user is shown: the host, without a scheme they never typed. */

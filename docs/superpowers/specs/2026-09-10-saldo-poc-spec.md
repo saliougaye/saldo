@@ -1039,7 +1039,8 @@ A passkey ceremony needs `navigator.credentials`, which React Native does not ha
 server serves and the resulting session is handed to the app.
 
 1. App: the user types the server address (§6.29 step 0, §6.30); `normaliseServerUrl` turns it into an origin (a
-   bare host gets `https://`, a path is rejected). «Continua» calls `GET /api/health`, which must return
+   bare host gets `https://`, a path is rejected, plain `http` is accepted only for `localhost`, `127.0.0.1`, `[::1]`
+   and the Android emulator's `10.0.2.2` — over a network it would let anybody on the path answer as the server). «Continua» calls `GET /api/health`, which must return
    `app: "saldo"` and `apiVersion: 1` — no answer or a 5xx is «Non raggiungibile» (a proxy in front of a Saldo that
    is down answers 502/503), any other status or body «Non è un server Saldo» (`readHealth`);
    it also returns `schemaVersion` (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered.
@@ -1498,6 +1499,11 @@ CI (`.github/workflows/ci.yml`): pnpm install (frozen lockfile), `pnpm lint`, `p
 - No telemetry, analytics or third-party network calls from the app except the server the user typed and signed in
   to (§6.29 step 0, §6.30) — `GET /api/health` on an address typed but not yet signed in to is the only request made
   before that — and, in the future, the user-configured AI provider.
+- **The server is whoever the user points the app at.** `/api/health` is a usability check, not authentication:
+  anything can answer like Saldo. What is guaranteed is that the app talks to the host that was typed (HTTPS, plain
+  `http` only to this machine) and that a passkey never leaves the origin it was made for. What cannot be guaranteed
+  is that the host is the right one, so the host is shown on the server row before signing in and named again in the
+  «Dati su questo telefono» question, the moment local rows would be pushed to it.
 - One opaque session token in the keychain/keystore (Expo SecureStore), not an access/refresh pair: phase 06b replaced
   the original OAuth-style design with Better Auth passkeys, and there is no refresh token to rotate or detect reuse
   of. The session is sliding — it renews on use, at most once every 14 days — and lapses after 180 days with no

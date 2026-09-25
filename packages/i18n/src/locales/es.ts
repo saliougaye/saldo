@@ -544,7 +544,7 @@ export const es: Messages = {
     foreignDeviceData: 'Inicio de sesión cancelado: los datos de este teléfono son de otra cuenta.',
     unownedTitle: 'Datos en este teléfono',
     unownedBody:
-      'Estos datos aún no están en ninguna cuenta. Puedes llevarlos a esta, junto con lo que ya contiene, o borrarlos y usar solo los del servidor.',
+      'Estos datos aún no están en ninguna cuenta. Puedes llevarlos a {{server}}, junto con lo que la cuenta ya contiene, o borrarlos y usar solo los del servidor.',
     unownedAdopt: 'Llevar a la cuenta',
     unownedDiscard: 'Borrar y usar el servidor',
     pending_one: '{{count}} cambio por sincronizar',
@@ -571,6 +571,7 @@ export const es: Messages = {
     hintIdle: 'Por ejemplo saldo.ejemplo.es',
     hintConnect: 'Me conecto a {{origin}}',
     hintInvalid: 'Escribe solo la dirección, por ejemplo saldo.ejemplo.es',
+    hintInsecure: 'Hace falta https://: http:// solo funciona con localhost, para desarrollo.',
     checking: 'Compruebo el servidor…',
     version: 'Saldo {{version}}',
     unreachable: 'No accesible',

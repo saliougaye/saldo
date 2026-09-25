@@ -109,6 +109,14 @@ describe('ServerSignInPanel', () => {
     expect(screen.getByLabelText('Server address').props.value).toBe('saldo.rossi.example.org');
   });
 
+  it('refuses plain http to another machine and says why', async () => {
+    await renderPanel();
+    await userEvent.type(screen.getByLabelText('Server address'), 'http://saldo.rossi.example.org');
+    expect(screen.getByText(/only works with localhost/)).toBeTruthy();
+    await userEvent.press(screen.getByText('Continue'));
+    expect(mockCheck).not.toHaveBeenCalled();
+  });
+
   it('sends a non-Saldo address back to the field, still typed', async () => {
     mockCheck.mockRejectedValue(new ApiClientError(502, 'not_saldo', 'x'));
     await renderPanel();
@@ -143,6 +151,8 @@ describe('ServerSignInPanel', () => {
     await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
     await userEvent.press(await screen.findByText('Sign in with passkey'));
+    // Where the rows would go, named at the moment they would leave the phone (§18).
+    expect(await screen.findByText(/bring it to saldo\.rossi\.example\.org,/)).toBeTruthy();
     await userEvent.press(await screen.findByText('Delete and use the server'));
     await act(async () => {
       await expect(answer).resolves.toBe('discard');

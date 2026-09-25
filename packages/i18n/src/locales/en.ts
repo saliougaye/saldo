@@ -539,7 +539,7 @@ export const en: Messages = {
     foreignDeviceData: 'Sign-in cancelled: the data on this phone belongs to another account.',
     unownedTitle: 'Data on this phone',
     unownedBody:
-      'This data is not in any account yet. You can bring it into this one, together with what it already holds, or delete it and use only the server’s.',
+      'This data is not in any account yet. You can bring it to {{server}}, together with what the account already holds, or delete it and use only the server’s.',
     unownedAdopt: 'Bring into the account',
     unownedDiscard: 'Delete and use the server',
     pending_one: '{{count}} change waiting to sync',
@@ -565,6 +565,7 @@ export const en: Messages = {
     hintIdle: 'For example saldo.example.com',
     hintConnect: 'Connecting to {{origin}}',
     hintInvalid: 'Type just the address, for example saldo.example.com',
+    hintInsecure: 'This needs https://: http:// only works with localhost, for development.',
     checking: 'Checking the server…',
     version: 'Saldo {{version}}',
     unreachable: 'Not reachable',
