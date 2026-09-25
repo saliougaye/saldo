@@ -188,7 +188,7 @@ How it is built:
   - whether the intro doubles as a «Novità» sheet after an update (Apple uses one pattern for both).
 - [ ] Spec section and a mockup in `docs/superpowers/mockups/` (intro cards, ⓘ sheet, Guida list), then the plan.
 
-### Transfers: a button to fill the amount with the source's whole balance
+### Transfers: a button to fill the amount with the source's whole balance ✅ done
 
 Asked for on 2026-09-24. Moving everything out of an account — emptying a pocket, sweeping a checking account into
 savings — means reading the source's balance and retyping it on the keypad, cents included. A button on the transfer
@@ -206,13 +206,13 @@ until they save.
 - **Pure function in `@saldo/core`**, TDD first, that returns the amount to prefill for a source and a `today`; the
   sheet only calls it. Money stays integer minor units.
 
-- [ ] Decide before planning:
-  - the label («Tutto», «Tutto il saldo», «Svuota conto») and whether it is a chip or a text button;
-  - whether «Accantona» should also offer a second fill, «quanto manca» (target − saved), since the parent's whole
-    balance is rarely what a goal wants;
-  - whether a pocket's «Riporta in {parent}» (§6.38) and «Preleva» (§6.36) reuse it instead of their own prefill;
-  - the source being a credit card in credit (positive balance): fill with it, or hide the button.
-- [ ] Spec line in §6.16, then the plan.
+- [x] Decide before planning (2026-09-25): a **chip** «Tutto il saldo · {amount}» under the figure; «Accantona»
+      (any transfer into an open goal) also gets «Quanto manca · {amount}», capped at the source's balance and shown
+      only when smaller; «Preleva» gets the chip from its Da picker, «Riporta in {parent}» keeps its own prefill; a
+      credit card as source offers only a credit (the > 0 rule), and **towards** a card there is no chip, since
+      paying a card the figure is its debt, which «Salda carta» offers under the same label.
+- [x] Spec line in §6.16 and the plan (`docs/superpowers/plans/2026-09-25-transfer-fill-balance.md`);
+      `transferFillAmounts` in `@saldo/core`, the chips in `TransactionForm`.
 
 ### Tag detail: the total ignores income ✅ done
 

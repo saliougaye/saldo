@@ -226,6 +226,8 @@ export const it = {
     missing_insufficientFunds: 'Sul conto di partenza ci sono solo {{available}}.',
     cardInCredit: 'La carta andrà in attivo di {{amount}}.',
     customAmount: 'Importo personalizzato',
+    fillBalance: 'Tutto il saldo · {{amount}}',
+    fillMissing: 'Quanto manca · {{amount}}',
     otherCategory: 'Altro',
     account: 'Conto',
     from: 'Da',

@@ -230,6 +230,8 @@ export const pt: Messages = {
     missing_insufficientFunds: 'A conta de origem só tem {{available}}.',
     cardInCredit: 'O cartão vai ficar com {{amount}} a favor.',
     customAmount: 'Valor personalizado',
+    fillBalance: 'Todo o saldo · {{amount}}',
+    fillMissing: 'O que falta · {{amount}}',
     otherCategory: 'Outros',
     account: 'Conta',
     from: 'De',

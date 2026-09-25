@@ -225,6 +225,8 @@ export const en: Messages = {
     missing_insufficientFunds: 'The source account only holds {{available}}.',
     cardInCredit: 'The card will be {{amount}} in credit.',
     customAmount: 'Custom amount',
+    fillBalance: 'Whole balance · {{amount}}',
+    fillMissing: 'Still needed · {{amount}}',
     otherCategory: 'Other',
     account: 'Account',
     from: 'From',

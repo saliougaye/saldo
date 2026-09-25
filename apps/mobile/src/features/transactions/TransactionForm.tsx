@@ -6,6 +6,7 @@ import {
   minorToAmountBuffer,
   topCategories,
   transferBalancePreview,
+  transferFillAmounts,
   transferOverdrawsSource,
   transferOverpaysCard,
 } from '@saldo/core';
@@ -169,6 +170,19 @@ export function TransactionForm({
       values.accountId,
       values.toAccountId,
     ],
+  );
+  // §6.16: one tap for «everything the source holds» (and, into a goal, «what it still lacks»)
+  // instead of reading the balance off the line below and retyping it. Follows the two pickers.
+  const fills = useMemo(
+    () =>
+      values.kind === 'transfer'
+        ? transferFillAmounts(accounts, history, today, {
+            id: transactionId,
+            fromAccountId: values.accountId,
+            toAccountId: values.toAccountId,
+          })
+        : [],
+    [accounts, history, today, transactionId, values.kind, values.accountId, values.toAccountId],
   );
   // Seven plus the "Altro" tile is two rows: the grid stops being the whole screen, and what it
   // pushed below the fold — the tags, the attachments — is reachable without scrolling past it.
@@ -361,8 +375,8 @@ export function TransactionForm({
         />
       )}
 
-      {/* The keypad clears the whole card, not just the figure: the choice, the custom-amount
-          line and the overpay warning under it are all about the amount being typed. */}
+      {/* The keypad clears the whole card, not just the figure: the fill chips, the choice, the
+          custom-amount line and the overpay warning under it are all about the amount being typed. */}
       <Card ref={amountCard}>
         <Text size="footnote" color="textMuted">
           {t('txForm.amount')}
@@ -380,6 +394,21 @@ export function TransactionForm({
             doneLabel={t('common.done')}
           />
         </View>
+        {fills.length === 0 ? null : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {fills.map((fill) => (
+              <Chip
+                key={fill.key}
+                testID={`txform-fill-${fill.key}`}
+                label={t(fill.key === 'balance' ? 'txForm.fillBalance' : 'txForm.fillMissing', {
+                  amount: spoken(fill.minor),
+                })}
+                active={typed === fill.minor}
+                onPress={() => set({ buffer: minorToAmountBuffer(fill.minor, minorDigits) })}
+              />
+            ))}
+          </View>
+        )}
         {amountShortcuts.length === 0 ? null : (
           <>
             <AmountChoice

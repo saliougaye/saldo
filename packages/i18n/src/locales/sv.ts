@@ -227,6 +227,8 @@ export const sv: Messages = {
     missing_insufficientFunds: 'Det finns bara {{available}} på avsändarkontot.',
     cardInCredit: 'Kortet hamnar {{amount}} på plus.',
     customAmount: 'Eget belopp',
+    fillBalance: 'Hela saldot · {{amount}}',
+    fillMissing: 'Det som saknas · {{amount}}',
     otherCategory: 'Övrigt',
     account: 'Konto',
     from: 'Från',

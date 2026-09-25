@@ -13,6 +13,7 @@ import {
   paymentAccountCandidates,
   spendableTotal,
   transferBalancePreview,
+  transferFillAmounts,
   transferOverdrawsSource,
   transferOverpaysCard,
 } from './accounts';
@@ -415,5 +416,135 @@ describe('transferOverpaysCard', () => {
     expect(transferOverpaysCard({ type: 'checking' }, { now: -5000, after: 1000 })).toBe(false);
     expect(transferOverpaysCard(undefined, { now: -5000, after: 1000 })).toBe(false);
     expect(transferOverpaysCard(card, null)).toBe(false);
+  });
+});
+
+describe('transferFillAmounts', () => {
+  const draft = { id: 'draft', fromAccountId: 'acc-checking', toAccountId: 'acc-savings' };
+  const goal = {
+    id: 'goal-car',
+    type: 'pocket' as const,
+    openingBalance: 100000,
+    includeInSpendable: false,
+    archivedAt: null,
+    creditCloseDay: null,
+    creditChargeDay: null,
+    goalTarget: 300000,
+  };
+
+  it('offers what the source holds today', () => {
+    expect(transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, draft)).toEqual([
+      { key: 'balance', minor: 603000 },
+    ]);
+  });
+
+  it('offers nothing without a source', () => {
+    expect(
+      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, { ...draft, fromAccountId: null }),
+    ).toEqual([]);
+    expect(
+      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, {
+        ...draft,
+        fromAccountId: 'gone',
+      }),
+    ).toEqual([]);
+  });
+
+  it('offers nothing when the source holds nothing, or less', () => {
+    const txs = [tx({ date: TODAY, amount: 500000, accountId: 'acc-checking' })];
+    expect(transferFillAmounts(ACCOUNTS, txs, TODAY, draft)).toEqual([]);
+    const overdrawn = [tx({ date: TODAY, amount: 600000, accountId: 'acc-checking' })];
+    expect(transferFillAmounts(ACCOUNTS, overdrawn, TODAY, draft)).toEqual([]);
+  });
+
+  it('offers a card only the credit it holds', () => {
+    const fromCard = { ...draft, fromAccountId: 'acc-card', toAccountId: 'acc-checking' };
+    // In debt (-18240): nothing to move.
+    expect(transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, fromCard)).toEqual([]);
+    const refund = [tx({ date: TODAY, kind: 'income', amount: 4000, accountId: 'acc-card' })];
+    expect(transferFillAmounts(ACCOUNTS, refund, TODAY, fromCard)).toEqual([
+      { key: 'balance', minor: 4000 },
+    ]);
+  });
+
+  it('offers nothing towards a card: paying it, what counts is its debt, which «Salda carta» offers', () => {
+    expect(
+      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, {
+        ...draft,
+        toAccountId: 'acc-card',
+      }),
+    ).toEqual([]);
+  });
+
+  it('leaves the transfer being edited out, so re-editing offers the same total', () => {
+    const saved = tx({
+      date: TODAY,
+      id: 'draft',
+      kind: 'transfer',
+      amount: 50000,
+      accountId: 'acc-checking',
+      toAccountId: 'acc-savings',
+    });
+    expect(transferFillAmounts(ACCOUNTS, [saved], TODAY, draft)).toEqual([
+      { key: 'balance', minor: 500000 },
+    ]);
+  });
+
+  it('ignores rows dated after today', () => {
+    const later = [tx({ date: '2026-04-20', amount: 5000, accountId: 'acc-checking' })];
+    expect(transferFillAmounts(ACCOUNTS, later, TODAY, draft)).toEqual([
+      { key: 'balance', minor: 500000 },
+    ]);
+  });
+
+  describe('into a goal', () => {
+    const accounts = [...ACCOUNTS, goal];
+    const toGoal = { ...draft, toAccountId: 'goal-car' };
+
+    it('also offers what the goal still lacks, when it is less than the whole balance', () => {
+      expect(transferFillAmounts(accounts, [], TODAY, toGoal)).toEqual([
+        { key: 'balance', minor: 500000 },
+        { key: 'missing', minor: 200000 },
+      ]);
+    });
+
+    it('counts what the goal has received', () => {
+      const put = [
+        tx({
+          date: TODAY,
+          kind: 'transfer',
+          amount: 50000,
+          accountId: 'acc-checking',
+          toAccountId: 'goal-car',
+        }),
+      ];
+      expect(transferFillAmounts(accounts, put, TODAY, toGoal)).toEqual([
+        { key: 'balance', minor: 450000 },
+        { key: 'missing', minor: 150000 },
+      ]);
+    });
+
+    it('drops the second chip when the source cannot cover the gap: both would fill the same', () => {
+      const poor = { ...goal, id: 'acc-poor', type: 'checking' as const, openingBalance: 150000 };
+      expect(
+        transferFillAmounts([poor, goal], [], TODAY, { ...toGoal, fromAccountId: 'acc-poor' }),
+      ).toEqual([{ key: 'balance', minor: 150000 }]);
+    });
+
+    it('offers no gap for a reached or archived goal', () => {
+      const reached = [...ACCOUNTS, { ...goal, openingBalance: 300000 }];
+      expect(transferFillAmounts(reached, [], TODAY, toGoal)).toEqual([
+        { key: 'balance', minor: 500000 },
+      ]);
+      const archived = [...ACCOUNTS, { ...goal, archivedAt: '2026-04-01T00:00:00.000Z' }];
+      expect(transferFillAmounts(archived, [], TODAY, toGoal)).toEqual([
+        { key: 'balance', minor: 500000 },
+      ]);
+    });
+
+    it('offers no gap when the source is empty', () => {
+      const txs = [tx({ date: TODAY, amount: 500000, accountId: 'acc-checking' })];
+      expect(transferFillAmounts(accounts, txs, TODAY, toGoal)).toEqual([]);
+    });
   });
 });

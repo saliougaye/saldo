@@ -230,6 +230,8 @@ export const fr: Messages = {
     missing_insufficientFunds: 'Le compte de départ n’a que {{available}}.',
     cardInCredit: 'La carte sera créditrice de {{amount}}.',
     customAmount: 'Montant personnalisé',
+    fillBalance: 'Tout le solde · {{amount}}',
+    fillMissing: 'Ce qui manque · {{amount}}',
     otherCategory: 'Autre',
     account: 'Compte',
     from: 'De',

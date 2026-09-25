@@ -314,6 +314,50 @@ export function transferBalancePreview(
   return { from: preview(draft.fromAccountId), to: preview(draft.toAccountId) };
 }
 
+/** A one-tap amount for a transfer: the source's whole balance, or what a goal still lacks. */
+export interface TransferFill {
+  key: 'balance' | 'missing';
+  minor: MinorUnits;
+}
+
+/**
+ * The amounts the transfer sheet offers to fill in with one tap (§6.16). «Tutto il saldo» is what
+ * the source holds today, the row being edited left out so re-editing offers the same total; there
+ * is nothing to offer from a balance of 0 or less, which is also why a card offers only a credit.
+ * Into an open goal that still lacks money, «Quanto manca» is that gap, capped at the source's
+ * balance and dropped when the cap makes it the same figure: one option is not a choice.
+ * Towards a credit card there is none: paying a card, the figure that counts is its debt, which
+ * «Salda carta» offers under the same label, and the two must not disagree.
+ */
+export function transferFillAmounts(
+  accounts: readonly (AccountRef & { goalTarget?: MinorUnits | null })[],
+  txs: readonly LedgerTx[],
+  today: LocalDate,
+  draft: Pick<TransferDraft, 'id' | 'fromAccountId' | 'toAccountId'>,
+): TransferFill[] {
+  if (draft.fromAccountId === null) return [];
+  const destination = accounts.find((account) => account.id === draft.toAccountId);
+  if (destination?.type === 'credit_card') return [];
+  const balances = accountBalances(
+    accounts,
+    txs.filter((tx) => tx.id !== draft.id),
+    today,
+  );
+  const balance = balances.get(draft.fromAccountId) ?? 0;
+  if (balance <= 0) return [];
+  const fills: TransferFill[] = [{ key: 'balance', minor: balance }];
+  if (
+    destination !== undefined &&
+    destination.type === 'pocket' &&
+    destination.archivedAt === null &&
+    typeof destination.goalTarget === 'number'
+  ) {
+    const missing = destination.goalTarget - (balances.get(destination.id) ?? 0);
+    if (missing > 0 && missing < balance) fills.push({ key: 'missing', minor: missing });
+  }
+  return fills;
+}
+
 /**
  * Whether a transfer takes out more than the source account holds.
  *
