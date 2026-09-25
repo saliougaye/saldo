@@ -5,6 +5,7 @@ export * from './Card';
 export * from './Chip';
 export * from './ConfirmDialog';
 export * from './EmptyState';
+export * from './ErrorNote';
 export * from './ListRow';
 export * from './LoadingScreen';
 export * from './NotFoundScreen';

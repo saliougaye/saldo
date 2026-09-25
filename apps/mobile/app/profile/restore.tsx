@@ -9,6 +9,7 @@ import { View } from 'react-native';
 import { extensionFor, fileFor } from '../../src/attachments/localFiles';
 import { Card } from '../../src/components/Card';
 import { ConfirmDialog } from '../../src/components/ConfirmDialog';
+import { ErrorNote } from '../../src/components/ErrorNote';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { BackButton } from '../../src/components/ScreenHeader';
@@ -149,11 +150,7 @@ export default function RestoreScreen() {
         </View>
       </Card>
 
-      {error === null ? null : (
-        <Text size="footnote" color="accent">
-          {error}
-        </Text>
-      )}
+      {error === null ? null : <ErrorNote message={error} />}
 
       <ConfirmDialog
         visible={pending !== null}
