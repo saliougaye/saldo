@@ -8,7 +8,7 @@ import { useDatabase } from '../../db/DatabaseProvider';
 import { seedDemoData } from '../../db/demo';
 import { runMaterialiser } from '../../db/recurrenceService';
 import { usePeriod } from '../period/PeriodProvider';
-import { RECAP_KEY } from '../recap/recapSchedule';
+import { RECAP_KEY, RECAP_REPLAY } from '../recap/recapSchedule';
 
 /**
  * Dev-only affordance for the demo seeder (§7). It belongs in Profile, which phase 05 builds; it
@@ -36,7 +36,8 @@ export function DevTools() {
       <SecondaryButton
         label={t('dev.replayRecap')}
         onPress={() => {
-          kv.remove(RECAP_KEY);
+          // Not a removal: a user who onboarded this period would never be due, and this is for looking.
+          kv.set(RECAP_KEY, RECAP_REPLAY);
           // Expo's reload, not `DevSettings.reload()`: under the new architecture the latter restarts
           // the JS runtime without Expo's native modules, and the app dies on `ExpoAsset`.
           void reloadAppAsync('replay the period recap');

@@ -3,6 +3,7 @@ import {
   isRecapDue,
   isRecapNotificationId,
   nextRecapNotification,
+  RECAP_REPLAY,
   recapNotificationId,
   recapStamp,
 } from './recapSchedule';
@@ -39,6 +40,13 @@ describe('isRecapDue', () => {
     expect(isRecapDue({ ...base, onboardingCompletedAt: null })).toBe(false);
     expect(isRecapDue({ ...base, onboardingCompletedAt: '2026-10-01T07:00:00.000Z' })).toBe(false);
     expect(isRecapDue({ ...base, onboardingCompletedAt: '2026-09-30T21:00:00.000Z' })).toBe(true);
+  });
+
+  it('is due again on the dev replay, even for a user who set Saldo up this period', () => {
+    const replay = { ...base, stored: RECAP_REPLAY };
+    expect(isRecapDue({ ...replay, onboardingCompletedAt: '2026-10-01T07:00:00.000Z' })).toBe(true);
+    // Nothing to recap before onboarding exists at all.
+    expect(isRecapDue({ ...replay, onboardingCompletedAt: null })).toBe(false);
   });
 });
 

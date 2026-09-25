@@ -10,6 +10,13 @@ import { reminderTrigger } from '../accounts/cardReminders';
 /** kv key holding the last period recapped on this device (§5.15). Never synced. */
 export const RECAP_KEY = 'lastRecapPeriod';
 
+/**
+ * Written to `RECAP_KEY` by the dev «rivedi recap» button: shows the closed period's recap again
+ * even to a user who set Saldo up during this period. Showing it stamps the period, which consumes
+ * it.
+ */
+export const RECAP_REPLAY = 'replay';
+
 /** The notification rings at this hour on the first day of a period (§5.15). */
 export const RECAP_HOUR = 9;
 
@@ -37,6 +44,7 @@ export interface RecapDueInput {
 export function isRecapDue(input: RecapDueInput): boolean {
   if (input.stored === input.stamp) return false;
   if (input.onboardingCompletedAt === null) return false;
+  if (input.stored === RECAP_REPLAY) return true;
   return input.onboardingCompletedAt.slice(0, 10) < input.currentStart;
 }
 
