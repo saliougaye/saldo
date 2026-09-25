@@ -366,6 +366,14 @@ export const mascot = {
   celebrateMs: 560,
   celebrateFromScale: 0.9,
   celebrateFromY: 14,
+  /** Waving above the welcome's title (§6.29 step 0). */
+  welcomeSize: 120,
+  /** Asleep in place of the lock screen's icon (§6.32). */
+  lockSize: 136,
+  /** Waiting in place of the spinner of a long, labelled load. */
+  loadingSize: 104,
+  /** Above a failed import's or restore's message: small, the words carry it. */
+  errorSize: 64,
   /** The app's only overshoot, kept for the one moment worth celebrating. */
   overshootEasing: [0.34, 1.36, 0.64, 1] as const,
 } as const;
