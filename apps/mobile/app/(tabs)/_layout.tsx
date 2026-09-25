@@ -4,6 +4,7 @@ import { TabBar } from '../../src/components/TabBar';
 import { CardRemindersGate } from '../../src/features/accounts/CardRemindersGate';
 import { useLeaveWhenDataGone } from '../../src/features/deleteData/useLeaveWhenDataGone';
 import { useAppLock } from '../../src/features/lock/useAppLock';
+import { PeriodRecapGate } from '../../src/features/recap/PeriodRecapGate';
 import { useNotificationRoutes } from '../../src/navigation/useNotificationRoutes';
 
 export default function TabsLayout() {
@@ -16,6 +17,8 @@ export default function TabsLayout() {
     <>
       {/* Here rather than on Home: the reminders follow every write, whichever screen made it. */}
       <CardRemindersGate />
+      {/* The recap of the period that just closed (§5.15), over whichever tab opens first. */}
+      <PeriodRecapGate />
       <Tabs
         screenOptions={{ headerShown: false }}
         tabBar={(props) => (
