@@ -70,7 +70,7 @@ export function MascotPeek({ pose, size, window, delayMs = 0, style }: MascotPee
       {...HIDDEN}
       style={[{ width: size, height: window, overflow: 'hidden' }, style]}
     >
-      {/* The PNG's empty margin above his ears would waste the top of the window. */}
+      {/* The PNG's empty margin above his coin would waste the top of the window. */}
       <Animated.View style={[{ marginTop: -size * mascot.trimTop }, rising]}>
         <Image source={POSES[pose]} style={{ width: size, height: size }} resizeMode="contain" />
       </Animated.View>

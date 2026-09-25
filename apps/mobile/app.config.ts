@@ -14,7 +14,7 @@ const config: ExpoConfig = {
   assetBundlePatterns: ['**/*'],
   /**
    * Saldo's mark is Rocky, the raccoon mascot. Its asset kit is generated in
-   * github.com/saliougaye/mascots (branch `mascot/saldo`, `out/saldo/icons/`); the files here are
+   * github.com/saliougaye/mascots (`out/saldo/icons/`); the files here are
    * copies of it, so change the mascot there and copy them back. This fallback covers web and
    * anything that ignores the per-platform icons below.
    */

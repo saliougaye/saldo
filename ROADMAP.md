@@ -150,12 +150,20 @@ This reopens a decision taken at 08 (sign-in required), so it is a product call,
 
 ### Mascot states
 
-Moved here from `TODO.md` on 2026-09-22. The mark is Rocky, the 3D raccoon generated in
-github.com/saliougaye/mascots (branch `mascot/saldo`); the app icons, splash and favicon in `apps/mobile/assets/`
-are copies of its `out/saldo/icons/`.
+Moved here from `TODO.md` on 2026-09-22. The mark is Rocky, the raccoon generated in
+github.com/saliougaye/mascots; the app icons, splash and favicon in `apps/mobile/assets/` are copies of its
+`out/saldo/icons/`, the two poses in `apps/mobile/assets/mascot/` are its `stills/idle.svg` and `stills/success.svg`
+rendered at 480 px.
 
-The kit also carries Lottie state animations and illustrations (empty, loading, error, success, thinking, idle).
-The empty states (§13) are the obvious first use: variant D of their design review would replace `GhostStack`.
+The kit also carries Lottie state animations (idle, empty, loading, thinking, error, success, wave, sleep).
+
+- [x] Where Rocky appears (2026-09-24, spec D26, §13 *Mascot*, plan `docs/superpowers/plans/2026-09-24-mascot-states.md`):
+  peeking over the «nothing yet» ghost stack, over a reached goal's card, and whole in its close sheet. Static PNGs,
+  no Lottie.
+- [x] Rocky redrawn as a flat vector character in the style of SmoothPressure's Capy (2026-09-25, mascots PR #4),
+  replacing the 3D clay render: new icons, splash, favicon and poses; the `mascot` token re-measured on the new PNGs.
+- [ ] Lottie states (loading, error, wave, sleep) where D26 allows them: needs `lottie-react-native` and a decision
+  per screen, so it waits for a place that asks for it (the first-run intro below is the likely one, with `wave`).
 
 ### In-app explanations: a first-run intro and a «Guida»
 
