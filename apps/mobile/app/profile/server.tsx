@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
@@ -9,30 +8,20 @@ import { ConfirmDialog } from '../../src/components/ConfirmDialog';
 import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
-import { ConnectForm } from '../../src/features/server/ConnectForm';
-import { startOver } from '../../src/navigation/history';
-import { ApiClientError } from '../../src/net/apiClient';
+import {
+  describeServerError,
+  SERVER_ERROR_KEYS,
+} from '../../src/features/server/describeServerError';
+import { ServerSignInPanel } from '../../src/features/server/ServerSignIn';
 import { useSync } from '../../src/sync/SyncProvider';
 import { useSyncCounts } from '../../src/sync/useSyncCounts';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** Error codes that have their own wording; anything else falls back to the message. */
-const CODE_KEYS: Record<string, string> = {
-  unreachable: 'sync.unreachable',
-  not_saldo: 'sync.notSaldo',
-  cancelled: 'sync.cancelled',
-  schema_too_old: 'sync.schemaTooOld',
-  schema_too_new: 'sync.schemaTooNew',
-  registration_closed: 'sync.registrationClosed',
-  foreign_device_data: 'sync.foreignDeviceData',
-};
-
 /** §6.30. */
 export default function ServerScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const router = useRouter();
   const { serverUrl, user, sessionExpired, connect, disconnect } = useServer();
   const { status, scheduler } = useSync();
   const counts = useSyncCounts();
@@ -41,20 +30,13 @@ export default function ServerScreen() {
   const [error, setError] = useState<string | null>(null);
   const [signOutOpen, setSignOutOpen] = useState(false);
 
-  const describe = (caught: unknown): string => {
-    const code = caught instanceof ApiClientError ? caught.code : null;
-    const key = code === null ? undefined : CODE_KEYS[code];
-    if (key !== undefined) return t(key);
-    return caught instanceof Error ? caught.message : t('sync.unreachable');
-  };
-
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
     setError(null);
     try {
       await action();
     } catch (caught) {
-      setError(describe(caught));
+      setError(describeServerError(t, caught));
     } finally {
       setBusy(false);
     }
@@ -72,7 +54,7 @@ export default function ServerScreen() {
     if (sessionExpired || status.kind === 'session-expired') return t('sync.sessionExpired');
     if (status.kind === 'syncing') return t('sync.syncing');
     if (status.kind === 'error') {
-      const key = CODE_KEYS[status.code];
+      const key = SERVER_ERROR_KEYS[status.code];
       return key === undefined ? status.message : t(key);
     }
     if (user !== null) return t('sync.lastSync', { when: relative });
@@ -112,11 +94,8 @@ export default function ServerScreen() {
         ) : null}
       </Card>
 
-      {connected ? null : (
-        <Card>
-          <ConnectForm />
-        </Card>
-      )}
+      {/* An expired session signs back in to the same server, from the row below. */}
+      {connected || sessionExpired ? null : <ServerSignInPanel />}
 
       {connected || sessionExpired ? (
         <Card padded={false}>
@@ -136,10 +115,10 @@ export default function ServerScreen() {
                 ) : undefined
               }
             />
-            {sessionExpired ? (
+            {sessionExpired && serverUrl !== null ? (
               <ListRow
                 title={t('sync.signIn')}
-                onPress={() => void run(async () => void (await connect('login')))}
+                onPress={() => void run(async () => void (await connect(serverUrl, 'login')))}
               />
             ) : null}
             <ListRow
@@ -165,10 +144,9 @@ export default function ServerScreen() {
         onConfirm={() => {
           setSignOutOpen(false);
           void run(async () => {
+            // §6.30: the data stays and the app carries on local-only, so there is nowhere to go —
+            // this screen now shows the sign-in again, prefilled with the address that worked.
             await disconnect();
-            // Signing out is not "go local-only" any more: the data stays, the app returns to the
-            // sign-in that §6.29 requires — with nothing of the signed-in app left underneath it.
-            startOver(router, '/');
           });
         }}
         onCancel={() => setSignOutOpen(false)}

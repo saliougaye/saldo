@@ -140,6 +140,14 @@ This reopens a decision taken at 08 (sign-in required), so it is a product call,
 - A build with an empty `SALDO_SERVER_URL` becomes a legitimate local-only build instead of one that «can only
   say so» (§15).
 
+- [x] Decide the UI (2026-09-25, variants harness, «Due passi»): two equal doors on the welcome; the server door is
+  one screen whose address field swaps into a server row, then the passkey. Failures reuse the row with a hollow
+  grey ring and words, no red.
+- [x] Decide the address: **typed**, Immich-style, and `SALDO_SERVER_URL` removed rather than kept as a prefill —
+  which reverses 08b. «Esci» now leaves a working local-only app.
+- [x] Spec (§1.1, §1.2, §6.29 step 0, §6.30, §9.3 steps 1 and 8, §15, §18) and plan
+  `docs/superpowers/plans/2026-09-25-local-first.md`; checked on the iOS simulator.
+
 ### Mascot states
 
 Moved here from `TODO.md` on 2026-09-22. The mark is Rocky, the 3D raccoon generated in
@@ -560,12 +568,12 @@ first:
 
 ### Then distribution
 
-`SALDO_SERVER_URL` is baked in at build time (08b), so **one official APK cannot exist** — but two things
-can:
+Since 2026-09-25 the app starts without a server and asks for its address, so **one official APK can exist**;
+a fork that builds its own only has to own the bundle id and the signing key. Two things make either easy:
 
 - [ ] A tagged server image on `ghcr.io`, so `docker compose` pulls instead of building. Tagged with the
       same version as the release, and `latest` only on a tagged build.
-- [ ] A reusable workflow a user runs in their own fork, with their own `SALDO_SERVER_URL` and signing
+- [ ] A reusable workflow a user runs in their own fork, with their own bundle id and signing
       secrets, producing a signed APK as an artifact. It pins itself to a tag too, so the APK a user builds
       says which release it is.
 

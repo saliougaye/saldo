@@ -1,4 +1,11 @@
-import { authorizeUrl, callbackParams, normaliseServerUrl, redirectUri, serverLabel } from './link';
+import {
+  authorizeUrl,
+  callbackParams,
+  isInsecureAddress,
+  normaliseServerUrl,
+  redirectUri,
+  serverLabel,
+} from './link';
 
 describe('normaliseServerUrl', () => {
   it('adds https, drops a trailing slash and rejects nonsense', () => {
@@ -12,6 +19,30 @@ describe('normaliseServerUrl', () => {
 
   it('refuses a URL with a path, which would break every endpoint below it', () => {
     expect(normaliseServerUrl('https://saldo.example.com/app')).toBeNull();
+  });
+
+  it('allows plain http only to this machine, where nobody can sit in between', () => {
+    expect(normaliseServerUrl('http://127.0.0.1:3000')).toBe('http://127.0.0.1:3000');
+    expect(normaliseServerUrl('http://[::1]:3000')).toBe('http://[::1]:3000');
+    // The Android emulator's name for the host machine.
+    expect(normaliseServerUrl('http://10.0.2.2:3000')).toBe('http://10.0.2.2:3000');
+    expect(normaliseServerUrl('HTTP://LOCALHOST:3000')).toBe('http://localhost:3000');
+  });
+
+  it('refuses plain http to anything else: the network could impersonate the server', () => {
+    expect(normaliseServerUrl('http://saldo.example.com')).toBeNull();
+    expect(normaliseServerUrl('http://192.168.1.20:3000')).toBeNull();
+    expect(normaliseServerUrl('http://localhost.evil.com')).toBeNull();
+  });
+});
+
+describe('isInsecureAddress', () => {
+  it('names the plain-http addresses the field refuses, and nothing else', () => {
+    expect(isInsecureAddress('http://saldo.example.com')).toBe(true);
+    expect(isInsecureAddress(' http://192.168.1.20:3000 ')).toBe(true);
+    expect(isInsecureAddress('http://localhost:3000')).toBe(false);
+    expect(isInsecureAddress('saldo.example.com')).toBe(false);
+    expect(isInsecureAddress('https://saldo.example.com/app')).toBe(false);
   });
 });
 

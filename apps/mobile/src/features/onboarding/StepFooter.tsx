@@ -13,9 +13,9 @@ import { useTheme } from '../../theme/ThemeProvider';
  *
  * On the steps that own an amount keypad the pad's tall key *is* the primary action (§5.1), so the
  * button steps aside while the pad is up rather than offering the same thing twice; "Indietro"
- * stays, because the way back must never disappear.
+ * stays, because the way back must never disappear. Without a `label` it is the way back alone.
  */
-export function StepFooter({ label, ...rest }: ButtonProps) {
+export function StepFooter({ label, ...rest }: Omit<ButtonProps, 'label'> & { label?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -41,7 +41,7 @@ export function StepFooter({ label, ...rest }: ButtonProps) {
           </Text>
         </Pressable>
       ) : null}
-      {session === null ? (
+      {session === null && label !== undefined ? (
         <View style={{ flex: 1 }}>
           <PrimaryButton label={label} {...rest} />
         </View>

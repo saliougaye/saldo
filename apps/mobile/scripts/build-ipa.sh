@@ -3,8 +3,8 @@
 # Builds an unsigned .ipa for sideloading — with Sideloadly, which is the recommended tool, or with
 # AltStore or SideStore.
 #
-#   pnpm --filter mobile build:ipa saldo.example.com
-#   SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:ipa
+#   pnpm --filter mobile build:ipa [com.yourname.saldo]
+#   SALDO_BUNDLE_ID=com.yourname.saldo pnpm --filter mobile build:ipa
 #
 # **Unsigned on purpose.** Sideloadly signs the app with your own Apple ID when it installs it, so
 # there is nothing here for Xcode to sign and no certificate to arrange first. That is also why
@@ -21,51 +21,39 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# The server is a build input, not something typed on the phone (§15). Argument first, then the
-# environment, so both spellings in the header work.
-SERVER_URL="${1:-${SALDO_SERVER_URL:-}}"
-BUNDLE_ID="${2:-${SALDO_BUNDLE_ID:-io.github.saldo.app}}"
+# The server is typed on the phone (§6.29 step 0), so the only per-person input here is the bundle
+# id. Argument first, then the environment, so both spellings in the header work.
+BUNDLE_ID="${1:-${SALDO_BUNDLE_ID:-io.github.saldo.app}}"
 APP_NAME="${SALDO_APP_NAME:-Saldo}"
 SCHEME="${SALDO_SCHEME:-saldo}"
 OUT="${SALDO_IPA_OUT:-$PWD/build/$APP_NAME.ipa}"
-
-if [ -z "$SERVER_URL" ]; then
-  echo "error: no server address." >&2
-  echo "  pnpm --filter mobile build:ipa saldo.example.com" >&2
-  echo "  SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:ipa" >&2
-  echo >&2
-  echo "The app signs in to exactly one server and the address is baked in here." >&2
-  exit 1
-fi
 
 # A free Personal Team cannot claim an id somebody else registered, and the default is this
 # project's own. Worth saying once rather than letting Sideloadly fail with a signing error.
 if [ "$BUNDLE_ID" = "io.github.saldo.app" ]; then
   echo "note: building with the default bundle id io.github.saldo.app."
   echo "      If Sideloadly refuses to sign it, pass one of your own:"
-  echo "      pnpm --filter mobile build:ipa $SERVER_URL com.yourname.saldo"
+  echo "      pnpm --filter mobile build:ipa com.yourname.saldo"
   echo
 fi
 
-echo "==> server   $SERVER_URL"
 echo "==> bundle   $BUNDLE_ID"
 echo "==> scheme   $SCHEME://"
 echo "==> output   $OUT"
 echo
 
 # `SALDO_DRY_RUN=1` stops here, having printed what it would bake in. The build takes minutes and
-# `--clean` throws ios/ away, so checking the four values first is cheaper than reading them back
+# `--clean` throws ios/ away, so checking the three values first is cheaper than reading them back
 # off a finished app.
 if [ "${SALDO_DRY_RUN:-}" = "1" ]; then
   echo "dry run: stopping before prebuild."
   exit 0
 fi
 
-# `--clean` throws away ios/ and regenerates it, which is what makes a changed bundle id or server
-# address actually land. Anything edited by hand in there is gone; native config belongs in
+# `--clean` throws away ios/ and regenerates it, which is what makes a changed bundle id or scheme
+# actually land. Anything edited by hand in there is gone; native config belongs in
 # app.config.ts and the config plugins (AGENTS.md).
 echo "==> prebuild"
-SALDO_SERVER_URL="$SERVER_URL" \
 SALDO_BUNDLE_ID="$BUNDLE_ID" \
 SALDO_APP_NAME="$APP_NAME" \
 SALDO_SCHEME="$SCHEME" \
@@ -73,11 +61,10 @@ SALDO_SCHEME="$SCHEME" \
 
 # Xcode inherits nothing from this shell. The "Bundle React Native code and images" build phase
 # sources .xcode.env.local, and that is the *second* time app.config.ts is evaluated — miss it and
-# the build succeeds with an empty extra.serverUrl, so the app starts and says it has no server.
+# the JS bundle embeds the default scheme, so sign-in redirects to one the app never registered.
 # Appended, never overwritten: prebuild writes NODE_BINARY in there.
 echo "==> passing the build inputs to Xcode"
 {
-  echo "export SALDO_SERVER_URL=$SERVER_URL"
   echo "export SALDO_BUNDLE_ID=$BUNDLE_ID"
   echo "export SALDO_APP_NAME=$APP_NAME"
   echo "export SALDO_SCHEME=$SCHEME"

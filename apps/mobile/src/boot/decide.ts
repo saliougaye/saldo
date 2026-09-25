@@ -6,7 +6,7 @@ export type BootDecision =
   | { kind: 'lock' }
   /** The session or the settings row is still being read. Short, and wordless. */
   | { kind: 'loading' }
-  /** §6.29 step 0: no session, so no account, so nothing else can be decided. */
+  /** §6.29 step 0: signed out and nothing on the phone, so the user picks a door. */
   | { kind: 'welcome' }
   /** Signed in, no settings here yet, and the account has not finished being asked about. */
   | { kind: 'waiting-for-sync' }
@@ -28,7 +28,7 @@ export interface BootInput {
   /** Null when this device holds no settings row. */
   onboardingCompletedAt: string | null | undefined;
   hasSettings: boolean;
-  /** False on a local-only build, where there is no sync to wait for. */
+  /** False while signed out or before an address is stored: no sync to wait for. */
   hasScheduler: boolean;
   syncStatus: SyncStatus;
 }
@@ -56,6 +56,10 @@ function firstSync(status: SyncStatus): 'pending' | 'answered' | 'failed' {
   }
 }
 
+function completed(input: BootInput): boolean {
+  return input.onboardingCompletedAt !== null && input.onboardingCompletedAt !== undefined;
+}
+
 /**
  * §6.29, §6.32. Pure, because every version of this that lived inside the screen grew a way to
  * strand somebody: first a spinner nothing could clear, then an onboarding offered to an account
@@ -68,10 +72,15 @@ function firstSync(status: SyncStatus): 'pending' | 'answered' | 'failed' {
 export function decideBoot(input: BootInput): BootDecision {
   if (input.locked) return { kind: 'lock' };
   if (input.session === 'loading' || !input.settingsLoaded) return { kind: 'loading' };
-  if (input.session === 'signed-out') return { kind: 'welcome' };
+  if (input.session === 'signed-out') {
+    // Local-only (§1.1 goal 2): the phone started without a server, or «Esci» left it on its own
+    // data (§6.30). Its settings row is the evidence; with none there is nothing to open yet.
+    if (!input.hasSettings) return { kind: 'welcome' };
+    return completed(input) ? { kind: 'tabs' } : { kind: 'onboarding' };
+  }
 
   if (!input.hasSettings) {
-    // A local-only build has no server to ask, so its empty database is all the evidence there is.
+    // No scheduler means no server to ask, so the empty database is all the evidence there is.
     if (!input.hasScheduler) return { kind: 'onboarding' };
     const answer = firstSync(input.syncStatus);
     if (answer === 'pending') return { kind: 'waiting-for-sync' };
@@ -87,7 +96,5 @@ export function decideBoot(input: BootInput): BootDecision {
 
   // Settings are here. Whether they arrived by sync or by onboarding does not matter any more —
   // what is left is whether the person ever finished.
-  return input.onboardingCompletedAt === null || input.onboardingCompletedAt === undefined
-    ? { kind: 'onboarding' }
-    : { kind: 'tabs' };
+  return completed(input) ? { kind: 'tabs' } : { kind: 'onboarding' };
 }

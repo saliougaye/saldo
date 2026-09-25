@@ -31,7 +31,7 @@ import { useTheme } from '../src/theme/ThemeProvider';
  * Categorie and Tag already went, and the only place a footnote or a confirmation has room.
  */
 export default function ProfileScreen() {
-  const { serverUrl, user, disconnect } = useServer();
+  const { user, disconnect } = useServer();
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -153,13 +153,7 @@ export default function ProfileScreen() {
             leading={lead('wifi')}
             onPress={() => router.push('/profile/server')}
             chevron
-            trailing={
-              <Text color="textMuted">
-                {serverUrl === null
-                  ? t('sync.notConnected')
-                  : (user?.displayName ?? t('sync.notConnected'))}
-              </Text>
-            }
+            trailing={<Text color="textMuted">{user?.displayName ?? t('sync.notConnected')}</Text>}
           />
           <ListRow
             title={t('profile.importCsv')}

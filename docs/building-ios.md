@@ -2,8 +2,8 @@
 
 ## What you get
 
-Saldo running on your own iPhone, built from this repository and talking to the server you run.
-There is no App Store listing, so this is the only route.
+Saldo running on your own iPhone, built from this repository. There is no App Store listing, so this
+is the only route.
 
 **Read this before you start, because it is the part people are not expecting.** Apple lets you
 install an app you built yourself, but with a free Apple ID it does so on a short lease:
@@ -22,8 +22,9 @@ signing screens — and, with its automatic refresh turned on, signs it again be
 run out. That route is [building an .ipa](#building-an-ipa-for-a-sideload-tool) below. Running
 from Xcode, which the rest of this page walks through, is for when you are changing the app itself.
 
-Have the server running first. Its address is compiled into the app rather than typed on the phone,
-so you need to know it before you build: see [self-hosting Saldo](./self-hosting.md).
+The build does not need a server. The app works on the phone alone, and asks for a server's address
+only if you want one: on the first screen, or later from Profile → Server and sync. To run one, see
+[self-hosting Saldo](./self-hosting.md).
 
 ## Before you start
 
@@ -39,17 +40,15 @@ You also need an Apple ID signed into Xcode: Xcode → Settings → Accounts →
 plain, free Apple ID is enough; signing in there is what creates the "Personal Team" you will pick
 later.
 
-## The server address is a build input
+## The build inputs
 
-Saldo does not ask which server to talk to: an app belongs to one server, and which one is decided
-when you build it. Four environment variables are read by `apps/mobile/app.config.ts` — once when
-you generate the Xcode project, and again when Xcode bundles the JavaScript, which is the reading
-the server address comes from. Both readings matter, and the second one happens inside Xcode, where
-your shell's environment does not reach. There is a step below for that.
+Three environment variables are read by `apps/mobile/app.config.ts` — once when you generate the
+Xcode project, and again when Xcode bundles the JavaScript. Both readings matter, and the second one
+happens inside Xcode, where your shell's environment does not reach. There is a step below for that.
+None of them is a server address: that is typed in the app.
 
 | Variable | Default | What it is |
 | --- | --- | --- |
-| `SALDO_SERVER_URL` | — (**required**) | The server this build signs in to, e.g. `saldo.example.com`. A bare hostname gets `https://`; spell out `http://` only for a `localhost` you are developing against. Give it an origin, not a URL — a path is rejected. A build without a usable value installs and runs, but its sign-in screen can do nothing except say so. |
 | `SALDO_BUNDLE_ID` | `io.github.saldo.app` | The bundle identifier. **You have to change this** — see below. |
 | `SALDO_APP_NAME` | `Saldo` | The name under the home-screen icon, and the name of the generated Xcode project. |
 | `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app; the app asks to come back to `<scheme>://auth/callback`. **Changing it is two changes, not one:** the server refuses a redirect whose scheme is not in its `APP_REDIRECT_SCHEMES` (see [self-hosting](./self-hosting.md#configuration)), and the sign-in fails with `invalid_redirect_uri`. Worth changing when another app on the same phone already claims `saldo://`. |
@@ -61,7 +60,7 @@ git clone https://github.com/saldo-app/saldo.git
 cd saldo
 pnpm install
 
-SALDO_BUNDLE_ID=com.example.saldo SALDO_SERVER_URL=saldo.example.com \
+SALDO_BUNDLE_ID=com.example.saldo \
   pnpm --filter mobile exec expo prebuild --platform ios --clean
 ```
 
@@ -77,8 +76,8 @@ never keep anything of your own in there.
 ## Hand the variables to Xcode
 
 Xcode does not inherit the environment of the terminal you typed that command in, and it needs the
-same variables when it bundles the JavaScript: without them the app builds and installs, and its
-sign-in screen then says it has no server configured.
+same variables when it bundles the JavaScript: without them the bundle embeds the defaults, and with
+a `SALDO_SCHEME` of your own the sign-in then redirects to a scheme the app never registered.
 
 The build phase that does the bundling sources `apps/mobile/ios/.xcode.env.local` first, so put them
 there:
@@ -86,7 +85,6 @@ there:
 ```bash
 cat >> apps/mobile/ios/.xcode.env.local <<'EOF'
 export SALDO_BUNDLE_ID=com.example.saldo
-export SALDO_SERVER_URL=saldo.example.com
 EOF
 ```
 
@@ -129,9 +127,9 @@ account it has not been told about. On the phone, go to **Settings → General �
 Management**, tap your Apple ID under "Developer App", and trust it. Then open Saldo from the home
 screen.
 
-It will show the sign-in screen for the server you built it against; if that server runs with
-`REGISTRATION=invite` you need a code first — see
-[letting people in](./self-hosting.md#letting-people-in).
+The first screen offers "Only on this phone" or "With your Saldo server"; the second asks for the
+server's address and then offers sign-in. If that server runs with `REGISTRATION=invite` you need a
+code first — see [letting people in](./self-hosting.md#letting-people-in).
 
 ## Keeping it alive
 
@@ -157,12 +155,12 @@ Distribute. It does not need to: they sign the app themselves at install time, s
 an **unsigned** build, which is a plain `xcodebuild` plus a zip.
 
 ```bash
-pnpm --filter mobile build:ipa saldo.example.com com.yourname.saldo
+pnpm --filter mobile build:ipa com.yourname.saldo
 ```
 
-The second argument is optional and defaults to this project's own bundle identifier; pass one of
-your own if the tool refuses to sign that. `SALDO_SERVER_URL` and `SALDO_BUNDLE_ID` work as
-environment variables instead, and `SALDO_DRY_RUN=1` prints what it would bake in and stops —
+The argument is optional and defaults to this project's own bundle identifier; pass one of your own
+if the tool refuses to sign that. `SALDO_BUNDLE_ID` works as an environment variable instead, as do
+`SALDO_APP_NAME` and `SALDO_SCHEME`, and `SALDO_DRY_RUN=1` prints what it would bake in and stops —
 worth one run, because the build takes minutes and `--clean` throws `ios/` away before it starts.
 
 The file lands at `apps/mobile/build/Saldo.ipa`. To install it with Sideloadly:
@@ -182,8 +180,7 @@ the same bundle identifier: it replaces the old one and the data on the phone st
 Sideloadly offers to rewrite the bundle identifier as it installs. Accepting is fine: the
 `saldo://` scheme that carries sign-in back from the browser lives in `Info.plist` and does not
 depend on the identifier. What you must not change is the scheme itself unless the server's
-`APP_REDIRECT_SCHEMES` changes with it — see [the server address](#the-server-address-is-a-build-input)
-above.
+`APP_REDIRECT_SCHEMES` changes with it — see [the build inputs](#the-build-inputs) above.
 
 The script is `apps/mobile/scripts/build-ipa.sh`, and it is short enough to read if you would
 rather run the steps by hand.
@@ -197,11 +194,6 @@ back, because the generated project comes from `app.config.ts`.
 
 **"Untrusted Developer" when the app starts.** Settings → General → VPN & Device Management on the
 phone, tap your Apple ID, trust it. This has to be done once per Apple ID, not once per install.
-
-**The app installs, but the sign-in screen says "This build has no server configured. Rebuild the
-app with SALDO_SERVER_URL."** Xcode did not see `SALDO_SERVER_URL` when it bundled the JavaScript.
-Exporting it in a terminal does not reach Xcode; it has to be in `apps/mobile/ios/.xcode.env.local`,
-as above. Check the file is still there — a `prebuild --clean` deletes it — then build again.
 
 **"No account for team … " or "Your maximum App ID limit has been reached".** A free Apple ID may
 register ten identifiers every seven days, and each throwaway bundle id you try burns one. Settle on

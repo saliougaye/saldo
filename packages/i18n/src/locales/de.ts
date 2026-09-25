@@ -80,9 +80,13 @@ export const de: Messages = {
     periodTimeline: 'Gerade läuft er vom {{start}} bis {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Behalte deine Ausgaben Zeitraum für Zeitraum im Blick. Melde dich bei deinem Server an; danach funktioniert die App offline.',
-    welcomeOffline:
-      'Zum Anmelden musst du deinen Server einmal erreichen. Danach funktioniert Saldo offline.',
+      'Behalte deine Ausgaben Zeitraum für Zeitraum im Blick. Wähle, wo deine Daten liegen – du kannst es später ändern.',
+    welcomePhone: 'Nur auf diesem Telefon',
+    welcomePhoneHint: 'Kein Konto, nichts einzurichten.',
+    welcomeServer: 'Mit deinem Saldo-Server',
+    welcomeServerHint: 'Synchronisiert mehrere Geräte. Du brauchst seine Adresse.',
+    welcomeLater:
+      'Wenn du nur auf diesem Telefon beginnst, kannst du später im Profil einen Server verbinden, ohne etwas zu verlieren.',
     cycleTitle: 'Wann beginnt dein Monat?',
     cycleBody: 'Wähle den Tag, an dem dein Gehalt kommt: Saldo zählt die Zyklen ab diesem Tag.',
     cycleTimeline: 'Dein Monat läuft vom {{start}} bis {{end}}',
@@ -510,9 +514,6 @@ export const de: Messages = {
   sync: {
     title: 'Server und Sync',
     serverIs: 'Server: {{server}}',
-    verifying: 'Server wird geprüft…',
-    noServerConfigured:
-      'In diesem Build ist kein Server konfiguriert. Baue die App mit SALDO_SERVER_URL neu.',
     notConnected: 'Nicht verbunden',
     localOnly: 'Sync ist aus. Die Daten bleiben auf diesem Handy.',
     connectedAs: 'Angemeldet als {{name}}',
@@ -542,6 +543,11 @@ export const de: Messages = {
     foreignDataConfirm: 'Löschen und anmelden',
     foreignDeviceData:
       'Anmeldung abgebrochen: Die Daten auf diesem Handy gehören einem anderen Konto.',
+    unownedTitle: 'Daten auf diesem Telefon',
+    unownedBody:
+      'Diese Daten gehören noch zu keinem Konto. Du kannst sie zu {{server}} übernehmen, zusammen mit dem, was das Konto schon enthält, oder sie löschen und nur die des Servers verwenden.',
+    unownedAdopt: 'Ins Konto übernehmen',
+    unownedDiscard: 'Löschen, Server verwenden',
     pending_one: '{{count}} Änderung wartet auf Sync',
     pending_other: '{{count}} Änderungen warten auf Sync',
     rejected_one: '{{count}} Änderung vom Server abgelehnt',
@@ -553,11 +559,33 @@ export const de: Messages = {
     unreachable: 'Diese Adresse ist nicht erreichbar',
     notSaldo: 'Diese Adresse antwortet nicht wie ein Saldo-Server',
     cancelled: 'Anmeldung abgebrochen',
-    serverFound: 'Saldo {{version}}',
     registrationClosed: 'Dieser Server nimmt keine neuen Konten an',
     nameRequired: 'Wähle zuerst einen Namen',
     passkeyNote:
       'Der Passkey bleibt auf diesem Handy; der Server speichert nur seinen öffentlichen Schlüssel.',
+  },
+  server: {
+    title: 'Dein Saldo-Server',
+    body: 'Die Adresse, unter der du Saldo im Browser öffnest; danach meldest du dich mit einem Passkey an. Wer den Server betreibt, hat sie dir gegeben, falls nicht du selbst.',
+    address: 'Serveradresse',
+    placeholder: 'saldo.beispiel.de',
+    hintIdle: 'Zum Beispiel saldo.beispiel.de',
+    hintConnect: 'Verbinde mit {{origin}}',
+    hintInvalid: 'Gib nur die Adresse ein, zum Beispiel saldo.beispiel.de',
+    hintInsecure: 'Hier ist https:// nötig: http:// geht nur mit localhost, zum Entwickeln.',
+    checking: 'Prüfe den Server…',
+    version: 'Saldo {{version}}',
+    unreachable: 'Nicht erreichbar',
+    notSaldo: 'Kein Saldo-Server',
+    change: 'Ändern',
+    changeServer: 'Server ändern',
+    changeAddress: 'Adresse ändern',
+    retry: 'Erneut versuchen',
+    stillNothing: 'Immer noch keine Antwort.',
+    helpUnreachable:
+      'Prüfe, ob du online bist und der Server läuft. Betreibt ihn jemand anderes, frag nach.',
+    helpNotSaldo:
+      'Du brauchst die Adresse, unter der du Saldo im Browser öffnest, zum Beispiel saldo.beispiel.de.',
   },
   budgets: {
     title: 'Budgets',

@@ -1,12 +1,15 @@
 # Self-hosting Saldo
 
-The Saldo server (`apps/web`) holds the accounts, so a Saldo app needs one: sign-in is the first
-thing it asks for. Everything after that is local-first — the app works offline and keeps working
-if the server is down — and the server is what gives you multi-device sync and attachment backup.
+The Saldo server (`apps/web`) holds the accounts. The app does not need one — it works on the phone
+alone, with no account — but the server is what gives you multi-device sync and attachment backup.
+Signed in, the app stays local-first: it works offline and keeps working if the server is down.
 
-The app is **built for one server**: you set `SALDO_SERVER_URL` when you build the APK or the iOS
-app, and nobody types an address on the phone. Once this server is up, build the app against it —
-[for Android](./building-android.md) or [for iOS](./building-ios.md).
+The app is not built for a particular server: it **asks for the address** — the HTTPS address you
+open Saldo at in a browser, e.g. `saldo.example.com` — on its first screen ("With your Saldo
+server"), or later from Profile → Server and sync. It checks `/api/health` there before offering to
+sign in. The one thing the server has to know about the app is its URL scheme: list it in
+`APP_REDIRECT_SCHEMES` (the default `saldo` unless the app was built with its own `SALDO_SCHEME`).
+Building the app is covered [for Android](./building-android.md) and [for iOS](./building-ios.md).
 
 ## What you need
 
@@ -153,14 +156,14 @@ create an account before it is in place.
    variable set on the command line wins over it — so they reach the production database, not your
    local one. Worth knowing because the opposite mistake is silent: an invite minted into the wrong
    database is a code that simply never works.
-8. **Build the app against that domain** and install it —
-   [Android](building-android.md), [iOS](building-ios.md):
+8. **Build the app** and install it — [Android](building-android.md), [iOS](building-ios.md):
 
    ```bash
-   pnpm --filter mobile build:android https://saldo.example.com
+   pnpm --filter mobile build:android com.example.saldo
    ```
 
-   The address is compiled in, so an app built against a different one will not reach this server.
+   On its first screen choose "With your Saldo server" and type `saldo.example.com` — the domain, not
+   a preview URL, for the same reason as above.
 9. **Sign in.** The app opens a browser at your own `/auth/mobile`, the passkey ceremony runs there,
    and the handoff comes back to the app over the `saldo://` scheme. If it stalls, check that
    `APP_REDIRECT_SCHEMES` on the server matches the `SALDO_SCHEME` the app was built with.
@@ -211,9 +214,9 @@ curl -s https://saldo.example.com/api/health
 #  "registrationAllowed":true,"inviteRequired":true,"attachmentsEnabled":false}
 ```
 
-`app` and `apiVersion` are what the mobile app looks for when it reaches the server it was built
-for, and `registrationAllowed` is what decides whether it offers "create account". `inviteRequired` says whether
-that form will also ask for a code.
+`app` and `apiVersion` are what the mobile app looks for when it checks the address you typed, and
+`registrationAllowed` is what decides whether it offers "create account". `inviteRequired` says
+whether that form will also ask for a code.
 
 ## Letting people in
 

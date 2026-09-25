@@ -321,6 +321,9 @@ server corretto."
 **Done** (plan: `2026-09-11-08b-server-from-build-env.md`). `SALDO_SERVER_URL` → `extra.serverUrl` → `readServerUrl`;
 `ConnectForm` probes `/api/health` on mount and offers sign-in without a field; `kv.serverUrl` is gone.
 
+**Reversed 2026-09-25** by `2026-09-25-local-first.md`: the app starts without a server, the address is typed again
+(`kv.serverUrl`, written by a successful sign-in), and `SALDO_SERVER_URL` is gone from the build.
+
 ### 09 — Attachments & Import/Export
 
 **Spec:** §10, §11, §6.6 (attachments), 6.16 (Allega foto), 6.28, 6.31

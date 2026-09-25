@@ -21,10 +21,10 @@ cycle, and am I going faster than I should?*
 ### 1.1 Goals (POC)
 
 1. Every feature visible in the design (§6), working on Android and iOS against a local database.
-2. **Local-first, one account.** Every read and write is local, so the app is fully usable offline — but it needs an
-   account on the user's own server, which is signed in to once at first run (§6.29 step 0). The account and the
-   database are the user's, so requiring them is not a hosted dependency; a server-less variant is a later option, not
-   part of this POC.
+2. **Local-first, one account when you want one.** Every read and write is local, so the app is fully usable
+   offline — and usable with no server at all: the first run offers «Solo su questo telefono» next to signing in
+   (§6.29 step 0). An account on the user's own server, signed in to then or later from Profile (§6.30), adds sync;
+   the account and the database are the user's, so it is not a hosted dependency.
 3. **Passkey authentication** against that self-hosted Next.js server, which is also what enables sync.
 4. **Sync** of all data between devices through that server.
 5. **Attachments** (receipt photos/PDFs) on transactions, synced.
@@ -46,7 +46,8 @@ cycle, and am I going faster than I should?*
 - AI features (see §17; they are future iterations with bring-your-own-key).
 - Nothing shorter than a week or longer than a year as a period: §5.2's four kinds (month, week, pay cycle, year) plus
   an arbitrary range cover what the design offers. A fortnightly or four-weekly *recurring* period is not among them.
-- A first run with no network: sign-in is required, so the welcome screen says so instead of appearing broken.
+- A first run with no network can still start on the phone; only the server door needs one, and it says so in the
+  server row (§6.29 step 0).
 
 ---
 
@@ -814,8 +815,8 @@ indented under it (ring, name, balance) and a last «liberi» line for its own b
 | 6.26 | **Delete dialog** | 1581–1592 | Centered card, scrim 0.6. |
 | 6.27 | **Toast** | 1594–1601 | Bottom 92px above tab bar, 4s (5s with undo). |
 | 6.28 | **Attachment viewer** | 1603–1614 | Black full-screen, close button, pinch zoom, swipe between attachments, share, delete attachment. |
-| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): the app needs an account on the user's own server, and the build already knows which one (§15), so this screen only names the server and offers passkey sign-in, plus "Crea account" when the server allows it. A build without a usable `SALDO_SERVER_URL` says exactly that and offers nothing. On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. With no network it says so — sign-in is required, so a first run offline cannot proceed. Then a **chooser**, "Come vuoi iniziare?": *Da zero* (the four steps below), *Importa un export* (the import path), or *Ripristina un backup* (the §11.1 restore screen; the backup brings its own settings, so the boot router goes to the tabs). *Da zero* is **five steps**: 1 **period** (four kinds, the "il tuo periodo va dal X al Y" timeline as the card's last line; the pay cycle then asks its start day on a screen of its own, 7-col grid 1–28, under the same step number), 2 account details (name, and the type as a three-column grid of tiles offering all six types, icon over label), 3 current balance (may be negative, §5.1) + currency, 4 categories, 5 **permissions** (below). Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keypad up. On the two steps that hold an amount (3 here, 4 on the import path) the keypad is **pinned**: it never closes, its tall key is «Continua», and the footer hides its own primary button so the step is not offered twice — «Indietro» stays, because the way back must never disappear. Progress bar 2px. Step 5, **permissions**, is the same on both paths: notifications (budget alerts, §5.8), camera (attachments, §10) and the biometric app lock (§6.32), one row open at a time with a sentence, «Attiva» and «Più tardi». The system prompt is called only from «Attiva», so the one prompt iOS allows is never spent before the user has read why; a permission the OS already decided shows its state instead of asking, and a denied one links to the system settings. «Più tardi» leaves the in-context request as it was (§5.8, §10). «Inizia» is on this step. Profile → **Permessi** shows and changes notifications and camera afterwards. "Inizia" (step 5) writes settings + account + categories, and the lock flag when step 5 turned it on. The **import path** is five steps too: 1 period, 2 currency (the file's; the four common chips and "Altra…" for the full §6.25 list), 3 the §11.3 wizard with nothing existing yet, its accepted plan kept in the draft, 4 **one current balance per imported account** (sign tile in front of the digits, §5.1), each starting at what its imported history adds up to, 5 **permissions**. It has no category grid: categories come from the file, plus the hidden seed rows. "Inizia" writes settings, the hidden categories and the import in one transaction, each account with `openingBalance = entered − Σ imported effects` (`importedBalances`, the §6.22 rule). As on the fresh path, nothing is written before "Inizia", and nothing at all if a sync delivered settings meanwhile. |
-| 6.30 | **Server & sync** (NEW) | — | The configured server address, read-only, status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. |
+| 6.29 | **Onboarding** | 1616–1717 | Step 0 **Welcome** (not in design; same visual language: 32px title, muted body): two doors of equal weight in one card: **Solo su questo telefono** (straight to the chooser; nothing is saved until onboarding finishes, and the chooser offers «Indietro» back here) and **Con il tuo server Saldo**, a step of its own ("Il tuo server Saldo"): the address field, whose hint previews the origin; «Continua» calls `GET /api/health`; the card swaps in place into a server row — server icon, host, a filled green dot with «Saldo {version}», «Cambia» — and «Accedi con passkey» (plus «Crea account» when the server allows it) appears below. A failure is the same row with a hollow grey ring and words (no red: `positive` stays the palette's only chromatic signal): «Non raggiungibile» → «Riprova» (a second failure adds «Ancora nessuna risposta.»), «Non è un server Saldo» → «Cambia indirizzo». On success it pulls; if the server already has settings with `onboardingCompletedAt`, the rest is skipped. After a sign-in the chooser has no «Indietro»: going back would mean leaving the account. Then a **chooser**, "Come vuoi iniziare?": *Da zero* (the four steps below), *Importa un export* (the import path), or *Ripristina un backup* (the §11.1 restore screen; the backup brings its own settings, so the boot router goes to the tabs). *Da zero* is **five steps**: 1 **period** (four kinds, the "il tuo periodo va dal X al Y" timeline as the card's last line; the pay cycle then asks its start day on a screen of its own, 7-col grid 1–28, under the same step number), 2 account details (name, and the type as a three-column grid of tiles offering all six types, icon over label), 3 current balance (may be negative, §5.1) + currency, 4 categories, 5 **permissions** (below). Steps 2 and 3 are split so each screen asks one thing and the balance gets the whole screen with the keypad up. On the two steps that hold an amount (3 here, 4 on the import path) the keypad is **pinned**: it never closes, its tall key is «Continua», and the footer hides its own primary button so the step is not offered twice — «Indietro» stays, because the way back must never disappear. Progress bar 2px. Step 5, **permissions**, is the same on both paths: notifications (budget alerts, §5.8), camera (attachments, §10) and the biometric app lock (§6.32), one row open at a time with a sentence, «Attiva» and «Più tardi». The system prompt is called only from «Attiva», so the one prompt iOS allows is never spent before the user has read why; a permission the OS already decided shows its state instead of asking, and a denied one links to the system settings. «Più tardi» leaves the in-context request as it was (§5.8, §10). «Inizia» is on this step. Profile → **Permessi** shows and changes notifications and camera afterwards. "Inizia" (step 5) writes settings + account + categories, and the lock flag when step 5 turned it on. The **import path** is five steps too: 1 period, 2 currency (the file's; the four common chips and "Altra…" for the full §6.25 list), 3 the §11.3 wizard with nothing existing yet, its accepted plan kept in the draft, 4 **one current balance per imported account** (sign tile in front of the digits, §5.1), each starting at what its imported history adds up to, 5 **permissions**. It has no category grid: categories come from the file, plus the hidden seed rows. "Inizia" writes settings, the hidden categories and the import in one transaction, each account with `openingBalance = entered − Σ imported effects` (`importedBalances`, the §6.22 rule). As on the fresh path, nothing is written before "Inizia", and nothing at all if a sync delivered settings meanwhile. |
+| 6.30 | **Server & sync** (NEW) | — | The server address (typed by the user, stored on the phone), status (Non connesso / Connesso come {name} / Ultima sincronizzazione {relative time} / Errore), "Sincronizza ora", "Esci", pending changes count, attachment upload queue count. Not connected, the screen is the §6.29 server step, prefilled with the last address that worked. «Esci» keeps the data and leaves the app local-only. |
 | 6.31 | **Import wizard** (NEW) | — | §11.3 steps, each a full screen with a sticky bottom CTA. |
 | 6.32 | **Lock screen** (NEW) | — | App icon + "Sblocca" button; auto-prompts biometrics (`expo-local-authentication`) on cold start and after 60s in background when enabled. Falls back to device passcode. |
 | 6.33 | **Ricorrenti** (NEW) | — | Reached from the Transactions tab. "Ogni mese, in media": Σ amount × occurrences-per-month over live recurrences, expenses and income apart, transfers left out; bar = expense/income when there is income. Then one card per cadence ("Ogni mese", "Ogni 2 settimane", …) with rows name · cadence · prossima date · signed amount → §6.34; ended series in a last card. Empty state points at "Ripeti". |
@@ -852,7 +853,8 @@ screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, Secondar
   inside `useMemo`. POC data volume (≤ 20k transactions) keeps this fast. Load only the date ranges needed
   (the selected cycle + 6 previous for baselines).
 - Device-local key/value store: `expo-secure-store` for tokens; a `kv` SQLite table (not synced) for `deviceId`,
-  `serverUrl`, `syncCursor`, `syncEpoch`, `dataResetNotice`, `appLockEnabled`, `lastAlertPeriodStart:{budgetId}`.
+  `serverUrl` (the signed-in server; absent means local-only), `lastServerUrl` (prefill after «Esci»), `accountId`,
+  `syncCursor`, `syncEpoch`, `dataResetNotice`, `appLockEnabled`, `lastAlertPeriodStart:{budgetId}`.
 - **Dev seed:** in `__DEV__` builds, Profile shows "Carica dati demo". It generates data equivalent to the design mock
   (`CYCLES`, `TAG_EXTRA`, `ACCOUNTS`, `BUDGETS`) shifted so the current cycle contains today.
 - Optional hardening (documented, not required): enable SQLCipher via the `expo-sqlite` config plugin
@@ -973,7 +975,8 @@ passkey account stays, and so does the session.
 - **The deleting phone** runs the request inside `scheduler.exclusive`. Only once the server has answered does it
   delete the attachment files and the synced tables, drop `syncCursor` and store the new `syncEpoch`. It keeps
   `deviceId`, `hlc`, `accountId` and `appLockEnabled`, then returns to the boot router, which opens onboarding. With
-  an expired session it refuses and asks to sign in again. A build with no server deletes the phone only.
+  an expired session it refuses and asks to sign in again. A phone with no server (local-only, or signed out)
+  deletes the phone only.
 - **Every other phone** learns on its next push or pull. On `data_reset` it asks `GET /api/data`, empties itself the
   same way (pending writes included) and runs the cycle again. The tabs then toast "Tutti i dati sono stati eliminati
   da un altro dispositivo" and return to the boot router if no settings are left.
@@ -1035,10 +1038,13 @@ Notes that follow from using the library:
 A passkey ceremony needs `navigator.credentials`, which React Native does not have (§9.4), so it runs on a page the
 server serves and the resulting session is handed to the app.
 
-1. App: the server is the one the build points at (§15), so nothing is asked for. The sign-in screen calls
-   `GET /api/health` on mount, which must return `app: "saldo"` and `apiVersion: 1`; it also returns `schemaVersion`
-   (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered. A failed check does not disable
-   "Accedi con passkey" — it may be transient, and the ceremony reports its own error — it only offers "Riprova".
+1. App: the user types the server address (§6.29 step 0, §6.30); `normaliseServerUrl` turns it into an origin (a
+   bare host gets `https://`, a path is rejected, plain `http` is accepted only for `localhost`, `127.0.0.1`, `[::1]`
+   and the Android emulator's `10.0.2.2` — over a network it would let anybody on the path answer as the server). «Continua» calls `GET /api/health`, which must return
+   `app: "saldo"` and `apiVersion: 1` — no answer or a 5xx is «Non raggiungibile» (a proxy in front of a Saldo that
+   is down answers 502/503), any other status or body «Non è un server Saldo» (`readHealth`);
+   it also returns `schemaVersion` (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered.
+   The address is stored (`kv.serverUrl`) only after a sign-in succeeds, and removed by «Esci».
 2. App generates `state` (`expo-crypto`) and calls
    `WebBrowser.openAuthSessionAsync("{server}/auth/mobile?redirect_uri=saldo://auth/callback&state=…&mode=login|register", "saldo://auth/callback")`.
 3. `/auth/mobile` (server component + client component) validates `redirect_uri` scheme ∈ `APP_REDIRECT_SCHEMES`
@@ -1056,6 +1062,14 @@ server serves and the resulting session is handed to the app.
    `auth.api.getSession({ headers })` reads either that or `Authorization: Bearer`. A 401 means the session is gone:
    the app shows "Sessione scaduta" and local use carries on.
 7. Logout: `authClient.signOut()`.
+8. **Whose rows are on the phone** is settled after step 5 and before the session is installed, because the first
+   cycle would push every pending row into the account that just signed in. `kv.accountId` records the last account;
+   rows of a **different** account are wiped after a confirmation (declining signs straight back out). Rows with
+   **no** recorded account — a phone that started local-only — ask «Porta nell’account» (they stay pending and the
+   first cycle pushes them, merging with what the account holds — except the one `settings` row, restamped with the
+   oldest possible HLC so an account that has settings keeps its own; categories are not de-duplicated, so a phone
+   seeded locally brings its own set), «Cancella e usa il server» (wipe, then pull) or
+   «Annulla» (sign back out, phone untouched). An empty phone asks nothing.
 
 **Accepted risk:** the handoff token travels in a `saldo://` URL, and on both platforms another app can register the
 same scheme. It is single-use and lives one minute, so the window is narrow, but the real fix is a verified app link
@@ -1407,17 +1421,15 @@ Date,Wallet,Type,"Category name",Amount,Currency,Note,Labels,Author
 | `SALDO_APP_NAME` | `Saldo` |
 | `SALDO_BUNDLE_ID` | `io.github.saldo.app` (forks must change it) |
 | `SALDO_SCHEME` | `saldo` |
-| `SALDO_SERVER_URL` | — (**required**: the server this build signs in to, e.g. `saldo.example.com`) |
 
-The address is a build input, not something typed on the phone: an app belongs to one server. It
-reaches the app through `extra.serverUrl` and is validated at runtime with `normaliseServerUrl`; a
-build without a usable value can only say so (§6.29 step 0).
+The server is not a build input: the app starts without one and asks for its address (§6.29 step 0, §6.30). The
+server has to list the build's `SALDO_SCHEME` in `APP_REDIRECT_SCHEMES` (§9.3).
 
 **Android APK (docs/building-android.md):**
 
 1. Prerequisites: JDK 17, Android SDK + platform tools, `ANDROID_HOME`.
 2. `pnpm install` then
-   `SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile exec expo prebuild --platform android --clean`.
+   `pnpm --filter mobile exec expo prebuild --platform android --clean`.
 3. Generate a keystore: `keytool -genkeypair -v -storetype PKCS12 -keystore saldo-release.keystore -alias saldo -keyalg RSA -keysize 2048 -validity 10000`.
 4. Put `SALDO_UPLOAD_STORE_FILE`, `SALDO_UPLOAD_KEY_ALIAS`, `SALDO_UPLOAD_STORE_PASSWORD`, `SALDO_UPLOAD_KEY_PASSWORD`
    in `~/.gradle/gradle.properties`. A config plugin in `apps/mobile/plugins/withReleaseSigning.js` wires
@@ -1429,7 +1441,7 @@ build without a usable value can only say so (§6.29 step 0).
 **iOS (docs/building-ios.md):**
 
 1. Prerequisites: macOS, Xcode (current), CocoaPods, an Apple ID.
-2. `SALDO_BUNDLE_ID=com.<you>.saldo SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile exec expo prebuild --platform ios --clean`.
+2. `SALDO_BUNDLE_ID=com.<you>.saldo pnpm --filter mobile exec expo prebuild --platform ios --clean`.
 3. Open `apps/mobile/ios/Saldo.xcworkspace`, then Signing & Capabilities → Team: your Personal Team.
 4. Select the device and run with the **Release** scheme configuration (Product → Scheme → Edit Scheme → Run → Release).
 5. **Free Apple ID limits:** the app expires after 7 days (re-run from Xcode) and you can have 3 sideloaded apps. A paid
@@ -1484,9 +1496,14 @@ CI (`.github/workflows/ci.yml`): pnpm install (frozen lockfile), `pnpm lint`, `p
 
 ## 18. Security & privacy checklist
 
-- No telemetry, analytics or third-party network calls from the app except the server this build was configured for
-  (`SALDO_SERVER_URL` at build time — §15 — not an address typed on the phone) and, in the future, the user-configured
-  AI provider.
+- No telemetry, analytics or third-party network calls from the app except the server the user typed and signed in
+  to (§6.29 step 0, §6.30) — `GET /api/health` on an address typed but not yet signed in to is the only request made
+  before that — and, in the future, the user-configured AI provider.
+- **The server is whoever the user points the app at.** `/api/health` is a usability check, not authentication:
+  anything can answer like Saldo. What is guaranteed is that the app talks to the host that was typed (HTTPS, plain
+  `http` only to this machine) and that a passkey never leaves the origin it was made for. What cannot be guaranteed
+  is that the host is the right one, so the host is shown on the server row before signing in and named again in the
+  «Dati su questo telefono» question, the moment local rows would be pushed to it.
 - One opaque session token in the keychain/keystore (Expo SecureStore), not an access/refresh pair: phase 06b replaced
   the original OAuth-style design with Better Auth passkeys, and there is no refresh token to rotate or detect reuse
   of. The session is sliding — it renews on use, at most once every 14 days — and lapses after 180 days with no
