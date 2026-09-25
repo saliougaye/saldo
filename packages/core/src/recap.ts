@@ -1,6 +1,7 @@
 import type { AccountRef } from './accounts';
+import { expandCategoryIds } from './budgets';
 import { type DateRange, isWithin } from './cycle';
-import type { LocalDate } from './dates';
+import { type LocalDate, parseLocalDate } from './dates';
 import type { Budget } from './entities';
 import { categorySpendHistory, type PeriodHistoryEntry, periodHistory } from './history';
 import {
@@ -11,7 +12,15 @@ import {
   summarizePeriod,
 } from './ledger';
 import type { MinorUnits } from './money';
-import { type PeriodDef, periodContaining, shiftPeriod } from './period';
+import {
+  isoWeekRange,
+  monthRangeOf,
+  type PeriodDef,
+  periodContaining,
+  shiftPeriod,
+  yearRange,
+} from './period';
+import { effectiveLimit } from './rollover';
 import { deltaPercent, median } from './stats';
 
 /** The budget fields a recap reads. */
@@ -126,6 +135,69 @@ function recapCategories(
 }
 
 /**
+ * The calendar window a budget measures when its period closes with `period` (§5.15). Not
+ * `budgetRange`: that one clips a closed period's week to the period, which would put every weekly
+ * budget in every monthly recap. Here a weekly budget belongs to a recap only when its whole ISO
+ * week ends on the period's last day.
+ */
+function ownRange(kind: RecapBudgetRef['period'], period: DateRange): DateRange {
+  switch (kind) {
+    case 'period':
+      return period;
+    case 'week':
+      return isoWeekRange(period.end);
+    case 'month': {
+      const { year, month } = parseLocalDate(period.end);
+      return monthRangeOf({ year, month });
+    }
+    case 'year':
+      return yearRange(period.end);
+  }
+}
+
+/** The budgets that closed with the period, measured as closed (§5.8), in the caller's order. */
+function recapBudgets(input: PeriodRecapInput): RecapBudgetLine[] {
+  const { def, period, today, transactions, categories, budgets } = input;
+  const lines: RecapBudgetLine[] = [];
+  for (const budget of budgets) {
+    const createdOn = budget.createdAt.slice(0, 10);
+    if (createdOn > period.end) continue;
+    const range = ownRange(budget.period, period);
+    if (range.end !== period.end) continue;
+
+    const ids = expandCategoryIds(budget.categoryIds, categories);
+    const spentIn = (target: DateRange): MinorUnits => {
+      const amounts = spendingByCategory(transactions, target, today);
+      let total = 0;
+      for (const id of ids) total += amounts.get(id) ?? 0;
+      return total;
+    };
+    const spent = spentIn(range);
+    // Rollover exists for budgets that follow the app's period only (§5.8).
+    const rolls = budget.period === 'period';
+    const limit = rolls
+      ? effectiveLimit({
+          amount: budget.amount,
+          createdAtPeriodStart: periodContaining(def, createdOn).start,
+          period,
+          def,
+          spentInPeriod: spentIn,
+          rollover: budget.rollover,
+        })
+      : budget.amount;
+    lines.push({
+      budgetId: budget.id,
+      name: budget.name,
+      spent,
+      limit,
+      over: spent > limit,
+      carry: rolls && budget.rollover ? Math.max(0, limit - spent) : 0,
+    });
+  }
+  return lines;
+}
+
+/**
  * The period a recap is about (§5.15): the one immediately before the period containing today,
  * under the kind in force. Only that one — after weeks away there is still a single recap.
  */
@@ -166,7 +238,7 @@ export function periodRecap(input: PeriodRecapInput): PeriodRecap | null {
     incomeDelta: deltaPercent(summary.income, before?.income ?? null),
     spentDelta: deltaPercent(summary.spent, before?.spent ?? null),
     ...recapCategories(inPeriod, period, today, input.categories, history),
-    budgets: [],
+    budgets: recapBudgets(input),
     biggestExpense: null,
     netWorthChange: 0,
   };

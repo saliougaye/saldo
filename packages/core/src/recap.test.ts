@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ACCOUNTS, CATEGORIES, tx } from './__tests__/fixtures';
 import type { CategoryRef, LedgerTx } from './ledger';
 import type { PeriodDef } from './period';
-import { type PeriodRecap, type PeriodRecapInput, periodRecap, recapPeriod } from './recap';
+import {
+  type PeriodRecap,
+  type PeriodRecapInput,
+  periodRecap,
+  type RecapBudgetRef,
+  recapPeriod,
+} from './recap';
 
 const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
 const SEPTEMBER = { start: '2026-09-01', end: '2026-09-30' };
@@ -155,5 +161,59 @@ describe('periodRecap: categories', () => {
       'cat-fun',
     ]);
     expect(result.otherCategories).toEqual({ count: 2, amount: 300 });
+  });
+});
+
+function budget(overrides: Partial<RecapBudgetRef> & Pick<RecapBudgetRef, 'id'>): RecapBudgetRef {
+  return {
+    name: overrides.id,
+    categoryIds: ['cat-groceries'],
+    amount: 40000,
+    period: 'period',
+    rollover: false,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+describe('periodRecap: budgets', () => {
+  it('measures the budgets that closed with the period, in their order', () => {
+    const budgets = [
+      budget({ id: 'plain' }),
+      // Created in August: 42000 − 40000 spent carries 2000 into September, so September measures
+      // against 44000 and carries 44000 − 38620 = 5380 into October.
+      budget({ id: 'rolling', amount: 42000, rollover: true, createdAt: '2026-08-15T10:00:00.000Z' }),
+      budget({ id: 'tight', amount: 30000 }),
+      budget({ id: 'monthly', period: 'month' }),
+      budget({ id: 'yearly', period: 'year' }),
+      budget({ id: 'weekly', period: 'week' }),
+      budget({ id: 'too-new', createdAt: '2026-10-01T08:00:00.000Z' }),
+    ];
+    expect(recap({ budgets }).budgets).toEqual([
+      { budgetId: 'plain', name: 'plain', spent: 38620, limit: 40000, over: false, carry: 0 },
+      { budgetId: 'rolling', name: 'rolling', spent: 38620, limit: 44000, over: false, carry: 5380 },
+      { budgetId: 'tight', name: 'tight', spent: 38620, limit: 30000, over: true, carry: 0 },
+      { budgetId: 'monthly', name: 'monthly', spent: 38620, limit: 40000, over: false, carry: 0 },
+    ]);
+  });
+
+  it('keeps a weekly budget in a weekly recap and drops a monthly one', () => {
+    const week: PeriodDef = { kind: 'week', startDay: 1 };
+    const closed = recapPeriod(week, '2026-10-05');
+    const result = periodRecap({
+      def: week,
+      period: closed,
+      today: '2026-10-05',
+      transactions: [tx({ date: '2026-09-30', amount: 5000 })],
+      categories: CATS,
+      budgets: [
+        budget({ id: 'weekly', period: 'week', amount: 10000 }),
+        budget({ id: 'monthly', period: 'month' }),
+      ],
+      accounts: ACCOUNTS,
+    });
+    expect(result?.budgets).toEqual([
+      { budgetId: 'weekly', name: 'weekly', spent: 5000, limit: 10000, over: false, carry: 0 },
+    ]);
   });
 });
