@@ -1,11 +1,12 @@
-import type { AccountRef } from './accounts';
+import { type AccountRef, accountBalances, netWorth } from './accounts';
 import { expandCategoryIds } from './budgets';
 import { type DateRange, isWithin } from './cycle';
-import { type LocalDate, parseLocalDate } from './dates';
+import { addDays, type LocalDate, parseLocalDate } from './dates';
 import type { Budget } from './entities';
 import { categorySpendHistory, type PeriodHistoryEntry, periodHistory } from './history';
 import {
   type CategoryRef,
+  countsInTotals,
   type LedgerTx,
   rollupToParents,
   spendingByCategory,
@@ -197,6 +198,40 @@ function recapBudgets(input: PeriodRecapInput): RecapBudgetLine[] {
   return lines;
 }
 
+/** The largest counted expense of the period; on a tie the earlier one, then the lower id. */
+function biggestExpense(inPeriod: readonly LedgerTx[], today: LocalDate): RecapExpense | null {
+  let best: LedgerTx | null = null;
+  for (const row of inPeriod) {
+    if (row.kind !== 'expense' || !countsInTotals(row, today)) continue;
+    if (
+      best === null ||
+      row.amount > best.amount ||
+      (row.amount === best.amount &&
+        (row.date < best.date || (row.date === best.date && row.id < best.id)))
+    ) {
+      best = row;
+    }
+  }
+  return best === null
+    ? null
+    : {
+        transactionId: best.id,
+        description: best.description,
+        categoryId: best.categoryId,
+        date: best.date,
+        amount: best.amount,
+      };
+}
+
+/** «Patrimonio complessivo» at the end of `date` (§5.3). */
+function netWorthOn(
+  accounts: readonly AccountRef[],
+  transactions: readonly LedgerTx[],
+  date: LocalDate,
+): MinorUnits {
+  return netWorth(accounts, accountBalances(accounts, transactions, date));
+}
+
 /**
  * The period a recap is about (§5.15): the one immediately before the period containing today,
  * under the kind in force. Only that one — after weeks away there is still a single recap.
@@ -239,7 +274,9 @@ export function periodRecap(input: PeriodRecapInput): PeriodRecap | null {
     spentDelta: deltaPercent(summary.spent, before?.spent ?? null),
     ...recapCategories(inPeriod, period, today, input.categories, history),
     budgets: recapBudgets(input),
-    biggestExpense: null,
-    netWorthChange: 0,
+    biggestExpense: biggestExpense(inPeriod, today),
+    netWorthChange:
+      netWorthOn(input.accounts, transactions, period.end) -
+      netWorthOn(input.accounts, transactions, addDays(period.start, -1)),
   };
 }

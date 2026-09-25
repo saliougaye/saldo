@@ -182,7 +182,12 @@ describe('periodRecap: budgets', () => {
       budget({ id: 'plain' }),
       // Created in August: 42000 − 40000 spent carries 2000 into September, so September measures
       // against 44000 and carries 44000 − 38620 = 5380 into October.
-      budget({ id: 'rolling', amount: 42000, rollover: true, createdAt: '2026-08-15T10:00:00.000Z' }),
+      budget({
+        id: 'rolling',
+        amount: 42000,
+        rollover: true,
+        createdAt: '2026-08-15T10:00:00.000Z',
+      }),
       budget({ id: 'tight', amount: 30000 }),
       budget({ id: 'monthly', period: 'month' }),
       budget({ id: 'yearly', period: 'year' }),
@@ -191,7 +196,14 @@ describe('periodRecap: budgets', () => {
     ];
     expect(recap({ budgets }).budgets).toEqual([
       { budgetId: 'plain', name: 'plain', spent: 38620, limit: 40000, over: false, carry: 0 },
-      { budgetId: 'rolling', name: 'rolling', spent: 38620, limit: 44000, over: false, carry: 5380 },
+      {
+        budgetId: 'rolling',
+        name: 'rolling',
+        spent: 38620,
+        limit: 44000,
+        over: false,
+        carry: 5380,
+      },
       { budgetId: 'tight', name: 'tight', spent: 38620, limit: 30000, over: true, carry: 0 },
       { budgetId: 'monthly', name: 'monthly', spent: 38620, limit: 40000, over: false, carry: 0 },
     ]);
@@ -215,5 +227,57 @@ describe('periodRecap: budgets', () => {
     expect(result?.budgets).toEqual([
       { budgetId: 'weekly', name: 'weekly', spent: 5000, limit: 10000, over: false, carry: 0 },
     ]);
+  });
+});
+
+describe('periodRecap: biggest expense and net worth', () => {
+  it('names the single largest counted expense', () => {
+    expect(recap().biggestExpense).toMatchObject({
+      amount: 72000,
+      date: '2026-09-01',
+      categoryId: 'cat-rent',
+      description: '',
+    });
+  });
+
+  it('skips excluded rows and transfers, and breaks a tie by the earlier date', () => {
+    const rows = [
+      tx({ date: '2026-09-05', amount: 9000, excludeFromTotals: true }),
+      tx({ date: '2026-09-08', amount: 5000, description: 'Treno' }),
+      tx({ date: '2026-09-03', amount: 5000, description: 'Cena' }),
+      tx({
+        date: '2026-09-04',
+        amount: 20000,
+        kind: 'transfer',
+        categoryId: null,
+        accountId: 'acc-checking',
+        toAccountId: 'acc-savings',
+      }),
+    ];
+    expect(recap({ transactions: rows }).biggestExpense).toMatchObject({
+      amount: 5000,
+      description: 'Cena',
+      date: '2026-09-03',
+    });
+  });
+
+  it('measures net worth from the day before the period to its last day', () => {
+    expect(recap().netWorthChange).toBe(118180);
+    // A transfer moves nothing; an excluded expense leaves the totals but not the balances.
+    const rows = [
+      ...ledger(),
+      tx({
+        date: '2026-09-20',
+        amount: 50000,
+        kind: 'transfer',
+        categoryId: null,
+        accountId: 'acc-checking',
+        toAccountId: 'acc-savings',
+      }),
+      tx({ date: '2026-09-21', amount: 1000, excludeFromTotals: true }),
+    ];
+    const result = recap({ transactions: rows });
+    expect(result.net).toBe(118180);
+    expect(result.netWorthChange).toBe(117180);
   });
 });
