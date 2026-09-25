@@ -1479,6 +1479,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import type { ReactElement } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { HiddenAmountsContext, VISIBLE } from '../hidden/hiddenAmounts';
@@ -1536,6 +1537,11 @@ const RECAP: PeriodRecap = {
   netWorthChange: 61240,
 };
 
+const METRICS: Metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
 let i18n: I18nInstance;
 
 beforeAll(async () => {
@@ -1544,13 +1550,15 @@ beforeAll(async () => {
 
 async function show(node: ReactElement, hidden = false) {
   await render(
-    <ThemeProvider preference="dark">
-      <I18nextProvider i18n={i18n}>
-        <HiddenAmountsContext.Provider value={{ ...VISIBLE, hidden }}>
-          {node}
-        </HiddenAmountsContext.Provider>
-      </I18nextProvider>
-    </ThemeProvider>,
+    <SafeAreaProvider initialMetrics={METRICS}>
+      <ThemeProvider preference="dark">
+        <I18nextProvider i18n={i18n}>
+          <HiddenAmountsContext.Provider value={{ ...VISIBLE, hidden }}>
+            {node}
+          </HiddenAmountsContext.Provider>
+        </I18nextProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>,
   );
 }
 
