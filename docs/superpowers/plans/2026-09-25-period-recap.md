@@ -2439,12 +2439,12 @@ git commit -m "feat(mobile): show the period recap once and schedule its notific
 
 The recap depends on the date and on a device-local stamp, so it is checked on the simulator by clearing the stamp.
 
-- [ ] **Step 1: Run the app with data in the previous period**
+- [x] **Step 1: Run the app with data in the previous period**
 
 Start Metro and the iOS simulator (`pnpm --filter mobile ios`). Use a database with transactions in the previous period
 (the demo data, or real ones), and make sure onboarding was completed before the current period started.
 
-- [ ] **Step 2: Clear the stamp and relaunch**
+- [x] **Step 2: Clear the stamp and relaunch**
 
 Find the database with `xcrun simctl get_app_container booted io.github.saldo.app data`, then
 `sqlite3 "<container>/Documents/SQLite/saldo.db" "delete from kv where key = 'lastRecapPeriod';"`, and relaunch the app.
@@ -2457,38 +2457,43 @@ Expected, on the first launch:
 
 Expected, on the second launch: no sheet.
 
-- [ ] **Step 3: Check the variants**
+- [x] **Step 3: Check the variants**
 
 - Hidden mode on (eye on Home), clear the stamp, relaunch: every aggregate is `••••`, the biggest expense readable.
 - Reduce Motion on (Settings › Accessibility › Motion): the sheet fades in, no count, bars full.
 - Profilo › periodo «Settimana», clear the stamp, relaunch: «La settimana si è chiusa», «Inizia la nuova settimana».
 - Light theme: contrast of the tag and of the accent bar.
 
-- [ ] **Step 4: Check the notification**
+- [x] **Step 4: Check the notification**
 
 Run in the Metro console (or a dev button): `Notifications.getAllScheduledNotificationsAsync()`.
 Expected: one request `period-recap:{first day of the next period}` at 09:00, title «Il tuo mese si è chiuso: guarda
 il riepilogo», when notifications are allowed; none when they are not.
 
-- [ ] **Step 5: Record the check**
+- [x] **Step 5: Record the check**
 
 Tick the steps above in this plan and write, under this task, what was seen (device, iOS version, anything off).
+
+**Checked 2026-09-25 on a phone through Expo Go (user).** Everything worked. Expo Go keeps the database inside its own
+container, out of reach of `sqlite3`, so the stamp was cleared with a dev-only DevTools button added for this check,
+«Rivedi il riepilogo del periodo» (`f8f9757`), which removes `lastRecapPeriod` and reloads. The scheduled notification
+cannot be inspected in Expo Go and was not checked there.
 
 ---
 
 ## Task 12: Close the phase
 
-- [ ] **Step 1: Full verification**
+- [x] **Step 1: Full verification**
 
 Run: `pnpm typecheck && pnpm test && rtk proxy pnpm lint`
 Expected: everything passes; Biome prints no `lint/…` lines.
 
-- [ ] **Step 2: Roadmap**
+- [x] **Step 2: Roadmap**
 
 In `ROADMAP.md`, under «Period recap», change `- [ ] Plan, then build.` to
 `- [x] Plan (`docs/superpowers/plans/2026-09-25-period-recap.md`) and build.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add ROADMAP.md docs/superpowers/plans/2026-09-25-period-recap.md

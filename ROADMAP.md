@@ -109,7 +109,7 @@ How it behaves:
   - **Not shareable** as an image.
 - [x] Spec section (§5.15 Period recap, §6.39) and a design pass (mockup in `.variants/period-recap.html`, not
   committed).
-- [ ] Plan, then build.
+- [x] Plan (`docs/superpowers/plans/2026-09-25-period-recap.md`) and build; checked on a phone (Expo Go).
 
 Later ideas, not planned: reopening past recaps (it has to survive changes of period kind), a setting to turn the
 notification off, sharing a recap as an image.
@@ -205,6 +205,32 @@ until they save.
   - whether a pocket's «Riporta in {parent}» (§6.38) and «Preleva» (§6.36) reuse it instead of their own prefill;
   - the source being a credit card in credit (positive balance): fill with it, or hide the button.
 - [ ] Spec line in §6.16, then the plan.
+
+### Tag detail: the total ignores income
+
+Noticed on 2026-09-25. `apps/mobile/app/tag/[id].tsx` computes its hero figure as
+`tagged.filter((tx) => tx.kind === 'expense')`, under the label `tags.total` = «Totale uscite», and the
+category split below it comes from `spendingByCategory`, which is expenses too. The transaction list under
+them lists *every* tagged row, income included — so a tagged refund or reimbursement shows in the list and
+changes nothing above it. For the tag the app itself advertises («un rimborso da chiedere», `tags.footnote`)
+that is the wrong answer: the trip cost 800 € and 300 € came back, and the screen still says 800 €.
+
+- [ ] Decide before planning — **two figures or one net difference**:
+  - **Two figures** (Totale uscite / Totale entrate, side by side): keeps «Totale uscite» meaning what it
+    means today and what §5.10 specifies, keeps the category split honest (it can only split expenses), and
+    stays readable when the income is unrelated to the expenses. Costs the hero its single number.
+  - **One net difference** (uscite − entrate, «Costo netto»): answers the refund question directly, but a tag
+    used for two unrelated things nets them against each other, and the figure no longer matches the sum of
+    the category split.
+  - A middle option: hero stays «Totale uscite», with entrate and the net shown under it only when the tag
+    carries at least one income row — nothing changes for the tags that have none.
+- [ ] Whichever wins: the bottom `money(total)` caption, the category split's scope, and the recap/Statistiche
+      tag card (§5.7) must agree with it, or the screen re-creates the two-totals-that-disagree problem §5.10
+      already warns about.
+- [ ] Transfers stay out of both figures — the screen totals neither side of them (the comment in
+      `transactionRow`'s call site says why).
+- [ ] New i18n keys in `it.ts` **and** `en.ts`; §5.10's "Shows total expenses" line updated in the spec first,
+      then the plan.
 
 ---
 
