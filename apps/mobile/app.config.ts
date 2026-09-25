@@ -3,7 +3,6 @@ import type { ExpoConfig } from 'expo/config';
 const name = process.env.SALDO_APP_NAME ?? 'Saldo';
 const bundleId = process.env.SALDO_BUNDLE_ID ?? 'io.github.saldo.app';
 const scheme = process.env.SALDO_SCHEME ?? 'saldo';
-const serverUrl = process.env.SALDO_SERVER_URL ?? '';
 
 const config: ExpoConfig = {
   name,
@@ -118,11 +117,6 @@ const config: ExpoConfig = {
   ],
   experiments: {
     typedRoutes: true,
-  },
-  extra: {
-    // Validated at runtime by `readServerUrl`: this file cannot import app code, and throwing
-    // here would break `expo prebuild` for anyone who has not exported the variable yet.
-    serverUrl,
   },
 };
 

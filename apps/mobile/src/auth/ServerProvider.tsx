@@ -15,16 +15,25 @@ import { log, shortId } from '../log';
 import { type ApiClient, ApiClientError, createApiClient } from '../net/apiClient';
 import { pendingCount } from '../sync/localStore';
 import { createServerAuthClient, type ServerAuthClient } from './authClient';
-import { BUILD_SERVER_URL } from './buildServer';
 import { DEVICE_ACCOUNT_KEY, ownershipVerdict } from './deviceOwner';
+import { LAST_SERVER_URL_KEY, SERVER_URL_KEY } from './serverKeys';
 import { checkServer, type ServerHealth, type SignedInUser, signIn, signOut } from './session';
 import { decideSession } from './sessionState';
 
 export type ServerStatus = 'loading' | 'signed-out' | 'signed-in';
 
+export interface OwnershipQuestions {
+  /** Rows of a **different** account are here: yes deletes them, no signs straight back out. */
+  confirmForeignData?: (pending: number) => Promise<boolean>;
+  /** Rows of **no** account are here (local-only): join the account, make way for it, or stop. */
+  decideUnownedData?: () => Promise<'adopt' | 'discard' | 'cancel'>;
+}
+
 export interface ServerValue {
-  /** The server this build points at (§15); null only when it was built without one. */
+  /** The server this phone is signed in to (or whose session expired); null when local-only. */
   serverUrl: string | null;
+  /** The last address that worked, to prefill the field after «Esci». */
+  lastServerUrl: string | null;
   user: SignedInUser | null;
   api: ApiClient | null;
   /**
@@ -35,13 +44,13 @@ export interface ServerValue {
   sessionExpired: boolean;
   check(url: string): Promise<ServerHealth>;
   /**
-   * `confirmForeignData` is asked only when this phone holds rows belonging to a **different**
-   * account, and is asked before the session is installed — see `ownershipVerdict`. Answering no
-   * signs the new account straight back out and leaves the data alone.
+   * Both questions are asked before the session is installed — see `ownershipVerdict`. A missing
+   * answer is a refusal: the account is signed back out and the phone is left as it was found.
    */
   connect(
+    serverUrl: string,
     mode: 'login' | 'register',
-    confirmForeignData?: (pending: number) => Promise<boolean>,
+    questions?: OwnershipQuestions,
   ): Promise<SignedInUser>;
   disconnect(): Promise<void>;
 }
@@ -49,22 +58,20 @@ export interface ServerValue {
 const ServerContext = createContext<ServerValue | null>(null);
 
 /**
- * Owns the server connection: whether there is a session (Better Auth's, in SecureStore) and the
- * API client the sync layer uses. *Which* server is not state at all — the build decides it
- * (§15), so there is nothing to store, nothing to forget on sign-out, and nothing to migrate when
- * a later build points somewhere else.
+ * Owns the server connection: which server (typed by the user and kept in `kv`, §6.30), whether
+ * there is a session (Better Auth's, in SecureStore, scoped by server), and the API client the
+ * sync layer uses. No address means local-only: no client, no API, no scheduler.
  */
 export function ServerProvider({ children }: { children: ReactNode }) {
   const { kv } = useDatabase();
-  // Fixed for the life of the process, so it appears in no dependency list below.
-  const serverUrl = BUILD_SERVER_URL;
+  const [serverUrl, setServerUrl] = useState<string | null>(() => kv.get(SERVER_URL_KEY));
   const [user, setUser] = useState<SignedInUser | null>(null);
   const [status, setStatus] = useState<ServerStatus>(serverUrl === null ? 'signed-out' : 'loading');
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const client = useMemo<ServerAuthClient | null>(
     () => (serverUrl === null ? null : createServerAuthClient(serverUrl)),
-    [],
+    [serverUrl],
   );
 
   const api = useMemo<ApiClient | null>(() => {
@@ -81,7 +88,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
         setUser(null);
       },
     });
-  }, [client]);
+  }, [serverUrl, client]);
 
   // A stored session has to be recognised on boot, not only after a sign-in.
   useEffect(() => {
@@ -138,15 +145,10 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   }, [client]);
 
   const connect = useCallback(
-    async (
-      mode: 'login' | 'register',
-      confirmForeignData?: (pending: number) => Promise<boolean>,
-    ) => {
-      // Unreachable from the UI, which hides the buttons; a thrown error beats a silent no-op.
-      if (serverUrl === null) throw new ApiClientError(500, 'no_server', 'No server configured');
-      const target = createServerAuthClient(serverUrl);
+    async (url: string, mode: 'login' | 'register', questions: OwnershipQuestions = {}) => {
+      const target = createServerAuthClient(url);
       log('auth', 'opening the ceremony', { mode });
-      const signedIn = await signIn({ serverUrl, client: target, mode });
+      const signedIn = await signIn({ serverUrl: url, client: target, mode });
       log('auth', 'ceremony finished', { account: shortId(signedIn.id) });
 
       /**
@@ -162,31 +164,43 @@ export function ServerProvider({ children }: { children: ReactNode }) {
         incoming: shortId(signedIn.id),
         verdict,
       });
-      if (verdict === 'foreign-data') {
-        const pending = pendingCount(db);
-        log('auth', 'asking before deleting another account data', { pending });
-        const accepted = (await confirmForeignData?.(pending)) ?? false;
-        if (!accepted) {
-          log('auth', 'refused, signing the new account back out');
-          // The ceremony has already succeeded, so there is a session to give back. Saying no here
-          // must leave the phone exactly as it was found.
-          await signOut(target);
-          throw new ApiClientError(
-            409,
-            'foreign_device_data',
-            'This phone holds another account data',
-          );
-        }
+
+      /** Saying no must leave the phone exactly as it was found: the ceremony already succeeded. */
+      const refuse = async (code: string, message: string): Promise<never> => {
+        log('auth', 'refused, signing the new account back out', { code });
+        await signOut(target);
+        throw new ApiClientError(409, code, message);
+      };
+      const wipe = () => {
         log('auth', 'deleting the attachment files');
         deleteAllAttachmentFiles();
         log('auth', 'emptying the database');
         wipeDevice(db);
         log('auth', 'phone is clear');
+      };
+
+      if (verdict === 'foreign-data') {
+        const pending = pendingCount(db);
+        log('auth', 'asking before deleting another account data', { pending });
+        const accepted = (await questions.confirmForeignData?.(pending)) ?? false;
+        if (!accepted) await refuse('foreign_device_data', 'This phone holds another account data');
+        wipe();
+      }
+      if (verdict === 'unowned-data') {
+        log('auth', 'asking what to do with rows that belong to no account');
+        const answer = (await questions.decideUnownedData?.()) ?? 'cancel';
+        log('auth', 'unowned data', { answer });
+        if (answer === 'cancel') await refuse('cancelled', 'Sign-in was cancelled');
+        // «Porta nell'account» needs nothing: the rows are pending, and the first cycle pushes them.
+        if (answer === 'discard') wipe();
       }
       // After the wipe, never before: `wipeDevice` empties `kv` too.
       kv.set(DEVICE_ACCOUNT_KEY, signedIn.id);
+      kv.set(SERVER_URL_KEY, url);
+      kv.set(LAST_SERVER_URL_KEY, url);
 
       log('auth', 'installing the session, sync can start now');
+      setServerUrl(url);
       setUser(signedIn);
       setStatus('signed-in');
       setSessionExpired(false);
@@ -197,9 +211,12 @@ export function ServerProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(async () => {
     if (client !== null) await signOut(client);
-    // §6.30 "Esci": the phone keeps its data, and the next sign-in starts from an empty cursor
-    // because this account's rows may not be the ones it pulls next.
+    // §6.30 «Esci»: the phone keeps its data and carries on local-only. The address goes — it is
+    // what makes a scheduler exist — and the next sign-in starts from an empty cursor, because
+    // that account's rows may not be the ones it pulls next.
     kv.remove('syncCursor');
+    kv.remove(SERVER_URL_KEY);
+    setServerUrl(null);
     setUser(null);
     setStatus('signed-out');
     setSessionExpired(false);
@@ -208,6 +225,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ServerValue>(
     () => ({
       serverUrl,
+      lastServerUrl: kv.get(LAST_SERVER_URL_KEY),
       user,
       api,
       status,
@@ -216,7 +234,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       connect,
       disconnect,
     }),
-    [user, api, status, sessionExpired, connect, disconnect],
+    [serverUrl, user, api, status, sessionExpired, connect, disconnect, kv],
   );
 
   return <ServerContext.Provider value={value}>{children}</ServerContext.Provider>;
