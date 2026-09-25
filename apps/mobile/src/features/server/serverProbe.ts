@@ -1,5 +1,5 @@
+import type { ServerHealth } from '../../auth/health';
 import { normaliseServerUrl } from '../../auth/link';
-import type { ServerHealth } from '../../auth/session';
 import { ApiClientError } from '../../net/apiClient';
 
 /**
@@ -22,7 +22,7 @@ export function addressHint(input: string): AddressHint {
 
 export type FailureReason = 'unreachable' | 'not_saldo';
 
-/** `checkServer` throws `not_saldo` for an answer that is not Saldo's; anything else is "no answer". */
+/** `checkServer` throws `not_saldo` when something answered that is not Saldo (`readHealth`); anything else is "no answer". */
 export function failureReason(caught: unknown): FailureReason {
   return caught instanceof ApiClientError && caught.code === 'not_saldo'
     ? 'not_saldo'

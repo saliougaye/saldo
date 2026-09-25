@@ -1,47 +1,39 @@
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import { z } from 'zod';
 import { log, ms, shortId } from '../log';
 import { ApiClientError } from '../net/apiClient';
 import type { ServerAuthClient } from './authClient';
 import { BUILD_REDIRECT_URI } from './buildServer';
+import { readHealth, type ServerHealth } from './health';
 import { authorizeUrl, callbackParams } from './link';
 
-export const healthSchema = z.object({
-  app: z.literal('saldo'),
-  apiVersion: z.number(),
-  schemaVersion: z.number(),
-  version: z.string(),
-  registrationAllowed: z.boolean(),
-  /** §10. Defaulted rather than required, so a server from before this field stays readable. */
-  attachmentsEnabled: z.boolean().default(false),
-});
-
-export type ServerHealth = z.infer<typeof healthSchema>;
+export type { ServerHealth } from './health';
 
 /** §9.3 step 1. Unauthenticated, so it runs before any session exists. */
 export async function checkServer(serverUrl: string): Promise<ServerHealth> {
   const startedAt = Date.now();
   const response = await fetch(`${serverUrl}/api/health`).catch(() => null);
-  if (response === null || !response.ok) {
+  const body = response === null ? null : await response.json().catch(() => null);
+  const reading = readHealth(response?.status ?? null, body);
+  if (reading.kind === 'unreachable') {
     log('auth', `${serverUrl} is not reachable`, { status: response?.status ?? 'no answer' });
     throw new ApiClientError(503, 'unreachable', 'Could not reach that address');
   }
-  const parsed = healthSchema.safeParse(await response.json().catch(() => null));
-  if (!parsed.success) {
-    log('auth', `${serverUrl} answered, but not like a Saldo server`);
+  if (reading.kind === 'not_saldo') {
+    log('auth', `${serverUrl} answered, but not like a Saldo server`, { status: response?.status });
     throw new ApiClientError(502, 'not_saldo', 'That address does not answer like a Saldo server');
   }
+  const { health } = reading;
   // Both versions and both switches: they decide what the app is allowed to offer, and getting
   // them wrong looks like the app misbehaving rather than the server being configured that way.
   log('auth', `${serverUrl} is a Saldo server (${ms(startedAt)})`, {
-    version: parsed.data.version,
-    api: parsed.data.apiVersion,
-    schema: parsed.data.schemaVersion,
-    registrationAllowed: parsed.data.registrationAllowed,
-    attachments: parsed.data.attachmentsEnabled,
+    version: health.version,
+    api: health.apiVersion,
+    schema: health.schemaVersion,
+    registrationAllowed: health.registrationAllowed,
+    attachments: health.attachmentsEnabled,
   });
-  return parsed.data;
+  return health;
 }
 
 function randomState(): string {

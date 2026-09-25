@@ -1040,7 +1040,8 @@ server serves and the resulting session is handed to the app.
 
 1. App: the user types the server address (§6.29 step 0, §6.30); `normaliseServerUrl` turns it into an origin (a
    bare host gets `https://`, a path is rejected). «Continua» calls `GET /api/health`, which must return
-   `app: "saldo"` and `apiVersion: 1` — no answer is «Non raggiungibile», any other answer «Non è un server Saldo»;
+   `app: "saldo"` and `apiVersion: 1` — no answer or a 5xx is «Non raggiungibile» (a proxy in front of a Saldo that
+   is down answers 502/503), any other status or body «Non è un server Saldo» (`readHealth`);
    it also returns `schemaVersion` (§8.1) and `registrationAllowed`, which decides whether "Crea account" is offered.
    The address is stored (`kv.serverUrl`) only after a sign-in succeeds, and removed by «Esci».
 2. App generates `state` (`expo-crypto`) and calls
