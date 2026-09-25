@@ -190,12 +190,18 @@ How it is built:
   again.
 - Cards and ⓘ are labelled buttons, text follows Dynamic Type, the intro honours Reduce Motion.
 
-- [ ] Analysis before planning:
-  - walk every screen and list what a new user must understand to use it, ranked by what a misunderstanding costs;
-  - for each concept, decide intro, ⓘ, Guida or none — a hint that compensates for an unclear label is a label to
-    fix instead;
-  - whether the intro doubles as a «Novità» sheet after an update (Apple uses one pattern for both).
-- [ ] Spec section and a mockup in `docs/superpowers/mockups/` (intro cards, ⓘ sheet, Guida list), then the plan.
+- [x] Analysis before planning (2026-09-26, spec D28, §5.16):
+  - eleven concepts, ranked by what a misunderstanding costs. **Intro**: the period, «Rimasto da spendere» (income −
+    spent, not a bank balance), transfers (a card payment included), recurring. **ⓘ**: account types, the credit
+    card's «Addebitata su», the period kind and cycle day, budgets, «Ripeti», a goal's «Dove li tieni». **Guida only**:
+    tags, hidden mode, where the data lives — the screens already say them in a sentence;
+  - labels fixed instead of explained: «ciclo» where the period in general is meant, «Includi nel saldo disponibile»
+    → «Includi nel totale spendibile»;
+  - **no «Novità» yet**: there are no releases to compare. The intro takes a list of ids, so a «Novità» after an
+    update reuses it once 0.8 exists.
+- [x] Spec (D28, §5.16, §6.40–§6.42) and a mockup (`docs/superpowers/mockups/2026-09-26-guide-variants.html`: intro
+  on one screen, ⓘ as a sheet with the whole text, Guida as grouped rows with the summary — variants 1A, 2A, 3A).
+- [ ] Plan (`docs/superpowers/plans/2026-09-26-in-app-guide.md`) and build; checked on the simulator.
 
 ### Transfers: a button to fill the amount with the source's whole balance ✅ done
 

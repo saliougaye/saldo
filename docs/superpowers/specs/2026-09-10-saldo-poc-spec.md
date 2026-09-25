@@ -82,6 +82,7 @@ cycle, and am I going faster than I should?*
 | D25 | Budget and Obiettivi on Home share one **target card** (§5.13): one item featured with a sentence that says what to do, the exceptions as rows, everything else behind one «Tutti …» row of rings (decided 2026-09-24 over three rounds of mockups) | A list of bars says where each item is, not what to do about it. The sentence turns the pace into an amount — per day for a budget, per period for a goal — and a single featured item keeps Home to one large figure per card. The exceptions (a budget over its limit, a goal reached or past its deadline) are the things that must not hide behind a tap, so they get rows of their own; being over *pace* is common and stays a dark ring. |
 | D26 | **Rocky appears only where the user stops** (decided 2026-09-24, widened 2026-09-25): peeking over the «nothing yet» ghost stack, peeking over a reached goal's card, whole in the close sheet of a reached goal, waving on the welcome, asleep on the lock screen, waiting in a long labelled load, and small above the message of a failed import or restore. Never in a «nothing matches», a «not found», a toast, the pull-to-refresh or a short boot wait. He moves as the mascot kit's Lottie states; only the waiting ones (`loading`, `sleep`) loop | A mascot seen ten times a day is noise. Next to an error he stays small and still after one play, under the text that says what happened, so he sets the tone without making light of it. Lottie from the kit rather than PNGs: one source for motion and still, since Reduce Motion shows the kit's pose frame. Mockup: `docs/superpowers/mockups/2026-09-24-mascot-variants.html`, variant A+B |
 | D27 | **A closed period is recapped once, in a sheet** (decided 2026-09-25): on the first open of a new period, for every kind including the week, a full-screen sheet recaps the period that just closed (§5.15), with a 09:00 notification that day. Once dismissed it cannot be reopened, and it is not shareable as an image | The switch to a new period was silent. A sheet makes it a moment; every kind gets one because the user wants the week recapped too. Reopening past recaps and sharing them are later ideas: the first has to survive changes of period kind, the second needs a native capture dependency and a decision on what a shared image hides. |
+| D28 | **Saldo explains itself in three places, from one text** (decided 2026-09-26): a first-run intro of four ideas on one screen, an ⓘ next to what it explains opening a sheet, and a «Guida» in Profile with one page per concept. All three read `guide.<concept>.{title,summary,body}` through one typed list of concept ids (§5.16) | Nothing in the app said how it thinks: a period that restarts, «Rimasto da spendere» that is not a bank balance, a transfer that is not an expense. Apple's pattern — a few rows, «Continua», done — costs one tap; the ⓘ answers where the question comes up without coach marks or tooltips over the UI; the Guida is where the same text can be read again. One list of ids makes it impossible for the three to drift apart. A hint that compensates for an unclear label was fixed as a label instead (the generic «ciclo», «saldo disponibile»). Not a «Novità» sheet yet: there are no releases to compare (0.8). Mockup: `docs/superpowers/mockups/2026-09-26-guide-variants.html`, variants 1A, 2A, 3A |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -753,6 +754,47 @@ at `stepWordStaggerMs`), the net rolling from zero over `motion.countMs`, the ba
 `staggerMs`) when their section scrolls into view. Leaving is quicker than arriving. With reduced motion only the fades
 remain. The mockup is `.variants/period-recap.html` (not committed).
 
+### 5.16 In-app explanations
+
+Three surfaces, one text (D28). The explanations are **content, not code**: every concept has
+`guide.<concept>.title`, `.summary` (one sentence) and `.body` (short paragraphs separated by a blank line) in every
+catalogue, and the parity test holds them together. One typed list, `GUIDE_CONCEPTS` in
+`apps/mobile/src/features/guide/concepts.ts`, gives each concept its id, icon, section and whether it is in the intro;
+the intro, the ⓘ and the Guida all read it.
+
+| Section | Concept | Icon | Intro | ⓘ next to |
+| --- | --- | --- | --- | --- |
+| Le basi | `period` — the period restarts Home, budgets and stats | cal | ✓ | Period sheet «Tipo di periodo»; Profile «Inizio del ciclo» screen |
+| Le basi | `remaining` — «Rimasto da spendere» is income − spent, not a balance (§5.3) | wallet | ✓ | — (Home stays clean) |
+| Le basi | `transfers` — a transfer is neither an expense nor income, a card payment included | swap | ✓ | — |
+| Conti | `accountTypes` — the type decides Totale spendibile; a debit card is its own account | landmark | | «Tipo» in the account sheet and onboarding step 2 |
+| Conti | `creditCard` — spend on the card, pay it with a transfer, «Salda carta» | card | | «Addebitata su» in the account sheet |
+| Pianificare | `budgets` — a ceiling per period, the pace tick, rollover | target | | the new/edit budget sheet's title |
+| Pianificare | `goals` — a pocket inside a real account, out of Totale spendibile | piggy | | goal wizard step «Dove li tieni» |
+| Pianificare | `recurring` — «Ripeti», occurrences ahead, the scope sheet | repeat | ✓ | «Ripeti» in the transaction sheet |
+| Organizzare | `tags` — one category, any number of tags | tag | | — |
+| Organizzare | `hidden` — hidden mode hides sums, not single rows | eyeOff | | — |
+| I tuoi dati | `data` — on the phone, on a server if connected, back it up | server | | — |
+
+Ranked by what a misunderstanding costs: the period, «Rimasto da spendere» read as a bank balance and a transfer (or a
+card payment) recorded as an expense change every number from the first day, so they are the intro, with recurring
+transactions because rent and salary are what a new user enters first. The rest are met later and get an ⓘ where the
+question comes up, or only a Guida page where the screen already says it in a sentence (Totale spendibile, «Escludi
+dai totali», tags).
+
+**First-run intro.** Once, after onboarding (§6.40). «Already seen» is device-local and not synced:
+`kv.introSeenFor = settings.onboardingCompletedAt`, written on «Continua». It is due whenever
+`onboardingCompletedAt` is set and differs from the stored value, so finishing onboarding again («Rivedi la
+configurazione iniziale», «Elimina tutti i dati», a device reset) shows it again, and a second phone signing in to an
+account shows it once. It waits for the period recap (§5.15): one sheet at a time, the recap first.
+
+**Labels fixed instead of explained.** «Ciclo» meant any period in copy written before §5.2 had four kinds; where it
+means the period in general it now says «periodo» (Statistiche, Home «Avanzato nel periodo», the budget median hint,
+«Escludi dai totali», «Ripeti»), and the pay-cycle strings keep «ciclo». «Includi nel saldo disponibile» becomes
+«Includi nel totale spendibile», the name of the figure it changes. The same in every language.
+
+**Not now.** A «Novità» sheet after an update reuses the intro with another list of ids once there are releases (0.8).
+
 ---
 
 ## 6. Screens (mobile) — inventory & behaviour
@@ -831,6 +873,9 @@ indented under it (ring, name, balance) and a last «liberi» line for its own b
 | 6.37 | **New goal sheet** (NEW) | — | A **wizard** like the new budget (§6.18): 1 name and look (icon and colour, the account picker's grid); 2 target (keypad, D23); 3 deadline, optional (Saldo's calendar, «Senza scadenza»); 4 «Da quale conto» (cash, checking, debit card, savings; non-archived) and «Già da parte» (keypad, 0 allowed; the parent's own balance shows as a hint, and more is accepted, since a parent may go negative). «Crea obiettivo» writes the pocket and, when «Già da parte» > 0, the transfer from the parent, in one database transaction. Edit is one page without step 4. |
 | 6.38 | **Close goal sheet** (NEW) | — | «Hai usato i soldi?» with the balance; «Registra la spesa» and «Riporta in {parent}» (§5.14); with a zero balance it only confirms. Archives the pocket and returns to the list with the toast «Obiettivo chiuso». A reached goal's sheet opens with Rocky celebrating above the question (§13 *Mascot*); an unreached one has none. |
 | 6.39 | **Period recap sheet** (NEW) | — | §5.15. Full-screen sheet over the Home of the new period, shown once. Eyebrow with the closed range («1 – 30 settembre 2026»), title «{Settembre} si è chiuso». A card: «Netto del mese» (34pt, positive colour when ≥ 0, signed), the comparisons line («Agosto +195,10 € · di solito +356,80 €»), Entrate and Uscite with their deltas. Then, all open and in this order: **Categorie** (dot, name, amount, bar relative to the top one; the tagged category's bar in accent), **Budget** (name, spent «di» limit, bar, the status line; «Sforato» in accent **and** in words), **Altro** (Spesa più grande — a single transaction, so its amount stays readable in hidden mode like a list row; Patrimonio as its change over the period). Footer: «Inizia il nuovo {mese \| settimana \| ciclo \| anno}», which dismisses it; there is no other way back into it. Every other amount follows hidden mode (the aggregate rule). No Rocky (D26). |
+| 6.40 | **First-run intro** (NEW) | — | §5.16. Full-screen modal over the tabs, shown once. Title «Come ragiona Saldo» (32pt), then the four intro concepts as rows: a 44pt icon box, the title (semibold) and the summary (muted). Footnote «Le ritrovi, con le altre, in Profilo → Guida.», then «Continua», the only button, which marks it seen. The rows arrive staggered (`stepEnterMs`, `staggerMs`); with Reduce Motion only fades. Each row is one accessibility element (title, summary). No Rocky (D26). |
+| 6.41 | **ⓘ sheet** (NEW) | — | §5.16. `InfoButton`: the `info` icon at 16pt, muted, right after a label, 44pt hit area, labelled «Informazioni: {title}». It opens a sheet: icon box, title, the summary in the text colour, the body paragraphs muted, «Fatto». The same content as the concept's Guida page. |
+| 6.42 | **Guida** (NEW) | — | `guide/index.tsx`, from a Profile row «Guida» next to «Rivedi la configurazione iniziale». Title «Guida», subtitle «Come ragiona Saldo, un'idea alla volta.», then one card per section (Le basi, Conti, Pianificare, Organizzare, I tuoi dati) with a row per concept: icon, title, summary, chevron → `guide/[id].tsx`: icon box, title (display), a card with the summary and the body. |
 
 Visual rules for NEW screens: use only tokens from `@saldo/ui` and the component primitives built for the design
 screens (Card, ListRow, SectionLabel, Toggle, Segmented, PrimaryButton, SecondaryButton, TextField). No new colours.
