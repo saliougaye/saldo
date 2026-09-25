@@ -245,7 +245,7 @@ export const it = {
     createTag: 'Crea «{{name}}»',
     repeat: 'Ripeti',
     exclude: 'Escludi dai totali',
-    excludeNote: 'La transazione resta nei saldi ma non nei totali del ciclo.',
+    excludeNote: 'La transazione resta nei saldi ma non nei totali del periodo.',
     details: 'Dettagli',
     detailsNone: 'Niente di impostato',
     detailsTags_one: '{{count}} tag',
@@ -331,7 +331,7 @@ export const it = {
     untilDate: 'fino al {{date}}',
     recurringNote: 'Ricorrente, {{cadence}}',
     recurringRow: 'Ricorrenza',
-    createsUpcoming: 'Crea anche le prossime occorrenze fino a fine ciclo prossimo',
+    createsUpcoming: 'Crea anche le prossime occorrenze fino alla fine del prossimo periodo',
     cardSubtitle_one: '{{count}} attiva · prossima {{name}} il {{date}}',
     cardSubtitle_other: '{{count}} attive · prossima {{name}} il {{date}}',
     perMonth: '{{amount}}/mese',
@@ -372,16 +372,16 @@ export const it = {
     resetDone: 'Telefono azzerato',
   },
   stats: {
-    cycleTrend: 'Andamento del ciclo',
-    trendFooter: 'Giorno {{elapsed}} di {{length}} · media dei 3 cicli precedenti in grigio',
+    cycleTrend: 'Andamento del periodo',
+    trendFooter: 'Giorno {{elapsed}} di {{length}} · media dei 3 periodi precedenti in grigio',
     title: 'Statistiche',
     cashflow: 'Flussi',
     committed: 'Quota impegnata',
     committedLine:
-      'Il {{pct}}% di questo ciclo era già deciso in partenza: {{amount}} tra affitto, utenze e abbonamenti.',
+      'Il {{pct}}% di questo periodo era già deciso in partenza: {{amount}} tra affitto, utenze e abbonamenti.',
     committedBar: 'Impegnato',
     discretionaryBar: 'Libero',
-    projection: 'Proiezione di fine ciclo',
+    projection: 'Proiezione di fine periodo',
     projectionAbove: 'Circa {{amount}} sopra il solito, mantenendo questo ritmo.',
     projectionBelow: 'Circa {{amount}} sotto il solito, mantenendo questo ritmo.',
     split: 'Ripartizione',
@@ -393,13 +393,13 @@ export const it = {
     ofTotal: '{{pct}}% del totale',
     seeAll_one: '{{count}} categoria in tutto',
     seeAll_other: 'Vedi tutte le {{count}} categorie',
-    lastCycles: 'Ultimi 6 cicli',
+    lastCycles: 'Ultimi 6 periodi',
     legendIncome: 'Entrate',
     legendExpenses: 'Uscite',
-    legendCurrent: 'Ciclo in corso',
-    legendPast: 'Cicli chiusi',
+    legendCurrent: 'Periodo in corso',
+    legendPast: 'Periodi chiusi',
     median: 'Mediana {{amount}}',
-    average: 'Media 6 cicli',
+    average: 'Media 6 periodi',
     subcategories: 'Sottocategorie',
     noSubcategory: 'Senza sottocategoria',
     empty: 'Nessun dato in questo periodo',
@@ -408,7 +408,7 @@ export const it = {
     tagsEmpty: 'Nessun tag in questo periodo',
     tagsFlows: 'Uscite · entrate',
     tagsOverlap:
-      'Una voce con più tag conta in ognuno, quindi la somma supera il totale del ciclo.',
+      'Una voce con più tag conta in ognuno, quindi la somma supera il totale del periodo.',
     tagsUntagged_one: '{{count}} voce senza tag · {{amount}}',
     tagsUntagged_other: '{{count}} voci senza tag · {{amount}}',
   },
@@ -605,7 +605,7 @@ export const it = {
     closed: 'Periodo chiuso',
     ofLimit: 'su {{amount}}',
     amount: 'Importo',
-    medianHint: 'Mediana degli ultimi 6 cicli: {{amount}}',
+    medianHint: 'Mediana degli ultimi 6 periodi: {{amount}}',
     useMedian: 'Usa',
     categories: 'Categorie',
     missing_categories: 'Scegli almeno una categoria.',
@@ -613,7 +613,7 @@ export const it = {
     taken: '«{{name}}» è già in un altro budget',
     name: 'Nome',
     repeats: 'Si ripete',
-    periodCycle: 'Ogni ciclo',
+    periodCycle: 'Ogni periodo',
     periodWeek: 'Settimana',
     periodYear: 'Anno',
     alertAt: 'Avvisami a',
@@ -630,7 +630,7 @@ export const it = {
     alertTitle: 'Budget {{name}}: {{pct}}% usato',
     empty: 'Nessun budget',
     emptyBody:
-      'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul passo del mese.',
+      'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul ritmo del periodo.',
   },
   accounts: {
     title: 'Conti',
@@ -655,7 +655,7 @@ export const it = {
     institution: 'Banca',
     type: 'Tipo',
     balance: 'Saldo attuale',
-    includeInSpendable: 'Includi nel saldo disponibile',
+    includeInSpendable: 'Includi nel totale spendibile',
     includeNote: 'I conti esclusi restano nel patrimonio complessivo.',
     colour: 'Colore',
     icon: 'Icona',
@@ -852,7 +852,7 @@ export const it = {
   },
   home: {
     remaining: 'Rimasto da spendere',
-    leftover: 'Avanzato nel ciclo',
+    leftover: 'Avanzato nel periodo',
     income: 'Entrate',
     expenses: 'Uscite',
     budget: 'Budget',
@@ -862,7 +862,7 @@ export const it = {
     recent: 'Ultime transazioni',
     allTransactions: 'Tutte le transazioni',
     dayOf: 'giorno {{elapsed}} di {{length}}',
-    closedCycle: 'ciclo chiuso',
+    closedCycle: 'periodo chiuso',
     overPace_one: '{{count}} oltre il ritmo',
     overPace_other: '{{count}} oltre il ritmo',
     withinLimits: 'nei limiti',
@@ -1012,6 +1012,108 @@ export const it = {
     notification_week: 'La tua settimana si è chiusa: guarda il riepilogo',
     notification_cycle: 'Il tuo ciclo si è chiuso: guarda il riepilogo',
     notification_year: 'Il tuo anno si è chiuso: guarda il riepilogo',
+  },
+  /** §5.16: the explanations of the intro, the ⓘ and the Guida. A body's paragraphs are split by a blank line. */
+  guide: {
+    title: 'Guida',
+    subtitle: 'Come ragiona Saldo, un’idea alla volta.',
+    introTitle: 'Come ragiona Saldo',
+    introFoot: 'Le ritrovi, con le altre, in Profilo → Guida.',
+    infoLabel: 'Informazioni: {{title}}',
+    section_basics: 'Le basi',
+    section_accounts: 'Conti',
+    section_plan: 'Pianificare',
+    section_organize: 'Organizzare',
+    section_data: 'I tuoi dati',
+    period: {
+      title: 'Il periodo',
+      summary:
+        'Home, budget e statistiche ripartono a ogni periodo: mese, settimana, ciclo di stipendio o anno.',
+      body: [
+        'Saldo guarda un periodo alla volta, e lo scegli tu: il mese solare, la settimana, l’anno, oppure il ciclo di stipendio, che parte dal giorno in cui lo ricevi.',
+        'Cambiare periodo raggruppa le transazioni in un altro modo: niente si sposta e niente si perde. Con ‹ › sulla Home rivedi i periodi passati.',
+      ].join('\n\n'),
+    },
+    remaining: {
+      title: 'Rimasto da spendere',
+      summary: 'Le entrate del periodo meno le uscite, non il saldo della banca.',
+      body: [
+        'Se lo stipendio di questo periodo non è ancora registrato, il numero può essere negativo: registralo, magari come ricorrente.',
+        'Contano solo entrate e uscite fino a oggi. Restano fuori i trasferimenti, le voci future e quelle con «Escludi dai totali», che cambiano comunque il saldo del loro conto.',
+        'Quanto c’è davvero sui conti lo trovi nella tab Conti.',
+      ].join('\n\n'),
+    },
+    transfers: {
+      title: 'Trasferimenti',
+      summary: 'Spostare soldi tra due tuoi conti non è né una spesa né un’entrata.',
+      body: [
+        'Un trasferimento cambia il saldo dei due conti e basta: non tocca il Rimasto da spendere né le statistiche.',
+        'Anche pagare la carta di credito è un trasferimento, dal conto su cui è addebitata alla carta: le spese le hai già registrate quando le hai fatte.',
+      ].join('\n\n'),
+    },
+    accountTypes: {
+      title: 'Tipi di conto',
+      summary: 'Il tipo decide se un conto entra nel Totale spendibile.',
+      body: [
+        'Contanti, Conto e le carte sono soldi che spendi: entrano nel Totale spendibile. Risparmi e Investimenti restano fuori, ma contano nel Patrimonio complessivo. Per ogni conto lo cambi con «Includi nel totale spendibile».',
+        'Una carta di debito è un conto a sé, con il suo saldo: aggiungila se la ricarichi a parte, come una prepagata. Se prende i soldi dal conto corrente, registra le spese sul conto.',
+      ].join('\n\n'),
+    },
+    creditCard: {
+      title: 'Carta di credito',
+      summary: 'Le spese vanno sulla carta; il pagamento a fine mese è un trasferimento.',
+      body: [
+        'Registra ogni spesa sulla carta, così finisce nel periodo in cui l’hai fatta. Il saldo della carta di solito è negativo: è quanto devi.',
+        'Con il giorno di chiusura, quello di addebito e il conto su cui è addebitata, Saldo calcola l’estratto conto e te lo ricorda il giorno dell’addebito. «Salda carta» prepara il trasferimento con l’importo giusto.',
+      ].join('\n\n'),
+    },
+    budgets: {
+      title: 'Budget',
+      summary: 'Un tetto di spesa su una o più categorie, che riparte a ogni periodo.',
+      body: [
+        'La barra si riempie man mano che spendi. La tacca verticale è il ritmo: dove dovresti essere oggi per arrivare giusto a fine periodo. Oltre la tacca stai spendendo più in fretta del previsto.',
+        'Con «Porta avanti il residuo» quello che non spendi si aggiunge al periodo dopo. Un budget può anche valere per la settimana, il mese o l’anno di calendario, qualunque sia il tuo periodo.',
+      ].join('\n\n'),
+    },
+    goals: {
+      title: 'Obiettivi',
+      summary: 'Soldi messi da parte dentro un tuo conto, verso una cifra e, se vuoi, una data.',
+      body: [
+        'I soldi restano nel conto, ma escono dal Totale spendibile: sotto il conto vedi quanto è negli obiettivi e quanto resta libero.',
+        'Accantona e Preleva sono trasferimenti tra il conto e l’obiettivo. Quando usi i soldi, chiudi l’obiettivo: registri la spesa o li riporti nel conto.',
+      ].join('\n\n'),
+    },
+    recurring: {
+      title: 'Ricorrenti',
+      summary: 'Affitto, abbonamenti e stipendio: registrali una volta, con «Ripeti».',
+      body: [
+        'Saldo crea da solo le prossime occorrenze, fino alla fine del periodo dopo. Finché la data non arriva le vedi «In arrivo» e non contano nei totali.',
+        'Quando ne modifichi una, ti chiede se vale solo per quella, anche per le successive o per tutte. Le trovi tutte in Transazioni → Ricorrenti.',
+      ].join('\n\n'),
+    },
+    tags: {
+      title: 'Categorie e tag',
+      summary: 'Ogni voce ha una categoria; i tag sono facoltativi, e possono essere più d’uno.',
+      body: [
+        'La categoria dice che tipo di spesa è: la usano le statistiche e i budget. Un tag raccoglie voci di categorie diverse, anche su più periodi: un viaggio, un trasloco, un rimborso da chiedere.',
+        'Una voce con più tag conta in ognuno.',
+      ].join('\n\n'),
+    },
+    hidden: {
+      title: 'Importi nascosti',
+      summary: 'L’occhio nasconde totali e saldi quando qualcuno guarda lo schermo.',
+      body: [
+        'Le singole voci restano leggibili: si nascondono le somme. Resta così finché non lo tocchi di nuovo, anche se chiudi l’app.',
+      ].join('\n\n'),
+    },
+    data: {
+      title: 'I tuoi dati',
+      summary: 'Sono su questo telefono. Anche su un tuo server, se ne colleghi uno.',
+      body: [
+        'Saldo funziona senza rete e senza account. Collegando un server Saldo, dal Profilo, i dati si sincronizzano tra i tuoi dispositivi.',
+        'Senza server, fai un backup ogni tanto da Profilo → Esporta i dati: se perdi il telefono, è l’unica copia.',
+      ].join('\n\n'),
+    },
   },
 };
 

@@ -247,7 +247,7 @@ export const es: Messages = {
     createTag: 'Crear «{{name}}»',
     repeat: 'Repetir',
     exclude: 'Excluir de los totales',
-    excludeNote: 'El movimiento cuenta en los saldos, pero no en los totales del ciclo.',
+    excludeNote: 'El movimiento cuenta en los saldos, pero no en los totales del periodo.',
     details: 'Detalles',
     detailsNone: 'Nada configurado',
     detailsTags_one: '{{count}} etiqueta',
@@ -333,7 +333,7 @@ export const es: Messages = {
     untilDate: 'hasta el {{date}}',
     recurringNote: 'Recurrente, {{cadence}}',
     recurringRow: 'Repetición',
-    createsUpcoming: 'También crea las próximas repeticiones hasta el final del ciclo siguiente',
+    createsUpcoming: 'También crea las próximas repeticiones hasta el final del periodo siguiente',
     cardSubtitle_one: '{{count}} activa · próxima: {{name}} el {{date}}',
     cardSubtitle_other: '{{count}} activas · próxima: {{name}} el {{date}}',
     perMonth: '{{amount}}/mes',
@@ -374,16 +374,16 @@ export const es: Messages = {
     resetDone: 'Teléfono restablecido',
   },
   stats: {
-    cycleTrend: 'Evolución del ciclo',
-    trendFooter: 'Día {{elapsed}} de {{length}} · media de los 3 ciclos anteriores en gris',
+    cycleTrend: 'Evolución del periodo',
+    trendFooter: 'Día {{elapsed}} de {{length}} · media de los 3 periodos anteriores en gris',
     title: 'Estadísticas',
     cashflow: 'Flujo',
     committed: 'Parte comprometida',
     committedLine:
-      'El {{pct}} % de este ciclo estaba decidido de antemano: {{amount}} entre alquiler, suministros y suscripciones.',
+      'El {{pct}} % de este periodo estaba decidido de antemano: {{amount}} entre alquiler, suministros y suscripciones.',
     committedBar: 'Comprometido',
     discretionaryBar: 'Libre',
-    projection: 'Proyección a fin de ciclo',
+    projection: 'Proyección a fin de periodo',
     projectionAbove: 'Unos {{amount}} por encima de lo habitual, a este ritmo.',
     projectionBelow: 'Unos {{amount}} por debajo de lo habitual, a este ritmo.',
     split: 'Reparto',
@@ -395,13 +395,13 @@ export const es: Messages = {
     ofTotal: '{{pct}} % del total',
     seeAll_one: '{{count}} categoría en total',
     seeAll_other: 'Ver las {{count}} categorías',
-    lastCycles: 'Últimos 6 ciclos',
+    lastCycles: 'Últimos 6 periodos',
     legendIncome: 'Ingresos',
     legendExpenses: 'Gastos',
-    legendCurrent: 'Ciclo en curso',
-    legendPast: 'Ciclos cerrados',
+    legendCurrent: 'Periodo en curso',
+    legendPast: 'Periodos cerrados',
     median: 'Mediana {{amount}}',
-    average: 'Media 6 ciclos',
+    average: 'Media 6 periodos',
     subcategories: 'Subcategorías',
     noSubcategory: 'Sin subcategoría',
     empty: 'Sin datos en este periodo',
@@ -410,7 +410,7 @@ export const es: Messages = {
     tagsEmpty: 'Sin etiquetas en este periodo',
     tagsFlows: 'Gastos · ingresos',
     tagsOverlap:
-      'Un movimiento con varias etiquetas cuenta en cada una, así que la suma supera el total del ciclo.',
+      'Un movimiento con varias etiquetas cuenta en cada una, así que la suma supera el total del periodo.',
     tagsUntagged_one: '{{count}} movimiento sin etiqueta · {{amount}}',
     tagsUntagged_other: '{{count}} movimientos sin etiqueta · {{amount}}',
   },
@@ -607,7 +607,7 @@ export const es: Messages = {
     closed: 'Periodo cerrado',
     ofLimit: 'de {{amount}}',
     amount: 'Importe',
-    medianHint: 'Mediana de los últimos 6 ciclos: {{amount}}',
+    medianHint: 'Mediana de los últimos 6 periodos: {{amount}}',
     useMedian: 'Usar',
     categories: 'Categorías',
     missing_categories: 'Elige al menos una categoría.',
@@ -615,7 +615,7 @@ export const es: Messages = {
     taken: '«{{name}}» ya está en otro presupuesto',
     name: 'Nombre',
     repeats: 'Se repite',
-    periodCycle: 'Cada ciclo',
+    periodCycle: 'Cada periodo',
     periodWeek: 'Semana',
     periodYear: 'Año',
     alertAt: 'Avisarme al',
@@ -632,7 +632,7 @@ export const es: Messages = {
     alertTitle: 'Presupuesto {{name}}: {{pct}} % usado',
     empty: 'Sin presupuestos',
     emptyBody:
-      'Un presupuesto pone un tope por categoría y te avisa cuando vas por delante del ritmo del mes.',
+      'Un presupuesto pone un tope por categoría y te avisa cuando vas por delante del ritmo del periodo.',
   },
   accounts: {
     title: 'Cuentas',
@@ -854,7 +854,7 @@ export const es: Messages = {
   },
   home: {
     remaining: 'Queda por gastar',
-    leftover: 'Sobrante del ciclo',
+    leftover: 'Sobrante del periodo',
     income: 'Ingresos',
     expenses: 'Gastos',
     budget: 'Presupuesto',
@@ -864,7 +864,7 @@ export const es: Messages = {
     recent: 'Últimos movimientos',
     allTransactions: 'Todos los movimientos',
     dayOf: 'día {{elapsed}} de {{length}}',
-    closedCycle: 'ciclo cerrado',
+    closedCycle: 'periodo cerrado',
     overPace_one: '{{count}} por encima del ritmo',
     overPace_other: '{{count}} por encima del ritmo',
     withinLimits: 'dentro del límite',
@@ -1014,5 +1014,108 @@ export const es: Messages = {
     notification_week: 'Tu semana ha terminado: mira el resumen',
     notification_cycle: 'Tu ciclo ha terminado: mira el resumen',
     notification_year: 'Tu año ha terminado: mira el resumen',
+  },
+  guide: {
+    title: 'Guía',
+    subtitle: 'Cómo piensa Saldo, una idea cada vez.',
+    introTitle: 'Cómo piensa Saldo',
+    introFoot: 'Las encontrarás, con las demás, en Perfil → Guía.',
+    infoLabel: 'Información: {{title}}',
+    section_basics: 'Lo básico',
+    section_accounts: 'Cuentas',
+    section_plan: 'Planificar',
+    section_organize: 'Organizar',
+    section_data: 'Tus datos',
+    period: {
+      title: 'El periodo',
+      summary:
+        'Inicio, presupuestos y estadísticas empiezan de nuevo cada periodo: mes, semana, ciclo de sueldo o año.',
+      body: [
+        'Saldo mira un periodo cada vez, y lo eliges tú: el mes natural, la semana, el año o el ciclo de sueldo, que empieza el día en que cobras.',
+        'Cambiar de periodo solo agrupa tus movimientos de otra forma: nada se mueve y nada se pierde. Con ‹ › en Inicio vuelves a ver periodos pasados.',
+      ].join('\n\n'),
+    },
+    remaining: {
+      title: 'Queda por gastar',
+      summary: 'Los ingresos del periodo menos sus gastos, no el saldo del banco.',
+      body: [
+        'Si el sueldo de este periodo aún no está registrado, el número puede ser negativo: regístralo, quizá como recurrente.',
+        'Solo cuentan ingresos y gastos hasta hoy. Quedan fuera las transferencias, los movimientos futuros y los marcados con «Excluir de los totales», que aun así cambian el saldo de su cuenta.',
+        'Lo que hay de verdad en tus cuentas está en la pestaña Cuentas.',
+      ].join('\n\n'),
+    },
+    transfers: {
+      title: 'Transferencias',
+      summary: 'Mover dinero entre dos cuentas tuyas no es ni un gasto ni un ingreso.',
+      body: [
+        'Una transferencia cambia el saldo de las dos cuentas y nada más: no toca el Queda por gastar ni las estadísticas.',
+        'Pagar la tarjeta de crédito también es una transferencia, de la cuenta en la que se carga a la tarjeta: los gastos ya los registraste al hacerlos.',
+      ].join('\n\n'),
+    },
+    accountTypes: {
+      title: 'Tipos de cuenta',
+      summary: 'El tipo decide si una cuenta entra en el total disponible.',
+      body: [
+        'Efectivo, Cuenta y las tarjetas son dinero que gastas: entran en el total disponible. Ahorro e Inversiones quedan fuera, pero cuentan en el patrimonio total. Lo cambias en cada cuenta con «Incluir en el disponible».',
+        'Una tarjeta de débito es una cuenta aparte, con su propio saldo: añádela si la recargas por separado, como una prepago. Si coge el dinero de tu cuenta corriente, registra los gastos en la cuenta.',
+      ].join('\n\n'),
+    },
+    creditCard: {
+      title: 'Tarjeta de crédito',
+      summary: 'Los gastos van a la tarjeta; pagarla a fin de mes es una transferencia.',
+      body: [
+        'Registra cada compra en la tarjeta, así cae en el periodo en que la hiciste. El saldo de la tarjeta suele ser negativo: es lo que debes.',
+        'Con el día de cierre, el día de cargo y la cuenta en la que se carga, Saldo calcula el extracto y te lo recuerda el día del cargo. «Pagar la tarjeta» prepara la transferencia con el importe justo.',
+      ].join('\n\n'),
+    },
+    budgets: {
+      title: 'Presupuestos',
+      summary: 'Un tope de gasto en una o varias categorías, que empieza de nuevo cada periodo.',
+      body: [
+        'La barra se llena a medida que gastas. La marca vertical es el ritmo: donde deberías estar hoy para llegar justo al final del periodo. Pasada la marca, gastas más deprisa de lo previsto.',
+        'Con «Arrastrar lo que sobre», lo que no gastas se suma al periodo siguiente. Un presupuesto también puede ir por semana, mes o año naturales, sea cual sea tu periodo.',
+      ].join('\n\n'),
+    },
+    goals: {
+      title: 'Objetivos',
+      summary:
+        'Dinero apartado dentro de una de tus cuentas, hacia una cifra y, si quieres, una fecha.',
+      body: [
+        'El dinero sigue en la cuenta, pero sale del total disponible: bajo la cuenta ves cuánto hay en objetivos y cuánto queda libre.',
+        'Apartar y Retirar son transferencias entre la cuenta y el objetivo. Cuando uses el dinero, cierra el objetivo: registras el gasto o lo devuelves a la cuenta.',
+      ].join('\n\n'),
+    },
+    recurring: {
+      title: 'Recurrentes',
+      summary: 'Alquiler, suscripciones y sueldo: regístralos una vez, con «Repetir».',
+      body: [
+        'Saldo crea solo las próximas repeticiones, hasta el final del periodo siguiente. Hasta que llega su fecha las ves como «Próximos» y no cuentan en los totales.',
+        'Cuando editas una, te pregunta si el cambio es solo para esa, también para las siguientes o para todas. Las encuentras todas en Movimientos → Recurrentes.',
+      ].join('\n\n'),
+    },
+    tags: {
+      title: 'Categorías y etiquetas',
+      summary:
+        'Cada movimiento tiene una categoría; las etiquetas son opcionales, y puede haber varias.',
+      body: [
+        'La categoría dice qué tipo de gasto es: la usan las estadísticas y los presupuestos. Una etiqueta reúne movimientos de categorías distintas, también de varios periodos: un viaje, una mudanza, un reembolso por pedir.',
+        'Un movimiento con varias etiquetas cuenta en cada una.',
+      ].join('\n\n'),
+    },
+    hidden: {
+      title: 'Importes ocultos',
+      summary: 'El ojo oculta totales y saldos cuando alguien mira tu pantalla.',
+      body: [
+        'Los movimientos sueltos siguen legibles: solo se ocultan las sumas. Se queda así hasta que lo vuelves a tocar, aunque cierres la app.',
+      ].join('\n\n'),
+    },
+    data: {
+      title: 'Tus datos',
+      summary: 'Están en este teléfono. También en un servidor tuyo, si conectas uno.',
+      body: [
+        'Saldo funciona sin red y sin cuenta. Si conectas un servidor Saldo desde el Perfil, tus datos se sincronizan entre tus dispositivos.',
+        'Sin servidor, haz una copia de vez en cuando desde Perfil → Exportar los datos: si pierdes el teléfono, es la única copia.',
+      ].join('\n\n'),
+    },
   },
 };

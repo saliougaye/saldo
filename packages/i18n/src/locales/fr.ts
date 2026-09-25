@@ -249,7 +249,7 @@ export const fr: Messages = {
     createTag: 'Créer « {{name}} »',
     repeat: 'Répéter',
     exclude: 'Exclure des totaux',
-    excludeNote: 'L’opération reste dans les soldes, mais pas dans les totaux du cycle.',
+    excludeNote: 'L’opération reste dans les soldes, mais pas dans les totaux de la période.',
     details: 'Détails',
     detailsNone: 'Rien de défini',
     detailsTags_one: '{{count}} tag',
@@ -335,7 +335,7 @@ export const fr: Messages = {
     untilDate: 'jusqu’au {{date}}',
     recurringNote: 'Récurrente, {{cadence}}',
     recurringRow: 'Récurrence',
-    createsUpcoming: 'Crée aussi les prochaines occurrences jusqu’à la fin du cycle suivant',
+    createsUpcoming: 'Crée aussi les prochaines occurrences jusqu’à la fin de la période suivante',
     cardSubtitle_one: '{{count}} active · prochaine : {{name}} le {{date}}',
     cardSubtitle_other: '{{count}} actives · prochaine : {{name}} le {{date}}',
     perMonth: '{{amount}}/mois',
@@ -375,16 +375,16 @@ export const fr: Messages = {
     resetDone: 'Téléphone réinitialisé',
   },
   stats: {
-    cycleTrend: 'Tendance du cycle',
-    trendFooter: 'Jour {{elapsed}} sur {{length}} · moyenne des 3 cycles précédents en gris',
+    cycleTrend: 'Tendance de la période',
+    trendFooter: 'Jour {{elapsed}} sur {{length}} · moyenne des 3 périodes précédentes en gris',
     title: 'Statistiques',
     cashflow: 'Flux',
     committed: 'Part engagée',
     committedLine:
-      '{{pct}} % de ce cycle était décidé d’avance : {{amount}} entre loyer, factures et abonnements.',
+      '{{pct}} % de cette période était décidé d’avance : {{amount}} entre loyer, factures et abonnements.',
     committedBar: 'Engagé',
     discretionaryBar: 'Libre',
-    projection: 'Projection de fin de cycle',
+    projection: 'Projection de fin de période',
     projectionAbove: 'Environ {{amount}} au-dessus de d’habitude, à ce rythme.',
     projectionBelow: 'Environ {{amount}} en dessous de d’habitude, à ce rythme.',
     split: 'Répartition',
@@ -396,13 +396,13 @@ export const fr: Messages = {
     ofTotal: '{{pct}} % du total',
     seeAll_one: '{{count}} catégorie en tout',
     seeAll_other: 'Voir les {{count}} catégories',
-    lastCycles: '6 derniers cycles',
+    lastCycles: '6 dernières périodes',
     legendIncome: 'Revenus',
     legendExpenses: 'Dépenses',
-    legendCurrent: 'Cycle en cours',
-    legendPast: 'Cycles clos',
+    legendCurrent: 'Période en cours',
+    legendPast: 'Périodes closes',
     median: 'Médiane {{amount}}',
-    average: 'Moyenne 6 cycles',
+    average: 'Moyenne 6 périodes',
     subcategories: 'Sous-catégories',
     noSubcategory: 'Sans sous-catégorie',
     empty: 'Aucune donnée sur cette période',
@@ -411,7 +411,7 @@ export const fr: Messages = {
     tagsEmpty: 'Aucun tag sur cette période',
     tagsFlows: 'Dépenses · revenus',
     tagsOverlap:
-      'Une opération avec plusieurs tags compte dans chacun, donc la somme dépasse le total du cycle.',
+      'Une opération avec plusieurs tags compte dans chacun, donc la somme dépasse le total de la période.',
     tagsUntagged_one: '{{count}} opération sans tag · {{amount}}',
     tagsUntagged_other: '{{count}} opérations sans tag · {{amount}}',
   },
@@ -609,7 +609,7 @@ export const fr: Messages = {
     closed: 'Période close',
     ofLimit: 'sur {{amount}}',
     amount: 'Montant',
-    medianHint: 'Médiane des 6 derniers cycles : {{amount}}',
+    medianHint: 'Médiane des 6 dernières périodes : {{amount}}',
     useMedian: 'Utiliser',
     categories: 'Catégories',
     missing_categories: 'Choisis au moins une catégorie.',
@@ -617,7 +617,7 @@ export const fr: Messages = {
     taken: '« {{name}} » est déjà dans un autre budget',
     name: 'Nom',
     repeats: 'Se répète',
-    periodCycle: 'Chaque cycle',
+    periodCycle: 'Chaque période',
     periodWeek: 'Semaine',
     periodYear: 'Année',
     alertAt: 'Me prévenir à',
@@ -634,7 +634,7 @@ export const fr: Messages = {
     alertTitle: 'Budget {{name}} : {{pct}} % utilisé',
     empty: 'Aucun budget',
     emptyBody:
-      'Un budget fixe un plafond par catégorie et te prévient quand tu dépenses plus vite que le rythme du mois.',
+      'Un budget fixe un plafond par catégorie et te prévient quand tu dépenses plus vite que le rythme de la période.',
   },
   accounts: {
     title: 'Comptes',
@@ -860,7 +860,7 @@ export const fr: Messages = {
   },
   home: {
     remaining: 'Reste à dépenser',
-    leftover: 'Épargné sur le cycle',
+    leftover: 'Épargné sur la période',
     income: 'Revenus',
     expenses: 'Dépenses',
     budget: 'Budget',
@@ -870,7 +870,7 @@ export const fr: Messages = {
     recent: 'Dernières opérations',
     allTransactions: 'Toutes les opérations',
     dayOf: 'jour {{elapsed}} sur {{length}}',
-    closedCycle: 'cycle clos',
+    closedCycle: 'période close',
     overPace_one: '{{count}} au-dessus du rythme',
     overPace_other: '{{count}} au-dessus du rythme',
     withinLimits: 'dans les limites',
@@ -1020,5 +1020,109 @@ export const fr: Messages = {
     notification_week: 'Ta semaine est terminée : regarde le récapitulatif',
     notification_cycle: 'Ton cycle est terminé : regarde le récapitulatif',
     notification_year: 'Ton année est terminée : regarde le récapitulatif',
+  },
+  guide: {
+    title: 'Guide',
+    subtitle: 'Comment Saldo raisonne, une idée à la fois.',
+    introTitle: 'Comment Saldo raisonne',
+    introFoot: 'Tu les retrouves, avec les autres, dans Profil → Guide.',
+    infoLabel: 'À propos : {{title}}',
+    section_basics: 'Les bases',
+    section_accounts: 'Comptes',
+    section_plan: 'Prévoir',
+    section_organize: 'Organiser',
+    section_data: 'Tes données',
+    period: {
+      title: 'La période',
+      summary:
+        'Accueil, budgets et statistiques repartent à chaque période : mois, semaine, cycle de salaire ou année.',
+      body: [
+        'Saldo regarde une période à la fois, et c’est toi qui la choisis : le mois civil, la semaine, l’année, ou le cycle de salaire, qui commence le jour où tu es payé.',
+        'Changer de période regroupe seulement tes opérations autrement : rien ne bouge et rien ne se perd. Avec ‹ › sur l’Accueil, tu revois les périodes passées.',
+      ].join('\n\n'),
+    },
+    remaining: {
+      title: 'Reste à dépenser',
+      summary: 'Les revenus de la période moins ses dépenses, pas le solde de ta banque.',
+      body: [
+        'Si le salaire de cette période n’est pas encore saisi, le chiffre peut être négatif : saisis-le, pourquoi pas en récurrent.',
+        'Seuls comptent les revenus et les dépenses jusqu’à aujourd’hui. Les virements, les opérations à venir et celles marquées « Exclure des totaux » restent dehors, même s’ils changent le solde de leur compte.',
+        'Ce qu’il y a vraiment sur tes comptes se trouve dans l’onglet Comptes.',
+      ].join('\n\n'),
+    },
+    transfers: {
+      title: 'Virements',
+      summary: 'Déplacer de l’argent entre deux de tes comptes n’est ni une dépense ni un revenu.',
+      body: [
+        'Un virement change le solde des deux comptes, et rien d’autre : il ne touche ni le Reste à dépenser ni les statistiques.',
+        'Régler la carte de crédit est aussi un virement, du compte sur lequel elle est débitée vers la carte : tu as déjà saisi les dépenses en les faisant.',
+      ].join('\n\n'),
+    },
+    accountTypes: {
+      title: 'Types de compte',
+      summary: 'Le type décide si un compte entre dans le total disponible.',
+      body: [
+        'Espèces, Compte et les cartes, c’est de l’argent que tu dépenses : ils entrent dans le total disponible. Épargne et Placements restent dehors, mais comptent dans le patrimoine total. Tu le changes pour chaque compte avec « Inclure dans le disponible ».',
+        'Une carte de débit est un compte à part, avec son propre solde : ajoute-la si tu la recharges à part, comme une carte prépayée. Si elle prend l’argent sur ton compte courant, saisis les dépenses sur le compte.',
+      ].join('\n\n'),
+    },
+    creditCard: {
+      title: 'Carte de crédit',
+      summary: 'Les dépenses vont sur la carte ; le règlement en fin de mois est un virement.',
+      body: [
+        'Saisis chaque achat sur la carte : il tombe ainsi dans la période où tu l’as fait. Le solde de la carte est en général négatif : c’est ce que tu dois.',
+        'Avec le jour de clôture, le jour de débit et le compte débité, Saldo calcule le relevé et te le rappelle le jour du débit. « Régler la carte » prépare le virement du bon montant.',
+      ].join('\n\n'),
+    },
+    budgets: {
+      title: 'Budgets',
+      summary:
+        'Un plafond de dépenses sur une ou plusieurs catégories, qui repart à chaque période.',
+      body: [
+        'La barre se remplit à mesure que tu dépenses. Le trait vertical, c’est le rythme : là où tu devrais être aujourd’hui pour finir pile en fin de période. Au-delà du trait, tu dépenses plus vite que prévu.',
+        'Avec « Reporter le reste », ce que tu ne dépenses pas s’ajoute à la période suivante. Un budget peut aussi suivre la semaine, le mois ou l’année civile, quelle que soit ta période.',
+      ].join('\n\n'),
+    },
+    goals: {
+      title: 'Objectifs',
+      summary:
+        'De l’argent mis de côté dans un de tes comptes, vers un montant et, si tu veux, une date.',
+      body: [
+        'L’argent reste sur le compte, mais sort du total disponible : sous le compte, tu vois ce qui est dans les objectifs et ce qui reste libre.',
+        'Mettre de côté et Retirer sont des virements entre le compte et l’objectif. Quand tu utilises l’argent, clos l’objectif : tu saisis la dépense ou tu le remets sur le compte.',
+      ].join('\n\n'),
+    },
+    recurring: {
+      title: 'Récurrentes',
+      summary: 'Loyer, abonnements et salaire : saisis-les une fois, avec « Répéter ».',
+      body: [
+        'Saldo crée tout seul les prochaines occurrences, jusqu’à la fin de la période suivante. Tant que leur date n’est pas arrivée, tu les vois « À venir » et elles ne comptent pas dans les totaux.',
+        'Quand tu en modifies une, il te demande si c’est pour celle-ci seulement, aussi pour les suivantes ou pour toutes. Tu les retrouves toutes dans Opérations → Récurrentes.',
+      ].join('\n\n'),
+    },
+    tags: {
+      title: 'Catégories et tags',
+      summary:
+        'Chaque opération a une catégorie ; les tags sont facultatifs, et il peut y en avoir plusieurs.',
+      body: [
+        'La catégorie dit quel genre de dépense c’est : les statistiques et les budgets s’en servent. Un tag rassemble des opérations de catégories différentes, sur plusieurs périodes aussi : un voyage, un déménagement, un remboursement à demander.',
+        'Une opération avec plusieurs tags compte dans chacun.',
+      ].join('\n\n'),
+    },
+    hidden: {
+      title: 'Montants masqués',
+      summary: 'L’œil masque totaux et soldes quand quelqu’un regarde ton écran.',
+      body: [
+        'Les opérations une à une restent lisibles : seules les sommes sont masquées. Ça reste ainsi jusqu’à ce que tu le touches à nouveau, même si tu fermes l’app.',
+      ].join('\n\n'),
+    },
+    data: {
+      title: 'Tes données',
+      summary: 'Elles sont sur ce téléphone. Sur un serveur à toi aussi, si tu en connectes un.',
+      body: [
+        'Saldo marche sans réseau et sans compte. En connectant un serveur Saldo depuis le Profil, tes données se synchronisent entre tes appareils.',
+        'Sans serveur, fais une sauvegarde de temps en temps depuis Profil → Exporter les données : si tu perds ton téléphone, c’est la seule copie.',
+      ].join('\n\n'),
+    },
   },
 };
