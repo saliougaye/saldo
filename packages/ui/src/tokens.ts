@@ -342,7 +342,7 @@ export const emptyState = {
 export const mascot = {
   /**
    * Transparent margin above the coin on his head, cut away. `success` catches him mid-hop, so its
-   * coin sits highest (alpha from 2.3%); `idle` keeps a sliver more above it.
+   * coin sits highest (2.3% of the kit's canvas); `idle` keeps a sliver more above it.
    */
   trimTop: 0.02,
   /** Over the back of the ghost stack: from his coin to below his chin. */

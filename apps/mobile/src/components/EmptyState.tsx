@@ -62,7 +62,7 @@ export function EmptyState(props: EmptyStateProps) {
         <View style={{ alignItems: 'center' }}>
           {/* Before the stack, so the ghosts paint over him (D26). */}
           <MascotPeek
-            pose="idle"
+            state="idle"
             size={mascot.emptySize}
             window={mascot.emptyWindow}
             delayMs={mascot.emptyDelayMs}
