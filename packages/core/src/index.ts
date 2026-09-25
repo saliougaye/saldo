@@ -21,6 +21,7 @@ export * from './money';
 export * from './period';
 export * from './permissions';
 export * from './pockets';
+export * from './recap';
 export * from './recents';
 export * from './recurrence';
 export * from './rollover';
