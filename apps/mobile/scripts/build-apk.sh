@@ -2,8 +2,8 @@
 #
 # Builds a release APK you can sideload, and tells you which key signed it.
 #
-#   pnpm --filter mobile build:android saldo.example.com
-#   SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:android
+#   pnpm --filter mobile build:android [com.yourname.saldo]
+#   SALDO_BUNDLE_ID=com.yourname.saldo pnpm --filter mobile build:android
 #
 # Signing comes from four properties in ~/.gradle/gradle.properties, outside the checkout:
 #
@@ -24,32 +24,20 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# The server is a build input, not something typed on the phone (§15). Argument first, then the
-# environment, so both spellings in the header work.
-SERVER_URL="${1:-${SALDO_SERVER_URL:-}}"
-BUNDLE_ID="${2:-${SALDO_BUNDLE_ID:-io.github.saldo.app}}"
+# The server is typed on the phone (§6.29 step 0), so the only per-person input here is the bundle
+# id. Argument first, then the environment, so both spellings in the header work.
+BUNDLE_ID="${1:-${SALDO_BUNDLE_ID:-io.github.saldo.app}}"
 APP_NAME="${SALDO_APP_NAME:-Saldo}"
 SCHEME="${SALDO_SCHEME:-saldo}"
 APK="android/app/build/outputs/apk/release/app-release.apk"
 
-if [ -z "$SERVER_URL" ]; then
-  echo "error: no server address." >&2
-  echo "  pnpm --filter mobile build:android saldo.example.com" >&2
-  echo "  SALDO_SERVER_URL=saldo.example.com pnpm --filter mobile build:android" >&2
-  echo >&2
-  echo "The app signs in to exactly one server and the address is baked in here. Building without" >&2
-  echo "it produces an app that starts and says it has no server — nine minutes to find out." >&2
-  exit 1
-fi
-
-echo "==> server   $SERVER_URL"
 echo "==> bundle   $BUNDLE_ID"
 echo "==> scheme   $SCHEME://"
 echo "==> output   $PWD/$APK"
 echo
 
 # `SALDO_DRY_RUN=1` stops here, having printed what it would bake in. The build takes minutes and
-# `--clean` throws android/ away, so checking the four values first is cheaper than reading them
+# `--clean` throws android/ away, so checking the three values first is cheaper than reading them
 # back off a finished APK.
 if [ "${SALDO_DRY_RUN:-}" = "1" ]; then
   echo "dry run: stopping before prebuild."
@@ -59,13 +47,12 @@ fi
 # Exported, not prefixed: app.config.ts is evaluated twice — once by prebuild and again by the
 # Gradle task that embeds the JS bundle — and the second one is easy to lose when the steps are run
 # separately. Gradle inherits this shell, which is the one thing Android has easier than iOS.
-export SALDO_SERVER_URL="$SERVER_URL"
 export SALDO_BUNDLE_ID="$BUNDLE_ID"
 export SALDO_APP_NAME="$APP_NAME"
 export SALDO_SCHEME="$SCHEME"
 
 # `--clean` throws away android/ and regenerates it, which is what makes a changed bundle id or
-# server address actually land. Anything edited by hand in there is gone; native config belongs in
+# scheme actually land. Anything edited by hand in there is gone; native config belongs in
 # app.config.ts and the config plugins (AGENTS.md).
 echo "==> prebuild"
 npx expo prebuild --platform android --clean

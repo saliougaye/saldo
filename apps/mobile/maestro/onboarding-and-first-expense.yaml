@@ -1,34 +1,18 @@
 # §16's first end-to-end flow: onboarding -> add an expense -> Home shows it.
 #
-# WHAT THIS FLOW CANNOT DO
-# ------------------------
-# §6.29 step 0 is sign-in, and sign-in is a passkey ceremony: `ConnectForm` hands off to a browser
-# and to the platform authenticator, neither of which Maestro drives. So this flow does not start
-# from a fresh install. It starts one screen later, at the start chooser, and everything before that is
-# done by hand once.
-#
-# THE STATE THE DEVICE MUST BE IN
-# -------------------------------
-#  * The app is installed (`SALDO_SERVER_URL=… npx expo run:ios`, see README "Step 3").
-#  * It is signed in to a **brand new** account — one whose server holds no settings row yet.
-#  * It is therefore sitting on the onboarding chooser when launched: `decideBoot` only returns
-#    `onboarding` once a sync cycle has come back and brought no settings
-#    (`apps/mobile/src/boot/decide.ts:75-95`).
-#
-# How to get there: launch the app, tap "Create account" on the welcome screen, finish the passkey
-# ceremony yourself (on the simulator, Features -> Face ID -> Enrolled first), and stop when
-# "Come vuoi iniziare?" / "How do you want to start?" appears. To run the flow a second time, delete the device's
-# database — the session lives in the keychain and survives it:
+# WHERE IT STARTS
+# ---------------
+# From a fresh install (`npx expo run:ios`, see README "Step 3"): the welcome's «Solo su questo
+# telefono» door leads straight to the start chooser with no server and no account (§6.29 step 0),
+# so nothing has to be done by hand first. To run it again, delete the app or its database:
 #
 #   xcrun simctl get_app_container booted io.github.saldo.app data
 #   rm -f "<that path>/Documents/SQLite/saldo.db"
 #
-# That only works while the account is still empty on the server. Once onboarding has completed
-# once, the first sync brings the settings back and the app goes straight to the tabs, so a second
-# run needs a second account (`REGISTRATION=first-user` allows exactly one — see docs/self-hosting).
-#
-# There is deliberately no `clearState`: on iOS Maestro implements it by reinstalling the app, and
-# on Android by `pm clear`. Either one throws the session away, and this flow cannot sign back in.
+# It also still runs on a device signed in to a **brand new** account (the server door and the
+# passkey ceremony done by hand, since Maestro drives neither a browser nor the platform
+# authenticator): that device opens on the chooser once its first sync comes back empty, and the
+# welcome tap below is skipped.
 #
 # `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
 # that variable set has a different one — change it here to match.
@@ -36,6 +20,16 @@ appId: io.github.saldo.app
 name: Onboarding, then a first expense on Home
 ---
 - launchApp
+
+# §6.29 step 0 on a fresh install: the phone door. Absent on a signed-in device, which boots onto
+# the chooser instead.
+- runFlow:
+    when:
+      visible:
+        id: "welcome-phone"
+    commands:
+      - tapOn:
+          id: "welcome-phone"
 
 # Before step 1 — where the data comes from. This flow starts from scratch. The wait is long
 # because a freshly signed-in device shows the "first sync" spinner until a cycle comes back.

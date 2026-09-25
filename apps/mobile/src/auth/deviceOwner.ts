@@ -16,7 +16,7 @@ export type OwnershipVerdict =
   | 'unowned-data';
 
 /**
- * §9.5. Nothing on the phone records who wrote a row — `pendingChanges` selects on `sync_state`
+ * §9.3 step 8. Nothing on the phone records who wrote a row — `pendingChanges` selects on `sync_state`
  * alone — so signing a second account in would show it the first one's data *and push whatever was
  * still pending into its server rows*. This is the check that stops that, and it runs before the
  * session is installed, because `SyncProvider` starts a cycle the moment a user appears.

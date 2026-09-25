@@ -1,8 +1,8 @@
 # Saldo
 
 Open-source, local-first personal finance app. Track spending period by period, with budgets and statistics, on your
-phone. Sign in once with a passkey to a server you run yourself; after that it works offline, and syncs across your
-devices when it can. Build it yourself, sideload it, own your data.
+phone. It works on the phone alone, with no account and no server; or sign in with a passkey to a server you run
+yourself, and it syncs across your devices when it can. Build it yourself, sideload it, own your data.
 
 > Status: proof of concept in progress. See the [phase index](docs/superpowers/plans/README.md) for what is
 > built and [`ROADMAP.md`](ROADMAP.md) for what comes next.
@@ -45,25 +45,26 @@ duplicate detection so a second run does not double your history.
 **On the phone.** Italian and English, light and dark following the system, a currency you choose,
 and a biometric app lock.
 
-**Across your devices.** Sign in with a passkey to your own server, then every device that signs into
-the same account converges — offline edits included, merged last-write-wins.
+**Across your devices.** Optional: sign in with a passkey to your own server, then every device that
+signs into the same account converges — offline edits included, merged last-write-wins.
 
 ## Quick start
 
-1. **Run the server** on a machine with an HTTPS domain, and mint yourself an invite code — see
-   [docs/self-hosting.md](docs/self-hosting.md).
-2. **Build the app** yourself, with your server's address baked in — see
-   [docs/building-android.md](docs/building-android.md) or [docs/building-ios.md](docs/building-ios.md).
-   Android needs the Android SDK and a keystore you generate. **iOS needs a Mac with Xcode**, and on a
-   free Apple ID the app stops opening after seven days until you reinstall it — a paid developer
-   account moves that to a year.
-3. **Create your account** in the app with the invite code and a passkey; after that it works offline
-   and syncs when it can.
+1. **Build the app** yourself — see [docs/building-android.md](docs/building-android.md) or
+   [docs/building-ios.md](docs/building-ios.md). Android needs the Android SDK and a keystore you
+   generate. **iOS needs a Mac with Xcode**, and on a free Apple ID the app stops opening after seven
+   days until you reinstall it — a paid developer account moves that to a year.
+2. **Start on the phone.** The first screen offers "Only on this phone": no account, nothing to set
+   up, and it works fully offline.
+3. **Optionally, add a server** for sync across devices: run it on a machine with an HTTPS domain and
+   mint yourself an invite code — see [docs/self-hosting.md](docs/self-hosting.md). Then choose "With
+   your Saldo server" on the first screen, or connect it later from Profile → Server and sync without
+   losing anything; type its address, and create your account with the invite code and a passkey.
 
 ## What it is not
 
 There is no cloud service to sign up to and no account on anybody else's server: if you do not run a
-server, there is nothing to sign in to. Nothing is reported anywhere — no telemetry, no analytics, no
+server, the app simply stays on your phone. Nothing is reported anywhere — no telemetry, no analytics, no
 crash reporting. The app does not connect to your bank; you enter transactions, or import them from a
 CSV. And there is no App Store or Play Store build: you build it and sideload it yourself.
 
@@ -131,12 +132,14 @@ stay on the phone. To store them on the server, uncomment either the `fs` line o
 
 ### Step 3 — the app
 
-The server address is baked into the build, so it goes on the command line rather than in a file:
-
 ```bash
 cd apps/mobile
-SALDO_SERVER_URL=http://localhost:3000 npx expo run:ios      # or run:android
+npx expo run:ios      # or run:android
 ```
+
+The app does not know about the server until you tell it: on the welcome screen choose "With your
+Saldo server" and type `http://localhost:3000` (a bare hostname gets `https://`, so spell out
+`http://` here), or pick "Only on this phone" to work without steps 1 and 2 at all.
 
 Afterwards `npx expo start` is enough for JavaScript changes. Three things need the full rebuild
 above: a **new native module**, a change to **`app.config.ts`** (permissions, scheme, bundle id —
@@ -155,8 +158,8 @@ included. Mint one before you try to sign in:
 pnpm --filter web invite new --label me
 ```
 
-That prints the code once. The app offers "Create account", the browser page asks for the code, and
-the first account to register becomes the instance's admin.
+That prints the code once. Once the app has found the server it offers "Create account", the
+browser page asks for the code, and the first account to register becomes the instance's admin.
 
 Setting `REGISTRATION=first-user` in your own `.env` skips the code and lets exactly one account
 through, which is quicker — at the cost of never exercising locally the path every real deployment
@@ -198,9 +201,10 @@ the full set.
 
 ## Self-hosting
 
-The app needs an account on a server — sign-in is the first thing it asks for — and everything
-after that is local-first: it works offline and keeps working when the server is down. The server
-is what gives you multi-device sync and attachment backup.
+The app does not need a server: it runs on the phone alone, and connecting one is a choice on the
+first screen or, later, in Profile → Server and sync. Signed in, it stays local-first — it works
+offline and keeps working when the server is down. The server is what gives you multi-device sync
+and attachment backup.
 
 See [docs/self-hosting.md](docs/self-hosting.md): one `docker compose` command with
 `apps/web/docker/docker-compose.yml` (the deployment file, which builds the server into an image —
