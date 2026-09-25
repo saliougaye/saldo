@@ -228,6 +228,10 @@ export const iconMarkup = {
   // Lucide 1.47.0 `merge`, for merging one tag into another (2026-09-22 tag edit plan).
   merge:
     '<path d="m8 6 4-4 4 4"/><path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22"/><path d="m20 22-5-5"/>',
+  // Lucide 1.47.0 `server`, with its dots as paths (the parser ignores <line>): the server door of
+  // the welcome and the server row of §6.29 / §6.30 (2026-09-25 local-first plan).
+  server:
+    '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
 } as const satisfies Record<string, string>;
 export type IconName = keyof typeof iconMarkup;
 
