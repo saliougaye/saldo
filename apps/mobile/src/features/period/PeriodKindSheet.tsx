@@ -5,6 +5,7 @@ import { ListRow } from '../../components/ListRow';
 import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 
 /** §5.2: how the user tracks spending. The pay cycle is the only kind that asks a second question. */
 export function PeriodKindSheet({
@@ -22,7 +23,12 @@ export function PeriodKindSheet({
   const theme = useTheme();
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('period.kind')}>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={t('period.kind')}
+      titleAccessory={<InfoButton concept="period" />}
+    >
       <View>
         {PERIOD_KINDS.map((kind) => (
           <ListRow

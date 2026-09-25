@@ -9,6 +9,8 @@ export interface SheetProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
+  /** Beside the title, at its end: the ⓘ of the concept the sheet is about (§6.41). */
+  titleAccessory?: ReactNode;
   children: ReactNode;
   /** Form sheets take the taller slide-up timing of §13. */
   tall?: boolean;
@@ -31,6 +33,7 @@ export function Sheet({
   visible,
   onClose,
   title,
+  titleAccessory,
   children,
   tall = false,
   onDismissed,
@@ -89,14 +92,20 @@ export function Sheet({
             />
           </View>
           {title === undefined ? null : (
-            <Text
-              size="headline"
-              weight="semibold"
-              tracking="tight"
-              style={{ paddingHorizontal: theme.layout.cardPadding, paddingBottom: 8 }}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingHorizontal: theme.layout.cardPadding,
+                paddingBottom: 8,
+              }}
             >
-              {title}
-            </Text>
+              <Text size="headline" weight="semibold" tracking="tight">
+                {title}
+              </Text>
+              {titleAccessory}
+            </View>
           )}
           {/* Shrinks, so a scroll view inside a long sheet stops at `maxHeight` instead of past it. */}
           <View style={{ flexShrink: 1, paddingHorizontal: theme.layout.cardPadding, gap: 10 }}>

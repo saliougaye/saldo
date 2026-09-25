@@ -28,6 +28,7 @@ import { useBudgets, useCategories, useSettings, useTransactionsInRange } from '
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { usePeriod } from '../period/PeriodProvider';
 import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
@@ -321,7 +322,7 @@ export function BudgetForm({
           </View>
         }
       >
-        <ScreenHeader title={t('budgets.editBudget')} />
+        <ScreenHeader title={t('budgets.editBudget')} trailing={<InfoButton concept="budgets" />} />
         {amountCard()}
         {categoriesCard()}
         {detailsCard()}
@@ -355,7 +356,7 @@ export function BudgetForm({
         </View>
       }
     >
-      <ScreenHeader title={t('budgets.newBudget')} />
+      <ScreenHeader title={t('budgets.newBudget')} trailing={<InfoButton concept="budgets" />} />
       <Stepper step={stepIndex} total={BUDGET_STEPS.length} label={t(`budgets.step_${step}`)} />
       {step === 'categories' ? categoriesCard() : null}
       {step === 'amount' ? amountCard() : null}

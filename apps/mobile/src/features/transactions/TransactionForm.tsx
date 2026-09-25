@@ -41,6 +41,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { AmountChoice } from './AmountChoice';
 import { AttachmentStrip } from './AttachmentStrip';
@@ -495,9 +496,12 @@ export function TransactionForm({
           </View>
 
           <View style={{ gap: 6 }}>
-            <Text size="footnote" color="textMuted">
-              {t('txForm.repeat')}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text size="footnote" color="textMuted">
+                {t('txForm.repeat')}
+              </Text>
+              <InfoButton concept="recurring" />
+            </View>
             {occurrenceOf !== null ? (
               <Pressable
                 testID="txform-recurrence-manage"

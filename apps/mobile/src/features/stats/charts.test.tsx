@@ -65,7 +65,7 @@ describe('CashflowChart', () => {
         <CashflowChart bars={BARS} currency="EUR" locale="en" />
       </Host>,
     );
-    expect(screen.getByText('Current cycle')).toBeTruthy();
+    expect(screen.getByText('Current period')).toBeTruthy();
     expect(screen.getByText('Income')).toBeTruthy();
     expect(screen.getByText('Expenses')).toBeTruthy();
     // One pattern per hatched bar (income + expenses of the current cycle) plus the legend swatch.
@@ -106,8 +106,8 @@ describe('SpendHistoryChart', () => {
         />
       </Host>,
     );
-    expect(screen.getByText('Current cycle')).toBeTruthy();
-    expect(screen.getByText('Closed cycles')).toBeTruthy();
+    expect(screen.getByText('Current period')).toBeTruthy();
+    expect(screen.getByText('Closed periods')).toBeTruthy();
     const tree = JSON.stringify(screen.toJSON());
     // The running cycle is opaque, the closed ones and the tracks are the same hue, faded.
     expect(tree).toContain('#63926F');

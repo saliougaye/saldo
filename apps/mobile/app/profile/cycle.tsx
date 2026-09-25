@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 import { Card } from '../../src/components/Card';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useSettings } from '../../src/db/hooks';
+import { InfoButton } from '../../src/features/guide/InfoButton';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { SettingScreen } from '../../src/features/profile/SettingScreen';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
@@ -42,6 +43,7 @@ export default function CycleSetting() {
       title={t('profile.cycleStart')}
       subtitle={t('settings.cycleFootnote')}
       card={false}
+      trailing={<InfoButton concept="period" />}
     >
       <Card>
         <Text size="footnote" color="textMuted">

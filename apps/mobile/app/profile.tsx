@@ -143,6 +143,12 @@ export default function ProfileScreen() {
             onPress={() => router.push('/period')}
             chevron
           />
+          <ListRow
+            title={t('guide.title')}
+            leading={lead('info')}
+            onPress={() => router.push('/guide')}
+            chevron
+          />
         </View>
       </Card>
 

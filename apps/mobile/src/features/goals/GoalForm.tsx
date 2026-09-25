@@ -19,6 +19,7 @@ import { useAccounts, useSettings, useTransactionsInRange } from '../../db/hooks
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 import { usePeriod } from '../period/PeriodProvider';
 import type { GoalFormValues } from './goalFormValues';
 import { GOAL_STEPS, goalStepMissing } from './steps';
@@ -119,9 +120,12 @@ export function GoalForm({ values, onChange, mode, onSubmit }: GoalFormProps) {
 
   const account = () => (
     <Card>
-      <Text size="footnote" color="textMuted">
-        {t('goals.parent')}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Text size="footnote" color="textMuted">
+          {t('goals.parent')}
+        </Text>
+        <InfoButton concept="goals" />
+      </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
         {parents.map((candidate) => (
           <Chip
