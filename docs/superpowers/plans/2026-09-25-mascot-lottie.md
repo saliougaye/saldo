@@ -28,6 +28,8 @@ frames come from the kit's spec (`mascots/saldo/mascot.spec.json`, `pose_time`, 
   simulator in Task 8.
 - **`success` stops mid-hop** (its pose frame), like the PNG it replaces. If it looks frozen on device, Task 8 moves
   its pose to the last frame and records it here and in §13.
+- **Checked on the iOS simulator (2026-09-26)** by the user: the welcome alignment, the centred `ErrorNote`, `success`
+  mid-hop and every size stay as planned; nothing changed.
 
 ---
 
@@ -773,13 +775,13 @@ rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm test
 ```
 Expected: no `lint/…` lines and no `× Some errors were emitted`; typecheck clean; every suite passes.
 
-- [ ] **Step 2: New dev build** (a native module was added; Metro alone will not load it)
+- [x] **Step 2: New dev build** (a native module was added; Metro alone will not load it)
 
 ```bash
 cd apps/mobile && npx expo run:ios
 ```
 
-- [ ] **Step 3: Check each place, light and dark, then with Reduce Motion on**
+- [x] **Step 3: Check each place, light and dark, then with Reduce Motion on**
 
 | Place | How to reach it | What to check |
 |---|---|---|
@@ -793,12 +795,12 @@ cd apps/mobile && npx expo run:ios
 
 With Reduce Motion on, every place shows the pose at once, loops included.
 
-- [ ] **Step 4: Record what the device changed**
+- [x] **Step 4: Record what the device changed**
 
 Any size changed in `mascot`, any pose frame moved (e.g. `success` to its last frame), or the welcome alignment:
 change it, update §13 *Mascot* in the spec and the «Decisions» list above in the same commit.
 
-- [ ] **Step 5: Close the roadmap item**
+- [x] **Step 5: Close the roadmap item**
 
 In `ROADMAP.md`, *Mascot states*, tick the Lottie bullet (`- [ ]` → `- [x]`) and append «checked on the iOS
 simulator.» Tick this plan's steps.
