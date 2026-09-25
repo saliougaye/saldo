@@ -155,15 +155,14 @@ github.com/saliougaye/mascots; the app icons, splash and favicon in `apps/mobile
 `out/saldo/icons/`, the two poses in `apps/mobile/assets/mascot/` are its `stills/idle.svg` and `stills/success.svg`
 rendered at 480 px.
 
-The kit also carries Lottie state animations (idle, empty, loading, thinking, error, success, wave, sleep).
+The kit also carries Lottie state animations (idle, empty, loading, thinking, error, success, wave, sleep); D26 keeps
+them out of the app for now.
 
 - [x] Where Rocky appears (2026-09-24, spec D26, §13 *Mascot*, plan `docs/superpowers/plans/2026-09-24-mascot-states.md`):
   peeking over the «nothing yet» ghost stack, over a reached goal's card, and whole in its close sheet. Static PNGs,
   no Lottie.
 - [x] Rocky redrawn as a flat vector character in the style of SmoothPressure's Capy (2026-09-25, mascots PR #4),
   replacing the 3D clay render: new icons, splash, favicon and poses; the `mascot` token re-measured on the new PNGs.
-- [ ] Lottie states (loading, error, wave, sleep) where D26 allows them: needs `lottie-react-native` and a decision
-  per screen, so it waits for a place that asks for it (the first-run intro below is the likely one, with `wave`).
 
 ### In-app explanations: a first-run intro and a «Guida»
 
