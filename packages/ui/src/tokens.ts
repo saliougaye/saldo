@@ -340,10 +340,13 @@ export const emptyState = {
  * is how much of him shows above it, and he rises `peekFromRatio` of his height to get there.
  */
 export const mascot = {
-  /** Transparent margin above his ears in both PNGs (their alpha starts at 18%), cut away. */
-  trimTop: 0.16,
-  /** Over the back of the ghost stack: from his ears to his coin. */
-  emptySize: 104,
+  /**
+   * Transparent margin above the coin on his head, cut away. `success` catches him mid-hop, so its
+   * coin sits highest (alpha from 2.3%); `idle` keeps a sliver more above it.
+   */
+  trimTop: 0.02,
+  /** Over the back of the ghost stack: from his coin to below his chin. */
+  emptySize: 95,
   emptyWindow: 60,
   /**
    * How far the window runs into the stack's box. The tilt puts the ghosts' visible top edge well
@@ -353,13 +356,13 @@ export const mascot = {
   /** Starts while the back ghosts settle; lands after the whole stack (`enterMs` + 2 staggers). */
   emptyDelayMs: 240,
   /** Over a reached goal's card, near its trailing corner. */
-  cardSize: 84,
+  cardSize: 76,
   cardWindow: 48,
   cardInset: 18,
   peekFromRatio: 0.62,
   peekMs: 520,
   /** Whole, in the close sheet of a reached goal. */
-  celebrateSize: 136,
+  celebrateSize: 124,
   celebrateMs: 560,
   celebrateFromScale: 0.9,
   celebrateFromY: 14,

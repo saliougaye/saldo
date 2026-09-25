@@ -19,13 +19,13 @@ describe.each([false, true])('with Reduce Motion %s', (isReduced) => {
   });
 
   it('peeks, hidden from screen readers', async () => {
-    await show(<MascotPeek pose="idle" size={104} window={60} />);
+    await show(<MascotPeek pose="idle" size={95} window={60} />);
     expect(screen.getByTestId('mascot', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.queryByTestId('mascot')).toBeNull();
   });
 
   it('celebrates, hidden from screen readers', async () => {
-    await show(<MascotCelebrate size={136} />);
+    await show(<MascotCelebrate size={124} />);
     expect(screen.getByTestId('mascot', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.queryByTestId('mascot')).toBeNull();
   });

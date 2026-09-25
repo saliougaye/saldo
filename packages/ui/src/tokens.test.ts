@@ -166,15 +166,20 @@ describe('mascot', () => {
     expect(mascot.cardWindow).toBeLessThan(mascot.cardSize);
   });
 
-  it('cuts him below his chin, not across his face', () => {
-    // His muzzle ends at about 60% of the PNG; the cut must fall under it.
-    expect(mascot.emptyWindow / mascot.emptySize + mascot.trimTop).toBeGreaterThan(0.68);
-    expect(mascot.cardWindow / mascot.cardSize + mascot.trimTop).toBeGreaterThan(0.68);
+  it('cuts him between his chin and his belly', () => {
+    // In the PNGs his muzzle ends by 58% (`idle`) and his belly starts from 68% (`success`, mid-hop).
+    for (const [window, size] of [
+      [mascot.emptyWindow, mascot.emptySize],
+      [mascot.cardWindow, mascot.cardSize],
+    ] as const) {
+      expect(window / size + mascot.trimTop).toBeGreaterThan(0.6);
+      expect(window / size + mascot.trimTop).toBeLessThan(0.67);
+    }
   });
 
-  it('trims only the empty margin above his ears', () => {
+  it('trims only the empty margin above his coin', () => {
     expect(mascot.trimTop).toBeGreaterThan(0);
-    expect(mascot.trimTop).toBeLessThan(0.18);
+    expect(mascot.trimTop).toBeLessThan(0.023);
   });
 
   it('starts below the edge, but never so far that he rises from nothing', () => {
