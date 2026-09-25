@@ -3,7 +3,7 @@ import {
   type DateRange,
   type LedgerTx,
   type LocalDate,
-  spendingByTag,
+  tagTotals,
 } from '@saldo/core';
 import type { AppLocale } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
@@ -29,15 +29,18 @@ export interface TagSpendCardProps {
 }
 
 /**
- * "Tag" on Statistics: which trips, moves and refunds this cycle paid for.
+ * "Tag" on Statistics: which trips, moves and refunds this cycle paid for, and what came back.
  *
  * A tag is the app's only non-cyclical dimension — "Vacanza Roma" is an event, not a month — and
  * until now the only way in was Profile → Tag, an admin screen. This card is the reading entry
  * point; tapping a row opens the tag view, which stays on **all** dates and says so.
  *
  * It is a ranking, never a split bar: a transaction can carry several tags or none, so the amounts
- * neither add up to the cycle's spend nor exclude each other (see `spendingByTag`). The untagged
+ * neither add up to the cycle's spend nor exclude each other (see `tagTotals`). The untagged
  * line is what keeps that honest.
+ *
+ * Income a tag carries sits under its spend, signed, and is never subtracted from it: the tag view
+ * shows the same two figures (§5.10), and a card that netted them would disagree with it.
  */
 export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendCardProps) {
   const router = useRouter();
@@ -45,8 +48,9 @@ export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendC
   const { format: money } = useHiddenMoney();
   const tags = useTags();
 
-  const spending = useMemo(() => spendingByTag(rows, range, today), [rows, range, today]);
+  const spending = useMemo(() => tagTotals(rows, range, today), [rows, range, today]);
   const top = spending.tags.slice(0, TOP_TAGS);
+  const anyIncome = top.some((row) => row.income > 0);
   const nameOf = useMemo(() => new Map(tags.map((tag) => [tag.id, tag.name])), [tags]);
 
   return (
@@ -63,7 +67,7 @@ export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendC
           {t('stats.tags')}
         </Text>
         <Text size="caption" color="textFaint" numberOfLines={1}>
-          {t('stats.expenses')}
+          {anyIncome ? t('stats.tagsFlows') : t('stats.expenses')}
         </Text>
       </View>
 
@@ -80,7 +84,28 @@ export function TagSpendCard({ rows, range, today, currency, locale }: TagSpendC
               subtitle={t('tags.uses', { count: row.count })}
               onPress={() => router.push({ pathname: '/tag/[id]', params: { id: row.tagId } })}
               trailing={
-                <AmountText minor={row.amount} currency={currency} locale={locale} align="end" />
+                <View style={{ alignItems: 'flex-end' }}>
+                  {/* A tag that only brought money in has no spend worth a "0,00" above it. */}
+                  {row.expense === 0 && row.income > 0 ? null : (
+                    <AmountText
+                      minor={row.expense}
+                      currency={currency}
+                      locale={locale}
+                      align="end"
+                    />
+                  )}
+                  {row.income === 0 ? null : (
+                    <AmountText
+                      minor={row.income}
+                      currency={currency}
+                      locale={locale}
+                      align="end"
+                      size="footnote"
+                      color="positive"
+                      signDisplay="always"
+                    />
+                  )}
+                </View>
               }
               chevron
             />

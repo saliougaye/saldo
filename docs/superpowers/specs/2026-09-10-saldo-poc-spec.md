@@ -449,11 +449,13 @@ Let `today = todayLocal()`.
 - **Ripartizione:** Uscite/Entrate toggle, total, split bar, rows with colour dot, name, delta vs usual, % of total, amount.
   Tapping a row opens category detail. A trailing row "N transazioni escluse dai totali · amount" opens the transaction
   list filtered to excluded (`onlyExcluded`) for that direction.
-- **Tag:** a **ranking** of the cycle's tagged expenses — tag name, "N transazioni", amount — top 5, then "Tutti i tag"
+- **Tag:** a **ranking** of the cycle's tagged rows by expense (then income) — tag name, "N transazioni", the spend and,
+  when the tag carries income, that income signed beneath it (never subtracted, as in §5.10); a tag with income only
+  shows just that. The header caption reads "Uscite" or, once a row carries income, "Uscite · entrate". Top 5, then "Tutti i tag"
   → the tag list. Tapping a tag opens the tag view (all dates, §5.10). Below it, "N voci senza tag · {amount}" and, from
   two tags up, the note that a transaction with several tags counts in each.
   **Never a split bar, a pie or a % of total:** tags are neither exclusive nor exhaustive, so the amounts overshoot the
-  cycle's spend and still miss the untagged rows. `spendingByTag` returns the untagged total precisely so the card can
+  cycle's spend and still miss the untagged rows. `tagTotals` returns the untagged spend precisely so the card can
   say what it leaves out. This is the *reading* entry point for tags; the one in Profilo is for *managing* them
   (rename, merge, delete), and a trip four taps deep inside the settings was a trip nobody found.
 - **Category detail:** total, delta line, "Ultimi 6 cicli" bars (5 previous + current in accent), median label,
@@ -522,7 +524,10 @@ Let `today = todayLocal()`.
 - **Merge into another tag:** replace the source id with the target id in every transaction's `tagIds` (dedupe), then tombstone
   the source.
 - **Delete:** remove the id from all transactions, then tombstone. Confirm inline: "Eliminare «X»? Le transazioni restano."
-- **Tag view:** a tag spans all dates (the period selector doesn't apply). Shows total expenses, the line "Tutte le date,
+- **Tag view:** a tag spans all dates (the period selector doesn't apply). Shows two figures side by side, «Totale
+  uscite» and «Totale entrate» — counted rows only, like the split, and **never netted**: a refund on a trip is the tag's
+  whole point, but a tag used for two unrelated things would net them, and a net would no longer match the category
+  split, which can only split expenses. Transfers count on neither side. Then the line "Tutte le date,
   fuori dal periodo selezionato", "N transazioni · first – last date", split by category, and all transactions ascending
   by date. The scope line is not decoration: the screen is reached from a card that *is* scoped to one cycle (§5.7), and
   two totals that disagree without saying why read as a bug.

@@ -404,6 +404,7 @@ export const it = {
     tags: 'Tag',
     tagsAll: 'Tutti i tag',
     tagsEmpty: 'Nessun tag in questo periodo',
+    tagsFlows: 'Uscite · entrate',
     tagsOverlap:
       'Una voce con più tag conta in ognuno, quindi la somma supera il totale del ciclo.',
     tagsUntagged_one: '{{count}} voce senza tag · {{amount}}',
@@ -743,6 +744,8 @@ export const it = {
     uses_one: '{{count}} transazione',
     uses_other: '{{count}} transazioni',
     total: 'Totale uscite',
+    totalIncome: 'Totale entrate',
+    totals: 'Uscite {{expense}} · Entrate {{income}}',
     range: '{{count}} transazioni · {{first}} – {{last}}',
     empty: 'Nessun tag',
     emptyBody: 'Creane uno qui, o scrivilo nel campo tag di una transazione mentre la registri.',

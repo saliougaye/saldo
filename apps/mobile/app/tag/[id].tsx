@@ -1,4 +1,4 @@
-import { rollupToParents, spendingByCategory } from '@saldo/core';
+import { rollupToParents, spendingByCategory, tagTotals } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -32,6 +32,9 @@ import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
+/** Where the tag view's rows start: a tag spans every date. */
+const ALL_DATES_START = '1970-01-01';
+
 /** §6.11 / §5.10. A tag spans every date, so the period selector does not apply here. */
 export default function TagView() {
   const theme = useTheme();
@@ -52,7 +55,7 @@ export default function TagView() {
   // drops a modal presented while another is still dismissing.
   const [deletePending, setDeletePending] = useState(false);
 
-  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery('1970-01-01', today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(ALL_DATES_START, today);
   // The figures sum these rows: before they land, a total would paint as 0.
   const loaded = entityLoaded && rowsLoaded;
   const slow = useDelayed(!loaded);
@@ -92,9 +95,12 @@ export default function TagView() {
     return <NotFoundScreen />;
   }
 
-  const total = tagged
-    .filter((tx) => tx.kind === 'expense')
-    .reduce((sum, tx) => sum + tx.amount, 0);
+  // Counted rows only, like the category split below: the two have to agree (§5.10). Spend and
+  // income stay apart — the category split can only split expenses, and a tag used for two
+  // unrelated things would net them against each other.
+  const totals = tagTotals(tagged, { start: ALL_DATES_START, end: today }, today).tags.find(
+    (row) => row.tagId === id,
+  ) ?? { expense: 0, income: 0 };
 
   return (
     <Screen refreshable>
@@ -120,17 +126,37 @@ export default function TagView() {
           </View>
         }
       />
-      <Text size="footnote" color="textMuted">
-        {t('tags.total')}
-      </Text>
-      <AmountText
-        minor={total}
-        currency={currency}
-        locale={locale}
-        size="hero"
-        weight="semibold"
-        tracking="tightest"
-      />
+      <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flex: 1 }}>
+          <Text size="footnote" color="textMuted">
+            {t('tags.total')}
+          </Text>
+          <AmountText
+            minor={totals.expense}
+            currency={currency}
+            locale={locale}
+            size="amountLg"
+            weight="semibold"
+            tracking="tightest"
+          />
+        </View>
+        {/* The refund on a trip, the reimbursement being chased: the rows the list below already
+            shows, which the figure beside them used to ignore. */}
+        <View style={{ flex: 1 }}>
+          <Text size="footnote" color="textMuted">
+            {t('tags.totalIncome')}
+          </Text>
+          <AmountText
+            minor={totals.income}
+            currency={currency}
+            locale={locale}
+            size="amountLg"
+            weight="semibold"
+            tracking="tightest"
+            color={totals.income > 0 ? 'positive' : undefined}
+          />
+        </View>
+      </View>
       {/* Statistics reaches this screen from a card that is scoped to one cycle; this total is not.
           Saying so is what keeps the two numbers from reading as a contradiction (§5.10). */}
       <Text size="footnote" color="textFaint">
@@ -204,7 +230,10 @@ export default function TagView() {
       </Card>
 
       <Text size="caption" color="textFaint">
-        {money(total, currency, locale)}
+        {t('tags.totals', {
+          expense: money(totals.expense, currency, locale),
+          income: money(totals.income, currency, locale),
+        })}
       </Text>
 
       <TagEditSheet

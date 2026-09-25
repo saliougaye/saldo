@@ -408,6 +408,7 @@ export const pt: Messages = {
     tags: 'Etiquetas',
     tagsAll: 'Todas as etiquetas',
     tagsEmpty: 'Sem etiquetas neste período',
+    tagsFlows: 'Despesas · receitas',
     tagsOverlap:
       'Um movimento com várias etiquetas conta em cada uma, por isso a soma passa o total do ciclo.',
     tagsUntagged_one: '{{count}} movimento sem etiqueta · {{amount}}',
@@ -747,6 +748,8 @@ export const pt: Messages = {
     uses_one: '{{count}} movimento',
     uses_other: '{{count}} movimentos',
     total: 'Total de despesas',
+    totalIncome: 'Total de receitas',
+    totals: 'Despesas {{expense}} · Receitas {{income}}',
     range: '{{count}} movimentos · {{first}} – {{last}}',
     empty: 'Sem etiquetas',
     emptyBody:

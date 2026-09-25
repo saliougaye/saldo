@@ -406,6 +406,7 @@ export const es: Messages = {
     tags: 'Etiquetas',
     tagsAll: 'Todas las etiquetas',
     tagsEmpty: 'Sin etiquetas en este periodo',
+    tagsFlows: 'Gastos · ingresos',
     tagsOverlap:
       'Un movimiento con varias etiquetas cuenta en cada una, así que la suma supera el total del ciclo.',
     tagsUntagged_one: '{{count}} movimiento sin etiqueta · {{amount}}',
@@ -745,6 +746,8 @@ export const es: Messages = {
     uses_one: '{{count}} movimiento',
     uses_other: '{{count}} movimientos',
     total: 'Total de gastos',
+    totalIncome: 'Total de ingresos',
+    totals: 'Gastos {{expense}} · Ingresos {{income}}',
     range: '{{count}} movimientos · {{first}} – {{last}}',
     empty: 'Sin etiquetas',
     emptyBody:
