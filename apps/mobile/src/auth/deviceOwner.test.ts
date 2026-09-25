@@ -9,10 +9,13 @@ describe('ownershipVerdict', () => {
     expect(ownershipVerdict('ada', 'bob', true)).toBe('foreign-data');
   });
 
-  it('adopts an install that has never recorded an account', () => {
-    // A fresh install, and every install that predates this check: there is no evidence the rows
-    // belong to somebody else, so accusing their owner of being a stranger would be wrong.
-    expect(ownershipVerdict(null, 'ada', true)).toBe('keep');
+  it('asks about rows that belong to no account yet', () => {
+    // A phone started without a server (§6.29 step 0), and every install that predates this
+    // check: the rows are nobody else's, but whether they join this account is the user's call.
+    expect(ownershipVerdict(null, 'ada', true)).toBe('unowned-data');
+  });
+
+  it('adopts a fresh install silently: there is nothing to decide', () => {
     expect(ownershipVerdict(null, 'ada', false)).toBe('keep');
   });
 
