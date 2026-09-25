@@ -146,7 +146,7 @@ This reopens a decision taken at 08 (sign-in required), so it is a product call,
 - [x] Decide the address: **typed**, Immich-style, and `SALDO_SERVER_URL` removed rather than kept as a prefill —
   which reverses 08b. «Esci» now leaves a working local-only app.
 - [x] Spec (§1.1, §1.2, §6.29 step 0, §6.30, §9.3 steps 1 and 8, §15, §18) and plan
-  `docs/superpowers/plans/2026-09-25-local-first.md`; device check pending.
+  `docs/superpowers/plans/2026-09-25-local-first.md`; checked on the iOS simulator.
 
 ### Mascot states
 

@@ -1969,7 +1969,7 @@ Expected: no `lint/…` lines; no type errors; all tests pass except the known `
 Run: `git grep -n "SALDO_SERVER_URL\|BUILD_SERVER_URL\|readServerUrl\|ConnectForm\|noServerConfigured\|welcomeOffline" -- ':!docs/superpowers/plans/2026-09-1*' ':!docs/superpowers/plans/2026-09-2[0-4]*'`
 Expected: only this plan file.
 
-- [ ] **Step 3: Acceptance (user checks on a device; do not drive the simulator unless asked)**
+- [x] **Step 3: Acceptance (user checks on a device; do not drive the simulator unless asked)** — checked by the user on the iOS simulator, 2026-09-25
 
 1. Fresh install → welcome shows the two doors. «Solo su questo telefono» → «Come vuoi iniziare?» with «Indietro»
    → back to the welcome → again → «Da zero» → finish → tabs. Kill and reopen: tabs, no welcome.
@@ -1980,7 +1980,7 @@ Expected: only this plan file.
 4. Fresh install → «Con il tuo server Saldo» → sign in to an account that already has data → pulls → tabs (no
    onboarding, no unowned dialog: the phone was empty).
 
-- [ ] **Step 4: Review and hand-off**
+- [x] **Step 4: Review and hand-off** — reviewed; fixes in `bc2b467`, `4aff23b`, `9f08ffb`; merged to `main`
 
 Use **requesting-code-review**, then delete the variants harness (`.variants/server-url.html`,
 `.variants/local-first-welcome.html` in the main checkout — git-excluded, local only), and use
