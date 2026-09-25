@@ -1,5 +1,6 @@
+import { reloadAppAsync } from 'expo';
 import { useTranslation } from 'react-i18next';
-import { DevSettings, View } from 'react-native';
+import { View } from 'react-native';
 import { SecondaryButton } from '../../components/Button';
 import { useToast } from '../../components/Toast';
 import { db } from '../../db/client';
@@ -36,7 +37,9 @@ export function DevTools() {
         label={t('dev.replayRecap')}
         onPress={() => {
           kv.remove(RECAP_KEY);
-          DevSettings.reload();
+          // Expo's reload, not `DevSettings.reload()`: under the new architecture the latter restarts
+          // the JS runtime without Expo's native modules, and the app dies on `ExpoAsset`.
+          void reloadAppAsync('replay the period recap');
         }}
       />
     </View>
