@@ -62,7 +62,7 @@ project with jest-expo + React Native Testing Library for `.test.tsx`), Reanimat
 
 ## Task 0: Branch
 
-- [ ] **Step 1: Create the branch**
+- [x] **Step 1: Create the branch**
 
 ```bash
 git switch -c feat/period-recap
@@ -77,7 +77,7 @@ git switch -c feat/period-recap
 - Create: `packages/core/src/recap.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/core/src/recap.test.ts`:
 
@@ -101,12 +101,12 @@ describe('recapPeriod', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: FAIL, `Failed to resolve import "./recap"`.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 `packages/core/src/recap.ts`:
 
@@ -126,12 +126,12 @@ export function recapPeriod(def: PeriodDef, today: LocalDate): DateRange {
 
 In `packages/core/src/index.ts`, add `export * from './recap';` on the line **before** `export * from './recents';`.
 
-- [ ] **Step 4: Run it to see it pass**
+- [x] **Step 4: Run it to see it pass**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: PASS, 1 test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/recap.ts packages/core/src/recap.test.ts packages/core/src/index.ts
@@ -146,7 +146,7 @@ git commit -m "feat(core): the period a recap is about"
 - Modify: `packages/core/src/recap.ts`
 - Modify: `packages/core/src/recap.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace the imports at the top of `packages/core/src/recap.test.ts` and add the fixtures and the new `describe`:
 
@@ -245,12 +245,12 @@ describe('periodRecap: totals', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: FAIL, `periodRecap` is not exported.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Replace `packages/core/src/recap.ts` with:
 
@@ -380,12 +380,12 @@ export function periodRecap(input: PeriodRecapInput): PeriodRecap | null {
 }
 ```
 
-- [ ] **Step 4: Run them to see them pass**
+- [x] **Step 4: Run them to see them pass**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/recap.ts packages/core/src/recap.test.ts
@@ -400,7 +400,7 @@ git commit -m "feat(core): recap totals against the period before and the usual 
 - Modify: `packages/core/src/recap.ts`
 - Modify: `packages/core/src/recap.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/core/src/recap.test.ts`:
 
@@ -459,12 +459,12 @@ describe('periodRecap: categories', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: FAIL, `categories` is `[]`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/recap.ts`:
 
@@ -523,12 +523,12 @@ function recapCategories(
 3. In `periodRecap`, replace the two lines `categories: [],` and `otherCategories: { count: 0, amount: 0 },` with
    `...recapCategories(inPeriod, period, today, input.categories, history),`.
 
-- [ ] **Step 4: Run them to see them pass**
+- [x] **Step 4: Run them to see them pass**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/recap.ts packages/core/src/recap.test.ts
@@ -543,7 +543,7 @@ git commit -m "feat(core): recap categories with the one that grew most"
 - Modify: `packages/core/src/recap.ts`
 - Modify: `packages/core/src/recap.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/core/src/recap.test.ts` (and add `type RecapBudgetRef` to the import from `./recap`):
 
@@ -603,12 +603,12 @@ describe('periodRecap: budgets', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: FAIL, `budgets` is `[]`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/recap.ts`:
 
@@ -685,12 +685,12 @@ function recapBudgets(input: PeriodRecapInput): RecapBudgetLine[] {
 
 3. In `periodRecap`, replace `budgets: [],` with `budgets: recapBudgets(input),`.
 
-- [ ] **Step 4: Run them to see them pass**
+- [x] **Step 4: Run them to see them pass**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: PASS, 10 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/recap.ts packages/core/src/recap.test.ts
@@ -705,7 +705,7 @@ git commit -m "feat(core): recap budgets that closed with the period"
 - Modify: `packages/core/src/recap.ts`
 - Modify: `packages/core/src/recap.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/core/src/recap.test.ts`:
 
@@ -763,12 +763,12 @@ describe('periodRecap: biggest expense and net worth', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: FAIL, `biggestExpense` is null and `netWorthChange` is 0.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/recap.ts`:
 
@@ -822,7 +822,7 @@ function netWorthOn(
       netWorthOn(input.accounts, transactions, addDays(period.start, -1)),
 ```
 
-- [ ] **Step 4: Run them to see them pass, then the whole package**
+- [x] **Step 4: Run them to see them pass, then the whole package**
 
 Run: `pnpm --filter @saldo/core test -- recap`
 Expected: PASS, 13 tests.
@@ -830,7 +830,7 @@ Expected: PASS, 13 tests.
 Run: `pnpm --filter @saldo/core typecheck && pnpm --filter @saldo/core test`
 Expected: no type errors; every test passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/recap.ts packages/core/src/recap.test.ts
@@ -847,7 +847,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
 **Files:**
 - Modify: `packages/i18n/src/locales/it.ts`, `en.ts`, `de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts`
 
-- [ ] **Step 1: Add the Italian source block to `it.ts`**
+- [x] **Step 1: Add the Italian source block to `it.ts`**
 
 ```ts
   recap: {
@@ -894,7 +894,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 2: Add `en.ts`**
+- [x] **Step 2: Add `en.ts`**
 
 ```ts
   recap: {
@@ -941,7 +941,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 3: Add `de.ts`**
+- [x] **Step 3: Add `de.ts`**
 
 ```ts
   recap: {
@@ -988,7 +988,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 4: Add `es.ts`**
+- [x] **Step 4: Add `es.ts`**
 
 ```ts
   recap: {
@@ -1035,7 +1035,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 5: Add `fr.ts`**
+- [x] **Step 5: Add `fr.ts`**
 
 ```ts
   recap: {
@@ -1082,7 +1082,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 6: Add `pt.ts`**
+- [x] **Step 6: Add `pt.ts`**
 
 ```ts
   recap: {
@@ -1129,7 +1129,7 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 7: Add `sv.ts`**
+- [x] **Step 7: Add `sv.ts`**
 
 ```ts
   recap: {
@@ -1176,12 +1176,12 @@ catalogs. Each block goes **at the end of the catalog object**, after the last n
   },
 ```
 
-- [ ] **Step 8: Run the parity test**
+- [x] **Step 8: Run the parity test**
 
 Run: `pnpm --filter @saldo/i18n test && pnpm --filter @saldo/i18n typecheck`
 Expected: PASS. A failure names the locale and the key that differs.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/i18n/src/locales
@@ -1196,7 +1196,7 @@ git commit -m "feat(i18n): period recap strings"
 - Create: `apps/mobile/src/features/recap/recapSchedule.ts`
 - Create: `apps/mobile/src/features/recap/recapSchedule.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `apps/mobile/src/features/recap/recapSchedule.test.ts`:
 
@@ -1267,12 +1267,12 @@ describe('recapNotificationId', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to see them fail**
+- [x] **Step 2: Run them to see them fail**
 
 Run: `pnpm --filter mobile test -- recapSchedule`
 Expected: FAIL, `Cannot find module './recapSchedule'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/mobile/src/features/recap/recapSchedule.ts`:
 
@@ -1344,12 +1344,12 @@ export function nextRecapNotification(
 }
 ```
 
-- [ ] **Step 4: Run them to see them pass**
+- [x] **Step 4: Run them to see them pass**
 
 Run: `pnpm --filter mobile test -- recapSchedule`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/features/recap/recapSchedule.ts apps/mobile/src/features/recap/recapSchedule.test.ts
@@ -1366,7 +1366,7 @@ changes, and these bars must grow once, from empty, when their section scrolls i
 **Files:**
 - Create: `apps/mobile/src/features/recap/RecapBar.tsx`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 ```tsx
 import { motion } from '@saldo/ui';
@@ -1449,12 +1449,12 @@ export function RecapBar({ ratio, accent = false, seen, index }: RecapBarProps) 
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `pnpm --filter mobile typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/mobile/src/features/recap/RecapBar.tsx
@@ -1469,7 +1469,7 @@ git commit -m "feat(mobile): recap bar that grows once in view"
 - Create: `apps/mobile/src/features/recap/PeriodRecapSheet.tsx`
 - Create: `apps/mobile/src/features/recap/PeriodRecapSheet.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/features/recap/PeriodRecapSheet.test.tsx`:
 
@@ -1479,6 +1479,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import type { ReactElement } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { HiddenAmountsContext, VISIBLE } from '../hidden/hiddenAmounts';
@@ -1536,6 +1537,11 @@ const RECAP: PeriodRecap = {
   netWorthChange: 61240,
 };
 
+const METRICS: Metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
+
 let i18n: I18nInstance;
 
 beforeAll(async () => {
@@ -1544,13 +1550,15 @@ beforeAll(async () => {
 
 async function show(node: ReactElement, hidden = false) {
   await render(
-    <ThemeProvider preference="dark">
-      <I18nextProvider i18n={i18n}>
-        <HiddenAmountsContext.Provider value={{ ...VISIBLE, hidden }}>
-          {node}
-        </HiddenAmountsContext.Provider>
-      </I18nextProvider>
-    </ThemeProvider>,
+    <SafeAreaProvider initialMetrics={METRICS}>
+      <ThemeProvider preference="dark">
+        <I18nextProvider i18n={i18n}>
+          <HiddenAmountsContext.Provider value={{ ...VISIBLE, hidden }}>
+            {node}
+          </HiddenAmountsContext.Provider>
+        </I18nextProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>,
   );
 }
 
@@ -1638,12 +1646,12 @@ describe('PeriodRecapSheet', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `pnpm --filter mobile test -- PeriodRecapSheet`
 Expected: FAIL, `Cannot find module './PeriodRecapSheet'`.
 
-- [ ] **Step 3: Write the component**
+- [x] **Step 3: Write the component**
 
 `apps/mobile/src/features/recap/PeriodRecapSheet.tsx`:
 
@@ -2202,20 +2210,20 @@ function Figure({
 }
 ```
 
-- [ ] **Step 4: Run the test to see it pass**
+- [x] **Step 4: Run the test to see it pass**
 
 Run: `pnpm --filter mobile test -- PeriodRecapSheet`
 Expected: PASS, 4 tests. If `getByLabelText('September 2026 is over')` fails, print
 `formatMonthYear({ year: 2026, month: 9 }, 'en')` and match the test to the formatter's real output; the formatter is
 the source of truth, not the test.
 
-- [ ] **Step 5: Lint and typecheck**
+- [x] **Step 5: Lint and typecheck**
 
 Run: `pnpm --filter mobile typecheck && pnpm lint`
 Expected: no type errors; no `lint/…` lines in the Biome output (see AGENTS.md: the exit code alone is not proof). Let
 Biome format the file with `pnpm exec biome format --write apps/mobile/src/features/recap` if it reports formatting.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/features/recap/PeriodRecapSheet.tsx apps/mobile/src/features/recap/PeriodRecapSheet.test.tsx
@@ -2230,7 +2238,7 @@ git commit -m "feat(mobile): the period recap sheet"
 - Create: `apps/mobile/src/features/recap/PeriodRecapGate.tsx`
 - Modify: `apps/mobile/app/(tabs)/_layout.tsx`
 
-- [ ] **Step 1: Write the gate**
+- [x] **Step 1: Write the gate**
 
 `apps/mobile/src/features/recap/PeriodRecapGate.tsx`:
 
@@ -2395,7 +2403,7 @@ function RecapHost({
 }
 ```
 
-- [ ] **Step 2: Mount it**
+- [x] **Step 2: Mount it**
 
 In `apps/mobile/app/(tabs)/_layout.tsx`, import it and render it next to the reminders:
 
@@ -2410,7 +2418,7 @@ import { PeriodRecapGate } from '../../src/features/recap/PeriodRecapGate';
       <PeriodRecapGate />
 ```
 
-- [ ] **Step 3: Typecheck, lint, test**
+- [x] **Step 3: Typecheck, lint, test**
 
 Run: `pnpm typecheck && pnpm test`
 Expected: all packages pass.
@@ -2418,7 +2426,7 @@ Expected: all packages pass.
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/mobile/src/features/recap/PeriodRecapGate.tsx "apps/mobile/app/(tabs)/_layout.tsx"
@@ -2431,12 +2439,12 @@ git commit -m "feat(mobile): show the period recap once and schedule its notific
 
 The recap depends on the date and on a device-local stamp, so it is checked on the simulator by clearing the stamp.
 
-- [ ] **Step 1: Run the app with data in the previous period**
+- [x] **Step 1: Run the app with data in the previous period**
 
 Start Metro and the iOS simulator (`pnpm --filter mobile ios`). Use a database with transactions in the previous period
 (the demo data, or real ones), and make sure onboarding was completed before the current period started.
 
-- [ ] **Step 2: Clear the stamp and relaunch**
+- [x] **Step 2: Clear the stamp and relaunch**
 
 Find the database with `xcrun simctl get_app_container booted io.github.saldo.app data`, then
 `sqlite3 "<container>/Documents/SQLite/saldo.db" "delete from kv where key = 'lastRecapPeriod';"`, and relaunch the app.
@@ -2449,38 +2457,43 @@ Expected, on the first launch:
 
 Expected, on the second launch: no sheet.
 
-- [ ] **Step 3: Check the variants**
+- [x] **Step 3: Check the variants**
 
 - Hidden mode on (eye on Home), clear the stamp, relaunch: every aggregate is `••••`, the biggest expense readable.
 - Reduce Motion on (Settings › Accessibility › Motion): the sheet fades in, no count, bars full.
 - Profilo › periodo «Settimana», clear the stamp, relaunch: «La settimana si è chiusa», «Inizia la nuova settimana».
 - Light theme: contrast of the tag and of the accent bar.
 
-- [ ] **Step 4: Check the notification**
+- [x] **Step 4: Check the notification**
 
 Run in the Metro console (or a dev button): `Notifications.getAllScheduledNotificationsAsync()`.
 Expected: one request `period-recap:{first day of the next period}` at 09:00, title «Il tuo mese si è chiuso: guarda
 il riepilogo», when notifications are allowed; none when they are not.
 
-- [ ] **Step 5: Record the check**
+- [x] **Step 5: Record the check**
 
 Tick the steps above in this plan and write, under this task, what was seen (device, iOS version, anything off).
+
+**Checked 2026-09-25 on a phone through Expo Go (user).** Everything worked. Expo Go keeps the database inside its own
+container, out of reach of `sqlite3`, so the stamp was cleared with a dev-only DevTools button added for this check,
+«Rivedi il riepilogo del periodo» (`f8f9757`), which removes `lastRecapPeriod` and reloads. The scheduled notification
+cannot be inspected in Expo Go and was not checked there.
 
 ---
 
 ## Task 12: Close the phase
 
-- [ ] **Step 1: Full verification**
+- [x] **Step 1: Full verification**
 
 Run: `pnpm typecheck && pnpm test && rtk proxy pnpm lint`
 Expected: everything passes; Biome prints no `lint/…` lines.
 
-- [ ] **Step 2: Roadmap**
+- [x] **Step 2: Roadmap**
 
 In `ROADMAP.md`, under «Period recap», change `- [ ] Plan, then build.` to
 `- [x] Plan (`docs/superpowers/plans/2026-09-25-period-recap.md`) and build.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add ROADMAP.md docs/superpowers/plans/2026-09-25-period-recap.md
