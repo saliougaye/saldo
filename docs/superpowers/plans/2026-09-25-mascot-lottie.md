@@ -56,7 +56,7 @@ frames come from the kit's spec (`mascots/saldo/mascot.spec.json`, `pose_time`, 
 - Modify: `biome.json` (`files.includes`)
 - Modify: `apps/mobile/jest.setup.js`
 
-- [ ] **Step 1: Install the library at the version Expo pins**
+- [x] **Step 1: Install the library at the version Expo pins**
 
 ```bash
 cd apps/mobile && npx expo install lottie-react-native
@@ -64,7 +64,7 @@ grep '"lottie-react-native"' package.json
 ```
 Expected: `"lottie-react-native": "~7.3.8"` (or whatever `expo/bundledNativeModules.json` lists; use that).
 
-- [ ] **Step 2: Copy the six states from the kit**
+- [x] **Step 2: Copy the six states from the kit**
 
 ```bash
 cd apps/mobile/assets/mascot
@@ -80,7 +80,7 @@ for s in ['idle','success','error','wave','loading','sleep']:
 Expected, one line each: `idle 30 144 512 512 0`, `success 30 72 …`, `error 30 72 …`, `wave 30 144 …`,
 `loading 30 144 …`, `sleep 30 144 …`. Zero assets: vector only.
 
-- [ ] **Step 3: Keep Biome off them**
+- [x] **Step 3: Keep Biome off them**
 
 In `biome.json`, `files.includes`, add after `"!apps/mobile/drizzle",`:
 
@@ -90,7 +90,7 @@ In `biome.json`, `files.includes`, add after `"!apps/mobile/drizzle",`:
 
 Run: `rtk proxy pnpm lint` from the repo root. Expected: no `lint/…` lines, no `× Some errors were emitted`.
 
-- [ ] **Step 4: Mock the native view in jest**
+- [x] **Step 4: Mock the native view in jest**
 
 Replace `apps/mobile/jest.setup.js` with:
 
@@ -115,14 +115,14 @@ jest.mock('lottie-react-native', () => {
 });
 ```
 
-- [ ] **Step 5: Run the gates**
+- [x] **Step 5: Run the gates**
 
 ```bash
 cd ../.. && rtk proxy pnpm typecheck && rtk proxy pnpm --filter mobile test
 ```
 Expected: typecheck clean; every suite passes (nothing uses the library yet).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/package.json pnpm-lock.yaml apps/mobile/assets/mascot/*.json biome.json apps/mobile/jest.setup.js
@@ -137,7 +137,7 @@ git commit -m "chore(mobile): lottie-react-native and Rocky's Lottie states from
 - Create: `apps/mobile/src/components/mascotPlayback.ts`
 - Test: `apps/mobile/src/components/mascotPlayback.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/components/mascotPlayback.test.ts`:
 
@@ -184,12 +184,12 @@ describe('mascotPlayback', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `cd apps/mobile && npx jest src/components/mascotPlayback.test.ts`
 Expected: FAIL, `Cannot find module './mascotPlayback'`.
 
-- [ ] **Step 3: Write the rule**
+- [x] **Step 3: Write the rule**
 
 `apps/mobile/src/components/mascotPlayback.ts`:
 
@@ -227,12 +227,12 @@ export function mascotPlayback(state: MascotState, frames: number, reduced: bool
 }
 ```
 
-- [ ] **Step 4: Run it to see it pass**
+- [x] **Step 4: Run it to see it pass**
 
 Run: `npx jest src/components/mascotPlayback.test.ts`
 Expected: PASS, 18 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/mascotPlayback.ts src/components/mascotPlayback.test.ts
@@ -250,7 +250,7 @@ git commit -m "feat(mobile): which of Rocky's states loop and where each one sto
 - Delete: `apps/mobile/assets/mascot/idle.png`, `apps/mobile/assets/mascot/success.png`
 - Test: `apps/mobile/src/components/Mascot.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace `apps/mobile/src/components/Mascot.test.tsx` with:
 
@@ -299,12 +299,12 @@ describe.each([false, true])('with Reduce Motion %s', (isReduced) => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `npx jest src/components/Mascot.test.tsx`
 Expected: FAIL, `Mascot` is not exported (and `state` is not a prop of `MascotPeek`).
 
-- [ ] **Step 3: Rewrite `Mascot.tsx`**
+- [x] **Step 3: Rewrite `Mascot.tsx`**
 
 Replace the top of `apps/mobile/src/components/Mascot.tsx` down to (and including) `export type MascotPose = …;`
 with:
@@ -414,12 +414,12 @@ with
       <Mascot state="success" size={size} />
 ```
 
-- [ ] **Step 4: Update the two callers**
+- [x] **Step 4: Update the two callers**
 
 `apps/mobile/src/components/EmptyState.tsx`, in the `MascotPeek` element: `pose="idle"` → `state="idle"`.
 `apps/mobile/src/features/goals/GoalCard.tsx`, in the `MascotPeek` element: `pose="success"` → `state="success"`.
 
-- [ ] **Step 5: Delete the PNGs and fix the token comment**
+- [x] **Step 5: Delete the PNGs and fix the token comment**
 
 ```bash
 git rm assets/mascot/idle.png assets/mascot/success.png
@@ -434,13 +434,13 @@ In `packages/ui/src/tokens.ts`, the `trimTop` comment: replace `in both PNGs` wo
    */
 ```
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run: `npx jest src/components/Mascot.test.tsx src/components/EmptyState.test.tsx src/features/goals`
 Expected: PASS. The existing `getByTestId('mascot')` assertions still find one element each: the inner `Mascot`
 uses `mascot-<state>`.
 
-- [ ] **Step 7: Typecheck and commit**
+- [x] **Step 7: Typecheck and commit**
 
 ```bash
 cd ../.. && rtk proxy pnpm typecheck
@@ -456,7 +456,7 @@ git commit -m "feat(mobile): Rocky plays the kit's Lottie states in the peek and
 - Modify: `packages/ui/src/tokens.ts` (the `mascot` object)
 - Test: `packages/ui/src/tokens.test.ts` (`describe('mascot')`)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `packages/ui/src/tokens.test.ts`, inside `describe('mascot', …)`, add:
 
@@ -468,12 +468,12 @@ In `packages/ui/src/tokens.test.ts`, inside `describe('mascot', …)`, add:
   });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: FAIL, `expected undefined to be less than undefined`.
 
-- [ ] **Step 3: Add the sizes**
+- [x] **Step 3: Add the sizes**
 
 In `packages/ui/src/tokens.ts`, in `mascot`, after `celebrateFromY: 14,` add:
 
@@ -488,12 +488,12 @@ In `packages/ui/src/tokens.ts`, in `mascot`, after `celebrateFromY: 14,` add:
   errorSize: 64,
 ```
 
-- [ ] **Step 4: Run it to see it pass**
+- [x] **Step 4: Run it to see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/ui test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts packages/ui/src/tokens.test.ts
@@ -511,7 +511,7 @@ git commit -m "feat(ui): mascot sizes for the welcome, the lock, a long wait and
 - Modify: `apps/mobile/app/profile/import.tsx` (the `error === null` block)
 - Modify: `apps/mobile/app/profile/restore.tsx` (the `error === null` block)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/components/ErrorNote.test.tsx`:
 
@@ -532,12 +532,12 @@ it('says what went wrong, with Rocky above it hidden from screen readers', async
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `cd apps/mobile && npx jest src/components/ErrorNote.test.tsx`
 Expected: FAIL, `Cannot find module './ErrorNote'`.
 
-- [ ] **Step 3: Write the component**
+- [x] **Step 3: Write the component**
 
 `apps/mobile/src/components/ErrorNote.tsx`:
 
@@ -569,12 +569,12 @@ In `apps/mobile/src/components/index.ts`, after `export * from './EmptyState';` 
 export * from './ErrorNote';
 ```
 
-- [ ] **Step 4: Run it to see it pass**
+- [x] **Step 4: Run it to see it pass**
 
 Run: `npx jest src/components/ErrorNote.test.tsx`
 Expected: PASS.
 
-- [ ] **Step 5: Use it in both screens**
+- [x] **Step 5: Use it in both screens**
 
 In `apps/mobile/app/profile/import.tsx` and in `apps/mobile/app/profile/restore.tsx`, replace
 
@@ -600,7 +600,7 @@ import { ErrorNote } from '../../src/components/ErrorNote';
 
 Both files still use `Text` elsewhere; keep that import.
 
-- [ ] **Step 6: Gates and commit**
+- [x] **Step 6: Gates and commit**
 
 ```bash
 cd ../.. && rtk proxy pnpm typecheck && rtk proxy pnpm lint
@@ -616,7 +616,7 @@ git commit -m "feat(mobile): Rocky above a failed import's or restore's message"
 - Modify: `apps/mobile/src/components/LoadingScreen.tsx`
 - Test: `apps/mobile/src/components/LoadingScreen.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/mobile/src/components/LoadingScreen.test.tsx`:
 
@@ -647,12 +647,12 @@ it('shows Rocky waiting, and says what for, through a long wait', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it to see it fail**
+- [x] **Step 2: Run it to see it fail**
 
 Run: `cd apps/mobile && npx jest src/components/LoadingScreen.test.tsx`
 Expected: FAIL, no element with testID `loading-spinner`.
 
-- [ ] **Step 3: Change the component**
+- [x] **Step 3: Change the component**
 
 Replace `apps/mobile/src/components/LoadingScreen.tsx` with:
 
@@ -700,12 +700,12 @@ export function LoadingScreen({ label }: { label?: string }) {
 }
 ```
 
-- [ ] **Step 4: Run it to see it pass**
+- [x] **Step 4: Run it to see it pass**
 
 Run: `npx jest src/components/LoadingScreen.test.tsx`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/LoadingScreen.tsx src/components/LoadingScreen.test.tsx
@@ -720,7 +720,7 @@ git commit -m "feat(mobile): Rocky waits through a long, labelled load"
 - Modify: `apps/mobile/app/(onboarding)/welcome.tsx`
 - Modify: `apps/mobile/app/lock.tsx`
 
-- [ ] **Step 1: Welcome**
+- [x] **Step 1: Welcome**
 
 In `apps/mobile/app/(onboarding)/welcome.tsx`, add the imports:
 
@@ -736,7 +736,7 @@ import { Mascot } from '../../src/components/Mascot';
       <Mascot state="wave" size={mascot.welcomeSize} style={{ alignSelf: 'flex-start' }} />
 ```
 
-- [ ] **Step 2: Lock screen**
+- [x] **Step 2: Lock screen**
 
 In `apps/mobile/app/lock.tsx`:
 - add `import { mascot } from '@saldo/ui';` as the first import and
@@ -750,7 +750,7 @@ In `apps/mobile/app/lock.tsx`:
         <Mascot state="sleep" size={mascot.lockSize} />
 ```
 
-- [ ] **Step 3: Gates and commit**
+- [x] **Step 3: Gates and commit**
 
 ```bash
 cd ../.. && rtk proxy pnpm typecheck && rtk proxy pnpm lint
@@ -766,7 +766,7 @@ git commit -m "feat(mobile): Rocky waves on the welcome and sleeps on the lock s
 - Modify: `ROADMAP.md` (tick the item), this plan (tick steps, record device decisions)
 - Possibly modify: `packages/ui/src/tokens.ts`, `apps/mobile/src/components/mascotPlayback.ts`, spec §13
 
-- [ ] **Step 1: Gates, read from the output, not the exit code (AGENTS.md)**
+- [x] **Step 1: Gates, read from the output, not the exit code (AGENTS.md)**
 
 ```bash
 rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm test
