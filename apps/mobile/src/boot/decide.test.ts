@@ -36,8 +36,28 @@ describe('decideBoot', () => {
     expect(decideBoot(input({ settingsLoaded: false }))).toEqual({ kind: 'loading' });
   });
 
-  it('sends a signed-out device to the welcome screen', () => {
-    expect(decideBoot(input({ session: 'signed-out' }))).toEqual({ kind: 'welcome' });
+  describe('a signed-out device', () => {
+    const signedOut = (overrides: Partial<BootInput> = {}) =>
+      decideBoot(input({ session: 'signed-out', hasScheduler: false, ...overrides }));
+
+    it('shows the welcome when the phone holds nothing yet', () => {
+      expect(signedOut({ hasSettings: false, onboardingCompletedAt: null })).toEqual({
+        kind: 'welcome',
+      });
+    });
+
+    it('opens the app on its own data when onboarding was finished here', () => {
+      // Started on the phone (§6.29 step 0), or signed out with «Esci» (§6.30): local-only.
+      expect(signedOut()).toEqual({ kind: 'tabs' });
+    });
+
+    it('resumes an onboarding that was never finished, without a server to ask', () => {
+      expect(signedOut({ onboardingCompletedAt: null })).toEqual({ kind: 'onboarding' });
+    });
+
+    it('never waits for a sync nobody is signed in to run', () => {
+      expect(signedOut({ syncStatus: SYNCING })).toEqual({ kind: 'tabs' });
+    });
   });
 
   it('opens the app when the settings are here and onboarding was finished', () => {
