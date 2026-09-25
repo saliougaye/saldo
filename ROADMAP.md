@@ -214,7 +214,7 @@ until they save.
   - the source being a credit card in credit (positive balance): fill with it, or hide the button.
 - [ ] Spec line in §6.16, then the plan.
 
-### Tag detail: the total ignores income
+### Tag detail: the total ignores income ✅ done
 
 Noticed on 2026-09-25. `apps/mobile/app/tag/[id].tsx` computes its hero figure as
 `tagged.filter((tx) => tx.kind === 'expense')`, under the label `tags.total` = «Totale uscite», and the
@@ -223,24 +223,17 @@ them lists *every* tagged row, income included — so a tagged refund or reimbur
 changes nothing above it. For the tag the app itself advertises («un rimborso da chiedere», `tags.footnote`)
 that is the wrong answer: the trip cost 800 € and 300 € came back, and the screen still says 800 €.
 
-- [ ] Decide before planning — **two figures or one net difference**:
-  - **Two figures** (Totale uscite / Totale entrate, side by side): keeps «Totale uscite» meaning what it
-    means today and what §5.10 specifies, keeps the category split honest (it can only split expenses), and
-    stays readable when the income is unrelated to the expenses. Costs the hero its single number.
-  - **One net difference** (uscite − entrate, «Costo netto»): answers the refund question directly, but a tag
-    used for two unrelated things nets them against each other, and the figure no longer matches the sum of
-    the category split.
-  - A middle option: hero stays «Totale uscite», with entrate and the net shown under it only when the tag
-    carries at least one income row — nothing changes for the tags that have none.
-- [ ] Whichever wins: the bottom `money(total)` caption, the category split's scope, and the recap/Statistiche
-      tag card (§5.7) must agree with it, or the screen re-creates the two-totals-that-disagree problem §5.10
-      already warns about.
-- [ ] Transfers stay out of both figures — the screen totals neither side of them (the comment in
-      `transactionRow`'s call site says why).
-- [ ] New i18n keys in `it.ts` **and** `en.ts`; §5.10's "Shows total expenses" line updated in the spec first,
-      then the plan.
-
----
+- [x] Decide before planning (2026-09-25): **two figures**, «Totale uscite» and «Totale entrate» side by side, never
+      netted; the Statistiche tag card follows (the income sits signed under each tag's spend). The net difference
+      lost because it stops matching the category split and nets a tag's unrelated uses; the middle option lost to
+      keeping the screen the same shape for every tag.
+  - Both figures count what the split counts — rows flagged `excludeFromTotals` no longer land in the hero, which
+    they did before while the split already left them out.
+- [x] The bottom caption reads both figures; the category split stays expenses; the Statistiche card (§5.7) shows
+      the same two directions.
+- [x] Transfers stay out of both figures (`tagTotals` skips them, with a test).
+- [x] New i18n keys in every locale; spec §5.10 and §5.7 updated, then the plan
+      (`docs/superpowers/plans/2026-09-25-tag-income.md`) and the build.
 
 ## 0.2 — Forecast: the next three months, from what already repeats
 

@@ -407,6 +407,7 @@ export const fr: Messages = {
     tags: 'Tags',
     tagsAll: 'Tous les tags',
     tagsEmpty: 'Aucun tag sur cette période',
+    tagsFlows: 'Dépenses · revenus',
     tagsOverlap:
       'Une opération avec plusieurs tags compte dans chacun, donc la somme dépasse le total du cycle.',
     tagsUntagged_one: '{{count}} opération sans tag · {{amount}}',
@@ -751,6 +752,8 @@ export const fr: Messages = {
     uses_one: '{{count}} opération',
     uses_other: '{{count}} opérations',
     total: 'Total des dépenses',
+    totalIncome: 'Total des revenus',
+    totals: 'Dépenses {{expense}} · Revenus {{income}}',
     range: '{{count}} opérations · {{first}} – {{last}}',
     empty: 'Aucun tag',
     emptyBody:

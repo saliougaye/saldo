@@ -6,9 +6,9 @@ import {
   rollupToParents,
   signedAmount,
   spendingByCategory,
-  spendingByTag,
   splitUpcoming,
   summarizePeriod,
+  tagTotals,
   totalsOf,
 } from './ledger';
 
@@ -122,7 +122,7 @@ describe('splitUpcoming', () => {
   });
 });
 
-describe('spendingByTag', () => {
+describe('tagTotals', () => {
   const tagged = () => [
     tx({ date: '2026-03-28', amount: 5000, tagIds: ['tag-rome', 'tag-trip'] }),
     tx({ date: '2026-04-02', amount: 3000, tagIds: ['tag-rome'] }),
@@ -139,30 +139,71 @@ describe('spendingByTag', () => {
     }),
   ];
 
-  it('ranks tags by counted spend, descending', () => {
-    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
+  it('ranks tags by counted spend, descending, with their counted income beside it', () => {
+    const { tags } = tagTotals(tagged(), APRIL_CYCLE, TODAY);
     expect(tags).toEqual([
-      { tagId: 'tag-rome', amount: 8000, count: 2 },
-      { tagId: 'tag-trip', amount: 5000, count: 1 },
+      { tagId: 'tag-rome', expense: 8000, income: 2500, count: 3 },
+      { tagId: 'tag-trip', expense: 5000, income: 0, count: 1 },
     ]);
   });
 
+  it('keeps a tag that only brought money in, after the ones that spent', () => {
+    const txs = [
+      tx({ date: '2026-04-02', amount: 1000, tagIds: ['tag-trip'] }),
+      tx({
+        date: '2026-04-03',
+        amount: 30_000,
+        kind: 'income',
+        categoryId: 'cat-refund',
+        tagIds: ['tag-refund'],
+      }),
+    ];
+    expect(tagTotals(txs, APRIL_CYCLE, TODAY).tags).toEqual([
+      { tagId: 'tag-trip', expense: 1000, income: 0, count: 1 },
+      { tagId: 'tag-refund', expense: 0, income: 30_000, count: 1 },
+    ]);
+  });
+
+  it('never nets income against spend', () => {
+    const txs = [
+      tx({ date: '2026-04-02', amount: 80_000, tagIds: ['tag-trip'] }),
+      tx({
+        date: '2026-04-03',
+        amount: 30_000,
+        kind: 'income',
+        categoryId: 'cat-refund',
+        tagIds: ['tag-trip'],
+      }),
+    ];
+    const [trip] = tagTotals(txs, APRIL_CYCLE, TODAY).tags;
+    expect(trip).toMatchObject({ expense: 80_000, income: 30_000 });
+  });
+
+  it('leaves transfers out of both sides', () => {
+    const txs = [
+      tx({
+        date: '2026-04-02',
+        amount: 5000,
+        kind: 'transfer',
+        categoryId: null,
+        toAccountId: 'acc-savings',
+        tagIds: ['tag-trip'],
+      }),
+    ];
+    expect(tagTotals(txs, APRIL_CYCLE, TODAY).tags).toEqual([]);
+  });
+
   it('counts a two-tag transaction in both, so the tags overshoot the period spend', () => {
-    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
-    const sum = tags.reduce((total, row) => total + row.amount, 0);
+    const { tags } = tagTotals(tagged(), APRIL_CYCLE, TODAY);
+    const sum = tags.reduce((total, row) => total + row.expense, 0);
     const { spent } = summarizePeriod(tagged(), APRIL_CYCLE, TODAY);
     expect(sum).toBeGreaterThan(spent);
   });
 
-  it('reports what carries no tag at all, so the ranking can say what it leaves out', () => {
-    const spending = spendingByTag(tagged(), APRIL_CYCLE, TODAY);
-    expect(spending.untagged).toBe(1200);
-    expect(spending.untaggedCount).toBe(1);
-  });
-
-  it('sums income when asked', () => {
-    const { tags } = spendingByTag(tagged(), APRIL_CYCLE, TODAY, 'income');
-    expect(tags).toEqual([{ tagId: 'tag-rome', amount: 2500, count: 1 }]);
+  it('reports the spend that carries no tag at all, so the ranking can say what it leaves out', () => {
+    const totals = tagTotals(tagged(), APRIL_CYCLE, TODAY);
+    expect(totals.untagged).toBe(1200);
+    expect(totals.untaggedCount).toBe(1);
   });
 
   it('breaks ties on the tag id, so the order never depends on input order', () => {
@@ -170,14 +211,14 @@ describe('spendingByTag', () => {
       tx({ date: '2026-04-02', amount: 1000, tagIds: ['tag-b'] }),
       tx({ date: '2026-04-02', amount: 1000, tagIds: ['tag-a'] }),
     ];
-    expect(spendingByTag(txs, APRIL_CYCLE, TODAY).tags.map((row) => row.tagId)).toEqual([
+    expect(tagTotals(txs, APRIL_CYCLE, TODAY).tags.map((row) => row.tagId)).toEqual([
       'tag-a',
       'tag-b',
     ]);
   });
 
   it('is empty for no rows', () => {
-    expect(spendingByTag([], APRIL_CYCLE, TODAY)).toEqual({
+    expect(tagTotals([], APRIL_CYCLE, TODAY)).toEqual({
       tags: [],
       untagged: 0,
       untaggedCount: 0,

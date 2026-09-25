@@ -402,6 +402,7 @@ export const en: Messages = {
     tags: 'Tags',
     tagsAll: 'All tags',
     tagsEmpty: 'No tags in this period',
+    tagsFlows: 'Expenses · income',
     tagsOverlap:
       'A transaction with several tags counts in each, so the sum runs past the cycle total.',
     tagsUntagged_one: '{{count}} transaction without a tag · {{amount}}',
@@ -737,6 +738,8 @@ export const en: Messages = {
     uses_one: '{{count}} transaction',
     uses_other: '{{count}} transactions',
     total: 'Total spent',
+    totalIncome: 'Total received',
+    totals: 'Spent {{expense}} · Received {{income}}',
     range: '{{count}} transactions · {{first}} – {{last}}',
     empty: 'No tags',
     emptyBody: 'Create one here, or type one in a transaction’s tags field while you record it.',

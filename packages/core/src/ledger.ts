@@ -115,56 +115,65 @@ export function spendingByCategory(
 
 export interface TagTotal {
   tagId: string;
-  amount: MinorUnits;
-  /** How many counted transactions carry the tag. */
+  /** Counted expenses carrying the tag. */
+  expense: MinorUnits;
+  /** Counted income carrying the tag: the refund of a trip, the reimbursement being chased. */
+  income: MinorUnits;
+  /** How many counted transactions carry the tag, both directions. */
   count: number;
 }
 
-export interface TagSpending {
+export interface TagTotals {
   /**
-   * Counted amount per tag, descending, ties broken on the id so the order never depends on the
-   * order the rows arrived in.
+   * Counted amounts per tag, by expense descending, then income descending, ties broken on the id
+   * so the order never depends on the order the rows arrived in.
    */
   tags: TagTotal[];
-  /** Counted amount of the rows carrying no tag at all. */
+  /** Counted spend of the rows carrying no tag at all. */
   untagged: MinorUnits;
   untaggedCount: number;
 }
 
 /**
- * Counted amounts per tag (§5.10).
+ * Counted expenses and income per tag (§5.7, §5.10).
  *
  * Tags are neither exclusive nor exhaustive: a transaction can carry several, and most carry none.
  * A row with two tags is therefore counted in both, and `tags` overshoots the period's spend while
  * missing everything in `untagged`. That is why this returns a **ranking** and why nothing built on
  * it may draw a share of a whole — a split bar or a pie over these numbers would be arithmetically
  * false. `untagged` travels with the ranking so the screen can say what it leaves out.
+ *
+ * The two directions stay apart and are never netted: a refund on a trip is the tag the app itself
+ * advertises, but a tag used for two unrelated things would net them against each other, and a
+ * net would no longer match the category split, which can only split expenses. Transfers count on
+ * neither side.
  */
-export function spendingByTag(
-  txs: readonly LedgerTx[],
-  range: DateRange,
-  today: LocalDate,
-  kind: 'expense' | 'income' = 'expense',
-): TagSpending {
+export function tagTotals(txs: readonly LedgerTx[], range: DateRange, today: LocalDate): TagTotals {
   const totals = new Map<string, TagTotal>();
   let untagged = 0;
   let untaggedCount = 0;
   for (const tx of txs) {
-    if (tx.kind !== kind || !isWithin(range, tx.date) || !countsInTotals(tx, today)) continue;
+    if (!isWithin(range, tx.date) || !countsInTotals(tx, today)) continue;
+    const expense = tx.kind === 'expense' ? tx.amount : 0;
+    const income = tx.kind === 'income' ? tx.amount : 0;
     if (tx.tagIds.length === 0) {
+      if (tx.kind !== 'expense') continue;
       untagged += tx.amount;
       untaggedCount += 1;
       continue;
     }
     for (const tagId of new Set(tx.tagIds)) {
-      const current = totals.get(tagId);
-      if (current === undefined) totals.set(tagId, { tagId, amount: tx.amount, count: 1 });
-      else
-        totals.set(tagId, { tagId, amount: current.amount + tx.amount, count: current.count + 1 });
+      const current = totals.get(tagId) ?? { tagId, expense: 0, income: 0, count: 0 };
+      totals.set(tagId, {
+        tagId,
+        expense: current.expense + expense,
+        income: current.income + income,
+        count: current.count + 1,
+      });
     }
   }
   const tags = [...totals.values()].sort(
-    (a, b) => b.amount - a.amount || a.tagId.localeCompare(b.tagId),
+    (a, b) => b.expense - a.expense || b.income - a.income || a.tagId.localeCompare(b.tagId),
   );
   return { tags, untagged, untaggedCount };
 }

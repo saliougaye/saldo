@@ -106,6 +106,48 @@ describe('TagSpendCard', () => {
     expect(mockPush).toHaveBeenCalledWith('/settings/tags');
   });
 
+  it('shows what came back beside what was spent, without netting the two', async () => {
+    await render(
+      card([
+        ...rows(),
+        tx({
+          date: '2026-04-05',
+          amount: 20_000,
+          kind: 'income',
+          categoryId: 'cat-refund',
+          tagIds: ['tag-rome'],
+        }),
+      ]),
+    );
+    expect(screen.getByText('Expenses · income')).toBeTruthy();
+    expect(screen.getByText('3 transactions')).toBeTruthy();
+    expect(screen.getByText('€570.00')).toBeTruthy();
+    expect(screen.getByText('+€200.00')).toBeTruthy();
+  });
+
+  it('lists a tag that only brought money in', async () => {
+    await render(
+      card([
+        tx({
+          date: '2026-04-05',
+          amount: 20_000,
+          kind: 'income',
+          categoryId: 'cat-refund',
+          tagIds: ['tag-move'],
+        }),
+      ]),
+    );
+    expect(screen.getByText('Trasloco')).toBeTruthy();
+    expect(screen.getByText('+€200.00')).toBeTruthy();
+    expect(screen.queryByText('No tags in this period')).toBeNull();
+  });
+
+  it('keeps the plain expenses caption while no tag carries income', async () => {
+    await render(card(rows()));
+    expect(screen.getByText('Expenses')).toBeTruthy();
+    expect(screen.queryByText(/^\+/)).toBeNull();
+  });
+
   it('says so when nothing in the cycle carries a tag', async () => {
     await render(card([tx({ date: '2026-04-04', amount: 1_500 })]));
     expect(screen.getByText('No tags in this period')).toBeTruthy();

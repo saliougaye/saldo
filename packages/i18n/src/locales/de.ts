@@ -406,6 +406,7 @@ export const de: Messages = {
     tags: 'Tags',
     tagsAll: 'Alle Tags',
     tagsEmpty: 'Keine Tags in diesem Zeitraum',
+    tagsFlows: 'Ausgaben · Einnahmen',
     tagsOverlap:
       'Ein Eintrag mit mehreren Tags zählt in jedem, daher liegt die Summe über der des Zyklus.',
     tagsUntagged_one: '{{count}} Eintrag ohne Tag · {{amount}}',
@@ -747,6 +748,8 @@ export const de: Messages = {
     uses_one: '{{count}} Buchung',
     uses_other: '{{count}} Buchungen',
     total: 'Ausgaben gesamt',
+    totalIncome: 'Einnahmen gesamt',
+    totals: 'Ausgaben {{expense}} · Einnahmen {{income}}',
     range: '{{count}} Buchungen · {{first}} – {{last}}',
     empty: 'Keine Tags',
     emptyBody: 'Leg hier einen an oder tipp ihn beim Erfassen einer Buchung ins Tag-Feld.',

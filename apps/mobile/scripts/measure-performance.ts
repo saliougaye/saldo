@@ -33,9 +33,9 @@ import {
   periodHistory,
   periodLength,
   spendingByCategory,
-  spendingByTag,
   summarizePeriod,
   type Transaction,
+  tagTotals,
 } from '@saldo/core';
 
 const DEFAULT_ROWS = 20_000;
@@ -232,7 +232,7 @@ time('accountBalances', 'Accounts tab, account detail', () =>
 );
 time('summarizePeriod', 'Home header, Statistics', () => summarizePeriod(rows, range, today));
 time('spendingByCategory', 'Statistics, budgets', () => spendingByCategory(rows, range, today));
-time('spendingByTag', 'Statistics tag ranking (§5.10)', () => spendingByTag(rows, range, today));
+time('tagTotals', 'Statistics tag ranking (§5.10)', () => tagTotals(rows, range, today));
 time('dailyCumulative', 'Home/Statistics chart series', () => dailyCumulative(rows, range, today));
 time(`monthEndBalances x${SPARK_MONTHS}`, 'Account sparkline', () =>
   monthEndBalances({
@@ -258,7 +258,7 @@ time('— Statistics screen total', 'every fold above that it runs', () => {
   const window = periodHistory(rows, def, range, HISTORY_PERIODS);
   for (const entry of window) dailyCumulative(entry.txs, entry.period, today);
   spendingByCategory(rows, range, today);
-  spendingByTag(rows, range, today);
+  tagTotals(rows, range, today);
   categorySpendHistory(window, categories, today);
 });
 
