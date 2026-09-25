@@ -81,9 +81,13 @@ export const pt: Messages = {
     periodTimeline: 'Neste momento vai de {{start}} a {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Acompanha as despesas período a período. Inicia sessão no teu servidor para começar; depois, a app funciona offline.',
-    welcomeOffline:
-      'Para iniciar sessão tens de chegar ao teu servidor uma vez. Depois, o Saldo funciona offline.',
+      'Acompanhe os gastos período a período. Escolha onde vivem os seus dados: pode mudar de ideia depois.',
+    welcomePhone: 'Só neste telemóvel',
+    welcomePhoneHint: 'Sem conta, nada para configurar.',
+    welcomeServer: 'Com o seu servidor Saldo',
+    welcomeServerHint: 'Sincroniza vários dispositivos. Precisa do endereço dele.',
+    welcomeLater:
+      'Se começar só neste telemóvel, pode ligar um servidor no Perfil mais tarde sem perder nada.',
     cycleTitle: 'Quando começa o teu mês?',
     cycleBody:
       'Escolhe o dia em que recebes o salário: o Saldo conta os ciclos a partir desse dia.',
@@ -512,9 +516,6 @@ export const pt: Messages = {
   sync: {
     title: 'Servidor e sincronização',
     serverIs: 'Servidor: {{server}}',
-    verifying: 'A verificar o servidor…',
-    noServerConfigured:
-      'Esta versão não tem servidor configurado. Volta a compilar a app com SALDO_SERVER_URL.',
     notConnected: 'Sem ligação',
     localOnly: 'Sincronização desligada. Os dados ficam neste telemóvel.',
     connectedAs: 'Sessão iniciada como {{name}}',
@@ -542,6 +543,11 @@ export const pt: Messages = {
       'Este telemóvel tem dados de outra conta, que têm de ser apagados para entrares. Perdem-se {{count}} alterações ainda não enviadas; tudo o resto fica no servidor dessa conta.',
     foreignDataConfirm: 'Apagar e entrar',
     foreignDeviceData: 'Início de sessão cancelado: os dados deste telemóvel são de outra conta.',
+    unownedTitle: 'Dados neste telemóvel',
+    unownedBody:
+      'Estes dados ainda não estão em nenhuma conta. Pode trazê-los para esta, junto com o que ela já tem, ou apagá-los e usar só os do servidor.',
+    unownedAdopt: 'Trazer para a conta',
+    unownedDiscard: 'Apagar e usar o servidor',
     pending_one: '{{count}} alteração por sincronizar',
     pending_other: '{{count}} alterações por sincronizar',
     rejected_one: '{{count}} alteração recusada pelo servidor',
@@ -553,11 +559,32 @@ export const pt: Messages = {
     unreachable: 'Não foi possível chegar a esse endereço',
     notSaldo: 'Esse endereço não responde como um servidor Saldo',
     cancelled: 'Início de sessão cancelado',
-    serverFound: 'Saldo {{version}}',
     registrationClosed: 'Este servidor não aceita novas contas',
     nameRequired: 'Escolhe primeiro um nome',
     passkeyNote:
       'A chave de acesso fica neste telemóvel; o servidor guarda apenas a sua chave pública.',
+  },
+  server: {
+    title: 'O seu servidor Saldo',
+    body: 'O endereço com que abre o Saldo no navegador; depois entra com uma passkey. Quem gere o servidor deu-lho, se não for você.',
+    address: 'Endereço do servidor',
+    placeholder: 'saldo.exemplo.pt',
+    hintIdle: 'Por exemplo saldo.exemplo.pt',
+    hintConnect: 'A ligar a {{origin}}',
+    hintInvalid: 'Escreva só o endereço, por exemplo saldo.exemplo.pt',
+    checking: 'A verificar o servidor…',
+    version: 'Saldo {{version}}',
+    unreachable: 'Inacessível',
+    notSaldo: 'Não é um servidor Saldo',
+    change: 'Mudar',
+    changeServer: 'Mudar de servidor',
+    changeAddress: 'Mudar endereço',
+    retry: 'Tentar de novo',
+    stillNothing: 'Continua sem resposta.',
+    helpUnreachable:
+      'Confirme que tem rede e que o servidor está ligado. Se outra pessoa o gere, pergunte-lhe.',
+    helpNotSaldo:
+      'Precisa do endereço com que abre o Saldo no navegador, por exemplo saldo.exemplo.pt.',
   },
   budgets: {
     title: 'Orçamentos',

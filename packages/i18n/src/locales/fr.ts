@@ -80,9 +80,13 @@ export const fr: Messages = {
     periodTimeline: 'En ce moment, elle va du {{start}} au {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Suis tes dépenses période par période. Connecte-toi à ton serveur pour commencer ; ensuite, l’app fonctionne hors ligne.',
-    welcomeOffline:
-      'Pour te connecter, tu dois joindre ton serveur une fois. Ensuite, Saldo fonctionne hors ligne.',
+      'Suivez vos dépenses période par période. Choisissez où vivent vos données : vous pourrez changer d’avis plus tard.',
+    welcomePhone: 'Seulement sur ce téléphone',
+    welcomePhoneHint: 'Pas de compte, rien à configurer.',
+    welcomeServer: 'Avec votre serveur Saldo',
+    welcomeServerHint: 'Synchronise plusieurs appareils. Il vous faut son adresse.',
+    welcomeLater:
+      'Si vous commencez seulement sur ce téléphone, vous pourrez connecter un serveur depuis le Profil sans rien perdre.',
     cycleTitle: 'Quand commence ton mois ?',
     cycleBody:
       'Choisis le jour où tu reçois ton salaire : Saldo compte les cycles à partir de ce jour.',
@@ -512,9 +516,6 @@ export const fr: Messages = {
   sync: {
     title: 'Serveur et synchronisation',
     serverIs: 'Serveur : {{server}}',
-    verifying: 'Vérification du serveur…',
-    noServerConfigured:
-      'Cette version n’a aucun serveur configuré. Recompile l’app avec SALDO_SERVER_URL.',
     notConnected: 'Non connecté',
     localOnly: 'Synchronisation désactivée. Les données restent sur ce téléphone.',
     connectedAs: 'Connecté en tant que {{name}}',
@@ -544,6 +545,11 @@ export const fr: Messages = {
       'Ce téléphone contient les données d’un autre compte, qu’il faut effacer pour te connecter. {{count}} modifications pas encore envoyées seront perdues ; tout le reste est sur le serveur de ce compte.',
     foreignDataConfirm: 'Effacer et se connecter',
     foreignDeviceData: 'Connexion annulée : les données de ce téléphone sont à un autre compte.',
+    unownedTitle: 'Données sur ce téléphone',
+    unownedBody:
+      'Ces données ne sont encore dans aucun compte. Vous pouvez les apporter dans celui-ci, avec ce qu’il contient déjà, ou les supprimer et n’utiliser que celles du serveur.',
+    unownedAdopt: 'Apporter dans le compte',
+    unownedDiscard: 'Supprimer et utiliser le serveur',
     pending_one: '{{count}} modification à synchroniser',
     pending_other: '{{count}} modifications à synchroniser',
     rejected_one: '{{count}} modification refusée par le serveur',
@@ -555,10 +561,31 @@ export const fr: Messages = {
     unreachable: 'Impossible de joindre cette adresse',
     notSaldo: 'Cette adresse ne répond pas comme un serveur Saldo',
     cancelled: 'Connexion annulée',
-    serverFound: 'Saldo {{version}}',
     registrationClosed: 'Ce serveur n’accepte pas de nouveaux comptes',
     nameRequired: 'Choisis d’abord un nom',
     passkeyNote: 'La clé d’accès reste sur ce téléphone ; le serveur ne garde que sa clé publique.',
+  },
+  server: {
+    title: 'Votre serveur Saldo',
+    body: 'L’adresse à laquelle vous ouvrez Saldo dans le navigateur, puis vous vous connectez avec une passkey. La personne qui gère le serveur vous l’a donnée, si ce n’est pas vous.',
+    address: 'Adresse du serveur',
+    placeholder: 'saldo.exemple.fr',
+    hintIdle: 'Par exemple saldo.exemple.fr',
+    hintConnect: 'Connexion à {{origin}}',
+    hintInvalid: 'Saisissez seulement l’adresse, par exemple saldo.exemple.fr',
+    checking: 'Vérification du serveur…',
+    version: 'Saldo {{version}}',
+    unreachable: 'Injoignable',
+    notSaldo: 'Pas un serveur Saldo',
+    change: 'Changer',
+    changeServer: 'Changer de serveur',
+    changeAddress: 'Changer d’adresse',
+    retry: 'Réessayer',
+    stillNothing: 'Toujours pas de réponse.',
+    helpUnreachable:
+      'Vérifiez que vous êtes en ligne et que le serveur est allumé. Si quelqu’un d’autre le gère, demandez-lui.',
+    helpNotSaldo:
+      'Il faut l’adresse à laquelle vous ouvrez Saldo dans le navigateur, par exemple saldo.exemple.fr.',
   },
   budgets: {
     title: 'Budgets',

@@ -79,9 +79,13 @@ export const sv: Messages = {
     periodTimeline: 'Just nu går den från {{start}} till {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Följ dina utgifter period för period. Logga in på din server för att börja; sedan fungerar appen offline.',
-    welcomeOffline:
-      'För att logga in behöver du nå din server en gång. Sedan fungerar Saldo offline.',
+      'Håll koll på utgifterna period för period. Välj var dina data finns: du kan ändra dig senare.',
+    welcomePhone: 'Bara på den här telefonen',
+    welcomePhoneHint: 'Inget konto, inget att ställa in.',
+    welcomeServer: 'Med din Saldo-server',
+    welcomeServerHint: 'Synkar flera enheter. Du behöver dess adress.',
+    welcomeLater:
+      'Om du bara börjar på den här telefonen kan du ansluta en server från Profil senare utan att förlora något.',
     cycleTitle: 'När börjar din månad?',
     cycleBody: 'Välj dagen då du får lön: Saldo räknar varje cykel från den dagen.',
     cycleTimeline: 'Din månad går från {{start}} till {{end}}',
@@ -507,9 +511,6 @@ export const sv: Messages = {
   sync: {
     title: 'Server och synk',
     serverIs: 'Server: {{server}}',
-    verifying: 'Kontrollerar servern…',
-    noServerConfigured:
-      'Den här versionen har ingen server inställd. Bygg om appen med SALDO_SERVER_URL.',
     notConnected: 'Inte ansluten',
     localOnly: 'Synken är av. Datan stannar på den här telefonen.',
     connectedAs: 'Inloggad som {{name}}',
@@ -537,6 +538,11 @@ export const sv: Messages = {
       'Telefonen har data från ett annat konto som måste raderas innan du loggar in. {{count}} ändringar som inte skickats går förlorade; allt annat finns kvar på det kontots server.',
     foreignDataConfirm: 'Radera och logga in',
     foreignDeviceData: 'Inloggningen avbröts: datan på telefonen tillhör ett annat konto.',
+    unownedTitle: 'Data på den här telefonen',
+    unownedBody:
+      'Dessa data finns inte i något konto ännu. Du kan ta med dem till det här, tillsammans med det som redan finns där, eller radera dem och bara använda serverns.',
+    unownedAdopt: 'Ta med till kontot',
+    unownedDiscard: 'Radera och använd servern',
     pending_one: '{{count}} ändring väntar på synk',
     pending_other: '{{count}} ändringar väntar på synk',
     rejected_one: '{{count}} ändring avvisad av servern',
@@ -548,10 +554,31 @@ export const sv: Messages = {
     unreachable: 'Det går inte att nå den adressen',
     notSaldo: 'Adressen svarar inte som en Saldo-server',
     cancelled: 'Inloggningen avbröts',
-    serverFound: 'Saldo {{version}}',
     registrationClosed: 'Servern tar inte emot nya konton',
     nameRequired: 'Välj ett namn först',
     passkeyNote: 'Nyckeln stannar på den här telefonen; servern sparar bara dess publika nyckel.',
+  },
+  server: {
+    title: 'Din Saldo-server',
+    body: 'Adressen du öppnar Saldo på i webbläsaren, sedan loggar du in med en passkey. Den som driver servern gav dig den, om det inte är du.',
+    address: 'Serveradress',
+    placeholder: 'saldo.exempel.se',
+    hintIdle: 'Till exempel saldo.exempel.se',
+    hintConnect: 'Ansluter till {{origin}}',
+    hintInvalid: 'Skriv bara adressen, till exempel saldo.exempel.se',
+    checking: 'Kontrollerar servern…',
+    version: 'Saldo {{version}}',
+    unreachable: 'Går inte att nå',
+    notSaldo: 'Inte en Saldo-server',
+    change: 'Ändra',
+    changeServer: 'Byt server',
+    changeAddress: 'Ändra adress',
+    retry: 'Försök igen',
+    stillNothing: 'Fortfarande inget svar.',
+    helpUnreachable:
+      'Kontrollera att du är online och att servern är igång. Om någon annan driver den, fråga dem.',
+    helpNotSaldo:
+      'Du behöver adressen du öppnar Saldo på i webbläsaren, till exempel saldo.exempel.se.',
   },
   budgets: {
     title: 'Budgetar',

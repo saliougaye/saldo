@@ -80,9 +80,13 @@ export const es: Messages = {
     periodTimeline: 'Ahora mismo va del {{start}} al {{end}}',
     welcomeTitle: 'Saldo',
     welcomeBody:
-      'Lleva tus gastos periodo a periodo. Inicia sesión en tu servidor para empezar; después, la app funciona sin conexión.',
-    welcomeOffline:
-      'Para iniciar sesión tienes que llegar a tu servidor una vez. Después, Saldo funciona sin conexión.',
+      'Controla tus gastos periodo a periodo. Elige dónde viven tus datos: puedes cambiar de idea después.',
+    welcomePhone: 'Solo en este teléfono',
+    welcomePhoneHint: 'Sin cuenta, nada que configurar.',
+    welcomeServer: 'Con tu servidor Saldo',
+    welcomeServerHint: 'Sincroniza varios dispositivos. Necesitas su dirección.',
+    welcomeLater:
+      'Si empiezas solo en este teléfono, podrás conectar un servidor desde el Perfil sin perder nada.',
     cycleTitle: '¿Cuándo empieza tu mes?',
     cycleBody: 'Elige el día en que cobras: Saldo cuenta los ciclos desde ese día.',
     cycleTimeline: 'Tu mes va del {{start}} al {{end}}',
@@ -510,9 +514,6 @@ export const es: Messages = {
   sync: {
     title: 'Servidor y sincronización',
     serverIs: 'Servidor: {{server}}',
-    verifying: 'Comprobando el servidor…',
-    noServerConfigured:
-      'Esta compilación no tiene servidor configurado. Vuelve a compilar la app con SALDO_SERVER_URL.',
     notConnected: 'Sin conexión',
     localOnly: 'Sincronización desactivada. Los datos se quedan en este teléfono.',
     connectedAs: 'Conectado como {{name}}',
@@ -541,6 +542,11 @@ export const es: Messages = {
       'Este teléfono tiene datos de otra cuenta y hay que borrarlos para entrar. Se perderán {{count}} cambios no enviados; todo lo demás sigue en el servidor de esa cuenta.',
     foreignDataConfirm: 'Borrar y entrar',
     foreignDeviceData: 'Inicio de sesión cancelado: los datos de este teléfono son de otra cuenta.',
+    unownedTitle: 'Datos en este teléfono',
+    unownedBody:
+      'Estos datos aún no están en ninguna cuenta. Puedes llevarlos a esta, junto con lo que ya contiene, o borrarlos y usar solo los del servidor.',
+    unownedAdopt: 'Llevar a la cuenta',
+    unownedDiscard: 'Borrar y usar el servidor',
     pending_one: '{{count}} cambio por sincronizar',
     pending_other: '{{count}} cambios por sincronizar',
     rejected_one: '{{count}} cambio rechazado por el servidor',
@@ -552,11 +558,32 @@ export const es: Messages = {
     unreachable: 'No se puede llegar a esa dirección',
     notSaldo: 'Esa dirección no responde como un servidor de Saldo',
     cancelled: 'Inicio de sesión cancelado',
-    serverFound: 'Saldo {{version}}',
     registrationClosed: 'Este servidor no acepta cuentas nuevas',
     nameRequired: 'Elige primero un nombre',
     passkeyNote:
       'La llave de acceso se queda en este teléfono; el servidor solo guarda su clave pública.',
+  },
+  server: {
+    title: 'Tu servidor Saldo',
+    body: 'La dirección con la que abres Saldo en el navegador; luego entras con una passkey. Te la dio quien gestiona el servidor, si no eres tú.',
+    address: 'Dirección del servidor',
+    placeholder: 'saldo.ejemplo.es',
+    hintIdle: 'Por ejemplo saldo.ejemplo.es',
+    hintConnect: 'Me conecto a {{origin}}',
+    hintInvalid: 'Escribe solo la dirección, por ejemplo saldo.ejemplo.es',
+    checking: 'Compruebo el servidor…',
+    version: 'Saldo {{version}}',
+    unreachable: 'No accesible',
+    notSaldo: 'No es un servidor Saldo',
+    change: 'Cambiar',
+    changeServer: 'Cambiar servidor',
+    changeAddress: 'Cambiar dirección',
+    retry: 'Reintentar',
+    stillNothing: 'Sigue sin responder.',
+    helpUnreachable:
+      'Comprueba que tienes conexión y que el servidor está encendido. Si lo gestiona otra persona, pregúntale.',
+    helpNotSaldo:
+      'Necesitas la dirección con la que abres Saldo en el navegador, por ejemplo saldo.ejemplo.es.',
   },
   budgets: {
     title: 'Presupuestos',
