@@ -37,7 +37,8 @@ export default function DeleteDataScreen() {
     setError(null);
     try {
       await deleteAllData({ db, api, scheduler, deleteAttachmentFiles: deleteAllAttachmentFiles });
-      // No settings now: the boot router sends the user to onboarding, with nothing underneath.
+      // No settings now: the boot router sends a signed-in user to onboarding and a local-only one
+      // back to the welcome (§6.29 step 0), with nothing underneath either way.
       startOver(router, '/');
     } catch (caught) {
       const code = caught instanceof ApiClientError ? caught.code : null;

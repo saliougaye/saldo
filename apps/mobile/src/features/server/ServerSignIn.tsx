@@ -37,13 +37,17 @@ export function ServerRow({ s }: { s: ServerSignIn }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const { probe } = s;
-  if (probe.kind !== 'found' && probe.kind !== 'failed') return null;
+  // «Riprova» keeps the row: the address is not in question, only the answer.
+  const retrying = probe.kind === 'checking' && probe.attempts > 0;
+  if (probe.kind !== 'found' && probe.kind !== 'failed' && !retrying) return null;
   const status =
     probe.kind === 'found'
       ? t('server.version', { version: probe.health.version })
-      : probe.reason === 'not_saldo'
+      : probe.kind === 'failed' && probe.reason === 'not_saldo'
         ? t('server.notSaldo')
-        : t('server.unreachable');
+        : retrying
+          ? t('server.checking')
+          : t('server.unreachable');
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
       <IconBox name="server" colour={theme.palette.textMuted} />
@@ -78,17 +82,19 @@ export function ServerRow({ s }: { s: ServerSignIn }) {
   );
 }
 
-/** The card: the address field while editing or checking, the server row afterwards. */
+/** The card: the address field until the first answer, the server row from then on. */
 export function ServerAddressCard({
   s,
-  onSubmitEditing,
+  autoFocus = true,
 }: {
   s: ServerSignIn;
-  onSubmitEditing?: () => void;
+  /** On in onboarding, where the step asks one thing; off in Profile, which is also a status. */
+  autoFocus?: boolean;
 }) {
   const { t } = useTranslation();
   const hint = addressHint(s.address);
-  const editing = s.probe.kind === 'editing' || s.probe.kind === 'checking';
+  const editing =
+    s.probe.kind === 'editing' || (s.probe.kind === 'checking' && s.probe.attempts === 0);
   return (
     <Card>
       {editing ? (
@@ -100,14 +106,14 @@ export function ServerAddressCard({
             value={s.address}
             onChangeText={s.setAddress}
             editable={s.probe.kind === 'editing'}
-            autoFocus
+            autoFocus={autoFocus}
             autoCapitalize="none"
             autoCorrect={false}
             spellCheck={false}
             keyboardType="url"
             textContentType="URL"
             returnKeyType="go"
-            onSubmitEditing={onSubmitEditing ?? s.submit}
+            onSubmitEditing={s.submit}
           />
           <Text size="caption" color="textFaint" accessibilityLiveRegion="polite">
             {s.probe.kind === 'checking'
@@ -149,7 +155,7 @@ export function ServerActions({ s }: { s: ServerSignIn }) {
     );
   }
   if (probe.kind === 'checking' && probe.attempts > 0) {
-    // «Riprova» in flight: the same place, busy, so the row does not jump.
+    // «Riprova» in flight: the same button, busy, under the same row.
     return <PrimaryButton label={t('server.retry')} loading />;
   }
   if (probe.kind !== 'found') return null;
@@ -215,7 +221,7 @@ export function ServerSignInPanel({ onConnected }: { onConnected?: () => void })
   const s = useServerSignIn({ onConnected });
   return (
     <View style={{ gap: 16 }}>
-      <ServerAddressCard s={s} />
+      <ServerAddressCard s={s} autoFocus={false} />
       {s.probe.kind === 'editing' || (s.probe.kind === 'checking' && s.probe.attempts === 0) ? (
         <PrimaryButton
           label={t('common.continue')}

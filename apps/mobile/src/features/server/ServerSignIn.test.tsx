@@ -9,8 +9,9 @@ import { ServerSignInPanel } from './ServerSignIn';
 
 const mockCheck = jest.fn();
 const mockConnect = jest.fn();
+let mockLastServerUrl: string | null = null;
 jest.mock('../../auth/ServerProvider', () => ({
-  useServer: () => ({ check: mockCheck, connect: mockConnect, lastServerUrl: null }),
+  useServer: () => ({ check: mockCheck, connect: mockConnect, lastServerUrl: mockLastServerUrl }),
 }));
 
 const HEALTH = {
@@ -29,6 +30,7 @@ beforeAll(async () => {
 beforeEach(() => {
   mockCheck.mockReset();
   mockConnect.mockReset();
+  mockLastServerUrl = null;
 });
 
 const METRICS: Metrics = {
@@ -82,6 +84,29 @@ describe('ServerSignInPanel', () => {
     expect(await screen.findByText(/Still no answer\./)).toBeTruthy();
     expect(mockCheck).toHaveBeenCalledTimes(2);
     expect(mockCheck).toHaveBeenLastCalledWith('https://saldo.rossi.example.org');
+  });
+
+  it('keeps the server row in place while «Try again» is checking', async () => {
+    mockCheck.mockRejectedValueOnce(new ApiClientError(503, 'unreachable', 'x'));
+    mockCheck.mockReturnValueOnce(new Promise(() => {}));
+    await renderPanel();
+    await typeAndContinue('saldo.rossi.example.org');
+    await userEvent.press(await screen.findByText('Try again'));
+    expect(screen.getByText('saldo.rossi.example.org')).toBeTruthy();
+    expect(screen.getByText('Checking the server…')).toBeTruthy();
+    expect(screen.queryByLabelText('Server address')).toBeNull();
+  });
+
+  it('prefills the last address, keeping an http:// that was spelled out', async () => {
+    mockLastServerUrl = 'http://localhost:3000';
+    await renderPanel();
+    expect(screen.getByLabelText('Server address').props.value).toBe('http://localhost:3000');
+  });
+
+  it('prefills an https address as the bare host', async () => {
+    mockLastServerUrl = 'https://saldo.rossi.example.org';
+    await renderPanel();
+    expect(screen.getByLabelText('Server address').props.value).toBe('saldo.rossi.example.org');
   });
 
   it('sends a non-Saldo address back to the field, still typed', async () => {

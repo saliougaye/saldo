@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import { deleteAllAttachmentFiles } from '../attachments/localFiles';
+import { yieldSettingsToAccount } from '../db/adopt';
 import { db } from '../db/client';
 import { useDatabase } from '../db/DatabaseProvider';
 import { hasLocalData, wipeDevice } from '../db/wipe';
@@ -191,8 +192,10 @@ export function ServerProvider({ children }: { children: ReactNode }) {
         const answer = (await questions.decideUnownedData?.()) ?? 'cancel';
         log('auth', 'unowned data', { answer });
         if (answer === 'cancel') await refuse('cancelled', 'Sign-in was cancelled');
-        // «Porta nell'account» needs nothing: the rows are pending, and the first cycle pushes them.
         if (answer === 'discard') wipe();
+        // «Porta nell'account»: the rows are pending and the first cycle pushes them — all but the
+        // settings, which yield to the account's own if it has any.
+        if (answer === 'adopt') yieldSettingsToAccount(db, kv.deviceId());
       }
       // After the wipe, never before: `wipeDevice` empties `kv` too.
       kv.set(DEVICE_ACCOUNT_KEY, signedIn.id);

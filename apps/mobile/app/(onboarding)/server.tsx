@@ -10,6 +10,7 @@ import {
   ServerSignInDialogs,
 } from '../../src/features/server/ServerSignIn';
 import { useServerSignIn } from '../../src/features/server/useServerSignIn';
+import { startOver } from '../../src/navigation/history';
 
 /**
  * §6.29 step 0, the server door. The field swaps in place for the server it found, and the
@@ -21,7 +22,9 @@ export default function ServerStep() {
   const router = useRouter();
   const { t } = useTranslation();
   // Where to go next is the boot router's call: an account with settings skips onboarding (§6.29).
-  const s = useServerSignIn({ onConnected: () => router.replace('/') });
+  // `startOver`, not `replace`: the welcome must not stay underneath a signed-in app, where a
+  // hardware back or an edge swipe would reach its two doors again.
+  const s = useServerSignIn({ onConnected: () => startOver(router, '/') });
   const asking =
     s.probe.kind === 'editing' || (s.probe.kind === 'checking' && s.probe.attempts === 0);
 

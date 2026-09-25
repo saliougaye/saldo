@@ -1,5 +1,5 @@
 import { useCallback, useReducer, useState } from 'react';
-import { normaliseServerUrl } from '../../auth/link';
+import { normaliseServerUrl, serverLabel } from '../../auth/link';
 import { useServer } from '../../auth/ServerProvider';
 import { failureReason, initialProbe, type ProbeState, probeReducer } from './serverProbe';
 
@@ -12,9 +12,11 @@ type Answer<T> = { resolve: (value: T) => void } | null;
  */
 export function useServerSignIn({ onConnected }: { onConnected?: () => void } = {}) {
   const { connect, check, lastServerUrl } = useServer();
-  const [address, setAddress] = useState(() =>
-    lastServerUrl === null ? '' : new URL(lastServerUrl).host,
-  );
+  // The host is what the user typed; `http://` has to stay spelled out or it would come back https.
+  const [address, setAddress] = useState(() => {
+    if (lastServerUrl === null) return '';
+    return lastServerUrl.startsWith('http://') ? lastServerUrl : serverLabel(lastServerUrl);
+  });
   const [probe, dispatch] = useReducer(probeReducer, initialProbe);
   const [busy, setBusy] = useState(false);
   // Kept raw and worded at render time, so a change of language does not need a new attempt.

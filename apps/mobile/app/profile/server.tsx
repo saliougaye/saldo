@@ -94,7 +94,8 @@ export default function ServerScreen() {
         ) : null}
       </Card>
 
-      {connected ? null : <ServerSignInPanel />}
+      {/* An expired session signs back in to the same server, from the row below. */}
+      {connected || sessionExpired ? null : <ServerSignInPanel />}
 
       {connected || sessionExpired ? (
         <Card padded={false}>

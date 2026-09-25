@@ -1064,7 +1064,9 @@ server serves and the resulting session is handed to the app.
    cycle would push every pending row into the account that just signed in. `kv.accountId` records the last account;
    rows of a **different** account are wiped after a confirmation (declining signs straight back out). Rows with
    **no** recorded account — a phone that started local-only — ask «Porta nell’account» (they stay pending and the
-   first cycle pushes them, merging with what the account holds), «Cancella e usa il server» (wipe, then pull) or
+   first cycle pushes them, merging with what the account holds — except the one `settings` row, restamped with the
+   oldest possible HLC so an account that has settings keeps its own; categories are not de-duplicated, so a phone
+   seeded locally brings its own set), «Cancella e usa il server» (wipe, then pull) or
    «Annulla» (sign back out, phone untouched). An empty phone asks nothing.
 
 **Accepted risk:** the handoff token travels in a `saldo://` URL, and on both platforms another app can register the
