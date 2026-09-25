@@ -1272,10 +1272,10 @@ import { ApiClientError } from '../../net/apiClient';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { ServerSignInPanel } from './ServerSignIn';
 
-const check = jest.fn();
-const connect = jest.fn();
+const mockCheck = jest.fn();
+const mockConnect = jest.fn();
 jest.mock('../../auth/ServerProvider', () => ({
-  useServer: () => ({ check, connect, lastServerUrl: null }),
+  useServer: () => ({ check: mockCheck, connect: mockConnect, lastServerUrl: null }),
 }));
 
 const HEALTH = {
@@ -1292,8 +1292,8 @@ beforeAll(async () => {
   i18n = await createI18n('en', []);
 });
 beforeEach(() => {
-  check.mockReset();
-  connect.mockReset();
+  mockCheck.mockReset();
+  mockConnect.mockReset();
 });
 
 const METRICS: Metrics = {
@@ -1328,7 +1328,7 @@ describe('ServerSignInPanel', () => {
   });
 
   it('swaps the field for the server row and offers the passkey', async () => {
-    check.mockResolvedValue(HEALTH);
+    mockCheck.mockResolvedValue(HEALTH);
     await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
     expect(await screen.findByText('saldo.rossi.example.org')).toBeTruthy();
@@ -1339,18 +1339,18 @@ describe('ServerSignInPanel', () => {
   });
 
   it('says in words that the server is not reachable, and tries the same address again', async () => {
-    check.mockRejectedValue(new ApiClientError(503, 'unreachable', 'x'));
+    mockCheck.mockRejectedValue(new ApiClientError(503, 'unreachable', 'x'));
     await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
     expect(await screen.findByText('Not reachable')).toBeTruthy();
     await userEvent.press(screen.getByText('Try again'));
     expect(await screen.findByText(/Still no answer\./)).toBeTruthy();
-    expect(check).toHaveBeenCalledTimes(2);
-    expect(check).toHaveBeenLastCalledWith('https://saldo.rossi.example.org');
+    expect(mockCheck).toHaveBeenCalledTimes(2);
+    expect(mockCheck).toHaveBeenLastCalledWith('https://saldo.rossi.example.org');
   });
 
   it('sends a non-Saldo address back to the field, still typed', async () => {
-    check.mockRejectedValue(new ApiClientError(502, 'not_saldo', 'x'));
+    mockCheck.mockRejectedValue(new ApiClientError(502, 'not_saldo', 'x'));
     await renderPanel();
     await typeAndContinue('example.org');
     expect(await screen.findByText('Not a Saldo server')).toBeTruthy();
@@ -1360,12 +1360,12 @@ describe('ServerSignInPanel', () => {
   });
 
   it('signs in to the address it checked and hands over', async () => {
-    check.mockResolvedValue(HEALTH);
-    connect.mockResolvedValue({ id: 'ada', displayName: 'Ada' });
+    mockCheck.mockResolvedValue(HEALTH);
+    mockConnect.mockResolvedValue({ id: 'ada', displayName: 'Ada' });
     const onConnected = await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
     await userEvent.press(await screen.findByText('Sign in with passkey'));
-    expect(connect).toHaveBeenCalledWith(
+    expect(mockConnect).toHaveBeenCalledWith(
       'https://saldo.rossi.example.org',
       'login',
       expect.objectContaining({ decideUnownedData: expect.any(Function) }),
@@ -1374,9 +1374,9 @@ describe('ServerSignInPanel', () => {
   });
 
   it('asks what to do with the phone’s own rows, and passes the answer on', async () => {
-    check.mockResolvedValue(HEALTH);
+    mockCheck.mockResolvedValue(HEALTH);
     let answer: Promise<string> | undefined;
-    connect.mockImplementation(async (_url, _mode, questions) => {
+    mockConnect.mockImplementation(async (_url, _mode, questions) => {
       answer = questions.decideUnownedData();
       return { id: 'ada', displayName: 'Ada', answer: await answer };
     });
