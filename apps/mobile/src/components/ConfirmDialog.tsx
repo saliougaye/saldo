@@ -11,6 +11,9 @@ export interface ConfirmDialogProps {
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** A third answer, drawn between the two: for a question with two ways forward and one way out. */
+  alternativeLabel?: string;
+  onAlternative?: () => void;
 }
 
 /** Centered dialog of §6.26, scrim 0.6. */
@@ -22,6 +25,8 @@ export function ConfirmDialog({
   cancelLabel,
   onConfirm,
   onCancel,
+  alternativeLabel,
+  onAlternative,
 }: ConfirmDialogProps) {
   const theme = useTheme();
   return (
@@ -50,6 +55,9 @@ export function ConfirmDialog({
           {body === undefined ? null : <Text color="textMuted">{body}</Text>}
           <View style={{ gap: 8, marginTop: 4 }}>
             <PrimaryButton label={confirmLabel} onPress={onConfirm} />
+            {alternativeLabel === undefined ? null : (
+              <SecondaryButton label={alternativeLabel} onPress={onAlternative} />
+            )}
             <SecondaryButton label={cancelLabel} onPress={onCancel} />
           </View>
         </View>

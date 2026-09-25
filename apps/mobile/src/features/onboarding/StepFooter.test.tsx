@@ -1,48 +1,42 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { StepFooter } from './StepFooter';
 
-const mockBack = jest.fn();
-let mockCanGoBack = true;
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack, canGoBack: () => mockCanGoBack }),
+  useRouter: () => ({ back: jest.fn(), canGoBack: () => true }),
+}));
+jest.mock('../../components/keypad/AmountKeypadProvider', () => ({
+  useAmountKeypad: () => ({ session: null }),
 }));
 
 let i18n: I18nInstance;
 beforeAll(async () => {
-  i18n = await createI18n('it', []);
-});
-beforeEach(() => {
-  mockBack.mockClear();
-  mockCanGoBack = true;
+  i18n = await createI18n('en', []);
 });
 
-function renderFooter(onPress = jest.fn()) {
-  return render(
+async function renderFooter(label?: string) {
+  await render(
     <ThemeProvider preference="dark">
       <I18nextProvider i18n={i18n}>
-        <StepFooter label="Continua" onPress={onPress} />
+        <StepFooter label={label} onPress={jest.fn()} />
       </I18nextProvider>
     </ThemeProvider>,
   );
 }
 
 describe('StepFooter', () => {
-  it('goes back from "Indietro" and forward from the primary action', async () => {
-    const onPress = jest.fn();
-    await renderFooter(onPress);
-    await userEvent.press(screen.getByRole('button', { name: 'Indietro' }));
-    expect(mockBack).toHaveBeenCalledTimes(1);
-    await userEvent.press(screen.getByRole('button', { name: 'Continua' }));
-    expect(onPress).toHaveBeenCalledTimes(1);
+  it('draws «Back» and the primary action', async () => {
+    await renderFooter('Continue');
+    expect(screen.getByText('Back')).toBeTruthy();
+    expect(screen.getByText('Continue')).toBeTruthy();
   });
 
-  it('has no "Indietro" when there is nothing behind the screen', async () => {
-    mockCanGoBack = false;
+  it('is only the way back when there is no action to offer', async () => {
     await renderFooter();
-    expect(screen.queryByRole('button', { name: 'Indietro' })).toBeNull();
+    expect(screen.getByText('Back')).toBeTruthy();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 });

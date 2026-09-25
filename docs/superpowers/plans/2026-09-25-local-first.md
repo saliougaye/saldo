@@ -965,7 +965,7 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { ConfirmDialog } from './ConfirmDialog';
 
-function renderDialog(extra: Partial<Parameters<typeof ConfirmDialog>[0]> = {}) {
+async function renderDialog(extra: Partial<Parameters<typeof ConfirmDialog>[0]> = {}) {
   const props = {
     visible: true,
     title: 'Data on this phone',
@@ -975,7 +975,7 @@ function renderDialog(extra: Partial<Parameters<typeof ConfirmDialog>[0]> = {}) 
     onCancel: jest.fn(),
     ...extra,
   };
-  render(
+  await render(
     <ThemeProvider preference="dark">
       <ConfirmDialog {...props} />
     </ThemeProvider>,
@@ -984,14 +984,14 @@ function renderDialog(extra: Partial<Parameters<typeof ConfirmDialog>[0]> = {}) 
 }
 
 describe('ConfirmDialog', () => {
-  it('offers two answers by default', () => {
-    renderDialog();
+  it('offers two answers by default', async () => {
+    await renderDialog();
     expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 
   it('offers a third answer between the two when asked to', async () => {
     const onAlternative = jest.fn();
-    renderDialog({ alternativeLabel: 'Delete and use the server', onAlternative });
+    await renderDialog({ alternativeLabel: 'Delete and use the server', onAlternative });
     expect(screen.getAllByRole('button')).toHaveLength(3);
     await userEvent.press(screen.getByText('Delete and use the server'));
     expect(onAlternative).toHaveBeenCalledTimes(1);
@@ -1021,8 +1021,8 @@ beforeAll(async () => {
   i18n = await createI18n('en', []);
 });
 
-function renderFooter(label?: string) {
-  render(
+async function renderFooter(label?: string) {
+  await render(
     <ThemeProvider preference="dark">
       <I18nextProvider i18n={i18n}>
         <StepFooter label={label} onPress={jest.fn()} />
@@ -1032,14 +1032,14 @@ function renderFooter(label?: string) {
 }
 
 describe('StepFooter', () => {
-  it('draws «Back» and the primary action', () => {
-    renderFooter('Continue');
+  it('draws «Back» and the primary action', async () => {
+    await renderFooter('Continue');
     expect(screen.getByText('Back')).toBeTruthy();
     expect(screen.getByText('Continue')).toBeTruthy();
   });
 
-  it('is only the way back when there is no action to offer', () => {
-    renderFooter();
+  it('is only the way back when there is no action to offer', async () => {
+    await renderFooter();
     expect(screen.getByText('Back')).toBeTruthy();
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
