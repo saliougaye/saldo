@@ -228,6 +228,8 @@ export const de: Messages = {
     missing_insufficientFunds: 'Auf dem Ausgangskonto sind nur {{available}}.',
     cardInCredit: 'Die Karte steht dann mit {{amount}} im Plus.',
     customAmount: 'Eigener Betrag',
+    fillBalance: 'Ganzer Saldo · {{amount}}',
+    fillMissing: 'Was noch fehlt · {{amount}}',
     otherCategory: 'Sonstiges',
     account: 'Konto',
     from: 'Von',

@@ -234,4 +234,34 @@ describe('TransactionForm', () => {
     expect(screen.queryByRole('radio', { name: /^Statement/ })).toBeNull();
     expect(screen.queryByText('Custom amount')).toBeNull();
   });
+
+  it('fills a transfer with the whole balance of its source in one tap', async () => {
+    const onChange = jest.fn();
+    const transfer = { ...emptyForm(TODAY, 'acc-1'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-2' }, undefined, onChange);
+    const fill = screen.getByRole('button', { name: /^Whole balance · .*1,000\.00/ });
+    expect(fill).not.toBeSelected();
+    await userEvent.press(fill);
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ buffer: '1000' }));
+    // Next to the figure, like the choice: the amount is still being decided.
+    expect(screen.getByTestId('amount-keypad')).toBeTruthy();
+  });
+
+  it('reads the fill as chosen while the field holds that amount', async () => {
+    const transfer = { ...emptyForm(TODAY, 'acc-1'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-2', buffer: '1000' });
+    expect(screen.getByRole('button', { name: /^Whole balance/ })).toBeSelected();
+  });
+
+  it('offers no fill on an expense, from a card in debt or towards a card', async () => {
+    await renderForm();
+    expect(screen.queryByTestId('txform-fill-balance')).toBeNull();
+    screen.unmount();
+    const transfer = { ...emptyForm(TODAY, 'acc-3'), kind: 'transfer' as const };
+    await renderForm({ ...transfer, toAccountId: 'acc-1' });
+    expect(screen.queryByTestId('txform-fill-balance')).toBeNull();
+    screen.unmount();
+    await renderForm({ ...transfer, accountId: 'acc-1', toAccountId: 'acc-3' });
+    expect(screen.queryByTestId('txform-fill-balance')).toBeNull();
+  });
 });
