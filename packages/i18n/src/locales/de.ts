@@ -357,6 +357,7 @@ export const de: Messages = {
     endChanged: 'Ende aktualisiert',
   },
   dev: {
+    replayRecap: 'Periodenübersicht erneut zeigen',
     loadDemo: 'Demodaten laden',
     demoLoaded: 'Demodaten geladen',
     resetDevice: 'Dieses Handy zurücksetzen',

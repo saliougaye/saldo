@@ -355,6 +355,7 @@ export const sv: Messages = {
     endChanged: 'Slut uppdaterat',
   },
   dev: {
+    replayRecap: 'Visa periodens sammanfattning igen',
     loadDemo: 'Ladda demodata',
     demoLoaded: 'Demodata laddade',
     resetDevice: 'Nollställ telefonen',

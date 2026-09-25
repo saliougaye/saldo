@@ -358,6 +358,7 @@ export const fr: Messages = {
     endChanged: 'Fin mise à jour',
   },
   dev: {
+    replayRecap: 'Revoir le récapitulatif de la période',
     loadDemo: 'Charger les données de démo',
     demoLoaded: 'Données de démo chargées',
     resetDevice: 'Réinitialiser ce téléphone',

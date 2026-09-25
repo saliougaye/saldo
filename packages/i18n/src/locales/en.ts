@@ -353,6 +353,7 @@ export const en: Messages = {
     endChanged: 'End updated',
   },
   dev: {
+    replayRecap: 'Show the period recap again',
     loadDemo: 'Load demo data',
     demoLoaded: 'Demo data loaded',
     resetDevice: 'Reset this phone',

@@ -355,6 +355,7 @@ export const it = {
     endChanged: 'Fine aggiornata',
   },
   dev: {
+    replayRecap: 'Rivedi il riepilogo del periodo',
     loadDemo: 'Carica dati demo',
     demoLoaded: 'Dati demo caricati',
     resetDevice: 'Azzera questo telefono',

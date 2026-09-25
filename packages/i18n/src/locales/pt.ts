@@ -359,6 +359,7 @@ export const pt: Messages = {
     endChanged: 'Fim atualizado',
   },
   dev: {
+    replayRecap: 'Ver de novo o resumo do período',
     loadDemo: 'Carregar dados de demonstração',
     demoLoaded: 'Dados de demonstração carregados',
     resetDevice: 'Repor este telemóvel',
