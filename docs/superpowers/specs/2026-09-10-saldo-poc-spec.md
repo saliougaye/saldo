@@ -1618,7 +1618,15 @@ public. The decisions behind this section are D30–D36.
   and on the phone, which skips it the same way on pull (§8.1). Unknown fields are stripped by Zod. One bad row
   never breaks a page. Counting skipped rows for the admin, a notice to the user and a regression test on stored
   rows are **deferred** until this happens in practice: every read goes through the projection, so adding them
-  changes one module. A skipped `settings` row is the exception, handled below.
+  changes one module. `settings` is the exception, below.
+- **`settings` is never skipped: it is read with a default for every field.** A missing or invalid field falls back
+  to `language: 'system'`, `theme: 'system'`, `periodKind: 'month'`, `cycleStartDay: 27`, `currency: 'EUR'`, and
+  `timeZone` to `TZ` (§17.1.5). `UserData.settings` is `Settings | null`, and only `null` (no row, or a tombstone)
+  sends the user to `/onboarding`. Skipping an unreadable row instead would look like «never onboarded», and
+  onboarding would write a new `settings` over the real one. The defaults live in a read-only schema used by the
+  projection; `entitySchemas` stays strict, because push validates with it and stores `data` as sent. Known cost: a
+  settings form on the web writes the whole row back, so a defaulted field (a language an older server does not
+  know) replaces the real value on every device. Accepted: it needs a server rollback first.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection.
 - **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads all of the user's data on every
@@ -1644,8 +1652,10 @@ public. The decisions behind this section are D30–D36.
   advanced under a row lock. Its `deviceId` is a stable instance id generated on first start, so its writes can be
   told apart and tie-breaks stay deterministic.
 - **Onboarding on the web:** an account with no `settings` row goes to `/onboarding` (currency, period kind and
-  cycle day, as on the phone), which writes `settings` and the seed data of §4.2. How seed rows from the web and
-  from a phone that onboarded offline avoid duplicating each other is resolved in the plan.
+  cycle day, as on the phone), which writes `settings` and the seed data of §4.2. `settings` itself cannot clash: a phone
+  that brings its local rows into an account yields its `settings` to the account's (`yieldSettingsToAccount`,
+  §9.3). The seed can: seed rows from the web and from a phone that onboarded offline have different ids, so both
+  survive the merge. Resolved in the plan; the lead option is deterministic ids for seed rows on both sides.
 
 #### 17.1.4 Authentication on the web
 
