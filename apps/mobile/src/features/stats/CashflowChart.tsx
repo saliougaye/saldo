@@ -256,6 +256,9 @@ export function CashflowChart({
                     <View
                       style={{
                         position: 'absolute',
+                        // Centred on the bar explicitly, not left to how the parent aligns its children.
+                        left: '50%',
+                        marginLeft: -BAND_WIDTH / 2,
                         top: barHeight(forecast.min),
                         height: Math.max(1, barHeight(forecast.max) - barHeight(forecast.min)),
                         width: BAND_WIDTH,
