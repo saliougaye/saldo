@@ -22,8 +22,8 @@ import {
 } from '@saldo/core';
 import { formatCycleRange, formatLongDate, formatPeriodTick } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -58,8 +58,6 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 
 /** §5.7 shows six cycles including the current one. */
 const CASHFLOW_CYCLES = 6;
-/** › stops at the current period here: what comes after it is the forecast (§5.17). */
-const STATS_PERIODS_AHEAD = 0;
 /** The start of any history: a balance covers every row ever entered (§5.3). */
 const EVERYTHING = '1970-01-01';
 /** "Il solito" on the cycle-trend chart is the average of this many previous cycles (§5.6). */
@@ -83,16 +81,7 @@ export default function StatsTab() {
   const locale = useAppLocale();
   const settings = useSettings();
   const { rows: categories, loaded: categoriesLoaded } = useCategoriesQuery();
-  const { today, def, period, resetToCurrent } = usePeriod();
-  // The selection is shared with Home and Transactions, which may go one period ahead (§6.15).
-  // Here the periods ahead are the forecast (§5.17), so arriving on one comes back to today's;
-  // once on this tab nothing can select one, since › stops at the current period.
-  const aheadOfToday = period.isPeriod && period.range.start > today;
-  useFocusEffect(
-    useCallback(() => {
-      if (aheadOfToday) resetToCurrent();
-    }, [aheadOfToday, resetToCurrent]),
-  );
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
   const [direction, setDirection] = useState<'expense' | 'income'>('expense');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -259,7 +248,7 @@ export default function StatsTab() {
   if (!loaded) {
     return (
       <Screen underTabBar>
-        <PeriodHeader maxAhead={STATS_PERIODS_AHEAD} />
+        <PeriodHeader />
         <StatsSkeleton />
       </Screen>
     );
@@ -267,7 +256,7 @@ export default function StatsTab() {
 
   return (
     <Screen underTabBar refreshable>
-      <PeriodHeader maxAhead={STATS_PERIODS_AHEAD} />
+      <PeriodHeader />
 
       <Animated.View entering={entering(0)}>
         <Card>

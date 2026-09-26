@@ -24,19 +24,10 @@ export interface PeriodHeaderProps {
    * transactions stay readable by decision, and a button that does nothing visible is a broken one.
    */
   hideAmounts?: boolean;
-  /**
-   * How far › may go past the current period. §6.15's default is one; Statistics passes 0,
-   * because the periods after the current one are its forecast (§5.17).
-   */
-  maxAhead?: number;
 }
 
 /** Header of §6.1: the period label with its subtitle, plus ‹ › cycle navigation. */
-export function PeriodHeader({
-  showProfile = false,
-  hideAmounts = true,
-  maxAhead,
-}: PeriodHeaderProps) {
+export function PeriodHeader({ showProfile = false, hideAmounts = true }: PeriodHeaderProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
@@ -47,8 +38,8 @@ export function PeriodHeader({
 
   // A custom range reads the same way a period does; only the subtitle below tells them apart.
   const label = formatCycleRange(period.range, locale, today);
-  // A period ahead has not closed, it has not started: the subtitle says so, and its label is
-  // muted, so it cannot pass for the current period on Home or Transactions (§6.15).
+  // Navigation stops at the current period, but a custom range can lie ahead: it has not closed,
+  // it has not started, and its muted label keeps it from passing for the current period.
   const ahead = period.range.start > today;
   const subtitle = period.isCurrent
     ? t('period.dayOf', { elapsed: period.elapsed, length: period.length })
@@ -57,9 +48,9 @@ export function PeriodHeader({
       : t('period.closed');
 
   const navButton = (direction: -1 | 1) => {
-    // Forward stops after the period the materialiser fills (§6.15): beyond it there is nothing
-    // to see, and a disabled arrow says that better than an empty screen would.
-    const allowed = canShift(direction, maxAhead);
+    // Forward stops at the current period (§6.15): what comes next is in «In arrivo» and the
+    // forecast, and a disabled arrow says that better than a screen of empty cards would.
+    const allowed = canShift(direction);
     return (
       <Pressable
         testID={direction === -1 ? 'period-previous' : 'period-next'}
@@ -68,7 +59,7 @@ export function PeriodHeader({
         accessibilityState={{ disabled: !allowed }}
         hitSlop={10}
         disabled={!allowed}
-        onPress={() => shift(direction, maxAhead)}
+        onPress={() => shift(direction)}
         style={{
           width: 36,
           height: theme.layout.headerButton,

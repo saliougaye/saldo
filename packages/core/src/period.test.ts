@@ -165,33 +165,24 @@ describe('canShiftPeriod', () => {
     expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, -12), -1, today)).toBe(true);
   });
 
-  it('allows the next period, where the materialiser has already put occurrences', () => {
-    expect(canShiftPeriod(cycle, current, 1, today)).toBe(true);
-  });
-
-  it('can be held at the current period, where the forecast takes over (§5.17)', () => {
-    expect(canShiftPeriod(cycle, current, 1, today, 0)).toBe(false);
-    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, -1), 1, today, 0)).toBe(true);
-  });
-
-  it('stops at the one after this one', () => {
-    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, 1), 1, today)).toBe(false);
+  it('stops at the current period: what comes next is «In arrivo» and the forecast', () => {
+    expect(canShiftPeriod(cycle, current, 1, today)).toBe(false);
     expect(canShiftPeriod(cycle, current, 2, today)).toBe(false);
   });
 
   it('lets a browse from the past walk forward to that same limit', () => {
     const past = shiftPeriod(cycle, current, -6);
     expect(canShiftPeriod(cycle, past, 1, today)).toBe(true);
-    expect(canShiftPeriod(cycle, past, 7, today)).toBe(true);
-    expect(canShiftPeriod(cycle, past, 8, today)).toBe(false);
+    expect(canShiftPeriod(cycle, past, 6, today)).toBe(true);
+    expect(canShiftPeriod(cycle, past, 7, today)).toBe(false);
   });
 
   it('holds for every period kind', () => {
     for (const kind of ['month', 'week', 'year'] as const) {
       const def: PeriodDef = { kind, startDay: 1 };
       const now = periodContaining(def, today);
-      expect(canShiftPeriod(def, now, 1, today)).toBe(true);
-      expect(canShiftPeriod(def, now, 2, today)).toBe(false);
+      expect(canShiftPeriod(def, shiftPeriod(def, now, -1), 1, today)).toBe(true);
+      expect(canShiftPeriod(def, now, 1, today)).toBe(false);
     }
   });
 });
