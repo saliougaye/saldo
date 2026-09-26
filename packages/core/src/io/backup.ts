@@ -1,28 +1,12 @@
 import { z } from 'zod';
-import {
-  accountSchema,
-  attachmentSchema,
-  budgetSchema,
-  categorySchema,
-  recurrenceSchema,
-  settingsSchema,
-  tagSchema,
-  transactionSchema,
-} from '../entities';
+import { settingsSchema } from '../entities';
+import { userDataSchema } from '../userData';
 
 /** Bumped only when a backup written by an older app can no longer be read (§11.1). */
 export const BACKUP_VERSION = 1;
 
-const dataSchema = z.object({
-  settings: settingsSchema,
-  accounts: z.array(accountSchema),
-  categories: z.array(categorySchema),
-  tags: z.array(tagSchema),
-  transactions: z.array(transactionSchema),
-  recurrences: z.array(recurrenceSchema),
-  budgets: z.array(budgetSchema),
-  attachments: z.array(attachmentSchema),
-});
+/** `UserData`, except that a backup always carries the settings: it is taken after onboarding. */
+const dataSchema = userDataSchema.extend({ settings: settingsSchema });
 
 export type BackupData = z.infer<typeof dataSchema>;
 

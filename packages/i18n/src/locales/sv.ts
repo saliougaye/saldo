@@ -779,6 +779,7 @@ export const sv: Messages = {
     currency: 'Valuta',
     language: 'Språk',
     theme: 'Tema',
+    timeZone: 'Tidszon',
     system: 'System',
     dark: 'Mörkt',
     light: 'Ljust',
@@ -1128,5 +1129,17 @@ export const sv: Messages = {
         'Utan server, gör en säkerhetskopia ibland via Profil → Exportera data: tappar du telefonen är den enda kopian.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Den ligger kvar när du reser: perioden stänger där du bor.',
+    search: 'Sök efter en stad',
+    current: 'Nuvarande',
+    currentAndPhone: 'Nuvarande och den här telefonen',
+    all: 'Alla',
+    noResults: 'Ingen stad hittades.',
+    phoneIsIn: 'Telefonen går på {{city}}-tid',
+    notice:
+      'Telefonen går på {{city}}-tid, där klockan är {{time}}. Siffrorna ligger kvar på {{saved}} tills du ändrar det.',
+    use: 'Använd {{city}}',
   },
 };

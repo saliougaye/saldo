@@ -31,6 +31,11 @@ export interface SyncDeps {
   clock: Clock;
   api: ApiClient;
   deviceId: string;
+  /**
+   * Runs once every page has been applied, before the materialiser: the local rows are then the
+   * account's, so a write made here cannot revert a newer one from another device.
+   */
+  afterPull?: () => void;
   /** Runs after a successful cycle: pulled recurrences may owe occurrences (§8.5). */
   materialise?: () => void;
   /**
@@ -177,6 +182,7 @@ async function runOnce(deps: SyncDeps): Promise<SyncOutcome> {
     since = page.nextSince;
   }
 
+  deps.afterPull?.();
   deps.materialise?.();
   await deps.syncBlobs?.().catch((error: unknown) => {
     // Swallowed on purpose (see `syncBlobs`), which is exactly why it needs saying out loud: the

@@ -790,6 +790,7 @@ export const fr: Messages = {
     currency: 'Devise',
     language: 'Langue',
     theme: 'Thème',
+    timeZone: 'Fuseau horaire',
     system: 'Système',
     dark: 'Sombre',
     light: 'Clair',
@@ -1142,5 +1143,17 @@ export const fr: Messages = {
         'Sans serveur, fais une sauvegarde de temps en temps depuis Profil → Exporter les données : si tu perds ton téléphone, c’est la seule copie.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Il reste le même en voyage : la période se clôt chez vous.',
+    search: 'Rechercher une ville',
+    current: 'Actuel',
+    currentAndPhone: 'Actuel et ce téléphone',
+    all: 'Tous',
+    noResults: 'Aucune ville trouvée.',
+    phoneIsIn: 'Le téléphone est à l’heure de {{city}}',
+    notice:
+      'Le téléphone est à l’heure de {{city}}, où il est {{time}}. Les comptes restent sur {{saved}} tant que vous ne le changez pas.',
+    use: 'Utiliser {{city}}',
   },
 };

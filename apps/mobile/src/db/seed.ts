@@ -85,6 +85,8 @@ export interface SeedInput {
   /** Resolves a `seed.*` key to the user's language. */
   translate: (key: string) => string;
   completedAt: string;
+  /** The device's zone at onboarding (D37). */
+  timeZone: string;
 }
 
 /**
@@ -106,6 +108,7 @@ export function seedFromOnboarding(repos: Repositories, input: SeedInput): boole
     language: input.language,
     theme: input.theme,
     onboardingCompletedAt: input.completedAt,
+    timeZone: input.timeZone,
   });
 
   if (input.account !== null) {

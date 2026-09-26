@@ -33,6 +33,7 @@ function setup() {
     translate: (key: string) => `t:${key}`,
     today: '2026-09-22',
     completedAt: COMPLETED_AT,
+    timeZone: 'Europe/Rome',
   } as const;
   return { db, repos, kv, input };
 }

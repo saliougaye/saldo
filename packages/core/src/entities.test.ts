@@ -110,6 +110,15 @@ describe('settingsSchema', () => {
     }
     expect(settingsSchema.safeParse({ ...settings, language: 'nl' }).success).toBe(false);
   });
+
+  it('takes an optional time zone, absent from rows written before it existed', () => {
+    expect(settingsSchema.safeParse({ ...settings, timeZone: 'Europe/Rome' }).success).toBe(true);
+    // The phone's column is null until onboarding or the boot backfill fills it.
+    expect(settingsSchema.safeParse({ ...settings, timeZone: null }).success).toBe(true);
+    expect(settingsSchema.safeParse(settings).success).toBe(true);
+    expect(settingsSchema.safeParse({ ...settings, timeZone: '' }).success).toBe(false);
+    expect(settingsSchema.safeParse({ ...settings, timeZone: 'x'.repeat(65) }).success).toBe(false);
+  });
 });
 
 describe('recurrenceSchema', () => {

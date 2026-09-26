@@ -786,6 +786,7 @@ export const pt: Messages = {
     currency: 'Moeda',
     language: 'Idioma',
     theme: 'Tema',
+    timeZone: 'Fuso horário',
     system: 'Sistema',
     dark: 'Escuro',
     light: 'Claro',
@@ -1136,5 +1137,17 @@ export const pt: Messages = {
         'Sem servidor, faz uma cópia de segurança de vez em quando em Perfil → Exportar os dados: se perderes o telemóvel, é a única cópia.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Mantém-se quando viaja: o período fecha onde vive.',
+    search: 'Procurar uma cidade',
+    current: 'Atual',
+    currentAndPhone: 'Atual e este telemóvel',
+    all: 'Todos',
+    noResults: 'Nenhuma cidade encontrada.',
+    phoneIsIn: 'O telemóvel está na hora de {{city}}',
+    notice:
+      'O telemóvel está na hora de {{city}}, onde são {{time}}. As contas ficam em {{saved}} até o alterar.',
+    use: 'Usar {{city}}',
   },
 };

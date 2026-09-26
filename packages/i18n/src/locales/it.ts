@@ -781,6 +781,7 @@ export const it = {
     currency: 'Valuta',
     language: 'Lingua',
     theme: 'Tema',
+    timeZone: 'Fuso orario',
     system: 'Sistema',
     dark: 'Scuro',
     light: 'Chiaro',
@@ -1132,6 +1133,18 @@ export const it = {
         'Senza server, fai un backup ogni tanto da Profilo → Esporta i dati: se perdi il telefono, è l’unica copia.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Resta questo anche quando viaggi: il periodo si chiude a casa tua.',
+    search: 'Cerca una città',
+    current: 'Attuale',
+    currentAndPhone: 'Attuale e questo telefono',
+    all: 'Tutti',
+    noResults: 'Nessuna città trovata.',
+    phoneIsIn: 'Il telefono è su {{city}}',
+    notice:
+      'Il telefono è su {{city}}, dove sono le {{time}}. I conti restano su {{saved}} finché non lo cambi.',
+    use: 'Usa {{city}}',
   },
 };
 

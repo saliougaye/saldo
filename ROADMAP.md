@@ -348,7 +348,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
       (registration, instance name, SMTP, the AI key of 0.5); env variables win and lock; secrets encrypted
       and write-only.
 - [x] **UI:** CSS Modules on token variables, chart geometry shared with the phone, a design pass first.
-- [x] **Today** from the synced `settings.timeZone` (filled at onboarding, changed by hand; D37), fallback `TZ`;
+- [x] **Today** from the synced `settings.timeZone` (filled at onboarding, changed by hand; D37), fallback `DEFAULT_TIME_ZONE`;
       preferences from the synced `settings`.
 - [x] **Out:** desktop extras (bulk edit, CSV preview, print) until after release; browser e2e tests.
 
@@ -356,7 +356,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 
 | Step | Content | Depends on |
 |---|---|---|
-| 0.3a | Projection: typed `UserData`, drift tolerance, `today` from `settings.timeZone` | — |
+| 0.3a | Projection: typed `UserData`, drift tolerance, `today` from `settings.timeZone`; plan `docs/superpowers/plans/2026-09-26-0.3a-user-data.md` | — |
 | 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
 | 0.3c | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
 | 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |

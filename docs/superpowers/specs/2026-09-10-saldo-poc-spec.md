@@ -191,7 +191,7 @@ All synced entities share **sync metadata**:
 | `language` | `system \| it \| en \| fr \| de \| sv \| es \| pt` | `LANGUAGE_PREFERENCES`. Widened from `system \| it \| en` before any public build, so `SYNC_SCHEMA_VERSION` did not move; a later widening needs a changelog line. |
 | `theme` | `system \| dark \| light` | Design default dark. |
 | `onboardingCompletedAt` | ISO \| null | |
-| `timeZone` | IANA name \| absent | Where the user's day starts and ends, for everything the **server** computes (§17.1.5). Filled at onboarding from the device, changed only by the user in Profile: travelling does not move it. Optional, so rows written before it existed still parse. The phone keeps its own clock for what it computes locally. |
+| `timeZone` | IANA name \| absent | Where the user's day starts and ends, for everything the **server** computes (§17.1.5). Filled at onboarding from the device, changed only by the user in Profile: travelling does not move it. Optional, so rows written before it existed still parse. A phone that onboarded before it existed fills it on boot, once its settings row is synced. The phone keeps its own clock for what it computes locally. |
 
 Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLockEnabled`, `serverUrl`,
 `deviceId`, tokens, last sync cursor.
@@ -1630,7 +1630,8 @@ public. The decisions behind this section are D30–D36.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection. The projection may also read a single row where loading everything would be absurd:
   the attachment check of §10 (`requireAttachment`, today in `server/attachments/row.ts`) moves into it as
-  `loadAttachment(userId, id)`. The rule is kept by review, not by a lint or a test.
+  `loadAttachment(db, userId, id)`, which returns `found`, `missing` or `invalid`; `requireAttachment` stays as the HTTP
+  wrapper. The rule is kept by review, not by a lint or a test.
 - **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads all of the user's data on every
   request**, as the phone already does from SQLite (`repos.transactions.list()`). This is a known limit, not an
   oversight: a few years of data is tens of thousands of rows, parsed and validated per page. When it starts to show,
@@ -1691,9 +1692,11 @@ public. The decisions behind this section are D30–D36.
   `Intl.DateTimeFormat().resolvedOptions().timeZone` on `/onboarding`) and changed only from Profile, on the phone
   or the web. It does not follow the device when the user travels: a period closes where the user lives.
 - Fallback when the field is absent (a user onboarded before it existed) or not a zone `Intl` recognises (a
-  renamed zone, a hand edit): the instance's time zone, a new optional `TZ` variable that defaults to UTC. An
+  renamed zone, a hand edit): the instance's time zone, a new optional `DEFAULT_TIME_ZONE` variable that defaults to UTC (not
+  `TZ`: Vercel reserves that name, and in Node it also moves the process's local time). An
   invalid name is logged and never breaks a page.
-- The conversion from an instant to a `LocalDate` in a zone lives in `apps/web` (it needs `Intl`), not in core.
+- The conversion from an instant to a wall clock in a zone lives in `@saldo/i18n` (`wallClock`, it needs `Intl`),
+  not in core: the server's «today» and the phone's time-zone screen share it.
 
 #### 17.1.6 Preferences
 

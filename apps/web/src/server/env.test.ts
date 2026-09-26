@@ -17,6 +17,16 @@ const complete = {
 };
 
 describe('readEnv', () => {
+  it('defaults the fallback time zone to UTC, and rejects one Intl does not know', () => {
+    expect(readEnv(complete).defaultTimeZone).toBe('UTC');
+    expect(readEnv({ ...complete, DEFAULT_TIME_ZONE: 'Europe/Rome' }).defaultTimeZone).toBe(
+      'Europe/Rome',
+    );
+    expect(() => readEnv({ ...complete, DEFAULT_TIME_ZONE: 'Europe/Atlantis' })).toThrow(
+      /DEFAULT_TIME_ZONE/,
+    );
+  });
+
   it('parses a complete environment and splits the redirect schemes', () => {
     const env = readEnv(complete);
     expect(env.publicUrl).toBe('https://saldo.example.com');

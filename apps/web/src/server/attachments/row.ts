@@ -1,8 +1,7 @@
-import { type Attachment, attachmentSchema } from '@saldo/core';
-import { and, eq, isNull } from 'drizzle-orm';
-import { syncRows } from '../db/schema';
+import type { Attachment } from '@saldo/core';
 import type { ServerDatabase } from '../db/types';
 import { ApiError } from '../http/errors';
+import { loadAttachment } from '../userData/attachment';
 
 /**
  * The attachment row this upload or download is about (§10). Its absence is what enforces the
@@ -15,24 +14,12 @@ export async function requireAttachment(
   userId: string,
   id: string,
 ): Promise<Attachment> {
-  const [row] = await db
-    .select({ data: syncRows.data })
-    .from(syncRows)
-    .where(
-      and(
-        eq(syncRows.userId, userId),
-        eq(syncRows.entity, 'attachment'),
-        eq(syncRows.id, id),
-        isNull(syncRows.deletedAt),
-      ),
-    )
-    .limit(1);
-  if (row === undefined) {
+  const lookup = await loadAttachment(db, userId, id);
+  if (lookup.status === 'missing') {
     throw new ApiError(404, 'not_found', 'No such attachment');
   }
-  const parsed = attachmentSchema.safeParse(row.data);
-  if (!parsed.success) {
+  if (lookup.status === 'invalid') {
     throw new ApiError(422, 'invalid_row', 'The stored attachment row is not readable');
   }
-  return parsed.data;
+  return lookup.attachment;
 }

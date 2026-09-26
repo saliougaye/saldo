@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "generate:currency-names": "node scripts/generate-currency-names.mjs"
+    "generate:currency-names": "node scripts/generate-currency-names.mjs",
+    "generate:time-zones": "node scripts/generate-time-zones.mjs"
   },
   "dependencies": {
     "@saldo/core": "workspace:*"

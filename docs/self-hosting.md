@@ -31,6 +31,7 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 | `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
 | `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
+| `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional, default `UTC`. The time zone the web app computes «today» in for a user whose settings carry none yet; every phone fills its own at onboarding, so this matters only for accounts created before that. Not `TZ`, which Vercel reserves. |
 
 Two things to know before you start:
 
@@ -185,6 +186,7 @@ values, so a secret put there is a secret published.
 | `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Must match the app's `SALDO_SCHEME` at build time. |
 | `TRUSTED_PROXIES` | — | Leave empty until you have looked at what Vercel sends; see below. |
+| `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional. Vercel does not let you set `TZ`; this is the one Saldo reads. |
 
 Plus whichever the storage driver needs: `BLOB_READ_WRITE_TOKEN` is injected by Vercel for
 `vercel-blob`, and `s3` takes the block documented under [attachments](#attachments).

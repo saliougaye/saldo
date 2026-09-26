@@ -1,3 +1,4 @@
+import { systemTimeZone } from '@saldo/i18n';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 import { deleteAllAttachmentFiles, readBytes, storeBytes } from '../attachments/localFiles';
@@ -6,6 +7,7 @@ import { db } from '../db/client';
 import { createClock } from '../db/clock';
 import { useDatabase } from '../db/DatabaseProvider';
 import { runMaterialiser } from '../db/recurrenceService';
+import { backfillTimeZone } from '../db/timeZone';
 import { usePeriod } from '../features/period/PeriodProvider';
 import { log } from '../log';
 import { uploadPendingBlobs } from './blobSync';
@@ -37,6 +39,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         api,
         deviceId: kv.deviceId(),
         // A pulled recurrence may owe occurrences; the materialiser is idempotent.
+        // D37: a phone that onboarded before the time zone existed tells the server its zone,
+        // once its settings are the account's.
+        afterPull: () => {
+          backfillTimeZone(db, repos, systemTimeZone());
+        },
         materialise: () => runMaterialiser(db, repos, today, def),
         syncBlobs: async () => {
           if (api === null) return;

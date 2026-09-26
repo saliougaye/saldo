@@ -1,5 +1,5 @@
 import { getCurrency } from '@saldo/core';
-import { LANGUAGE_NAMES } from '@saldo/i18n';
+import { canonicalTimeZone, LANGUAGE_NAMES, systemTimeZone, timeZoneCity } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
@@ -22,6 +22,7 @@ import { useAccounts, useSettings } from '../src/db/hooks';
 import { runMaterialiser } from '../src/db/recurrenceService';
 import { wipeDevice } from '../src/db/wipe';
 import { usePeriod } from '../src/features/period/PeriodProvider';
+import { useAppLocale } from '../src/i18n/useAppLocale';
 import { startOver } from '../src/navigation/history';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
@@ -42,6 +43,7 @@ export default function ProfileScreen() {
   const { today, def } = usePeriod();
   const [lockEnabled, setLockEnabled] = useState(kv.get('appLockEnabled') === 'true');
   const [resetOpen, setResetOpen] = useState(false);
+  const locale = useAppLocale();
 
   const currency = settings?.currency ?? 'EUR';
   const archived = accounts.filter((account) => account.archivedAt !== null).length;
@@ -57,6 +59,8 @@ export default function ProfileScreen() {
     dark: t('profile.dark'),
     light: t('profile.light'),
   }[settings?.theme ?? 'system'];
+  const device = systemTimeZone();
+  const zone = canonicalTimeZone(settings?.timeZone ?? device);
 
   return (
     <Screen refreshable>
@@ -99,6 +103,18 @@ export default function ProfileScreen() {
             leading={lead('bulb')}
             trailing={<Text color="textMuted">{themeLabel}</Text>}
             onPress={() => router.push('/profile/theme')}
+            chevron
+          />
+          <ListRow
+            title={t('profile.timeZone')}
+            subtitle={
+              zone === device
+                ? undefined
+                : t('timeZone.phoneIsIn', { city: timeZoneCity(device, locale) })
+            }
+            leading={lead('clock')}
+            trailing={<Text color="textMuted">{timeZoneCity(zone, locale)}</Text>}
+            onPress={() => router.push('/profile/timezone')}
             chevron
           />
         </View>

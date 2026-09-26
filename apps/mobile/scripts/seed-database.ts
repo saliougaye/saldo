@@ -74,6 +74,7 @@ if (repos.settings.get() === null) {
     selectedCategoryKeys: [],
     translate,
     completedAt: new Date().toISOString(),
+    timeZone: 'Europe/Rome',
   });
   for (const category of repos.categories.list()) repos.categories.remove(category.id);
   for (const account of repos.accounts.list()) repos.accounts.remove(account.id);

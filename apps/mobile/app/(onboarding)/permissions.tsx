@@ -6,6 +6,7 @@ import {
   type PermissionKey,
   todayLocal,
 } from '@saldo/core';
+import { systemTimeZone } from '@saldo/i18n';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -93,6 +94,7 @@ export default function PermissionsStep() {
       translate: (key) => t(`seed.${key}`),
       today: todayLocal(),
       completedAt: new Date().toISOString(),
+      timeZone: systemTimeZone(),
     });
     enterTabs(router);
   };
