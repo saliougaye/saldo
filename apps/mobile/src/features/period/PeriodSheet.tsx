@@ -158,6 +158,7 @@ export function PeriodSheet({ visible, onClose }: { visible: boolean; onClose: (
         visible={rangeOpen}
         initial={period.range}
         today={today}
+        maxDate={periodContaining(def, today).end}
         onApply={setAppliedRange}
         onClose={() => setRangeOpen(false)}
         onDismissed={() => {

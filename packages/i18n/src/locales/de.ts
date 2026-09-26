@@ -278,7 +278,6 @@ export const de: Messages = {
     title: 'Zeitraum',
     dayOf: 'Tag {{elapsed}} von {{length}}',
     closed: 'abgeschlossen',
-    startsOn: 'beginnt am {{date}}',
     inProgress: 'läuft, Tag {{elapsed}} von {{length}}',
     spent: '{{amount}} ausgegeben',
     custom: 'Eigener Zeitraum',

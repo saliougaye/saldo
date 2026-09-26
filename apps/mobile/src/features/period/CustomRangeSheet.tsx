@@ -11,7 +11,8 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
- * §6.15 "Periodo personalizzato": any range the user wants, not just a whole period.
+ * §6.15 "Periodo personalizzato": any range the user wants, not just a whole period — up to
+ * `maxDate`, the end of the current period, where the period navigation stops too.
  *
  * The same `Calendar` the transaction form uses, in its range mode — a second calendar would be a
  * second set of rules about what "today" looks like and where the week starts.
@@ -20,6 +21,7 @@ export function CustomRangeSheet({
   visible,
   initial,
   today,
+  maxDate,
   onApply,
   onClose,
   onDismissed,
@@ -27,6 +29,8 @@ export function CustomRangeSheet({
   visible: boolean;
   initial: DateRange;
   today: LocalDate;
+  /** The last day a range may reach: nothing past the current period is browsable (§6.15). */
+  maxDate: LocalDate;
   onApply: (range: DateRange) => void;
   onClose: () => void;
   /**
@@ -93,7 +97,7 @@ export function CustomRangeSheet({
           {end(t('period.customFrom'), range.start, 'start')}
           {end(t('period.customTo'), range.end, 'end')}
         </View>
-        <Calendar value={range} today={today} onSelect={select} />
+        <Calendar value={range} today={today} onSelect={select} maxDate={maxDate} />
         <PrimaryButton
           label={t('common.done')}
           onPress={() => {

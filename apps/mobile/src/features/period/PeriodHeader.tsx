@@ -1,4 +1,4 @@
-import { formatCycleRange, formatDayMonth } from '@saldo/i18n';
+import { formatCycleRange } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,14 +38,9 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
 
   // A custom range reads the same way a period does; only the subtitle below tells them apart.
   const label = formatCycleRange(period.range, locale, today);
-  // Navigation stops at the current period, but a custom range can lie ahead: it has not closed,
-  // it has not started, and its muted label keeps it from passing for the current period.
-  const ahead = period.range.start > today;
   const subtitle = period.isCurrent
     ? t('period.dayOf', { elapsed: period.elapsed, length: period.length })
-    : ahead
-      ? t('period.startsOn', { date: formatDayMonth(period.range.start, locale) })
-      : t('period.closed');
+    : t('period.closed');
 
   const navButton = (direction: -1 | 1) => {
     // Forward stops at the current period (§6.15): what comes next is in «In arrivo» and the
@@ -117,13 +112,7 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
             it already use single chevrons to *move* the period, and a third one pointing down
             would have read as more of the same. This is the shape a picker has. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <Text
-            weight="medium"
-            tracking="tight"
-            color={ahead ? 'textMuted' : 'text'}
-            numberOfLines={1}
-            style={{ flexShrink: 1 }}
-          >
+          <Text weight="medium" tracking="tight" numberOfLines={1} style={{ flexShrink: 1 }}>
             {label}
           </Text>
           <Icon name="chevUD" size={14} color={theme.palette.textFaint} />

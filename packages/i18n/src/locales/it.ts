@@ -276,7 +276,6 @@ export const it = {
     title: 'Periodo',
     dayOf: 'giorno {{elapsed}} di {{length}}',
     closed: 'periodo chiuso',
-    startsOn: 'inizia il {{date}}',
     inProgress: 'in corso, giorno {{elapsed}} di {{length}}',
     spent: '{{amount}} di uscite',
     custom: 'Periodo personalizzato',

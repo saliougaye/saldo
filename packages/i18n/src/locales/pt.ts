@@ -280,7 +280,6 @@ export const pt: Messages = {
     title: 'Período',
     dayOf: 'dia {{elapsed}} de {{length}}',
     closed: 'período fechado',
-    startsOn: 'começa a {{date}}',
     inProgress: 'em curso, dia {{elapsed}} de {{length}}',
     spent: '{{amount}} em despesas',
     custom: 'Período personalizado',
