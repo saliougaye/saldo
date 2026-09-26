@@ -1635,7 +1635,11 @@ public. The decisions behind this section are D30–D36.
   the options are, in order of cost: a cache keyed on the user's highest `seq`; loading transactions by date window
   through generated columns on `sync_rows` (`date`, `account_id`, `kind`, `amount`) with an index, and balances as a
   SQL sum pinned to `accountBalances` by a parity test; typed relational tables in place of `sync_rows`. Pages ask the
-  projection for data and never touch storage, so any of these changes the projection alone.
+  projection for data and never touch storage. The cache and relational tables change the projection alone; loading
+  by date window also changes what pages ask for, because the API in 0.3 is one call that returns everything.
+- **One call, loaded once per request.** `loadUserData(userId)` returns the whole `UserData`, wrapped in React's
+  `cache()` so a layout and a page in the same request share one load. No query-shaped API in 0.3: core's functions
+  take whole arrays, and balances and the forecast read the whole history anyway.
 - **Recurring occurrences are not materialised by the server in 0.3.** The web shows the occurrences a phone has
   already generated and synced. Server-side materialisation is an open question for a later milestone.
 
