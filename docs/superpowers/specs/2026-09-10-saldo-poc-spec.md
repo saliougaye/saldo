@@ -1628,7 +1628,9 @@ public. The decisions behind this section are D30–D36.
   settings form on the web writes the whole row back, so a defaulted field (a language an older server does not
   know) replaces the real value on every device. Accepted: it needs a server rollback first.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
-  goes through the projection.
+  goes through the projection. The projection may also read a single row where loading everything would be absurd:
+  the attachment check of §10 (`requireAttachment`, today in `server/attachments/row.ts`) moves into it as
+  `loadAttachment(userId, id)`. The rule is kept by review, not by a lint or a test.
 - **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads all of the user's data on every
   request**, as the phone already does from SQLite (`repos.transactions.list()`). This is a known limit, not an
   oversight: a few years of data is tens of thousands of rows, parsed and validated per page. When it starts to show,
