@@ -409,6 +409,16 @@ export const en: Messages = {
       'A transaction with several tags counts in each, so the sum runs past the period total.',
     tagsUntagged_one: '{{count}} transaction without a tag · {{amount}}',
     tagsUntagged_other: '{{count}} transactions without a tag · {{amount}}',
+    lastAndForecast: '3 periods · 3 ahead',
+    legendForecast: 'Forecast',
+    legendRange: 'Min–max',
+    forecast: 'Forecast',
+    forecastEnd: 'By {{date}}, about {{amount}}',
+    forecastEndLabel: 'By {{date}}, about',
+    forecastSpend: 'Spending ~{{amount}}',
+    forecastRange: 'between {{min}} and {{max}}',
+    forecastHow:
+      'From the recurring transactions you’ve set up and the median of the last 6 periods. The band runs from the lightest to the heaviest of those 6. Transfers and excluded transactions don’t count.',
   },
   attachments: {
     add: 'Add an attachment',
@@ -1083,6 +1093,14 @@ export const en: Messages = {
       body: [
         'Saldo creates the next occurrences on its own, up to the end of the next period. Until their date comes you see them as “Upcoming”, and they don’t count in the totals.',
         'When you edit one, it asks whether the change is for that one only, the following ones too, or all of them. You’ll find them all under Transactions → Recurring.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Forecast',
+      summary: 'The next three periods, from what already repeats.',
+      body: [
+        'In Statistics, on the current period, Cashflow adds three forecast periods, dimmed. Each one adds your recurring transactions and anything already dated ahead to your usual free spending: the median of the last 6 periods.',
+        'The light band behind spending runs from the lightest period to the heaviest: that’s how much it can move. The balance starts from today’s net worth. It needs at least 3 periods of history, otherwise the forecast doesn’t appear.',
       ].join('\n\n'),
     },
     tags: {

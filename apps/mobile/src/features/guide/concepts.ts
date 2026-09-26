@@ -27,6 +27,7 @@ export const GUIDE_CONCEPTS = [
   { id: 'budgets', icon: 'target', section: 'plan', intro: false },
   { id: 'goals', icon: 'piggy', section: 'plan', intro: false },
   { id: 'recurring', icon: 'repeat', section: 'plan', intro: true },
+  { id: 'forecast', icon: 'trend', section: 'plan', intro: false },
   { id: 'tags', icon: 'tag', section: 'organize', intro: false },
   { id: 'hidden', icon: 'eyeOff', section: 'organize', intro: false },
   { id: 'data', icon: 'server', section: 'data', intro: false },

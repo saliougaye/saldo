@@ -308,7 +308,8 @@ historical columns as before; the detail (one row per forecast period with the m
 The line reads «Al {data} circa» so it works for every period kind, and the function is `forecastPeriods` («period» is
 the general word now).
 
-- [ ] Plan `docs/superpowers/plans/2026-09-26-forecast.md` — core function, chart, sheet, i18n, ⓘ `forecast`.
+- [x] Plan `docs/superpowers/plans/2026-09-26-forecast.md` — core function, chart, sheet, i18n, ⓘ `forecast`,
+      and the build.
 
 **Done when:** Statistics shows three dimmed forecast periods with a min/max band and a «Al {data} circa {amount}»
 row opening the sheet, hidden with fewer than 3 periods of history, and `forecastPeriods` is unit-tested in

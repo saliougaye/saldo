@@ -411,6 +411,16 @@ export const it = {
       'Una voce con più tag conta in ognuno, quindi la somma supera il totale del periodo.',
     tagsUntagged_one: '{{count}} voce senza tag · {{amount}}',
     tagsUntagged_other: '{{count}} voci senza tag · {{amount}}',
+    lastAndForecast: '3 periodi · 3 previsti',
+    legendForecast: 'Previsione',
+    legendRange: 'Min–max',
+    forecast: 'Previsione',
+    forecastEnd: 'Al {{date}} circa {{amount}}',
+    forecastEndLabel: 'Al {{date}} circa',
+    forecastSpend: 'Uscite ~{{amount}}',
+    forecastRange: 'tra {{min}} e {{max}}',
+    forecastHow:
+      'Dalle ricorrenze già impostate e dalla mediana degli ultimi 6 periodi. La fascia va dal periodo più leggero al più pesante fra quei 6. Trasferimenti e transazioni escluse non contano.',
   },
   attachments: {
     add: 'Aggiungi allegato',
@@ -1089,6 +1099,14 @@ export const it = {
       body: [
         'Saldo crea da solo le prossime occorrenze, fino alla fine del periodo dopo. Finché la data non arriva le vedi «In arrivo» e non contano nei totali.',
         'Quando ne modifichi una, ti chiede se vale solo per quella, anche per le successive o per tutte. Le trovi tutte in Transazioni → Ricorrenti.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Previsione',
+      summary: 'I prossimi tre periodi, da quello che si ripete già.',
+      body: [
+        'In Statistiche, sul periodo in corso, Flussi aggiunge tre periodi previsti, attenuati. Ognuno somma le ricorrenze e le voci già datate più avanti alla tua spesa libera solita: la mediana degli ultimi 6 periodi.',
+        'La fascia chiara dietro le uscite va dal periodo più leggero al più pesante: è quanto può cambiare. Il saldo parte dal patrimonio complessivo di oggi. Servono almeno 3 periodi di storico, altrimenti la previsione non compare.',
       ].join('\n\n'),
     },
     tags: {

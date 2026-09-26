@@ -414,6 +414,16 @@ export const fr: Messages = {
       'Une opération avec plusieurs tags compte dans chacun, donc la somme dépasse le total de la période.',
     tagsUntagged_one: '{{count}} opération sans tag · {{amount}}',
     tagsUntagged_other: '{{count}} opérations sans tag · {{amount}}',
+    lastAndForecast: '3 périodes · 3 prévues',
+    legendForecast: 'Prévision',
+    legendRange: 'Min–max',
+    forecast: 'Prévision',
+    forecastEnd: 'Au {{date}}, environ {{amount}}',
+    forecastEndLabel: 'Au {{date}}, environ',
+    forecastSpend: 'Dépenses ~{{amount}}',
+    forecastRange: 'entre {{min}} et {{max}}',
+    forecastHow:
+      'À partir de tes opérations récurrentes et de la médiane des 6 dernières périodes. La bande va de la période la plus légère à la plus lourde parmi ces 6. Les virements et les opérations exclues ne comptent pas.',
   },
   attachments: {
     add: 'Ajouter une pièce jointe',
@@ -1098,6 +1108,14 @@ export const fr: Messages = {
       body: [
         'Saldo crée tout seul les prochaines occurrences, jusqu’à la fin de la période suivante. Tant que leur date n’est pas arrivée, tu les vois « À venir » et elles ne comptent pas dans les totaux.',
         'Quand tu en modifies une, il te demande si c’est pour celle-ci seulement, aussi pour les suivantes ou pour toutes. Tu les retrouves toutes dans Opérations → Récurrentes.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Prévision',
+      summary: 'Les trois prochaines périodes, à partir de ce qui se répète déjà.',
+      body: [
+        'Dans Statistiques, sur la période en cours, Flux ajoute trois périodes prévues, atténuées. Chacune additionne tes récurrentes et ce qui est déjà daté plus tard à tes dépenses libres habituelles : la médiane des 6 dernières périodes.',
+        'La bande claire derrière les dépenses va de la période la plus légère à la plus lourde : c’est de combien elle peut varier. Le solde part de ton patrimoine total d’aujourd’hui. Il faut au moins 3 périodes d’historique, sinon la prévision n’apparaît pas.',
       ].join('\n\n'),
     },
     tags: {
