@@ -18,7 +18,7 @@ milestone bends one of them, the bend is written down here before it is built.
 ## The order, and what actually constrains it
 
 ```
-0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared ledger ──> 0.7 Public ──> 0.8 Marketing site ──> 0.9 Releases
+0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared finances ──> 0.7 Public ──> 0.8 Marketing site ──> 0.9 Releases
 ```
 
 Only five things in this order are dependencies; everything else is preference and can move.
@@ -26,7 +26,7 @@ Only five things in this order are dependencies; everything else is preference a
 | Before | After | Why |
 |---|---|---|
 | Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
-| Shared ledger (0.6) | Public (0.7) → Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
+| Shared finances (0.6) | Public (0.7) → Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
 | Everything | Public (0.7) → Releases (0.9) | a decision, taken 2026-09-22 |
 | Public (0.7) | Marketing site (0.8) → Releases (0.9) | the site links to the public repository, and is live before a release is announced (decided 2026-09-26) |
@@ -283,7 +283,7 @@ a sheet with the detail (spec §5.17, D29). For each forecast period:
 **Rules that carry over unchanged:**
 
 - Forecast is **derived, never stored**: one pure function in `@saldo/core` (`forecastCycles(input, today)`) with
-  injected `today`, unit-tested first. Screens only load the ledger and recurrences and render.
+  injected `today`, unit-tested first. Screens only load the transactions and recurrences and render.
 - Excluded transactions and transfers stay out, exactly as in every statistic. A recurrence that ends inside the
   horizon contributes only its remaining occurrences.
 - Fewer than 3 cycles of history → hide the forecast entirely, same as §5.7 hides the projection line when there is
@@ -329,7 +329,7 @@ projection that 0.4 and 0.5 need anyway.
 **Why it matters beyond the browser:** the web app, installable as a PWA, is how Saldo reaches people who
 will not sideload, without waiting for an App Store build.
 
-**What it builds for everyone after it:** the typed projection. Server code loads a ledger's rows from
+**What it builds for everyone after it:** the typed projection. Server code loads a user's rows from
 `sync_rows`, validates them against `entitySchemas`, and hands them to the same pure functions the phone
 calls. No calculation is written twice; if the web app shows a number the phone does not, one of them is wrong.
 
@@ -337,8 +337,8 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 
 - [x] **Where:** the root of the instance (`/`), not a subdomain: the passkey and the cookie stay on one
       origin. `/admin` is the admin panel. The marketing site moves to its own app, `apps/site` (see 0.8).
-- [x] **Shared ledger: not prepared for.** Queries stay `where user_id = ?` like the sync. The shared
-      ledger (0.6) ships before the release, so it changes the key with no production rows to migrate (D31).
+- [x] **Shared finances: not prepared for.** Queries stay `where user_id = ?` like the sync. Shared
+      finances (0.6) ships before the release, so it changes the key with no production rows to migrate (D31).
 - [x] **Read and write:** the web writes transactions, accounts, categories, tags, budgets and settings as a
       server-side sync client (server HLC, same upsert as push). Recurrences and attachments stay phone-only.
       Server-side materialisation of recurrences: not now.
@@ -355,7 +355,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 
 | Step | Content | Depends on |
 |---|---|---|
-| 0.3a | Projection: typed `Ledger`, drift tolerance, `today` from the `tz` cookie | — |
+| 0.3a | Projection: typed `UserData`, drift tolerance, `today` from the `tz` cookie | — |
 | 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
 | 0.3c | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
 | 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |
@@ -370,7 +370,7 @@ server code reads rows.
 
 ---
 
-## 0.4 — MCP server: the user's own assistant reads the ledger
+## 0.4 — MCP server: the user's own assistant reads their data
 
 Idea from 2026-09-22. The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint so
 an assistant the user already runs (Claude, or any MCP client) can ask «quanto ho speso in Spesa questo ciclo?»
@@ -436,7 +436,7 @@ URL, model id configurable.
 
 Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.2 — never raw
 descriptions unless the user opts in; results cached per cycle. **Only if 0.4 has not made it redundant**: a
-user whose assistant already reads the ledger through MCP may not need Saldo to hold a key for this.
+user whose assistant already reads their data through MCP may not need Saldo to hold a key for this.
 
 **To decide before planning:**
 
@@ -452,7 +452,7 @@ user whose assistant already reads the ledger through MCP may not need Saldo to 
 key never contacts a provider, and §18 says exactly what leaves the server and when.
 ---
 
-## 0.6 — Shared ledger
+## 0.6 — Shared finances
 
 Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
 households from the POC; this is the note that it is the next non-goal to fall.
@@ -460,7 +460,7 @@ households from the POC; this is the note that it is the next non-goal to fall.
 **Before the release, decided when it starts** (changed 2026-09-26). It was meant to be decided before 0.3 so
 the web app would not be rewritten. It ships before 0.7, 0.8 and 0.9 instead, while there are still no production
 rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
-not of anybody's ledger. 0.3 and 0.4 do not prepare for it.
+not of anybody's real data. 0.3 and 0.4 do not prepare for it.
 
 Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
 local rows) was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two
@@ -483,8 +483,8 @@ below) there is no shared key to distribute, which is the part that made «space
 - [ ] Which shape, or which first. Spendee's **shared wallet** (share one wallet, not the whole account) is
       the lead candidate. Accounts carry a real email from 0.3 (D32), which is how a member would be invited.
 - [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
-      server are not served. A shared ledger either keeps that line or has to earn its removal.
-- [ ] Spec section (`§5.x Shared ledger`), then the plan.
+      server are not served. Shared finances either keep that line or have to earn its removal.
+- [ ] Spec section (`§5.x Shared finances`), then the plan.
 
 **Done when:** two phones with two passkeys see the same transactions, budgets and accounts, and the
 10b stopgap label comes off.
@@ -587,7 +587,7 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
       plan.
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
-the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no ledger.
+the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no user data.
 
 **Done when:** the marketing site and the docs library are live on the public domain, every call to action
 reaches the public repository or a guide, and each docs page renders from the Markdown file in `docs/` it

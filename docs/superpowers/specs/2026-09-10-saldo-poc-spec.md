@@ -84,9 +84,9 @@ cycle, and am I going faster than I should?*
 | D27 | **A closed period is recapped once, in a sheet** (decided 2026-09-25): on the first open of a new period, for every kind including the week, a full-screen sheet recaps the period that just closed (§5.15), with a 09:00 notification that day. Once dismissed it cannot be reopened, and it is not shareable as an image | The switch to a new period was silent. A sheet makes it a moment; every kind gets one because the user wants the week recapped too. Reopening past recaps and sharing them are later ideas: the first has to survive changes of period kind, the second needs a native capture dependency and a decision on what a shared image hides. |
 | D28 | **Saldo explains itself in three places, from one text** (decided 2026-09-26): a first-run intro of four ideas on one screen, an ⓘ next to what it explains opening a sheet, and a «Guida» in Profile with one page per concept. All three read `guide.<concept>.{title,summary,body}` through one typed list of concept ids (§5.16) | Nothing in the app said how it thinks: a period that restarts, «Rimasto da spendere» that is not a bank balance, a transfer that is not an expense. Apple's pattern — a few rows, «Continua», done — costs one tap; the ⓘ answers where the question comes up without coach marks or tooltips over the UI; the Guida is where the same text can be read again. One list of ids makes it impossible for the three to drift apart. A hint that compensates for an unclear label was fixed as a label instead (the generic «ciclo», «saldo disponibile»). Not a «Novità» sheet yet: there are no releases to compare (0.9). Mockup: `docs/superpowers/mockups/2026-09-26-guide-variants.html`, variants 1A, 2A, 3A |
 | D29 | **The forecast lives in Flussi and opens a sheet** (decided 2026-09-26, mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, variant «Finestra + dettaglio»): on the current period the cashflow chart keeps its six columns but shows 2 closed + current + 3 forecast; the row «Al {data} circa {saldo}» under it opens a sheet with one row per forecast period (§5.7, §5.17) | Nine columns did not fit 320px without abbreviating every label; a scroll inside the chart hides half of it and duplicates the header's ‹ ›; a separate card or a balance line added UI the roadmap had left out. Three closed periods are enough on screen because the header already walks back, and the medians still read six. |
-| D30 | **The web app is server-side, at the root of the instance** (decided 2026-09-22 and 2026-09-26, §17.1) | Server components read the ledger through one typed projection of `sync_rows` into `@saldo/core`, which 0.4 and 0.5 reuse. A browser running SQLite WASM would duplicate the phone's engine. The root rather than a subdomain keeps the passkey's RP id and the cookie on one origin, with nothing new for a self-hoster to configure. |
-| D31 | **The web app does not prepare for the shared ledger** (decided 2026-09-26) | Shared wallet or shared account is decided when that milestone starts, and it ships before the first release, so there are still no production rows to migrate then. Scoping queries for a model nobody has designed would guess at it; the web app keeps `where user_id = ?` like the sync, and the shared ledger changes both together. |
-| D32 | **An account has a real email** (decided 2026-09-26, §17.1.4) | It is how an admin, and later a shared ledger, knows who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
+| D30 | **The web app is server-side, at the root of the instance** (decided 2026-09-22 and 2026-09-26, §17.1) | Server components read the user's data through one typed projection of `sync_rows` into `@saldo/core`, which 0.4 and 0.5 reuse. A browser running SQLite WASM would duplicate the phone's engine. The root rather than a subdomain keeps the passkey's RP id and the cookie on one origin, with nothing new for a self-hoster to configure. |
+| D31 | **The web app does not prepare for shared finances** (decided 2026-09-26) | Shared wallet or shared account is decided when that milestone starts, and it ships before the first release, so there are still no production rows to migrate then. Scoping queries for a model nobody has designed would guess at it; the web app keeps `where user_id = ?` like the sync, and shared finances change both together. |
+| D32 | **An account has a real email** (decided 2026-09-26, §17.1.4) | It is how an admin, and later shared finances, know who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
 | D33 | **Product settings live in the database and change from `/admin`; infrastructure stays in the environment** (decided 2026-09-26, §17.1.8) | A self-hoster should not edit env files and restart to open registration or set an AI key. An env variable that sets the same thing wins and locks it, so existing deployments keep working. Secrets are encrypted at rest and write-only in the UI. |
 | D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
 | D35 | **The marketing site and docs library are their own app, `apps/site`** (decided 2026-09-26, supersedes the roadmap's «inside `apps/web`») | An instance build should not carry, or need a flag to hide, a site that advertises the project. `apps/site` shares `@saldo/ui` and `@saldo/i18n` and reads the Markdown in `docs/` in place. |
@@ -1602,10 +1602,12 @@ public. The decisions behind this section are D30–D36.
 
 #### 17.1.2 The projection: the only way server code reads rows
 
-- `apps/web/src/server/ledger/` loads a user's live rows from `sync_rows` (tombstones excluded), parses each
-  with `entitySchemas[entity]` and returns a typed `Ledger` (`settings`, `accounts`, `categories`, `tags`,
-  `transactions`, `recurrences`, `budgets`, `attachments`).
-- Pages hand the `Ledger` to the same `@saldo/core` functions the phone calls: period bounds, totals, budgets,
+- `apps/web/src/server/userData/` loads a user's live rows from `sync_rows` (tombstones excluded), parses each
+  with `entitySchemas[entity]` and returns a typed `UserData` (`settings`, `accounts`, `categories`, `tags`,
+  `transactions`, `recurrences`, `budgets`, `attachments`). `UserData` is the shape the backup already has
+  (`BackupData`, §11.1), moved to `@saldo/core` so that the backup, the web, MCP and AI share one type. The server
+  may hold no `settings` row yet (before onboarding); how `UserData` says so is settled in the plan.
+- Pages hand the `UserData` to the same `@saldo/core` functions the phone calls: period bounds, totals, budgets,
   target cards, statistics, the forecast. **No calculation is written twice**; if the web shows a number the phone
   does not, one of them is wrong.
 - **Schema drift is tolerated, not fatal.** The server ships with the web app and a phone can lag behind it or run
@@ -1613,7 +1615,7 @@ public. The decisions behind this section are D30–D36.
   stripped by Zod. One bad row never breaks a page.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection.
-- **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads the user's whole ledger on every
+- **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads all of the user's data on every
   request**, as the phone already does from SQLite (`repos.transactions.list()`). This is a known limit, not an
   oversight: a few years of data is tens of thousands of rows, parsed and validated per page. When it starts to show,
   the options are, in order of cost: a cache keyed on the user's highest `seq`; loading transactions by date window
@@ -1648,7 +1650,7 @@ public. The decisions behind this section are D30–D36.
 - `/register`: **email** plus the invite code when `REGISTRATION=invite`, then the passkey ceremony. The same
   email field is added to the phone's registration page at `/auth/mobile`.
 - **Email is required from now on (D32)** and replaces the synthetic `{id}@passkey.saldo.invalid` of §9.1. It is
-  lowercased and unique. It is an identifier (how an admin, and later a shared ledger, knows who somebody is),
+  lowercased and unique. It is an identifier (how an admin, and later shared finances, know who somebody is),
   **not a credential**: signing in stays passkey-only.
 - **Verification and recovery need SMTP, registration does not.** When the admin has configured SMTP
   (§17.1.8), the server sends a verification link and offers **account recovery** by magic link to a verified

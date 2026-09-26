@@ -438,7 +438,7 @@ appears.
 
 **This is a stopgap and is labelled one.** The proper fix is scoping the local rows, and the
 decision recorded on 2026-09-12 is not to write it yet: what the rows would be scoped *by* is not
-the account. Sharing a ledger between people needs an owning entity on the server — `sync_rows` is
+the account. Sharing data between people needs an owning entity on the server — `sync_rows` is
 keyed `(user_id, entity, id)` and the pull is `where user_id = ?` — and that entity, not the
 account, is what the phone would key on. Scoping by account now is work to redo under another name.
 

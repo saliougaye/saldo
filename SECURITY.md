@@ -55,7 +55,7 @@ you place in any machine you run yourself.
 **The admin of an instance can reach its database.** Roles and revocation keep a member from
 administering the instance; they do not pretend to keep the owner out of Postgres. If your threat
 model has two people who do not trust each other on one server, Saldo does not currently serve it —
-see the shared ledger milestone in [`ROADMAP.md`](ROADMAP.md).
+see the shared finances milestone in [`ROADMAP.md`](ROADMAP.md).
 
 ## Supported versions
 
