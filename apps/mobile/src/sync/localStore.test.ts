@@ -121,6 +121,50 @@ describe('applyPull', () => {
     expect(repos.tags.byId(tag.id)?.name).toBe('remote');
   });
 
+  it('clears an optional field the newer remote row does not carry', () => {
+    // Whole-row LWW: a settings row written before `timeZone` existed wins over the local one, so
+    // the local zone must go too, or the phone and the server disagree for good.
+    const { db, kv, clock, repos } = createTestContext();
+    repos.settings.create({
+      periodKind: 'month',
+      cycleStartDay: 27,
+      currency: 'EUR',
+      language: 'system',
+      theme: 'system',
+      onboardingCompletedAt: null,
+      timeZone: 'Europe/Rome',
+    });
+    const updatedAt = '999999999999999-0000-device-b';
+    applyPull({
+      db,
+      kv,
+      clock,
+      changes: [
+        {
+          entity: 'settings',
+          id: 'settings',
+          updatedAt,
+          deletedAt: null,
+          seq: 1,
+          data: {
+            id: 'settings',
+            createdAt: '2026-09-01T10:00:00.000Z',
+            updatedAt,
+            deletedAt: null,
+            periodKind: 'month',
+            cycleStartDay: 27,
+            currency: 'USD',
+            language: 'system',
+            theme: 'system',
+            onboardingCompletedAt: null,
+          },
+        },
+      ],
+      nextSince: 1,
+    });
+    expect(repos.settings.get()).toMatchObject({ currency: 'USD', timeZone: null });
+  });
+
   it('applies a tombstone', () => {
     const { db, kv, clock, repos } = createTestContext();
     const tag = repos.tags.create({ name: 'local' });

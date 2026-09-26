@@ -4,7 +4,7 @@ import {
   type SyncChangeEnvelope,
   shouldApplyRemote,
 } from '@saldo/core';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import type { Clock } from '../db/clock';
 import type { KvStore } from '../db/kv';
 import { PENDING, type RepositoryDatabase, SYNC_ERROR, SYNCED } from '../db/repositories/support';
@@ -115,6 +115,23 @@ export interface ApplyPullOutcome {
 }
 
 /**
+ * A pulled row replaces the local one whole (LWW, §8.3), but an optional field it does not carry is
+ * simply absent from the parsed data, and an upsert leaves absent columns alone. Each such column
+ * is set to null here, so a row written before the field existed also clears it locally. Columns
+ * that only mean something on this device are left alone.
+ */
+function absentAsNull<T extends object>(entity: SyncedEntityName, data: T): T {
+  const local = LOCAL_ONLY_COLUMNS[entity] ?? [];
+  const out: Record<string, unknown> = {};
+  Object.assign(out, data);
+  for (const [key, column] of Object.entries(getTableColumns(SYNCED_TABLES[entity]))) {
+    if (key in out || column.notNull || key === 'syncState' || local.includes(key)) continue;
+    out[key] = null;
+  }
+  return out as T;
+}
+
+/**
  * §8.3: applies a page and stores the cursor **in the same transaction as the rows**, so a crash
  * mid-page cannot leave the cursor ahead of the data it stands for.
  */
@@ -146,7 +163,7 @@ export function applyPull(input: ApplyPullInput): ApplyPullOutcome {
         outcome.skipped += 1;
         continue;
       }
-      const values = { ...parsed.data, syncState: SYNCED };
+      const values = { ...absentAsNull(entity, parsed.data), syncState: SYNCED };
       tx.insert(table).values(values).onConflictDoUpdate({ target: table.id, set: values }).run();
       outcome.applied += 1;
     }
