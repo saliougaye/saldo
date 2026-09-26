@@ -1613,8 +1613,13 @@ public. The decisions behind this section are D30–D36.
   stripped by Zod. One bad row never breaks a page.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection.
-- The projection loads the whole ledger on every request. A personal ledger is a few thousand rows; a cache keyed
-  on the user's highest `seq` is the first optimisation if that stops being true.
+- **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads the user's whole ledger on every
+  request**, as the phone already does from SQLite (`repos.transactions.list()`). This is a known limit, not an
+  oversight: a few years of data is tens of thousands of rows, parsed and validated per page. When it starts to show,
+  the options are, in order of cost: a cache keyed on the user's highest `seq`; loading transactions by date window
+  through generated columns on `sync_rows` (`date`, `account_id`, `kind`, `amount`) with an index, and balances as a
+  SQL sum pinned to `accountBalances` by a parity test; typed relational tables in place of `sync_rows`. Pages ask the
+  projection for data and never touch storage, so any of these changes the projection alone.
 - **Recurring occurrences are not materialised by the server in 0.3.** The web shows the occurrences a phone has
   already generated and synced. Server-side materialisation is an open question for a later milestone.
 
