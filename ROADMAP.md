@@ -18,17 +18,18 @@ milestone bends one of them, the bend is written down here before it is built.
 ## The order, and what actually constrains it
 
 ```
-0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared ledger ──> 0.7 Public ──> 0.8 Releases
+0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared ledger ──> 0.7 Public ──> 0.8 Marketing site ──> 0.9 Releases
 ```
 
-Only four things in this order are dependencies; everything else is preference and can move.
+Only five things in this order are dependencies; everything else is preference and can move.
 
 | Before | After | Why |
 |---|---|---|
 | Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
-| Shared ledger (0.6) | Public (0.7) → Releases (0.8) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
+| Shared ledger (0.6) | Public (0.7) → Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
-| Everything | Public (0.7) → Releases (0.8) | a decision, taken 2026-09-22 |
+| Everything | Public (0.7) → Releases (0.9) | a decision, taken 2026-09-22 |
+| Public (0.7) | Marketing site (0.8) → Releases (0.9) | the site links to the public repository, and is live before a release is announced (decided 2026-09-26) |
 
 Two decisions taken on 2026-09-22 shape the whole list:
 
@@ -198,7 +199,7 @@ How it is built:
   - labels fixed instead of explained: «ciclo» where the period in general is meant, «Includi nel saldo disponibile»
     → «Includi nel totale spendibile»;
   - **no «Novità» yet**: there are no releases to compare. The intro takes a list of ids, so a «Novità» after an
-    update reuses it once 0.8 exists.
+    update reuses it once 0.9 exists.
 - [x] Spec (D28, §5.16, §6.40–§6.42) and a mockup (`docs/superpowers/mockups/2026-09-26-guide-variants.html`: intro
   on one screen, ⓘ as a sheet with the whole text, Guida as grouped rows with the summary — variants 1A, 2A, 3A).
 - [x] Plan (`docs/superpowers/plans/2026-09-26-in-app-guide.md`) and build; checked on the iOS simulator.
@@ -335,7 +336,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 **Decided 2026-09-26** (spec §17.1, D30–D36):
 
 - [x] **Where:** the root of the instance (`/`), not a subdomain: the passkey and the cookie stay on one
-      origin. `/admin` is the admin panel. The marketing site moves to its own app, `apps/site` (see 0.7).
+      origin. `/admin` is the admin panel. The marketing site moves to its own app, `apps/site` (see 0.8).
 - [x] **Shared ledger: not prepared for.** Queries stay `where user_id = ?` like the sync. The shared
       ledger (0.6) ships before the release, so it changes the key with no production rows to migrate (D31).
 - [x] **Read and write:** the web writes transactions, accounts, categories, tags, budgets and settings as a
@@ -457,7 +458,7 @@ Saldo exists to replace Spendee's paid features (§1), and shared wallets is one
 households from the POC; this is the note that it is the next non-goal to fall.
 
 **Before the release, decided when it starts** (changed 2026-09-26). It was meant to be decided before 0.3 so
-the web app would not be rewritten. It ships before 0.7 and 0.8 instead, while there are still no production
+the web app would not be rewritten. It ships before 0.7, 0.8 and 0.9 instead, while there are still no production
 rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
 not of anybody's ledger. 0.3 and 0.4 do not prepare for it.
 
@@ -542,7 +543,16 @@ public either way.
       state of §6.30. That index is the first thing a visitor reads, so correct it before the repository is
       public: record what was actually exercised on the device, and leave the rest listed as still open.
 
-### Visibility: a marketing site and a docs library, in `apps/site`
+**Done when:** the repository is public at `github.com/saliougaye/saldo`, private vulnerability reporting
+is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
+`AGENTS.md` without hitting a 404 or a private path.
+
+---
+
+## 0.8 — Marketing website & docs library, in `apps/site`
+
+Its own milestone since 2026-09-26, between going public and the first release: the site is the page a release
+note, a Spendee forum post or a self-hosting list links to, so it is live before there is a release to announce.
 
 Asked for on 2026-09-24. A public repository is not a visible one: today a stranger's only way in is the
 README, and the only page Saldo serves is the fifteen-line landing page every instance shows
@@ -571,21 +581,21 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
     the existing Markdown in place without copying it.
   - Languages: Italian and English like the app, or English first. If both, the copy goes through
     `@saldo/i18n` like every other user-visible string.
-  - Whether the docs carry a version selector once 0.8 has tags, so a self-hoster reads the guide that
+  - Whether the docs carry a version selector once 0.9 has tags, so a self-hoster reads the guide that
     matches the release they run.
 - [ ] Spec section, a design pass on `@saldo/ui` tokens (no hard-coded colours, radii or font sizes), then the
       plan.
 
-Depends on: the slug and dead-link fixes above (the site links to the repository), and the docs being correct
-— the phase-index fix is part of that. It does **not** depend on 0.3: the marketing routes read no ledger.
+Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
+the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no ledger.
 
-**Done when:** the repository is public at `github.com/saliougaye/saldo`, private vulnerability reporting
-is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
-`AGENTS.md` without hitting a 404 or a private path, and the marketing site and the docs library are live.
+**Done when:** the marketing site and the docs library are live on the public domain, every call to action
+reaches the public repository or a guide, and each docs page renders from the Markdown file in `docs/` it
+claims to show.
 
 ---
 
-## 0.8 — Releases & distribution
+## 0.9 — Releases & distribution
 
 Self-hosting currently means building the server from source, and installing the app means owning a Mac
 or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found

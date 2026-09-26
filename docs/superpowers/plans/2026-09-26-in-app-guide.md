@@ -8,7 +8,7 @@ explanations: a first-run intro and a «Guida»»).
 - Intro **1A**: one screen, «Come ragiona Saldo», four rows (period, remaining, transfers, recurring), «Continua».
 - ⓘ **2A**: a muted `info` icon after the label opens a sheet with the concept's whole text and «Fatto».
 - Guida **3A**: grouped rows with icon, title and summary; a row pushes the concept's page.
-- No «Novità» sheet until there are releases (0.8).
+- No «Novità» sheet until there are releases (0.9).
 - Labels fixed instead of explained: the generic «ciclo» → «periodo» in every language that said «cycle» for the
   period in general; «Includi nel saldo disponibile» → «Includi nel totale spendibile» (it only).
 - «Already seen» is `kv.introSeenFor = settings.onboardingCompletedAt`, written on «Continua»; the intro waits for the
