@@ -26,7 +26,7 @@ Only four things in this order are dependencies; everything else is preference a
 | Before | After | Why |
 |---|---|---|
 | Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
-| **Deciding** the shape of the shared ledger | Web app (0.3), MCP (0.4) | every server-side query is scoped by the answer |
+| Shared ledger (0.6) | Public (0.7) → Releases (0.8) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
 | Everything | Public (0.7) → Releases (0.8) | a decision, taken 2026-09-22 |
 
@@ -336,8 +336,8 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 
 - [x] **Where:** the root of the instance (`/`), not a subdomain: the passkey and the cookie stay on one
       origin. `/admin` is the admin panel. The marketing site moves to its own app, `apps/site` (see 0.7).
-- [x] **Shared-ledger shape, as far as 0.3 needs it:** rows are keyed by `ledger_id`; every user has one
-      personal ledger whose id is the user id. Shared wallet or shared account stays a 0.6 decision.
+- [x] **Shared ledger: not prepared for.** Queries stay `where user_id = ?` like the sync. The shared
+      ledger (0.6) ships before the release, so it changes the key with no production rows to migrate (D31).
 - [x] **Read and write:** the web writes transactions, accounts, categories, tags, budgets and settings as a
       server-side sync client (server HLC, same upsert as push). Recurrences and attachments stay phone-only.
       Server-side materialisation of recurrences: not now.
@@ -354,19 +354,18 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 
 | Step | Content | Depends on |
 |---|---|---|
-| 0.3a | Ledger scoping: `ledgers`, `ledger_members`, `sync_rows` keyed by `ledger_id`, push/pull/export/delete through membership | — |
-| 0.3b | Projection: typed `Ledger`, drift tolerance, `today` from the `tz` cookie | 0.3a |
-| 0.3c | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
-| 0.3d | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
-| 0.3e | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | b, c, d |
-| 0.3f | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | e |
-| 0.3g | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | c |
-| 0.3h | PWA: manifest, icons, offline page | e |
+| 0.3a | Projection: typed `Ledger`, drift tolerance, `today` from the `tz` cookie | — |
+| 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
+| 0.3c | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
+| 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |
+| 0.3e | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | d |
+| 0.3f | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | b |
+| 0.3g | PWA: manifest, icons, offline page | d |
 
 **Done when:** a user registers on the web or signs in with the phone's passkey, sees Home, transactions and
 Statistics matching the phone to the cent, adds a transaction that reaches the phone on its next sync, and
 installs the app to the home screen; an admin runs the instance from `/admin`; the projection is the only way
-server code reads rows, and every query is scoped by ledger.
+server code reads rows.
 
 ---
 
@@ -457,9 +456,10 @@ key never contacts a provider, and §18 says exactly what leaves the server and 
 Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
 households from the POC; this is the note that it is the next non-goal to fall.
 
-**Built last among the product milestones, decided first.** Its shape fixes how every server-side query is
-scoped, so 0.3 and 0.4 need the answer before they start — and once they have it, building the ledger itself
-finds the web app and the MCP tools already reading the right rows.
+**Before the release, decided when it starts** (changed 2026-09-26). It was meant to be decided before 0.3 so
+the web app would not be rewritten. It ships before 0.7 and 0.8 instead, while there are still no production
+rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
+not of anybody's ledger. 0.3 and 0.4 do not prepare for it.
 
 Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
 local rows) was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two
@@ -479,11 +479,8 @@ below) there is no shared key to distribute, which is the part that made «space
 
 **To decide before planning:**
 
-- [ ] Which shape, or which first — Spendee's **shared wallet** (share one wallet, not the whole account) is
-      the lead candidate, to be rethought when this milestone starts. What had to be decided before 0.3 is
-      decided (2026-09-26, D31): rows are keyed by `ledger_id`, every user has a personal ledger, and
-      `ledger_members` exists, so either shape lands without rewriting the web app. Accounts also carry a real
-      email from 0.3 (D32), which is how a member is invited.
+- [ ] Which shape, or which first. Spendee's **shared wallet** (share one wallet, not the whole account) is
+      the lead candidate. Accounts carry a real email from 0.3 (D32), which is how a member would be invited.
 - [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
       server are not served. A shared ledger either keeps that line or has to earn its removal.
 - [ ] Spec section (`§5.x Shared ledger`), then the plan.

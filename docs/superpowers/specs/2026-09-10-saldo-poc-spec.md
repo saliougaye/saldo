@@ -85,10 +85,10 @@ cycle, and am I going faster than I should?*
 | D28 | **Saldo explains itself in three places, from one text** (decided 2026-09-26): a first-run intro of four ideas on one screen, an ⓘ next to what it explains opening a sheet, and a «Guida» in Profile with one page per concept. All three read `guide.<concept>.{title,summary,body}` through one typed list of concept ids (§5.16) | Nothing in the app said how it thinks: a period that restarts, «Rimasto da spendere» that is not a bank balance, a transfer that is not an expense. Apple's pattern — a few rows, «Continua», done — costs one tap; the ⓘ answers where the question comes up without coach marks or tooltips over the UI; the Guida is where the same text can be read again. One list of ids makes it impossible for the three to drift apart. A hint that compensates for an unclear label was fixed as a label instead (the generic «ciclo», «saldo disponibile»). Not a «Novità» sheet yet: there are no releases to compare (0.8). Mockup: `docs/superpowers/mockups/2026-09-26-guide-variants.html`, variants 1A, 2A, 3A |
 | D29 | **The forecast lives in Flussi and opens a sheet** (decided 2026-09-26, mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, variant «Finestra + dettaglio»): on the current period the cashflow chart keeps its six columns but shows 2 closed + current + 3 forecast; the row «Al {data} circa {saldo}» under it opens a sheet with one row per forecast period (§5.7, §5.17) | Nine columns did not fit 320px without abbreviating every label; a scroll inside the chart hides half of it and duplicates the header's ‹ ›; a separate card or a balance line added UI the roadmap had left out. Three closed periods are enough on screen because the header already walks back, and the medians still read six. |
 | D30 | **The web app is server-side, at the root of the instance** (decided 2026-09-22 and 2026-09-26, §17.1) | Server components read the ledger through one typed projection of `sync_rows` into `@saldo/core`, which 0.4 and 0.5 reuse. A browser running SQLite WASM would duplicate the phone's engine. The root rather than a subdomain keeps the passkey's RP id and the cookie on one origin, with nothing new for a self-hoster to configure. |
-| D31 | **Synced rows are scoped by ledger, not by user** (decided 2026-09-26, §17.1.3) | The shared ledger (0.6) is built last but changes the key of every server query. Every user gets a personal ledger now, with the user's id as its id, so 0.6 adds members and not a rewrite. What a shared ledger contains is left to 0.6. |
-| D32 | **An account has a real email** (decided 2026-09-26, §17.1.5) | It is how an admin, and later a shared ledger, knows who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
-| D33 | **Product settings live in the database and change from `/admin`; infrastructure stays in the environment** (decided 2026-09-26, §17.1.9) | A self-hoster should not edit env files and restart to open registration or set an AI key. An env variable that sets the same thing wins and locks it, so existing deployments keep working. Secrets are encrypted at rest and write-only in the UI. |
-| D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.8) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
+| D31 | **The web app does not prepare for the shared ledger** (decided 2026-09-26) | Shared wallet or shared account is decided when that milestone starts, and it ships before the first release, so there are still no production rows to migrate then. Scoping queries for a model nobody has designed would guess at it; the web app keeps `where user_id = ?` like the sync, and the shared ledger changes both together. |
+| D32 | **An account has a real email** (decided 2026-09-26, §17.1.4) | It is how an admin, and later a shared ledger, knows who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
+| D33 | **Product settings live in the database and change from `/admin`; infrastructure stays in the environment** (decided 2026-09-26, §17.1.8) | A self-hoster should not edit env files and restart to open registration or set an AI key. An env variable that sets the same thing wins and locks it, so existing deployments keep working. Secrets are encrypted at rest and write-only in the UI. |
+| D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
 | D35 | **The marketing site and docs library are their own app, `apps/site`** (decided 2026-09-26, supersedes the roadmap's «inside `apps/web`») | An instance build should not carry, or need a flag to hide, a site that advertises the project. `apps/site` shares `@saldo/ui` and `@saldo/i18n` and reads the Markdown in `docs/` in place. |
 | D36 | **The AI provider key is one per instance**, set by the admin in `/admin` (decided 2026-09-26, for 0.5) | One household per instance is the case Saldo serves; the admin pays and every client, phone and web, uses the same key. |
 
@@ -1039,8 +1039,6 @@ create index sync_rows_user_seq on sync_rows (user_id, seq);
 The upsert uses `INSERT … ON CONFLICT (user_id, entity, id) DO UPDATE … WHERE sync_rows.updated_at < excluded.updated_at`
 so concurrent pushes stay correct without application locks.
 
-From milestone 0.3 the key is `(ledger_id, entity, id)` instead of `(user_id, entity, id)` (D31, §17.1.3).
-
 ### 8.5 Scheduler (mobile)
 
 - Triggers: app start (after auth), app foreground, 2s debounce after local writes, every 60s while in foreground,
@@ -1106,7 +1104,7 @@ Notes that follow from using the library:
 - `verification` replaces `webauthn_challenges` and `auth_codes`.
 - `user.email` is required and unique, but a passkey-only account has no email, so it gets a synthetic address at
   `{id}@passkey.saldo.invalid` — RFC 2606 reserves `.invalid`, so the value can never route anywhere.
-  **Superseded by D32 (§17.1.5):** from milestone 0.3 registration asks for a real email.
+  **Superseded by D32 (§17.1.4):** from milestone 0.3 registration asks for a real email.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -1597,14 +1595,14 @@ public. The decisions behind this section are D30–D36.
 - **Why not a subdomain:** a passkey is bound to `WEBAUTHN_RP_ID`. On the same origin the phone's passkey works
   on the web with no configuration; a subdomain would ask every self-hoster for a second DNS record, a second
   certificate, a shared cookie domain and a parent-domain RP id.
-- `/admin/**` is the admin panel (§17.1.9). The public marketing site and docs library are **not** here: they are
+- `/admin/**` is the admin panel (§17.1.8). The public marketing site and docs library are **not** here: they are
   their own app, `apps/site`, with their own deploy (D35, roadmap 0.7).
 - Routes in 0.3: `/login`, `/register`, `/onboarding`, `/home`, `/transactions`, `/stats`, `/profile`,
   `/admin/**`.
 
 #### 17.1.2 The projection: the only way server code reads rows
 
-- `apps/web/src/server/ledger/` loads a ledger's live rows from `sync_rows` (tombstones excluded), parses each
+- `apps/web/src/server/ledger/` loads a user's live rows from `sync_rows` (tombstones excluded), parses each
   with `entitySchemas[entity]` and returns a typed `Ledger` (`settings`, `accounts`, `categories`, `tags`,
   `transactions`, `recurrences`, `budgets`, `attachments`).
 - Pages hand the `Ledger` to the same `@saldo/core` functions the phone calls: period bounds, totals, budgets,
@@ -1616,25 +1614,11 @@ public. The decisions behind this section are D30–D36.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection.
 - The projection loads the whole ledger on every request. A personal ledger is a few thousand rows; a cache keyed
-  on the ledger's highest `seq` is the first optimisation if that stops being true.
+  on the user's highest `seq` is the first optimisation if that stops being true.
 - **Recurring occurrences are not materialised by the server in 0.3.** The web shows the occurrences a phone has
   already generated and synced. Server-side materialisation is an open question for a later milestone.
 
-#### 17.1.3 Ledger scoping
-
-- Synced rows belong to a **ledger**, not a user: `sync_rows` is keyed `(ledger_id, entity, id)`, and the same goes
-  for every other table that holds ledger data (`deleted_blobs`, attachment ownership).
-- A new `ledgers` table (`id`, `owner_user_id`, `kind`, `created_at`) and a `ledger_members` table
-  (`ledger_id`, `user_id`, `role`). In 0.3 every user has exactly one ledger, `kind = 'personal'`, whose id equals
-  the user id, which keeps the migration a rename. It is created together with the account.
-- Push, pull, export and delete-all resolve the caller's ledger through `ledger_members`, never by using the
-  user id directly as a scope.
-- **This is only the key.** Which data a shared ledger holds and how members join it (shared wallet or shared
-  account) is decided in 0.6. The key makes both possible without rewriting the web app's queries.
-- There are no production users, so the migration rewrites the table in place. `SYNC_SCHEMA_VERSION` does not
-  change: the wire format is the same.
-
-#### 17.1.4 Writes from the web: the server as a sync client
+#### 17.1.3 Writes from the web: the server as a sync client
 
 - The web writes **transactions, accounts (including pockets and their goals), categories, tags, budgets and
   settings**. It does **not** create or edit recurrences and does not upload attachments in 0.3; both stay on the
@@ -1650,7 +1634,7 @@ public. The decisions behind this section are D30–D36.
   cycle day, as on the phone), which writes `settings` and the seed data of §4.2. How seed rows from the web and
   from a phone that onboarded offline avoid duplicating each other is resolved in the plan.
 
-#### 17.1.5 Authentication on the web
+#### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
   `requireUser` accepts either. A revoked user's session is refused on the next request.
@@ -1662,14 +1646,14 @@ public. The decisions behind this section are D30–D36.
   lowercased and unique. It is an identifier (how an admin, and later a shared ledger, knows who somebody is),
   **not a credential**: signing in stays passkey-only.
 - **Verification and recovery need SMTP, registration does not.** When the admin has configured SMTP
-  (§17.1.9), the server sends a verification link and offers **account recovery** by magic link to a verified
+  (§17.1.8), the server sends a verification link and offers **account recovery** by magic link to a verified
   address, which then lets the user register a new passkey. Without SMTP the email stays unverified and there is
   no recovery. Recovery makes the mailbox as strong as the passkey; `SECURITY.md` says so.
 - `/profile` lists the account's passkeys, and lets the user add, rename and delete them (never the last one),
   and sign out.
 - CSRF: Server Actions check the origin; Better Auth checks its own endpoints' origin against `PUBLIC_URL`.
 
-#### 17.1.6 «Today» on the server
+#### 17.1.5 «Today» on the server
 
 - The browser sets a `tz` cookie with its IANA time zone on first load. The server derives `today` as a
   `LocalDate` in that zone and injects it into core, as the phone does with its own clock.
@@ -1677,13 +1661,13 @@ public. The decisions behind this section are D30–D36.
   a new optional `TZ` variable that defaults to UTC.
 - The conversion from an instant to a `LocalDate` in a zone lives in `apps/web` (it needs `Intl`), not in core.
 
-#### 17.1.7 Preferences
+#### 17.1.6 Preferences
 
 The web reads the user's preferences from the synced `settings` row (language, currency, period kind, cycle day,
 theme) and writes them back there. There are no web-only preferences except the `tz` cookie. What is
 device-local on the phone (hidden mode, the lock) does not exist on the web in 0.3.
 
-#### 17.1.8 Interface
+#### 17.1.7 Interface
 
 - DOM components styled with **CSS Modules**. The `@saldo/ui` tokens become CSS custom properties generated from
   `tokens.ts`, so no colour, radius or font size is typed by hand. Strings go through `@saldo/i18n`, formatting
@@ -1700,7 +1684,7 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 - **PWA:** a web manifest, icons, and a minimal service worker that serves an offline page. No offline data: the
   web app is online-only by decision (roadmap 0.3).
 
-#### 17.1.9 Admin panel (`/admin`)
+#### 17.1.8 Admin panel (`/admin`)
 
 - Reachable by the `admin` role only (`requireAdmin`, §9.5). It puts a UI on functions that already exist behind
   `scripts/user.ts` and `scripts/invite.ts`, which stay.
@@ -1717,19 +1701,18 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   - Secret values (SMTP password, AI key) are encrypted at rest with AES-256-GCM under a new required variable,
     `SETTINGS_ENCRYPTION_KEY`, and are **write-only** in the panel: it shows «set» and «replace», never the value.
 
-#### 17.1.10 Not in 0.3
+#### 17.1.9 Not in 0.3
 
 Recurrence editing, attachment upload, the period recap sheet, server-side materialisation of recurrences,
 desktop-only features (bulk edit, CSV import with preview, printing: an improvement after release), offline
 data, end-to-end browser tests.
 
-#### 17.1.11 Done when
+#### 17.1.10 Done when
 
 A user registers on the web (email, passkey, and an invite where required), or signs in with the phone's passkey;
 sees Home, Transazioni and Statistiche matching the phone to the cent; adds and edits a transaction that reaches
 the phone on its next sync; installs the app to the home screen. An admin manages accounts, invites and server
-settings from `/admin`. The projection is the only way server code reads rows, and every query is scoped by
-ledger.
+settings from `/admin`. The projection is the only way server code reads rows.
 
 ### 17.2 AI receipt analysis (BYOK)
 
