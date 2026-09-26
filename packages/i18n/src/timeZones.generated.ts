@@ -423,6 +423,37 @@ export const TIME_ZONES: readonly string[] = [
   'UTC',
 ];
 
+/** A current IANA name → the id `TIME_ZONES` lists it under. */
+export const TIME_ZONE_ALIASES: Readonly<Record<string, string>> = {
+  'Africa/Asmara': 'Africa/Asmera',
+  'America/Argentina/Buenos_Aires': 'America/Buenos_Aires',
+  'America/Argentina/Catamarca': 'America/Catamarca',
+  'America/Argentina/Cordoba': 'America/Cordoba',
+  'America/Argentina/Jujuy': 'America/Jujuy',
+  'America/Argentina/Mendoza': 'America/Mendoza',
+  'America/Atikokan': 'America/Coral_Harbour',
+  'America/Indiana/Indianapolis': 'America/Indianapolis',
+  'America/Kentucky/Louisville': 'America/Louisville',
+  'America/Nuuk': 'America/Godthab',
+  'Asia/Chongqing': 'Asia/Shanghai',
+  'Asia/Ho_Chi_Minh': 'Asia/Saigon',
+  'Asia/Istanbul': 'Europe/Istanbul',
+  'Asia/Kathmandu': 'Asia/Katmandu',
+  'Asia/Kolkata': 'Asia/Calcutta',
+  'Asia/Ulan_Bator': 'Asia/Ulaanbaatar',
+  'Asia/Yangon': 'Asia/Rangoon',
+  'Atlantic/Faroe': 'Atlantic/Faeroe',
+  'Australia/Canberra': 'Australia/Sydney',
+  'Etc/GMT': 'UTC',
+  'Etc/UTC': 'UTC',
+  'Europe/Kyiv': 'Europe/Kiev',
+  'Europe/Uzhgorod': 'Europe/Kiev',
+  'Europe/Zaporozhye': 'Europe/Kiev',
+  'Pacific/Chuuk': 'Pacific/Truk',
+  'Pacific/Kanton': 'Pacific/Enderbury',
+  'Pacific/Pohnpei': 'Pacific/Ponape',
+};
+
 /** Per locale: the distinct generic names, and for each zone of `TIME_ZONES` the index of its name. */
 export const TIME_ZONE_GENERIC_NAMES = {
   it: {

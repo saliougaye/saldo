@@ -1,5 +1,12 @@
 import { groupTimeZones } from '@saldo/core';
-import { formatWallTime, TIME_ZONES, timeZoneCity, timeZoneName, wallClock } from '@saldo/i18n';
+import {
+  canonicalTimeZone,
+  formatWallTime,
+  TIME_ZONES,
+  timeZoneCity,
+  timeZoneName,
+  wallClock,
+} from '@saldo/i18n';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -42,14 +49,22 @@ export function TimeZoneList({ saved, device, now, onSelect }: TimeZoneListProps
       ),
     [locale],
   );
+  // Compared by the id the list holds: a phone reports Asia/Kolkata, CLDR lists Asia/Calcutta.
+  const here = canonicalTimeZone(device);
+  const current = canonicalTimeZone(saved ?? device);
+  const away = current !== here;
   const labelsOf = (zone: string) => [timeZoneCity(zone, locale), timeZoneName(zone, locale) ?? ''];
-  const groups = groupTimeZones({ query, saved, device, zones, labelsOf });
-  const time = (zone: string) => {
-    const clock = wallClock(zone, now);
-    return clock === null ? undefined : formatWallTime(clock);
-  };
-  const current = saved ?? device;
-  const away = current !== device;
+  const groups = groupTimeZones({ query, saved: current, device: here, zones, labelsOf });
+  // Read once per `now`, not on every keystroke of the search: a formatter per zone is the cost.
+  const times = useMemo(() => {
+    const out = new Map<string, string>();
+    for (const zone of [...TIME_ZONES, current, here]) {
+      const clock = wallClock(zone, now);
+      if (clock !== null) out.set(zone, formatWallTime(clock));
+    }
+    return out;
+  }, [now, current, here]);
+  const time = (zone: string) => times.get(zone);
 
   const rows = (list: string[]) => (
     <Card padded={false}>
@@ -76,15 +91,15 @@ export function TimeZoneList({ saved, device, now, onSelect }: TimeZoneListProps
             <IconBox name="plane" colour={theme.palette.textMuted} small />
             <Text style={{ flex: 1 }}>
               {t('timeZone.notice', {
-                city: timeZoneCity(device, locale),
-                time: time(device) ?? '',
+                city: timeZoneCity(here, locale),
+                time: time(here) ?? '',
                 saved: timeZoneCity(current, locale),
               })}
             </Text>
           </View>
           <PrimaryButton
-            label={t('timeZone.use', { city: timeZoneCity(device, locale) })}
-            onPress={() => onSelect(device)}
+            label={t('timeZone.use', { city: timeZoneCity(here, locale) })}
+            onPress={() => onSelect(here)}
           />
         </Card>
       ) : null}

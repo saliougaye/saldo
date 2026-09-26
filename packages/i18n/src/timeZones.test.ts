@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SUPPORTED_LOCALES } from './format';
 import { CITY_NAMES } from './timeZoneCities';
 import {
+  canonicalTimeZone,
   formatWallTime,
   isTimeZone,
   localDateOf,
@@ -11,7 +12,7 @@ import {
   timeZoneName,
   wallClock,
 } from './timeZones';
-import { TIME_ZONE_GENERIC_NAMES } from './timeZones.generated';
+import { TIME_ZONE_ALIASES, TIME_ZONE_GENERIC_NAMES } from './timeZones.generated';
 
 describe('time-zone data', () => {
   it('lists the zones people use, and UTC', () => {
@@ -31,7 +32,30 @@ describe('time-zone data', () => {
   });
 });
 
+describe('canonicalTimeZone', () => {
+  it('maps a current name to the id the list holds, and leaves listed ids alone', () => {
+    expect(canonicalTimeZone('Asia/Kolkata')).toBe('Asia/Calcutta');
+    expect(canonicalTimeZone('Europe/Kyiv')).toBe('Europe/Kiev');
+    expect(canonicalTimeZone('Etc/UTC')).toBe('UTC');
+    expect(canonicalTimeZone('Europe/Rome')).toBe('Europe/Rome');
+  });
+
+  it('only aliases names the list lacks, onto ids it has', () => {
+    for (const [name, target] of Object.entries(TIME_ZONE_ALIASES)) {
+      expect(TIME_ZONES, name).not.toContain(name);
+      expect(TIME_ZONES, name).toContain(target);
+    }
+  });
+});
+
 describe('timeZoneCity', () => {
+  it('shows the current name of a renamed city, in every language', () => {
+    expect(timeZoneCity('Asia/Calcutta', 'it')).toBe('Kolkata');
+    expect(timeZoneCity('Asia/Kolkata', 'de')).toBe('Kolkata');
+    expect(timeZoneCity('Europe/Kyiv', 'fr')).toBe('Kyiv');
+    expect(timeZoneName('Asia/Kolkata', 'en')).toBe(timeZoneName('Asia/Calcutta', 'en'));
+  });
+
   it('translates a common city and falls back to IANA’s English', () => {
     expect(timeZoneCity('Europe/Rome', 'it')).toBe('Roma');
     expect(timeZoneCity('Europe/Rome', 'en')).toBe('Rome');

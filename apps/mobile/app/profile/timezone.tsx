@@ -1,4 +1,4 @@
-import { systemTimeZone } from '@saldo/i18n';
+import { canonicalTimeZone, systemTimeZone } from '@saldo/i18n';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRepositories } from '../../src/db/DatabaseProvider';
@@ -22,7 +22,9 @@ export default function TimeZoneSetting() {
         device={device}
         now={now}
         onSelect={(zone) => {
-          if (zone !== saved) repos.settings.update({ timeZone: zone });
+          if (saved === null || zone !== canonicalTimeZone(saved)) {
+            repos.settings.update({ timeZone: zone });
+          }
         }}
       />
     </SettingScreen>

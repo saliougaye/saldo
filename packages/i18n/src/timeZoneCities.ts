@@ -2,8 +2,11 @@ import type { AppLocale } from './format';
 
 /**
  * Cities people are likely to look for, in each language (§6.8 Fuso orario). `Intl` has no API
- * for CLDR's exemplar cities, so every other zone shows IANA's English city: «Algiers», «Kolkata».
+ * for CLDR's exemplar cities, so every other zone shows IANA's English city: «Algiers».
  * Only names that differ from IANA's are listed. Keys are ids of `TIME_ZONES`; a test checks it.
+ *
+ * `en` also carries the current name of every city CLDR files under an old id (Calcutta, Kiev,
+ * Saigon): it is the fallback for every language, so no one is shown a name the city dropped.
  */
 export const CITY_NAMES: Record<AppLocale, Readonly<Record<string, string>>> = {
   it: {
@@ -28,9 +31,18 @@ export const CITY_NAMES: Record<AppLocale, Readonly<Record<string, string>>> = {
     'Europe/Zurich': 'Zurigo',
   },
   en: {
+    'Africa/Asmera': 'Asmara',
+    'America/Godthab': 'Nuuk',
     'America/Sao_Paulo': 'São Paulo',
     'Asia/Calcutta': 'Kolkata',
+    'Asia/Katmandu': 'Kathmandu',
+    'Asia/Rangoon': 'Yangon',
+    'Asia/Saigon': 'Ho Chi Minh City',
+    'Atlantic/Faeroe': 'Faroe',
     'Europe/Kiev': 'Kyiv',
+    'Pacific/Enderbury': 'Kanton',
+    'Pacific/Ponape': 'Pohnpei',
+    'Pacific/Truk': 'Chuuk',
   },
   fr: {
     'Africa/Algiers': 'Alger',

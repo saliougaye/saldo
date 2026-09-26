@@ -1,22 +1,31 @@
 import { type LocalDate, makeLocalDate } from '@saldo/core';
 import type { AppLocale } from './format';
 import { CITY_NAMES } from './timeZoneCities';
-import { TIME_ZONE_GENERIC_NAMES, TIME_ZONES } from './timeZones.generated';
+import { TIME_ZONE_ALIASES, TIME_ZONE_GENERIC_NAMES, TIME_ZONES } from './timeZones.generated';
 
 export { TIME_ZONES };
+
+/**
+ * The id `TIME_ZONES` lists a zone under: `Asia/Kolkata`, as phones report it, is CLDR's
+ * `Asia/Calcutta`. Compare zones only after this, or a renamed one never equals itself.
+ */
+export function canonicalTimeZone(zone: string): string {
+  return TIME_ZONE_ALIASES[zone] ?? zone;
+}
 
 const POSITION = new Map(TIME_ZONES.map((zone, index) => [zone, index]));
 
 /** «Roma», «Zürich», «Los Angeles»: the city a zone is named after, in the app's language. */
 export function timeZoneCity(zone: string, locale: AppLocale): string {
-  const translated = CITY_NAMES[locale][zone];
+  const id = canonicalTimeZone(zone);
+  const translated = CITY_NAMES[locale][id] ?? CITY_NAMES.en[id];
   if (translated !== undefined) return translated;
-  return (zone.split('/').at(-1) ?? zone).replaceAll('_', ' ');
+  return (id.split('/').at(-1) ?? id).replaceAll('_', ' ');
 }
 
 /** «Ora dell’Europa centrale»; undefined for an id CLDR does not list. */
 export function timeZoneName(zone: string, locale: AppLocale): string | undefined {
-  const position = POSITION.get(zone);
+  const position = POSITION.get(canonicalTimeZone(zone));
   if (position === undefined) return undefined;
   const table = TIME_ZONE_GENERIC_NAMES[locale];
   const index = table.of[position];
@@ -96,8 +105,11 @@ export function formatWallTime(clock: WallClock): string {
   return `${pad2(clock.hour)}:${pad2(clock.minute)}`;
 }
 
-/** The zone this device or browser runs in, or UTC if it reports nothing usable. */
+/**
+ * The zone this device or browser runs in, as `TIME_ZONES` lists it, or UTC if it reports nothing
+ * usable.
+ */
 export function systemTimeZone(): string {
   const zone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return typeof zone === 'string' && isTimeZone(zone) ? zone : 'UTC';
+  return typeof zone === 'string' && isTimeZone(zone) ? canonicalTimeZone(zone) : 'UTC';
 }

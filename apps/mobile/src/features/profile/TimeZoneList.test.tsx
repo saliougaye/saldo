@@ -64,6 +64,15 @@ describe('TimeZoneList', () => {
     expect(screen.queryByRole('button', { name: /Tokyo/ })).toBeNull();
   });
 
+  it('treats a renamed zone as the same zone', async () => {
+    // Phones report Asia/Kolkata; CLDR lists it as Asia/Calcutta.
+    await show({ saved: 'Asia/Kolkata', device: 'Asia/Calcutta' });
+    expect(screen.queryByText(/Il telefono è su/)).toBeNull();
+    expect(screen.getByRole('button', { name: /Kolkata/ }).props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+  });
+
   it('says so when nothing matches', async () => {
     await show({ saved: 'Europe/Rome', device: 'Europe/Rome' });
     await userEvent.type(screen.getByLabelText('Cerca una città'), 'atlantide');

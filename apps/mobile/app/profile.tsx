@@ -1,5 +1,5 @@
 import { getCurrency } from '@saldo/core';
-import { LANGUAGE_NAMES, systemTimeZone, timeZoneCity } from '@saldo/i18n';
+import { canonicalTimeZone, LANGUAGE_NAMES, systemTimeZone, timeZoneCity } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
     light: t('profile.light'),
   }[settings?.theme ?? 'system'];
   const device = systemTimeZone();
-  const zone = settings?.timeZone ?? device;
+  const zone = canonicalTimeZone(settings?.timeZone ?? device);
 
   return (
     <Screen refreshable>
