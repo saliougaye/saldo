@@ -221,6 +221,8 @@ export const layout = {
   cardGap: 10,
   iconBox: 32,
   iconBoxSmall: 26,
+  /** The icon of an explanation (§6.40–§6.42): the intro's rows, the ⓘ sheet, a Guida page. */
+  iconBoxLarge: 44,
   headerButton: 34,
   tabBarHeight: 78,
   fabSize: 56,

@@ -247,7 +247,7 @@ export const de: Messages = {
     createTag: '„{{name}}“ anlegen',
     repeat: 'Wiederholen',
     exclude: 'Aus Summen ausnehmen',
-    excludeNote: 'Die Buchung zählt im Kontostand, aber nicht in den Summen des Zyklus.',
+    excludeNote: 'Die Buchung zählt im Kontostand, aber nicht in den Summen des Zeitraums.',
     details: 'Details',
     detailsNone: 'Nichts festgelegt',
     detailsTags_one: '{{count}} Tag',
@@ -333,7 +333,7 @@ export const de: Messages = {
     untilDate: 'bis {{date}}',
     recurringNote: 'Wiederkehrend, {{cadence}}',
     recurringRow: 'Wiederholung',
-    createsUpcoming: 'Legt auch die nächsten Vorkommen bis zum Ende des nächsten Zyklus an',
+    createsUpcoming: 'Legt auch die nächsten Vorkommen bis zum Ende des nächsten Zeitraums an',
     cardSubtitle_one: '{{count}} aktiv · nächste: {{name}} am {{date}}',
     cardSubtitle_other: '{{count}} aktiv · nächste: {{name}} am {{date}}',
     perMonth: '{{amount}}/Monat',
@@ -374,16 +374,16 @@ export const de: Messages = {
     resetDone: 'Handy zurückgesetzt',
   },
   stats: {
-    cycleTrend: 'Verlauf des Zyklus',
-    trendFooter: 'Tag {{elapsed}} von {{length}} · Schnitt der 3 vorherigen Zyklen in Grau',
+    cycleTrend: 'Verlauf des Zeitraums',
+    trendFooter: 'Tag {{elapsed}} von {{length}} · Schnitt der 3 vorherigen Zeiträume in Grau',
     title: 'Statistik',
     cashflow: 'Cashflow',
     committed: 'Fixanteil',
     committedLine:
-      '{{pct}} % dieses Zyklus standen von Anfang an fest: {{amount}} für Miete, Nebenkosten und Abos.',
+      '{{pct}} % dieses Zeitraums standen von Anfang an fest: {{amount}} für Miete, Nebenkosten und Abos.',
     committedBar: 'Fix',
     discretionaryBar: 'Frei',
-    projection: 'Prognose zum Zyklusende',
+    projection: 'Prognose zum Ende des Zeitraums',
     projectionAbove: 'Etwa {{amount}} über dem Üblichen, wenn es so weitergeht.',
     projectionBelow: 'Etwa {{amount}} unter dem Üblichen, wenn es so weitergeht.',
     split: 'Aufteilung',
@@ -395,13 +395,13 @@ export const de: Messages = {
     ofTotal: '{{pct}} % der Summe',
     seeAll_one: '{{count}} Kategorie insgesamt',
     seeAll_other: 'Alle {{count}} Kategorien',
-    lastCycles: 'Letzte 6 Zyklen',
+    lastCycles: 'Letzte 6 Zeiträume',
     legendIncome: 'Einnahmen',
     legendExpenses: 'Ausgaben',
-    legendCurrent: 'Laufender Zyklus',
+    legendCurrent: 'Laufender Zeitraum',
     legendPast: 'Abgeschlossene',
     median: 'Median {{amount}}',
-    average: 'Schnitt 6 Zyklen',
+    average: 'Schnitt 6 Zeiträume',
     subcategories: 'Unterkategorien',
     noSubcategory: 'Ohne Unterkategorie',
     empty: 'Keine Daten in diesem Zeitraum',
@@ -410,7 +410,7 @@ export const de: Messages = {
     tagsEmpty: 'Keine Tags in diesem Zeitraum',
     tagsFlows: 'Ausgaben · Einnahmen',
     tagsOverlap:
-      'Ein Eintrag mit mehreren Tags zählt in jedem, daher liegt die Summe über der des Zyklus.',
+      'Ein Eintrag mit mehreren Tags zählt in jedem, daher liegt die Summe über der des Zeitraums.',
     tagsUntagged_one: '{{count}} Eintrag ohne Tag · {{amount}}',
     tagsUntagged_other: '{{count}} Einträge ohne Tag · {{amount}}',
   },
@@ -608,7 +608,7 @@ export const de: Messages = {
     closed: 'Zeitraum beendet',
     ofLimit: 'von {{amount}}',
     amount: 'Betrag',
-    medianHint: 'Median der letzten 6 Zyklen: {{amount}}',
+    medianHint: 'Median der letzten 6 Zeiträume: {{amount}}',
     useMedian: 'Übernehmen',
     categories: 'Kategorien',
     missing_categories: 'Wähle mindestens eine Kategorie.',
@@ -616,7 +616,7 @@ export const de: Messages = {
     taken: '„{{name}}“ ist schon in einem anderen Budget',
     name: 'Name',
     repeats: 'Wiederholt sich',
-    periodCycle: 'Jeder Zyklus',
+    periodCycle: 'Jeder Zeitraum',
     periodWeek: 'Woche',
     periodYear: 'Jahr',
     alertAt: 'Hinweis bei',
@@ -633,7 +633,7 @@ export const de: Messages = {
     alertTitle: 'Budget {{name}}: {{pct}} % verbraucht',
     empty: 'Keine Budgets',
     emptyBody:
-      'Ein Budget setzt einer Kategorie ein Limit und warnt dich, wenn du schneller ausgibst, als der Monat vergeht.',
+      'Ein Budget setzt einer Kategorie ein Limit und warnt dich, wenn du schneller ausgibst, als der Zeitraum vergeht.',
   },
   accounts: {
     title: 'Konten',
@@ -855,7 +855,7 @@ export const de: Messages = {
   },
   home: {
     remaining: 'Noch verfügbar',
-    leftover: 'Übrig im Zyklus',
+    leftover: 'Übrig im Zeitraum',
     income: 'Einnahmen',
     expenses: 'Ausgaben',
     budget: 'Budget',
@@ -865,7 +865,7 @@ export const de: Messages = {
     recent: 'Letzte Buchungen',
     allTransactions: 'Alle Buchungen',
     dayOf: 'Tag {{elapsed}} von {{length}}',
-    closedCycle: 'Zyklus beendet',
+    closedCycle: 'Zeitraum beendet',
     overPace_one: '{{count}} über dem Tempo',
     overPace_other: '{{count}} über dem Tempo',
     withinLimits: 'im Rahmen',
@@ -1015,5 +1015,110 @@ export const de: Messages = {
     notification_week: 'Deine Woche ist vorbei: sieh dir die Übersicht an',
     notification_cycle: 'Dein Zyklus ist vorbei: sieh dir die Übersicht an',
     notification_year: 'Dein Jahr ist vorbei: sieh dir die Übersicht an',
+  },
+  guide: {
+    title: 'Anleitung',
+    subtitle: 'Wie Saldo denkt, eine Idee nach der anderen.',
+    introTitle: 'Wie Saldo denkt',
+    introFoot: 'Du findest sie, mit allen anderen, unter Profil → Anleitung.',
+    infoLabel: 'Erklärung: {{title}}',
+    section_basics: 'Grundlagen',
+    section_accounts: 'Konten',
+    section_plan: 'Planen',
+    section_organize: 'Ordnen',
+    section_data: 'Deine Daten',
+    period: {
+      title: 'Der Zeitraum',
+      summary:
+        'Start, Budgets und Statistik beginnen jeden Zeitraum neu: Monat, Woche, Gehaltszyklus oder Jahr.',
+      body: [
+        'Saldo betrachtet einen Zeitraum nach dem anderen, und du wählst, welchen: den Kalendermonat, die Woche, das Jahr oder den Gehaltszyklus, der an dem Tag beginnt, an dem dein Gehalt kommt.',
+        'Einen anderen Zeitraum zu wählen gruppiert deine Buchungen nur anders: Nichts verschiebt sich, nichts geht verloren. Mit ‹ › auf Start siehst du frühere Zeiträume.',
+      ].join('\n\n'),
+    },
+    remaining: {
+      title: 'Noch verfügbar',
+      summary: 'Die Einnahmen des Zeitraums minus seine Ausgaben, nicht dein Kontostand.',
+      body: [
+        'Ist das Gehalt dieses Zeitraums noch nicht erfasst, kann die Zahl negativ sein: Erfasse es, am besten als wiederkehrend.',
+        'Es zählen nur Einnahmen und Ausgaben bis heute. Umbuchungen, künftige Buchungen und solche mit „Aus Summen ausnehmen“ bleiben draußen, ändern aber trotzdem den Stand ihres Kontos.',
+        'Was wirklich auf deinen Konten liegt, steht im Tab Konten.',
+      ].join('\n\n'),
+    },
+    transfers: {
+      title: 'Umbuchungen',
+      summary: 'Geld zwischen zwei deiner Konten zu verschieben ist weder Ausgabe noch Einnahme.',
+      body: [
+        'Eine Umbuchung ändert die Stände der beiden Konten, sonst nichts: Sie berührt weder „Noch verfügbar“ noch die Statistik.',
+        'Auch das Ausgleichen der Kreditkarte ist eine Umbuchung, vom belasteten Konto auf die Karte: Die Ausgaben hast du schon erfasst, als du sie gemacht hast.',
+      ].join('\n\n'),
+    },
+    accountTypes: {
+      title: 'Kontoarten',
+      summary: 'Die Art entscheidet, ob ein Konto zum Verfügbaren zählt.',
+      body: [
+        'Bargeld, Girokonto und Karten sind Geld, das du ausgibst: Sie zählen zum Verfügbaren. Sparen und Anlagen bleiben draußen, zählen aber zum Vermögen. Pro Konto änderst du das mit „Zum Verfügbaren zählen“.',
+        'Eine Debitkarte ist ein eigenes Konto mit eigenem Stand: Leg sie an, wenn du sie getrennt auflädst, wie eine Prepaidkarte. Bucht sie vom Girokonto ab, erfasse die Ausgaben auf dem Girokonto.',
+      ].join('\n\n'),
+    },
+    creditCard: {
+      title: 'Kreditkarte',
+      summary: 'Ausgaben gehen auf die Karte; der Ausgleich am Monatsende ist eine Umbuchung.',
+      body: [
+        'Erfasse jeden Kauf auf der Karte, damit er in dem Zeitraum landet, in dem du ihn gemacht hast. Der Stand der Karte ist meist negativ: Das ist, was du schuldest.',
+        'Mit Abschlusstag, Abbuchungstag und belastetem Konto berechnet Saldo die Abrechnung und erinnert dich am Abbuchungstag. „Karte ausgleichen“ bereitet die Umbuchung mit dem richtigen Betrag vor.',
+      ].join('\n\n'),
+    },
+    budgets: {
+      title: 'Budgets',
+      summary:
+        'Eine Ausgabengrenze für eine oder mehrere Kategorien, die jeden Zeitraum neu beginnt.',
+      body: [
+        'Der Balken füllt sich, während du ausgibst. Der senkrechte Strich ist das Tempo: wo du heute sein solltest, um genau zum Ende des Zeitraums anzukommen. Jenseits des Strichs gibst du schneller aus als geplant.',
+        'Mit „Rest übertragen“ kommt, was du nicht ausgibst, zum nächsten Zeitraum dazu. Ein Budget kann auch für die Kalenderwoche, den Kalendermonat oder das Kalenderjahr gelten, egal welchen Zeitraum du nutzt.',
+      ].join('\n\n'),
+    },
+    goals: {
+      title: 'Ziele',
+      summary:
+        'Geld, das du in einem deiner Konten zurücklegst, auf einen Betrag hin und, wenn du willst, bis zu einem Datum.',
+      body: [
+        'Das Geld bleibt auf dem Konto, zählt aber nicht mehr zum Verfügbaren: Unter dem Konto siehst du, wie viel in Zielen steckt und wie viel frei ist.',
+        'Zurücklegen und Abheben sind Umbuchungen zwischen Konto und Ziel. Wenn du das Geld ausgibst, schließ das Ziel: Erfasse die Ausgabe oder bring das Geld aufs Konto zurück.',
+      ].join('\n\n'),
+    },
+    recurring: {
+      title: 'Wiederkehrend',
+      summary: 'Miete, Abos und Gehalt: einmal erfassen, mit „Wiederholen“.',
+      body: [
+        'Saldo legt die nächsten Vorkommen selbst an, bis zum Ende des nächsten Zeitraums. Bis ihr Datum kommt, siehst du sie als „Anstehend“, und sie zählen nicht in den Summen.',
+        'Änderst du eines, fragt Saldo, ob das nur für dieses gilt, auch für die folgenden oder für alle. Du findest sie alle unter Buchungen → Wiederkehrend.',
+      ].join('\n\n'),
+    },
+    tags: {
+      title: 'Kategorien und Tags',
+      summary: 'Jede Buchung hat eine Kategorie; Tags sind freiwillig, und es können mehrere sein.',
+      body: [
+        'Die Kategorie sagt, welche Art Ausgabe es ist: Statistik und Budgets nutzen sie. Ein Tag sammelt Buchungen aus verschiedenen Kategorien, auch über Zeiträume hinweg: eine Reise, ein Umzug, eine Erstattung, die noch aussteht.',
+        'Eine Buchung mit mehreren Tags zählt in jedem davon.',
+      ].join('\n\n'),
+    },
+    hidden: {
+      title: 'Verborgene Beträge',
+      summary:
+        'Das Auge verbirgt Summen und Kontostände, wenn jemand auf deinen Bildschirm schaut.',
+      body: [
+        'Einzelne Buchungen bleiben lesbar: Nur die Summen verschwinden. Es bleibt so, bis du es wieder antippst, auch wenn du die App schließt.',
+      ].join('\n\n'),
+    },
+    data: {
+      title: 'Deine Daten',
+      summary:
+        'Sie liegen auf diesem Telefon. Auch auf einem eigenen Server, wenn du einen verbindest.',
+      body: [
+        'Saldo funktioniert ohne Netz und ohne Konto. Verbindest du im Profil einen Saldo-Server, werden deine Daten zwischen deinen Geräten abgeglichen.',
+        'Ohne Server mach ab und zu eine Sicherung über Profil → Daten exportieren: Verlierst du das Telefon, ist sie die einzige Kopie.',
+      ].join('\n\n'),
+    },
   },
 };

@@ -89,7 +89,7 @@ describe('TagSpendCard', () => {
     expect(screen.getByText('1 transaction without a tag · €15.00')).toBeTruthy();
     expect(
       screen.getByText(
-        'A transaction with several tags counts in each, so the sum runs past the cycle total.',
+        'A transaction with several tags counts in each, so the sum runs past the period total.',
       ),
     ).toBeTruthy();
   });

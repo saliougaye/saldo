@@ -6,6 +6,7 @@ import { IconBox, ListRow } from '../../components/ListRow';
 import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 
 /**
  * "Addebitata su" (§6.22): the account a credit card is charged to, or none.
@@ -38,7 +39,12 @@ export function PaymentAccountSheet({
     isSelected ? <Icon name="check" size={16} color={theme.palette.accent} /> : undefined;
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('accounts.creditPaymentAccount')}>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={t('accounts.creditPaymentAccount')}
+      titleAccessory={<InfoButton concept="creditCard" />}
+    >
       <View>
         <ListRow
           title={t('accounts.noPaymentAccount')}

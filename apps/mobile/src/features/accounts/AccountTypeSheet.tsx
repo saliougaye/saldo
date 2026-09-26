@@ -5,6 +5,7 @@ import { ListRow } from '../../components/ListRow';
 import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
+import { InfoButton } from '../guide/InfoButton';
 
 /** A pocket is a goal (§5.14): made by the goal wizard, never picked as a type. */
 export const ACCOUNT_TYPES = accountTypeSchema.options.filter((type) => type !== 'pocket');
@@ -27,7 +28,12 @@ export function AccountTypeSheet({
   const { t } = useTranslation();
   const theme = useTheme();
   return (
-    <Sheet visible={visible} onClose={onClose} title={t('accounts.type')}>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={t('accounts.type')}
+      titleAccessory={<InfoButton concept="accountTypes" />}
+    >
       <View>
         {types.map((type) => (
           <ListRow

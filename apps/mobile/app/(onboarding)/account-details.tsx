@@ -6,6 +6,7 @@ import { Card } from '../../src/components/Card';
 import { Screen } from '../../src/components/Screen';
 import { TextField } from '../../src/components/TextField';
 import { AccountTypeGrid } from '../../src/features/accounts/AccountTypeGrid';
+import { InfoButton } from '../../src/features/guide/InfoButton';
 import { StepFooter } from '../../src/features/onboarding/StepFooter';
 import { StepChunk, StepHeader } from '../../src/features/onboarding/StepHeader';
 import { ONBOARDING_STEPS, useOnboarding } from '../../src/features/onboarding/state';
@@ -49,9 +50,12 @@ export default function AccountDetailsStep() {
               autoFocus
             />
             <View style={{ gap: 6 }}>
-              <Text size="footnote" color="textMuted">
-                {t('onboarding.accountType')}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text size="footnote" color="textMuted">
+                  {t('onboarding.accountType')}
+                </Text>
+                <InfoButton concept="accountTypes" />
+              </View>
               <AccountTypeGrid
                 accessibilityLabel={t('onboarding.accountType')}
                 value={type}

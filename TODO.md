@@ -14,7 +14,12 @@ None open.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-None open.
+### Profile: the period row shows the period, not only the cycle day
+
+Found by the in-app guide analysis (2026-09-26). Profile's first row is «Inizio del ciclo · dal 27» whatever the
+period kind, so a user tracking by calendar month reads about a cycle they never chose, and the kind itself can be
+changed only from the period sheet. The row should read «Periodo · Mese solare» (or «Ciclo di stipendio · dal 27»)
+and open a screen with the four kinds, the day grid under the cycle only — the onboarding step 1 layout.
 
 ## Ideas
 

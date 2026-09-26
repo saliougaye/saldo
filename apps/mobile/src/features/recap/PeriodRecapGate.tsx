@@ -37,7 +37,15 @@ import {
  * Mounted in the tabs layout, which exists only past the boot router and the lock, so the sheet
  * never draws over the lock screen. The ledger is read only when a recap is due, by `RecapHost`.
  */
-export function PeriodRecapGate() {
+export function PeriodRecapGate({
+  onBusyChange,
+}: {
+  /**
+   * True until it has decided, and while its sheet is up: the first-run intro (§5.16) waits for
+   * it, so the two never stack.
+   */
+  onBusyChange?: (busy: boolean) => void;
+} = {}) {
   const { t } = useTranslation();
   const { kv } = useDatabase();
   const settings = useSettings();
@@ -45,6 +53,12 @@ export function PeriodRecapGate() {
   const closed = useMemo(() => recapPeriod(def, today), [def, today]);
   const stamp = recapStamp(def, closed);
   const [open, setOpen] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+
+  const busy = !checked || open !== null;
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   useEffect(() => {
     if (settings === null || open !== null) return;
@@ -55,6 +69,7 @@ export function PeriodRecapGate() {
       currentStart: periodContaining(def, today).start,
     });
     if (due) setOpen(stamp);
+    setChecked(true);
   }, [settings, open, stamp, kv, def, today]);
 
   const ready = settings !== null;

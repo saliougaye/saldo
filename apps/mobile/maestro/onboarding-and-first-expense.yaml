@@ -85,6 +85,15 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "onboarding-start"
 
+# The first-run intro (§6.40), over the tabs once per finished onboarding. «Continua» is its only
+# button.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 20000
+- tapOn:
+    id: "intro-continue"
+
 # The tabs. The FAB is part of the tab bar, so it is here on every tab (§6.14).
 - extendedWaitUntil:
     visible:

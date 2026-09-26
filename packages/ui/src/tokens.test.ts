@@ -235,6 +235,13 @@ describe('permissions list motion', () => {
   });
 });
 
+describe('guide layout', () => {
+  it('draws an explanation icon larger than a row icon, as big as a hit target', () => {
+    expect(layout.iconBoxLarge).toBeGreaterThan(layout.iconBox);
+    expect(layout.iconBoxLarge).toBe(layout.minHitTarget);
+  });
+});
+
 describe('target card layout', () => {
   it('draws the featured bar twice as thick as a row bar, with a longer pace tick', () => {
     expect(layout.progressHeightThick).toBe(layout.progressHeight * 2);

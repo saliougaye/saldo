@@ -33,6 +33,14 @@ name: Edit a recurring transaction, this one and the following ones
     visible:
       id: "tab-fab"
     timeout: 30000
+# The first-run intro (§6.40) is up once after onboarding on this device; out of the way if so.
+- runFlow:
+    when:
+      visible:
+        id: "intro-continue"
+    commands:
+      - tapOn:
+          id: "intro-continue"
 
 # 1. A monthly series, dated today. Saving with "Ripeti" on turns the row into the first occurrence
 #    of a new recurrence and materialises the rest up to the end of the period after this one.
