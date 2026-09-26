@@ -12,6 +12,7 @@ import {
   transactionSchema,
 } from './entities';
 import { SETTINGS_ID } from './ids';
+import { formatHlc } from './sync/hlc';
 
 /**
  * Everything one user has, typed (§17.1.2). The backup (§11.1) and the server's projection share
@@ -70,6 +71,8 @@ export const SETTINGS_DEFAULTS = {
 >;
 
 const EPOCH = '1970-01-01T00:00:00.000Z';
+/** Older than any real write, and still an HLC for code that parses it. */
+const OLDEST_HLC = formatHlc({ wallMs: 0, counter: 0, deviceId: 'unknown' });
 const shape = settingsSchema.shape;
 
 /**
@@ -79,7 +82,7 @@ const shape = settingsSchema.shape;
 const lenientSettingsSchema = z.object({
   id: z.literal(SETTINGS_ID).catch(SETTINGS_ID),
   createdAt: shape.createdAt.catch(EPOCH),
-  updatedAt: shape.updatedAt.catch('0'),
+  updatedAt: shape.updatedAt.catch(OLDEST_HLC),
   deletedAt: shape.deletedAt.catch(null),
   periodKind: shape.periodKind.catch(SETTINGS_DEFAULTS.periodKind),
   cycleStartDay: shape.cycleStartDay.catch(SETTINGS_DEFAULTS.cycleStartDay),

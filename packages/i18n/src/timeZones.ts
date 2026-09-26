@@ -43,16 +43,16 @@ export interface WallClock {
   minute: number;
 }
 
-const formatters = new Map<string, Intl.DateTimeFormat | null>();
+const formatters = new Map<string, Intl.DateTimeFormat>();
 
 /**
  * One formatter per zone, built once: building them is the expensive part, and the time-zone
- * screen asks for every zone at once. `null` remembers a name `Intl` refused.
+ * screen asks for every zone at once.
  */
 function formatterFor(zone: string): Intl.DateTimeFormat | null {
   const cached = formatters.get(zone);
   if (cached !== undefined) return cached;
-  let formatter: Intl.DateTimeFormat | null;
+  let formatter: Intl.DateTimeFormat;
   try {
     formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: zone,
@@ -64,7 +64,9 @@ function formatterFor(zone: string): Intl.DateTimeFormat | null {
       minute: 'numeric',
     });
   } catch {
-    formatter = null;
+    // Not cached: the server is asked about whatever a client stored, and a map of every name
+    // anyone ever typed would only grow.
+    return null;
   }
   formatters.set(zone, formatter);
   return formatter;
@@ -88,7 +90,8 @@ export function wallClock(zone: string, now: Date): WallClock | null {
     year: read('year'),
     month: read('month'),
     day: read('day'),
-    hour: read('hour'),
+    // `hourCycle: 'h23'` should never give 24, but an engine that ignores it writes midnight so.
+    hour: read('hour') % 24,
     minute: read('minute'),
   };
   return Object.values(clock).every(Number.isInteger) ? clock : null;

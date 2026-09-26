@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { entitySchemas } from './entities';
+import { isHlc } from './sync/hlc';
 import {
   emptyUserData,
   readSettings,
@@ -66,7 +67,9 @@ describe('readSettings', () => {
 
   it('never throws, even on something that is not a row at all', () => {
     for (const junk of [null, 'settings', 7, [], undefined]) {
-      expect(readSettings(junk)).toMatchObject({ id: 'settings', ...SETTINGS_DEFAULTS });
+      const read = readSettings(junk);
+      expect(read).toMatchObject({ id: 'settings', ...SETTINGS_DEFAULTS });
+      expect(isHlc(read.updatedAt)).toBe(true);
     }
   });
 });
