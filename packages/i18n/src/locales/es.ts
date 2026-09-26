@@ -784,6 +784,7 @@ export const es: Messages = {
     currency: 'Moneda',
     language: 'Idioma',
     theme: 'Tema',
+    timeZone: 'Zona horaria',
     system: 'Sistema',
     dark: 'Oscuro',
     light: 'Claro',
@@ -1135,5 +1136,17 @@ export const es: Messages = {
         'Sin servidor, haz una copia de vez en cuando desde Perfil → Exportar los datos: si pierdes el teléfono, es la única copia.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Se mantiene cuando viajas: el periodo se cierra donde vives.',
+    search: 'Buscar una ciudad',
+    current: 'Actual',
+    currentAndPhone: 'Actual y este teléfono',
+    all: 'Todas',
+    noResults: 'No se ha encontrado ninguna ciudad.',
+    phoneIsIn: 'El teléfono está en la hora de {{city}}',
+    notice:
+      'El teléfono está en la hora de {{city}}, donde son las {{time}}. Las cuentas siguen en {{saved}} hasta que lo cambies.',
+    use: 'Usar {{city}}',
   },
 };

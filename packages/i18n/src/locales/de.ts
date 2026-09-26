@@ -785,6 +785,7 @@ export const de: Messages = {
     currency: 'Währung',
     language: 'Sprache',
     theme: 'Design',
+    timeZone: 'Zeitzone',
     system: 'System',
     dark: 'Dunkel',
     light: 'Hell',
@@ -1138,5 +1139,17 @@ export const de: Messages = {
         'Ohne Server mach ab und zu eine Sicherung über Profil → Daten exportieren: Verlierst du das Telefon, ist sie die einzige Kopie.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'Sie bleibt, wenn du reist: Der Zeitraum endet dort, wo du wohnst.',
+    search: 'Stadt suchen',
+    current: 'Aktuell',
+    currentAndPhone: 'Aktuell und dieses Telefon',
+    all: 'Alle',
+    noResults: 'Keine Stadt gefunden.',
+    phoneIsIn: 'Das Telefon zeigt die Zeit von {{city}}',
+    notice:
+      'Das Telefon zeigt die Zeit von {{city}}, dort ist es {{time}}. Die Zahlen bleiben bei {{saved}}, bis du es änderst.',
+    use: '{{city}} verwenden',
   },
 };

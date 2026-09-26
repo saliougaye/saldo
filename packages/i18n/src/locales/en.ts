@@ -775,6 +775,7 @@ export const en: Messages = {
     currency: 'Currency',
     language: 'Language',
     theme: 'Theme',
+    timeZone: 'Time zone',
     system: 'System',
     dark: 'Dark',
     light: 'Light',
@@ -1126,5 +1127,17 @@ export const en: Messages = {
         'Without a server, make a backup now and then from Profile → Export your data: if you lose your phone, it’s the only copy.',
       ].join('\n\n'),
     },
+  },
+  timeZone: {
+    subtitle: 'It stays put when you travel: the period closes where you live.',
+    search: 'Search for a city',
+    current: 'Current',
+    currentAndPhone: 'Current and this phone',
+    all: 'All',
+    noResults: 'No city found.',
+    phoneIsIn: 'This phone is on {{city}} time',
+    notice:
+      'This phone is on {{city}} time, where it is {{time}}. Your figures stay on {{saved}} until you change it.',
+    use: 'Use {{city}}',
   },
 };
