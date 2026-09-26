@@ -195,6 +195,27 @@ describe('runSyncCycle', () => {
     expect(outcome.pulled).toBe(1);
   });
 
+  it('runs afterPull once the pulled rows are in', async () => {
+    const { db, kv, clock, repos } = createTestContext();
+    const server: FakeServer = {
+      pushes: [],
+      pushResponse: appliedTo,
+      pages: [{ ...EMPTY_PAGE, changes: [row('tag-remote', 1)], nextSince: 1 }],
+    };
+    let seen: string | undefined;
+    await runSyncCycle({
+      db,
+      kv,
+      clock,
+      api: fakeApi(server),
+      deviceId: 'device-a',
+      afterPull: () => {
+        seen = repos.tags.byId('tag-remote')?.name;
+      },
+    });
+    expect(seen).toBe('tag-remote');
+  });
+
   it('runs the materialiser after a cycle', async () => {
     const { db, kv, clock } = createTestContext();
     let ran = 0;

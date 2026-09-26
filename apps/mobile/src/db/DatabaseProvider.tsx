@@ -1,4 +1,3 @@
-import { systemTimeZone } from '@saldo/i18n';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { createContext, type ReactNode, useContext, useEffect, useMemo } from 'react';
 import { View } from 'react-native';
@@ -10,7 +9,6 @@ import { useTheme } from '../theme/ThemeProvider';
 import { db } from './client';
 import { createKvStore, type KvStore } from './kv';
 import { createRepositories, type Repositories } from './repositories';
-import { backfillTimeZone } from './timeZone';
 
 export interface DatabaseValue {
   repos: Repositories;
@@ -63,10 +61,6 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     else if (success) log('db', `database ready, ${known} migrations in this bundle`);
     else log('db', `applying migrations, ${known} in this bundle`);
   }, [success, error]);
-  // D37: a phone that onboarded before the time zone existed tells the server its zone once.
-  useEffect(() => {
-    if (success) backfillTimeZone(db, value.repos, systemTimeZone());
-  }, [success, value]);
   if (error) return <CenteredMessage title="Saldo" body={error.message} />;
   if (!success) return <LoadingScreen />;
   return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;
