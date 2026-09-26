@@ -16,6 +16,7 @@ const BASE = {
   },
   translate: (key: string) => `t:${key}`,
   completedAt: '2026-04-18T10:00:00.000Z',
+  timeZone: 'Europe/Rome',
 } as const;
 
 function seed(selectedCategoryKeys: readonly string[]) {

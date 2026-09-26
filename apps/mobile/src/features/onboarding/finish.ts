@@ -13,6 +13,8 @@ export interface FinishInput {
   translate: (key: string) => string;
   today: LocalDate;
   completedAt: string;
+  /** The device's zone (D37), from `systemTimeZone()`. */
+  timeZone: string;
 }
 
 /**
@@ -26,7 +28,7 @@ export function finishOnboarding(
   db: RepositoryDatabase,
   repos: Repositories,
   kv: Pick<KvStore, 'set'>,
-  { draft, translate, today, completedAt }: FinishInput,
+  { draft, translate, today, completedAt, timeZone }: FinishInput,
 ): void {
   const { minorDigits } = getCurrency(draft.currency);
   const settings = {
@@ -37,6 +39,7 @@ export function finishOnboarding(
     theme: 'system',
     translate,
     completedAt,
+    timeZone,
   } as const;
 
   if (draft.path === 'import') {

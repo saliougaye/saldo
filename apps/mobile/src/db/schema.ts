@@ -34,6 +34,8 @@ export const settings = sqliteTable(
     language: text('language').$type<Settings['language']>().notNull(),
     theme: text('theme').$type<'system' | 'dark' | 'light'>().notNull(),
     onboardingCompletedAt: text('onboarding_completed_at'),
+    /** §4.1, D37. Null until onboarding or the boot backfill fills it. */
+    timeZone: text('time_zone'),
   },
   (table) => [index('settings_pending').on(table.syncState).where(sql`sync_state = 1`)],
 );

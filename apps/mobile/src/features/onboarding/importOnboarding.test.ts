@@ -30,6 +30,7 @@ const INPUT = {
   theme: 'system',
   translate: (key: string) => `t:${key}`,
   completedAt: COMPLETED_AT,
+  timeZone: 'Europe/Rome',
   today: '2026-09-17',
 } as const;
 
