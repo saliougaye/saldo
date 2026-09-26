@@ -169,6 +169,11 @@ describe('canShiftPeriod', () => {
     expect(canShiftPeriod(cycle, current, 1, today)).toBe(true);
   });
 
+  it('can be held at the current period, where the forecast takes over (§5.17)', () => {
+    expect(canShiftPeriod(cycle, current, 1, today, 0)).toBe(false);
+    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, -1), 1, today, 0)).toBe(true);
+  });
+
   it('stops at the one after this one', () => {
     expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, 1), 1, today)).toBe(false);
     expect(canShiftPeriod(cycle, current, 2, today)).toBe(false);

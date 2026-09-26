@@ -27,10 +27,13 @@ export interface PeriodValue {
   /** How the user tracks spending (§5.2). Screens pass this to `@saldo/core`, not a start day. */
   def: PeriodDef;
   period: Period;
-  /** Moves by whole periods. On a custom range it first returns to the period holding today. */
-  shift: (delta: number) => void;
+  /**
+   * Moves by whole periods. On a custom range it first returns to the period holding today.
+   * `maxAhead` defaults to §6.15's one period past the current one.
+   */
+  shift: (delta: number, maxAhead?: number) => void;
   /** False past the period after this one (§6.15); the header greys its › out rather than lying. */
-  canShift: (delta: number) => boolean;
+  canShift: (delta: number, maxAhead?: number) => boolean;
   setCustomRange: (range: DateRange) => void;
   goToPeriod: (period: Cycle) => void;
   /** Back to the period containing today — what a changed kind or start day has to fall back to. */
@@ -74,13 +77,19 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
       today,
       def,
       period: { ...view, isPeriod: active.kind === 'period' },
-      shift: (delta) => {
+      shift: (delta, maxAhead) => {
         const from = active.kind === 'period' ? active.range : current;
-        if (!canShiftPeriod(def, from, delta, today)) return;
+        if (!canShiftPeriod(def, from, delta, today, maxAhead)) return;
         setSelection({ kind: 'period', range: shiftPeriod(def, from, delta) });
       },
-      canShift: (delta) =>
-        canShiftPeriod(def, active.kind === 'period' ? active.range : current, delta, today),
+      canShift: (delta, maxAhead) =>
+        canShiftPeriod(
+          def,
+          active.kind === 'period' ? active.range : current,
+          delta,
+          today,
+          maxAhead,
+        ),
       setCustomRange: (range) => setSelection({ kind: 'custom', range }),
       goToPeriod: (range) => setSelection({ kind: 'period', range }),
       resetToCurrent: () => setSelection(null),

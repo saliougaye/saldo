@@ -445,7 +445,10 @@ Let `today = todayLocal()`.
   a min–max band behind each forecast expense bar, a dashed divider before the first, and the caption «3 periodi · 3
   previsti». Under the chart one row, «Al {data} circa {saldo} ›», opens the forecast sheet (§5.17). A custom range, a
   closed period or a period ahead keep the six historical columns: going further back is the header's ‹, not a
-  scroll inside the chart.
+  scroll inside the chart. On Statistics › stops at the current period (`maxAhead = 0`): the periods after it are the
+  forecast, and a future period would only show empty cards. Home and Transactions keep §6.15's one period ahead, which
+  holds real scheduled rows; there the header mutes the label and the subtitle reads «inizia il {data}» instead of
+  «periodo chiuso». Opening Statistics while a future period is selected goes back to the current one.
 - **Quota impegnata (committed share):** `committed` = counted expenses with `recurrenceId ≠ null`.
   `discretionary = max(0, spent − committed)`. Two bars (grey committed, accent discretionary) and the line
   "Il {pct}% di questo ciclo era già deciso in partenza: {committed} tra affitto, utenze e abbonamenti."

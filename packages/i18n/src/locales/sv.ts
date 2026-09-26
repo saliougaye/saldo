@@ -277,6 +277,7 @@ export const sv: Messages = {
     title: 'Period',
     dayOf: 'dag {{elapsed}} av {{length}}',
     closed: 'avslutad period',
+    startsOn: 'börjar {{date}}',
     inProgress: 'pågår, dag {{elapsed}} av {{length}}',
     spent: '{{amount}} i utgifter',
     custom: 'Egen period',

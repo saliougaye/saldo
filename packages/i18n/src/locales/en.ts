@@ -275,6 +275,7 @@ export const en: Messages = {
     title: 'Period',
     dayOf: 'day {{elapsed}} of {{length}}',
     closed: 'closed period',
+    startsOn: 'starts {{date}}',
     inProgress: 'in progress, day {{elapsed}} of {{length}}',
     spent: '{{amount}} spent',
     custom: 'Custom period',

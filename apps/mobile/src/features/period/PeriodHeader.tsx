@@ -1,4 +1,4 @@
-import { formatCycleRange } from '@saldo/i18n';
+import { formatCycleRange, formatDayMonth } from '@saldo/i18n';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,10 +24,19 @@ export interface PeriodHeaderProps {
    * transactions stay readable by decision, and a button that does nothing visible is a broken one.
    */
   hideAmounts?: boolean;
+  /**
+   * How far › may go past the current period. §6.15's default is one; Statistics passes 0,
+   * because the periods after the current one are its forecast (§5.17).
+   */
+  maxAhead?: number;
 }
 
 /** Header of §6.1: the period label with its subtitle, plus ‹ › cycle navigation. */
-export function PeriodHeader({ showProfile = false, hideAmounts = true }: PeriodHeaderProps) {
+export function PeriodHeader({
+  showProfile = false,
+  hideAmounts = true,
+  maxAhead,
+}: PeriodHeaderProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const locale = useAppLocale();
@@ -38,14 +47,19 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
 
   // A custom range reads the same way a period does; only the subtitle below tells them apart.
   const label = formatCycleRange(period.range, locale, today);
+  // A period ahead has not closed, it has not started: the subtitle says so, and its label is
+  // muted, so it cannot pass for the current period on Home or Transactions (§6.15).
+  const ahead = period.range.start > today;
   const subtitle = period.isCurrent
     ? t('period.dayOf', { elapsed: period.elapsed, length: period.length })
-    : t('period.closed');
+    : ahead
+      ? t('period.startsOn', { date: formatDayMonth(period.range.start, locale) })
+      : t('period.closed');
 
   const navButton = (direction: -1 | 1) => {
     // Forward stops after the period the materialiser fills (§6.15): beyond it there is nothing
     // to see, and a disabled arrow says that better than an empty screen would.
-    const allowed = canShift(direction);
+    const allowed = canShift(direction, maxAhead);
     return (
       <Pressable
         testID={direction === -1 ? 'period-previous' : 'period-next'}
@@ -54,7 +68,7 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
         accessibilityState={{ disabled: !allowed }}
         hitSlop={10}
         disabled={!allowed}
-        onPress={() => shift(direction)}
+        onPress={() => shift(direction, maxAhead)}
         style={{
           width: 36,
           height: theme.layout.headerButton,
@@ -112,7 +126,13 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
             it already use single chevrons to *move* the period, and a third one pointing down
             would have read as more of the same. This is the shape a picker has. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <Text weight="medium" tracking="tight" numberOfLines={1} style={{ flexShrink: 1 }}>
+          <Text
+            weight="medium"
+            tracking="tight"
+            color={ahead ? 'textMuted' : 'text'}
+            numberOfLines={1}
+            style={{ flexShrink: 1 }}
+          >
             {label}
           </Text>
           <Icon name="chevUD" size={14} color={theme.palette.textFaint} />

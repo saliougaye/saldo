@@ -149,16 +149,18 @@ export const MAX_PERIODS_AHEAD = 1;
 
 /**
  * Whether the navigation may move `delta` periods from `range`. Backwards is always allowed: that
- * is history, and it exists.
+ * is history, and it exists. `maxAhead` lets a screen stop earlier: Statistics stops at the
+ * current period, because the periods after it are its forecast (§5.17).
  */
 export function canShiftPeriod(
   def: PeriodDef,
   range: DateRange,
   delta: number,
   today: LocalDate,
+  maxAhead: number = MAX_PERIODS_AHEAD,
 ): boolean {
   if (delta <= 0) return true;
   const target = shiftPeriod(def, range, delta);
-  const limit = shiftPeriod(def, periodContaining(def, today), MAX_PERIODS_AHEAD);
+  const limit = shiftPeriod(def, periodContaining(def, today), maxAhead);
   return target.start <= limit.start;
 }
