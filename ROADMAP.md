@@ -325,28 +325,49 @@ browser with SQLite WASM and the same sync client — and left the choice to a d
 2026-09-22: server-side.** The browser path would duplicate the phone's engine; the server path builds the
 projection that 0.4 and 0.5 need anyway.
 
-**What it builds for everyone after it:** the typed projection. Route handlers (or server components) load a
-user's rows from `sync_rows`, validate them against `entitySchemas`, and hand them to the same pure functions
-the phone calls — cycle totals, budgets, «Quota impegnata», the forecast of 0.2. No calculation is written
-twice; if the web app shows a number the phone does not, one of them is wrong.
+**Why it matters beyond the browser:** the web app, installable as a PWA, is how Saldo reaches people who
+will not sideload, without waiting for an App Store build.
 
-**Shape:**
+**What it builds for everyone after it:** the typed projection. Server code loads a ledger's rows from
+`sync_rows`, validates them against `entitySchemas`, and hands them to the same pure functions the phone
+calls. No calculation is written twice; if the web app shows a number the phone does not, one of them is wrong.
 
-- Same passkey login (the browser ceremony already exists for the phone's sign-in), cookie session.
-- DOM components on `@saldo/ui` tokens and `@saldo/i18n`; the mobile screens are the reference, not a
-  template — the web app can be read-mostly at first.
-- Every query is scoped the way the shared ledger (0.6) will need. Its **shape is decided before this
-  milestone starts**, even though it is built last: «two passkeys, one account» means `where user_id = ?`
-  stays; «spaces» means every query takes a space id from day one, so 0.6 does not rewrite the web app.
+**Decided 2026-09-26** (spec §17.1, D30–D36):
 
-**To decide before planning:**
+- [x] **Where:** the root of the instance (`/`), not a subdomain: the passkey and the cookie stay on one
+      origin. `/admin` is the admin panel. The marketing site moves to its own app, `apps/site` (see 0.7).
+- [x] **Shared-ledger shape, as far as 0.3 needs it:** rows are keyed by `ledger_id`; every user has one
+      personal ledger whose id is the user id. Shared wallet or shared account stays a 0.6 decision.
+- [x] **Read and write:** the web writes transactions, accounts, categories, tags, budgets and settings as a
+      server-side sync client (server HLC, same upsert as push). Recurrences and attachments stay phone-only.
+      Server-side materialisation of recurrences: not now.
+- [x] **Email on every account**, required at registration on web and phone. An identifier, not a credential.
+      Verification and recovery by magic link only when SMTP is configured.
+- [x] **Admin panel** for accounts, invites, instance info and **server settings in the database**
+      (registration, instance name, SMTP, the AI key of 0.5); env variables win and lock; secrets encrypted
+      and write-only.
+- [x] **UI:** CSS Modules on token variables, chart geometry shared with the phone, a design pass first.
+- [x] **Today** from the browser's time zone (cookie), fallback `TZ`; preferences from the synced `settings`.
+- [x] **Out:** desktop extras (bulk edit, CSV preview, print) until after release; browser e2e tests.
 
-- [ ] The shared-ledger shape (see 0.6). This is the one decision that cannot wait.
-- [ ] Read-only first, or transaction entry from the start.
-- [ ] Spec: §17.1 records the server-side decision, the projection gets a section of its own, then the plan.
+**Steps** (each gets its own plan under `docs/superpowers/plans/`):
 
-**Done when:** a user signs in on the web with the phone's passkey and sees Home, transactions and
-Statistics matching the phone to the cent, and the projection is the only way server code reads rows.
+| Step | Content | Depends on |
+|---|---|---|
+| 0.3a | Ledger scoping: `ledgers`, `ledger_members`, `sync_rows` keyed by `ledger_id`, push/pull/export/delete through membership | — |
+| 0.3b | Projection: typed `Ledger`, drift tolerance, `today` from the `tz` cookie | 0.3a |
+| 0.3c | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
+| 0.3d | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
+| 0.3e | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | b, c, d |
+| 0.3f | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | e |
+| 0.3g | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | c |
+| 0.3h | PWA: manifest, icons, offline page | e |
+
+**Done when:** a user registers on the web or signs in with the phone's passkey, sees Home, transactions and
+Statistics matching the phone to the cent, adds a transaction that reaches the phone on its next sync, and
+installs the app to the home screen; an admin runs the instance from `/admin`; the projection is the only way
+server code reads rows, and every query is scoped by ledger.
+
 ---
 
 ## 0.4 — MCP server: the user's own assistant reads the ledger
@@ -419,9 +440,8 @@ user whose assistant already reads the ledger through MCP may not need Saldo to 
 
 **To decide before planning:**
 
-- [ ] Key **per instance** (the admin sets it in the server environment, everyone uses it, the admin pays)
-      or **per user** (each user saves their own in Profile, the server keeps it in Postgres). One household
-      needs the first; an instance hosting several does not.
+- [x] Key **per instance** (decided 2026-09-26, D36): the admin sets it in `/admin` (server settings of 0.3,
+      encrypted at rest), everyone on the instance uses it, the admin pays.
 - [ ] Whether insights ship at all, given 0.4.
 - [ ] The wording of the §18 change and of the consent screen.
 - [ ] The local-only mode (0.1, «A first run with no server») has no AI. Write that down where that
@@ -459,8 +479,11 @@ below) there is no shared key to distribute, which is the part that made «space
 
 **To decide before planning:**
 
-- [ ] Which shape, or which first. This is the decision that unblocks the proper fix to 10b, and it is due
-      **before 0.3 starts**.
+- [ ] Which shape, or which first — Spendee's **shared wallet** (share one wallet, not the whole account) is
+      the lead candidate, to be rethought when this milestone starts. What had to be decided before 0.3 is
+      decided (2026-09-26, D31): rows are keyed by `ledger_id`, every user has a personal ledger, and
+      `ledger_members` exists, so either shape lands without rewriting the web app. Accounts also carry a real
+      email from 0.3 (D32), which is how a member is invited.
 - [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
       server are not served. A shared ledger either keeps that line or has to earn its removal.
 - [ ] Spec section (`§5.x Shared ledger`), then the plan.
@@ -522,7 +545,7 @@ public either way.
       state of §6.30. That index is the first thing a visitor reads, so correct it before the repository is
       public: record what was actually exercised on the device, and leave the rest listed as still open.
 
-### Visibility: a marketing site and a docs library, inside `apps/web`
+### Visibility: a marketing site and a docs library, in `apps/site`
 
 Asked for on 2026-09-24. A public repository is not a visible one: today a stranger's only way in is the
 README, and the only page Saldo serves is the fifteen-line landing page every instance shows
@@ -537,8 +560,12 @@ Next.js app, one deploy and one set of design tokens:
   («Guida»), organised, searchable and linkable. The Markdown files stay the source of truth, so a page on
   the site and the file on GitHub cannot say two things.
 
+**Decided 2026-09-26 (D35):** not inside `apps/web` after all, but a separate app, `apps/site`, with its own
+deploy. The instance root is the web app of 0.3, and an instance build carries no marketing and needs no flag.
+The paragraphs below keep the original reasoning; where they say `apps/web`, read `apps/site`.
+
 - [ ] Decide before planning:
-  - **Instance vs. public site.** Every self-hosted instance serves `apps/web`, so its `/` must not become an
+  - ~~**Instance vs. public site.**~~ Settled by D35. Every self-hosted instance serves `apps/web`, so its `/` must not become an
     advert for the project. Either the marketing routes are a route group switched on by an env flag (off in a
     self-hosted build, on for the public deploy), or the public site is its own build target of the same app.
     The instance's root stays the small status/landing page it is now, or the web app of 0.3.
