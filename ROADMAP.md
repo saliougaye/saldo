@@ -166,7 +166,7 @@ The kit also carries Lottie state animations (idle, empty, loading, thinking, er
   waving on the welcome, asleep on the lock screen, waiting in a long labelled load, small above a failed import or
   restore. Plan `docs/superpowers/plans/2026-09-25-mascot-lottie.md`; checked on the iOS simulator.
 
-### In-app explanations: a first-run intro and a «Guida»
+### In-app explanations: a first-run intro and a «Guida» ✅ done
 
 Asked for on 2026-09-24. Saldo has ideas a new user does not bring with them — six account types, a period that
 starts on a chosen day, what counts towards the totals, budgets as a ceiling per period, goals and pockets, transfers,
@@ -201,7 +201,7 @@ How it is built:
     update reuses it once 0.8 exists.
 - [x] Spec (D28, §5.16, §6.40–§6.42) and a mockup (`docs/superpowers/mockups/2026-09-26-guide-variants.html`: intro
   on one screen, ⓘ as a sheet with the whole text, Guida as grouped rows with the summary — variants 1A, 2A, 3A).
-- [ ] Plan (`docs/superpowers/plans/2026-09-26-in-app-guide.md`) and build; checked on the simulator.
+- [x] Plan (`docs/superpowers/plans/2026-09-26-in-app-guide.md`) and build; checked on the iOS simulator.
 
 ### Transfers: a button to fill the amount with the source's whole balance ✅ done
 

@@ -147,6 +147,7 @@ export default function ProfileScreen() {
             title={t('guide.title')}
             leading={lead('info')}
             onPress={() => router.push('/guide')}
+            testID="profile-guide"
             chevron
           />
         </View>

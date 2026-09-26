@@ -17,34 +17,34 @@ explanations: a first-run intro and a «Guida»»).
 
 ## Steps
 
-- [ ] **Labels.** In all seven catalogues: `txForm.excludeNote`, `recurrence.createsUpcoming`, `stats.cycleTrend`,
+- [x] **Labels.** In all seven catalogues: `txForm.excludeNote`, `recurrence.createsUpcoming`, `stats.cycleTrend`,
       `stats.trendFooter`, `stats.committedLine`, `stats.projection`, `stats.lastCycles`, `stats.legendCurrent`,
       `stats.legendPast`, `stats.average`, `stats.tagsOverlap`, `budgets.medianHint`, `budgets.periodCycle`,
       `budgets.emptyBody`, `home.leftover`, `home.closedCycle` say «period»; it `accounts.includeInSpendable`.
       Update any test asserting the old copy.
-- [ ] **Catalogue.** `guide` in every locale: `title`, `subtitle`, `introTitle`, `introFoot`, `infoLabel`
+- [x] **Catalogue.** `guide` in every locale: `title`, `subtitle`, `introTitle`, `introFoot`, `infoLabel`
       (`{{title}}`), `section_{basics,accounts,plan,organize,data}`, and for each of the eleven concepts
       `{title, summary, body}` (body paragraphs split on a blank line). Parity test green.
-- [ ] **Concepts, test first.** `apps/mobile/src/features/guide/concepts.ts`: `GUIDE_CONCEPTS` (id, icon, section,
+- [x] **Concepts, test first.** `apps/mobile/src/features/guide/concepts.ts`: `GUIDE_CONCEPTS` (id, icon, section,
       intro), `GUIDE_SECTIONS`, `INTRO_CONCEPTS`, `guideConcept(id)`, `isGuideConceptId`, `paragraphs(body)`. Tests:
       four intro concepts in order; every section used; every concept has non-empty title/summary/body in every
       catalogue; `paragraphs` splits on blank lines and drops empties.
-- [ ] **Intro schedule, test first.** `introSchedule.ts`: `INTRO_KEY = 'introSeenFor'`,
+- [x] **Intro schedule, test first.** `introSchedule.ts`: `INTRO_KEY = 'introSeenFor'`,
       `isIntroDue({ onboardingCompletedAt, stored })`. Tests: null onboarding → false; equal → false; missing or
       different → true.
-- [ ] **ⓘ.** `GuideSheet` (icon box, title, summary, body paragraphs, «Fatto») and `InfoButton({ concept })` (16pt
+- [x] **ⓘ.** `GuideSheet` (icon box, title, summary, body paragraphs, «Fatto») and `InfoButton({ concept })` (16pt
       muted `info`, 44pt hit area, «Informazioni: {title}», owns its sheet). `Sheet` gains `titleAccessory`. Tests:
       the button is labelled and opens the sheet with the concept's text.
-- [ ] **Intro.** `IntroSheet` (full-screen `Modal`, staggered rows, fades only with reduced motion, «Continua») and
+- [x] **Intro.** `IntroSheet` (full-screen `Modal`, staggered rows, fades only with reduced motion, «Continua») and
       `IntroGate` in the tabs layout: due by `isIntroDue`, waits while the recap is open, writes the key on
       «Continua». `PeriodRecapGate` reports whether its sheet is open. Tests: shows once, writes the key, does not
       show when the stored value matches.
-- [ ] **Guida.** `app/guide/index.tsx` (sections, rows → page) and `app/guide/[id].tsx` (unknown id →
+- [x] **Guida.** `app/guide/index.tsx` (sections, rows → page) and `app/guide/[id].tsx` (unknown id →
       `NotFoundScreen`); Profile row «Guida» (`info`) after «Rivedi la configurazione iniziale». Tests: every
       concept is listed; a page renders its body.
-- [ ] **Placements.** `accountTypes`: onboarding account-details «Tipo» and `AccountTypeSheet`; `creditCard`:
+- [x] **Placements.** `accountTypes`: onboarding account-details «Tipo» and `AccountTypeSheet`; `creditCard`:
       `PaymentAccountSheet`; `period`: `PeriodKindSheet` and `profile/cycle`; `budgets`: `BudgetForm` header
       (new and edit); `recurring`: «Ripeti» in `TransactionForm`; `goals`: «Dove li tieni» (`goals.parent`) in
       `GoalForm`.
-- [ ] Spec, ROADMAP and plan ticked; `pnpm lint`, `pnpm typecheck`, `pnpm test` clean (read the output, AGENTS.md).
-- [ ] Checked on the simulator: intro after a fresh onboarding, each ⓘ, the Guida, a nested ⓘ over a sheet.
+- [x] Spec, ROADMAP and plan ticked; `pnpm lint`, `pnpm typecheck`, `pnpm test` clean (read the output, AGENTS.md).
+- [x] Checked on the simulator: intro after a fresh onboarding, each ⓘ, the Guida, a nested ⓘ over a sheet.
