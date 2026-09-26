@@ -91,6 +91,7 @@ cycle, and am I going faster than I should?*
 | D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
 | D35 | **The marketing site and docs library are their own app, `apps/site`** (decided 2026-09-26, supersedes the roadmap's «inside `apps/web`») | An instance build should not carry, or need a flag to hide, a site that advertises the project. `apps/site` shares `@saldo/ui` and `@saldo/i18n` and reads the Markdown in `docs/` in place. |
 | D36 | **The AI provider key is one per instance**, set by the admin in `/admin` (decided 2026-09-26, for 0.5) | One household per instance is the case Saldo serves; the admin pays and every client, phone and web, uses the same key. |
+| D37 | **The user's time zone is a synced setting, not a cookie** (decided 2026-09-26, §17.1.5) | The server computes «today» for the web, and from 0.4 for MCP and AI, which have no browser to send a cookie. A cookie is also missing on the very first request. `settings.timeZone` is filled at onboarding and changed by hand, as Sure does with `families.timezone`; it does not follow a travelling device, so two devices in different zones do not overwrite each other and a period closes where the user lives. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -190,6 +191,7 @@ All synced entities share **sync metadata**:
 | `language` | `system \| it \| en \| fr \| de \| sv \| es \| pt` | `LANGUAGE_PREFERENCES`. Widened from `system \| it \| en` before any public build, so `SYNC_SCHEMA_VERSION` did not move; a later widening needs a changelog line. |
 | `theme` | `system \| dark \| light` | Design default dark. |
 | `onboardingCompletedAt` | ISO \| null | |
+| `timeZone` | IANA name \| absent | Where the user's day starts and ends, for everything the **server** computes (§17.1.5). Filled at onboarding from the device, changed only by the user in Profile: travelling does not move it. Optional, so rows written before it existed still parse. The phone keeps its own clock for what it computes locally. |
 
 Device-local (not synced, stored in `expo-secure-store`/`AsyncStorage`): `appLockEnabled`, `serverUrl`,
 `deviceId`, tokens, last sync cursor.
@@ -1610,9 +1612,13 @@ public. The decisions behind this section are D30–D36.
 - Pages hand the `UserData` to the same `@saldo/core` functions the phone calls: period bounds, totals, budgets,
   target cards, statistics, the forecast. **No calculation is written twice**; if the web shows a number the phone
   does not, one of them is wrong.
-- **Schema drift is tolerated, not fatal.** The server ships with the web app and a phone can lag behind it or run
-  ahead. A row that fails validation is skipped and counted (logged, and visible to the admin); unknown fields are
-  stripped by Zod. One bad row never breaks a page.
+- **A row that fails validation is skipped and logged, never fatal.** Push already refuses a row that does not parse,
+  so a stored row fails only when the schema has changed under it: a server rolled back to an older release, a
+  field added without `.optional()` or a rule tightened, a hand edit of the database. The row stays in `sync_rows`
+  and on the phone, which skips it the same way on pull (§8.1). Unknown fields are stripped by Zod. One bad row
+  never breaks a page. Counting skipped rows for the admin, a notice to the user and a regression test on stored
+  rows are **deferred** until this happens in practice: every read goes through the projection, so adding them
+  changes one module. A skipped `settings` row is the exception, handled below.
 - Push and pull keep moving envelopes without looking inside `data`; everything else that needs a row's contents
   goes through the projection.
 - **Storage stays `sync_rows` (D11 confirmed 2026-09-26), and the projection loads all of the user's data on every
@@ -1662,16 +1668,21 @@ public. The decisions behind this section are D30–D36.
 
 #### 17.1.5 «Today» on the server
 
-- The browser sets a `tz` cookie with its IANA time zone on first load. The server derives `today` as a
-  `LocalDate` in that zone and injects it into core, as the phone does with its own clock.
-- Without the cookie (first request, or a client that refuses it) the fallback is the instance's time zone,
-  a new optional `TZ` variable that defaults to UTC.
+- The server derives `today` as a `LocalDate` in the user's `settings.timeZone` (§4.1) and injects it into core,
+  as the phone does with its own clock. The same zone serves the web, MCP (0.4) and AI (0.5), which have no
+  browser to ask (D37).
+- The zone is filled at onboarding from the device (the phone's, or the browser's
+  `Intl.DateTimeFormat().resolvedOptions().timeZone` on `/onboarding`) and changed only from Profile, on the phone
+  or the web. It does not follow the device when the user travels: a period closes where the user lives.
+- Fallback when the field is absent (a user onboarded before it existed) or not a zone `Intl` recognises (a
+  renamed zone, a hand edit): the instance's time zone, a new optional `TZ` variable that defaults to UTC. An
+  invalid name is logged and never breaks a page.
 - The conversion from an instant to a `LocalDate` in a zone lives in `apps/web` (it needs `Intl`), not in core.
 
 #### 17.1.6 Preferences
 
 The web reads the user's preferences from the synced `settings` row (language, currency, period kind, cycle day,
-theme) and writes them back there. There are no web-only preferences except the `tz` cookie. What is
+theme, time zone) and writes them back there. There are no web-only preferences. What is
 device-local on the phone (hidden mode, the lock) does not exist on the web in 0.3.
 
 #### 17.1.7 Interface
@@ -1697,7 +1708,7 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   `scripts/user.ts` and `scripts/invite.ts`, which stay.
 - **Accounts:** list with email and role, revoke and restore, promote, delete.
 - **Invites:** mint (the code is shown once, as text, link and QR code), list, revoke.
-- **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver, rows skipped by the projection.
+- **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver. (Rows skipped by the projection: deferred, §17.1.2.)
 - **Server settings** (D33): a `server_settings` table (`key`, `value jsonb`, `updated_at`, `updated_by`).
   - Infrastructure stays in the environment and needs a restart: `DATABASE_URL`, `PUBLIC_URL`, `WEBAUTHN_*`,
     secrets, attachment storage.
