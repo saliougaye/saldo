@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saldo — Previsione · varianti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ───────────────────────── tokens (packages/ui/src/tokens.ts) ───────────────────────── */
+:root{
+  --page:#050505;--bg:#0A0A0A;--surface:#121212;--raised:#1A1A1A;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.12);
+  --text:#EDEDED;--text-muted:#8C8C8C;--text-faint:#5C5C5C;
+  --accent:#C7C7C7;--positive:#5FBF7F;--on-accent:#0A0A0A;
+  --bar-grey:#3A3A3A;--track:#1E1E1E;
+  --ease:cubic-bezier(0.32,0.72,0,1);--press:120ms;
+  /* forecast: dimmed like the prototype's hatched current cycle, one step further back */
+  --fc-dim:.5;--band:.2;
+}
+[data-theme="light"]{
+  --page:#E9E9E7;--bg:#FFFFFF;--surface:#FAFAF9;--raised:#F1F1EF;
+  --border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.18);
+  --text:#171717;--text-muted:#6E6E6E;--text-faint:#9A9A9A;
+  --accent:#4A4A46;--positive:#2E8A50;--on-accent:#FFFFFF;
+  --bar-grey:#C9C9C6;--track:#EDEDEB;
+  --band:.12;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--page);color:var(--text);
+  font-family:Geist,"Inter Tight",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  display:grid;place-items:center;padding:32px 16px 96px;min-height:100%;
+}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:6px}
+svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ───────────────────────── phone frame + Stats chrome ───────────────────────── */
+.phone{
+  width:var(--w,390px);height:844px;background:var(--bg);border-radius:46px;overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px var(--border-strong),0 30px 80px rgba(0,0,0,.5);
+}
+.screen{height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.header{
+  position:sticky;top:0;z-index:6;background:var(--bg);border-bottom:1px solid var(--border);
+  padding:54px 16px 14px;display:flex;align-items:center;gap:8px;
+}
+.avatar{width:34px;height:34px;flex:0 0 auto;border-radius:17px;background:var(--raised);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--text-muted)}
+.period{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:2px 0;margin-inline-start:4px;text-align:left}
+.period{overflow:hidden}.period .l{display:flex;align-items:center;gap:5px;max-width:100%;font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.period .l .ic{color:var(--text-muted)}
+.period .s{font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hbtn{width:34px;height:34px;flex:0 0 auto;border-radius:9px;background:var(--raised);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:transform var(--press) var(--ease)}
+.hbtn:active{transform:scale(.96)}
+.hbtn[aria-pressed="true"]{color:var(--text)}
+.nav{flex:0 0 auto;display:flex;align-items:stretch;height:34px;border-radius:9px;background:var(--raised);border:1px solid var(--border);overflow:hidden}
+.nav button{width:36px;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.nav button+button{border-inline-start:1px solid var(--border);color:var(--text-faint)}
+
+.content{padding:16px;display:flex;flex-direction:column;gap:10px}
+.card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.card-h .t{font-size:15px;font-weight:500;letter-spacing:-.01em;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.card-h .n{font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+/* ⓘ of §6.41: a muted glyph right after the label, 44px target grown outwards */
+.info{position:relative;color:var(--text-faint);display:inline-flex;align-self:center}
+.info::after{content:"";position:absolute;inset:-14px}
+.info .ic{width:14px;height:14px}
+.caption{font-size:11px;color:var(--text-faint)}
+.foot{font-size:13px;color:var(--text-muted);line-height:1.35}
+.foot b{font-weight:500;color:var(--text)}
+
+/* ───────────────────────── cashflow chart (CashflowChart.tsx geometry) ───────────────────────── */
+.cf{display:flex;flex-direction:column;gap:16px;margin-top:18px}
+.cols{display:flex;gap:var(--gap,5px)}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative}
+.col .net{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%}
+.col .net.neg{color:var(--accent)}
+.half{width:100%;height:54px;display:flex;flex-direction:column;align-items:center;position:relative}
+.half.top{justify-content:flex-end}
+.half.bot{justify-content:flex-start}
+.axis{width:100%;height:1px;background:var(--border-strong)}
+.bar{width:16px;position:relative;z-index:1}
+.half.top .bar{border-radius:2px 2px 0 0}
+.half.bot .bar{border-radius:0 0 2px 2px}
+.bar.inc{background:var(--positive)}
+.bar.exp{background:var(--accent)}
+.hatch.inc{background:repeating-linear-gradient(45deg,var(--positive) 0 1.4px,transparent 1.4px 3.5px)}
+.hatch.exp{background:repeating-linear-gradient(45deg,var(--accent) 0 1.4px,transparent 1.4px 3.5px)}
+.col.fc .bar{opacity:var(--fc-dim)}
+.col .tick{font-size:11px;color:var(--text-faint);white-space:nowrap}
+.col.cur .tick{color:var(--text)}
+.col.fc .tick{color:var(--text-faint)}
+.col.fc .net{color:var(--text-faint)}
+.col.fc .net.neg{color:var(--accent);opacity:.75}
+/* min/max band: the range the expense bar could end in, drawn behind it */
+.band{position:absolute;left:50%;translate:-50% 0;width:22px;border-radius:2px;background:var(--accent);opacity:var(--band)}
+/* the seam between what happened and what is expected */
+.col.first-fc::before{content:"";position:absolute;left:calc(var(--gap,5px) / -2 - .5px);top:18px;bottom:18px;border-left:1px dashed var(--border-strong)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px}
+.legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-faint)}
+.legend i{width:8px;height:8px;border-radius:2px;display:block}
+.legend i.fc{opacity:var(--fc-dim)}
+.legend i.band{position:static;translate:none;width:12px;height:8px;border-radius:2px}
+
+/* ── Variant A · Nove colonne: tighter gutter so nine columns fit the same card. Below ~300px of chart the
+   past nets no longer fit side by side: they go, the current and forecast nets stay. ── */
+[data-variant="nove"] .cols{--gap:3px;container-type:inline-size}
+@container (max-width:300px){[data-variant="nove"] .col:not(.cur):not(.fc) .net{visibility:hidden}}
+
+/* ── Variant C · Card a parte: rows, one per forecast cycle ── */
+.fc-big{margin-top:10px}
+.fc-big .k{font-size:13px;color:var(--text-muted)}
+.fc-big .v{font-size:26px;font-weight:600;letter-spacing:-.03em;margin-top:2px;white-space:nowrap}
+.fc-rows{margin-top:14px}
+.fc-row{padding:12px 0;border-top:1px solid var(--border)}
+.fc-row .top{display:flex;align-items:baseline;gap:8px;font-size:15px;letter-spacing:-.01em}
+.fc-row .top .m{flex:1;min-width:0}
+.fc-row .top .net{font-size:13px;color:var(--text-muted);white-space:nowrap}
+.fc-row .top .net.neg{color:var(--accent)}
+.fc-row .top .bal{font-size:15px;white-space:nowrap}
+.range{position:relative;height:4px;border-radius:2px;background:var(--track);margin-top:10px}
+.range .rb{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--accent);opacity:.35}
+.range .rp{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--text);translate:-1px 0}
+.fc-row .sub{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11px;color:var(--text-faint);white-space:nowrap}
+.fc-row .sub span{overflow:hidden;text-overflow:ellipsis}
+
+/* ── Variant D · Scorrevole: nine columns at today's width, six on screen, snapped, opened on the newest.
+   The left edge fades while older cycles sit off screen, so the scroll announces itself without a label. ── */
+.cols.scroll{overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;
+  mask-image:linear-gradient(to right,transparent 0,#000 28px);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 28px)}
+.cols.scroll::-webkit-scrollbar{display:none}
+.cols.scroll.at-start{mask-image:none;-webkit-mask-image:none}
+.cols.scroll .col{flex:0 0 calc((100% - 5 * var(--gap,5px)) / 6);scroll-snap-align:end}
+.cols.scroll:focus-visible{outline:2px solid var(--text);outline-offset:4px;border-radius:6px}
+
+/* ── Variant E · Traiettoria: Flussi unchanged, the forecast is the balance line underneath ── */
+.traj{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.traj .hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.traj .hd .k{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.traj .hd .v{font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.traj .plot{height:72px;margin-top:12px}
+.traj .plot svg{width:100%;height:100%;display:block;overflow:visible}
+.traj .ticks{display:grid;grid-template-columns:repeat(9,1fr);margin-top:8px}
+.traj .ticks span{font-size:11px;color:var(--text-faint);text-align:center}
+.traj .ticks span.cur{color:var(--text)}
+.traj .range-l{margin-top:10px}
+
+/* ── Variant F · Finestra + dettaglio: the forecast line is the way into a sheet ── */
+.fc-open{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;
+  margin:-4px 0;padding:0;text-align:left;transition:transform 160ms var(--ease)}
+.fc-open:active{transform:scale(.98)}
+.fc-open .ic{color:var(--text-muted);flex:0 0 auto}
+.phone.sheet-open .screen{pointer-events:none}
+.scrim{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;
+  transition:opacity 220ms var(--ease)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;max-height:80%;display:flex;flex-direction:column;
+  background:var(--surface);border-radius:14px 14px 0 0;padding-bottom:34px;
+  translate:0 100%;visibility:hidden;
+  /* exit: faster than the enter, same curve */
+  transition:translate 220ms var(--ease),visibility 0s linear 220ms}
+.phone.sheet-open .scrim{opacity:1;pointer-events:auto;transition-duration:320ms}
+.phone.sheet-open .sheet{translate:0 0;visibility:visible;transition:translate 320ms var(--ease),visibility 0s}
+.sheet .handle{width:36px;height:4px;border-radius:999px;background:var(--border-strong);margin:8px auto 4px}
+.sheet .st{display:flex;align-items:center;gap:4px;padding:0 16px 8px;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.sheet .st:focus-visible{outline:none}
+.sheet .sb{padding:0 16px;overflow-y:auto;scrollbar-width:none}
+.sheet .sb .fc-big{margin-top:0}
+.sheet .sb .how{margin:6px 0 4px;font-size:13px;color:var(--text-muted);line-height:1.4}
+@media (prefers-reduced-motion:reduce){
+  .sheet,.phone.sheet-open .sheet{translate:0 0;opacity:0;transition:opacity 150ms linear,visibility 0s linear 150ms}
+  .phone.sheet-open .sheet{opacity:1;transition:opacity 150ms linear,visibility 0s}
+}
+
+/* ── context cards (static, shape only) ── */
+.seg{display:flex;padding:2px;border-radius:9px;background:var(--raised);border:1px solid var(--border)}
+.seg button{flex:1;padding:7px 0;border-radius:7px;font-size:13px;color:var(--text-muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 0 0 1px var(--border)}
+.amt-md{font-size:26px;font-weight:600;letter-spacing:-.03em;margin-top:12px}
+.split{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-top:10px}
+.split div{height:100%}
+.srow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.srow:first-child{border-top:none}
+.srow .dot{width:8px;height:8px;border-radius:4px}
+.srow .nm{flex:1;font-size:15px;letter-spacing:-.01em}
+.srow .pc{font-size:13px;color:var(--text-faint)}
+.srow .am{font-size:15px}
+.trend{height:80px;margin-top:12px}
+.trend svg{width:100%;height:100%;display:block;overflow:visible}
+
+/* tab bar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:78px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 12px 0;z-index:5}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text-faint);width:64px}
+.tab.on{color:var(--text)}
+.tab .ic{width:22px;height:22px}
+
+/* ───────────────────────── picker (outside the design system on purpose) ───────────────────────── */
+.variant-picker{position:fixed;bottom:24px;left:50%;translate:-50% 0;z-index:2147483647;display:flex;gap:2px;padding:4px;border-radius:999px;background:rgb(20 20 20 / .9);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .25);font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none}
+.variant-picker button{padding:7px 14px;border:0;white-space:nowrap;border-radius:999px;background:none;color:rgb(255 255 255 / .6);cursor:pointer}
+.variant-picker button:hover{color:rgb(255 255 255 / .85)}
+.variant-picker button[aria-current="true"]{background:rgb(255 255 255 / .14);color:#fff}
+.variant-picker button:focus-visible{outline:2px solid rgb(255 255 255 / .7);outline-offset:2px}
+.tweaks{position:fixed;right:20px;bottom:24px;z-index:2147483646;font:13px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#fff}
+.tweaks summary{list-style:none;cursor:pointer;padding:9px 14px;border-radius:999px;background:rgb(20 20 20 / .9);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .25);color:rgb(255 255 255 / .75);user-select:none}
+.tweaks summary::-webkit-details-marker{display:none}
+.tweaks .panel{position:absolute;right:0;bottom:44px;width:250px;padding:12px 14px;border-radius:14px;background:rgb(20 20 20 / .95);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .1),0 8px 24px rgb(0 0 0 / .35);display:flex;flex-direction:column;gap:10px}
+.tweaks label{display:flex;align-items:center;justify-content:space-between;gap:10px;color:rgb(255 255 255 / .8)}
+.tweaks select,.tweaks input{accent-color:#fff;font:inherit}
+.tweaks select{background:rgb(255 255 255 / .08);color:#fff;border:0;border-radius:6px;padding:4px 6px}
+.tweaks .note{color:rgb(255 255 255 / .5);font-size:12px;line-height:1.4;border-top:1px solid rgb(255 255 255 / .1);padding-top:10px}
+.tweaks kbd{font:inherit;padding:1px 5px;border-radius:4px;background:rgb(255 255 255 / .1)}
+</style>
+</head>
+<body>
+<div class="phone" id="phone" data-variant="nove">
+  <div class="screen">
+    <div class="header">
+      <button class="avatar" aria-label="Profilo">SG</button>
+      <button class="period" aria-label="Cambia periodo">
+        <div class="l num">Settembre 2026 <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></div>
+        <div class="s num">1 set – 30 set · 4 giorni rimasti</div>
+      </button>
+      <button class="hbtn" id="eye" aria-label="Nascondi gli importi" aria-pressed="false">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <div class="nav">
+        <button aria-label="Periodo precedente"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 18-6-6 6-6"/></svg></button>
+        <button aria-label="Periodo successivo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="handle" aria-hidden="true"></div>
+    <div class="st" id="sheet-title" tabindex="-1">Previsione <button class="info" aria-label="Cos'è la previsione"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.01"/></svg></button></div>
+    <div class="sb" id="sheet-body"></div>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/></svg>Home</div>
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h9M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Transazioni</div>
+    <div class="tab on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Statistiche</div>
+    <div class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 16.5z"/><path d="M3 8.5V7a2 2 0 0 1 2-2h11"/><path d="M16.5 12.5h.01"/></svg>Conti</div>
+  </div>
+</div>
+
+<nav class="variant-picker" aria-label="Varianti">
+  <button type="button" data-variant="nove" aria-current="true">Nove colonne</button>
+  <button type="button" data-variant="finestra">Finestra</button>
+  <button type="button" data-variant="card">Card a parte</button>
+  <button type="button" data-variant="scorrevole">Scorrevole</button>
+  <button type="button" data-variant="traiettoria">Traiettoria</button>
+  <button type="button" data-variant="mix">Finestra + dettaglio</button>
+</nav>
+<details class="tweaks">
+  <summary>Tweaks</summary>
+  <div class="panel">
+    <label>Tema <select id="tw-theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+    <label>Scenario <select id="tw-scenario"><option value="base">Risparmio</option><option value="tight">In calo</option></select></label>
+    <label>Storico <select id="tw-history"><option value="full">6+ periodi</option><option value="short">2 periodi</option></select></label>
+    <label>Larghezza <select id="tw-width"><option value="390">390 px</option><option value="320">320 px</option></select></label>
+    <label>Importi nascosti <input type="checkbox" id="tw-hidden" /></label>
+    <div class="note">
+      <kbd>←</kbd><kbd>→</kbd> cambia variante, <kbd>1</kbd>–<kbd>6</kbd> salta. In «Finestra + dettaglio» le frecce ‹ › dell'header cambiano periodo: la previsione c'è solo sul periodo in corso. Con «2 periodi» la previsione sparisce (meno di 3 periodi di storico).
+      L'ⓘ è solo segnaposto: aprirebbe il concetto «Previsione» della Guida.
+    </div>
+  </div>
+</details>
+
+<script>
+(() => {
+  const VARIANTS = ['nove', 'finestra', 'card', 'scorrevole', 'traiettoria', 'mix'];
+  const MASK = '••••';
+  const MINUS = '−';
+  const phone = document.getElementById('phone');
+  const content = document.getElementById('content');
+  const eye = document.getElementById('eye');
+  const state = { variant: 'nove', scenario: 'base', history: 'full', hidden: false, offset: 0, sheet: false };
+
+  /* ── data: monthly cycles, today 26 set 2026, EUR, whole euros (the app keeps minor units) ──
+     Committed spend ≈ 1.026 € (affitto 850, utenze 120, palestra 45, Spotify 11); discretionary medians
+     from the six closed cycles; Nov carries the yearly car insurance (420 €), a recurrence. */
+  const SCENARIOS = {
+    base: {
+      balance: 8412,
+      older: [{ k: 'gen', inc: 2650, exp: 2310 }, { k: 'feb', inc: 2650, exp: 2090 }, { k: 'mar', inc: 2650, exp: 2520 }],
+      past: [
+        { k: 'apr', inc: 2650, exp: 2180 }, { k: 'mag', inc: 2650, exp: 2410 },
+        { k: 'giu', inc: 3720, exp: 2020 }, { k: 'lug', inc: 2650, exp: 2930 },
+        { k: 'ago', inc: 2650, exp: 2240 }, { k: 'set', inc: 2650, exp: 1980, cur: true },
+      ],
+      fc: [
+        { k: 'ott', name: 'Ottobre', inc: 2650, exp: 2210, min: 1980, max: 2930 },
+        { k: 'nov', name: 'Novembre', inc: 2650, exp: 2630, min: 2400, max: 3350 },
+        { k: 'dic', name: 'Dicembre', inc: 2650, exp: 2210, min: 1980, max: 2930 },
+      ],
+    },
+    tight: {
+      balance: 3140,
+      older: [{ k: 'gen', inc: 2100, exp: 2310 }, { k: 'feb', inc: 2100, exp: 2090 }, { k: 'mar', inc: 2100, exp: 2520 }],
+      past: [
+        { k: 'apr', inc: 2100, exp: 2180 }, { k: 'mag', inc: 2100, exp: 2410 },
+        { k: 'giu', inc: 2100, exp: 2020 }, { k: 'lug', inc: 2100, exp: 2930 },
+        { k: 'ago', inc: 2100, exp: 2240 }, { k: 'set', inc: 2100, exp: 1980, cur: true },
+      ],
+      fc: [
+        { k: 'ott', name: 'Ottobre', inc: 2100, exp: 2210, min: 1980, max: 2930 },
+        { k: 'nov', name: 'Novembre', inc: 2100, exp: 2630, min: 2400, max: 3350 },
+        { k: 'dic', name: 'Dicembre', inc: 2100, exp: 2210, min: 1980, max: 2930 },
+      ],
+    },
+  };
+
+  const group = (n) => String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  /** formatMajor: `+325`, `−193`, `0` */
+  const major = (n) => (n > 0 ? '+' : n < 0 ? MINUS : '') + group(n);
+  /** Nine columns leave ~33px per label: four figures and up go compact (`+1,7k`). */
+  const compact = (n) => {
+    if (Math.abs(n) < 1000) return major(n);
+    const k = (Math.abs(n) / 1000).toFixed(1).replace('.', ',').replace(',0', '');
+    return (n > 0 ? '+' : MINUS) + k + 'k';
+  };
+  const euro = (n) => `${group(n)} €`;
+  const m = (s) => (state.hidden ? MASK : s);
+
+  function scenario() {
+    const s = SCENARIOS[state.scenario];
+    if (state.history === 'full') return { ...s, showFc: true };
+    // Two cycles of history: the four older columns are empty cycles, the forecast is hidden.
+    const past = s.past.map((c, i) => (i < 4 ? { ...c, inc: 0, exp: 0 } : c));
+    return { ...s, past, showFc: false };
+  }
+
+  function withBalance(s) {
+    let bal = s.balance;
+    return s.fc.map((c) => { bal += c.inc - c.exp; return { ...c, bal }; });
+  }
+
+  const INFO = `<button class="info" aria-label="Cos'è la previsione"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.01"/></svg></button>`;
+
+  /* ── one cashflow column ── */
+  function column(c, scale, { fc = false, first = false, fmt = major } = {}) {
+    const h = (v) => (state.hidden ? 19 : v === 0 ? 0 : Math.max(1, Math.round((v / scale) * 54)));
+    const net = c.inc - c.exp;
+    const empty = c.inc === 0 && c.exp === 0;
+    const hatch = c.cur || fc;
+    const band = fc && !state.hidden
+      ? `<div class="band" style="top:${h(c.min)}px;height:${h(c.max) - h(c.min)}px"></div>` : '';
+    const cls = ['col', c.cur ? 'cur' : '', fc ? 'fc' : '', first ? 'first-fc' : ''].join(' ');
+    const label = empty ? '0' : fmt(net);
+    return `<div class="${cls}">
+      <div class="net num ${!state.hidden && net < 0 ? 'neg' : ''}">${m(label)}</div>
+      <div class="half top">${h(c.inc) ? `<div class="bar inc ${hatch ? 'hatch' : ''}" style="height:${h(c.inc)}px"></div>` : ''}</div>
+      <div class="axis"></div>
+      <div class="half bot">${band}${h(c.exp) ? `<div class="bar exp ${hatch ? 'hatch' : ''}" style="height:${h(c.exp)}px"></div>` : ''}</div>
+      <div class="tick">${c.k}</div>
+    </div>`;
+  }
+
+  function legend(withFc) {
+    const items = [
+      `<span><i style="background:var(--positive)"></i>Entrate</span>`,
+      `<span><i style="background:var(--accent)"></i>Uscite</span>`,
+      `<span><i class="hatch exp"></i>Periodo in corso</span>`,
+    ];
+    if (withFc) {
+      items.push(`<span><i class="hatch exp fc"></i>Previsione</span>`);
+      items.push(`<span><i class="band" style="background:var(--accent);opacity:calc(var(--band) * 1.6)"></i>Min–max</span>`);
+    }
+    return `<div class="legend">${items.join('')}</div>`;
+  }
+
+  function ariaSummary(s, fcs) {
+    const last = fcs.at(-1);
+    return state.hidden ? 'Flussi, importi nascosti'
+      : `Flussi. Previsione a fine dicembre circa ${euro(last.bal)}. ` +
+        fcs.map((c) => `${c.name}: entrate ${c.inc}, uscite ${c.exp} (tra ${c.min} e ${c.max})`).join('; ');
+  }
+
+  function cashflowCard(cols, { caption, withFc, sentence, info, after }) {
+    const box = cols.scroll
+      ? `<div class="cols scroll" tabindex="0" role="region" aria-label="${cols.aria}. Scorri per i periodi precedenti">${cols.html}</div>`
+      : `<div class="cols" role="img" aria-label="${cols.aria}">${cols.html}</div>`;
+    return `<div class="card">
+      <div class="card-h"><div class="t">Flussi${info ? ' ' + INFO : ''}</div><div class="n">${caption}</div></div>
+      <div class="cf">
+        ${box}
+        ${sentence || ''}
+        ${legend(withFc)}
+      </div>
+      ${after || ''}
+    </div>`;
+  }
+
+  function sentenceLine(fcs) {
+    const last = fcs.at(-1);
+    return `<div class="foot num">A fine ${last.name.toLowerCase()} circa <b>${m(euro(last.bal))}</b></div>`;
+  }
+
+  function renderCashflow() {
+    const s = scenario();
+    const fcs = withBalance(s);
+    const v = state.variant;
+    const showFc = s.showFc;
+
+    if (v === 'mix') {
+      // The window follows the selected period (header ‹ ›): on a closed period it is §5.7 as today,
+      // six cycles ending there; only the running period grows the three forecast columns.
+      if (state.offset < 0 || !showFc) {
+        const hist = [...s.older.map((c) => (showFc ? c : { ...c, inc: 0, exp: 0 })), ...s.past];
+        const end = hist.length + state.offset;
+        const cols = hist.slice(end - 6, end).map((c, i, a) => ({ ...c, cur: i === a.length - 1 }));
+        const scale = Math.max(1, ...cols.flatMap((c) => [c.inc, c.exp]));
+        const html = cols.map((c) => column(c, scale)).join('');
+        return cashflowCard({ html, aria: 'Flussi degli ultimi 6 periodi' }, { caption: 'Ultimi 6 periodi', withFc: false });
+      }
+      const past = s.past.slice(-3);
+      const scale = Math.max(1, ...[...past, ...fcs].flatMap((c) => [c.inc, c.exp, c.max || 0]));
+      const html = past.map((c) => column(c, scale)).join('') +
+        fcs.map((c, i) => column(c, scale, { fc: true, first: i === 0 })).join('');
+      const last = fcs.at(-1);
+      const open = `<button class="fc-open foot num" id="fc-open" aria-haspopup="dialog">
+          <span>A fine ${last.name.toLowerCase()} circa <b>${m(euro(last.bal))}</b></span>
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 18 6-6-6-6"/></svg></button>`;
+      return cashflowCard({ html, aria: ariaSummary(s, fcs) }, { caption: '3 periodi · 3 previsti', withFc: true, sentence: open, info: true });
+    }
+
+    if (v === 'card' || v === 'traiettoria' || !showFc) {
+      const scale = Math.max(1, ...s.past.flatMap((c) => [c.inc, c.exp]));
+      const html = s.past.map((c) => column(c, scale)).join('');
+      const after = v === 'traiettoria' && showFc ? trajectory(s, fcs) : '';
+      let out = cashflowCard({ html, aria: 'Flussi degli ultimi 6 periodi' }, { caption: 'Ultimi 6 periodi', withFc: false, after });
+      if (v === 'card' && showFc) out += forecastCard(fcs);
+      return out;
+    }
+
+    const past = v === 'finestra' ? s.past.slice(-3) : s.past;
+    const all = [...past, ...fcs];
+    const scale = Math.max(1, ...all.flatMap((c) => [c.inc, c.exp, c.max || 0]));
+    const fmt = v === 'nove' ? compact : major;
+    const html = past.map((c) => column(c, scale, { fmt })).join('') +
+      fcs.map((c, i) => column(c, scale, { fc: true, first: i === 0, fmt })).join('');
+    const caption = v === 'finestra' ? '3 periodi · 3 previsti' : '6 periodi · 3 previsti';
+    return cashflowCard({ html, aria: ariaSummary(s, fcs), scroll: v === 'scorrevole' },
+      { caption, withFc: true, sentence: sentenceLine(fcs), info: true });
+  }
+
+  /* ── Variant E: month-end balance, six known points then three expected, with the min–max fan ── */
+  function trajectory(s, fcs) {
+    // Month-end balances walked back from today's balance (the current cycle ends ≈ today's balance).
+    const past = [];
+    let b = s.balance;
+    for (let i = s.past.length - 1; i >= 0; i -= 1) { past.unshift(b); b -= s.past[i].inc - s.past[i].exp; }
+    let lo = s.balance, hi = s.balance;
+    const fan = fcs.map((c) => { lo += c.inc - c.max; hi += c.inc - c.min; return { lo, hi }; });
+    const last = fcs.at(-1), end = fan.at(-1);
+    const W = 300, H = 72, N = 9;
+    const all = [...past, ...fcs.map((c) => c.bal), ...fan.flatMap((f) => [f.lo, f.hi])];
+    const min = Math.min(...all), max = Math.max(...all);
+    const x = (i) => ((i + 0.5) / N) * W;
+    const y = (v) => (state.hidden ? H / 2 : H - 4 - ((v - min) / Math.max(1, max - min)) * (H - 8));
+    const cur = past.length - 1;
+    const solid = past.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    const dashed = `M${x(cur)} ${y(past[cur])} ` + fcs.map((c, i) => `L${x(cur + 1 + i).toFixed(1)} ${y(c.bal).toFixed(1)}`).join(' ');
+    const band = `M${x(cur)} ${y(past[cur])} ` + fan.map((f, i) => `L${x(cur + 1 + i).toFixed(1)} ${y(f.hi).toFixed(1)}`).join(' ') +
+      ' ' + fan.slice().reverse().map((f, i) => `L${x(N - 1 - i).toFixed(1)} ${y(f.lo).toFixed(1)}`).join(' ') + ' Z';
+    const ticks = [...s.past.map((c) => c.k), ...fcs.map((c) => c.k)]
+      .map((k, i) => `<span class="${i === cur ? 'cur' : ''}">${k}</span>`).join('');
+    const aria = state.hidden ? 'Saldo previsto, importi nascosti'
+      : `Saldo previsto a fine ${last.name.toLowerCase()} circa ${euro(last.bal)}, tra ${euro(end.lo)} e ${euro(end.hi)}`;
+    return `<div class="traj">
+      <div class="hd"><div class="k">Saldo a fine ${last.name.toLowerCase()} ${INFO}</div><div class="v num">${m('~' + euro(last.bal))}</div></div>
+      <div class="plot" role="img" aria-label="${aria}"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        ${state.hidden ? '' : `<path d="${band}" fill="var(--accent)" opacity="var(--band)"/>`}
+        <path d="${solid}" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        <path d="${dashed}" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="3 4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        <path d="M${x(cur)} ${y(past[cur])} l0 0" stroke="var(--text)" stroke-width="6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      </svg></div>
+      <div class="ticks num" aria-hidden="true">${ticks}</div>
+      <div class="foot num range-l">${state.hidden ? MASK : `Tra <b>${euro(end.lo)}</b> e <b>${euro(end.hi)}</b>, dalle ricorrenze e dalla mediana degli ultimi 6 periodi`}</div>
+    </div>`;
+  }
+
+  /* ── Variant F: the sheet carries Variant C's content ── */
+  function sheetBody(fcs) {
+    const card = forecastCard(fcs);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = card;
+    const big = tmp.querySelector('.fc-big').outerHTML;
+    const rows = tmp.querySelector('.fc-rows').outerHTML;
+    return big + rows +
+      `<p class="how">Dalle ricorrenze già impostate e dalla mediana degli ultimi 6 periodi. La fascia è il periodo più leggero e il più pesante fra quei 6. Trasferimenti e transazioni escluse non contano.</p>`;
+  }
+
+  /* ── Variant C: its own card under Flussi, one row per forecast cycle ── */
+  function forecastCard(fcs) {
+    const last = fcs.at(-1);
+    const hi = Math.max(...fcs.map((c) => c.max)) * 1.08;
+    const pct = (v) => `${((v / hi) * 100).toFixed(1)}%`;
+    const rows = fcs.map((c) => {
+      const net = c.inc - c.exp;
+      const range = state.hidden ? '' :
+        `<div class="range" aria-hidden="true"><div class="rb" style="left:${pct(c.min)};width:calc(${pct(c.max)} - ${pct(c.min)})"></div><div class="rp" style="left:${pct(c.exp)}"></div></div>`;
+      return `<div class="fc-row">
+        <div class="top num"><div class="m">${c.name}</div><div class="net ${!state.hidden && net < 0 ? 'neg' : ''}">${m(major(net))}</div><div class="bal">${m('~' + euro(c.bal))}</div></div>
+        ${range}
+        <div class="sub num"><span>Uscite ${m('~' + euro(c.exp))}</span><span>${state.hidden ? MASK : `tra ${group(c.min)} e ${group(c.max)}`}</span></div>
+      </div>`;
+    }).join('');
+    return `<div class="card" style="padding-bottom:4px">
+      <div class="card-h"><div class="t">Previsione ${INFO}</div><div class="n">Prossimi 3 periodi</div></div>
+      <div class="fc-big num"><div class="k">A fine ${last.name.toLowerCase()} circa</div><div class="v">${m(euro(last.bal))}</div></div>
+      <div class="fc-rows">${rows}</div>
+    </div>`;
+  }
+
+  /* ── context: the rest of the Stats tab, static ── */
+  function contextCards() {
+    const cats = [
+      { n: 'Casa', c: '#8A7BD1', a: 970, p: 49 }, { n: 'Spesa', c: '#5FA8BF', a: 412, p: 21 },
+      { n: 'Ristoranti', c: '#C98A5A', a: 238, p: 12 }, { n: 'Trasporti', c: '#7FAF6A', a: 164, p: 8 },
+      { n: 'Altro', c: '#8C8C8C', a: 196, p: 10 },
+    ];
+    return `<div class="card">
+      <div class="seg" role="group" aria-label="Ripartizione"><button aria-pressed="true">Uscite</button><button aria-pressed="false">Entrate</button></div>
+      <div class="amt-md num">${m('1.980,00 €')}</div>
+      <div class="split">${cats.map((c) => `<div style="flex:${c.a};background:${c.c}"></div>`).join('')}</div>
+      <div style="margin-top:6px">${cats.slice(0, 3).map((c) => `<div class="srow"><div class="dot" style="background:${c.c}"></div><div class="nm">${c.n}</div><div class="pc num">${c.p}%</div><div class="am num">${m(euro(c.a))}</div></div>`).join('')}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="t">Andamento del periodo</div><div class="n num" style="font-size:15px;color:var(--text)">${m('1.980 €')}</div></div>
+      <div class="trend"><svg viewBox="0 0 326 80" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 78 L40 70 L80 64 L120 52 L160 46 L200 38 L240 30 L282 24" fill="none" stroke="var(--text)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        <path d="M0 78 L40 72 L80 62 L120 56 L160 48 L200 40 L240 34 L282 28 L326 20" fill="none" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
+      </svg></div>
+      <div class="caption" style="margin-top:8px">Giorno 26 di 30</div>
+    </div>
+    <div class="caption">1 set – 30 set 2026</div>
+    <div style="height:84px"></div>`;
+  }
+
+  const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre'];
+  const MSHORT = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set'];
+  const DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30];
+  function header() {
+    const off = state.variant === 'mix' ? state.offset : 0;
+    const i = MONTHS.length - 1 + off;
+    const name = MONTHS[i][0].toUpperCase() + MONTHS[i].slice(1);
+    document.querySelector('.period .l').firstChild.textContent = `${name} 2026 `;
+    document.querySelector('.period .s').textContent =
+      `1 ${MSHORT[i]} – ${DAYS[i]} ${MSHORT[i]} · ${off === 0 ? '4 giorni rimasti' : 'Periodo chiuso'}`;
+    const [prev, next] = document.querySelectorAll('.nav button');
+    prev.disabled = state.variant !== 'mix' || off <= -3;
+    next.disabled = state.variant !== 'mix' || off >= 0;
+    prev.style.opacity = prev.disabled ? .4 : 1;
+    next.style.opacity = next.disabled ? .4 : 1;
+  }
+
+  const sheet = document.getElementById('sheet');
+  const scrim = document.getElementById('scrim');
+  let opener = null;
+  function openSheet() {
+    const s = scenario();
+    document.getElementById('sheet-body').innerHTML = sheetBody(withBalance(s));
+    opener = document.activeElement;
+    state.sheet = true;
+    phone.classList.add('sheet-open');
+    phone.querySelector('.screen').inert = true;
+    document.getElementById('sheet-title').focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    if (!state.sheet) return;
+    state.sheet = false;
+    phone.classList.remove('sheet-open');
+    phone.querySelector('.screen').inert = false;
+    (document.getElementById('fc-open') || opener)?.focus({ preventScroll: true });
+  }
+  scrim.addEventListener('click', closeSheet);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+  const [prevBtn, nextBtn] = document.querySelectorAll('.nav button');
+  prevBtn.addEventListener('click', () => { state.offset = Math.max(-3, state.offset - 1); render(); });
+  nextBtn.addEventListener('click', () => { state.offset = Math.min(0, state.offset + 1); render(); });
+
+  function render() {
+    if (state.variant !== 'mix') { state.offset = 0; closeSheet(); }
+    header();
+    phone.dataset.variant = state.variant;
+    content.innerHTML = renderCashflow() + contextCards();
+    content.querySelector('#fc-open')?.addEventListener('click', openSheet);
+    const sc = content.querySelector('.cols.scroll');
+    if (sc) {
+      const edge = () => sc.classList.toggle('at-start', sc.scrollLeft < 4);
+      sc.scrollLeft = sc.scrollWidth;
+      edge();
+      sc.addEventListener('scroll', edge, { passive: true });
+    }
+  }
+
+  /* ── picker: URL is the source of truth ── */
+  const picker = document.querySelector('.variant-picker');
+  function setVariant(v, push = true) {
+    if (!VARIANTS.includes(v)) v = VARIANTS[0];
+    state.variant = v;
+    for (const b of picker.querySelectorAll('button')) b.setAttribute('aria-current', String(b.dataset.variant === v));
+    if (push) {
+      const u = new URL(location.href); u.searchParams.set('variant', v); history.replaceState(null, '', u);
+    }
+    render();
+  }
+  picker.addEventListener('click', (e) => { const b = e.target.closest('button[data-variant]'); if (b) setVariant(b.dataset.variant); });
+  addEventListener('keydown', (e) => {
+    if (e.target.closest('select,input') || state.sheet) return;
+    const i = VARIANTS.indexOf(state.variant);
+    if (e.key === 'ArrowRight') setVariant(VARIANTS[(i + 1) % VARIANTS.length]);
+    else if (e.key === 'ArrowLeft') setVariant(VARIANTS[(i - 1 + VARIANTS.length) % VARIANTS.length]);
+    else if (/^[1-6]$/.test(e.key)) setVariant(VARIANTS[Number(e.key) - 1]);
+  });
+
+  /* ── tweaks, also readable from the URL for static screenshots (?theme=light&hidden=1&history=short&scenario=tight&w=320) ── */
+  const q = new URLSearchParams(location.search);
+  const $ = (id) => document.getElementById(id);
+  function applyTheme(t) { document.documentElement.dataset.theme = t; $('tw-theme').value = t; }
+  function applyWidth(w) { phone.style.setProperty('--w', `${w}px`); $('tw-width').value = String(w); }
+  function applyHidden(h) {
+    state.hidden = h; $('tw-hidden').checked = h;
+    eye.setAttribute('aria-pressed', String(h));
+    eye.setAttribute('aria-label', h ? 'Mostra gli importi' : 'Nascondi gli importi');
+  }
+  $('tw-theme').onchange = (e) => applyTheme(e.target.value);
+  $('tw-width').onchange = (e) => applyWidth(e.target.value);
+  $('tw-scenario').onchange = (e) => { state.scenario = e.target.value; render(); };
+  $('tw-history').onchange = (e) => { state.history = e.target.value; render(); };
+  $('tw-hidden').onchange = (e) => { applyHidden(e.target.checked); render(); };
+  eye.onclick = () => { applyHidden(!state.hidden); render(); };
+
+  applyTheme(q.get('theme') === 'light' ? 'light' : 'dark');
+  applyWidth(q.get('w') === '320' ? 320 : 390);
+  applyHidden(q.get('hidden') === '1');
+  state.scenario = q.get('scenario') === 'tight' ? 'tight' : 'base'; $('tw-scenario').value = state.scenario;
+  state.history = q.get('history') === 'short' ? 'short' : 'full'; $('tw-history').value = state.history;
+  setVariant(q.get('variant') || 'nove', false);
+  if (q.get('offset')) { state.offset = Math.max(-3, Math.min(0, Number(q.get('offset')) || 0)); render(); }
+  if (q.get('sheet') === '1' && document.getElementById('fc-open')) openSheet();
+})();
+</script>
+</body>
+</html>

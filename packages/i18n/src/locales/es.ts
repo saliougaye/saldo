@@ -413,6 +413,16 @@ export const es: Messages = {
       'Un movimiento con varias etiquetas cuenta en cada una, así que la suma supera el total del periodo.',
     tagsUntagged_one: '{{count}} movimiento sin etiqueta · {{amount}}',
     tagsUntagged_other: '{{count}} movimientos sin etiqueta · {{amount}}',
+    lastAndForecast: '3 periodos · 3 previstos',
+    legendForecast: 'Previsión',
+    legendRange: 'Mín.–máx.',
+    forecast: 'Previsión',
+    forecastEnd: 'Al {{date}}, unos {{amount}}',
+    forecastEndLabel: 'Al {{date}}, unos',
+    forecastSpend: 'Gastos ~{{amount}}',
+    forecastRange: 'entre {{min}} y {{max}}',
+    forecastHow:
+      'A partir de tus movimientos recurrentes y de la mediana de los últimos 6 periodos. La franja va del periodo más ligero al más pesado de esos 6. Las transferencias y los movimientos excluidos no cuentan.',
   },
   attachments: {
     add: 'Añadir adjunto',
@@ -1091,6 +1101,14 @@ export const es: Messages = {
       body: [
         'Saldo crea solo las próximas repeticiones, hasta el final del periodo siguiente. Hasta que llega su fecha las ves como «Próximos» y no cuentan en los totales.',
         'Cuando editas una, te pregunta si el cambio es solo para esa, también para las siguientes o para todas. Las encuentras todas en Movimientos → Recurrentes.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Previsión',
+      summary: 'Los próximos tres periodos, a partir de lo que ya se repite.',
+      body: [
+        'En Estadísticas, en el periodo en curso, Flujo añade tres periodos previstos, atenuados. Cada uno suma tus recurrentes y lo que ya tiene fecha futura a tu gasto libre habitual: la mediana de los últimos 6 periodos.',
+        'La franja clara detrás de los gastos va del periodo más ligero al más pesado: es cuánto puede variar. El saldo parte de tu patrimonio total de hoy. Hacen falta al menos 3 periodos de historial; si no, la previsión no aparece.',
       ].join('\n\n'),
     },
     tags: {

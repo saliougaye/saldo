@@ -11,6 +11,7 @@ export * from './cycle';
 export * from './dates';
 export * from './entities';
 export * from './filters';
+export * from './forecast';
 export * from './goals';
 export * from './goalTargets';
 export * from './history';

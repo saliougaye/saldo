@@ -413,6 +413,16 @@ export const de: Messages = {
       'Ein Eintrag mit mehreren Tags zählt in jedem, daher liegt die Summe über der des Zeitraums.',
     tagsUntagged_one: '{{count}} Eintrag ohne Tag · {{amount}}',
     tagsUntagged_other: '{{count}} Einträge ohne Tag · {{amount}}',
+    lastAndForecast: '3 Zeiträume · 3 voraus',
+    legendForecast: 'Prognose',
+    legendRange: 'Min.–max.',
+    forecast: 'Prognose',
+    forecastEnd: 'Bis {{date}} etwa {{amount}}',
+    forecastEndLabel: 'Bis {{date}} etwa',
+    forecastSpend: 'Ausgaben ~{{amount}}',
+    forecastRange: 'zwischen {{min}} und {{max}}',
+    forecastHow:
+      'Aus deinen wiederkehrenden Buchungen und dem Median der letzten 6 Zeiträume. Das Band reicht vom leichtesten bis zum schwersten dieser 6. Umbuchungen und ausgeschlossene Buchungen zählen nicht.',
   },
   attachments: {
     add: 'Anhang hinzufügen',
@@ -1093,6 +1103,14 @@ export const de: Messages = {
       body: [
         'Saldo legt die nächsten Vorkommen selbst an, bis zum Ende des nächsten Zeitraums. Bis ihr Datum kommt, siehst du sie als „Anstehend“, und sie zählen nicht in den Summen.',
         'Änderst du eines, fragt Saldo, ob das nur für dieses gilt, auch für die folgenden oder für alle. Du findest sie alle unter Buchungen → Wiederkehrend.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Prognose',
+      summary: 'Die nächsten drei Zeiträume, aus dem, was sich schon wiederholt.',
+      body: [
+        'In der Statistik ergänzt Cashflow im laufenden Zeitraum drei prognostizierte Zeiträume, abgeschwächt. Jeder addiert deine wiederkehrenden Buchungen und alles, was schon im Voraus datiert ist, zu deinen üblichen freien Ausgaben: dem Median der letzten 6 Zeiträume.',
+        'Das helle Band hinter den Ausgaben reicht vom leichtesten bis zum schwersten Zeitraum: So viel kann es schwanken. Der Saldo beginnt beim heutigen Vermögen. Es braucht mindestens 3 Zeiträume Verlauf, sonst erscheint keine Prognose.',
       ].join('\n\n'),
     },
     tags: {

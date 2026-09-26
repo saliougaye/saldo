@@ -1,4 +1,4 @@
-import { isUpcoming, previousPeriods, summarizePeriod } from '@saldo/core';
+import { isUpcoming, previousPeriods, summarizePeriod, upcomingUntil } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -56,7 +56,10 @@ export default function HomeTab() {
 
   // Load the selected cycle plus the previous six, which is all the baselines need (§7).
   const historyStart = previousPeriods(def, period.range, 6).at(-1)?.start ?? period.range.start;
-  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  // «In arrivo» reaches into the next period while this one is current: navigation stops here, so
+  // that is where next month's rent is found (§6.15). Everything else filters by the period.
+  const upcomingEnd = upcomingUntil(def, period.range, today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, upcomingEnd);
   // Before both answer, the hero would read "0 €" and the recent card "no transactions yet".
   // The skeleton shows at once rather than behind `useDelayed`: this is the screen the app opens
   // on, and a blank band under the header read as a hang. Its blocks sit where the figures land.
@@ -70,8 +73,8 @@ export default function HomeTab() {
   // stops saying that and starts being the transactions list. The header still counts them all,
   // so the cap never hides how many there are.
   const upcomingAll = useMemo(
-    () => rows.filter((tx) => isUpcoming(tx, today) && tx.date <= period.range.end),
-    [rows, today, period.range.end],
+    () => rows.filter((tx) => isUpcoming(tx, today) && tx.date <= upcomingEnd),
+    [rows, today, upcomingEnd],
   );
   const upcoming = upcomingAll.slice(0, UPCOMING_SHOWN);
   const recent = useMemo(

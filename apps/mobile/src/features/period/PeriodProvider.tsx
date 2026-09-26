@@ -29,7 +29,7 @@ export interface PeriodValue {
   period: Period;
   /** Moves by whole periods. On a custom range it first returns to the period holding today. */
   shift: (delta: number) => void;
-  /** False past the period after this one (§6.15); the header greys its › out rather than lying. */
+  /** False past the current period (§6.15); the header greys its › out rather than lying. */
   canShift: (delta: number) => boolean;
   setCustomRange: (range: DateRange) => void;
   goToPeriod: (period: Cycle) => void;

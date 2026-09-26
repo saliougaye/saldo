@@ -411,6 +411,16 @@ export const sv: Messages = {
       'En post med flera taggar räknas i varje, så summan blir större än periodens total.',
     tagsUntagged_one: '{{count}} post utan tagg · {{amount}}',
     tagsUntagged_other: '{{count}} poster utan tagg · {{amount}}',
+    lastAndForecast: '3 perioder · 3 framåt',
+    legendForecast: 'Prognos',
+    legendRange: 'Min–max',
+    forecast: 'Prognos',
+    forecastEnd: 'Den {{date}} cirka {{amount}}',
+    forecastEndLabel: 'Den {{date}} cirka',
+    forecastSpend: 'Utgifter ~{{amount}}',
+    forecastRange: 'mellan {{min}} och {{max}}',
+    forecastHow:
+      'Utifrån dina återkommande poster och medianen av de senaste 6 perioderna. Bandet går från den lättaste till den tyngsta av de 6. Överföringar och exkluderade poster räknas inte.',
   },
   attachments: {
     add: 'Lägg till bilaga',
@@ -1085,6 +1095,14 @@ export const sv: Messages = {
       body: [
         'Saldo skapar själv nästa tillfällen, till slutet av nästa period. Tills datumet kommer ser du dem som ”Kommande”, och de räknas inte i summorna.',
         'När du ändrar ett frågar Saldo om ändringen gäller bara det, även de följande eller alla. Du hittar alla under Transaktioner → Återkommande.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Prognos',
+      summary: 'De tre kommande perioderna, utifrån det som redan upprepas.',
+      body: [
+        'I Statistik lägger Kassaflöde till tre prognosperioder, nedtonade, under den pågående perioden. Var och en lägger ihop dina återkommande poster och allt som redan är daterat framåt med dina vanliga fria utgifter: medianen av de senaste 6 perioderna.',
+        'Det ljusa bandet bakom utgifterna går från den lättaste perioden till den tyngsta: så mycket kan det variera. Saldot utgår från din totala förmögenhet i dag. Det krävs minst 3 perioder historik, annars visas ingen prognos.',
       ].join('\n\n'),
     },
     tags: {

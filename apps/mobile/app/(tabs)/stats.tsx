@@ -1,11 +1,15 @@
 import {
+  accountBalances,
   averageSeries,
   categorySpendHistory,
   committedSpend,
   dailyCumulative,
   deltaPercent,
+  FORECAST_PERIODS,
+  forecastPeriods,
   isWithin,
   median,
+  netWorth,
   periodHistory,
   periodSpendHistory,
   previousPeriods,
@@ -16,7 +20,7 @@ import {
   summarizePeriod,
   upcomingExpenses,
 } from '@saldo/core';
-import { formatCycleRange, formatPeriodTick } from '@saldo/i18n';
+import { formatCycleRange, formatLongDate, formatPeriodTick } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -29,23 +33,33 @@ import { ListRow } from '../../src/components/ListRow';
 import { Screen } from '../../src/components/Screen';
 import { Segmented } from '../../src/components/Segmented';
 import { Sheet } from '../../src/components/Sheet';
-import { useCategoriesQuery, useSettings, useTransactionsInRangeQuery } from '../../src/db/hooks';
+import {
+  useAccountsQuery,
+  useCategoriesQuery,
+  useRecurrencesQuery,
+  useSettings,
+  useTransactionsInRangeQuery,
+} from '../../src/db/hooks';
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { CycleTrendChart } from '../../src/features/home/CycleTrendChart';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
-import { CashflowChart } from '../../src/features/stats/CashflowChart';
+import { type CashflowBar, CashflowChart } from '../../src/features/stats/CashflowChart';
 import { CategorySplitRows } from '../../src/features/stats/CategorySplitRows';
+import { ForecastSheet } from '../../src/features/stats/ForecastSheet';
 import { SplitBar } from '../../src/features/stats/SplitBar';
 import { StatsSkeleton } from '../../src/features/stats/StatsSkeleton';
 import { TagSpendCard } from '../../src/features/stats/TagSpendCard';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
+import { Icon } from '../../src/theme/Icon';
 import { entering } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 /** §5.7 shows six cycles including the current one. */
 const CASHFLOW_CYCLES = 6;
+/** The start of any history: a balance covers every row ever entered (§5.3). */
+const EVERYTHING = '1970-01-01';
 /** "Il solito" on the cycle-trend chart is the average of this many previous cycles (§5.6). */
 const USUAL_CYCLES = 3;
 /** The projection is only offered with at least this many days left (§5.7). */
@@ -71,6 +85,7 @@ export default function StatsTab() {
   const currency = settings?.currency ?? 'EUR';
   const [direction, setDirection] = useState<'expense' | 'income'>('expense');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [forecastOpen, setForecastOpen] = useState(false);
   // Pushing the category while the sheet is still dismissing leaves the modal on top of it, so the
   // tap is parked here and spent once the sheet has actually gone.
   const [pending, setPending] = useState<string | null>(null);
@@ -79,12 +94,35 @@ export default function StatsTab() {
 
   const historyStart =
     previousPeriods(def, period.range, CASHFLOW_CYCLES).at(-1)?.start ?? period.range.start;
+  // §5.17: only on a whole period that holds today. A custom range, a closed period or the one
+  // ahead keep the six historical columns; walking back is the header's ‹, not the chart's.
+  const forecastOn = period.isPeriod && period.isCurrent;
+  const forecastEnd = shiftPeriod(def, period.range, FORECAST_PERIODS).end;
   // The query, not just its rows: this screen reads six cycles, and rendering it against an empty
-  // array first is what made it jump when the data landed.
-  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, period.range.end);
+  // array first is what made it jump when the data landed. With a forecast it reads the whole
+  // history, because the balance chain starts from today's net worth (§5.3), and the three periods
+  // ahead, for what is already scheduled in them. Every calculation below filters by its range.
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(
+    forecastOn ? EVERYTHING : historyStart,
+    forecastOn ? forecastEnd : period.range.end,
+  );
+  const { accounts, loaded: accountsLoaded } = useAccountsQuery();
+  const { rows: recurrences, loaded: recurrencesLoaded } = useRecurrencesQuery();
   // The split prints category names. The skeleton shows at once, as on every tab: a blank band
   // under the header read as a hang.
-  const loaded = rowsLoaded && categoriesLoaded;
+  const loaded = rowsLoaded && categoriesLoaded && accountsLoaded && recurrencesLoaded;
+
+  const forecast = useMemo(() => {
+    if (!forecastOn) return null;
+    return forecastPeriods({
+      txs: rows,
+      recurrences,
+      def,
+      period: period.range,
+      today,
+      balance: netWorth(accounts, accountBalances(accounts, rows, today)),
+    });
+  }, [forecastOn, rows, recurrences, def, period.range, today, accounts]);
 
   const summary = useMemo(
     () => summarizePeriod(rows, period.range, today),
@@ -104,22 +142,38 @@ export default function StatsTab() {
     );
   }, [rows, period.range, def, today, current.length]);
 
-  const bars = useMemo(() => {
+  const bars = useMemo<CashflowBar[]>(() => {
+    // D29: with a forecast the six columns are 2 closed + current + 3 ahead, never nine.
+    const historical = forecast === null ? CASHFLOW_CYCLES : CASHFLOW_CYCLES - FORECAST_PERIODS;
     const cycles = [period.range];
-    for (let back = 1; back < CASHFLOW_CYCLES; back += 1) {
+    for (let back = 1; back < historical; back += 1) {
       cycles.push(shiftPeriod(def, period.range, -back));
     }
-    return cycles.reverse().map((cycle) => {
+    const past = cycles.reverse().map((cycle) => {
       const cycleSummary = summarizePeriod(rows, cycle, today);
       return {
         key: cycle.start,
         label: formatPeriodTick(cycle.start, def.kind, locale),
         income: cycleSummary.income,
         expenses: cycleSummary.spent,
-        current: cycle.start === period.range.start,
+        // Hatched means "still running": a closed period the user walked back to is final.
+        current: period.isCurrent && cycle.start === period.range.start,
       };
     });
-  }, [rows, period.range, def, today, locale]);
+    if (forecast === null) return past;
+    return [
+      ...past,
+      ...forecast.map((ahead) => ({
+        key: ahead.range.start,
+        label: formatPeriodTick(ahead.range.start, def.kind, locale),
+        income: ahead.income,
+        expenses: ahead.expenses,
+        current: false,
+        forecast: { min: ahead.expensesMin, max: ahead.expensesMax },
+      })),
+    ];
+  }, [rows, period.range, period.isCurrent, def, today, locale, forecast]);
+  const forecastLast = forecast?.at(-1);
 
   const committed = useMemo(
     () => committedSpend(rows, period.range, today),
@@ -218,11 +272,46 @@ export default function StatsTab() {
               {t('stats.cashflow')}
             </Text>
             <Text size="caption" color="textFaint" numberOfLines={1}>
-              {t('stats.lastCycles')}
+              {t(forecast === null ? 'stats.lastCycles' : 'stats.lastAndForecast')}
             </Text>
           </View>
           <View style={{ marginTop: 18 }}>
-            <CashflowChart bars={bars} currency={currency} locale={locale} />
+            <CashflowChart
+              bars={bars}
+              currency={currency}
+              locale={locale}
+              footer={
+                forecastLast === undefined ? null : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('stats.forecastEnd', {
+                      date: formatLongDate(forecastLast.range.end, locale),
+                      amount: money(forecastLast.balance, currency, locale),
+                    })}
+                    onPress={() => setForecastOpen(true)}
+                    style={({ pressed }) => ({
+                      minHeight: theme.layout.minHitTarget,
+                      marginVertical: -8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      opacity: pressed ? 0.6 : 1,
+                    })}
+                  >
+                    <Text size="footnote" color="textMuted" tabular style={{ flexShrink: 1 }}>
+                      {t('stats.forecastEndLabel', {
+                        date: formatLongDate(forecastLast.range.end, locale),
+                      })}{' '}
+                      <Text size="footnote" weight="medium" tabular>
+                        {money(forecastLast.balance, currency, locale)}
+                      </Text>
+                    </Text>
+                    <Icon name="chevR" size={16} color={theme.palette.textMuted} />
+                  </Pressable>
+                )
+              }
+            />
           </View>
         </Card>
       </Animated.View>
@@ -405,6 +494,17 @@ export default function StatsTab() {
       <Text size="caption" color="textFaint">
         {formatCycleRange(period.range, locale, today)}
       </Text>
+
+      {forecast === null ? null : (
+        <ForecastSheet
+          visible={forecastOpen}
+          onClose={() => setForecastOpen(false)}
+          periods={forecast}
+          currency={currency}
+          locale={locale}
+          today={today}
+        />
+      )}
 
       <Sheet
         visible={sheetOpen}

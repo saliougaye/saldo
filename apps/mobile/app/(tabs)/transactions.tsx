@@ -9,6 +9,7 @@ import {
   type TransactionFilters,
   totalsOf,
   touchesClosedGoal,
+  upcomingUntil,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import { router as routerApi, useLocalSearchParams, useRouter } from 'expo-router';
@@ -62,7 +63,7 @@ export default function TransactionsTab() {
   const { accounts, loaded: accountsLoaded } = useAccountsQuery();
   const { rows: categories, loaded: categoriesLoaded } = useCategoriesQuery();
   const tags = useTags();
-  const { today, period } = usePeriod();
+  const { today, def, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   // Filters arrive as route params — from "Ultime transazioni" on an account, and from the excluded
@@ -91,9 +92,11 @@ export default function TransactionsTab() {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [upcomingOpen, setUpcomingOpen] = useState(false);
 
+  // The upcoming fold reaches into the next period while this one is current (§5.12, §6.15):
+  // navigation stops here, so this is where rows dated next period are found.
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(
     period.range.start,
-    period.range.end,
+    upcomingUntil(def, period.range, today),
   );
   // Rows need their names: before accounts and categories answer they would paint as "—".
   const loaded = rowsLoaded && accountsLoaded && categoriesLoaded;

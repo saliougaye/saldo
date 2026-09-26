@@ -43,8 +43,8 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
     : t('period.closed');
 
   const navButton = (direction: -1 | 1) => {
-    // Forward stops after the period the materialiser fills (§6.15): beyond it there is nothing
-    // to see, and a disabled arrow says that better than an empty screen would.
+    // Forward stops at the current period (§6.15): what comes next is in «In arrivo» and the
+    // forecast, and a disabled arrow says that better than a screen of empty cards would.
     const allowed = canShift(direction);
     return (
       <Pressable

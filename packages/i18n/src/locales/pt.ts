@@ -415,6 +415,16 @@ export const pt: Messages = {
       'Um movimento com várias etiquetas conta em cada uma, por isso a soma passa o total do período.',
     tagsUntagged_one: '{{count}} movimento sem etiqueta · {{amount}}',
     tagsUntagged_other: '{{count}} movimentos sem etiqueta · {{amount}}',
+    lastAndForecast: '3 períodos · 3 previstos',
+    legendForecast: 'Previsão',
+    legendRange: 'Mín.–máx.',
+    forecast: 'Previsão',
+    forecastEnd: 'A {{date}}, cerca de {{amount}}',
+    forecastEndLabel: 'A {{date}}, cerca de',
+    forecastSpend: 'Despesas ~{{amount}}',
+    forecastRange: 'entre {{min}} e {{max}}',
+    forecastHow:
+      'A partir dos teus movimentos recorrentes e da mediana dos últimos 6 períodos. A faixa vai do período mais leve ao mais pesado desses 6. Transferências e movimentos excluídos não contam.',
   },
   attachments: {
     add: 'Adicionar anexo',
@@ -1093,6 +1103,14 @@ export const pt: Messages = {
       body: [
         'O Saldo cria sozinho as próximas ocorrências, até ao fim do período seguinte. Até chegar a data vês-las como «Próximos» e não contam nos totais.',
         'Quando editas uma, pergunta se a alteração é só para essa, também para as seguintes ou para todas. Encontras todas em Movimentos → Recorrentes.',
+      ].join('\n\n'),
+    },
+    forecast: {
+      title: 'Previsão',
+      summary: 'Os próximos três períodos, a partir do que já se repete.',
+      body: [
+        'Nas Estatísticas, no período em curso, Fluxos junta três períodos previstos, esbatidos. Cada um soma os teus recorrentes e o que já tem data futura às tuas despesas livres habituais: a mediana dos últimos 6 períodos.',
+        'A faixa clara atrás das despesas vai do período mais leve ao mais pesado: é quanto pode variar. O saldo parte do teu património total de hoje. São precisos pelo menos 3 períodos de histórico; caso contrário, a previsão não aparece.',
       ].join('\n\n'),
     },
     tags: {

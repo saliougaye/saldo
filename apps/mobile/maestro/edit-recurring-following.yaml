@@ -76,12 +76,11 @@ name: Edit a recurring transaction, this one and the following ones
 # Home, "Ultime transazioni": today's occurrence. Text, but text this flow typed.
 - assertVisible: "Maestro rent"
 
-# 2. The next occurrence is a month out, so it is in the next period, and the list folds everything
-#    dated after today behind one row (§5.12) — hence the disclosure tap.
+# 2. The next occurrence is a month out, in the next period. Navigation stops at the current one
+#    (§6.15), so it is found in the upcoming fold, which reaches the end of the next period and
+#    folds everything dated after today behind one row (§5.12) — hence the disclosure tap.
 - tapOn:
     id: "tab-transactions"
-- tapOn:
-    id: "period-next"
 - tapOn:
     id: "transactions-upcoming"
 - scrollUntilVisible:
@@ -108,19 +107,15 @@ name: Edit a recurring transaction, this one and the following ones
     id: "recurrence-scope-this-and-following"
 
 # 5. The sheet closes the screen behind it, which leaves the detail of an occurrence that has just
-#    been tombstoned. Back out of it to the list, still on the next period.
+#    been tombstoned. Back out of it to the list, where the upcoming fold is still open.
 - tapOn:
     id: "back-button"
-# The future occurrence carries the new description...
+# The future occurrence carries the new description.
 - assertVisible: "Maestro moved"
-# ...and the old one is gone rather than sitting beside it. Weaker than the line above — a row far
-# enough down the list would also be "not visible" — but the failure it is here to catch is a
-# duplicate in the same day card, which would be right next to it.
-- assertNotVisible: "Maestro rent"
 
-# 6. The occurrence that already happened is untouched: still there, still called what it was.
-- tapOn:
-    id: "period-previous"
+# 6. The occurrence that already happened is untouched: still in the same list, still called what
+#    it was. (No duplicate check here any more: today's row and the next one now share this list,
+#    so "not visible" cannot tell a duplicate apart; `planRecurrenceEdit`'s tests cover that.)
 - scrollUntilVisible:
     element: "Maestro rent"
     direction: DOWN

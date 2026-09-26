@@ -74,6 +74,44 @@ describe('CashflowChart', () => {
   });
 });
 
+const FORECAST_BARS = [
+  ...BARS,
+  {
+    key: '2026-04-27',
+    label: 'Apr 27',
+    income: 231_000,
+    expenses: 190_000,
+    current: false,
+    forecast: { min: 165_000, max: 235_000 },
+  },
+];
+
+describe('CashflowChart forecast', () => {
+  it('explains the forecast and its band only when a forecast column is drawn', async () => {
+    await render(
+      <Host>
+        <CashflowChart bars={BARS} currency="EUR" locale="en" />
+      </Host>,
+    );
+    expect(screen.queryByText('Forecast')).toBeNull();
+    expect(screen.queryByText('Min–max')).toBeNull();
+  });
+
+  it('labels a forecast column with its estimated net and adds the legend entries', async () => {
+    await render(
+      <Host>
+        <CashflowChart bars={FORECAST_BARS} currency="EUR" locale="en" />
+      </Host>,
+    );
+    expect(screen.getByText('+410')).toBeTruthy();
+    expect(screen.getByText('Forecast')).toBeTruthy();
+    expect(screen.getByText('Min–max')).toBeTruthy();
+    // Hatched: the current cycle's two bars, the forecast's two, and two legend swatches.
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree.match(/RNSVGPattern/g)).toHaveLength(6);
+  });
+});
+
 describe('SpendHistoryChart', () => {
   it('labels each column with an unsigned amount', async () => {
     await render(
@@ -133,5 +171,17 @@ describe('hidden mode', () => {
     );
     expect(screen.getAllByText('••••')).toHaveLength(BARS.length);
     expect(screen.queryByText('+325')).toBeNull();
+  });
+
+  it('masks a forecast column too', async () => {
+    await render(
+      <Host>
+        <HiddenAmountsProvider>
+          <CashflowChart bars={FORECAST_BARS} currency="EUR" locale="en" />
+        </HiddenAmountsProvider>
+      </Host>,
+    );
+    expect(screen.getAllByText('••••')).toHaveLength(FORECAST_BARS.length);
+    expect(screen.queryByText('+410')).toBeNull();
   });
 });

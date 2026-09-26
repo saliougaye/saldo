@@ -137,15 +137,15 @@ export function describePeriod(range: DateRange, today: LocalDate): PeriodView {
 }
 
 /**
- * How far forward the period navigation goes (§6.15).
+ * How far forward the period navigation goes (§6.15): no further than the current period.
  *
- * Not zero: recurrences are materialised to the end of the *next* period (§5.9), and a
- * transaction can be entered with a future date, so the period after this one holds rows the user
- * put there and expects to find. Everything beyond it is empty by construction — no spending has
- * happened, no budget has moved — and a screen that can scroll forever into nothing is a way to
- * get lost, not a feature.
+ * It used to be one: recurrences are materialised to the end of the *next* period (§5.9) and a
+ * transaction can be dated ahead, so that period holds rows the user expects to find. They are
+ * found in «In arrivo» instead, which reaches the end of the next period (`upcomingUntil`), and
+ * Statistics shows what comes after as its forecast (§5.17). A period ahead was otherwise empty
+ * cards — no spending has happened, no budget has moved — and read as a closed one.
  */
-export const MAX_PERIODS_AHEAD = 1;
+export const MAX_PERIODS_AHEAD = 0;
 
 /**
  * Whether the navigation may move `delta` periods from `range`. Backwards is always allowed: that

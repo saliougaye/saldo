@@ -255,8 +255,9 @@ that is the wrong answer: the trip cost 800 € and 300 € came back, and the s
 Discussed on 2026-09-21. The ask: a simple forecast of the coming months from past spending. The app already
 computes every input it needs, so this is a projection layer on top of §5.5 and §5.7, not a new model.
 
-**What it shows.** In Statistics, the cashflow chart (§5.7) grows **three forecast cycles** after the current
-one, drawn dimmed and hatched like the current cycle is today. For each forecast cycle:
+**What it shows.** In Statistics, on the current period, the cashflow chart (§5.7) shows the two closed periods, the
+current one and **three forecast periods**, drawn dimmed and hatched; the row «Al {data} circa {saldo}» under it opens
+a sheet with the detail (spec §5.17, D29). For each forecast period:
 
 - **Expenses** = `median(discretionary of the last 6 cycles)` + Σ recurring expenses that
   `occurrenceDates` places in that cycle. `discretionary = spent − committed`, as in "Quota impegnata".
@@ -300,13 +301,19 @@ one, drawn dimmed and hatched like the current cycle is today. For each forecast
 - These aggregates are exactly what the AI insights in 0.5 would consume; whichever ships first should expose
   them from `@saldo/core` in a shape the other can reuse.
 
-**To decide before planning:** nothing — the decisions above are taken.
+**UI decided 2026-09-26** (mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, «Finestra +
+dettaglio»): six columns stay six — 2 closed + current + 3 forecast — so nothing is abbreviated at 320px; no scroll
+inside the chart, because the header's ‹ already walks back and a custom range or a closed period shows the six
+historical columns as before; the detail (one row per forecast period with the min–max band) is a sheet, not a card.
+The line reads «Al {data} circa» so it works for every period kind, and the function is `forecastPeriods` («period» is
+the general word now).
 
-- [ ] Write the plan (`docs/superpowers/plans/…-forecast.md`) with the core function, the chart extension and
-      the i18n keys.
+- [x] Plan `docs/superpowers/plans/2026-09-26-forecast.md` — core function, chart, sheet, i18n, ⓘ `forecast`,
+      and the build.
 
-**Done when:** Statistics shows three dimmed forecast cycles with a min/max band and a «A fine {mese} circa
-{amount}» line, hidden with fewer than 3 cycles of history, and `forecastCycles` is unit-tested in `@saldo/core`.
+**Done when:** Statistics shows three dimmed forecast periods with a min/max band and a «Al {data} circa {amount}»
+row opening the sheet, hidden with fewer than 3 periods of history, and `forecastPeriods` is unit-tested in
+`@saldo/core`.
 
 ---
 
