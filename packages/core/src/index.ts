@@ -31,3 +31,4 @@ export * from './sync/hlc';
 export * from './sync/merge';
 export * from './sync/protocol';
 export * from './targets';
+export * from './userData';
