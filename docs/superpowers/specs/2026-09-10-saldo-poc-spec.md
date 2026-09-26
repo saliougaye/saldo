@@ -83,6 +83,7 @@ cycle, and am I going faster than I should?*
 | D26 | **Rocky appears only where the user stops** (decided 2026-09-24, widened 2026-09-25): peeking over the «nothing yet» ghost stack, peeking over a reached goal's card, whole in the close sheet of a reached goal, waving on the welcome, asleep on the lock screen, waiting in a long labelled load, and small above the message of a failed import or restore. Never in a «nothing matches», a «not found», a toast, the pull-to-refresh or a short boot wait. He moves as the mascot kit's Lottie states; only the waiting ones (`loading`, `sleep`) loop | A mascot seen ten times a day is noise. Next to an error he stays small and still after one play, under the text that says what happened, so he sets the tone without making light of it. Lottie from the kit rather than PNGs: one source for motion and still, since Reduce Motion shows the kit's pose frame. Mockup: `docs/superpowers/mockups/2026-09-24-mascot-variants.html`, variant A+B |
 | D27 | **A closed period is recapped once, in a sheet** (decided 2026-09-25): on the first open of a new period, for every kind including the week, a full-screen sheet recaps the period that just closed (§5.15), with a 09:00 notification that day. Once dismissed it cannot be reopened, and it is not shareable as an image | The switch to a new period was silent. A sheet makes it a moment; every kind gets one because the user wants the week recapped too. Reopening past recaps and sharing them are later ideas: the first has to survive changes of period kind, the second needs a native capture dependency and a decision on what a shared image hides. |
 | D28 | **Saldo explains itself in three places, from one text** (decided 2026-09-26): a first-run intro of four ideas on one screen, an ⓘ next to what it explains opening a sheet, and a «Guida» in Profile with one page per concept. All three read `guide.<concept>.{title,summary,body}` through one typed list of concept ids (§5.16) | Nothing in the app said how it thinks: a period that restarts, «Rimasto da spendere» that is not a bank balance, a transfer that is not an expense. Apple's pattern — a few rows, «Continua», done — costs one tap; the ⓘ answers where the question comes up without coach marks or tooltips over the UI; the Guida is where the same text can be read again. One list of ids makes it impossible for the three to drift apart. A hint that compensates for an unclear label was fixed as a label instead (the generic «ciclo», «saldo disponibile»). Not a «Novità» sheet yet: there are no releases to compare (0.8). Mockup: `docs/superpowers/mockups/2026-09-26-guide-variants.html`, variants 1A, 2A, 3A |
+| D29 | **The forecast lives in Flussi and opens a sheet** (decided 2026-09-26, mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, variant «Finestra + dettaglio»): on the current period the cashflow chart keeps its six columns but shows 2 closed + current + 3 forecast; the row «Al {data} circa {saldo}» under it opens a sheet with one row per forecast period (§5.7, §5.17) | Nine columns did not fit 320px without abbreviating every label; a scroll inside the chart hides half of it and duplicates the header's ‹ ›; a separate card or a balance line added UI the roadmap had left out. Three closed periods are enough on screen because the header already walks back, and the medians still read six. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -436,9 +437,15 @@ Let `today = todayLocal()`.
 
 ### 5.7 Statistics
 
-- **Cashflow (6 cycles):** for each of the last 6 cycles including the current one, show counted income (bar up, positive
+- **Cashflow (6 columns):** for each of the last 6 cycles including the selected one, show counted income (bar up, positive
   colour) and expenses (bar down, accent), with the net label above (`+123` muted, or `−123` accent, rounded to units).
-  The current cycle's bars are hatched (45° stripes).
+  The running period's bars are hatched (45° stripes); a closed period the user navigated to is not, its totals are final.
+  **When the selected period is the current one** and the forecast of §5.17 exists, the six columns become the two
+  closed periods before it, the current one and the **three forecast periods** (D29): dimmed (50% opacity) and hatched,
+  a min–max band behind each forecast expense bar, a dashed divider before the first, and the caption «3 periodi · 3
+  previsti». Under the chart one row, «Al {data} circa {saldo} ›», opens the forecast sheet (§5.17). A custom range, a
+  closed period or a period ahead keep the six historical columns: going further back is the header's ‹, not a
+  scroll inside the chart.
 - **Quota impegnata (committed share):** `committed` = counted expenses with `recurrenceId ≠ null`.
   `discretionary = max(0, spent − committed)`. Two bars (grey committed, accent discretionary) and the line
   "Il {pct}% di questo ciclo era già deciso in partenza: {committed} tra affitto, utenze e abbonamenti."
@@ -772,6 +779,7 @@ the intro, the ⓘ and the Guida all read it.
 | Pianificare | `budgets` — a ceiling per period, the pace tick, rollover | target | | the new/edit budget sheet's title |
 | Pianificare | `goals` — a pocket inside a real account, out of Totale spendibile | piggy | | goal wizard step «Dove li tieni» |
 | Pianificare | `recurring` — «Ripeti», occurrences ahead, the scope sheet | repeat | ✓ | «Ripeti» in the transaction sheet |
+| Pianificare | `forecast` — three periods ahead from recurrences and the usual discretionary spend (§5.17) | trend | | the «Previsione» sheet's title |
 | Organizzare | `tags` — one category, any number of tags | tag | | — |
 | Organizzare | `hidden` — hidden mode hides sums, not single rows | eyeOff | | — |
 | I tuoi dati | `data` — on the phone, on a server if connected, back it up | server | | — |
@@ -794,6 +802,35 @@ means the period in general it now says «periodo» (Statistiche, Home «Avanzat
 «Includi nel totale spendibile», the name of the figure it changes. The same in every language.
 
 **Not now.** A «Novità» sheet after an update reuses the intro with another list of ids once there are releases (0.8).
+
+### 5.17 Forecast
+
+Derived, never stored: `forecastPeriods(input)` in `@saldo/core`, pure, `today` injected. Offered only when the selected
+period is a whole period (not a custom range) containing `today`, and the §5.5 window of the current period holds **at
+least 3** used periods; otherwise `null` and nothing of it renders — a forecast from one month of data would fake
+confidence. Money stays integer minor units; each median is rounded once.
+
+- **Horizon:** the 3 periods after the current one, `shiftPeriod(def, current, 1..3)`, in the user's own period kind
+  (§5.2). Fixed; no selector.
+- **Window:** `periodHistory(txs, def, current)` (§5.5). Per window period: `discretionary = max(0, spent − committed)`
+  as in «Quota impegnata», and `oneOffIncome` = counted income with `recurrenceId = null`.
+- **Scheduled** amounts of a forecast period = every counted-if-it-had-happened row already dated in it (not a transfer,
+  not `excludeFromTotals`: materialised occurrences as edited, and anything the user dated ahead) **plus** the
+  occurrences of live recurrences (`deletedAt = null`, template not a transfer and not excluded) dated in it **after
+  `recurrenceHorizonEnd(def, today)`**, which the materialiser has not written yet (§5.9). A missing occurrence before
+  that horizon was deleted by the user and stays deleted; a recurrence that ends inside the horizon contributes only
+  its remaining dates.
+- **Per forecast period:** `expenses = scheduledExpense + median(discretionary)`, `expensesMin/Max = scheduledExpense +
+  min/max(discretionary)`, `income = scheduledIncome + median(oneOffIncome)`.
+- **Balance:** starts from today's **Patrimonio complessivo** (`netWorth`, §5.3), adds the rest of the current period —
+  scheduled income after today, minus `projectEndOfCycle − spent` (the §5.7 projection's remaining expenses) — then
+  `balance_i = balance_{i−1} + income_i − expenses_i`. Excluded rows and transfers stay out, as in every statistic.
+- **Sheet «Previsione»** (ⓘ `forecast`, §5.16): «Al {data di fine} circa» with the last balance at `amountMd`, then one
+  row per forecast period — its range (`formatCycleRange`), the net, «~{saldo}», a track with the min–max expenses band
+  and a tick at the estimate, «Uscite ~{expenses}» and «tra {min} e {max}» — and one footnote on how it is computed.
+  In hidden mode every figure is masked and the bands and ticks are not drawn.
+- **Not now** (ROADMAP 0.2): per-category forecast, seasonality, a «what if» slider, a Home card, the dashed balance
+  continuation in account detail.
 
 ---
 
