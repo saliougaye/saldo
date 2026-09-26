@@ -57,6 +57,14 @@ export const settingsSchema = z.object({
   language: z.enum(LANGUAGE_PREFERENCES),
   theme: z.enum(['system', 'dark', 'light']),
   onboardingCompletedAt: isoTimestamp.nullable(),
+  /**
+   * The IANA zone where the user's day starts and ends, for everything the **server** computes
+   * (§17.1.5, D37). Filled at onboarding from the device and changed only in Profile: travelling
+   * does not move it. Optional and nullable, so a row written before it existed still parses and the
+   * phone's column can be null until it is filled. Not checked against a zone list: core has no
+   * `Intl`, so every reader falls back when a name is unknown.
+   */
+  timeZone: z.string().min(1).max(64).nullable().optional(),
 });
 
 export const accountTypeSchema = z.enum([
