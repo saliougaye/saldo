@@ -1,3 +1,4 @@
+import { isTimeZone } from '@saldo/i18n';
 import { z } from 'zod';
 
 export const REGISTRATION_MODES = ['open', 'first-user', 'closed', 'invite'] as const;
@@ -50,6 +51,9 @@ const schema = z.object({
   // reverse proxy — everything else in that header is whatever the caller sent. Empty means "no
   // reverse proxy", the same as a bare `pnpm --filter web dev`.
   TRUSTED_PROXIES: z.string().default(''),
+  // The time zone for a user whose settings carry none (§17.1.5). Not `TZ`: Vercel reserves that
+  // name, and in Node it would also move the process's own local time.
+  DEFAULT_TIME_ZONE: z.string().default('UTC').refine(isTimeZone, 'must be an IANA time zone'),
   // Attachment storage (§10). Only the chosen driver's variables are required, so a deployment on
   // a disk is not asked for an S3 bucket and one on Vercel is not asked for a directory it has no
   // way to keep.
@@ -122,6 +126,8 @@ export interface ServerEnv {
   registration: RegistrationMode;
   appRedirectSchemes: string[];
   trustedProxies: string[];
+  /** For users whose settings carry no time zone (§17.1.5). */
+  defaultTimeZone: string;
 }
 
 export function readEnv(source: Record<string, string | undefined>): ServerEnv {
@@ -147,6 +153,7 @@ export function readEnv(source: Record<string, string | undefined>): ServerEnv {
     trustedProxies: value.TRUSTED_PROXIES.split(',')
       .map((entry) => entry.trim())
       .filter((entry) => entry.length > 0),
+    defaultTimeZone: value.DEFAULT_TIME_ZONE,
   };
 }
 
