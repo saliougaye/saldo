@@ -343,7 +343,11 @@ calls. No calculation is written twice; if the web app shows a number the phone 
       server-side sync client (server HLC, same upsert as push). Recurrences and attachments stay phone-only.
       Server-side materialisation of recurrences: not now.
 - [x] **Email on every account**, required at registration on web and phone. An identifier, not a credential.
-      Verification and recovery by magic link only when SMTP is configured.
+      Verification and recovery by magic link only when SMTP is configured. **Decided 2026-09-27:** the
+      phone asks for it in onboarding and when it connects to a server, which is also how an account
+      created before 0.3b replaces its synthetic `{id}@passkey.saldo.invalid`.
+- [x] **Order (decided 2026-09-27):** the design pass (0.3c) comes before auth (0.3b), so the login,
+      register and passkey pages are built once, on the approved design and the token variables.
 - [x] **Admin panel** for accounts, invites, instance info and **server settings in the database**
       (registration, instance name, SMTP, the AI key of 0.5); env variables win and lock; secrets encrypted
       and write-only.
@@ -357,8 +361,8 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 | Step | Content | Depends on |
 |---|---|---|
 | 0.3a | Projection: typed `UserData`, drift tolerance, `today` from `settings.timeZone`; plan `docs/superpowers/plans/2026-09-26-0.3a-user-data.md` | — |
-| 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out | — |
-| 0.3c | Design pass: desktop and narrow layouts as HTML variants, token CSS variables, chart geometry extracted from the phone | — |
+| 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out; the phone asks for the email in onboarding and when it connects to a server, so an account with the old synthetic address gets a real one | c |
+| 0.3c | Design pass: desktop and narrow layouts as HTML variants (the auth pages included), token CSS variables, chart geometry extracted from the phone | — |
 | 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |
 | 0.3e | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | d |
 | 0.3f | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | b |
