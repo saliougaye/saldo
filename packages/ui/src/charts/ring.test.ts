@@ -1,4 +1,5 @@
-import { ringGeometry } from './ringGeometry';
+import { describe, expect, it } from 'vitest';
+import { ringGeometry } from './ring';
 
 describe('ringGeometry', () => {
   it('fills the share of the circle the ratio asks for', () => {
