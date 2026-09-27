@@ -1738,6 +1738,16 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   that the gap between groups is at least twice the gap inside one. On narrow screens Home stays the phone's, cards
   included. New tokens: `topbarHeight` 64, `contentWide` 1120, `pagePaddingWeb` 48, `navItemHeight` 36,
   `fontSize.heroWeb` 56, `sectionGapWeb` 56, `columnGapWeb` 72, and the 1024px breakpoint.
+- **Transazioni (decided 2026-09-27, mockup `2026-09-27-web-transactions-variants.html`, variant «2 · Pannello»).**
+  The list keeps the open style of Home: period header, search (`/`), the filter chips of §5.12, the filtered total,
+  «In arrivo» collapsed, days as title rows with their total and a hairline, rows separated by space, tags shown
+  as pills on wide screens. Selecting a row opens its **detail in a panel on the trailing side** (420px) beside the
+  list, which stays live and moves with ↑ ↓; the URL carries the selection (`?t={id}`). «Modifica» (`E`) and
+  «Nuova transazione» (`N`) open the form **in the same panel**; Esc closes it, ⌘↵ saves. Delete confirms in a
+  dialog and offers «Annulla» in a toast for 5s. The amount is typed with the computer's keyboard (D23's keypad is
+  the phone's). Recurrences and attachments are shown and not edited (§17.1.9), and the form says so where they
+  would be. On narrow screens the phone's patterns stay: detail full screen, the form in a bottom sheet. New
+  tokens: `panelWidth` 420, `searchWidth` 320.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
