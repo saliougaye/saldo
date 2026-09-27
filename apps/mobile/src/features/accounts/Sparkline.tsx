@@ -1,3 +1,4 @@
+import { chartLine, hiddenBaseline, sparklinePoints } from '@saldo/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
@@ -9,20 +10,7 @@ export function Sparkline({ series, height = 48 }: { series: readonly number[]; 
   const theme = useTheme();
   const { hidden } = useHiddenAmounts();
   const [width, setWidth] = useState(0);
-  const min = Math.min(...series, 0);
-  const max = Math.max(...series, 0);
-  const span = max - min || 1;
-
-  const points =
-    series.length === 0 || width === 0
-      ? ''
-      : series
-          .map((value, index) => {
-            const x = series.length === 1 ? width / 2 : (index / (series.length - 1)) * width;
-            const y = height - ((value - min) / span) * height;
-            return `${x.toFixed(1)},${y.toFixed(1)}`;
-          })
-          .join(' ');
+  const points = width === 0 ? '' : sparklinePoints(series, width, height);
 
   return (
     <View
@@ -32,16 +20,21 @@ export function Sparkline({ series, height = 48 }: { series: readonly number[]; 
       {points === '' ? null : hidden ? (
         <Svg width={width} height={height}>
           <Polyline
-            points={`0,${(height / 2).toFixed(1)} ${width.toFixed(1)},${(height / 2).toFixed(1)}`}
+            points={hiddenBaseline(width, height)}
             fill="none"
             stroke={theme.palette.borderStrong}
-            strokeWidth={1.5}
-            strokeDasharray="3 4"
+            strokeWidth={chartLine.hiddenStroke}
+            strokeDasharray={chartLine.hiddenDash}
           />
         </Svg>
       ) : (
         <Svg width={width} height={height}>
-          <Polyline points={points} fill="none" stroke={theme.palette.accent} strokeWidth={1.5} />
+          <Polyline
+            points={points}
+            fill="none"
+            stroke={theme.palette.accent}
+            strokeWidth={chartLine.sparklineStroke}
+          />
         </Svg>
       )}
     </View>
