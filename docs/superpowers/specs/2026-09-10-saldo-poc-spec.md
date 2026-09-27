@@ -1725,8 +1725,9 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   the grid, the sidebar and the tab bar every later page reuses; then Transazioni, Statistiche, Profile, the
   auth pages (`/login`, `/register`, `/auth/mobile`) and Admin. The chosen variant of each is recorded here. Layout
   values the mockups introduce (sidebar width, content max-width, breakpoints) become tokens in `tokens.ts`.
-- Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Profile (preferences,
-  passkeys, export), Admin.
+- Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
+  pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
+  (preferences, passkeys, export), Admin.
 - **Chart geometry is shared.** The calculations inside the phone's charts (axis scale, ticks, bar heights, the
   forecast band, arcs) move into renderer-agnostic pure functions that return coordinates. The phone draws them
   with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. They live in
