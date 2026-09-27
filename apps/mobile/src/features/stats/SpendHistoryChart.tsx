@@ -1,5 +1,6 @@
 import type { CurrencyCode } from '@saldo/core';
 import { type AppLocale, formatMajor } from '@saldo/i18n';
+import { spendHistoryChart, spendHistoryColumns } from '@saldo/ui';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Text } from '../../theme/Text';
@@ -15,16 +16,13 @@ export interface SpendHistoryBar {
   current: boolean;
 }
 
-/** Design geometry (`docs/design/Spese.dc.html` lines 878-887). */
-const COLUMN_HEIGHT = 88;
-const COLUMN_RADIUS = 3;
-/** Every column while the figures are hidden: the labels are masked, the shape must be too. */
-const HIDDEN_STUB = Math.round(COLUMN_HEIGHT * 0.4);
-/** Closed cycles keep the same hue as the running one, faded so the current cycle reads first. */
-const PAST_ALPHA = 0.4;
-/** The track is the same hue again, barely there, so the column well belongs to the category. */
-const TRACK_ALPHA = 0.1;
-const LEGEND_SWATCH = 8;
+const {
+  columnHeight: COLUMN_HEIGHT,
+  columnRadius: COLUMN_RADIUS,
+  pastAlpha: PAST_ALPHA,
+  trackAlpha: TRACK_ALPHA,
+  legendSwatch: LEGEND_SWATCH,
+} = spendHistoryChart;
 
 /**
  * One column per cycle over a track, as on the category detail screen (§6.10): a single
@@ -47,7 +45,6 @@ export function SpendHistoryChart({
   const theme = useTheme();
   const { t } = useTranslation();
   const { hidden } = useHiddenAmounts();
-  const max = Math.max(1, ...bars.map((bar) => bar.amount));
 
   const base = colour ?? theme.palette.accent;
   const past = theme.tint(base, PAST_ALPHA);
@@ -61,7 +58,7 @@ export function SpendHistoryChart({
   return (
     <View style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-        {bars.map((bar) => (
+        {spendHistoryColumns(bars, hidden).map(({ bar, height }) => (
           <View key={bar.key} style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: 6 }}>
             <Text
               size="caption"
@@ -83,9 +80,7 @@ export function SpendHistoryChart({
             >
               <View
                 style={{
-                  height: hidden
-                    ? HIDDEN_STUB
-                    : Math.max(1, Math.round((bar.amount / max) * COLUMN_HEIGHT)),
+                  height,
                   backgroundColor: bar.current ? base : past,
                   borderTopLeftRadius: COLUMN_RADIUS,
                   borderTopRightRadius: COLUMN_RADIUS,
