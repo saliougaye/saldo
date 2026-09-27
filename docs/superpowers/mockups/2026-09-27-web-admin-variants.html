@@ -584,6 +584,7 @@
   .alert b { color:var(--color-text); font-weight:var(--font-weight-medium); display:block; margin-bottom:2px; }
   .copy-row .input { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; line-height:40px; }
   .once .btn-primary { justify-content:center; }
+  .field-hint { font-size:var(--font-size-footnote); color:var(--color-text-faint); line-height:1.45; text-wrap:pretty; }
 </style>
 </head>
 <body>
@@ -593,6 +594,7 @@
     <div class="seg" data-control="variant">
       <button data-value="1" aria-pressed="true">1 · Sotto-nav + righe</button>
       <button data-value="2" aria-pressed="false">2 · Tab + tabella</button>
+      <button data-value="3" aria-pressed="false">3 · Sotto-nav + pannelli</button>
     </div>
   </div>
   <div class="group"><span class="label">Stato</span>
@@ -603,9 +605,12 @@
       <button data-value="invites" aria-pressed="false">Inviti</button>
       <button data-value="mint" aria-pressed="false">Nuovo invito</button>
       <button data-value="minted" aria-pressed="false">Codice creato</button>
+      <button data-value="invite" aria-pressed="false">Dettaglio invito</button>
       <button data-value="instance" aria-pressed="false">Istanza</button>
       <button data-value="settings" aria-pressed="false">Impostazioni</button>
       <button data-value="smtp" aria-pressed="false">SMTP</button>
+      <button data-value="locked" aria-pressed="false">Bloccato dall'ambiente</button>
+      <button data-value="name" aria-pressed="false">Nome istanza</button>
     </div>
   </div>
   <div class="group"><span class="label">Tema</span>
@@ -636,6 +641,7 @@
   <table>
     <tr><th>Variante</th><th>Scommette su</th><th>Costo</th></tr>
     <tr><td>1 · Sotto-nav + righe</td><td>Lo stesso schema di Profilo, deciso poco fa: chi ha usato uno sa usare l'altro. Una famiglia sta su 5–10 account; righe bastano.</td><td>Poche colonne di informazione per account (email, ruolo, stato); confrontare «ultimo accesso» o «righe sincronizzate» fra account è scomodo.</td></tr>
+    <tr><td>3 · Sotto-nav + pannelli</td><td>Lo schema di Profilo senza eccezioni: ogni sezione è un riepilogo leggibile di come è impostato il server, e si modifica una cosa alla volta nel pannello. Un'impostazione bloccata dall'ambiente spiega nel pannello come cambiarla.</td><td>Un clic in più per le impostazioni rispetto al modulo della 1; con poche impostazioni (3 righe) la pagina è quasi vuota finché non arrivano quelle di 0.5 (chiave AI).</td></tr>
     <tr><td>2 · Tab + tabella</td><td>Admin è una console: una tabella confronta account a colpo d'occhio (ruolo, stato, ultimo accesso, righe, creato). Le tab in alto tengono tutta la larghezza per i dati.</td><td>Unica pagina dell'app con una tabella e con le tab; su stretto la tabella diventa righe comunque.</td></tr>
   </table>
   <p style="margin-top:12px">In entrambe: il dettaglio di un account e la creazione di un invito si aprono nel pannello; il codice d'invito si vede una volta sola (testo, link, QR) con un avviso; eliminare un account chiede di scrivere la sua email, perché porta via anche tutti i suoi dati; un'impostazione fissata da una variabile d'ambiente mostra la variabile e un lucchetto; i segreti (password SMTP) dicono solo «impostata» e «Sostituisci».
@@ -758,11 +764,79 @@ function topbar() {
     <button class="btn-primary press">${icon('plus')}<span>Nuova transazione</span><span class="kbd">N</span></button><button class="avatar press">SG</button></div></header>`;
 }
 
-const SECTION = { accounts: 'Account', account: 'Account', deleteAccount: 'Account', invites: 'Inviti', mint: 'Inviti', minted: 'Inviti', instance: 'Istanza', settings: 'Impostazioni', smtp: 'Impostazioni' };
-const URLS = { accounts: '/admin/accounts', account: '/admin/accounts?u=awa', deleteAccount: '/admin/accounts?u=awa', invites: '/admin/invites', mint: '/admin/invites?new', minted: '/admin/invites?new', instance: '/admin/instance', settings: '/admin/settings', smtp: '/admin/settings' };
+const SECTION = { invite: 'Inviti', locked: 'Impostazioni', name: 'Impostazioni', accounts: 'Account', account: 'Account', deleteAccount: 'Account', invites: 'Inviti', mint: 'Inviti', minted: 'Inviti', instance: 'Istanza', settings: 'Impostazioni', smtp: 'Impostazioni' };
+const URLS = { invite: '/admin/invites?i=mamma', locked: '/admin/settings?edit=registration', name: '/admin/settings?edit=name', accounts: '/admin/accounts', account: '/admin/accounts?u=awa', deleteAccount: '/admin/accounts?u=awa', invites: '/admin/invites', mint: '/admin/invites?new', minted: '/admin/invites?new', instance: '/admin/instance', settings: '/admin/settings', smtp: '/admin/settings' };
+
+/* ---------------- variant 3: every section is summary rows; every row opens in the panel ---------------- */
+const sumRow = (lead, title, sub, value, sel) => `<button class="sum press" ${sel ? 'aria-selected="true"' : ''}>${lead}<span class="row-main"><div class="row-title">${title}</div>${sub ? `<div class="row-sub">${sub}</div>` : ''}</span><span class="v">${value}</span>${icon('chevR')}</button>`;
+const tile = (name) => `<span style="width:32px;height:32px;border-radius:var(--radius-input);background:var(--color-raised);display:grid;place-items:center;color:var(--color-text-muted)">${icon(name)}</span>`;
+
+function panelsContent(cur, view) {
+  if (cur === 'Account') return accountsRows(['account', 'deleteAccount'].includes(view) ? 1 : -1);
+  if (cur === 'Inviti') return `${secTop('Inviti', `<button class="btn-primary press">${icon('plus')}Nuovo invito</button>`)}
+    <div class="sum-rows">${INVITES.map(([l, d, st], k) => sumRow(tile('key'), l, d, st, view === 'invite' && k === 0)).join('')}</div>`;
+  if (cur === 'Istanza') return `${secTop('Istanza', '<span class="card-status">dall\'ambiente e dalla build</span>')}<div class="sum-rows">
+    ${sumRow(tile('info'), 'Versione', '0.3.0 · a3caa94', 'aggiornata', false)}
+    ${sumRow(tile('archive'), 'Allegati', 'Disco locale · ATTACHMENT_STORAGE=fs', '', false)}
+    ${sumRow(tile('settings'), 'Sincronizzazione', 'apiVersion 1 · schema 7', '', false)}
+    ${sumRow(tile('clock'), 'Fuso predefinito', 'per chi non ne ha impostato uno', 'Europa/Roma', false)}</div>`;
+  return `${secTop('Impostazioni del server', '<span class="card-status">cambiano senza riavviare</span>')}<div class="sum-rows">
+    ${sumRow(tile('house'), 'Nome dell\'istanza', 'nella pagina d\'accesso e negli inviti', 'Casa Gaye', view === 'name')}
+    ${sumRow(tile('shield'), 'Registrazione', 'impostato dall\'ambiente', 'solo con invito', view === 'locked')}
+    ${sumRow(tile('inbox'), 'Email (SMTP)', 'smtp.fastmail.com:465 · saldo@example.com', '<span class="secret"><span class="dot-ok"></span>configurata</span>', view === 'smtp')}</div>`;
+}
+
+function smtpPanel() {
+  return `<div class="form"><div class="form-title">Email (SMTP)</div>
+    <p class="warn" style="margin-top:-16px">Serve per verificare le email e recuperare l'accesso. Senza, la registrazione funziona lo stesso.</p>
+    <div class="two" style="grid-template-columns:minmax(0,1fr) 88px"><div class="field"><label>Server</label><div class="input">smtp.fastmail.com</div></div><div class="field"><label>Porta</label><div class="input">465</div></div></div>
+    <div class="field"><label>Utente</label><div class="input">saldo@example.com</div></div>
+    <div class="field"><label>Password</label><div style="display:flex;gap:10px;align-items:center"><span class="secret"><span class="dot-ok"></span>impostata</span><button class="btn-secondary press">Sostituisci</button></div>
+      <span class="field-hint">Cifrata sul server. Non si rilegge: si sostituisce.</span></div>
+    <div class="field"><label>Mittente</label><div class="input">Saldo &lt;saldo@example.com&gt;</div></div>
+    <div class="form-foot"><button class="btn-secondary press">Manda un'email di prova</button><span class="spacer"></span><button class="btn-primary lg press">Salva</button></div></div>`;
+}
+
+function lockedPanel() {
+  return `<div class="form"><div class="form-title">Registrazione</div>
+    <div class="alert">${icon('shield')}<div><b>Impostata dall'ambiente</b>La variabile <code class="mono">REGISTRATION=invite</code> vince su questa pagina. Per cambiarla, modificala dove gira il server e riavvialo; oppure toglila, e da allora si sceglie qui.</div></div>
+    <div class="opts" style="opacity:.5">${[['Aperta', 'chiunque può creare un account'], ['Solo il primo', 'finché non esiste nessun account'], ['Solo con invito', 'un codice per ogni account'], ['Chiusa', 'nessun nuovo account']].map(([n, d], k) => `<div class="opt" ${k === 2 ? 'aria-pressed="true"' : ''}><span><div>${n}</div><div class="row-sub">${d}</div></span>${k === 2 ? icon('check') : ''}</div>`).join('')}</div></div>`;
+}
+
+function namePanel() {
+  return `<div class="form"><div class="form-title">Nome dell'istanza</div>
+    <div class="field"><label>Nome</label><div class="input" style="box-shadow:inset 0 0 0 1px var(--color-text-muted)">Casa Gaye</div><span class="field-hint">Lo vede chi apre la pagina d'accesso o riceve un invito.</span></div>
+    <div class="form-foot"><span class="spacer"></span><button class="btn-secondary lg press">Annulla</button><button class="btn-primary lg press">Salva</button></div></div>`;
+}
+
+function invitePanel() {
+  return `<div style="display:flex;gap:12px;align-items:center;margin-bottom:24px">${tile('key')}<div><div class="form-title">Mamma</div><div class="row-sub">invito attivo</div></div></div>
+    <dl class="facts"><dt>Creato</dt><dd>25 settembre 2026, da Saliou</dd><dt>Scade</dt><dd>2 ottobre 2026</dd><dt>Codice</dt><dd class="muted">non si rilegge: al server resta la sua impronta</dd></dl>
+    <p class="warn" style="margin-top:24px">L'hai perso? Revocalo e creane uno nuovo.</p>
+    <div class="actions" style="margin-top:12px"><button class="btn-secondary btn-danger press">Revoca</button><span class="spacer"></span><button class="btn-secondary press">${icon('plus')}Nuovo invito</button></div>`;
+}
+
+function renderPanels(el, view) {
+  const cur = SECTION[view];
+  let panel = '';
+  if (['account', 'deleteAccount'].includes(view)) panel = accountPanel();
+  if (view === 'mint') panel = mintPanel();
+  if (view === 'minted') panel = mintedPanel();
+  if (view === 'invite') panel = invitePanel();
+  if (view === 'smtp') panel = smtpPanel();
+  if (view === 'locked') panel = lockedPanel();
+  if (view === 'name') panel = namePanel();
+  const items = [['Account', 'settings', '4'], ['Inviti', 'key', '1'], ['Istanza', 'info', ''], ['Impostazioni', 'settings', '']];
+  el.innerHTML = `${topbar()}<div style="position:relative;min-height:0;display:grid"><div class="split ${panel ? 'open' : ''}"><main class="main"><div class="page">
+      <div class="admin-head"><h1>Admin</h1><span class="s">Casa Gaye · 4 account</span></div>
+      <div class="settings"><nav class="subnav">${items.map(([n, i, c]) => `<button class="press" ${n === cur ? 'aria-current="page"' : ''}>${icon(i)}${n}<span class="count">${c}</span></button>`).join('')}</nav><div>${panelsContent(cur, view)}</div></div></div></main>
+    ${panel ? `<aside class="panel"><div class="panel-head"><span></span><button class="icon-btn press" aria-label="Chiudi">${icon('x')}</button></div>${panel}</aside>` : ''}</div>${view === 'deleteAccount' ? deleteDialog() : ''}</div>`;
+  document.getElementById('url').textContent = `saldo.example.com${URLS[view]}`;
+}
 
 function render() {
   const { variant, view } = state;
+  if (variant === '3') { const el = document.getElementById('desktop'); el.className = 'app desk vC'; renderPanels(el, view); return; }
   const el = document.getElementById('desktop');
   el.className = 'app desk vC';
   const cur = SECTION[view];
@@ -792,9 +866,10 @@ function render() {
 
 const CAPTIONS = {
   1: '<b>1 · Sotto-navigazione + righe.</b> Lo schema di Profilo: sezioni a sinistra (Account, Inviti, Istanza, Impostazioni), righe di riepilogo, dettaglio e azioni nel pannello.',
+  3: '<b>3 · Sotto-navigazione + pannelli.</b> Come la 1, ma ogni sezione è fatta di righe di riepilogo, anche Istanza e Impostazioni, e ogni riga si apre nel pannello: SMTP, nome dell\'istanza, un\'impostazione bloccata dall\'ambiente, un invito. È lo schema di Profilo, identico.',
   2: '<b>2 · Tab + tabella.</b> Le sezioni come tab in alto; account e inviti in una tabella che confronta ruolo, stato, ultimo accesso e righe sincronizzate. Dettaglio e azioni nel pannello.',
 };
-const state = { variant: '1', view: 'accounts', theme: 'dark' };
+const state = { variant: '3', view: 'smtp', theme: 'dark' };
 for (const [key, value] of new URLSearchParams(location.hash.slice(1))) if (key in state) state[key] = value;
 function apply() {
   render();
