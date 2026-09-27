@@ -484,6 +484,22 @@
   .tag-rows { display:flex; flex-direction:column; gap:14px; }
   .tag-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; font-size:var(--font-size-body); }
   .tag-row .bar { grid-column:1 / -1; height:4px; }
+  /* variant 3: the chart is the period picker */
+  .cf.nav .cf-col { cursor:pointer; padding:8px 0 10px; border-radius:var(--radius-input); }
+  @media (hover:hover) and (pointer:fine) { .cf.nav .cf-col:hover { background:color-mix(in srgb, var(--color-raised) 50%, transparent); } }
+  .cf.nav .cf-col.sel { background:var(--color-raised); }
+  .cf.nav .cf-col.sel .lbl { color:var(--color-text); font-weight:var(--font-weight-medium); }
+  .cf.nav .cf-col .divider { top:30px; }
+  .picked { display:flex; align-items:baseline; gap:12px; margin:40px 0 24px; }
+  .picked .t { font-size:var(--font-size-title); font-weight:var(--font-weight-semibold); letter-spacing:var(--tracking-tighter); }
+  .picked .s { font-size:var(--font-size-footnote); color:var(--color-text-faint); }
+  .picked .keys { margin-left:auto; font-size:var(--font-size-caption); color:var(--color-text-faint); display:flex; gap:6px; align-items:center; }
+  .kpis { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:32px; padding-bottom:40px; border-bottom:1px solid var(--color-border); margin-bottom:48px; }
+  .kpi .k { font-size:var(--font-size-footnote); color:var(--color-text-faint); }
+  .kpi .v { font-size:var(--font-size-amount-lg); font-weight:var(--font-weight-semibold); letter-spacing:var(--tracking-tighter); margin-top:6px; }
+  .kpi .n { font-size:var(--font-size-caption); color:var(--color-text-faint); margin-top:4px; }
+  .trio { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:56px; align-items:start; }
+  .fc-note { font-size:var(--font-size-footnote); color:var(--color-text-muted); line-height:1.5; max-width:60ch; text-wrap:pretty; }
   .duo { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--col-gap); }
 </style>
 </head>
@@ -494,6 +510,7 @@
     <div class="seg" data-control="variant">
       <button data-value="1" aria-pressed="true">1 · Due colonne</button>
       <button data-value="2" aria-pressed="false">2 · Flussi larghi</button>
+      <button data-value="3" aria-pressed="false">3 · Navigatore</button>
     </div>
   </div>
   <div class="group"><span class="label">Stato</span>
@@ -542,6 +559,7 @@
   <table>
     <tr><th>Variante</th><th>Flussi</th><th>Scommette su</th><th>Costo</th></tr>
     <tr><td>1 · Due colonne</td><td>6 colonne come sul telefono (D29: 2 chiusi + corrente + 3 previsti); «Al 26 dic circa…» apre il dettaglio nel pannello</td><td>Stesso grafico del telefono al centesimo e al pixel; a sinistra i flussi nel tempo, a destra dove vanno i soldi.</td><td>Il desktop ha spazio e non lo usa: per vedere marzo bisogna tornare indietro col periodo.</td></tr>
+    <tr><td>3 · Navigatore</td><td>10 colonne a tutta larghezza, e il grafico è il selettore del periodo; sotto, quattro numeri chiave e tre colonne che seguono la scelta</td><td>Una pagina sola per il passato, il presente e il previsto: si passa da agosto a ottobre senza cambiare vista, e la previsione smette di essere un foglio a parte.</td><td>Due modi di cambiare periodo (grafico e ‹ › di Home) da tenere coerenti; stessi costi di geometria della 2; su stretto non esiste e resta il telefono.</td></tr>
     <tr><td>2 · Flussi larghi</td><td>tutta la larghezza, 10 colonne (6 chiusi + corrente + 3 previsti), barre più alte; la tabella della previsione sotto il grafico, senza pannello</td><td>Mezzo anno a colpo d'occhio: il limite di D29 era la larghezza di 320px, non una scelta di contenuto.</td><td>Due grafici diversi fra telefono e web; <code>cashflowColumns</code> deve accettare l'altezza della metà (oggi 54 fisso) e il numero di periodi.</td></tr>
   </table>
   <p style="margin-top:12px">Stretto: resta il telefono (una colonna di card, foglio per la previsione). «Periodo chiuso» toglie previsione e proiezione, come sul telefono.</p>
@@ -580,7 +598,7 @@ function cashflowColumns(bars, half) {
 }
 const HATCH = 'M0,5 L5,0 M-1,1 L1,-1 M4,6 L6,4';
 
-function cashflow({ closed, half, withForecast }) {
+function cashflow({ closed, half, withForecast, selected }) {
   const bars = [
     ...HISTORY.slice(-closed).map(([l, i, e]) => ({ l, income: i, expenses: e })),
     withForecast ? { l: CURRENT[0], income: CURRENT[1], expenses: CURRENT[2], current: true } : { l: 'set', income: 2310, expenses: 1985 },
@@ -588,13 +606,13 @@ function cashflow({ closed, half, withForecast }) {
   ];
   const cols = cashflowColumns(bars, half);
   const W = 16, R = 2;
-  return `<div class="cf" style="grid-template-columns:repeat(${cols.length}, minmax(0,1fr))">${cols.map(({ bar, income, expenses, band, divider }, k) => {
+  return `<div class="cf ${selected ? 'nav' : ''}" style="grid-template-columns:repeat(${cols.length}, minmax(0,1fr))">${cols.map(({ bar, income, expenses, band, divider }, k) => {
     const hatched = bar.current || bar.forecast;
     const net = bar.income - bar.expenses;
     const id = `h${half}${k}`;
     const fill = (c) => (hatched ? `url(#${id}${c === 'var(--color-positive)' ? 'p' : 'a'})` : c);
     const op = bar.forecast ? 0.5 : 1;
-    return `<div class="cf-col">
+    return `<div class="cf-col ${selected === bar.l ? 'sel' : ''}" ${selected ? 'role="button" tabindex="0"' : ''}>
       <span class="net ${net < 0 ? 'neg' : ''} ${bar.forecast ? 'fc' : ''}">${net >= 0 ? '+' : '−'}${fmt(net)} €</span>
       <svg viewBox="-20 0 40 ${half * 2 + 1}" preserveAspectRatio="xMidYMin meet" style="height:${half * 2 + 1}px">
         <defs>
@@ -693,10 +711,38 @@ function renderDesktop() {
       <div class="cols"><div class="stack">${section('Ripartizione', 'settembre', split())}</div>
         <div class="stack">${section('Andamento del periodo', '', trend())}<div class="duo">${section('Quota impegnata', '', committed())}${past ? '' : section('Proiezione', '', projection())}</div>${section('Tag', 'Uscite · entrate', tags())}</div></div></div>`;
   }
+  if (variant === '3') main = navigator(view);
   const panel = variant === '1' && view === 'forecast'
     ? `<aside class="panel"><div class="panel-head"><span class="form-title">Previsione</span><button class="icon-btn press">${icon('x')}</button></div>${forecastTable()}</aside>` : '';
   el.innerHTML = `${topbar()}<div class="split ${panel ? 'open' : ''}"><main class="main"><div class="page">${main}</div></main>${panel}</div>`;
   document.getElementById('url').textContent = `saldo.example.com/stats${panel ? '?forecast' : past ? '?p=2026-07-27' : ''}`;
+}
+
+/** Variant 3: Flussi picks the period; what is below follows the pick. */
+function navigator(view) {
+  const pick = view === 'forecast' ? 'ott' : view === 'past' ? 'ago' : 'set';
+  const heads = {
+    set: ['Settembre', '27 ago – 26 set · in corso, giorno 19 di 31'],
+    ago: ['Agosto', '27 lug – 26 ago · chiuso'],
+    ott: ['Ottobre', '27 set – 26 ott · previsione'],
+  };
+  const kpis = {
+    set: [['Entrate', money('2.310,00', { tone: 'pos' }), 'finora'], ['Uscite', money('1.125,40'), 'finora'], ['Netto', money('1.184,60', { sign: '+' }), 'finora'], ['Proiezione', money('1.840,00'), 'uscite a fine periodo, 120 € sopra il solito']],
+    ago: [['Entrate', money('2.310,00', { tone: 'pos' }), ''], ['Uscite', money('2.210,00'), '230 € sopra la mediana'], ['Netto', money('100,00', { sign: '+' }), ''], ['Quota impegnata', '<span class="num">44%</span>', '972,40 € decisi in partenza']],
+    ott: [['Entrate circa', money('2.310,00', { tone: 'pos' }), 'dalle ricorrenze'], ['Uscite circa', money('1.850,00'), 'tra 1.650 e 2.150 €'], ['Netto circa', money('460,00', { sign: '+' }), ''], ['Saldo circa', money('5.940,00'), 'al 26 ottobre']],
+  };
+  const [t, sub] = heads[pick];
+  const below = pick === 'ott'
+    ? `<div class="trio"><div class="sec"><div class="card-head"><div class="card-title">Come si calcola</div></div><div class="sec-body"><p class="fc-note">Dalle ricorrenze già impostate e dalla mediana degli ultimi 6 periodi. La fascia va dal periodo più leggero al più pesante fra quei 6. Trasferimenti e transazioni escluse non contano.</p></div></div>
+        ${section('Periodi previsti', '', forecastTable().replace(/<p class="how">[\s\S]*<\/p>/, ''))}
+        ${section('Ricorrenze attese', 'ottobre', `<div class="cat-rows">${[['Affitto', 'house', 22, '750,00'], ['Bolletta luce', 'zap', 12, '71,30'], ['Netflix', 'film', 6, '12,99']].map(([n, i, c, a]) => `<div class="cat-row">${ibox(i, c)}<span class="row-main"><div class="row-title">${n}</div></span><span></span><span class="row-amt">${money(a, { sign: '−' })}</span></div>`).join('')}</div>`)}</div>`
+    : `<div class="trio">${section('Ripartizione', t.toLowerCase(), split())}
+        <div class="stack">${section('Andamento del periodo', '', trend())}${section('Quota impegnata', '', committed())}</div>
+        ${section('Tag', 'Uscite · entrate', tags())}</div>`;
+  return `${section('Flussi', '6 periodi · 3 previsti', cashflow({ closed: 6, half: 64, withForecast: true, selected: pick }))}
+    <div class="picked"><span class="t">${t}</span><span class="s">${sub}</span><span class="keys"><span class="kbd">←</span><span class="kbd">→</span> per cambiare periodo</span></div>
+    <div class="kpis">${kpis[pick].map(([k, v, n]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('')}</div>
+    ${below}`;
 }
 
 function renderNarrow() {
@@ -726,6 +772,7 @@ function topbar() {
 
 const CAPTIONS = {
   1: '<b>1 · Due colonne.</b> A sinistra i flussi nel tempo (Flussi a 6 colonne come sul telefono, Andamento, Proiezione); a destra dove vanno i soldi (Ripartizione, Quota impegnata, Tag). «Al 26 dic circa…» apre la previsione nel pannello.',
+  3: '<b>3 · Navigatore.</b> Flussi a tutta larghezza è anche il selettore del periodo: clicca una colonna (o ← →) e tutto sotto segue — numeri chiave, Ripartizione, Andamento, Tag. Una colonna prevista mostra la previsione di quel mese. Niente pannello: il dettaglio è la pagina.',
   2: '<b>2 · Flussi larghi.</b> Flussi a tutta larghezza con 6 periodi chiusi + corrente + 3 previsti e barre più alte; la tabella della previsione è sotto il grafico. Il resto in due colonne.',
 };
 const state = { variant: '1', view: 'current', theme: 'dark', frames: 'both' };
@@ -739,6 +786,13 @@ function apply() {
   for (const group of document.querySelectorAll('[data-control]')) for (const b of group.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.value === state[group.dataset.control]));
 }
 document.addEventListener('click', (event) => {
+  const col = event.target.closest('.cf.nav .cf-col');
+  if (col) {
+    const l = col.querySelector('.lbl').textContent;
+    state.view = l === 'ott' || l === 'nov' || l === 'dic' ? 'forecast' : l === 'set' ? 'current' : 'past';
+    apply();
+    return;
+  }
   const control = event.target.closest('[data-control] button');
   if (!control) return;
   state[control.closest('[data-control]').dataset.control] = control.dataset.value;
