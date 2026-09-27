@@ -362,7 +362,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 |---|---|---|
 | 0.3a | Projection: typed `UserData`, drift tolerance, `today` from `settings.timeZone`; plan `docs/superpowers/plans/2026-09-26-0.3a-user-data.md` | — |
 | 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out; the phone asks for the email in onboarding and when it connects to a server, so an account with the old synthetic address gets a real one | c |
-| 0.3c | Design pass: desktop and narrow layouts as HTML variants, one mockup per page (the auth pages included), token CSS variables, chart geometry extracted from the phone | — |
+| 0.3c | **Done 2026-09-27.** Design pass: one mockup per page (`docs/superpowers/mockups/2026-09-27-web-{home,transactions,accounts,stats,profile,auth,admin}-variants.html`), choices in spec §17.1.7; `tokensCss()` and the web layout tokens; chart geometry in `@saldo/ui/charts`; plan `docs/superpowers/plans/2026-09-27-0.3c-design-pass.md` | — |
 | 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |
 | 0.3e | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | d |
 | 0.3f | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | b |
