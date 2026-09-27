@@ -1671,7 +1671,8 @@ public. The decisions behind this section are D30–D36.
 - `/login`: passkey sign-in, with the browser's conditional UI (passkey autofill) where it is supported. Signing
   in with the phone's passkey from a desktop uses the browser's cross-device (QR) flow, which WebAuthn provides.
 - `/register`: **email** plus the invite code when `REGISTRATION=invite`, then the passkey ceremony. The same
-  email field is added to the phone's registration page at `/auth/mobile`.
+  email field is added to the phone's registration page at `/auth/mobile`. The page is in steps and checks the code before the ceremony
+  (§17.1.7, auth pages).
 - **Email is required from now on (D32)** and replaces the synthetic `{id}@passkey.saldo.invalid` of §9.1. It is
   lowercased and unique. It is an identifier (how an admin, and later shared finances, know who somebody is),
   **not a credential**: signing in stays passkey-only.
@@ -1778,6 +1779,18 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   label, the authenticator's own name does not change), shows whether it is synced (`backed_up`) and deletes it
   after a confirmation, **never the last one**: its Elimina is disabled and says why, with a link to add another.
   Lock, permissions, server and CSV import stay the phone's. On narrow screens Profilo stays the phone's.
+- **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»).**
+  No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
+  brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
+  browser offers the passkey as soon as it is focused, «Accedi con passkey», a line on the cross-device QR, «Crea
+  un account» (absent, with a notice, when registration is closed), the version and host in the footer (§17.1.1).
+  `/register` is **in steps**, with the phone onboarding's segments: (1) name and email, (2) the invite code, only
+  under `REGISTRATION=invite`, (3) the passkey. An error sits in the step that causes it (email taken in 1, invalid
+  invite in 2, cancelled ceremony in 3). `/auth/mobile` is the same pages opened by the app, ending on «Fatto, torna
+  all'app». Step 2 needs the code checked **before** the ceremony, so nobody performs a passkey ceremony only to be
+  told the code is wrong: 0.3b adds a check endpoint that answers one `invalid_invite` for unknown, spent, revoked
+  and expired codes, rate-limited like the auth endpoints; `resolveUser` still checks and `afterVerification` still
+  burns, so the endpoint is a convenience and never the gate.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
