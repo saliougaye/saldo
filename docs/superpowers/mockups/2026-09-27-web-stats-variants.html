@@ -500,6 +500,14 @@
   .kpi .n { font-size:var(--font-size-caption); color:var(--color-text-faint); margin-top:4px; }
   .trio { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:56px; align-items:start; }
   .fc-note { font-size:var(--font-size-footnote); color:var(--color-text-muted); line-height:1.5; max-width:60ch; text-wrap:pretty; }
+  /* variant 3, lower half */
+  .bands { display:flex; flex-direction:column; gap:56px; }
+  .bands .trend { height:160px; }
+  .tall { position:sticky; top:24px; }  /* the chart stays in view while the right column scrolls */
+  .tall .trend { height:220px; }
+  .cat-rows.two { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:56px; }
+  .split-head { display:flex; align-items:center; gap:24px; }
+  .split-head .splitbar { flex:1; margin:0; }
   .duo { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--col-gap); }
 </style>
 </head>
@@ -511,6 +519,13 @@
       <button data-value="1" aria-pressed="true">1 · Due colonne</button>
       <button data-value="2" aria-pressed="false">2 · Flussi larghi</button>
       <button data-value="3" aria-pressed="false">3 · Navigatore</button>
+    </div>
+  </div>
+  <div class="group" data-only="3"><span class="label">Parte bassa</span>
+    <div class="seg" data-control="bottom">
+      <button data-value="bands" aria-pressed="true">Fasce</button>
+      <button data-value="left" aria-pressed="false">Andamento a sinistra</button>
+      <button data-value="trio" aria-pressed="false">Tre colonne</button>
     </div>
   </div>
   <div class="group"><span class="label">Stato</span>
@@ -647,12 +662,21 @@ function section(title, status, body) {
 }
 
 const CATS = [['Casa', 'house', 22, '750,00', 38], ['Spesa', 'cart', 0, '312,40', 16], ['Ristoranti', 'utensils', 10, '186,00', 9], ['Trasporti', 'train', 16, '124,60', 6], ['Svago', 'film', 6, '98,90', 5]];
-function split() {
+function split({ wide } = {}) {
+  if (wide) return splitWide();
   return `<div class="seg-ctl"><button aria-pressed="true">Uscite</button><button>Entrate</button></div>
     <div class="splitbar">${CATS.map((c, i) => `<span style="flex-grow:${c[4]};background:var(--color-segments-${i})"></span>`).join('')}<span style="flex-grow:26;background:var(--color-segment-other)"></span></div>
     <div class="cat-rows">${CATS.map(([n, i, c, a, p], k) => `<button class="cat-row press">${ibox(i, c)}<span class="row-main"><div class="row-title">${n}</div><div class="row-sub">${p}% del totale</div></span><span class="dot" style="background:var(--color-segments-${k})"></span><span class="row-amt">${money(a)}</span></button>`).join('')}</div>
     <button class="more press"><span class="label">Vedi tutte le 12 categorie</span>${icon('chevR')}</button>
     <div class="excluded">1 transazione esclusa dai totali · 42,00 €</div>`;
+}
+
+function splitWide() {
+  return `<div class="split-head"><div class="seg-ctl"><button aria-pressed="true">Uscite</button><button>Entrate</button></div>
+      <div class="splitbar">${CATS.map((c, i) => `<span style="flex-grow:${c[4]};background:var(--color-segments-${i})"></span>`).join('')}<span style="flex-grow:26;background:var(--color-segment-other)"></span></div></div>
+    <div class="cat-rows two">${CATS.concat([['Salute', 'drop', 18, '64,00', 3]]).map(([n, i, c, a, p], k) => `<button class="cat-row press">${ibox(i, c)}<span class="row-main"><div class="row-title">${n}</div><div class="row-sub">${p}% del totale</div></span><span class="dot" style="background:var(--color-segments-${Math.min(k, 4)})"></span><span class="row-amt">${money(a)}</span></button>`).join('')}</div>
+    <div style="display:flex;align-items:center;gap:24px"><button class="more press" style="flex:1"><span class="label">Vedi tutte le 12 categorie</span>${icon('chevR')}</button>
+      <span class="excluded" style="margin:12px 0 0">1 transazione esclusa dai totali · 42,00 €</span></div>`;
 }
 
 function tags() {
@@ -736,9 +760,16 @@ function navigator(view) {
     ? `<div class="trio"><div class="sec"><div class="card-head"><div class="card-title">Come si calcola</div></div><div class="sec-body"><p class="fc-note">Dalle ricorrenze già impostate e dalla mediana degli ultimi 6 periodi. La fascia va dal periodo più leggero al più pesante fra quei 6. Trasferimenti e transazioni escluse non contano.</p></div></div>
         ${section('Periodi previsti', '', forecastTable().replace(/<p class="how">[\s\S]*<\/p>/, ''))}
         ${section('Ricorrenze attese', 'ottobre', `<div class="cat-rows">${[['Affitto', 'house', 22, '750,00'], ['Bolletta luce', 'zap', 12, '71,30'], ['Netflix', 'film', 6, '12,99']].map(([n, i, c, a]) => `<div class="cat-row">${ibox(i, c)}<span class="row-main"><div class="row-title">${n}</div></span><span></span><span class="row-amt">${money(a, { sign: '−' })}</span></div>`).join('')}</div>`)}</div>`
-    : `<div class="trio">${section('Ripartizione', t.toLowerCase(), split())}
-        <div class="stack">${section('Andamento del periodo', '', trend())}${section('Quota impegnata', '', committed())}</div>
-        ${section('Tag', 'Uscite · entrate', tags())}</div>`;
+    : state.bottom === 'bands'
+      ? `<div class="bands">${section('Andamento del periodo', '', trend())}
+          ${section('Ripartizione', t.toLowerCase(), split({ wide: true }))}
+          <div class="cols" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">${section('Quota impegnata', '', committed())}${section('Tag', 'Uscite · entrate', tags())}</div></div>`
+      : state.bottom === 'left'
+        ? `<div class="cols"><div class="stack tall">${section('Andamento del periodo', '', trend())}</div>
+            <div class="stack">${section('Ripartizione', t.toLowerCase(), split())}${section('Quota impegnata', '', committed())}${section('Tag', 'Uscite · entrate', tags())}</div></div>`
+        : `<div class="trio">${section('Ripartizione', t.toLowerCase(), split())}
+          <div class="stack">${section('Andamento del periodo', '', trend())}${section('Quota impegnata', '', committed())}</div>
+          ${section('Tag', 'Uscite · entrate', tags())}</div>`;
   return `${section('Flussi', '6 periodi · 3 previsti', cashflow({ closed: 6, half: 64, withForecast: true, selected: pick }))}
     <div class="picked"><span class="t">${t}</span><span class="s">${sub}</span><span class="keys"><span class="kbd">←</span><span class="kbd">→</span> per cambiare periodo</span></div>
     <div class="kpis">${kpis[pick].map(([k, v, n]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('')}</div>
@@ -775,12 +806,13 @@ const CAPTIONS = {
   3: '<b>3 · Navigatore.</b> Flussi a tutta larghezza è anche il selettore del periodo: clicca una colonna (o ← →) e tutto sotto segue — numeri chiave, Ripartizione, Andamento, Tag. Una colonna prevista mostra la previsione di quel mese. Niente pannello: il dettaglio è la pagina.',
   2: '<b>2 · Flussi larghi.</b> Flussi a tutta larghezza con 6 periodi chiusi + corrente + 3 previsti e barre più alte; la tabella della previsione è sotto il grafico. Il resto in due colonne.',
 };
-const state = { variant: '1', view: 'current', theme: 'dark', frames: 'both' };
+const state = { variant: '3', bottom: 'bands', view: 'current', theme: 'dark', frames: 'both', scroll: '0' };
 for (const [key, value] of new URLSearchParams(location.hash.slice(1))) if (key in state) state[key] = value;
 function apply() {
   renderDesktop(); renderNarrow();
   for (const app of document.querySelectorAll('.app')) app.dataset.theme = state.theme;
   document.getElementById('caption').innerHTML = CAPTIONS[state.variant];
+  document.querySelector('[data-only="3"]').hidden = state.variant !== '3';
   document.querySelector('[data-frame="desktop"]').hidden = state.frames === 'narrow';
   document.querySelector('[data-frame="narrow"]').hidden = state.frames === 'desktop';
   for (const group of document.querySelectorAll('[data-control]')) for (const b of group.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.value === state[group.dataset.control]));
@@ -799,6 +831,8 @@ document.addEventListener('click', (event) => {
   apply();
 });
 apply();
+// `#scroll=700` scrolls the desktop page, for screenshots of what is below the fold.
+document.querySelector('#desktop .main').scrollTop = Number(state.scroll);
 </script>
 </body>
 </html>
