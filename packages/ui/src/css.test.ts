@@ -88,6 +88,27 @@ describe('tokensCss', () => {
     expect(root).toContain('--font-weight-semibold: 600;');
   });
 
+  it('writes the web layout decided in the design pass (§17.1.7)', () => {
+    const root = block(css, ':root');
+    for (const line of [
+      '--layout-topbar-height: 64px;',
+      '--layout-content-wide: 1120px;',
+      '--layout-page-padding-web: 48px;',
+      '--layout-nav-item-height: 36px;',
+      '--layout-section-gap-web: 56px;',
+      '--layout-column-gap-web: 72px;',
+      '--layout-panel-width: 420px;',
+      '--layout-search-width: 320px;',
+      '--layout-subnav-width: 200px;',
+      '--layout-auth-width: 380px;',
+      '--layout-dialog-width: 400px;',
+      '--layout-wide-breakpoint: 1024px;',
+      '--font-size-hero-web: 3.5rem;',
+    ]) {
+      expect(root).toContain(line);
+    }
+  });
+
   it('never prints a value that did not resolve', () => {
     expect(css).not.toMatch(/undefined|NaN|\[object/);
   });
