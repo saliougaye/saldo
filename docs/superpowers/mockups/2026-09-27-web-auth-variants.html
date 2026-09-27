@@ -483,6 +483,15 @@
   .v-card .auth { place-items:center; padding:48px 24px; background:var(--color-page); }
   .v-card .auth-col { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-dialog); padding:36px 32px; max-width:calc(var(--layout-auth-width) + 64px); }
 
+  /* 4 · steps: the phone onboarding's segments (layout.stepSegmentHeight 2, stepSegmentGap 6) */
+  .v-steps .auth { place-items:center; padding:48px 24px; }
+  .steps { display:flex; gap:6px; }
+  .steps i { flex:1; height:2px; border-radius:var(--radius-pill); background:var(--color-border-strong); }
+  .steps i.on { background:var(--color-text); }
+  .step-label { font-size:var(--font-size-footnote); color:var(--color-text-faint); margin-top:-12px; }
+  .back { display:inline-flex; align-items:center; gap:6px; font-size:var(--font-size-footnote); color:var(--color-text-muted); }
+  .back .ico { font-size:14px; }
+  .pk-art { width:72px; height:72px; border-radius:var(--radius-dialog); background:var(--color-raised); display:grid; place-items:center; font-size:32px; color:var(--color-text); }
   .narrow .auth { place-items:start center; padding:72px 20px 32px; grid-template-columns:minmax(0,1fr); }
   .narrow .auth > .aside { display:none; }
   .narrow .auth > .form-side { padding:0; place-items:start center; }
@@ -497,6 +506,7 @@
       <button data-value="centre" aria-pressed="true">1 · Centrata</button>
       <button data-value="split" aria-pressed="false">2 · Divisa</button>
       <button data-value="card" aria-pressed="false">3 · Card</button>
+      <button data-value="steps" aria-pressed="false">4 · Un passo alla volta</button>
     </div>
   </div>
   <div class="group"><span class="label">Stato</span>
@@ -507,6 +517,7 @@
       <button data-value="invite" aria-pressed="false">Con invito</button>
       <button data-value="badInvite" aria-pressed="false">Invito non valido</button>
       <button data-value="emailTaken" aria-pressed="false">Email già usata</button>
+      <button data-value="passkeyStep" aria-pressed="false">Passo passkey</button>
       <button data-value="cancelled" aria-pressed="false">Annullato</button>
       <button data-value="closed" aria-pressed="false">Registrazioni chiuse</button>
       <button data-value="mobile" aria-pressed="false">/auth/mobile</button>
@@ -553,6 +564,7 @@
     <tr><th>Variante</th><th>Scommette su</th><th>Costo</th></tr>
     <tr><td>1 · Centrata</td><td>Lo stile «Aperta» dell'app anche qui: nessun riquadro, una colonna da 380px al centro. Si entra in Saldo già con il suo aspetto.</td><td>Su 1280px molto vuoto attorno; nulla dice cos'è Saldo a chi arriva con un invito.</td></tr>
     <tr><td>2 · Divisa</td><td>A destra il nome dell'istanza e tre righe su cosa è Saldo e dove stanno i dati: chi riceve un invito capisce dove sta entrando.</td><td>Testo da scrivere e tradurre in 7 lingue; su stretto la metà destra sparisce.</td></tr>
+    <tr><td>4 · Un passo alla volta</td><td>Una decisione per schermata, lo stesso ritmo dell'onboarding del telefono; l'invito si controlla prima di chiedere la passkey, quindi nessuno fa la cerimonia per poi sentirsi dire che il codice è sbagliato.</td><td>Più schermate per chi ha fretta; il passo dell'invito vuole una verifica del codice prima della passkey (oggi la fa solo <code>resolveUser</code>): un piccolo endpoint in 0.3b, con la stessa risposta unica per codici sconosciuti, usati, revocati e scaduti.</td></tr>
     <tr><td>3 · Card</td><td>Il riquadro classico delle pagine di accesso: familiare, delimita bene gli errori.</td><td>Reintroduce la card che l'app ha tolto; la più generica delle tre.</td></tr>
   </table>
   <p style="margin-top:12px">In tutte: l'email è il campo con <code>autocomplete="username webauthn"</code>, così il browser propone la passkey appena lo si tocca (suggerimento automatico); «Accedi con passkey» apre la finestra del browser, che su un computer offre anche il QR per usare quella del telefono.
@@ -608,6 +620,39 @@ function content(view) {
     ${foot()}</div>`;
 }
 
+/** Variant 4: registration one decision per screen; sign-in as variant 1. */
+function stepped(view) {
+  const invite = ['invite', 'badInvite'].includes(view);
+  const passkey = view === 'passkeyStep';
+  const total = 3;
+  const at = passkey ? 3 : invite ? 2 : 1;
+  const seg = `<div class="steps">${Array.from({ length: total }, (_, i) => `<i class="${i < at ? 'on' : ''}"></i>`).join('')}</div>`;
+  const back = at > 1 ? `<button class="back press">${icon('chevL')}Indietro</button>` : brand();
+  let body;
+  if (passkey) {
+    body = `<span class="pk-art">${icon('key')}</span><h1>Crea la tua passkey</h1>
+      <p class="lede">Il browser ti chiederà impronta, volto o il PIN di questo dispositivo. La passkey resta qui; il server conserva solo la sua chiave pubblica.</p>
+      <div class="field-hint">Account per <b style="color:var(--color-text);font-weight:var(--font-weight-medium)">Saliou · gayesaliou29@gmail.com</b></div>
+      <button class="btn-primary press">${icon('key')}Crea la passkey</button>
+      <p class="field-hint" style="text-align:center">Vuoi usare il telefono? Nella finestra del browser scegli «Usa un telefono» e inquadra il QR.</p>`;
+  } else if (invite) {
+    body = `<h1>Il tuo codice d'invito</h1><p class="lede">Questo server accetta nuovi account solo con un invito. Te l'ha mandato chi lo gestisce.</p>
+      ${view === 'badInvite' ? alert('Il codice non è valido', 'Controlla di averlo copiato tutto, oppure chiedine uno nuovo. Un codice vale una volta e scade dopo 7 giorni.') : ''}
+      <div class="field"><label>Codice d'invito</label><div class="input mono ${view === 'badInvite' ? 'err' : 'focus'}">K7QM-2XRA-9DTE-4HW</div>
+      <span class="field-hint">16 caratteri; maiuscole e trattini li sistemiamo noi.</span></div>
+      <button class="btn-primary press">Continua</button>`;
+  } else {
+    body = `<h1>Crea il tuo account</h1><p class="lede">Due cose su di te, poi la passkey. Niente password.</p>
+      ${view === 'emailTaken' ? alert('Questa email ha già un account', 'Accedi con la sua passkey. Se l\'hai persa, chiedi all\'amministratore del server.') : ''}
+      <div class="fields"><div class="field"><label>Nome</label><div class="input">Saliou</div></div>
+        <div class="field"><label>Email</label><div class="input ${view === 'emailTaken' ? 'err' : 'focus'}">gayesaliou29@gmail.com</div>
+        <span class="field-hint">Serve per riconoscerti. Non è una password.</span></div></div>
+      <button class="btn-primary press">Continua</button>
+      <div class="switch-line">Hai già un account? <button class="linkish press">Accedi</button></div>`;
+  }
+  return `<div class="auth-col">${back}${seg}<div class="step-label">Passo ${at} di ${total}</div>${body}${foot()}</div>`;
+}
+
 function aside() {
   return `<aside class="aside"><div class="big">Le tue spese, periodo per periodo.</div>
     <div class="points">
@@ -621,18 +666,21 @@ function aside() {
 function render(el, narrow) {
   const { variant, view } = state;
   el.className = `app ${narrow ? 'narrow' : ''} v-${variant}`;
+  const stepViews = ['register', 'invite', 'badInvite', 'emailTaken', 'passkeyStep'];
+  if (variant === 'steps' && stepViews.includes(view)) { el.innerHTML = `<div class="auth">${stepped(view)}</div>`; return; }
   el.innerHTML = variant === 'split'
     ? `<div class="auth"><div class="form-side">${content(view)}</div>${aside()}</div>`
     : `<div class="auth">${content(view)}</div>`;
 }
 
-const URLS = { login: '/login', autofill: '/login', cancelled: '/login', closed: '/login', register: '/register', invite: '/register?invite=K7QM…', badInvite: '/register', emailTaken: '/register', mobile: '/auth/mobile?redirect_uri=saldo://auth/callback&state=…', handoff: '/auth/mobile → saldo://auth/callback' };
+const URLS = { passkeyStep: '/register', login: '/login', autofill: '/login', cancelled: '/login', closed: '/login', register: '/register', invite: '/register?invite=K7QM…', badInvite: '/register', emailTaken: '/register', mobile: '/auth/mobile?redirect_uri=saldo://auth/callback&state=…', handoff: '/auth/mobile → saldo://auth/callback' };
 const CAPTIONS = {
   centre: '<b>1 · Centrata.</b> Una colonna da 380px al centro della pagina, senza riquadro: lo stile «Aperta» dell\'app. Rocky saluta sopra il nome.',
   split: '<b>2 · Divisa.</b> Il modulo a sinistra; a destra, su una superficie, cosa è Saldo e dove stanno i dati. Su stretto resta solo il modulo.',
+  steps: '<b>4 · Un passo alla volta.</b> L\'accesso come la 1. La registrazione è a passi, con i segmenti dell\'onboarding del telefono: chi sei, il codice d\'invito (solo se serve), la passkey. Ogni errore sta nel passo dove nasce.',
   card: '<b>3 · Card.</b> Il modulo in un riquadro al centro della pagina, su fondo più scuro: la forma classica.',
 };
-const state = { variant: 'centre', view: 'login', theme: 'dark', frames: 'both' };
+const state = { variant: 'steps', view: 'invite', theme: 'dark', frames: 'both' };
 for (const [key, value] of new URLSearchParams(location.hash.slice(1))) if (key in state) state[key] = value;
 function apply() {
   render(document.getElementById('desktop'), false);
