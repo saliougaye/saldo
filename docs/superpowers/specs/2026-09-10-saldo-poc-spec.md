@@ -1748,6 +1748,13 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   the phone's). Recurrences and attachments are shown and not edited (§17.1.9), and the form says so where they
   would be. On narrow screens the phone's patterns stay: detail full screen, the form in a bottom sheet. New
   tokens: `panelWidth` 420, `searchWidth` 320.
+- **Conti (decided 2026-09-27, mockup `2026-09-27-web-accounts-variants.html`, variant «1 · Lista aperta»).** A band as
+  on Home: the page title with «Nuovo conto», Patrimonio complessivo at 56px, Totale spendibile beside it with its
+  note. Then two open groups, «Da spendere» and «Risparmi e investimenti», rows separated by space, each account's
+  pockets nested under it with their ring and goal line and «Libero» closing the group, as on the phone; archived
+  accounts behind one row at the end. Account, credit card and goal details, and the account form, open in the
+  trailing panel as in Transazioni (`?a={id}`, `?g={id}`). Tiles (one card per account with its sparkline) were
+  considered and not taken: they brought back the cards Home removed.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
