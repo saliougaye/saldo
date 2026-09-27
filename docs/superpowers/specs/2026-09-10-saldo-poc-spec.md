@@ -1767,6 +1767,17 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   of forecast periods and the recurrences expected that month, so the phone's forecast sheet has no web counterpart.
   The period header's ‹ › stays and moves the same selection. On narrow screens Statistiche stays the phone's.
   `cashflowColumns` takes the half height as a parameter (the phone passes 54, the web 64).
+- **Profilo (decided 2026-09-27, mockup `2026-09-27-web-profile-variants.html`, variant «5 · Sotto-navigazione +
+  pannello»).** Under the profile header (avatar, name, email, role), a sub-navigation on the leading side picks one
+  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/passkeys`,
+  `/profile/categories`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
+  rows showing the current value; the row picked is edited **in the trailing panel**, as in Transazioni and Conti
+  (`?edit=currency`, `?k={passkeyId}`). Preferences are the synced `settings` and say they apply to the phone too;
+  the currency asks for confirmation as on the phone. Passkeys are one row each (name, provider from the AAGUID,
+  date added, «in uso ora» for the one that signed this browser in); the panel renames one (the name is Saldo's
+  label, the authenticator's own name does not change), shows whether it is synced (`backed_up`) and deletes it
+  after a confirmation, **never the last one**: its Elimina is disabled and says why, with a link to add another.
+  Lock, permissions, server and CSV import stay the phone's. On narrow screens Profilo stays the phone's.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
