@@ -430,6 +430,7 @@
      PROFILO — shell «Aperta». Settings rows: label and help on the leading side, control on the trailing one.
      ===================================================================================== */
   :root { --layout-subnav-width:200px; --layout-settings-label:280px; } /* NEW TOKENS */
+  body { padding-top:124px; } /* the toolbar wraps to two lines on this page */
 
   .prof-head { display:flex; align-items:center; gap:20px; margin-bottom:56px; }
   .prof-head .big-avatar { width:64px; height:64px; border-radius:var(--radius-pill); background:var(--color-raised); display:grid; place-items:center;
@@ -518,6 +519,7 @@
       <button data-value="2" aria-pressed="false">2 · Sotto-navigazione</button>
       <button data-value="3" aria-pressed="false">3 · Riepilogo + pannello</button>
       <button data-value="4" aria-pressed="false">4 · Due colonne</button>
+      <button data-value="5" aria-pressed="false">5 · Sotto-nav + pannello</button>
     </div>
   </div>
   <div class="group"><span class="label">Stato</span>
@@ -661,6 +663,49 @@ function renderSummary(el, view) {
   document.getElementById('url').textContent = `saldo.example.com/profile${open === 'Passkey' ? '?edit=passkeys' : open === 'Valuta' ? '?edit=currency' : ''}`;
 }
 
+/** Variant 5: the sub-navigation picks a section, its rows are summaries, the row picked is edited in the panel. */
+function renderMix(el, view) {
+  const onKeys = ['rename', 'delete', 'last'].includes(view);
+  const cur = onKeys ? 'Passkey' : 'Preferenze';
+  const items = [['Account', 'settings'], ['Preferenze', 'settings'], ['Passkey', 'key'], ['Categorie', 'tag'], ['Tag', 'tag'], ['Dati', 'archive']];
+  const sum = (n, v, sel, sub) => `<button class="sum press" ${sel ? 'aria-selected="true"' : ''}><span><span class="n">${n}</span>${sub ? `<div class="row-sub" style="margin-top:2px">${sub}</div>` : ''}</span><span class="v">${v}</span>${icon('chevR')}</button>`;
+  const keys = view === 'last'
+    ? [['iCloud Portachiavi', 'Apple · aggiunta il 10 set · in uso ora']]
+    : [['iCloud Portachiavi', 'Apple · aggiunta il 10 set · in uso ora'], ['Pixel di Saliou', 'Google Password Manager · aggiunta il 14 set'], ['YubiKey', 'aggiunta il 20 set']];
+  const selectedKey = view === 'last' ? 0 : ['rename', 'delete'].includes(view) ? 1 : -1;
+  const content = cur === 'Passkey'
+    ? `${sec('Passkey', `${keys.length} passkey`, `<p class="row-sub" style="margin:12px 0 4px;white-space:normal;line-height:1.45">Ognuna entra nel tuo account. Tienine almeno due, su dispositivi diversi, per non restare fuori se ne perdi uno.</p>
+        <div class="sum-rows">${keys.map(([n, d], k) => `<button class="sum press" ${k === selectedKey ? 'aria-selected="true"' : ''}><span style="display:flex;gap:12px;align-items:center"><span class="kicon" style="width:32px;height:32px;border-radius:var(--radius-input);background:var(--color-raised);display:grid;place-items:center;color:var(--color-text-muted)">${icon('key')}</span><span><span class="n">${n}</span><div class="row-sub" style="margin-top:2px">${d}</div></span></span><span></span>${icon('chevR')}</button>`).join('')}</div>
+        <button class="btn-secondary press" style="margin-top:16px">${icon('plus')}Aggiungi passkey</button>`)}`
+    : `${sec('Preferenze', 'valgono anche sul telefono', `<div class="sum-rows">${sum('Lingua', 'Italiano')}${sum('Valuta', 'Euro · EUR', view === 'currency')}${sum('Periodo', 'Ciclo dal 27', false, '27 ago – 26 set')}${sum('Tema', 'Scuro')}${sum('Fuso orario', 'Europa/Roma', false, 'ora 14:32')}</div>`)}`;
+
+  let panel = '';
+  if (view === 'currency') panel = `<div class="form-title" style="margin-bottom:6px">Valuta</div>
+    <p style="font-size:var(--font-size-footnote);color:var(--color-text-faint);margin-bottom:16px;line-height:1.45">Gli importi vengono riformattati, non convertiti.</p>
+    <div class="search" style="width:100%;margin:0 0 16px">${icon('search')}<span class="q"></span></div>
+    <div class="section-label" style="border:0">Comuni</div><div class="opts">${[['Euro', 'EUR', true], ['Dollaro statunitense', 'USD', false], ['Sterlina britannica', 'GBP', false], ['Franco svizzero', 'CHF', false]].map(([n, c, on]) => `<button class="opt press" ${on ? 'aria-pressed="true"' : ''}>${n}<span class="code">${c}</span>${on ? icon('check') : ''}</button>`).join('')}</div>
+    <button class="linkish press" style="margin-top:12px;font-size:var(--font-size-footnote)">Tutte le valute</button>`;
+  if (selectedKey >= 0) {
+    const [n, d] = keys[selectedKey];
+    const last = keys.length === 1;
+    panel = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:24px"><span style="width:44px;height:44px;border-radius:var(--radius-button);background:var(--color-raised);display:grid;place-items:center;color:var(--color-text-muted);font-size:20px">${icon('key')}</span>
+        <div><div class="form-title">${n}</div><div class="row-sub">${d}</div></div></div>
+      <div class="field"><label>Nome</label><div class="input" ${view === 'rename' ? 'style="box-shadow:inset 0 0 0 1px var(--color-text-muted)"' : ''}>${n}${view === 'rename' ? '<span style="width:1px;height:16px;background:var(--color-text)"></span>' : ''}</div>
+        <div class="row-sub" style="white-space:normal">Solo per riconoscerla qui. Il nome sul dispositivo non cambia.</div></div>
+      <dl class="facts" style="margin-top:24px"><dt>Provider</dt><dd>${d.split(' · ')[0].startsWith('aggiunta') ? 'sconosciuto' : d.split(' · ')[0]}</dd><dt>Aggiunta</dt><dd>${d.includes('14') ? '14 settembre 2026' : d.includes('20') ? '20 settembre 2026' : '10 settembre 2026'}</dd><dt>Sincronizzata</dt><dd>sì, fra i dispositivi del provider</dd><!-- from passkey.backed_up --></dl>
+      <div class="actions" style="margin-top:32px">${view === 'rename' ? '<button class="btn-primary press">Salva</button>' : ''}<span class="spacer"></span>
+        <button class="btn-secondary btn-danger press" ${last ? 'disabled style="opacity:.45;cursor:not-allowed"' : ''}>${icon('trash')}Elimina</button></div>
+      ${last ? `<p style="margin-top:12px;font-size:var(--font-size-footnote);color:var(--color-text-muted);line-height:1.45;text-wrap:pretty">È la tua unica passkey: senza, non potresti più entrare. <button class="linkish press">Aggiungine un'altra</button> prima di eliminarla.</p>` : ''}`;
+  }
+  const url = cur === 'Passkey' ? `/profile/passkeys${selectedKey >= 0 ? `?k=${selectedKey + 1}` : ''}` : `/profile/preferences${view === 'currency' ? '?edit=currency' : ''}`;
+  el.innerHTML = `${topbar()}<div style="position:relative;min-height:0;display:grid"><div class="split ${panel ? 'open' : ''}"><main class="main"><div class="page">${header()}
+      <div class="settings" style="gap:48px"><nav class="subnav">${items.map(([n, i]) => `<button class="press" ${n === cur ? 'aria-current="page"' : ''}>${icon(i)}${n}</button>`).join('')}
+        <div class="sep"></div><button class="press btn-danger">${icon('arrowUR')}Esci</button></nav><div>${content}</div></div></div></main>
+    ${panel ? `<aside class="panel"><div class="panel-head"><span></span><button class="icon-btn press" aria-label="Chiudi">${icon('x')}</button></div>${panel}</aside>` : ''}</div>
+    ${view === 'delete' ? `<div class="scrim"><div class="dialog small" role="alertdialog"><div class="t">Eliminare «Pixel di Saliou»?</div><div class="b">Non potrai più entrare con questa passkey. Le altre due restano.</div><div class="actions"><button class="btn-secondary press">Annulla</button><button class="btn-primary press">Elimina</button></div></div></div>` : ''}</div>`;
+  document.getElementById('url').textContent = `saldo.example.com${url}`;
+}
+
 function header() {
   return `<div class="prof-head"><span class="big-avatar">SG</span><div class="who"><div class="n">Saliou</div><div class="e">gayesaliou29@gmail.com<span class="badge-soft">admin</span></div></div></div>`;
 }
@@ -703,6 +748,7 @@ function renderDesktop() {
       <div>${cur === 'Passkey' ? passkeys(view) : prefs()}</div></div></div>`;
   }
   if (variant === '3') { renderSummary(el, view); return; }
+  if (variant === '5') { renderMix(el, view); return; }
   if (variant === '4') {
     body = `<div class="page">${header()}<div class="cols">
       <div class="stack compact">${prefs()}</div>
@@ -731,11 +777,12 @@ function renderNarrow() {
 
 const CAPTIONS = {
   1: '<b>1 · Una pagina.</b> Account, Preferenze, Passkey e Dati in una pagina sola a sezioni aperte, 960px: a sinistra cosa è e perché, a destra il controllo.',
+  5: '<b>5 · Sotto-navigazione + pannello.</b> La colonna a sinistra sceglie la sezione (ognuna con il suo URL); la sezione è fatta di righe di riepilogo; la riga scelta si modifica nel pannello a destra. Per le passkey: una riga per chiave, il pannello per rinominarla o eliminarla.',
   3: '<b>3 · Riepilogo + pannello.</b> Ogni impostazione è una riga con il valore attuale; cliccandola si apre il pannello a destra, come in Transazioni e Conti. La pagina resta corta e si legge come un riepilogo.',
   4: '<b>4 · Due colonne.</b> Come Statistiche (7/5): a sinistra le preferenze con i controlli compatti in riga, a destra Account, Passkey e Dati. Tutto visibile senza cambiare pagina.',
   2: '<b>2 · Sotto-navigazione.</b> Le stesse sezioni, una alla volta, scelte da una colonna a sinistra; ognuna ha il suo URL (/profile/passkeys).',
 };
-const state = { variant: '1', view: 'default', theme: 'dark', frames: 'both', scroll: '0' };
+const state = { variant: '5', view: 'default', theme: 'dark', frames: 'both', scroll: '0' };
 for (const [key, value] of new URLSearchParams(location.hash.slice(1))) if (key in state) state[key] = value;
 function apply() {
   renderDesktop(); renderNarrow();
