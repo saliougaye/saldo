@@ -765,8 +765,8 @@ function navigator(view) {
           ${section('Ripartizione', t.toLowerCase(), split({ wide: true }))}
           <div class="cols" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">${section('Quota impegnata', '', committed())}${section('Tag', 'Uscite · entrate', tags())}</div></div>`
       : state.bottom === 'left'
-        ? `<div class="cols"><div class="stack tall">${section('Andamento del periodo', '', trend())}</div>
-            <div class="stack">${section('Ripartizione', t.toLowerCase(), split())}${section('Quota impegnata', '', committed())}${section('Tag', 'Uscite · entrate', tags())}</div></div>`
+        ? `<div class="cols"><div class="stack tall">${section('Andamento del periodo', '', trend())}${section('Quota impegnata', '', committed())}</div>
+            <div class="stack">${section('Ripartizione', t.toLowerCase(), split())}${section('Tag', 'Uscite · entrate', tags())}</div></div>`
         : `<div class="trio">${section('Ripartizione', t.toLowerCase(), split())}
           <div class="stack">${section('Andamento del periodo', '', trend())}${section('Quota impegnata', '', committed())}</div>
           ${section('Tag', 'Uscite · entrate', tags())}</div>`;
@@ -806,7 +806,7 @@ const CAPTIONS = {
   3: '<b>3 · Navigatore.</b> Flussi a tutta larghezza è anche il selettore del periodo: clicca una colonna (o ← →) e tutto sotto segue — numeri chiave, Ripartizione, Andamento, Tag. Una colonna prevista mostra la previsione di quel mese. Niente pannello: il dettaglio è la pagina.',
   2: '<b>2 · Flussi larghi.</b> Flussi a tutta larghezza con 6 periodi chiusi + corrente + 3 previsti e barre più alte; la tabella della previsione è sotto il grafico. Il resto in due colonne.',
 };
-const state = { variant: '3', bottom: 'bands', view: 'current', theme: 'dark', frames: 'both', scroll: '0' };
+const state = { variant: '3', bottom: 'left', view: 'current', theme: 'dark', frames: 'both', scroll: '0' };
 for (const [key, value] of new URLSearchParams(location.hash.slice(1))) if (key in state) state[key] = value;
 function apply() {
   renderDesktop(); renderNarrow();
