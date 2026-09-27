@@ -1725,6 +1725,19 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   the grid, the sidebar and the tab bar every later page reuses; then Transazioni, Statistiche, Profile, the
   auth pages (`/login`, `/register`, `/auth/mobile`) and Admin. The chosen variant of each is recorded here. Layout
   values the mockups introduce (sidebar width, content max-width, breakpoints) become tokens in `tokens.ts`.
+- **Shell and Home (decided 2026-09-27, mockup `2026-09-27-web-home-variants.html`, round 2, variant «C · Aperta»).**
+  On wide screens navigation is a **top bar**, not a sidebar: the brand, Home, Transazioni, Statistiche and Conti on
+  the leading side; Admin (for the `admin` role), «Nuova transazione» (shortcut `N`) and the profile avatar on the
+  trailing side. Below 1024px it is the phone's tab bar and FAB, Profile and Admin reached from the avatar. Home
+  opens with a **band** that is not a card: the period header across the full width, «Rimasto da spendere» at 56px,
+  Entrate and Uscite beside it, the progress bar with its pace tick under both. Under the band, **two columns** (7/5):
+  «In arrivo» and «Ultime transazioni» on the leading side, Budget and Obiettivi (§5.13) on the trailing one.
+  Sections are **open, with no card around them**: a title row with one hairline under it, rows separated by space
+  and never by lines, 56px between sections and 72px between the columns. Rounds 1 and 2 showed that the phone's
+  density (16px padding, 10px between cards, a line under every row) reads as packed at 1280px; the rule kept is
+  that the gap between groups is at least twice the gap inside one. On narrow screens Home stays the phone's, cards
+  included. New tokens: `topbarHeight` 64, `contentWide` 1120, `pagePaddingWeb` 48, `navItemHeight` 36,
+  `fontSize.heroWeb` 56, `sectionGapWeb` 56, `columnGapWeb` 72, and the 1024px breakpoint.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
