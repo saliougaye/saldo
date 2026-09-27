@@ -222,6 +222,9 @@ importers:
       '@saldo/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@saldo/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@simplewebauthn/browser':
         specifier: ^14.0.0
         version: 14.0.0
