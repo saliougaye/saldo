@@ -1,5 +1,6 @@
 import type { CurrencyCode } from '@saldo/core';
 import { type AppLocale, formatMajor } from '@saldo/i18n';
+import { CASHFLOW_HATCH_PATH, cashflowChart, cashflowColumns } from '@saldo/ui';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -23,37 +24,24 @@ export interface CashflowBar {
   forecast?: { min: number; max: number };
 }
 
-/** Design geometry (`docs/design/Spese.dc.html` lines 265-289): fixed-width bars in 54px halves. */
-const BAR_WIDTH = 16;
-const HALF_HEIGHT = 54;
-/** Height of every bar while the figures are hidden. */
-const HIDDEN_STUB = Math.round(HALF_HEIGHT * 0.35);
-const BAR_RADIUS = 2;
-const COLUMN_GAP = 5;
-/** 45° stripes, 2px of ink every 5px, as in the prototype's `repeating-linear-gradient`. */
-const HATCH_PERIOD = 5;
-const HATCH_INK = 2;
-/**
- * The three diagonals of one 5x5 tile: the middle one plus the two that continue the stripes of
- * the neighbouring tiles, so the pattern is seamless. Drawn as lines rather than a rotated
- * rectangle because `patternTransform` is unreliable in react-native-svg and renders as dots.
- */
-/** Forecast bars sit one step behind the running period's (§5.7). */
-const FORECAST_OPACITY = 0.5;
-/** The min–max band: a little wider than the bar it sits behind, and faint. */
-const BAND_WIDTH = 22;
-const BAND_OPACITY = 0.2;
-/** Dashes of the divider between what happened and what is expected. */
-const DIVIDER_DASH = '3 4';
-const HATCH_PATH = `M0,${HATCH_PERIOD} L${HATCH_PERIOD},0 M-1,1 L1,-1 M${HATCH_PERIOD - 1},${
-  HATCH_PERIOD + 1
-} L${HATCH_PERIOD + 1},${HATCH_PERIOD - 1}`;
+const {
+  barWidth: BAR_WIDTH,
+  halfHeight: HALF_HEIGHT,
+  barRadius: BAR_RADIUS,
+  columnGap: COLUMN_GAP,
+  hatchPeriod: HATCH_PERIOD,
+  hatchInk: HATCH_INK,
+  forecastOpacity: FORECAST_OPACITY,
+  bandWidth: BAND_WIDTH,
+  bandOpacity: BAND_OPACITY,
+  dividerDash: DIVIDER_DASH,
+} = cashflowChart;
 
 function Hatch({ id, colour }: { id: string; colour: string }) {
   return (
     <Defs>
       <Pattern id={id} width={HATCH_PERIOD} height={HATCH_PERIOD} patternUnits="userSpaceOnUse">
-        <Path d={HATCH_PATH} stroke={colour} strokeWidth={HATCH_INK} />
+        <Path d={CASHFLOW_HATCH_PATH} stroke={colour} strokeWidth={HATCH_INK} />
       </Pattern>
     </Defs>
   );
@@ -124,7 +112,7 @@ function LegendSwatch({ id, colour, kind }: { id: string; colour: string; kind: 
 
 /**
  * Cashflow of §5.7: income above the axis, expenses below it, one column per cycle, with the net
- * on top and the cycle start underneath. Both halves share one scale so the columns are comparable.
+ * on top and the cycle start underneath. Heights come from `cashflowColumns`, shared with the web.
  */
 export function CashflowChart({
   bars,
@@ -141,18 +129,8 @@ export function CashflowChart({
   const theme = useTheme();
   const { t } = useTranslation();
   const { hidden } = useHiddenAmounts();
-  const max = Math.max(
-    1,
-    ...bars.flatMap((bar) => [bar.income, bar.expenses, bar.forecast?.max ?? 0]),
-  );
+  const columns = cashflowColumns(bars, hidden);
   const hasForecast = bars.some((bar) => bar.forecast !== undefined);
-  // A cycle with nothing in it gets no bar at all rather than a 1px stub, so "no data" reads as
-  // empty instead of as a very small amount. In hidden mode every column is the same stub: with the
-  // labels masked the shape of the year would still say which months were heavy.
-  const barHeight = (value: number) => {
-    if (hidden) return HIDDEN_STUB;
-    return value === 0 ? 0 : Math.max(1, Math.round((value / max) * HALF_HEIGHT));
-  };
 
   const legend: { key: string; label: string; colour: string; kind: Swatch }[] = [
     {
@@ -189,11 +167,10 @@ export function CashflowChart({
   return (
     <View style={{ gap: 16 }}>
       <View style={{ flexDirection: 'row', gap: COLUMN_GAP }}>
-        {bars.map((bar, index) => {
+        {columns.map(({ bar, income, expenses, band, divider }) => {
           const net = bar.income - bar.expenses;
           const forecast = bar.forecast;
           const hatched = bar.current || forecast !== undefined;
-          const firstForecast = forecast !== undefined && bars[index - 1]?.forecast === undefined;
           return (
             <View key={bar.key} style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: 7 }}>
               <Text
@@ -207,7 +184,7 @@ export function CashflowChart({
                 {hidden ? MASK : formatMajor(net, currency, locale)}
               </Text>
               <View style={{ width: '100%' }}>
-                {firstForecast ? (
+                {divider ? (
                   // Half the column gap to the left: the seam between what happened and what is expected.
                   <Svg
                     width={1}
@@ -234,7 +211,7 @@ export function CashflowChart({
                   }}
                 >
                   <Bar
-                    height={barHeight(bar.income)}
+                    height={income}
                     colour={theme.palette.positive}
                     hatched={hatched}
                     patternId={`cashflow-income-${bar.key}`}
@@ -252,15 +229,15 @@ export function CashflowChart({
                     justifyContent: 'flex-start',
                   }}
                 >
-                  {forecast === undefined || hidden ? null : (
+                  {band === null ? null : (
                     <View
                       style={{
                         position: 'absolute',
                         // Centred on the bar explicitly, not left to how the parent aligns its children.
                         left: '50%',
                         marginLeft: -BAND_WIDTH / 2,
-                        top: barHeight(forecast.min),
-                        height: Math.max(1, barHeight(forecast.max) - barHeight(forecast.min)),
+                        top: band.top,
+                        height: band.height,
                         width: BAND_WIDTH,
                         borderRadius: BAR_RADIUS,
                         backgroundColor: theme.palette.accent,
@@ -269,7 +246,7 @@ export function CashflowChart({
                     />
                   )}
                   <Bar
-                    height={barHeight(bar.expenses)}
+                    height={expenses}
                     colour={theme.palette.accent}
                     hatched={hatched}
                     patternId={`cashflow-expenses-${bar.key}`}

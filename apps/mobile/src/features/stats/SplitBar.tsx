@@ -1,3 +1,4 @@
+import { splitShares } from '@saldo/ui';
 import { View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useHiddenAmounts } from '../hidden/hiddenAmounts';
@@ -18,9 +19,9 @@ export function SplitBar({
 }) {
   const theme = useTheme();
   const { hidden } = useHiddenAmounts();
-  const total = segments.reduce((sum, segment) => sum + segment.amount, 0);
+  const shares = splitShares(segments);
   // The empty track is also the hidden rendering: shares are the figures, drawn as widths.
-  if (hidden || total <= 0) {
+  if (hidden || shares === null) {
     return (
       <View
         style={{ height, borderRadius: theme.radii.pill, backgroundColor: theme.palette.track }}
@@ -31,11 +32,8 @@ export function SplitBar({
     <View
       style={{ flexDirection: 'row', height, borderRadius: theme.radii.pill, overflow: 'hidden' }}
     >
-      {segments.map((segment) => (
-        <View
-          key={segment.key}
-          style={{ flexGrow: segment.amount, backgroundColor: segment.colour }}
-        />
+      {shares.map(({ segment, share }) => (
+        <View key={segment.key} style={{ flexGrow: share, backgroundColor: segment.colour }} />
       ))}
     </View>
   );

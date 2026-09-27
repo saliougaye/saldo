@@ -1,3 +1,4 @@
+import { chartLine, hiddenBaseline, trendGeometry } from '@saldo/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
@@ -12,30 +13,15 @@ export interface CycleTrendChartProps {
   height?: number;
 }
 
-function points(series: readonly number[], width: number, height: number, max: number): string {
-  if (series.length === 0) return '';
-  const step = series.length === 1 ? 0 : width / (series.length - 1);
-  return series
-    .map((value, index) => {
-      const x = series.length === 1 ? width / 2 : index * step;
-      const y = height - (max === 0 ? 0 : (value / max) * height);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
-}
-
 /**
  * "Andamento del ciclo" (§5.6): grey `usual` behind, accent `current` in front, with a dot at the
- * last point. Drawn with SVG polylines, so it needs no charting dependency.
+ * last point. The geometry is `@saldo/ui`'s, shared with the web.
  */
 export function CycleTrendChart({ current, usual, height = 96 }: CycleTrendChartProps) {
   const theme = useTheme();
   const { hidden } = useHiddenAmounts();
   const [width, setWidth] = useState(0);
-  const max = Math.max(1, ...current, ...usual);
-  const last = current[current.length - 1] ?? 0;
-  const lastX = current.length <= 1 ? width / 2 : width;
-  const lastY = height - (last / max) * height;
+  const trend = trendGeometry(current, usual, width, height);
 
   return (
     <View
@@ -46,34 +32,39 @@ export function CycleTrendChart({ current, usual, height = 96 }: CycleTrendChart
         // The line is the figure: a flat dashed baseline says "there is a chart here" and no more.
         <Svg width={width} height={height}>
           <Polyline
-            points={`0,${(height / 2).toFixed(1)} ${width.toFixed(1)},${(height / 2).toFixed(1)}`}
+            points={hiddenBaseline(width, height)}
             fill="none"
             stroke={theme.palette.borderStrong}
-            strokeWidth={1.5}
-            strokeDasharray="3 4"
+            strokeWidth={chartLine.hiddenStroke}
+            strokeDasharray={chartLine.hiddenDash}
           />
         </Svg>
       ) : (
         <Svg width={width} height={height}>
-          {usual.length > 0 ? (
+          {trend.usual === '' ? null : (
             <Polyline
-              points={points(usual, width, height, max)}
+              points={trend.usual}
               fill="none"
               stroke={theme.palette.borderStrong}
-              strokeWidth={1.5}
+              strokeWidth={chartLine.usualStroke}
             />
-          ) : null}
-          {current.length > 0 ? (
+          )}
+          {trend.current === '' ? null : (
             <Polyline
-              points={points(current, width, height, max)}
+              points={trend.current}
               fill="none"
               stroke={theme.palette.accent}
-              strokeWidth={2}
+              strokeWidth={chartLine.currentStroke}
             />
-          ) : null}
-          {current.length > 0 ? (
-            <Circle cx={lastX} cy={lastY} r={3} fill={theme.palette.accent} />
-          ) : null}
+          )}
+          {trend.last === null ? null : (
+            <Circle
+              cx={trend.last.x}
+              cy={trend.last.y}
+              r={chartLine.dotRadius}
+              fill={theme.palette.accent}
+            />
+          )}
         </Svg>
       )}
     </View>

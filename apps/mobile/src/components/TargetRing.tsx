@@ -1,5 +1,5 @@
 import type { IconName } from '@saldo/ui';
-import { motion } from '@saldo/ui';
+import { motion, ringGeometry } from '@saldo/ui';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -7,7 +7,6 @@ import { Circle, G, Line, Svg } from 'react-native-svg';
 import { Icon } from '../theme/Icon';
 import { EASE, useMotion } from '../theme/motion';
 import { useTheme } from '../theme/ThemeProvider';
-import { ringGeometry } from './ringGeometry';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

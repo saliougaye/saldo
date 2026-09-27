@@ -196,6 +196,8 @@ export const fontSize = {
   display: 34,
   amountXl: 38,
   hero: 44,
+  /** The one figure a wide web page leads with: «Rimasto da spendere», Patrimonio (§17.1.7). */
+  heroWeb: 56,
 } as const;
 
 export const fontWeight = {
@@ -254,6 +256,31 @@ export const layout = {
   targetRing: 36,
   targetRingSmall: 28,
   minHitTarget: 44,
+  /** Web (§17.1.7). The top bar that replaces the tab bar on wide screens. */
+  topbarHeight: 64,
+  /** Web: the widest a page's content grows, and its inline margin. */
+  contentWide: 1120,
+  pagePaddingWeb: 48,
+  /** Web: a top-bar or sub-navigation item. */
+  navItemHeight: 36,
+  /** Web: between open sections, and between the two columns of Home and Statistiche. */
+  sectionGapWeb: 56,
+  columnGapWeb: 72,
+  /** Web: the trailing panel where details and forms open (Transazioni, Conti, Profilo, Admin). */
+  panelWidth: 420,
+  searchWidth: 320,
+  /** Web: the sub-navigation of Profilo and Admin. */
+  subnavWidth: 200,
+  /** Web: the column of the sign-in and registration pages. */
+  authWidth: 380,
+  /** Web: a confirmation dialog. */
+  dialogWidth: 400,
+  /**
+   * Web: top bar and panels at and above this width, the phone's tab bar below. A media query cannot
+   * read a custom property, so the web writes this number in its `@media` rules with a comment
+   * naming the token.
+   */
+  wideBreakpoint: 1024,
 } as const;
 
 export const motion = {

@@ -83,12 +83,12 @@ cycle, and am I going faster than I should?*
 | D26 | **Rocky appears only where the user stops** (decided 2026-09-24, widened 2026-09-25): peeking over the «nothing yet» ghost stack, peeking over a reached goal's card, whole in the close sheet of a reached goal, waving on the welcome, asleep on the lock screen, waiting in a long labelled load, and small above the message of a failed import or restore. Never in a «nothing matches», a «not found», a toast, the pull-to-refresh or a short boot wait. He moves as the mascot kit's Lottie states; only the waiting ones (`loading`, `sleep`) loop | A mascot seen ten times a day is noise. Next to an error he stays small and still after one play, under the text that says what happened, so he sets the tone without making light of it. Lottie from the kit rather than PNGs: one source for motion and still, since Reduce Motion shows the kit's pose frame. Mockup: `docs/superpowers/mockups/2026-09-24-mascot-variants.html`, variant A+B |
 | D27 | **A closed period is recapped once, in a sheet** (decided 2026-09-25): on the first open of a new period, for every kind including the week, a full-screen sheet recaps the period that just closed (§5.15), with a 09:00 notification that day. Once dismissed it cannot be reopened, and it is not shareable as an image | The switch to a new period was silent. A sheet makes it a moment; every kind gets one because the user wants the week recapped too. Reopening past recaps and sharing them are later ideas: the first has to survive changes of period kind, the second needs a native capture dependency and a decision on what a shared image hides. |
 | D28 | **Saldo explains itself in three places, from one text** (decided 2026-09-26): a first-run intro of four ideas on one screen, an ⓘ next to what it explains opening a sheet, and a «Guida» in Profile with one page per concept. All three read `guide.<concept>.{title,summary,body}` through one typed list of concept ids (§5.16) | Nothing in the app said how it thinks: a period that restarts, «Rimasto da spendere» that is not a bank balance, a transfer that is not an expense. Apple's pattern — a few rows, «Continua», done — costs one tap; the ⓘ answers where the question comes up without coach marks or tooltips over the UI; the Guida is where the same text can be read again. One list of ids makes it impossible for the three to drift apart. A hint that compensates for an unclear label was fixed as a label instead (the generic «ciclo», «saldo disponibile»). Not a «Novità» sheet yet: there are no releases to compare (0.9). Mockup: `docs/superpowers/mockups/2026-09-26-guide-variants.html`, variants 1A, 2A, 3A |
-| D29 | **The forecast lives in Flussi and opens a sheet** (decided 2026-09-26, mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, variant «Finestra + dettaglio»): on the current period the cashflow chart keeps its six columns but shows 2 closed + current + 3 forecast; the row «Al {data} circa {saldo}» under it opens a sheet with one row per forecast period (§5.7, §5.17) | Nine columns did not fit 320px without abbreviating every label; a scroll inside the chart hides half of it and duplicates the header's ‹ ›; a separate card or a balance line added UI the roadmap had left out. Three closed periods are enough on screen because the header already walks back, and the medians still read six. |
+| D29 | **The forecast lives in Flussi and opens a sheet** (decided 2026-09-26, mockup `docs/superpowers/mockups/2026-09-26-forecast-variants.html`, variant «Finestra + dettaglio»): on the current period the cashflow chart keeps its six columns but shows 2 closed + current + 3 forecast; the row «Al {data} circa {saldo}» under it opens a sheet with one row per forecast period (§5.7, §5.17) | Nine columns did not fit 320px without abbreviating every label; a scroll inside the chart hides half of it and duplicates the header's ‹ ›; a separate card or a balance line added UI the roadmap had left out. Three closed periods are enough on screen because the header already walks back, and the medians still read six. On the web's wide layout the chart shows six closed periods and doubles as the period picker (§17.1.7, 2026-09-27). |
 | D30 | **The web app is server-side, at the root of the instance** (decided 2026-09-22 and 2026-09-26, §17.1) | Server components read the user's data through one typed projection of `sync_rows` into `@saldo/core`, which 0.4 and 0.5 reuse. A browser running SQLite WASM would duplicate the phone's engine. The root rather than a subdomain keeps the passkey's RP id and the cookie on one origin, with nothing new for a self-hoster to configure. |
 | D31 | **The web app does not prepare for shared finances** (decided 2026-09-26) | Shared wallet or shared account is decided when that milestone starts, and it ships before the first release, so there are still no production rows to migrate then. Scoping queries for a model nobody has designed would guess at it; the web app keeps `where user_id = ?` like the sync, and shared finances change both together. |
 | D32 | **An account has a real email** (decided 2026-09-26, §17.1.4) | It is how an admin, and later shared finances, know who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
 | D33 | **Product settings live in the database and change from `/admin`; infrastructure stays in the environment** (decided 2026-09-26, §17.1.8) | A self-hoster should not edit env files and restart to open registration or set an AI key. An env variable that sets the same thing wins and locks it, so existing deployments keep working. Secrets are encrypted at rest and write-only in the UI. |
-| D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
+| D34 | **Web UI in CSS Modules on generated token variables, behaviour from Base UI's headless primitives; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7; Base UI added 2026-09-27) | CSS Modules add no styling dependency, and the tokens stay the only source of visual values. Dialogs, menus, selects and focus traps written by hand are where accessibility breaks, so their behaviour comes from Base UI, which renders no look of its own. shadcn/ui on Tailwind was the alternative: faster to write and able to enforce tokens through `@theme`, but its value is a look Saldo would restyle anyway, at the cost of a second styling dialect beside the phone's and several dependencies. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
 | D35 | **The marketing site and docs library are their own app, `apps/site`** (decided 2026-09-26, supersedes the roadmap's «inside `apps/web`») | An instance build should not carry, or need a flag to hide, a site that advertises the project. `apps/site` shares `@saldo/ui` and `@saldo/i18n` and reads the Markdown in `docs/` in place. |
 | D36 | **The AI provider key is one per instance**, set by the admin in `/admin` (decided 2026-09-26, for 0.5) | One household per instance is the case Saldo serves; the admin pays and every client, phone and web, uses the same key. |
 | D37 | **The user's time zone is a synced setting, not a cookie** (decided 2026-09-26, §17.1.5) | The server computes «today» for the web, and from 0.4 for MCP and AI, which have no browser to send a cookie. A cookie is also missing on the very first request. `settings.timeZone` is filled at onboarding and changed by hand, as Sure does with `families.timezone`; it does not follow a travelling device, so two devices in different zones do not overwrite each other and a period closes where the user lives. Profile shows it and warns only when the phone's zone differs (mockup `docs/superpowers/mockups/2026-09-26-timezone-variants.html`, variant «Viaggio + ora»): travelling is the one moment when the web and the phone can disagree about today. |
@@ -1671,7 +1671,8 @@ public. The decisions behind this section are D30–D36.
 - `/login`: passkey sign-in, with the browser's conditional UI (passkey autofill) where it is supported. Signing
   in with the phone's passkey from a desktop uses the browser's cross-device (QR) flow, which WebAuthn provides.
 - `/register`: **email** plus the invite code when `REGISTRATION=invite`, then the passkey ceremony. The same
-  email field is added to the phone's registration page at `/auth/mobile`.
+  email field is added to the phone's registration page at `/auth/mobile`. The page is in steps and checks the code before the ceremony
+  (§17.1.7, auth pages).
 - **Email is required from now on (D32)** and replaces the synthetic `{id}@passkey.saldo.invalid` of §9.1. It is
   lowercased and unique. It is an identifier (how an admin, and later shared finances, know who somebody is),
   **not a credential**: signing in stays passkey-only.
@@ -1706,18 +1707,114 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 
 #### 17.1.7 Interface
 
-- DOM components styled with **CSS Modules**. The `@saldo/ui` tokens become CSS custom properties generated from
-  `tokens.ts`, so no colour, radius or font size is typed by hand. Strings go through `@saldo/i18n`, formatting
-  through its formatters (D16).
+- DOM components styled with **CSS Modules**; dialogs, popovers, selects, menus and toasts are built on the
+  headless primitives of **Base UI** (`@base-ui/react`), which bring focus management, keyboard handling and ARIA,
+  and expose the enter/exit states (`data-starting-style`, `data-ending-style`, `--transform-origin`) the styles
+  animate. No component library supplies a look: shadcn/ui and Tailwind were considered and not taken (D34).
+  Base UI is added by 0.3b, the first step that renders one of them.
+- **Tokens as CSS custom properties.** A pure `tokensCss()` in `@saldo/ui` returns `:root` (dark),
+  `[data-theme="light"]` and a `prefers-color-scheme: light` block for the `system` preference, with variables
+  named `--color-*`, `--radius-*`, `--font-size-*`, `--font-weight-*`, `--motion-*` and `--category-*`. The root
+  layout injects it as a `<style>`, so there is no generated file to fall out of step. So that no colour, radius
+  or font size is typed by hand, a test in `apps/web` refuses hex and `rgb()` colours and literal `font-size` and
+  `border-radius` lengths in any `.module.css`. Strings go through `@saldo/i18n`, formatting through its
+  formatters (D16).
 - Layout: a sidebar on wide screens, a bottom tab bar on narrow ones. The mobile screens are the **reference for
   behaviour, not a template** for layout. A design pass (HTML variants, as for the phone) comes before any
-  screen is built.
-- Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Profile (preferences,
-  passkeys, export), Admin.
+  screen is built, **one mockup per page** so each can go through its own rounds
+  (`docs/superpowers/mockups/2026-09-27-web-<page>-variants.html`): Home with the shell first, because it fixes
+  the grid, the sidebar and the tab bar every later page reuses; then Transazioni, Statistiche, Profile, the
+  auth pages (`/login`, `/register`, `/auth/mobile`) and Admin. The chosen variant of each is recorded here. Layout
+  values the mockups introduce (sidebar width, content max-width, breakpoints) become tokens in `tokens.ts`.
+- **Shell and Home (decided 2026-09-27, mockup `2026-09-27-web-home-variants.html`, round 2, variant «C · Aperta»).**
+  On wide screens navigation is a **top bar**, not a sidebar: the brand, Home, Transazioni, Statistiche and Conti on
+  the leading side; Admin (for the `admin` role), «Nuova transazione» (shortcut `N`) and the profile avatar on the
+  trailing side. Below 1024px it is the phone's tab bar and FAB, Profile and Admin reached from the avatar. Home
+  opens with a **band** that is not a card: the period header across the full width, «Rimasto da spendere» at 56px,
+  Entrate and Uscite beside it, the progress bar with its pace tick under both. Under the band, **two columns** (7/5):
+  «In arrivo» and «Ultime transazioni» on the leading side, Budget and Obiettivi (§5.13) on the trailing one.
+  Sections are **open, with no card around them**: a title row with one hairline under it, rows separated by space
+  and never by lines, 56px between sections and 72px between the columns. Rounds 1 and 2 showed that the phone's
+  density (16px padding, 10px between cards, a line under every row) reads as packed at 1280px; the rule kept is
+  that the gap between groups is at least twice the gap inside one. On narrow screens Home stays the phone's, cards
+  included. New tokens: `topbarHeight` 64, `contentWide` 1120, `pagePaddingWeb` 48, `navItemHeight` 36,
+  `fontSize.heroWeb` 56, `sectionGapWeb` 56, `columnGapWeb` 72, and the 1024px breakpoint.
+- **Transazioni (decided 2026-09-27, mockup `2026-09-27-web-transactions-variants.html`, variant «2 · Pannello»).**
+  The list keeps the open style of Home: period header, search (`/`), the filter chips of §5.12, the filtered total,
+  «In arrivo» collapsed, days as title rows with their total and a hairline, rows separated by space, tags shown
+  as pills on wide screens. Selecting a row opens its **detail in a panel on the trailing side** (420px) beside the
+  list, which stays live and moves with ↑ ↓; the URL carries the selection (`?t={id}`). «Modifica» (`E`) and
+  «Nuova transazione» (`N`) open the form **in the same panel**; Esc closes it, ⌘↵ saves. Delete confirms in a
+  dialog and offers «Annulla» in a toast for 5s. The amount is typed with the computer's keyboard (D23's keypad is
+  the phone's). Recurrences and attachments are shown and not edited (§17.1.9), and the form says so where they
+  would be. On narrow screens the phone's patterns stay: detail full screen, the form in a bottom sheet. New
+  tokens: `panelWidth` 420, `searchWidth` 320.
+- **Conti (decided 2026-09-27, mockup `2026-09-27-web-accounts-variants.html`, variant «1 · Lista aperta»).** A band as
+  on Home: the page title with «Nuovo conto», Patrimonio complessivo at 56px, Totale spendibile beside it with its
+  note. Then two open groups, «Da spendere» and «Risparmi e investimenti», rows separated by space, each account's
+  pockets nested under it with their ring and goal line and «Libero» closing the group, as on the phone; archived
+  accounts behind one row at the end. Account, credit card and goal details, and the account form, open in the
+  trailing panel as in Transazioni (`?a={id}`, `?g={id}`). Tiles (one card per account with its sparkline) were
+  considered and not taken: they brought back the cards Home removed.
+- **Statistiche (decided 2026-09-27, mockup `2026-09-27-web-stats-variants.html`, variant «3 · Navigatore», lower half
+  «Andamento a sinistra» with Quota impegnata under it).** On wide screens Flussi spans the page with **ten
+  columns**: six closed periods, the current one and the three forecast ones (D29 kept six because of 320px; the
+  desktop has the room). The chart is also the **period picker**: a column, or ← →, selects a period and everything
+  below follows. Under it the selected period's name and range, then four key figures: Entrate, Uscite, Netto and
+  Proiezione for the running period; Quota impegnata in place of Proiezione for a closed one; for a forecast column
+  Entrate, Uscite (with its min–max), Netto and the balance, all «circa». Below, two columns (7/5): Andamento del
+  periodo (220px tall) with Quota impegnata under it on the leading side, **sticky** so it stays beside what is read;
+  Ripartizione and Tag on the trailing side. A forecast column replaces them with how the forecast is made, the table
+  of forecast periods and the recurrences expected that month, so the phone's forecast sheet has no web counterpart.
+  The period header's ‹ › stays and moves the same selection. On narrow screens Statistiche stays the phone's.
+  `cashflowColumns` takes the half height as a parameter (the phone passes 54, the web 64).
+- **Profilo (decided 2026-09-27, mockup `2026-09-27-web-profile-variants.html`, variant «5 · Sotto-navigazione +
+  pannello»).** Under the profile header (avatar, name, email, role), a sub-navigation on the leading side picks one
+  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/passkeys`,
+  `/profile/categories`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
+  rows showing the current value; the row picked is edited **in the trailing panel**, as in Transazioni and Conti
+  (`?edit=currency`, `?k={passkeyId}`). Preferences are the synced `settings` and say they apply to the phone too;
+  the currency asks for confirmation as on the phone. Passkeys are one row each (name, provider from the AAGUID,
+  date added, «in uso ora» for the one that signed this browser in); the panel renames one (the name is Saldo's
+  label, the authenticator's own name does not change), shows whether it is synced (`backed_up`) and deletes it
+  after a confirmation, **never the last one**: its Elimina is disabled and says why, with a link to add another.
+  Lock, permissions, server and CSV import stay the phone's. On narrow screens Profilo stays the phone's.
+- **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»).**
+  No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
+  brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
+  browser offers the passkey as soon as it is focused, «Accedi con passkey», a line on the cross-device QR, «Crea
+  un account» (absent, with a notice, when registration is closed), the version and host in the footer (§17.1.1).
+  `/register` is **in steps**, with the phone onboarding's segments: (1) name and email, (2) the invite code, only
+  under `REGISTRATION=invite`, (3) the passkey. An error sits in the step that causes it (email taken in 1, invalid
+  invite in 2, cancelled ceremony in 3). `/auth/mobile` is the same pages opened by the app, ending on «Fatto, torna
+  all'app». Step 2 needs the code checked **before** the ceremony, so nobody performs a passkey ceremony only to be
+  told the code is wrong: 0.3b adds a check endpoint that answers one `invalid_invite` for unknown, spent, revoked
+  and expired codes, rate-limited like the auth endpoints; `resolveUser` still checks and `afterVerification` still
+  burns, so the endpoint is a convenience and never the gate.
+- **Admin (decided 2026-09-27, mockup `2026-09-27-web-admin-variants.html`, variant «3 · Sotto-nav + pannelli»).**
+  The Profilo pattern with no exception: a sub-navigation (Account, Inviti, Istanza, Impostazioni, each with its
+  URL under `/admin/`), every section a list of summary rows, every row edited or inspected in the trailing panel.
+  An account's panel shows role, state, the invite it came with, last sign-in, passkeys and synced rows, and offers
+  promote and revoke; deleting sits in a separate danger zone and asks for the account's email to be typed, since it
+  takes every synced row with it. An invite's panel shows who minted it and when it expires, and revokes it; «Nuovo
+  invito» mints in the panel (label, TTL of 1, 7, 30 or 90 days) and shows the code **once**, as text, link and QR
+  code, with «copy it now». Istanza is read-only rows. Impostazioni has one row per product setting; a setting fixed by
+  an environment variable shows «impostato dall'ambiente», and its panel names the variable, explains how to change
+  it and shows the choices disabled; the SMTP panel holds the form, with the password as «impostata» and
+  «Sostituisci» (write-only) and a test email. A table with tabs was considered and not taken: a household instance
+  has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
+- Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
+  pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
+  (preferences, passkeys, export), Admin.
 - **Chart geometry is shared.** The calculations inside the phone's charts (axis scale, ticks, bar heights, the
   forecast band, arcs) move into renderer-agnostic pure functions that return coordinates. The phone draws them
-  with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. Where the functions
-  live (a `charts` module in `@saldo/ui`, which D4 keeps free of rendering) is settled in the plan.
+  with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. They live in
+  `packages/ui/src/charts/`, exported from `@saldo/ui` (D4 allows it: they return numbers, they render nothing):
+  the cashflow chart (bar heights, the forecast band, the hidden-mode stub, the forecast divider), the trend and
+  sparkline polylines, the spend-history columns, the split shares and the target ring (`ringGeometry`, moved
+  from `apps/mobile`). The design constants move with them. The phone's chart components are refactored onto
+  them with their existing tests unchanged, which is what shows the refactor draws the same thing; the web's
+  `<svg>` components arrive with the screens (0.3d).
 - **PWA:** a web manifest, icons, and a minimal service worker that serves an offline page. No offline data: the
   web app is online-only by decision (roadmap 0.3).
 
