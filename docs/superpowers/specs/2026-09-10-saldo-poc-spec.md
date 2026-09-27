@@ -1791,6 +1791,18 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   told the code is wrong: 0.3b adds a check endpoint that answers one `invalid_invite` for unknown, spent, revoked
   and expired codes, rate-limited like the auth endpoints; `resolveUser` still checks and `afterVerification` still
   burns, so the endpoint is a convenience and never the gate.
+- **Admin (decided 2026-09-27, mockup `2026-09-27-web-admin-variants.html`, variant «3 · Sotto-nav + pannelli»).**
+  The Profilo pattern with no exception: a sub-navigation (Account, Inviti, Istanza, Impostazioni, each with its
+  URL under `/admin/`), every section a list of summary rows, every row edited or inspected in the trailing panel.
+  An account's panel shows role, state, the invite it came with, last sign-in, passkeys and synced rows, and offers
+  promote and revoke; deleting sits in a separate danger zone and asks for the account's email to be typed, since it
+  takes every synced row with it. An invite's panel shows who minted it and when it expires, and revokes it; «Nuovo
+  invito» mints in the panel (label, TTL of 1, 7, 30 or 90 days) and shows the code **once**, as text, link and QR
+  code, with «copy it now». Istanza is read-only rows. Impostazioni has one row per product setting; a setting fixed by
+  an environment variable shows «impostato dall'ambiente», and its panel names the variable, explains how to change
+  it and shows the choices disabled; the SMTP panel holds the form, with the password as «impostata» and
+  «Sostituisci» (write-only) and a test email. A table with tabs was considered and not taken: a household instance
+  has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
