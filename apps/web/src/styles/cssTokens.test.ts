@@ -24,6 +24,34 @@ describe('findHardCodedValues', () => {
     ]);
   });
 
+  it('reads the whole value of a font or radius declaration, in any case', () => {
+    expect(findHardCodedValues('.a { font: 15px/1.2 serif; }')).toEqual(['font: 15px/1.2 serif']);
+    expect(findHardCodedValues('.a { border-radius: 0 0 4px 4px; }')).toEqual([
+      'border-radius: 0 0 4px 4px',
+    ]);
+    expect(findHardCodedValues('.a { border-radius: var(--radius-card) 4px; }')).toEqual([
+      'border-radius: var(--radius-card) 4px',
+    ]);
+    expect(findHardCodedValues('.a { font-size: var(--x, 14px); }')).toEqual([
+      'font-size: var(--x, 14px)',
+    ]);
+    expect(findHardCodedValues('.a { font-size: 12pt; }')).toEqual(['font-size: 12pt']);
+    expect(findHardCodedValues('.a { font-size: calc(var(--y) * 2); }')).toEqual([
+      'font-size: calc(var(--y) * 2)',
+    ]);
+    expect(findHardCodedValues('.a { FONT-SIZE: 15PX; }')).toEqual(['font-size: 15PX']);
+  });
+
+  it('refuses the newer colour functions and any case', () => {
+    expect(findHardCodedValues('.a { color: oklch(0.7 0.1 200); }')).toEqual(['oklch(']);
+    expect(findHardCodedValues('.a { color: lab(50 0 0); }')).toEqual(['lab(']);
+    expect(findHardCodedValues('.a { color: RGB(0, 0, 0); }')).toEqual(['RGB(']);
+  });
+
+  it('does not take an id or an SVG reference for a colour', () => {
+    expect(findHardCodedValues('#add .a { mask: url(#bead); }')).toEqual([]);
+  });
+
   it('ignores what sits in comments', () => {
     expect(findHardCodedValues('/* was #EDEDED */ .a { color: var(--color-text); }')).toEqual([]);
   });

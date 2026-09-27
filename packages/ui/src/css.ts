@@ -24,11 +24,13 @@ const ROOT_FONT_PX = 16;
 
 function paletteDeclarations(palette: Palette): string[] {
   const lines: string[] = [];
-  for (const [name, value] of Object.entries(palette)) {
+  // Typed keys, not `Object.entries`: an interface has no index signature, so entries would be `any`.
+  for (const name of Object.keys(palette) as (keyof Palette)[]) {
+    const value = palette[name];
     if (typeof value === 'string') {
       lines.push(`--color-${kebab(name)}: ${value};`);
     } else {
-      value.forEach((entry: string, index: number) => {
+      value.forEach((entry, index) => {
         lines.push(`--color-${kebab(name)}-${index}: ${entry};`);
       });
     }
@@ -76,7 +78,9 @@ function block(selector: string, lines: readonly string[], indent = ''): string 
  * The tokens as CSS custom properties (§17.1.7). Dark is the default, as on the phone; `system`
  * follows `prefers-color-scheme` unless the page says `data-theme="dark"`, and `data-theme="light"`
  * forces light. The web's root layout injects this string, so there is no generated file to fall
- * out of step with `tokens.ts`.
+ * out of step with `tokens.ts`. Forcing dark works on `<html>` only (there is no
+ * `[data-theme="dark"]` block), and the accent the user picks overrides `--color-accent` and
+ * `--color-on-accent` on `<html>` in whichever step adds it.
  */
 export function tokensCss(): string {
   const light = ['color-scheme: light;', ...paletteDeclarations(palettes.light)];

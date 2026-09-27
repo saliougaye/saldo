@@ -42,6 +42,21 @@ describe('tokensCss', () => {
     expect(system).toContain(`--color-bg: ${palettes.light.bg};`);
   });
 
+  it('puts forced light after the dark default, and gives system light the same values', () => {
+    // Same specificity as `:root`: forced light wins only because it comes later.
+    expect(css.indexOf('[data-theme="light"] {')).toBeGreaterThan(css.indexOf(':root {'));
+    const forced = block(css, '[data-theme="light"]')
+      .split('\n')
+      .slice(1)
+      .map((line) => line.trim());
+    const system = block(css, ':root:not([data-theme="dark"])')
+      .split('\n')
+      .slice(1)
+      .map((line) => line.trim());
+    expect(system).toEqual(forced);
+    expect(forced).toContain(`--color-heatmap-0: ${palettes.light.heatmap[0]};`);
+  });
+
   it('numbers the entries of a palette array', () => {
     const root = block(css, ':root');
     palettes.dark.heatmap.forEach((colour, index) => {
