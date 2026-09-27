@@ -88,7 +88,7 @@ cycle, and am I going faster than I should?*
 | D31 | **The web app does not prepare for shared finances** (decided 2026-09-26) | Shared wallet or shared account is decided when that milestone starts, and it ships before the first release, so there are still no production rows to migrate then. Scoping queries for a model nobody has designed would guess at it; the web app keeps `where user_id = ?` like the sync, and shared finances change both together. |
 | D32 | **An account has a real email** (decided 2026-09-26, §17.1.4) | It is how an admin, and later shared finances, know who somebody is. It is an identifier, not a credential: signing in stays passkey-only. Verification and recovery by magic link exist only when SMTP is configured, so registration never depends on mail. |
 | D33 | **Product settings live in the database and change from `/admin`; infrastructure stays in the environment** (decided 2026-09-26, §17.1.8) | A self-hoster should not edit env files and restart to open registration or set an AI key. An env variable that sets the same thing wins and locks it, so existing deployments keep working. Secrets are encrypted at rest and write-only in the UI. |
-| D34 | **Web UI in CSS Modules on generated token variables; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7) | CSS Modules add no dependency, and the tokens stay the only source of visual values. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
+| D34 | **Web UI in CSS Modules on generated token variables, behaviour from Base UI's headless primitives; chart geometry shared with the phone** (decided 2026-09-26, §17.1.7; Base UI added 2026-09-27) | CSS Modules add no styling dependency, and the tokens stay the only source of visual values. Dialogs, menus, selects and focus traps written by hand are where accessibility breaks, so their behaviour comes from Base UI, which renders no look of its own. shadcn/ui on Tailwind was the alternative: faster to write and able to enforce tokens through `@theme`, but its value is a look Saldo would restyle anyway, at the cost of a second styling dialect beside the phone's and several dependencies. A chart library would draw different charts and re-implement the forecast band; pure geometry functions keep both renderers on one set of numbers. |
 | D35 | **The marketing site and docs library are their own app, `apps/site`** (decided 2026-09-26, supersedes the roadmap's «inside `apps/web`») | An instance build should not carry, or need a flag to hide, a site that advertises the project. `apps/site` shares `@saldo/ui` and `@saldo/i18n` and reads the Markdown in `docs/` in place. |
 | D36 | **The AI provider key is one per instance**, set by the admin in `/admin` (decided 2026-09-26, for 0.5) | One household per instance is the case Saldo serves; the admin pays and every client, phone and web, uses the same key. |
 | D37 | **The user's time zone is a synced setting, not a cookie** (decided 2026-09-26, §17.1.5) | The server computes «today» for the web, and from 0.4 for MCP and AI, which have no browser to send a cookie. A cookie is also missing on the very first request. `settings.timeZone` is filled at onboarding and changed by hand, as Sure does with `families.timezone`; it does not follow a travelling device, so two devices in different zones do not overwrite each other and a period closes where the user lives. Profile shows it and warns only when the phone's zone differs (mockup `docs/superpowers/mockups/2026-09-26-timezone-variants.html`, variant «Viaggio + ora»): travelling is the one moment when the web and the phone can disagree about today. |
@@ -1706,18 +1706,36 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 
 #### 17.1.7 Interface
 
-- DOM components styled with **CSS Modules**. The `@saldo/ui` tokens become CSS custom properties generated from
-  `tokens.ts`, so no colour, radius or font size is typed by hand. Strings go through `@saldo/i18n`, formatting
-  through its formatters (D16).
+- DOM components styled with **CSS Modules**; dialogs, popovers, selects, menus and toasts are built on the
+  headless primitives of **Base UI** (`@base-ui/react`), which bring focus management, keyboard handling and ARIA,
+  and expose the enter/exit states (`data-starting-style`, `data-ending-style`, `--transform-origin`) the styles
+  animate. No component library supplies a look: shadcn/ui and Tailwind were considered and not taken (D34).
+  Base UI is added by 0.3b, the first step that renders one of them.
+- **Tokens as CSS custom properties.** A pure `tokensCss()` in `@saldo/ui` returns `:root` (dark),
+  `[data-theme="light"]` and a `prefers-color-scheme: light` block for the `system` preference, with variables
+  named `--color-*`, `--radius-*`, `--font-size-*`, `--font-weight-*`, `--motion-*` and `--category-*`. The root
+  layout injects it as a `<style>`, so there is no generated file to fall out of step. So that no colour, radius
+  or font size is typed by hand, a test in `apps/web` refuses hex and `rgb()` colours and literal `font-size` and
+  `border-radius` lengths in any `.module.css`. Strings go through `@saldo/i18n`, formatting through its
+  formatters (D16).
 - Layout: a sidebar on wide screens, a bottom tab bar on narrow ones. The mobile screens are the **reference for
   behaviour, not a template** for layout. A design pass (HTML variants, as for the phone) comes before any
-  screen is built.
+  screen is built, **one mockup per page** so each can go through its own rounds
+  (`docs/superpowers/mockups/2026-09-27-web-<page>-variants.html`): Home with the shell first, because it fixes
+  the grid, the sidebar and the tab bar every later page reuses; then Transazioni, Statistiche, Profile, the
+  auth pages (`/login`, `/register`, `/auth/mobile`) and Admin. The chosen variant of each is recorded here. Layout
+  values the mockups introduce (sidebar width, content max-width, breakpoints) become tokens in `tokens.ts`.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Profile (preferences,
   passkeys, export), Admin.
 - **Chart geometry is shared.** The calculations inside the phone's charts (axis scale, ticks, bar heights, the
   forecast band, arcs) move into renderer-agnostic pure functions that return coordinates. The phone draws them
-  with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. Where the functions
-  live (a `charts` module in `@saldo/ui`, which D4 keeps free of rendering) is settled in the plan.
+  with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. They live in
+  `packages/ui/src/charts/`, exported from `@saldo/ui` (D4 allows it: they return numbers, they render nothing):
+  the cashflow chart (bar heights, the forecast band, the hidden-mode stub, the forecast divider), the trend and
+  sparkline polylines, the spend-history columns, the split shares and the target ring (`ringGeometry`, moved
+  from `apps/mobile`). The design constants move with them. The phone's chart components are refactored onto
+  them with their existing tests unchanged, which is what shows the refactor draws the same thing; the web's
+  `<svg>` components arrive with the screens (0.3d).
 - **PWA:** a web manifest, icons, and a minimal service worker that serves an offline page. No offline data: the
   web app is online-only by decision (roadmap 0.3).
 

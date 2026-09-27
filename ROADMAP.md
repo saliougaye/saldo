@@ -351,7 +351,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 - [x] **Admin panel** for accounts, invites, instance info and **server settings in the database**
       (registration, instance name, SMTP, the AI key of 0.5); env variables win and lock; secrets encrypted
       and write-only.
-- [x] **UI:** CSS Modules on token variables, chart geometry shared with the phone, a design pass first.
+- [x] **UI:** CSS Modules on token variables with Base UI primitives (decided 2026-09-27 over shadcn/Tailwind), chart geometry shared with the phone, a design pass first.
 - [x] **Today** from the synced `settings.timeZone` (filled at onboarding, changed by hand; D37), fallback `DEFAULT_TIME_ZONE`;
       preferences from the synced `settings`.
 - [x] **Out:** desktop extras (bulk edit, CSV preview, print) until after release; browser e2e tests.
@@ -362,7 +362,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 |---|---|---|
 | 0.3a | Projection: typed `UserData`, drift tolerance, `today` from `settings.timeZone`; plan `docs/superpowers/plans/2026-09-26-0.3a-user-data.md` | — |
 | 0.3b | Auth on the web: cookie session, `/login`, `/register` with email (web and `/auth/mobile`), passkey management, sign-out; the phone asks for the email in onboarding and when it connects to a server, so an account with the old synthetic address gets a real one | c |
-| 0.3c | Design pass: desktop and narrow layouts as HTML variants (the auth pages included), token CSS variables, chart geometry extracted from the phone | — |
+| 0.3c | Design pass: desktop and narrow layouts as HTML variants, one mockup per page (the auth pages included), token CSS variables, chart geometry extracted from the phone | — |
 | 0.3d | Read screens: Home, Transazioni, Statistiche, Profile, matching the phone to the cent | a, b, c |
 | 0.3e | Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed | d |
 | 0.3f | Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery | b |
