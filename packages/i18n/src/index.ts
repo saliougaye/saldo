@@ -14,6 +14,7 @@ export * from './format';
 export * from './languageNames';
 export type { Messages } from './locales/it';
 export * from './timeZones';
+export * from './translate';
 export { de, en, es, fr, it, pt, sv };
 
 /** Every catalog, as written; `it` is the source the others are checked against. */
