@@ -1,0 +1,116 @@
+import {
+  accountBalances,
+  type DateRange,
+  FORECAST_PERIODS,
+  type ForecastPeriod,
+  forecastPeriods,
+  type LocalDate,
+  netWorth,
+  type PeriodDef,
+  periodContaining,
+  shiftPeriod,
+  summarizePeriod,
+  type UserData,
+} from '@saldo/core';
+import type { CashflowValues } from '@saldo/ui';
+
+/**
+ * §17.1.7: six closed periods on the web, where the phone shows three beside its forecast — D29 kept
+ * six columns in all because of 320px, and the desktop has the room for ten. It is the one sanctioned
+ * difference: it changes how many columns there are, not how any of them is computed.
+ */
+export const WEB_CLOSED_COLUMNS = 6;
+
+export interface NavigatorColumn {
+  range: DateRange;
+  kind: 'closed' | 'current' | 'forecast';
+  selected: boolean;
+  /**
+   * Hatched: «still running». The phone hatches the column that is the selected period **and** is
+   * current; a closed period the user walked back to is final. Here the columns are anchored on
+   * today, so the running one is always the `current` column.
+   */
+  running: boolean;
+  /** What `cashflowColumns` needs; on a forecast column with no forecast, zeroes and no band. */
+  values: CashflowValues;
+  /** The forecast column's own period from `forecastPeriods` (its balance, for the key figures). */
+  forecast: ForecastPeriod | null;
+}
+
+export interface NavigatorView {
+  columns: NavigatorColumn[];
+  selected: NavigatorColumn | null;
+  /** `forecastPeriods` as the phone calls it — `null` under three used periods. */
+  forecast: ForecastPeriod[] | null;
+}
+
+/**
+ * The chart that is also the period picker (§17.1.7). Every column carries the values
+ * `cashflowColumns` needs, so the renderer stays geometry-only.
+ *
+ * The columns are anchored on the period containing `today`, never on the selection: selecting a
+ * closed period moves the highlight, not the chart. The forecast is therefore always the phone's
+ * `forecastOn` call — `period` is the current period — even when a closed one is selected, where
+ * the phone would not forecast at all; a forecast anchored on a closed period would chain today's
+ * balance from the wrong place.
+ */
+export function navigatorView(input: {
+  data: UserData;
+  def: PeriodDef;
+  today: LocalDate;
+  selected: DateRange;
+}): NavigatorView {
+  const { data, def, today, selected } = input;
+  const txs = data.transactions;
+  const current = periodContaining(def, today);
+  const forecast = forecastPeriods({
+    txs,
+    recurrences: data.recurrences,
+    def,
+    period: current,
+    today,
+    balance: netWorth(data.accounts, accountBalances(data.accounts, txs, today)),
+  });
+
+  const isSelected = (range: DateRange) => range.start === selected.start;
+
+  // As the phone's `bars`: each closed column is `shiftPeriod(current, -back)`, oldest first.
+  const real: DateRange[] = [current];
+  for (let back = 1; back <= WEB_CLOSED_COLUMNS; back += 1) {
+    real.push(shiftPeriod(def, current, -back));
+  }
+  const columns: NavigatorColumn[] = real.reverse().map((range) => {
+    const summary = summarizePeriod(txs, range, today);
+    const running = range.start === current.start;
+    return {
+      range,
+      kind: running ? 'current' : 'closed',
+      selected: isSelected(range),
+      running,
+      values: { income: summary.income, expenses: summary.spent },
+      forecast: null,
+    };
+  });
+
+  for (let ahead = 1; ahead <= FORECAST_PERIODS; ahead += 1) {
+    const period = forecast?.[ahead - 1] ?? null;
+    const range = period?.range ?? shiftPeriod(def, current, ahead);
+    columns.push({
+      range,
+      kind: 'forecast',
+      selected: isSelected(range),
+      running: false,
+      values:
+        period === null
+          ? { income: 0, expenses: 0 }
+          : {
+              income: period.income,
+              expenses: period.expenses,
+              forecast: { min: period.expensesMin, max: period.expensesMax },
+            },
+      forecast: period,
+    });
+  }
+
+  return { columns, selected: columns.find((column) => column.selected) ?? null, forecast };
+}
