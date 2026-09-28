@@ -1,8 +1,9 @@
 import { readSettings } from '@saldo/core';
+import type { AppLocale } from '@saldo/i18n';
 import { tokensCss } from '@saldo/ui';
 import { GeistSans } from 'geist/font/sans';
 import type { ReactNode } from 'react';
-import { publicI18n } from '../src/i18n/server';
+import { publicI18n, userI18n } from '../src/i18n/server';
 import { currentUser } from '../src/server/auth/currentUser';
 import { loadUserData } from '../src/server/userData/load';
 import './globals.css';
@@ -23,18 +24,31 @@ const TOKENS = `${tokensCss()}
   --font-family: var(--font-geist-sans), "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }`;
 
+interface DocumentAttributes {
+  /** §17.1.6: the synced `settings.language` where there is a session, `Accept-Language` where not. */
+  locale: AppLocale;
+  /** `undefined` for `system`, which leaves `prefers-color-scheme` to decide. */
+  theme: 'dark' | 'light' | undefined;
+}
+
 /**
- * The forced theme, or `undefined` for `system` and for nobody signed in. It belongs on `<html>`
- * rather than on the shell's own wrapper: a portal (Base UI's menus, and the panels and dialogs of
- * Tasks 14 and 20) mounts on `document.body`, outside any wrapper, and would otherwise render in
- * the opposite palette to the page behind it. `currentUser` and `loadUserData` are both `cache()`d,
- * so reading them here costs the `(app)` layout nothing.
+ * What `<html>` carries. The theme belongs here rather than on the shell's own wrapper: a portal
+ * (Base UI's menus, and the panels and dialogs of Tasks 14 and 20) mounts on `document.body`,
+ * outside any wrapper, and would otherwise render in the opposite palette to the page behind it.
+ * The locale belongs here because `lang` is the whole document's, and a page whose text is Italian
+ * must not tell a screen reader it is English.
+ *
+ * `currentUser` and `loadUserData` are both `cache()`d, and `userI18n` reads the same load, so a
+ * signed-in request answers both of these without a query the `(app)` layout was not making anyway.
+ * This decides the two attributes only: the pages and the `(app)` layout call `userI18n` for their
+ * own strings, and share it through the same cache.
  */
-async function forcedTheme(): Promise<'dark' | 'light' | undefined> {
+async function documentAttributes(): Promise<DocumentAttributes> {
   const user = await currentUser();
-  if (user === null) return undefined;
-  const { theme } = readSettings((await loadUserData(user.id)).settings);
-  return theme === 'system' ? undefined : theme;
+  if (user === null) return { locale: (await publicI18n()).locale, theme: undefined };
+  const [{ locale }, data] = await Promise.all([userI18n(user.id), loadUserData(user.id)]);
+  const { theme } = readSettings(data.settings);
+  return { locale, theme: theme === 'system' ? undefined : theme };
 }
 
 /**
@@ -43,7 +57,7 @@ async function forcedTheme(): Promise<'dark' | 'light' | undefined> {
  * `prefers-color-scheme` to decide, which is what `tokensCss()` writes.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [{ locale }, theme] = await Promise.all([publicI18n(), forcedTheme()]);
+  const { locale, theme } = await documentAttributes();
   return (
     <html lang={locale} className={GeistSans.variable} data-theme={theme}>
       <head>
