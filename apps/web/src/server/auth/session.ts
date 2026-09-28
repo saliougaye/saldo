@@ -1,6 +1,6 @@
+import { getDb } from '../db/client';
 import { isRevoked } from './admin';
 import { auth } from './auth';
-import { getDb } from '../db/client';
 
 export interface AuthenticatedUser {
   id: string;
