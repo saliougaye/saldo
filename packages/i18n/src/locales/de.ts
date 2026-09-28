@@ -45,6 +45,9 @@ export const de: Messages = {
     stats: 'Statistik',
     accounts: 'Konten',
   },
+  admin: {
+    title: 'Admin',
+  },
   kinds: {
     expense: 'Ausgabe',
     income: 'Einnahme',
@@ -1212,6 +1215,12 @@ export const de: Messages = {
       handoffFailedTitle: 'Du bist angemeldet, aber die App hat es nicht bekommen',
       handoffFailedBody:
         'Dein Konto ist fertig. Tippe auf «Wiederholen», um zur App zurückzukehren.',
+    },
+    shell: {
+      newTransaction: 'Neue Buchung',
+      openMenu: 'Profilmenü öffnen',
+      skipToContent: 'Zum Inhalt springen',
+      comingIn0_3e: 'Kommt im nächsten Schritt; trag es so lange am Telefon ein.',
     },
     passkeys: {
       title: 'Deine Passkeys',

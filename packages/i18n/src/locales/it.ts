@@ -43,6 +43,9 @@ export const it = {
     stats: 'Statistiche',
     accounts: 'Conti',
   },
+  admin: {
+    title: 'Admin',
+  },
   kinds: {
     expense: 'Uscita',
     income: 'Entrata',
@@ -1204,6 +1207,12 @@ export const it = {
       nameRequiredBody: 'Scrivi come vuoi essere chiamato in Saldo.',
       handoffFailedTitle: 'L’accesso è fatto, ma l’app non l’ha ricevuto',
       handoffFailedBody: 'Il tuo account è pronto. Tocca «Riprova» per tornare all’app.',
+    },
+    shell: {
+      newTransaction: 'Nuova transazione',
+      openMenu: 'Apri il menu del profilo',
+      skipToContent: 'Vai al contenuto',
+      comingIn0_3e: 'Arriva col prossimo passo: per ora scrivi dal telefono.',
     },
     passkeys: {
       title: 'Le tue passkey',

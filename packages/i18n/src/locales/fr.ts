@@ -45,6 +45,9 @@ export const fr: Messages = {
     stats: 'Statistiques',
     accounts: 'Comptes',
   },
+  admin: {
+    title: 'Admin',
+  },
   kinds: {
     expense: 'Dépense',
     income: 'Revenu',
@@ -1215,6 +1218,12 @@ export const fr: Messages = {
       nameRequiredBody: 'Écris le nom que Saldo doit utiliser pour toi.',
       handoffFailedTitle: 'Tu es connecté, mais l’app ne l’a pas reçu',
       handoffFailedBody: 'Ton compte est prêt. Touche « Réessayer » pour revenir à l’app.',
+    },
+    shell: {
+      newTransaction: 'Nouvelle transaction',
+      openMenu: 'Ouvrir le menu du profil',
+      skipToContent: 'Aller au contenu',
+      comingIn0_3e: 'À venir à la prochaine étape ; en attendant, saisis depuis le téléphone.',
     },
     passkeys: {
       title: 'Tes passkeys',

@@ -45,6 +45,9 @@ export const sv: Messages = {
     stats: 'Statistik',
     accounts: 'Konton',
   },
+  admin: {
+    title: 'Admin',
+  },
   kinds: {
     expense: 'Utgift',
     income: 'Inkomst',
@@ -1201,6 +1204,12 @@ export const sv: Messages = {
       handoffFailedTitle: 'Du är inloggad, men appen fick det inte',
       handoffFailedBody:
         'Ditt konto är klart. Tryck på «Försök igen» för att gå tillbaka till appen.',
+    },
+    shell: {
+      newTransaction: 'Ny transaktion',
+      openMenu: 'Öppna profilmenyn',
+      skipToContent: 'Hoppa till innehållet',
+      comingIn0_3e: 'Kommer i nästa steg; skriv från telefonen så länge.',
     },
     passkeys: {
       title: 'Dina passnycklar',

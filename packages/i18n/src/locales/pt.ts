@@ -46,6 +46,9 @@ export const pt: Messages = {
     stats: 'Estatísticas',
     accounts: 'Contas',
   },
+  admin: {
+    title: 'Admin',
+  },
   kinds: {
     expense: 'Despesa',
     income: 'Receita',
@@ -1208,6 +1211,12 @@ export const pt: Messages = {
       nameRequiredBody: 'Escreve o nome com que o Saldo te deve tratar.',
       handoffFailedTitle: 'Entraste, mas a app não recebeu',
       handoffFailedBody: 'A tua conta está pronta. Toca em «Tentar outra vez» para voltar à app.',
+    },
+    shell: {
+      newTransaction: 'Nova transação',
+      openMenu: 'Abrir o menu do perfil',
+      skipToContent: 'Ir para o conteúdo',
+      comingIn0_3e: 'Chega no próximo passo; por agora escreve no telemóvel.',
     },
     passkeys: {
       title: 'As tuas passkeys',
