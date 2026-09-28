@@ -2,16 +2,19 @@
 
 import { Menu } from '@base-ui/react';
 import Link from 'next/link';
+import type { NavItem } from '../features/shell/nav';
 import styles from './AvatarMenu.module.css';
 import { SignOutButton } from './SignOutButton';
 
 interface Props {
+  /** The top bar's trailing destinations (Admin). Shown here below the breakpoint only. */
+  items: (NavItem & { label: string })[];
   user: { name: string; email: string };
   strings: { openMenu: string; profile: string; signOut: string; working: string };
 }
 
 /** The initial is decorative: the accessible name is on the trigger, and the menu names the account. */
-export function AvatarMenu({ user, strings }: Props) {
+export function AvatarMenu({ items, user, strings }: Props) {
   const initial = user.name.trim().slice(0, 1).toUpperCase();
   return (
     <Menu.Root>
@@ -25,6 +28,19 @@ export function AvatarMenu({ user, strings }: Props) {
               <b className={styles.name}>{user.name}</b>
               <span className={styles.email}>{user.email}</span>
             </div>
+            {/* §17.1.7: below the breakpoint Admin is reached from here, above it from the top
+                bar's trailing links. One destination, one list (`navItems`), CSS picks the copy —
+                so neither width shows both. */}
+            {items.map((item) => (
+              <Menu.LinkItem
+                key={item.key}
+                className={`${styles.item} ${styles.narrowOnly}`}
+                closeOnClick
+                render={<Link href={item.href} />}
+              >
+                {item.label}
+              </Menu.LinkItem>
+            ))}
             {/* `LinkItem`, not `Item`: 1.8 has the part that renders an `<a>`, and it closes the
                 menu on click, which `Item`'s `render` of a `Link` would have to be told to do. */}
             <Menu.LinkItem className={styles.item} closeOnClick render={<Link href="/profile" />}>

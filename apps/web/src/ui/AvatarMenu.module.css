@@ -50,3 +50,13 @@
 .item[data-highlighted] {
   background: var(--color-surface);
 }
+
+/*
+ * The top bar shows these as trailing links from the breakpoint up, so the menu only carries them
+ * below it (§17.1.7). `--layout-wide-breakpoint` (1024): a media query cannot read a custom property.
+ */
+@media (min-width: 1024px) {
+  .narrowOnly {
+    display: none;
+  }
+}

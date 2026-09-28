@@ -46,6 +46,13 @@
   gap: 12px;
 }
 
+/* Below the breakpoint these live in the avatar menu instead, which is where §17.1.7 puts them. */
+.trailing {
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
 /* The phone writes from its own screen, and 0.3e gives the wide screen the panel this opens. */
 .newDisabled {
   display: none;
@@ -67,6 +74,10 @@
   }
 
   .sections {
+    display: flex;
+  }
+
+  .trailing {
     display: flex;
   }
 
