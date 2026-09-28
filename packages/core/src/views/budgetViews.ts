@@ -1,20 +1,11 @@
-import type { Budget } from '@saldo/core';
-import {
-  type BudgetProgress,
-  budgetProgress,
-  budgetRange,
-  type Category,
-  type Cycle,
-  cycleLength,
-  effectiveLimit,
-  elapsedDays,
-  expandCategoryIds,
-  type LocalDate,
-  type PeriodDef,
-  periodContaining,
-  spendingByCategory,
-  type Transaction,
-} from '@saldo/core';
+import { budgetRange } from '../budgetRanges';
+import { type BudgetProgress, budgetProgress, expandCategoryIds } from '../budgets';
+import { type Cycle, cycleLength, elapsedDays } from '../cycle';
+import type { LocalDate } from '../dates';
+import type { Budget, Category } from '../entities';
+import { type LedgerTx, spendingByCategory } from '../ledger';
+import { type PeriodDef, periodContaining } from '../period';
+import { effectiveLimit } from '../rollover';
 
 export interface BudgetView extends BudgetProgress {
   budget: Budget;
@@ -33,7 +24,7 @@ export interface BudgetProgressInput {
   budgets: readonly Budget[];
   categories: readonly Category[];
   /** Rows covering the selected period *and* the periods the carry walks back through. */
-  transactions: readonly Transaction[];
+  transactions: readonly LedgerTx[];
   period: Cycle;
   def: PeriodDef;
   today: LocalDate;

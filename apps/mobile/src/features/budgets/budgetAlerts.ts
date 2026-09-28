@@ -1,5 +1,5 @@
+import type { BudgetView } from '@saldo/core';
 import type { KvStore } from '../../db/kv';
-import type { BudgetView } from './useBudgetProgress';
 
 /** kv key holding the period a budget was last alerted for (§5.8). */
 export function alertKey(budgetId: string): string {

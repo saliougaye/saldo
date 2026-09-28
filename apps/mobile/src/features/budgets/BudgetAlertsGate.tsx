@@ -1,9 +1,9 @@
+import type { BudgetView } from '@saldo/core';
 import * as Notifications from 'expo-notifications';
 import { type ReactNode, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDatabase } from '../../db/DatabaseProvider';
 import { alertKey, pendingBudgetAlerts } from './budgetAlerts';
-import type { BudgetView } from './useBudgetProgress';
 
 /**
  * Sends the local notifications of §5.8 when a budget crosses its threshold, once per budget per

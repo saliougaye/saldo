@@ -1,5 +1,7 @@
-import type { Budget, Category, PeriodDef, Transaction } from '@saldo/core';
-import { budgetViews } from './useBudgetProgress';
+import { describe, expect, it } from 'vitest';
+import type { Budget, Category, Transaction } from '../entities';
+import type { PeriodDef } from '../period';
+import { budgetViews } from './budgetViews';
 
 const CYCLE = { start: '2026-03-27', end: '2026-04-26' };
 const TODAY = '2026-04-18';

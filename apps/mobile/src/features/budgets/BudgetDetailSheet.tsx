@@ -1,3 +1,4 @@
+import type { BudgetView } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -10,7 +11,6 @@ import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
-import type { BudgetView } from './useBudgetProgress';
 
 export interface BudgetDetailSheetProps {
   visible: boolean;

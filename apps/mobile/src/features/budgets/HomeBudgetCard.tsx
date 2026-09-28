@@ -1,5 +1,6 @@
 import {
   type BudgetTargetInput,
+  type BudgetView,
   budgetAdvice,
   budgetCardStatus,
   budgetEventIds,
@@ -23,7 +24,6 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { FeaturedTarget } from '../targets/FeaturedTarget';
 import { SeeAllRow } from '../targets/SeeAllRow';
-import type { BudgetView } from './useBudgetProgress';
 
 /** Device-local (never synced): the budget featured last, for the hysteresis of §5.13. */
 export const FEATURED_BUDGET_KEY = 'home.featuredBudget';

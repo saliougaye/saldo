@@ -1,4 +1,5 @@
 import {
+  budgetViews,
   isUpcoming,
   previousPeriods,
   summarizePeriod,
@@ -27,7 +28,6 @@ import {
 } from '../../src/db/hooks';
 import { BudgetAlertsGate } from '../../src/features/budgets/BudgetAlertsGate';
 import { HomeBudgetCard } from '../../src/features/budgets/HomeBudgetCard';
-import { budgetViews } from '../../src/features/budgets/useBudgetProgress';
 import { GoalAlertsGate } from '../../src/features/goals/GoalAlertsGate';
 import { HomeGoalsCard } from '../../src/features/goals/HomeGoalsCard';
 import { useGoalViews } from '../../src/features/goals/useGoalViews';
