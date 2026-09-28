@@ -9,6 +9,7 @@ import {
   palettes,
   radii,
   tracking,
+  withAlpha,
 } from './tokens';
 
 /** `textMuted` → `text-muted`: token names as CSS custom property names. */
@@ -21,6 +22,13 @@ export function kebab(name: string): string {
  * scales them; every size in `fontSize` divides into an exact binary fraction, so nothing rounds.
  */
 const ROOT_FONT_PX = 16;
+
+/**
+ * Behind a category's icon its own colour, at the alpha the phone tints an icon box with
+ * (`theme.tint(colour, 0.14)`, mobile `ListRow`). Derived here rather than typed in a stylesheet,
+ * so the web's tint cannot drift from the palette it comes from.
+ */
+const CATEGORY_TINT_ALPHA = 0.14;
 
 function paletteDeclarations(palette: Palette): string[] {
   const lines: string[] = [];
@@ -65,7 +73,10 @@ function sharedDeclarations(): string[] {
     ...Object.entries(radii).map(([name, px]) => `--radius-${kebab(name)}: ${px}px;`),
     ...Object.entries(layout).map(([name, px]) => `--layout-${kebab(name)}: ${px}px;`),
     ...motionDeclarations(),
-    ...categoryColors.map((colour, index) => `--category-${index}: ${colour};`),
+    ...categoryColors.flatMap((colour, index) => [
+      `--category-${index}: ${colour};`,
+      `--category-${index}-tint: ${withAlpha(colour, CATEGORY_TINT_ALPHA)};`,
+    ]),
   ];
 }
 

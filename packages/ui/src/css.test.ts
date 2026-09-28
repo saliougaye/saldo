@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { kebab, tokensCss } from './css';
-import { categoryColors, fontSize, palettes, radii } from './tokens';
+import { categoryColors, fontSize, palettes, radii, withAlpha } from './tokens';
 
 /** The declarations inside the first block whose selector is exactly `selector`. */
 function block(css: string, selector: string): string {
@@ -115,10 +115,12 @@ describe('tokensCss', () => {
     expect(root).not.toContain('--motion-swap-from-scale');
   });
 
-  it('declares every category colour by the index entities store', () => {
+  it('declares every category colour by the index entities store, with its tint', () => {
     const root = block(css, ':root');
     categoryColors.forEach((colour, index) => {
       expect(root).toContain(`--category-${index}: ${colour};`);
+      // The alpha the phone tints an icon box with, so the two renderers cannot drift apart.
+      expect(root).toContain(`--category-${index}-tint: ${withAlpha(colour, 0.14)};`);
     });
   });
 

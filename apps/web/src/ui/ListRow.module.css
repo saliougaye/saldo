@@ -22,10 +22,7 @@ a.row:hover {
   padding-inline-start: 10px;
 }
 
-/*
- * Without a category the box is the neutral surface; with one, `--row-tint` carries the colour and
- * the box takes it at 14%, the alpha the phone tints an icon box with (`ListRow`, mobile).
- */
+/* Without a category the box is the neutral surface; with one the row sets `--category-N-tint`. */
 .iconBox {
   position: relative;
   flex: none;
@@ -33,13 +30,8 @@ a.row:hover {
   height: var(--layout-icon-box);
   border-radius: var(--radius-icon-box);
   background: var(--color-raised);
-  color: var(--row-tint, inherit);
   display: grid;
   place-items: center;
-}
-
-.tinted {
-  background: color-mix(in srgb, var(--row-tint) 14%, transparent);
 }
 
 .badge {

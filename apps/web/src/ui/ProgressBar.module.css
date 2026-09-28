@@ -26,3 +26,8 @@
   inline-size: 1px;
   background: var(--color-text-muted);
 }
+
+/* A thick bar takes the longer tick, as on the phone (`ProgressBar`, mobile). */
+.thick .tick {
+  inset-block: calc(-1 * var(--layout-pace-tick-overhang-thick));
+}

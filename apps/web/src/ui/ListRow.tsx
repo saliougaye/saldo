@@ -1,6 +1,6 @@
-import type { IconName } from '@saldo/ui';
+import { categoryColors, type IconName } from '@saldo/ui';
 import Link from 'next/link';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Icon } from './Icon';
 import styles from './ListRow.module.css';
 
@@ -29,15 +29,26 @@ export function ListRow({
   upcoming = false,
   selected = false,
 }: Props) {
-  // A custom property, because a CSS Module cannot name one of the 24 category colours: the
-  // stylesheet tints it (`--category-N` has no `-bg` companion; the phone tints at 14%).
-  const tint = colorIndex === undefined ? undefined : `var(--category-${colorIndex})`;
+  // Wrapped here, once, as the phone's `theme.categoryColor` wraps it: an index past the end of
+  // the palette would otherwise name a variable that does not exist, which renders as no colour
+  // at all rather than as an error.
+  const paletteIndex =
+    colorIndex === undefined
+      ? undefined
+      : ((colorIndex % categoryColors.length) + categoryColors.length) % categoryColors.length;
   const body = (
     <>
       {icon === undefined ? null : (
         <span
-          className={`${styles.iconBox} ${tint === undefined ? '' : styles.tinted}`}
-          style={tint === undefined ? undefined : ({ '--row-tint': tint } as CSSProperties)}
+          className={styles.iconBox}
+          style={
+            paletteIndex === undefined
+              ? undefined
+              : {
+                  background: `var(--category-${paletteIndex}-tint)`,
+                  color: `var(--category-${paletteIndex})`,
+                }
+          }
         >
           <Icon name={icon} size={16} />
           {badge === undefined ? null : (

@@ -9,3 +9,7 @@
 .over {
   stroke: var(--color-accent);
 }
+
+.tick {
+  stroke: var(--color-text-muted);
+}
