@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 /**
  * §17.1.7: a top bar on wide screens, the phone's tab bar on narrow ones — both rendered, CSS picks.
  * The theme is set here rather than on `<html>`, which a nested layout cannot touch; `tokensCss()`
- * writes `[data-theme="light"]` as an attribute selector, so any element carries it.
+ * writes both forced themes as attribute selectors, so this wrapper carries either of them.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();

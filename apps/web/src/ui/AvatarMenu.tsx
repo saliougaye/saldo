@@ -30,9 +30,14 @@ export function AvatarMenu({ user, strings }: Props) {
             <Menu.LinkItem className={styles.item} closeOnClick render={<Link href="/profile" />}>
               {strings.profile}
             </Menu.LinkItem>
-            <div className={styles.item}>
-              <SignOutButton label={strings.signOut} working={strings.working} />
-            </div>
+            {/* An `Item`, not a button beside one: only an item joins the popup's roving focus,
+                so this is what makes «Esci» reachable with the arrow keys. It stays open while the
+                request is in flight, which is what shows the busy label. */}
+            <Menu.Item
+              closeOnClick={false}
+              nativeButton
+              render={<SignOutButton label={strings.signOut} working={strings.working} />}
+            />
           </Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>

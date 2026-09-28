@@ -1,13 +1,18 @@
 'use client';
 
 import type { IconName } from '@saldo/ui';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import styles from './Button.module.css';
 import { Icon } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'link';
 
-interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+/**
+ * `ComponentPropsWithRef`, not `ButtonHTMLAttributes`: a headless part (Base UI's `Menu.Item`) that
+ * renders one of these hands it a `ref` and its own event handlers, and they have to reach the DOM
+ * button. `className` stays out — the variants are the whole point of having this component.
+ */
+interface Props extends Omit<ComponentPropsWithRef<'button'>, 'className'> {
   variant?: Variant;
   icon?: IconName;
   /** While true the button is disabled and shows `busyLabel`, so the page never double-submits. */

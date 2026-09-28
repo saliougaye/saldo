@@ -36,6 +36,33 @@ describe('tokensCss', () => {
     expect(light).toContain(`--color-text: ${palettes.light.text};`);
   });
 
+  it('declares the dark palette for data-theme="dark", so any element can force it', () => {
+    const dark = block(css, '[data-theme="dark"]');
+    expect(dark).toContain('color-scheme: dark;');
+    expect(dark).toContain(`--color-surface: ${palettes.dark.surface};`);
+    expect(dark).toContain(`--color-text: ${palettes.dark.text};`);
+    expect(dark).toContain(`--color-heatmap-0: ${palettes.dark.heatmap[0]};`);
+  });
+
+  it('forces dark with the same declarations :root uses, minus what does not change', () => {
+    const forced = block(css, '[data-theme="dark"]')
+      .split('\n')
+      .slice(1)
+      .map((line) => line.trim());
+    const root = block(css, ':root');
+    for (const line of forced) expect(root).toContain(line);
+    // Only the palette: the sizes and durations are declared once, on `:root`.
+    expect(forced).not.toContain('--font-size-body: 0.9375rem;');
+  });
+
+  it('puts forced dark after the system block, so a nested element can take light back', () => {
+    // A browser that prefers light has already repainted `:root`; a rule that comes earlier, or
+    // that only matches `:root`, would leave `<div data-theme="dark">` light.
+    expect(css.indexOf('[data-theme="dark"] {')).toBeGreaterThan(
+      css.indexOf('@media (prefers-color-scheme: light)'),
+    );
+  });
+
   it('follows the system in light mode unless the user chose dark', () => {
     expect(css).toContain('@media (prefers-color-scheme: light)');
     const system = block(css, ':root:not([data-theme="dark"])');

@@ -19,7 +19,11 @@ interface Props {
   };
 }
 
-/** Wide screens only (`display: none` below the breakpoint): brand and sections leading, actions trailing. */
+/**
+ * §17.1.7: brand and sections leading, actions trailing. The sections are hidden below the
+ * breakpoint, where the tab bar carries them — the bar itself stays, because Profile, Admin and
+ * sign-out are reached from the avatar on a narrow screen and it lives here.
+ */
 export function TopBar({ items, user, strings }: Props) {
   const sections = items.filter((item) => item.trailing !== true);
   const trailing = items.filter((item) => item.trailing === true);

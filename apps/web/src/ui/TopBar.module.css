@@ -1,25 +1,22 @@
+/**
+ * Narrow first. §17.1.7 gives a narrow screen the phone's tab bar for the sections, but Profile,
+ * Admin and sign-out are reached from the avatar — so the bar itself stays, carrying only the
+ * brand and what the tab bar cannot: the trailing links and the avatar.
+ */
 .bar {
-  display: none;
-}
-
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .bar {
-    display: block;
-    height: var(--layout-topbar-height);
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
+  height: var(--layout-topbar-height);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .inner {
   height: 100%;
   max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
   margin: 0 auto;
-  padding: 0 var(--layout-page-padding-web);
+  padding: 0 var(--layout-screen-padding-x);
   display: flex;
   align-items: center;
   gap: 24px;
@@ -33,8 +30,9 @@
   text-decoration: none;
 }
 
+/* The tab bar carries these below the breakpoint; two copies of one list is one too many. */
 .sections {
-  display: flex;
+  display: none;
   gap: 4px;
   list-style: none;
   margin: 0;
@@ -48,8 +46,9 @@
   gap: 12px;
 }
 
+/* The phone writes from its own screen, and 0.3e gives the wide screen the panel this opens. */
 .newDisabled {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 6px;
   height: var(--layout-nav-item-height);
@@ -59,4 +58,19 @@
   color: var(--color-text-faint);
   font-size: var(--font-size-footnote);
   cursor: not-allowed;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .inner {
+    padding: 0 var(--layout-page-padding-web);
+  }
+
+  .sections {
+    display: flex;
+  }
+
+  .newDisabled {
+    display: inline-flex;
+  }
 }
