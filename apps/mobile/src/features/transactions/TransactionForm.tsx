@@ -10,7 +10,7 @@ import {
   transferOverdrawsSource,
   transferOverpaysCard,
 } from '@saldo/core';
-import { formatDayMonth, formatLongDate } from '@saldo/i18n';
+import { cadenceLabel, endLabel, formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
@@ -47,7 +47,7 @@ import { AmountChoice } from './AmountChoice';
 import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
 import { RecurrenceSheet } from './RecurrenceSheet';
-import { cadenceLabel, endLabel, presetOf, ruleForPreset } from './recurrenceCopy';
+import { presetOf, ruleForPreset } from './recurrenceCopy';
 import {
   canCreateTag,
   changeKind,

@@ -5,6 +5,7 @@ import {
   type RecurrenceEditScope,
   type Transaction,
 } from '@saldo/core';
+import { cadenceLabel } from '@saldo/i18n';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -15,7 +16,6 @@ import { useDatabase } from '../../db/DatabaseProvider';
 import { applyRecurrenceEdit } from '../../db/recurrenceService';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
-import { cadenceLabel } from './recurrenceCopy';
 import { type TransactionFormValues, toTransactionInput } from './useTransactionForm';
 
 export interface RecurrenceScopeSheetProps {
