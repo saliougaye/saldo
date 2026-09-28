@@ -7,12 +7,11 @@ import type {
   LocalDate,
 } from '@saldo/core';
 import { parseLocalDate } from '@saldo/core';
-import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear } from '@saldo/i18n';
+import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear, plural } from '@saldo/i18n';
 import { categoryColors, type IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
-import { plural } from '../../../src/i18n/plural';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';

@@ -1,4 +1,4 @@
-import { formatDayMonth, formatLongDate, formatMoney } from '@saldo/i18n';
+import { formatDayMonth, formatLongDate, formatMoney, plural } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -11,7 +11,6 @@ import {
   toggleHref,
 } from '../../../src/features/transactions/listParams';
 import { type DayView, listView } from '../../../src/features/transactions/listView';
-import { plural } from '../../../src/i18n/plural';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Band } from '../../../src/ui/Band';
