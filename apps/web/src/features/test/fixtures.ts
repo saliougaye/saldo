@@ -120,6 +120,15 @@ export const CATEGORY_2: Category = categorySchema.parse({
   deletedAt: null,
 });
 
+/** A child of `CATEGORY`, for what rolls up to its parent (§4: one level deep). */
+export const CATEGORY_CHILD: Category = categorySchema.parse({
+  ...CATEGORY,
+  id: 'c1a',
+  name: 'Frutta',
+  parentId: CATEGORY.id,
+  sortOrder: 2,
+});
+
 export function tx(
   over: Partial<Transaction> & Pick<Transaction, 'id' | 'amount' | 'date'>,
 ): Transaction {
