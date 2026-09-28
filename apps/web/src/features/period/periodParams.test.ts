@@ -34,6 +34,35 @@ describe('periodFromParam', () => {
   it('refuses a period after the current one, as the phone’s navigation does', () => {
     expect(periodFromParam(def, today, '2026-11-02').range.start).toBe('2026-09-01');
   });
+
+  it('says how far ahead a period is: never, by default', () => {
+    expect(periodFromParam(def, today, undefined).ahead).toBe(0);
+    expect(periodFromParam(def, today, '2026-07-14').ahead).toBe(0);
+    expect(periodFromParam(def, today, '2026-10-02').ahead).toBe(0);
+  });
+
+  it('reaches as many periods ahead as it is allowed, and says which one it is', () => {
+    const october = periodFromParam(def, today, '2026-10-02', 3);
+    expect(october.range.start).toBe('2026-10-01');
+    expect(october.ahead).toBe(1);
+    // A future period is not a closed one: `isCurrent` alone would say it is.
+    expect(october.isCurrent).toBe(false);
+    expect(periodFromParam(def, today, '2026-12-31', 3).ahead).toBe(3);
+  });
+
+  it('falls back to the current period past the periods it may reach', () => {
+    const tooFar = periodFromParam(def, today, '2027-01-05', 3);
+    expect(tooFar.range.start).toBe('2026-09-01');
+    expect(tooFar.ahead).toBe(0);
+    // No forecast (too little history) means nothing ahead to reach.
+    expect(periodFromParam(def, today, '2026-10-02', 0).range.start).toBe('2026-09-01');
+  });
+
+  it('still reads the past with a reach ahead', () => {
+    const july = periodFromParam(def, today, '2026-07-14', 3);
+    expect(july.range.start).toBe('2026-07-01');
+    expect(july.ahead).toBe(0);
+  });
 });
 
 describe('periodSteps', () => {
@@ -51,6 +80,31 @@ describe('periodSteps', () => {
     const steps = periodSteps(def, { start: '2026-07-01', end: '2026-07-31' }, today, '/home');
     expect(steps.next).toBe('/home?p=2026-08-01');
     expect(steps.previous).toBe('/home?p=2026-06-01');
+  });
+
+  it('steps into the periods ahead as far as it is allowed, and no further', () => {
+    const current = periodFromParam(def, today, undefined).range;
+    expect(periodSteps(def, current, today, '/stats', {}, 3).next).toBe('/stats?p=2026-10-01');
+    const december = { start: '2026-12-01', end: '2026-12-31' };
+    expect(periodSteps(def, december, today, '/stats', {}, 3).next).toBeNull();
+    const november = { start: '2026-11-01', end: '2026-11-30' };
+    expect(periodSteps(def, november, today, '/stats', {}, 3).next).toBe('/stats?p=2026-12-01');
+    expect(periodSteps(def, november, today, '/stats', {}, 3).previous).toBe('/stats?p=2026-10-01');
+  });
+
+  it('agrees with `periodFromParam` on every period it links to', () => {
+    // The › and a click on a column must reach the same periods: each `next` must read back as
+    // itself, and the last one reachable must offer no `next`.
+    let range = periodFromParam(def, today, undefined).range;
+    for (let step = 0; step < 3; step += 1) {
+      const next = periodSteps(def, range, today, '/stats', {}, 3).next;
+      expect(next).not.toBeNull();
+      const param = new URL(next ?? '', 'http://x').searchParams.get('p') ?? undefined;
+      const read = periodFromParam(def, today, param, 3);
+      expect(read.ahead).toBe(step + 1);
+      range = read.range;
+    }
+    expect(periodSteps(def, range, today, '/stats', {}, 3).next).toBeNull();
   });
 
   it('keeps the other parameters of the page it is on', () => {

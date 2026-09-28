@@ -2,12 +2,15 @@ import {
   type CurrencyCode,
   type LocalDate,
   type PeriodDef,
-  type PeriodView,
   readSettings,
   type Settings,
   type UserData,
 } from '@saldo/core';
-import { PERIOD_PARAM, periodFromParam } from '../../features/period/periodParams';
+import {
+  PERIOD_PARAM,
+  periodFromParam,
+  type WebPeriodView,
+} from '../../features/period/periodParams';
 import { userI18n, type WebI18n } from '../../i18n/server';
 import { requireWebUser } from '../auth/currentUser';
 import { env } from '../env';
@@ -22,7 +25,7 @@ export interface PageState {
   currency: CurrencyCode;
   today: LocalDate;
   timeZone: string;
-  period: PeriodView;
+  period: WebPeriodView;
 }
 
 /**

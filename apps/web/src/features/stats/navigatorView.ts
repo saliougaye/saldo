@@ -52,6 +52,30 @@ export interface NavigatorView {
 }
 
 /**
+ * The periods the navigator shows ahead (§5.17), on their own.
+ *
+ * A page needs them **before** it knows which period it is reading: how far `?p=` may reach is how
+ * many forecast periods there are, and the selection is what `navigatorView` is then asked about.
+ * Calling this first and handing the answer back in keeps the forecast computed once.
+ */
+export function navigatorForecast(input: {
+  data: UserData;
+  def: PeriodDef;
+  today: LocalDate;
+}): ForecastPeriod[] | null {
+  const { data, def, today } = input;
+  const txs = data.transactions;
+  return forecastPeriods({
+    txs,
+    recurrences: data.recurrences,
+    def,
+    period: periodContaining(def, today),
+    today,
+    balance: netWorth(data.accounts, accountBalances(data.accounts, txs, today)),
+  });
+}
+
+/**
  * The chart that is also the period picker (§17.1.7). Every column carries the values
  * `cashflowColumns` needs, so the renderer stays geometry-only.
  *
@@ -66,18 +90,14 @@ export function navigatorView(input: {
   def: PeriodDef;
   today: LocalDate;
   selected: DateRange;
+  /** The page's own `navigatorForecast` call, when it has already made one; computed here otherwise. */
+  forecast?: ForecastPeriod[] | null;
 }): NavigatorView {
   const { data, def, today, selected } = input;
   const txs = data.transactions;
   const current = periodContaining(def, today);
-  const forecast = forecastPeriods({
-    txs,
-    recurrences: data.recurrences,
-    def,
-    period: current,
-    today,
-    balance: netWorth(data.accounts, accountBalances(data.accounts, txs, today)),
-  });
+  const forecast =
+    input.forecast === undefined ? navigatorForecast({ data, def, today }) : input.forecast;
 
   const isSelected = (range: DateRange) => range.start === selected.start;
 

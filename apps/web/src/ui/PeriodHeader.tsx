@@ -13,12 +13,23 @@ interface Props {
   /** The page the ‹ › stay on, and the parameters they must not lose. */
   path: string;
   params?: Record<string, string>;
+  /** How many periods after the current one `›` may reach (§17.1.7). 0 by default, as on the phone. */
+  reach?: number;
   strings: { previous: string; next: string };
 }
 
 /** The phone's period header (§5.4), as two links and a label. No client state: the URL is the state. */
-export function PeriodHeader({ period, def, today, locale, path, params = {}, strings }: Props) {
-  const steps = periodSteps(def, period.range, today, path, params);
+export function PeriodHeader({
+  period,
+  def,
+  today,
+  locale,
+  path,
+  params = {},
+  reach = 0,
+  strings,
+}: Props) {
+  const steps = periodSteps(def, period.range, today, path, params, reach);
   return (
     <div className={styles.header}>
       <Link className={styles.step} href={steps.previous} aria-label={strings.previous}>
