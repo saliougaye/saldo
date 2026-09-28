@@ -1,0 +1,112 @@
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 48px 24px;
+}
+
+/* Below the wide breakpoint (layout.wideBreakpoint 1024) the column starts near the top, as on the
+   phone, instead of floating in the middle of a tall viewport. */
+@media (max-width: 1023px) {
+  .page {
+    place-items: start center;
+    padding: 72px 20px 32px;
+  }
+}
+
+.column {
+  width: 100%;
+  max-width: var(--layout-auth-width);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.lede {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  text-wrap: pretty;
+  margin-top: -12px;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hint {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.centred {
+  text-align: center;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.switchLine {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.rocky {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin-bottom: -8px;
+}
+
+/* The passkey step's mark, where the other steps have the brand. */
+.passkeyArt {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-dialog);
+  background: var(--color-raised);
+  display: grid;
+  place-items: center;
+  color: var(--color-text);
+}
+
+.done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.check {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-positive) 16%, transparent);
+  color: var(--color-positive);
+  display: grid;
+  place-items: center;
+}
