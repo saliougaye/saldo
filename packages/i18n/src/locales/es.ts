@@ -575,6 +575,13 @@ export const es: Messages = {
     nameRequired: 'Elige primero un nombre',
     passkeyNote:
       'La llave de acceso se queda en este teléfono; el servidor solo guarda su clave pública.',
+    emailAskTitle: 'Tu correo',
+    emailAskBody:
+      'Identifica esta cuenta: quien administra el servidor ve esta dirección, no una contraseña. Seguirás entrando con la passkey.',
+    emailAskLater: 'Más tarde',
+    emailAskTaken: 'Ese correo ya es de otra cuenta.',
+    emailAskInvalid: 'Escribe una dirección de correo válida.',
+    emailAddRow: 'Añade tu correo',
   },
   server: {
     title: 'Tu servidor Saldo',
@@ -1148,5 +1155,78 @@ export const es: Messages = {
     notice:
       'El teléfono está en la hora de {{city}}, donde son las {{time}}. Las cuentas siguen en {{saved}} hasta que lo cambies.',
     use: 'Usar {{city}}',
+  },
+  web: {
+    auth: {
+      signInTitle: 'Entrar en Saldo',
+      signInBody: 'Con la passkey que creaste en este servidor, desde el móvil o desde aquí.',
+      crossDeviceHint:
+        'En un ordenador sin passkey el navegador muestra un QR: escanéalo con el móvil donde la creaste.',
+      emailLabel: 'Correo',
+      emailPlaceholder: 'nombre@ejemplo.es',
+      or: 'o',
+      closedTitle: 'Registro cerrado',
+      closedBody:
+        'Este servidor no acepta cuentas nuevas. Pide una invitación a quien lo administra.',
+      cancelledBody: 'Se cerró la ventana de la passkey. Vuelve a intentarlo cuando quieras.',
+      registerTitle: 'Crea tu cuenta',
+      registerBody: 'Dos cosas sobre ti y luego la passkey. Sin contraseñas.',
+      nameLabel: 'Nombre',
+      emailHint: 'Sirve para reconocerte. No es una contraseña.',
+      emailTakenTitle: 'Ese correo ya tiene una cuenta',
+      emailTakenBody:
+        'Entra con su passkey. Si la has perdido, pídelo a quien administra el servidor.',
+      inviteTitle: 'Tu código de invitación',
+      inviteBody:
+        'Este servidor solo acepta cuentas nuevas con invitación. Te la envió quien lo administra.',
+      inviteLabel: 'Código de invitación',
+      inviteHint: '16 caracteres; de las mayúsculas y los guiones nos encargamos nosotros.',
+      invalidInviteTitle: 'Ese código no es válido',
+      invalidInviteBody:
+        'Comprueba que lo copiaste entero o pide uno nuevo. Un código vale una vez y caduca.',
+      passkeyTitle: 'Crea tu passkey',
+      passkeyBody:
+        'El navegador te pedirá la huella, la cara o el PIN de este dispositivo. La passkey se queda aquí; el servidor solo guarda su clave pública.',
+      passkeyAccount: 'Cuenta de {{name}} · {{email}}',
+      passkeyPhoneHint:
+        '¿Prefieres el móvil? En la ventana del navegador elige «Usar un teléfono» y escanea el QR.',
+      passkeyButton: 'Crear la passkey',
+      haveAccount: '¿Ya tienes una cuenta?',
+      signInLink: 'Entrar',
+      mobileSignInTitle: 'Entrar para la app',
+      mobileSignInBody:
+        'La app de Saldo te ha traído aquí para usar la passkey. Al terminar vuelve ella sola.',
+      mobileDoneTitle: 'Listo',
+      mobileDoneBody:
+        'Estás volviendo a la app de Saldo. Si no se abre sola, cambia a ella: ya has entrado.',
+      linkUnusableTitle: 'Este enlace no se puede usar',
+      linkMissing: 'Falta el redirect o el state.',
+      emailInvalid: 'Escribe una dirección de correo válida.',
+      genericError: 'Algo ha ido mal. Vuelve a intentarlo.',
+    },
+    passkeys: {
+      title: 'Tus passkeys',
+      body: 'Cada dispositivo desde el que entras tiene la suya. El servidor solo guarda la clave pública.',
+      add: 'Añadir passkey',
+      addedOn: 'Añadida el {{date}}',
+      inUse: 'en uso ahora',
+      synced: 'Sincronizada con tu gestor de contraseñas',
+      notSynced: 'Solo en este dispositivo',
+      unknownProvider: 'Passkey',
+      renameTitle: 'Cambiar el nombre de la passkey',
+      nameLabel: 'Nombre',
+      renameHint: 'Es la etiqueta de Saldo: el nombre que le da el dispositivo no cambia.',
+      deleteTitle: '¿Eliminar esta passkey?',
+      deleteBody:
+        'El dispositivo que la tiene ya no entrará en esta cuenta. Las demás siguen funcionando.',
+      lastOneNote: 'Es tu última passkey: añade otra antes de eliminarla.',
+      empty: 'No hay passkeys en esta cuenta.',
+    },
+    home: {
+      stubTitle: 'Casi está',
+      stubBody:
+        'Entrar funciona. Las pantallas del web llegan en el paso siguiente; hasta entonces usa la app del móvil.',
+      signedInAs: 'Has entrado como {{name}} · {{email}}',
+    },
   },
 };
