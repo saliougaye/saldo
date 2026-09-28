@@ -1,0 +1,41 @@
+.page {
+  max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+  margin: 0 auto;
+  padding: 48px var(--layout-page-padding-web);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.body {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  text-wrap: pretty;
+  max-width: 52ch;
+}
+
+.meta {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.links {
+  display: flex;
+  gap: 16px;
+  font-size: var(--font-size-footnote);
+}
+
+.link {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}

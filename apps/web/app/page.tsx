@@ -1,17 +1,13 @@
-import { APP_VERSION } from '../src/server/version';
+import { redirect } from 'next/navigation';
+import { currentUser } from '../src/server/auth/currentUser';
 
-export default function Home() {
-  return (
-    <main style={{ padding: 32, textAlign: 'center', maxWidth: 480 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>
-        Saldo server is running
-      </h1>
-      <p style={{ color: '#8C8C8C' }}>Version {APP_VERSION}</p>
-      <p style={{ color: '#8C8C8C' }}>
-        <a href="https://github.com/saldo-app/saldo" style={{ color: '#C7C7C7' }}>
-          Source and documentation
-        </a>
-      </p>
-    </main>
-  );
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/**
+ * §17.1.1: the instance's root **is** the app. The landing page it used to show is gone; the version
+ * and the host live at the foot of `/login` instead.
+ */
+export default async function RootPage() {
+  redirect((await currentUser()) === null ? '/login' : '/home');
 }
