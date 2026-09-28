@@ -6,7 +6,7 @@ import type {
   GoalView,
   LocalDate,
 } from '@saldo/core';
-import { parseLocalDate } from '@saldo/core';
+import { endLabels, parseLocalDate } from '@saldo/core';
 import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear, plural } from '@saldo/i18n';
 import { categoryColors, type IconName } from '@saldo/ui';
 import Link from 'next/link';
@@ -61,15 +61,6 @@ function Rich({ text }: { text: string }) {
       )}
     </>
   );
-}
-
-/**
- * Which labels sit under a featured bar (§5.13): an end steps aside when «oggi» would collide with
- * it, and without a pace there is no «oggi» at all. The phone's `endLabels`, thresholds included.
- */
-function endLabels(pace: number | null): { start: boolean; today: boolean; end: boolean } {
-  if (pace === null) return { start: true, today: false, end: true };
-  return { start: pace > 0.18, today: true, end: pace < 0.78 };
 }
 
 /** As `ListRow` wraps it: an index past the end of the palette must still name a variable. */
