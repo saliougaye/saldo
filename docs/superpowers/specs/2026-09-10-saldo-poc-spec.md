@@ -1106,7 +1106,11 @@ Notes that follow from using the library:
 - `verification` replaces `webauthn_challenges` and `auth_codes`.
 - `user.email` is required and unique, but a passkey-only account has no email, so it gets a synthetic address at
   `{id}@passkey.saldo.invalid` — RFC 2606 reserves `.invalid`, so the value can never route anywhere.
-  **Superseded by D32 (§17.1.4):** from milestone 0.3 registration asks for a real email.
+  **Superseded by D32 (§17.1.4):** from milestone 0.3 registration asks for a real email. Built in 0.3b: an account
+  created before it keeps the synthetic address until the phone asks for a real one (onboarding, or Profile → server),
+  which `POST /api/me/email` stores. That route only ever fills an empty seat — it answers `email_already_set` when the
+  current address is not synthetic, because replacing a real one means proving the new one belongs to the person, and
+  there is no SMTP until 0.3f. `isSyntheticEmail` is the test, in `apps/web/src/server/auth/email.ts`.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -1682,7 +1686,33 @@ public. The decisions behind this section are D30–D36.
   no recovery. Recovery makes the mailbox as strong as the passkey; `SECURITY.md` says so.
 - `/profile` lists the account's passkeys, and lets the user add, rename and delete them (never the last one),
   and sign out.
-- CSRF: Server Actions check the origin; Better Auth checks its own endpoints' origin against `PUBLIC_URL`.
+- CSRF: Server Actions check the origin; Better Auth checks its own endpoints' origin against `PUBLIC_URL`. Next
+  compares `Origin` with `Host`, which is wrong behind a proxy that rewrites `Host`, so the origin is also named
+  outright: `experimental.serverActions.allowedOrigins` from `PUBLIC_URL` (it is still an experimental key in Next 16).
+  The app's pages carry the same CSP as `/auth/**`, plus `form-action 'self'`, which a Server Action's POST needs.
+
+**Settled while building 0.3b (2026-09-28):**
+
+- **The invite check is `POST /api/auth/invite/check`**, an endpoint of a small Better Auth plugin rather than a route
+  of our own, so it inherits the instance's rate limiter, its trusted-proxy IP resolution and its origin handling
+  instead of growing a second set beside them. Its own rule is 10 per minute per IP. It answers
+  `403 {"code":"invalid_invite"}` for unknown, spent, revoked and expired codes alike, and never spends the code:
+  `resolveUser` checks it again and registration is what burns it, so a caller who skips the endpoint gains nothing.
+- **«This email already has an account» is shown on purpose.** It tells a caller which addresses have accounts, which
+  is what the design's step 1 asks for; the alternative — one vague refusal — would send somebody who forgot they had
+  registered to the admin instead of to `/login`. Bounded: the endpoint is rate-limited, an `invite` or `closed`
+  instance refuses before it answers, and on an `open` instance a caller learns the same by trying to register.
+- **«In uso ora» comes from the browser, not the server.** No table links a session to the credential that created
+  it, so the sign-in and add-passkey ceremonies keep the credential id in `localStorage` (`saldo.lastPasskeyId`) and
+  the page marks the row whose `credentialID` matches. It is the honest reading of «the one that signed **this
+  browser** in», and it costs no column.
+- **Passkey management is `/profile/passkeys` from 0.3b**, in the plain page shell; 0.3d wraps it in Profilo's
+  sub-navigation and trailing panel rather than moving it. Renaming refuses an empty name — Better Auth validates
+  `name` with `min(1)`, and a row with no label already shows its authenticator's name.
+- **`afterVerification` must recognise an account that already exists.** With a session the passkey plugin skips
+  `resolveUser` and still calls `afterVerification`, which is exactly what «add a passkey» does; without the early
+  return it would re-check the registration policy, burn an invite and try to create a row that is already there.
+  Nothing exercised that path before 0.3b, so it was a latent bug this step fixed.
 
 #### 17.1.5 «Today» on the server
 
@@ -1711,7 +1741,13 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   headless primitives of **Base UI** (`@base-ui/react`), which bring focus management, keyboard handling and ARIA,
   and expose the enter/exit states (`data-starting-style`, `data-ending-style`, `--transform-origin`) the styles
   animate. No component library supplies a look: shadcn/ui and Tailwind were considered and not taken (D34).
-  Base UI is added by 0.3b, the first step that renders one of them.
+  Base UI is added by 0.3b, the first step that renders one of them (`@base-ui/react`, whose namespaced parts —
+  `Dialog.Root`, `Popup`, `AlertDialog.Description` — the passkey dialogs use).
+- **Strings are resolved on the server.** `@saldo/i18n` gains `makeTranslator(messages)` — dotted paths, `{{var}}`
+  interpolation, and the key itself when a string is missing — and there is no react-i18next on the web and no catalog
+  in the browser bundle: a client component receives the handful of strings it shows as a plain, typed prop. The locale
+  is the synced `settings.language` where there is a session and the browser's `Accept-Language` where there is not
+  (`apps/web/src/i18n/`). Plurals stay i18next's on the phone; nothing on the web counts anything yet.
 - **Tokens as CSS custom properties.** A pure `tokensCss()` in `@saldo/ui` returns `:root` (dark),
   `[data-theme="light"]` and a `prefers-color-scheme: light` block for the `system` preference, with variables
   named `--color-*`, `--radius-*`, `--font-size-*`, `--font-weight-*`, `--motion-*` and `--category-*`. The root
@@ -1779,8 +1815,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   label, the authenticator's own name does not change), shows whether it is synced (`backed_up`) and deletes it
   after a confirmation, **never the last one**: its Elimina is disabled and says why, with a link to add another.
   Lock, permissions, server and CSV import stay the phone's. On narrow screens Profilo stays the phone's.
-- **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»).**
-  No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
+- **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
+  built 2026-09-28 in 0.3b).** No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
   brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
   browser offers the passkey as soon as it is focused, «Accedi con passkey», a line on the cross-device QR, «Crea
   un account» (absent, with a notice, when registration is closed), the version and host in the footer (§17.1.1).
@@ -1790,7 +1826,9 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   all'app». Step 2 needs the code checked **before** the ceremony, so nobody performs a passkey ceremony only to be
   told the code is wrong: 0.3b adds a check endpoint that answers one `invalid_invite` for unknown, spent, revoked
   and expired codes, rate-limited like the auth endpoints; `resolveUser` still checks and `afterVerification` still
-  burns, so the endpoint is a convenience and never the gate.
+  burns, so the endpoint is a convenience and never the gate. As built, each page is a server component that resolves
+  its strings and the instance's state and hands a single client component only what it renders, the step being that
+  component's own state; `/register?invite=CODE` prefills step 2, which is what a link in an invite message opens.
 - **Admin (decided 2026-09-27, mockup `2026-09-27-web-admin-variants.html`, variant «3 · Sotto-nav + pannelli»).**
   The Profilo pattern with no exception: a sub-navigation (Account, Inviti, Istanza, Impostazioni, each with its
   URL under `/admin/`), every section a list of summary rows, every row edited or inspected in the trailing panel.
@@ -1822,7 +1860,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 
 - Reachable by the `admin` role only (`requireAdmin`, §9.5). It puts a UI on functions that already exist behind
   `scripts/user.ts` and `scripts/invite.ts`, which stay.
-- **Accounts:** list with email and role, revoke and restore, promote, delete.
+- **Accounts:** list with email and role, revoke and restore, promote, delete. `listAccounts` carries the email from
+  0.3b (D32), so `scripts/user.ts list` shows it too — synthetic or real.
 - **Invites:** mint (the code is shown once, as text, link and QR code), list, revoke.
 - **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver. (Rows skipped by the projection: deferred, §17.1.2.)
 - **Server settings** (D33): a `server_settings` table (`key`, `value jsonb`, `updated_at`, `updated_by`).
