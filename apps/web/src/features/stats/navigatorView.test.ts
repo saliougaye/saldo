@@ -21,7 +21,7 @@ const HISTORY = [
 describe('navigatorView', () => {
   it('shows six closed periods, the running one and the three forecast ones', () => {
     const view = navigatorView({
-      data: emptyUserData(),
+      data: dataWith(HISTORY),
       def: DEF,
       today: TODAY,
       selected: SEPTEMBER,
@@ -35,7 +35,7 @@ describe('navigatorView', () => {
 
   it('ends the closed run at the period before the current one, in order', () => {
     const view = navigatorView({
-      data: emptyUserData(),
+      data: dataWith(HISTORY),
       def: DEF,
       today: TODAY,
       selected: SEPTEMBER,
@@ -80,18 +80,29 @@ describe('navigatorView', () => {
     expect(view.columns[6]?.values).toEqual({ income: 0, expenses: 12000 });
   });
 
-  it('keeps the forecast columns, with no figures, when there is not enough history to forecast', () => {
+  it('drops the forecast columns when there is not enough history to forecast', () => {
     const view = navigatorView({
       data: emptyUserData(),
       def: DEF,
       today: TODAY,
       selected: SEPTEMBER,
     });
-    // `forecastPeriods` returns null under three used periods: the columns stay, with no figures.
+    // `forecastPeriods` returns null under three used periods, and §5.17 renders nothing of it: the
+    // phone's `if (forecast === null) return past`. Seven columns, none of them selectable ahead.
     expect(view.forecast).toBeNull();
-    expect(view.columns.at(-1)?.values).toEqual({ income: 0, expenses: 0 });
-    expect(view.columns.at(-1)?.values.forecast).toBeUndefined();
-    expect(view.columns.at(-1)?.forecast).toBeNull();
+    expect(view.columns).toHaveLength(7);
+    expect(view.columns.some((column) => column.kind === 'forecast')).toBe(false);
+    expect(view.columns.at(-1)?.range.start).toBe('2026-09-01');
+  });
+
+  it('selects nothing ahead when there is no forecast to select', () => {
+    const view = navigatorView({
+      data: emptyUserData(),
+      def: DEF,
+      today: TODAY,
+      selected: { start: '2026-10-01', end: '2026-10-31' },
+    });
+    expect(view.selected).toBeNull();
   });
 
   it('forecasts from the current period whichever column is selected', () => {

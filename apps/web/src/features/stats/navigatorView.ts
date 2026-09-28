@@ -1,7 +1,6 @@
 import {
   accountBalances,
   type DateRange,
-  FORECAST_PERIODS,
   type ForecastPeriod,
   forecastPeriods,
   type LocalDate,
@@ -31,9 +30,12 @@ export interface NavigatorColumn {
    * today, so the running one is always the `current` column.
    */
   running: boolean;
-  /** What `cashflowColumns` needs; on a forecast column with no forecast, zeroes and no band. */
+  /** What `cashflowColumns` needs; a forecast column's carries its min–max band. */
   values: CashflowValues;
-  /** The forecast column's own period from `forecastPeriods` (its balance, for the key figures). */
+  /**
+   * A forecast column's own period from `forecastPeriods` (its balance, for the key figures);
+   * `null` exactly on the real columns — a forecast column only exists when there is a forecast.
+   */
   forecast: ForecastPeriod | null;
 }
 
@@ -92,22 +94,20 @@ export function navigatorView(input: {
     };
   });
 
-  for (let ahead = 1; ahead <= FORECAST_PERIODS; ahead += 1) {
-    const period = forecast?.[ahead - 1] ?? null;
-    const range = period?.range ?? shiftPeriod(def, current, ahead);
+  // §5.17: with too little history (`forecastPeriods` answers null) nothing of the forecast
+  // renders — the phone's `if (forecast === null) return past` — so there are seven columns and none
+  // ahead to select. `forecastPeriods` already walks `FORECAST_PERIODS` ahead of `current`.
+  for (const period of forecast ?? []) {
     columns.push({
-      range,
+      range: period.range,
       kind: 'forecast',
-      selected: isSelected(range),
+      selected: isSelected(period.range),
       running: false,
-      values:
-        period === null
-          ? { income: 0, expenses: 0 }
-          : {
-              income: period.income,
-              expenses: period.expenses,
-              forecast: { min: period.expensesMin, max: period.expensesMax },
-            },
+      values: {
+        income: period.income,
+        expenses: period.expenses,
+        forecast: { min: period.expensesMin, max: period.expensesMax },
+      },
       forecast: period,
     });
   }
