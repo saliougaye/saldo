@@ -144,7 +144,6 @@ describe('homeView', () => {
     expect(view.budgets.advice).toBeNull();
     expect(view.goals.items).toEqual([]);
     expect(view.goals.eventIds).toEqual([]);
-    expect(view.goals.advice).toBeNull();
   });
 
   it('features the budget the phone features, and says why', () => {
@@ -220,12 +219,5 @@ describe('homeView', () => {
     expect(view.goals.status).toEqual({ expired: 0, behind: 0, reached: 1 });
     expect(view.goals.featuredId).toBe('p1');
     expect(view.goals.eventIds).toEqual(['p2']);
-    // 80 000 still missing over the four periods to the deadline, straight from `goalAdvice`.
-    expect(view.goals.advice).toEqual({
-      kind: 'perPeriod',
-      perPeriod: 20000,
-      gap: 7705,
-      behind: false,
-    });
   });
 });

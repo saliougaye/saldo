@@ -8,11 +8,9 @@ import {
   budgetEventIds,
   budgetViews,
   featuredTarget,
-  type GoalAdvice,
   type GoalCardStatus,
   type GoalTargetInput,
   type GoalView,
-  goalAdvice,
   goalCardStatus,
   goalEventIds,
   goalViews,
@@ -76,7 +74,8 @@ export interface HomeGoals {
   /** Expired then reached, the featured one excluded: a row each (§5.13). */
   eventIds: string[];
   status: GoalCardStatus;
-  advice: GoalAdvice | null;
+  // No `advice`: the featured goal's sentence is `goalSentence` from `@saldo/i18n`, which reads
+  // `goalAdvice` itself — the same call the phone's `useGoalText` makes.
 }
 
 export interface HomeView {
@@ -167,7 +166,6 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
   }));
   // Same `null`, same reason as the budgets above.
   const featuredGoalId = featuredTarget(goalInputs.map(rankGoal), null);
-  const featuredGoal = goalItems.find((view) => view.account.id === featuredGoalId);
 
   return {
     summary,
@@ -195,7 +193,6 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
       featuredId: featuredGoalId,
       eventIds: goalEventIds(goalInputs, featuredGoalId),
       status: goalCardStatus(goalInputs),
-      advice: featuredGoal === undefined ? null : goalAdvice(featuredGoal.progress),
     },
   };
 }

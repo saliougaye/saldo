@@ -1,13 +1,18 @@
-import type {
-  BudgetAdvice,
-  BudgetView,
-  CurrencyCode,
-  GoalAdvice,
-  GoalView,
-  LocalDate,
-} from '@saldo/core';
-import { endLabels, parseLocalDate } from '@saldo/core';
-import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear, plural } from '@saldo/i18n';
+import type { BudgetAdvice, BudgetView, CurrencyCode, GoalView } from '@saldo/core';
+import { endLabels, goalPace, goalTone } from '@saldo/core';
+import {
+  type AppLocale,
+  formatDayMonth,
+  formatMoney,
+  type GoalTextDeps,
+  goalEnds,
+  goalMeta,
+  goalOf,
+  goalSentence,
+  goalStatus,
+  plural,
+  richText,
+} from '@saldo/i18n';
 import { categoryColors, type IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
@@ -287,102 +292,28 @@ export default async function HomePage({
   );
 
   // ---- Obiettivi (§5.14) ----------------------------------------------------------------------
-  /** «15 ott» this year, «giugno 2027» after (the phone's `deadlineLabel`). */
-  const deadlineLabel = (date: LocalDate) => {
-    const parts = parseLocalDate(date);
-    return parts.year === parseLocalDate(today).year
-      ? formatDayMonth(date, locale)
-      : formatMonthYear(parts, locale);
+  // The strings are `@saldo/i18n`'s and the tone and pace `@saldo/core`'s: the phone's
+  // `useGoalText` calls the same functions, so the two cannot drift apart.
+  const goalDeps: GoalTextDeps = {
+    t,
+    locale,
+    money,
+    today,
+    periodKind: settings.periodKind,
   };
-  const goalPace = (item: GoalView) => {
-    const { state, pace } = item.progress;
-    return state === 'reached' || state === 'expired' ? null : pace;
+  const goalWebTone = (item: GoalView): 'normal' | 'over' | 'done' => {
+    const tone = goalTone(item.progress);
+    return tone === 'attention' ? 'over' : tone === 'plain' ? 'normal' : 'done';
   };
-  const goalTone = (item: GoalView): 'normal' | 'over' | 'done' => {
-    const { state } = item.progress;
-    if (state === 'reached') return 'done';
-    return state === 'expired' || state === 'behind' ? 'over' : 'normal';
-  };
-  const goalStatus = (item: GoalView) => {
-    const { state, gap, missing } = item.progress;
-    switch (state) {
-      case 'reached':
-        return t('goals.statusReached');
-      case 'expired':
-        return t('goals.statusExpired');
-      case 'behind':
-        return t('goals.statusBehind', { amount: money(-(gap ?? 0)) });
-      case 'onTrack':
-        return t('goals.statusAhead', { amount: money(gap ?? 0) });
-      case 'open':
-        return t('goals.statusMissing', { amount: money(missing) });
-    }
-  };
-  /** Beside the name: short on the featured block, full on a row. */
-  const goalMeta = (item: GoalView, short = false) => {
-    const { state, reachedOn } = item.progress;
-    const deadline = item.account.goalDeadline ?? null;
-    if (state === 'reached') {
-      return short || reachedOn === null
-        ? t('goals.toClose')
-        : t('goals.reachedOnMeta', { date: formatDayMonth(reachedOn, locale) });
-    }
-    if (state === 'expired' && deadline !== null) {
-      return short
-        ? t('goals.expiredMeta')
-        : t('goals.expiredOnMeta', { date: formatDayMonth(deadline, locale) });
-    }
-    return deadline === null
-      ? t('goals.noDeadline')
-      : t('goals.by', { date: deadlineLabel(deadline) });
-  };
-  const goalSentence = (advice: GoalAdvice, item: GoalView): ReactNode => {
-    switch (advice.kind) {
-      case 'perPeriod':
-        return (
-          <>
-            <Rich
-              text={t(`goals.perPeriod_${settings.periodKind}`, {
-                amount: money(advice.perPeriod),
-              })}
-            />{' '}
-            <span className={styles.muted}>
-              {t(advice.behind ? 'goals.stateBehind' : 'goals.stateAhead', {
-                amount: money(advice.gap),
-              })}
-            </span>
-          </>
-        );
-      case 'lastPeriod':
-        return (
-          <Rich
-            text={plural(t, locale, 'goals.lastPeriod', advice.days, {
-              amount: money(advice.missing),
-            })}
-          />
-        );
-      case 'noDeadline':
-        return <Rich text={t('goals.missingSentence', { amount: money(advice.missing) })} />;
-      case 'expired':
-        return (
-          <>
-            <Rich
-              text={t('goals.expiredSentence', {
-                amount: money(advice.missing),
-                date: formatDayMonth(item.account.goalDeadline ?? today, locale),
-              })}
-            />{' '}
-            <span className={styles.muted}>{t('goals.expiredState')}</span>
-          </>
-        );
-      case 'reached':
-        return (
-          <>
-            <Rich text={t('goals.reachedSentence', { amount: money(advice.target) })} />{' '}
-            <span className={styles.muted}>{t('goals.reachedState')}</span>
-          </>
-        );
-    }
+  const goalSentenceNode = (item: GoalView): ReactNode => {
+    const { action, state } = goalSentence(item, goalDeps);
+    const bold = <Rich text={richText(action, t, locale)} />;
+    if (state === null) return bold;
+    return (
+      <>
+        {bold} <span className={styles.muted}>{state}</span>
+      </>
+    );
   };
   const goalRow = (item: GoalView) => (
     <ListRow
@@ -391,18 +322,18 @@ export default async function HomePage({
       icon={item.account.icon as IconName}
       colorIndex={item.account.colorIndex}
       title={item.account.name}
-      subtitle={goalMeta(item)}
+      subtitle={goalMeta(item, goalDeps)}
       trailing={
         <>
           <span className={styles.rowStatus}>
             <span className={styles.rowPercent}>{percent(item.progress.ratio)}</span>
-            <span className={styles.rowStatusMeta}>{goalStatus(item)}</span>
+            <span className={styles.rowStatusMeta}>{goalStatus(item, goalDeps)}</span>
           </span>
           <TargetRing
             size={ROW_RING}
             ratio={item.progress.ratio}
-            pace={goalPace(item)}
-            tone={goalTone(item)}
+            pace={goalPace(item.progress)}
+            tone={goalWebTone(item)}
           />
         </>
       }
@@ -550,31 +481,23 @@ export default async function HomePage({
                 <EmptyState title={t('goals.empty')} body={t('goals.emptyBody')} />
               ) : (
                 <>
-                  {featuredGoal === undefined || view.goals.advice === null ? null : (
+                  {featuredGoal === undefined ? null : (
                     <Featured
                       icon={featuredGoal.account.icon as IconName}
                       colorIndex={featuredGoal.account.colorIndex}
                       name={featuredGoal.account.name}
-                      meta={goalMeta(featuredGoal, true)}
+                      meta={goalMeta(featuredGoal, goalDeps, true)}
                       amount={featuredGoal.progress.saved}
                       currency={currency}
                       locale={locale}
-                      of={t('targets.ofLimit', {
-                        amount: money(featuredGoal.progress.target),
-                        percent: percent(featuredGoal.progress.ratio),
-                      })}
+                      of={goalOf(featuredGoal, goalDeps)}
                       ratio={featuredGoal.progress.ratio}
-                      pace={goalPace(featuredGoal)}
-                      tone={goalTone(featuredGoal)}
-                      start={deadlineLabel(featuredGoal.account.goalStartDate ?? today)}
-                      end={
-                        featuredGoal.account.goalDeadline === null ||
-                        featuredGoal.account.goalDeadline === undefined
-                          ? ''
-                          : deadlineLabel(featuredGoal.account.goalDeadline)
-                      }
+                      pace={goalPace(featuredGoal.progress)}
+                      tone={goalWebTone(featuredGoal)}
+                      start={goalEnds(featuredGoal, goalDeps).start}
+                      end={goalEnds(featuredGoal, goalDeps).end}
                       today={t('targets.today')}
-                      sentence={goalSentence(view.goals.advice, featuredGoal)}
+                      sentence={goalSentenceNode(featuredGoal)}
                     />
                   )}
                   {goalEvents.map(goalRow)}
