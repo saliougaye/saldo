@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { z } from 'zod';
 import { deleteAllAttachmentFiles } from '../attachments/localFiles';
 import { yieldSettingsToAccount } from '../db/adopt';
 import { db } from '../db/client';
@@ -54,6 +55,11 @@ export interface ServerValue {
     questions?: OwnershipQuestions,
   ): Promise<SignedInUser>;
   disconnect(): Promise<void>;
+  /**
+   * D32: gives this account a real address, over the synthetic one of §9.1. The server refuses to
+   * replace an address that is already real (`email_already_set`), so this is only ever the first one.
+   */
+  saveEmail(email: string): Promise<void>;
 }
 
 const ServerContext = createContext<ServerValue | null>(null);
@@ -137,7 +143,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       }
       const data = answer.kind === 'answered' ? answer.result.data : null;
       if (decision === 'signed-in' && data !== null) {
-        setUser({ id: data.user.id, displayName: data.user.name });
+        setUser({ id: data.user.id, displayName: data.user.name, email: data.user.email });
       }
     })();
     return () => {
@@ -225,6 +231,16 @@ export function ServerProvider({ children }: { children: ReactNode }) {
     setSessionExpired(false);
   }, [client, kv]);
 
+  const saveEmail = useCallback(
+    async (email: string) => {
+      if (api === null) throw new ApiClientError(401, 'no_session', 'Not signed in');
+      const answer = await api.post('/api/me/email', { email }, z.object({ email: z.string() }));
+      log('auth', 'the account has a real email now');
+      setUser((current) => (current === null ? null : { ...current, email: answer.email }));
+    },
+    [api],
+  );
+
   const value = useMemo<ServerValue>(
     () => ({
       serverUrl,
@@ -236,8 +252,9 @@ export function ServerProvider({ children }: { children: ReactNode }) {
       check: checkServer,
       connect,
       disconnect,
+      saveEmail,
     }),
-    [serverUrl, user, api, status, sessionExpired, connect, disconnect, kv],
+    [serverUrl, user, api, status, sessionExpired, connect, disconnect, saveEmail, kv],
   );
 
   return <ServerContext.Provider value={value}>{children}</ServerContext.Provider>;

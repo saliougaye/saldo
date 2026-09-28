@@ -45,6 +45,8 @@ function randomState(): string {
 export interface SignedInUser {
   id: string;
   displayName: string;
+  /** Synthetic (`@passkey.saldo.invalid`) until the account is given a real one (D32). */
+  email: string;
 }
 
 /**
@@ -94,7 +96,7 @@ export async function signIn(options: {
     );
   }
   log('auth', `signed in as ${shortId(data.user.id)} in ${ms(startedAt)}`);
-  return { id: data.user.id, displayName: data.user.name };
+  return { id: data.user.id, displayName: data.user.name, email: data.user.email };
 }
 
 /** §9.3 step 7. Revokes server-side, and the Expo client clears its stored session. */

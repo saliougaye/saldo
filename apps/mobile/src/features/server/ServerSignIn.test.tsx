@@ -129,7 +129,7 @@ describe('ServerSignInPanel', () => {
 
   it('signs in to the address it checked and hands over', async () => {
     mockCheck.mockResolvedValue(HEALTH);
-    mockConnect.mockResolvedValue({ id: 'ada', displayName: 'Ada' });
+    mockConnect.mockResolvedValue({ id: 'ada', displayName: 'Ada', email: 'ada@example.com' });
     const onConnected = await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
     await userEvent.press(await screen.findByText('Sign in with passkey'));
@@ -146,7 +146,7 @@ describe('ServerSignInPanel', () => {
     let answer: Promise<string> | undefined;
     mockConnect.mockImplementation(async (_url, _mode, questions) => {
       answer = questions.decideUnownedData();
-      return { id: 'ada', displayName: 'Ada', answer: await answer };
+      return { id: 'ada', displayName: 'Ada', email: 'ada@example.com', answer: await answer };
     });
     await renderPanel();
     await typeAndContinue('saldo.rossi.example.org');
