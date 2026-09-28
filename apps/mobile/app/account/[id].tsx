@@ -15,6 +15,7 @@ import {
   periodContaining,
   pocketsOf,
   summarizePeriod,
+  transactionRow,
 } from '@saldo/core';
 import {
   formatDayMonth,
@@ -50,7 +51,6 @@ import {
   settlementParams,
 } from '../../src/features/accounts/settlement';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
-import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { useLeaveGone } from '../../src/navigation/leave';
 import { Icon } from '../../src/theme/Icon';

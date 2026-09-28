@@ -1,4 +1,12 @@
-import { isUpcoming, previousPeriods, summarizePeriod, upcomingUntil } from '@saldo/core';
+import {
+  isUpcoming,
+  previousPeriods,
+  summarizePeriod,
+  type TransactionRowDeps,
+  transactionRow,
+  upcomingUntil,
+} from '@saldo/core';
+import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,10 +36,6 @@ import { DevTools } from '../../src/features/home/DevTools';
 import { HomeSkeleton } from '../../src/features/home/HomeSkeleton';
 import { PeriodHeader } from '../../src/features/period/PeriodHeader';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
-import {
-  type TransactionRowDeps,
-  transactionRow,
-} from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { appearing, entering, leaving, reflowing } from '../../src/theme/motion';
 import { Text } from '../../src/theme/Text';
@@ -176,7 +180,7 @@ export default function HomeTab() {
                         subtitle={row.subtitle}
                         leading={
                           <IconBox
-                            name={row.icon}
+                            name={row.icon as IconName}
                             colour={theme.categoryColor(row.colorIndex)}
                             badge={tx.recurrenceId === null ? undefined : 'repeat'}
                           />
@@ -241,7 +245,7 @@ export default function HomeTab() {
                           subtitle={row.subtitle}
                           leading={
                             <IconBox
-                              name={row.icon}
+                              name={row.icon as IconName}
                               colour={theme.categoryColor(row.colorIndex)}
                               badge={tx.recurrenceId === null ? undefined : 'repeat'}
                             />

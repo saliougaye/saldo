@@ -1,4 +1,5 @@
-import type { LedgerTx } from '@saldo/core';
+import { describe, expect, it } from 'vitest';
+import type { LedgerTx } from '../ledger';
 import { NEUTRAL_COLOR_INDEX, type TransactionRowDeps, transactionRow } from './transactionRow';
 
 const tx = (overrides: Partial<LedgerTx>): LedgerTx => ({

@@ -1,4 +1,4 @@
-import { rollupToParents, spendingByCategory, tagTotals } from '@saldo/core';
+import { rollupToParents, spendingByCategory, tagTotals, transactionRow } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,7 +26,6 @@ import { SplitBar } from '../../src/features/stats/SplitBar';
 import { DeleteTagSheet } from '../../src/features/tags/DeleteTagSheet';
 import { MergeTagSheet } from '../../src/features/tags/MergeTagSheet';
 import { TagEditSheet } from '../../src/features/tags/TagEditSheet';
-import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';

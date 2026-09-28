@@ -1,4 +1,4 @@
-import { type Recurrence, recurringMonthlyTotals } from '@saldo/core';
+import { NEUTRAL_COLOR_INDEX, type Recurrence, recurringMonthlyTotals } from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
@@ -22,7 +22,6 @@ import {
   recurrenceViews,
 } from '../src/features/recurrences/recurrenceViews';
 import { cadenceLabel } from '../src/features/transactions/recurrenceCopy';
-import { NEUTRAL_COLOR_INDEX } from '../src/features/transactions/transactionRow';
 import { useAppLocale } from '../src/i18n/useAppLocale';
 import { Text } from '../src/theme/Text';
 import { useTheme } from '../src/theme/ThemeProvider';
