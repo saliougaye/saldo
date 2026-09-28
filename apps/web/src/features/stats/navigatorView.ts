@@ -33,6 +33,11 @@ export interface NavigatorColumn {
   /** What `cashflowColumns` needs; a forecast column's carries its min–max band. */
   values: CashflowValues;
   /**
+   * Income less expenses: the label over the column, and a forecast period's «Netto circa». The
+   * phone subtracts in its chart and in its forecast sheet; here it is done once, for both.
+   */
+  net: number;
+  /**
    * A forecast column's own period from `forecastPeriods` (its balance, for the key figures);
    * `null` exactly on the real columns — a forecast column only exists when there is a forecast.
    */
@@ -90,6 +95,7 @@ export function navigatorView(input: {
       selected: isSelected(range),
       running,
       values: { income: summary.income, expenses: summary.spent },
+      net: summary.income - summary.spent,
       forecast: null,
     };
   });
@@ -108,6 +114,7 @@ export function navigatorView(input: {
         expenses: period.expenses,
         forecast: { min: period.expensesMin, max: period.expensesMax },
       },
+      net: period.income - period.expenses,
       forecast: period,
     });
   }

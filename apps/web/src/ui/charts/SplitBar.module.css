@@ -1,0 +1,13 @@
+/* The phone's 8px bar: the thick progress height, on the empty track's colour. */
+.bar {
+  display: flex;
+  block-size: var(--layout-progress-height-thick);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-track);
+}
+
+.segment {
+  flex-basis: 0;
+  block-size: 100%;
+}

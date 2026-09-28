@@ -130,6 +130,20 @@ describe('navigatorView', () => {
     }
   });
 
+  it('nets every column once, real and forecast alike', () => {
+    const view = navigatorView({
+      data: dataWith(HISTORY),
+      def: DEF,
+      today: TODAY,
+      selected: SEPTEMBER,
+    });
+    expect(view.columns[3]?.net).toBe(160000);
+    expect(view.columns[6]?.net).toBe(-12000);
+    for (const column of view.columns) {
+      expect(column.net).toBe(column.values.income - column.values.expenses);
+    }
+  });
+
   it('hatches only the running period, which is always the current column', () => {
     const view = navigatorView({
       data: emptyUserData(),
