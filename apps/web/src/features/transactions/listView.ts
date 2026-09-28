@@ -5,6 +5,7 @@ import {
   hasActiveFilters,
   type ListTotals,
   type LocalDate,
+  newestFirst,
   type PeriodDef,
   type PeriodView,
   splitUpcoming,
@@ -74,15 +75,10 @@ export function listView({
   // end of the next period while this one is current, and the period's own end once it is closed —
   // where an unbounded upper end would show a closed September rows dated in October (§6.15).
   const end = upcomingUntil(def, period.range, today);
-  // The order the phone's query returns: date, then creation, then id, all descending.
+  // The order the phone's query returns, byte for byte (see `newestFirst`).
   const inRange = data.transactions
     .filter((tx) => tx.date >= period.range.start && tx.date <= end)
-    .sort(
-      (a, b) =>
-        b.date.localeCompare(a.date) ||
-        b.createdAt.localeCompare(a.createdAt) ||
-        b.id.localeCompare(a.id),
-    );
+    .sort(newestFirst);
 
   const categories = new Map(data.categories.map((category) => [category.id, category]));
   const accounts = new Map(data.accounts.map((account) => [account.id, account]));

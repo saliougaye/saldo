@@ -18,6 +18,7 @@ import {
   goalViews,
   isUpcoming,
   type LocalDate,
+  newestFirst,
   type PeriodDef,
   type PeriodSummary,
   type PeriodView,
@@ -116,13 +117,8 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
     viewpointAccountId: null,
   };
 
-  // The order the phone's query returns: date, then creation, then id, all descending.
-  const byDateDesc = [...txs].sort(
-    (a, b) =>
-      b.date.localeCompare(a.date) ||
-      b.createdAt.localeCompare(a.createdAt) ||
-      b.id.localeCompare(a.id),
-  );
+  // The order the phone's query returns, byte for byte (see `newestFirst`).
+  const byDateDesc = [...txs].sort(newestFirst);
   const row = (tx: Transaction): HomeRow => ({
     ...transactionRow(tx, deps),
     id: tx.id,

@@ -19,6 +19,7 @@ export * from './ids';
 export * from './io';
 export * from './ledger';
 export * from './money';
+export * from './order';
 export * from './period';
 export * from './permissions';
 export * from './pockets';
