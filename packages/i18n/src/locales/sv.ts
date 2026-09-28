@@ -577,6 +577,7 @@ export const sv: Messages = {
     emailAskLater: 'Senare',
     emailAskTaken: 'E-postadressen hör redan till ett annat konto.',
     emailAskInvalid: 'Skriv en giltig e-postadress.',
+    emailAskFailed: 'Adressen kunde inte sparas. Försök igen.',
     emailAddRow: 'Lägg till din e-post',
   },
   server: {
@@ -1195,6 +1196,11 @@ export const sv: Messages = {
       linkMissing: 'Redirect eller state saknas.',
       emailInvalid: 'Skriv en giltig e-postadress.',
       genericError: 'Något gick fel. Försök igen.',
+      nameRequiredTitle: 'Ditt namn saknas',
+      nameRequiredBody: 'Skriv namnet som Saldo ska använda för dig.',
+      handoffFailedTitle: 'Du är inloggad, men appen fick det inte',
+      handoffFailedBody:
+        'Ditt konto är klart. Tryck på «Försök igen» för att gå tillbaka till appen.',
     },
     passkeys: {
       title: 'Dina passnycklar',

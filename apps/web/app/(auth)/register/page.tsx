@@ -60,6 +60,8 @@ export default async function RegisterPage({
           'web.auth.emailHint': t('web.auth.emailHint'),
           'web.auth.genericError': t('web.auth.genericError'),
           'web.auth.crossDeviceHint': t('web.auth.crossDeviceHint'),
+          'web.auth.nameRequiredTitle': t('web.auth.nameRequiredTitle'),
+          'web.auth.nameRequiredBody': t('web.auth.nameRequiredBody'),
           'sync.cancelled': t('sync.cancelled'),
           'web.auth.cancelledBody': t('web.auth.cancelledBody'),
         }}

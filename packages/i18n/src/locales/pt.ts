@@ -582,6 +582,7 @@ export const pt: Messages = {
     emailAskLater: 'Mais tarde',
     emailAskTaken: 'Esse e-mail já é de outra conta.',
     emailAskInvalid: 'Escreve um endereço de e-mail válido.',
+    emailAskFailed: 'Não foi possível guardar o endereço. Tenta outra vez.',
     emailAddRow: 'Adiciona o teu e-mail',
   },
   server: {
@@ -1203,6 +1204,10 @@ export const pt: Messages = {
       linkMissing: 'Falta o redirect ou o state.',
       emailInvalid: 'Escreve um endereço de e-mail válido.',
       genericError: 'Algo correu mal. Tenta outra vez.',
+      nameRequiredTitle: 'Falta o teu nome',
+      nameRequiredBody: 'Escreve o nome com que o Saldo te deve tratar.',
+      handoffFailedTitle: 'Entraste, mas a app não recebeu',
+      handoffFailedBody: 'A tua conta está pronta. Toca em «Tentar outra vez» para voltar à app.',
     },
     passkeys: {
       title: 'As tuas passkeys',

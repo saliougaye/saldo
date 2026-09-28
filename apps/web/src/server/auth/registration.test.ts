@@ -103,6 +103,27 @@ describe('resolveRegistration', () => {
     ).rejects.toMatchObject({ body: { code: 'email_taken' } });
   });
 
+  /**
+   * The invite is what bounds «this email already has an account» (decision 7): an instance that is
+   * not open must refuse before it answers, or an anonymous caller could read the address list.
+   */
+  it('refuses the invite before it says whether the email is taken', async () => {
+    await harness.db
+      .insert(user)
+      .values({ id: 'u1', name: 'Ada', email: 'ada@example.com', emailVerified: false });
+    await expect(
+      resolveRegistration(harness.db, {
+        mode: 'invite',
+        context: context({
+          name: 'Ada again',
+          email: 'ada@example.com',
+          invite: 'NOPE-NOPE-NOPE-NOPE',
+        }),
+        now: new Date(),
+      }),
+    ).rejects.toMatchObject({ body: { code: 'invalid_invite' } });
+  });
+
   it('refuses an unusable invite under invite mode, and nothing is spent', async () => {
     const { invite } = await createInvite(harness.db, {
       label: null,
@@ -212,6 +233,35 @@ describe('completeRegistration', () => {
         now: new Date(),
       }),
     ).rejects.toMatchObject({ body: { code: 'email_taken' } });
+  });
+
+  /**
+   * The row exists and holds its owner's address; failing here would leave somebody who can never
+   * register with that address again and has no passkey to sign in with. A role can be given back
+   * (`user promote`), so the account wins over the role.
+   */
+  it('keeps the account when the role cannot be claimed', async () => {
+    // `claimRoleForNewUser` is the only thing here that opens a transaction, so this breaks that and
+    // nothing else.
+    const withoutTransactions = new Proxy(harness.db, {
+      get(target, property, receiver) {
+        if (property === 'transaction') {
+          return () => Promise.reject(new Error('the lock could not be taken'));
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    }) as ServerDatabase;
+    const created = await completeRegistration(withoutTransactions, {
+      mode: 'open',
+      context: context({ name: 'Ada', email: 'ada@example.com' }),
+      resolved,
+      store: storeFor(harness.db),
+      now: new Date(),
+    });
+    expect(created.userId).toBe(resolved.id);
+    const [row] = await harness.db.select().from(user).where(eq(user.id, resolved.id));
+    expect(row?.email).toBe('ada@example.com');
+    expect(row?.role).toBeNull();
   });
 
   /** Decision 12: this is «add a passkey» on an account that already exists. */

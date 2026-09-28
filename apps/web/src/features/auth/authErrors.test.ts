@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeAuthError } from './authErrors';
+import { describeAuthError, fieldForErrorCode } from './authErrors';
 
 describe('describeAuthError', () => {
   it('names the server’s own refusals', () => {
@@ -18,6 +18,20 @@ describe('describeAuthError', () => {
     expect(describeAuthError('email_required')).toEqual({
       titleKey: 'web.auth.emailInvalid',
       bodyKey: 'web.auth.emailHint',
+    });
+  });
+
+  it('says the name is missing when it is the name that is missing', () => {
+    expect(describeAuthError('display_name_required')).toEqual({
+      titleKey: 'web.auth.nameRequiredTitle',
+      bodyKey: 'web.auth.nameRequiredBody',
+    });
+  });
+
+  it('tells an account that exists that only the handoff failed', () => {
+    expect(describeAuthError('handoff_failed')).toEqual({
+      titleKey: 'web.auth.handoffFailedTitle',
+      bodyKey: 'web.auth.handoffFailedBody',
     });
   });
 
@@ -44,5 +58,20 @@ describe('describeAuthError', () => {
       titleKey: 'web.auth.genericError',
       bodyKey: 'web.auth.crossDeviceHint',
     });
+  });
+});
+
+describe('fieldForErrorCode', () => {
+  it('marks the field the refusal is about', () => {
+    expect(fieldForErrorCode('display_name_required')).toBe('name');
+    expect(fieldForErrorCode('email_required')).toBe('email');
+    expect(fieldForErrorCode('email_taken')).toBe('email');
+    expect(fieldForErrorCode('invalid_invite')).toBe('invite');
+  });
+
+  it('marks none when the refusal is not about a field', () => {
+    expect(fieldForErrorCode('registration_closed')).toBeNull();
+    expect(fieldForErrorCode('NotAllowedError')).toBeNull();
+    expect(fieldForErrorCode(undefined)).toBeNull();
   });
 });

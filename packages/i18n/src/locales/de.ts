@@ -582,6 +582,7 @@ export const de: Messages = {
     emailAskLater: 'Später',
     emailAskTaken: 'Diese E-Mail gehört schon zu einem anderen Konto.',
     emailAskInvalid: 'Gib eine gültige E-Mail-Adresse ein.',
+    emailAskFailed: 'Die Adresse konnte nicht gespeichert werden. Versuch es noch einmal.',
     emailAddRow: 'E-Mail hinzufügen',
   },
   server: {
@@ -1206,6 +1207,11 @@ export const de: Messages = {
       linkMissing: 'Es fehlt der Redirect oder der State.',
       emailInvalid: 'Gib eine gültige E-Mail-Adresse ein.',
       genericError: 'Etwas ist schiefgegangen. Versuch es noch einmal.',
+      nameRequiredTitle: 'Dein Name fehlt',
+      nameRequiredBody: 'Schreib den Namen, mit dem Saldo dich ansprechen soll.',
+      handoffFailedTitle: 'Du bist angemeldet, aber die App hat es nicht bekommen',
+      handoffFailedBody:
+        'Dein Konto ist fertig. Tippe auf «Wiederholen», um zur App zurückzukehren.',
     },
     passkeys: {
       title: 'Deine Passkeys',

@@ -19,8 +19,23 @@ const BY_CODE: Record<string, AuthMessage> = {
     bodyKey: 'web.auth.invalidInviteBody',
   },
   registration_closed: { titleKey: 'web.auth.closedTitle', bodyKey: 'web.auth.closedBody' },
-  display_name_required: { titleKey: 'web.auth.emailInvalid', bodyKey: 'web.auth.emailHint' },
+  display_name_required: {
+    titleKey: 'web.auth.nameRequiredTitle',
+    bodyKey: 'web.auth.nameRequiredBody',
+  },
+  handoff_failed: {
+    titleKey: 'web.auth.handoffFailedTitle',
+    bodyKey: 'web.auth.handoffFailedBody',
+  },
 };
+
+/** Which field a refusal belongs to, so the step marks that one and not its neighbour. */
+export function fieldForErrorCode(code: string | undefined): 'name' | 'email' | 'invite' | null {
+  if (code === 'display_name_required') return 'name';
+  if (code === 'email_required' || code === 'email_taken') return 'email';
+  if (code === 'invalid_invite') return 'invite';
+  return null;
+}
 
 /**
  * The two i18n keys an error becomes. Deliberately not the server's `message`: it is English, written

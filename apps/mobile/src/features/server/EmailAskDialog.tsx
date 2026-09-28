@@ -25,6 +25,8 @@ export function EmailAskDialog({ visible, onSave, onDismiss }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const save = () => {
+    // The keyboard's Done key reaches this while the buttons are already disabled by `busy`.
+    if (busy) return;
     if (!emailLooksValid(email)) {
       setError(t('sync.emailAskInvalid'));
       return;
@@ -41,7 +43,11 @@ export function EmailAskDialog({ visible, onSave, onDismiss }: Props) {
           typeof caught === 'object' && caught !== null && 'code' in caught
             ? String((caught as { code: unknown }).code)
             : '';
-        setError(code === 'email_taken' ? t('sync.emailAskTaken') : t('sync.emailAskInvalid'));
+        // Only the server's answers about the address itself say anything about what was typed. A
+        // phone that is offline, or a 500, must not tell somebody their correct address is malformed.
+        if (code === 'email_taken') setError(t('sync.emailAskTaken'));
+        else if (code === 'invalid_email') setError(t('sync.emailAskInvalid'));
+        else setError(t('sync.emailAskFailed'));
       })
       .finally(() => setBusy(false));
   };

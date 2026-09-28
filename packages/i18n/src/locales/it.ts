@@ -580,6 +580,7 @@ export const it = {
     emailAskLater: 'Più tardi',
     emailAskTaken: 'Questa email è già di un altro account.',
     emailAskInvalid: 'Scrivi un indirizzo email valido.',
+    emailAskFailed: 'Non è stato possibile salvare l’indirizzo. Riprova.',
     emailAddRow: 'Aggiungi la tua email',
   },
   server: {
@@ -1199,6 +1200,10 @@ export const it = {
       linkMissing: 'Manca il redirect o lo state.',
       emailInvalid: 'Scrivi un indirizzo email valido.',
       genericError: 'Qualcosa è andato storto. Riprova.',
+      nameRequiredTitle: 'Manca il nome',
+      nameRequiredBody: 'Scrivi come vuoi essere chiamato in Saldo.',
+      handoffFailedTitle: 'L’accesso è fatto, ma l’app non l’ha ricevuto',
+      handoffFailedBody: 'Il tuo account è pronto. Tocca «Riprova» per tornare all’app.',
     },
     passkeys: {
       title: 'Le tue passkey',

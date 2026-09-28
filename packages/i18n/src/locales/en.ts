@@ -575,6 +575,7 @@ export const en: Messages = {
     emailAskLater: 'Later',
     emailAskTaken: 'That email already belongs to another account.',
     emailAskInvalid: 'Enter a valid email address.',
+    emailAskFailed: 'The address could not be saved. Try again.',
     emailAddRow: 'Add your email',
   },
   server: {
@@ -1193,6 +1194,10 @@ export const en: Messages = {
       linkMissing: 'It is missing the redirect or the state.',
       emailInvalid: 'Enter a valid email address.',
       genericError: 'Something went wrong. Try again.',
+      nameRequiredTitle: 'Your name is missing',
+      nameRequiredBody: 'Write the name Saldo should call you by.',
+      handoffFailedTitle: 'You are signed in, but the app did not get it',
+      handoffFailedBody: 'Your account is ready. Tap «Retry» to hand it back to the app.',
     },
     passkeys: {
       title: 'Your passkeys',

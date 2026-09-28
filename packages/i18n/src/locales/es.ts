@@ -581,6 +581,7 @@ export const es: Messages = {
     emailAskLater: 'Más tarde',
     emailAskTaken: 'Ese correo ya es de otra cuenta.',
     emailAskInvalid: 'Escribe una dirección de correo válida.',
+    emailAskFailed: 'No se ha podido guardar la dirección. Vuelve a intentarlo.',
     emailAddRow: 'Añade tu correo',
   },
   server: {
@@ -1203,6 +1204,10 @@ export const es: Messages = {
       linkMissing: 'Falta el redirect o el state.',
       emailInvalid: 'Escribe una dirección de correo válida.',
       genericError: 'Algo ha ido mal. Vuelve a intentarlo.',
+      nameRequiredTitle: 'Falta tu nombre',
+      nameRequiredBody: 'Escribe el nombre con el que Saldo debe llamarte.',
+      handoffFailedTitle: 'Has entrado, pero la app no lo ha recibido',
+      handoffFailedBody: 'Tu cuenta está lista. Toca «Reintentar» para volver a la app.',
     },
     passkeys: {
       title: 'Tus passkeys',

@@ -120,6 +120,11 @@ export default async function MobileAuthPage({
             'web.auth.emailHint': t('web.auth.emailHint'),
             'web.auth.genericError': t('web.auth.genericError'),
             'web.auth.crossDeviceHint': t('web.auth.crossDeviceHint'),
+            retry: t('common.retry'),
+            'web.auth.nameRequiredTitle': t('web.auth.nameRequiredTitle'),
+            'web.auth.nameRequiredBody': t('web.auth.nameRequiredBody'),
+            'web.auth.handoffFailedTitle': t('web.auth.handoffFailedTitle'),
+            'web.auth.handoffFailedBody': t('web.auth.handoffFailedBody'),
             'sync.cancelled': t('sync.cancelled'),
             'web.auth.cancelledBody': t('web.auth.cancelledBody'),
           }}

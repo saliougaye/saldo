@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authClient } from '../../../src/client/authClient';
 import { log } from '../../../src/client/log';
-import { describeAuthError } from '../../../src/features/auth/authErrors';
+import { describeAuthError, fieldForErrorCode } from '../../../src/features/auth/authErrors';
 import { rememberPasskey } from '../../../src/features/auth/lastPasskey';
 import {
   type RegisterStep,
@@ -34,9 +34,10 @@ interface Props {
   stepLabels: string[];
 }
 
-/** An error, and the step it belongs in. */
+/** An error, the step it belongs in, and the field it is about. */
 interface Refusal {
   step: RegisterStep;
+  field: 'name' | 'email' | 'invite' | null;
   title: string;
   body: string;
 }
@@ -70,20 +71,39 @@ export function RegisterFlow({
   const shown = refusal !== null && refusal.step === step ? refusal : null;
   const refuse = (code: string | undefined) => {
     const message = describeAuthError(code);
+    const owner = stepForErrorCode(code, steps);
     setRefusal({
-      step: stepForErrorCode(code, steps),
+      step: owner,
+      field: fieldForErrorCode(code),
       title: strings[message.titleKey] ?? strings['web.auth.genericError'] ?? '',
       body: strings[message.bodyKey] ?? '',
     });
-    setStep(stepForErrorCode(code, steps));
+    setStep(owner);
   };
+
+  // Changing step swaps the whole heading and its fields: without this the focus is left on a button
+  // that no longer exists, which drops it to the document and announces nothing.
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const moved = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the step is the trigger, not a read.
+  useEffect(() => {
+    if (!moved.current) {
+      moved.current = true;
+      return;
+    }
+    headingRef.current?.focus();
+  }, [step]);
 
   /** Step 1 → 2 (or straight to the ceremony when the server asks for no code). */
   const submitIdentity = () => {
     setRefusal(null);
-    // The server validates it too (`normaliseEmail`); this is so the person is not sent to the next
-    // screen only to be turned back.
-    if (name.trim().length === 0 || !email.includes('@')) {
+    // The server validates both too (`resolveRegistration`); this is so the person is not sent to the
+    // next screen only to be turned back — and each refusal names the field it is about.
+    if (name.trim().length === 0) {
+      refuse('display_name_required');
+      return;
+    }
+    if (!email.includes('@')) {
       refuse('email_required');
       return;
     }
@@ -104,9 +124,19 @@ export function RegisterFlow({
     });
     setBusy(false);
     if (error !== null) {
-      log('auth', 'the invite code was refused before the ceremony', { status: error.status });
-      refuse('invalid_invite');
-      return;
+      const code = 'code' in error ? error.code : undefined;
+      log('auth', 'the check endpoint did not accept the invite code', {
+        status: error.status,
+        code,
+      });
+      // Only the endpoint's own answer means «this code is wrong». A rate limit, a 500 or a browser
+      // that could not reach the server say nothing about the code, and refusing here would trap
+      // somebody holding a valid one on a step with no way out. `resolveUser` checks it again before
+      // the ceremony, so letting them through costs nothing: the gate is there, not here.
+      if (code === 'invalid_invite' || error.status === 403) {
+        refuse('invalid_invite');
+        return;
+      }
     }
     setStep('passkey');
   };
@@ -159,31 +189,42 @@ export function RegisterFlow({
 
       {step === 'identity' ? (
         <>
-          <h1 className={styles.title}>{strings.registerTitle}</h1>
+          <h1 className={styles.title} ref={headingRef} tabIndex={-1}>
+            {strings.registerTitle}
+          </h1>
           <p className={styles.lede}>{strings.registerBody}</p>
           {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
-          <div className={styles.fields}>
-            <TextField
-              label={label('nameLabel')}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              autoComplete="name"
-              maxLength={80}
-            />
-            <TextField
-              label={label('emailLabel')}
-              placeholder={strings.emailPlaceholder}
-              hint={strings.emailHint}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              invalid={shown !== null}
-            />
-          </div>
-          <Button onClick={submitIdentity}>{strings.continue}</Button>
+          {/* A form, so Enter in either field is «Continua» — the browser's own behaviour. */}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitIdentity();
+            }}
+          >
+            <div className={styles.fields}>
+              <TextField
+                label={label('nameLabel')}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoComplete="name"
+                maxLength={80}
+                invalid={shown?.field === 'name'}
+              />
+              <TextField
+                label={label('emailLabel')}
+                placeholder={strings.emailPlaceholder}
+                hint={strings.emailHint}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                invalid={shown?.field === 'email'}
+              />
+            </div>
+            <Button type="submit">{strings.continue}</Button>
+          </form>
           <p className={styles.switchLine}>
             {strings.haveAccount} <a href="/login">{strings.signInLink}</a>
           </p>
@@ -192,24 +233,33 @@ export function RegisterFlow({
 
       {step === 'invite' ? (
         <>
-          <h1 className={styles.title}>{strings.inviteTitle}</h1>
+          <h1 className={styles.title} ref={headingRef} tabIndex={-1}>
+            {strings.inviteTitle}
+          </h1>
           <p className={styles.lede}>{strings.inviteBody}</p>
           {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
-          <TextField
-            label={label('inviteLabel')}
-            hint={strings.inviteHint}
-            value={invite}
-            onChange={(event) => setInvite(event.target.value.toUpperCase())}
-            mono
-            invalid={shown !== null}
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            maxLength={32}
-          />
-          <Button busy={busy} busyLabel={strings.working} onClick={() => void submitInvite()}>
-            {strings.continue}
-          </Button>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitInvite();
+            }}
+          >
+            <TextField
+              label={label('inviteLabel')}
+              hint={strings.inviteHint}
+              value={invite}
+              onChange={(event) => setInvite(event.target.value.toUpperCase())}
+              mono
+              invalid={shown?.field === 'invite'}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={32}
+            />
+            <Button type="submit" busy={busy} busyLabel={strings.working}>
+              {strings.continue}
+            </Button>
+          </form>
         </>
       ) : null}
 
@@ -218,7 +268,9 @@ export function RegisterFlow({
           <span className={styles.passkeyArt}>
             <Icon name="key" size={32} />
           </span>
-          <h1 className={styles.title}>{strings.passkeyTitle}</h1>
+          <h1 className={styles.title} ref={headingRef} tabIndex={-1}>
+            {strings.passkeyTitle}
+          </h1>
           <p className={styles.lede}>{strings.passkeyBody}</p>
           {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
           <Button

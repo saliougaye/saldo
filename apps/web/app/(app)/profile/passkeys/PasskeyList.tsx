@@ -30,7 +30,9 @@ export function PasskeyList({ passkeys, strings }: Props) {
   const [renaming, setRenaming] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [name, setName] = useState('');
-  const [failed, setFailed] = useState(false);
+  /** The key of the line to show when something was refused, or `null` when nothing was. */
+  const [failure, setFailure] = useState<'lastOneNote' | 'failed' | null>(null);
+  const [adding, setAdding] = useState(false);
   const [busy, startTransition] = useTransition();
 
   // `strings` is a `Record<string, string>`, so `noUncheckedIndexedAccess` reads every lookup as
@@ -47,10 +49,15 @@ export function PasskeyList({ passkeys, strings }: Props) {
   const deletable = canDeletePasskey(rows.length);
 
   const addPasskey = async () => {
-    setFailed(false);
+    // A second click would start a second ceremony, which aborts the first — and the first then
+    // reports that abort as a failure even though the second is about to succeed.
+    if (adding) return;
+    setFailure(null);
+    setAdding(true);
     const result = await authClient.passkey.addPasskey({ returnWebAuthnResponse: true });
     if (result.error !== null || result.data === null) {
-      setFailed(true);
+      setAdding(false);
+      setFailure('failed');
       return;
     }
     // `webauthn` is a sibling of `data`, not nested under it — same shape as `LoginForm`'s ceremony.
@@ -85,7 +92,7 @@ export function PasskeyList({ passkeys, strings }: Props) {
                 <Button
                   variant="link"
                   onClick={() => {
-                    setFailed(false);
+                    setFailure(null);
                     setName(row.name ?? '');
                     setRenaming(row);
                   }}
@@ -98,7 +105,7 @@ export function PasskeyList({ passkeys, strings }: Props) {
                   /** §17.1.7: the last one's Elimina is disabled and says why. */
                   title={deletable ? undefined : strings.lastOneNote}
                   onClick={() => {
-                    setFailed(false);
+                    setFailure(null);
                     setDeleting(row);
                   }}
                 >
@@ -109,13 +116,19 @@ export function PasskeyList({ passkeys, strings }: Props) {
           );
         })}
       </div>
-      {deletable ? null : <p className={styles.note}>{strings.lastOneNote}</p>}
-      {failed ? (
+      {/* With no passkey at all there is nothing to keep, so the «last one» line would be nonsense. */}
+      {deletable || rows.length === 0 ? null : <p className={styles.note}>{strings.lastOneNote}</p>}
+      {failure === null ? null : (
         <p className={styles.note} role="alert">
-          {strings.failed}
+          {strings[failure] ?? strings.failed}
         </p>
-      ) : null}
-      <Button icon="key" onClick={() => void addPasskey()}>
+      )}
+      <Button
+        icon="key"
+        busy={adding}
+        busyLabel={strings.working}
+        onClick={() => void addPasskey()}
+      >
         {strings.add}
       </Button>
 
@@ -147,7 +160,7 @@ export function PasskeyList({ passkeys, strings }: Props) {
                   if (target === null) return;
                   startTransition(async () => {
                     const result = await renamePasskeyAction(target.id, name);
-                    if (!result.ok) setFailed(true);
+                    if (!result.ok) setFailure('failed');
                     setRenaming(null);
                   });
                 }}
@@ -181,7 +194,10 @@ export function PasskeyList({ passkeys, strings }: Props) {
                   if (target === null) return;
                   startTransition(async () => {
                     const result = await deletePasskeyAction(target.id);
-                    if (!result.ok) setFailed(true);
+                    // The action's own reason, so a refusal to delete the last one says that and not
+                    // «something went wrong» — the two are refused for very different causes.
+                    if (!result.ok)
+                      setFailure(result.reason === 'last_one' ? 'lastOneNote' : 'failed');
                     setDeleting(null);
                   });
                 }}
