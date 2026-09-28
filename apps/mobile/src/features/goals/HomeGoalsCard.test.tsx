@@ -1,10 +1,9 @@
-import type { Account, GoalProgress } from '@saldo/core';
+import type { Account, GoalProgress, GoalView } from '@saldo/core';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import type { GoalView } from './goalViews';
 import { FEATURED_GOAL_KEY, HomeGoalsCard } from './HomeGoalsCard';
 
 const mockPush = jest.fn();

@@ -1,4 +1,4 @@
-import { goalAdvice, type LocalDate, parseLocalDate } from '@saldo/core';
+import { type GoalView, goalAdvice, type LocalDate, parseLocalDate } from '@saldo/core';
 import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear } from '@saldo/i18n';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -7,7 +7,6 @@ import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { usePeriod } from '../period/PeriodProvider';
-import type { GoalView } from './goalViews';
 
 const BOLD = { b: <Text weight="medium" /> };
 

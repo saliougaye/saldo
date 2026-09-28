@@ -34,4 +34,5 @@ export * from './targets';
 export * from './timeZonePicker';
 export * from './userData';
 export * from './views/budgetViews';
+export * from './views/goalViews';
 export * from './views/transactionRow';

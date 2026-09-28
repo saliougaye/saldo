@@ -1,6 +1,7 @@
 import {
   featuredTarget,
   type GoalTargetInput,
+  type GoalView,
   goalCardStatus,
   goalEventIds,
   rankGoal,
@@ -18,7 +19,6 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { FeaturedTarget } from '../targets/FeaturedTarget';
 import { SeeAllRow } from '../targets/SeeAllRow';
-import type { GoalView } from './goalViews';
 import { useGoalText } from './useGoalText';
 
 /** Device-local (never synced): the goal featured last, for the hysteresis of §5.13. */

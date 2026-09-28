@@ -1,3 +1,4 @@
+import type { GoalView } from '@saldo/core';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +8,6 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { usePeriod } from '../period/PeriodProvider';
 import { goalAlertKey, pendingGoalAlerts } from './goalAlerts';
-import type { GoalView } from './goalViews';
 
 /**
  * «Obiettivo {name} raggiunto» (§5.14), once per goal, with the permission flow of the budget
