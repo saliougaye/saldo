@@ -1,4 +1,6 @@
 .row {
+  /* The anchor of a `VisuallyHidden` label. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;

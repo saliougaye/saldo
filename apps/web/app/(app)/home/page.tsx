@@ -2,10 +2,13 @@ import type { BudgetAdvice, BudgetView, CurrencyCode, GoalView } from '@saldo/co
 import { endLabels, goalPace, goalTone } from '@saldo/core';
 import {
   type AppLocale,
+  budgetCardStatusText,
   formatDayMonth,
   formatMoney,
   type GoalTextDeps,
+  goalCardStatusText,
   goalEnds,
+  goalLabel,
   goalMeta,
   goalOf,
   goalSentence,
@@ -28,6 +31,7 @@ import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
+import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import styles from './home.module.css';
 
 export const runtime = 'nodejs';
@@ -87,6 +91,11 @@ interface FeaturedProps {
   end: string;
   today: string;
   sentence: ReactNode;
+  /**
+   * The figures as one sentence for a screen reader — the phone's `accessibilityLabel`. The drawn
+   * figures are hidden from it; the sentence under them is not, since it says what to do.
+   */
+  label: string;
 }
 
 /**
@@ -97,12 +106,13 @@ function Featured(props: FeaturedProps) {
   const labels = endLabels(props.pace);
   return (
     <div className={styles.featured}>
-      <div className={styles.featuredHead}>
+      <VisuallyHidden>{props.label}</VisuallyHidden>
+      <div className={styles.featuredHead} aria-hidden="true">
         <IconBox name={props.icon} colorIndex={props.colorIndex} />
         <span className={styles.featuredName}>{props.name}</span>
         <span className={styles.featuredMeta}>{props.meta}</span>
       </div>
-      <div className={styles.featuredAmount}>
+      <div className={styles.featuredAmount} aria-hidden="true">
         <AmountText
           minor={props.amount}
           currency={props.currency}
@@ -110,8 +120,10 @@ function Featured(props: FeaturedProps) {
           size="title"
         />
       </div>
-      <span className={styles.featuredOf}>{props.of}</span>
-      <div className={styles.featuredBar}>
+      <span className={styles.featuredOf} aria-hidden="true">
+        {props.of}
+      </span>
+      <div className={styles.featuredBar} aria-hidden="true">
         <ProgressBar thick ratio={props.ratio} pace={props.pace} tone={props.tone} />
       </div>
       <div className={styles.ends} aria-hidden="true">
@@ -239,9 +251,17 @@ export default async function HomePage({
       />
     );
   };
+  const budgetLabel = (item: BudgetView) =>
+    t('targets.itemLabel', {
+      name: item.budget.name,
+      amount: money(item.spent),
+      limit: money(item.limit),
+      status: budgetStatus(item),
+    });
   const budgetRow = (item: BudgetView) => (
     <ListRow
       key={item.budget.id}
+      label={budgetLabel(item)}
       icon={item.budget.icon as IconName}
       colorIndex={budgetColour(item)}
       title={item.budget.name}
@@ -263,12 +283,12 @@ export default async function HomePage({
     />
   );
 
-  const budgetStatusLine =
-    view.budgets.status.kind === 'overLimit'
-      ? plural(t, locale, 'targets.overLimit', view.budgets.status.count)
-      : view.budgets.status.kind === 'overPace'
-        ? plural(t, locale, 'budgets.overPace', view.budgets.status.count)
-        : t('budgets.withinLimits');
+  const budgetStatusLine = budgetCardStatusText(
+    view.budgets.items.length,
+    view.budgets.status,
+    t,
+    locale,
+  );
   const featuredBudget = view.budgets.items.find(
     (item) => item.budget.id === view.budgets.featuredId,
   );
@@ -307,6 +327,7 @@ export default async function HomePage({
   const goalRow = (item: GoalView) => (
     <ListRow
       key={item.account.id}
+      label={goalLabel(item, goalDeps)}
       href={`/accounts?g=${item.account.id}`}
       icon={item.account.icon as IconName}
       colorIndex={item.account.colorIndex}
@@ -329,19 +350,7 @@ export default async function HomePage({
     />
   );
 
-  const goalParts = [
-    view.goals.status.expired > 0
-      ? plural(t, locale, 'goals.expired', view.goals.status.expired)
-      : null,
-    view.goals.status.behind > 0
-      ? plural(t, locale, 'goals.behind', view.goals.status.behind)
-      : null,
-    view.goals.status.reached > 0
-      ? plural(t, locale, 'goals.reached', view.goals.status.reached)
-      : null,
-  ].filter((part): part is string => part !== null);
-  const goalStatusLine =
-    goalParts.length === 0 ? t('goals.onTime') : goalParts.slice(0, 2).join(' · ');
+  const goalStatusLine = goalCardStatusText(view.goals.items.length, view.goals.status, t, locale);
   const featuredGoal = view.goals.items.find((item) => item.account.id === view.goals.featuredId);
   const goalEvents = view.goals.eventIds.flatMap((id) =>
     view.goals.items.filter((item) => item.account.id === id),
@@ -434,7 +443,8 @@ export default async function HomePage({
           <>
             <Section title={t('home.budget')} trailing={budgetStatusLine}>
               {view.budgets.items.length === 0 ? (
-                <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
+                // The header already says «Nessun budget», as on the phone: the body says what one is.
+                <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
               ) : (
                 <>
                   {featuredBudget === undefined || view.budgets.advice === null ? null : (
@@ -457,6 +467,7 @@ export default async function HomePage({
                       end={formatDayMonth(featuredBudget.range.end, locale)}
                       today={t('targets.today')}
                       sentence={budgetSentence(view.budgets.advice, featuredBudget)}
+                      label={budgetLabel(featuredBudget)}
                     />
                   )}
                   {budgetEvents.map(budgetRow)}
@@ -467,7 +478,7 @@ export default async function HomePage({
 
             <Section title={t('goals.title')} trailing={goalStatusLine}>
               {view.goals.items.length === 0 ? (
-                <EmptyState title={t('goals.empty')} body={t('goals.emptyBody')} />
+                <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
               ) : (
                 <>
                   {featuredGoal === undefined ? null : (
@@ -487,6 +498,7 @@ export default async function HomePage({
                       end={goalEnds(featuredGoal, goalDeps).end}
                       today={t('targets.today')}
                       sentence={goalSentenceNode(featuredGoal)}
+                      label={goalLabel(featuredGoal, goalDeps)}
                     />
                   )}
                   {goalEvents.map(goalRow)}

@@ -11,6 +11,14 @@
   color: var(--color-text-muted);
 }
 
+.emptyNote {
+  padding-block: 4px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+  max-width: 52ch;
+}
+
 .seeAll {
   color: var(--color-text-muted);
   text-decoration: none;
@@ -30,6 +38,8 @@
 
 /* The featured item of a target card (§5.13). */
 .featured {
+  /* The anchor of its `VisuallyHidden` label. */
+  position: relative;
   display: flex;
   flex-direction: column;
   padding-block: 2px 8px;

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { IconBox } from './IconBox';
 import styles from './ListRow.module.css';
+import { VisuallyHidden } from './VisuallyHidden';
 
 interface Props {
   icon?: IconName;
@@ -16,6 +17,11 @@ interface Props {
   /** A dated-ahead row: a 2px leading border, as on the phone (§5.12). */
   upcoming?: boolean;
   selected?: boolean;
+  /**
+   * The whole row as one sentence for a screen reader — the phone's `accessibilityLabel`. The
+   * visible text is then hidden from it, so the row is not read twice.
+   */
+  label?: string;
 }
 
 export function ListRow({
@@ -28,15 +34,22 @@ export function ListRow({
   href,
   upcoming = false,
   selected = false,
+  label,
 }: Props) {
+  const hidden = label === undefined ? undefined : true;
   const body = (
     <>
+      {label === undefined ? null : <VisuallyHidden>{label}</VisuallyHidden>}
       {icon === undefined ? null : <IconBox name={icon} colorIndex={colorIndex} badge={badge} />}
-      <span className={styles.text}>
+      <span className={styles.text} aria-hidden={hidden}>
         <span className={styles.title}>{title}</span>
         {subtitle === undefined ? null : <span className={styles.subtitle}>{subtitle}</span>}
       </span>
-      {trailing === undefined ? null : <span className={styles.trailing}>{trailing}</span>}
+      {trailing === undefined ? null : (
+        <span className={styles.trailing} aria-hidden={hidden}>
+          {trailing}
+        </span>
+      )}
     </>
   );
   const className = `${styles.row} ${upcoming ? styles.upcoming : ''} ${

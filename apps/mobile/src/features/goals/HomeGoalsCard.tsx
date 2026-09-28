@@ -6,6 +6,7 @@ import {
   goalEventIds,
   rankGoal,
 } from '@saldo/core';
+import { goalCardStatusText } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -66,12 +67,7 @@ export function HomeGoalsCard({ views }: { views: readonly GoalView[] }) {
   };
 
   const status = goalCardStatus(inputs);
-  const parts = [
-    status.expired > 0 ? t('goals.expired', { count: status.expired }) : null,
-    status.behind > 0 ? t('goals.behind', { count: status.behind }) : null,
-    status.reached > 0 ? t('goals.reached', { count: status.reached }) : null,
-  ].filter((part): part is string => part !== null);
-  const statusText = parts.length === 0 ? t('goals.onTime') : parts.slice(0, 2).join(' · ');
+  const statusText = goalCardStatusText(views.length, status, t, text.locale);
 
   const featured = views.find((view) => view.account.id === featuredId);
   const eventIds = goalEventIds(inputs, featuredId);
