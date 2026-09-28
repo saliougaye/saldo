@@ -1,0 +1,43 @@
+/**
+ * The one hairline of an open section runs under its title row; the rows below are separated by
+ * space and never by lines (§17.1.7).
+ */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.trailing {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (max-width: 1023px) {
+  .section {
+    padding: var(--layout-card-padding);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+}

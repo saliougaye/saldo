@@ -1,0 +1,21 @@
+.columns {
+  display: grid;
+  gap: 24px;
+}
+
+.lead,
+.trail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  min-width: 0;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .columns {
+    grid-template-columns: 7fr 5fr;
+    column-gap: var(--layout-column-gap-web);
+    row-gap: var(--layout-section-gap-web);
+  }
+}

@@ -1,0 +1,41 @@
+/**
+ * §17.1.7: open on a wide screen — no card, only the space under it. Below the breakpoint the
+ * phone's shape returns, so the band takes a surface and the card's padding.
+ */
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 32px;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (max-width: 1023px) {
+  .band {
+    padding: var(--layout-card-padding);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+
+  .figures {
+    gap: 20px;
+  }
+}

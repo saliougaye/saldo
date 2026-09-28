@@ -1,0 +1,11 @@
+.track {
+  stroke: var(--color-raised);
+}
+
+.fill {
+  stroke: var(--color-text);
+}
+
+.over {
+  stroke: var(--color-accent);
+}

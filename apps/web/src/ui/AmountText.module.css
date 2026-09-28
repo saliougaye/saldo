@@ -1,0 +1,43 @@
+.amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
+  white-space: nowrap;
+}
+
+.dim {
+  opacity: 0.5;
+}
+
+.hero {
+  font-size: var(--font-size-hero-web);
+  font-weight: var(--font-weight-semibold);
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+}
+
+.body {
+  font-size: var(--font-size-body);
+}
+
+.footnote {
+  font-size: var(--font-size-footnote);
+}
+
+.positive {
+  color: var(--color-positive);
+}
+
+.negative {
+  color: var(--color-accent);
+}
+
+.neutral {
+  color: inherit;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,82 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--layout-min-hit-target);
+  padding: 6px 8px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+a.row:hover {
+  background: var(--color-surface);
+}
+
+.selected {
+  background: var(--color-raised);
+}
+
+.upcoming {
+  border-inline-start: 2px solid var(--color-border-strong);
+  padding-inline-start: 10px;
+}
+
+/*
+ * Without a category the box is the neutral surface; with one, `--row-tint` carries the colour and
+ * the box takes it at 14%, the alpha the phone tints an icon box with (`ListRow`, mobile).
+ */
+.iconBox {
+  position: relative;
+  flex: none;
+  width: var(--layout-icon-box);
+  height: var(--layout-icon-box);
+  border-radius: var(--radius-icon-box);
+  background: var(--color-raised);
+  color: var(--row-tint, inherit);
+  display: grid;
+  place-items: center;
+}
+
+.tinted {
+  background: color-mix(in srgb, var(--row-tint) 14%, transparent);
+}
+
+.badge {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -2px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.trailing {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

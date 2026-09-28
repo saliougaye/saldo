@@ -1,0 +1,28 @@
+.track {
+  position: relative;
+  block-size: var(--layout-progress-height);
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  overflow: visible;
+}
+
+.thick {
+  block-size: var(--layout-progress-height-thick);
+}
+
+.fill {
+  block-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+}
+
+.over {
+  background: var(--color-accent);
+}
+
+.tick {
+  position: absolute;
+  inset-block: calc(-1 * var(--layout-pace-tick-overhang));
+  inline-size: 1px;
+  background: var(--color-text-muted);
+}
