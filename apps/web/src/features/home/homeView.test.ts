@@ -182,6 +182,24 @@ describe('homeView', () => {
     expect(view.recent.map((row) => row.id)).toEqual(['past']);
   });
 
+  it('keeps «Ultime transazioni» inside a closed period, as the phone\u2019s query does', () => {
+    const view = homeView({
+      data: dataWith([
+        tx({ id: 'inside', amount: 100, date: '2026-08-20' }),
+        tx({ id: 'after', amount: 100, date: '2026-09-10' }),
+      ]),
+      today: TODAY,
+      def: DEF,
+      period: {
+        range: { start: '2026-08-01', end: '2026-08-31' },
+        isCurrent: false,
+        elapsed: 31,
+        length: 31,
+      },
+    });
+    expect(view.recent.map((row) => row.id)).toEqual(['inside']);
+  });
+
   it('shows at most five rows in each list, newest first', () => {
     const many = Array.from({ length: 8 }, (_, index) =>
       tx({ id: `t${index}`, amount: 100, date: `2026-09-0${index + 1}` }),

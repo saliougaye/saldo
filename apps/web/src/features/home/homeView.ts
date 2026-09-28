@@ -133,8 +133,14 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
   // «In arrivo» reaches into the next period while this one is current; everything else is
   // filtered by the period itself (§5.12, §6.15).
   const upcomingAll = byDateDesc.filter((tx) => isUpcoming(tx, today) && tx.date <= upcomingEnd);
+  // `upcomingEnd` bounds this list too, and not only «In arrivo»: the phone's query never loads a
+  // row past it, so on a **closed** period — where the horizon is the period's own end — its
+  // «Ultime transazioni» stops at the period. Without the bound the web reaches into the periods
+  // after it and shows five rows the phone does not.
   const recent = byDateDesc
-    .filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start)
+    .filter(
+      (tx) => !isUpcoming(tx, today) && tx.date >= period.range.start && tx.date <= upcomingEnd,
+    )
     .slice(0, HOME_ROWS)
     .map(row);
 

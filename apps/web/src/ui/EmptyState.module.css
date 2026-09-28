@@ -1,0 +1,19 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  color: var(--color-text-muted);
+}
+
+.title {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.body {
+  font-size: var(--font-size-footnote);
+  text-wrap: pretty;
+  max-width: 52ch;
+}

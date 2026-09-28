@@ -1214,6 +1214,7 @@ export const sv: Messages = {
       sectionNav: 'Avsnitt',
       previousPeriod: 'Föregående period',
       nextPeriod: 'Nästa period',
+      finishOnPhone: 'Slutför inställningen från telefonen',
     },
     passkeys: {
       title: 'Dina passnycklar',

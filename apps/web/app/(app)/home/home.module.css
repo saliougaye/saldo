@@ -1,0 +1,139 @@
+/* The band, then the 7/5 pair. Below the breakpoint both become the phone's cards, so the gap is
+   what separates them there too. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.notice {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.seeAll {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.seeAll:hover {
+  color: var(--color-text);
+}
+
+.strong {
+  font-weight: var(--font-weight-medium);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+/* The featured item of a target card (§5.13). */
+.featured {
+  display: flex;
+  flex-direction: column;
+  padding-block: 2px 8px;
+}
+
+.featuredHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.featuredIcon {
+  flex: none;
+  width: var(--layout-icon-box);
+  height: var(--layout-icon-box);
+  border-radius: var(--radius-icon-box);
+  display: grid;
+  place-items: center;
+}
+
+.featuredName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.featuredMeta {
+  flex: none;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.featuredAmount {
+  margin-top: 14px;
+}
+
+.featuredOf {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.featuredBar {
+  margin-top: 16px;
+}
+
+/* The three labels under the bar: the ends anchored, «oggi» centred on the tick. */
+.ends {
+  position: relative;
+  height: 16px;
+  margin-top: 6px;
+}
+
+.endStart,
+.endToday,
+.endEnd {
+  position: absolute;
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.endStart {
+  inset-inline-start: 0;
+  color: var(--color-text-faint);
+}
+
+.endEnd {
+  inset-inline-end: 0;
+  color: var(--color-text-faint);
+}
+
+.endToday {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.sentence {
+  margin-top: 12px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+/* A budget's or a goal's row: the percentage over the state, then the ring. */
+.rowStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: end;
+}
+
+.rowPercent {
+  font-size: var(--font-size-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowStatusMeta {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

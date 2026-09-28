@@ -1228,6 +1228,7 @@ export const fr: Messages = {
       sectionNav: 'Sections',
       previousPeriod: 'Période précédente',
       nextPeriod: 'Période suivante',
+      finishOnPhone: 'Termine la configuration depuis le téléphone',
     },
     passkeys: {
       title: 'Tes passkeys',

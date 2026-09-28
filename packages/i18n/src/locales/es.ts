@@ -1221,6 +1221,7 @@ export const es: Messages = {
       sectionNav: 'Secciones',
       previousPeriod: 'Periodo anterior',
       nextPeriod: 'Periodo siguiente',
+      finishOnPhone: 'Termina la configuración desde el teléfono',
     },
     passkeys: {
       title: 'Tus passkeys',

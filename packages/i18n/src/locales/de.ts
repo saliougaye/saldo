@@ -1225,6 +1225,7 @@ export const de: Messages = {
       sectionNav: 'Bereiche',
       previousPeriod: 'Vorheriger Zeitraum',
       nextPeriod: 'Nächster Zeitraum',
+      finishOnPhone: 'Schließ die Einrichtung am Telefon ab',
     },
     passkeys: {
       title: 'Deine Passkeys',
