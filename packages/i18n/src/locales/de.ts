@@ -47,6 +47,9 @@ export const de: Messages = {
   },
   admin: {
     title: 'Admin',
+    role: 'Rolle',
+    roleAdmin: 'Administrator',
+    roleMember: 'Mitglied',
   },
   kinds: {
     expense: 'Ausgabe',
@@ -807,6 +810,8 @@ export const de: Messages = {
     cycleFootnote: 'Eine Änderung gruppiert nur die Buchungen neu. Nichts wird verschoben.',
     cycleValue: 'ab dem {{day}}.',
     reviewOnboarding: 'Ersteinrichtung ansehen',
+    preferences: 'Einstellungen',
+    appliesToPhone: 'Gelten auch am Telefon: sie werden synchronisiert.',
   },
   profile: {
     title: 'Profil',

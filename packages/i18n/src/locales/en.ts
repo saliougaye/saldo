@@ -45,6 +45,9 @@ export const en: Messages = {
   },
   admin: {
     title: 'Admin',
+    role: 'Role',
+    roleAdmin: 'Admin',
+    roleMember: 'Member',
   },
   kinds: {
     expense: 'Expense',
@@ -797,6 +800,8 @@ export const en: Messages = {
     cycleFootnote: 'Changing this only regroups your transactions. Nothing moves.',
     cycleValue: 'from the {{day}}',
     reviewOnboarding: 'Review the initial setup',
+    preferences: 'Preferences',
+    appliesToPhone: 'These apply to the phone too: they are synced.',
   },
   profile: {
     title: 'Profile',

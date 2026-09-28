@@ -45,6 +45,9 @@ export const it = {
   },
   admin: {
     title: 'Admin',
+    role: 'Ruolo',
+    roleAdmin: 'Amministratore',
+    roleMember: 'Membro',
   },
   kinds: {
     expense: 'Uscita',
@@ -804,6 +807,8 @@ export const it = {
     cycleFootnote: 'Cambiarlo raggruppa solo le transazioni. Niente si sposta.',
     cycleValue: 'dal {{day}}',
     reviewOnboarding: 'Rivedi la configurazione iniziale',
+    preferences: 'Preferenze',
+    appliesToPhone: 'Valgono anche sul telefono: sono sincronizzate.',
   },
   profile: {
     title: 'Profilo',

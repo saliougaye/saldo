@@ -47,6 +47,9 @@ export const es: Messages = {
   },
   admin: {
     title: 'Admin',
+    role: 'Rol',
+    roleAdmin: 'Administrador',
+    roleMember: 'Miembro',
   },
   kinds: {
     expense: 'Gasto',
@@ -806,6 +809,8 @@ export const es: Messages = {
     cycleFootnote: 'Cambiarlo solo reagrupa los movimientos. Nada se mueve.',
     cycleValue: 'desde el {{day}}',
     reviewOnboarding: 'Revisar la configuración inicial',
+    preferences: 'Preferencias',
+    appliesToPhone: 'También valen en el teléfono: están sincronizadas.',
   },
   profile: {
     title: 'Perfil',

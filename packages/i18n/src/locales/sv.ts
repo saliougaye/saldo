@@ -47,6 +47,9 @@ export const sv: Messages = {
   },
   admin: {
     title: 'Admin',
+    role: 'Roll',
+    roleAdmin: 'Administratör',
+    roleMember: 'Medlem',
   },
   kinds: {
     expense: 'Utgift',
@@ -801,6 +804,8 @@ export const sv: Messages = {
     cycleFootnote: 'En ändring grupperar bara om transaktionerna. Inget flyttas.',
     cycleValue: 'från den {{day}}',
     reviewOnboarding: 'Gå igenom startinställningen',
+    preferences: 'Inställningar',
+    appliesToPhone: 'Gäller även i telefonen: de synkas.',
   },
   profile: {
     title: 'Profil',

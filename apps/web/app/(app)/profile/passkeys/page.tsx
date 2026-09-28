@@ -7,6 +7,7 @@ import { getDb } from '../../../../src/server/db/client';
 import { env } from '../../../../src/server/env';
 import { loadUserData } from '../../../../src/server/userData/load';
 import { resolveTimeZone } from '../../../../src/server/userData/today';
+import { Section } from '../../../../src/ui/Section';
 import styles from '../../app.module.css';
 import { PasskeyList } from './PasskeyList';
 
@@ -34,8 +35,7 @@ export default async function PasskeysPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <h1 className={styles.title}>{t('web.passkeys.title')}</h1>
+    <Section title={t('web.passkeys.title')}>
       <p className={styles.body}>{t('web.passkeys.body')}</p>
       <PasskeyList
         passkeys={passkeys.map((passkey) => ({ ...passkey, addedOn: addedOn(passkey.createdAt) }))}
@@ -60,11 +60,6 @@ export default async function PasskeysPage() {
           failed: t('web.auth.genericError'),
         }}
       />
-      <p className={styles.links}>
-        <a className={styles.link} href="/home">
-          {t('common.goBack')}
-        </a>
-      </p>
-    </div>
+    </Section>
   );
 }
