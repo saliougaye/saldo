@@ -12,6 +12,8 @@ import {
   describeServerError,
   SERVER_ERROR_KEYS,
 } from '../../src/features/server/describeServerError';
+import { EmailAskDialog } from '../../src/features/server/EmailAskDialog';
+import { needsEmail } from '../../src/features/server/emailAsk';
 import { ServerSignInPanel } from '../../src/features/server/ServerSignIn';
 import { useSync } from '../../src/sync/SyncProvider';
 import { useSyncCounts } from '../../src/sync/useSyncCounts';
@@ -22,13 +24,14 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 export default function ServerScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { serverUrl, user, sessionExpired, connect, disconnect } = useServer();
+  const { serverUrl, user, sessionExpired, connect, disconnect, saveEmail } = useServer();
   const { status, scheduler } = useSync();
   const counts = useSyncCounts();
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signOutOpen, setSignOutOpen] = useState(false);
+  const [emailAskOpen, setEmailAskOpen] = useState(false);
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -121,6 +124,9 @@ export default function ServerScreen() {
                 onPress={() => void run(async () => void (await connect(serverUrl, 'login')))}
               />
             ) : null}
+            {needsEmail(user) ? (
+              <ListRow title={t('sync.emailAddRow')} onPress={() => setEmailAskOpen(true)} />
+            ) : null}
             <ListRow
               title={t('sync.signOut')}
               onPress={busy ? undefined : () => setSignOutOpen(true)}
@@ -150,6 +156,12 @@ export default function ServerScreen() {
           });
         }}
         onCancel={() => setSignOutOpen(false)}
+      />
+
+      <EmailAskDialog
+        visible={emailAskOpen}
+        onSave={saveEmail}
+        onDismiss={() => setEmailAskOpen(false)}
       />
     </Screen>
   );
