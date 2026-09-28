@@ -22,31 +22,6 @@ a.row:hover {
   padding-inline-start: 10px;
 }
 
-/* Without a category the box is the neutral surface; with one the row sets `--category-N-tint`. */
-.iconBox {
-  position: relative;
-  flex: none;
-  width: var(--layout-icon-box);
-  height: var(--layout-icon-box);
-  border-radius: var(--radius-icon-box);
-  background: var(--color-raised);
-  display: grid;
-  place-items: center;
-}
-
-.badge {
-  position: absolute;
-  inset-block-end: -2px;
-  inset-inline-end: -2px;
-  display: grid;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-pill);
-  background: var(--color-bg);
-  color: var(--color-text-muted);
-}
-
 .text {
   display: flex;
   flex-direction: column;

@@ -13,7 +13,7 @@ import {
   plural,
   richText,
 } from '@saldo/i18n';
-import { categoryColors, type IconName } from '@saldo/ui';
+import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
@@ -22,7 +22,7 @@ import { AmountText } from '../../../src/ui/AmountText';
 import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';
 import { Columns } from '../../../src/ui/Columns';
 import { EmptyState } from '../../../src/ui/EmptyState';
-import { Icon } from '../../../src/ui/Icon';
+import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
@@ -68,11 +68,6 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-/** As `ListRow` wraps it: an index past the end of the palette must still name a variable. */
-function paletteIndex(colorIndex: number): number {
-  return ((colorIndex % categoryColors.length) + categoryColors.length) % categoryColors.length;
-}
-
 interface FeaturedProps {
   icon: IconName;
   colorIndex: number;
@@ -100,16 +95,10 @@ interface FeaturedProps {
  */
 function Featured(props: FeaturedProps) {
   const labels = endLabels(props.pace);
-  const index = paletteIndex(props.colorIndex);
   return (
     <div className={styles.featured}>
       <div className={styles.featuredHead}>
-        <span
-          className={styles.featuredIcon}
-          style={{ background: `var(--category-${index}-tint)`, color: `var(--category-${index})` }}
-        >
-          <Icon name={props.icon} size={16} />
-        </span>
+        <IconBox name={props.icon} colorIndex={props.colorIndex} />
         <span className={styles.featuredName}>{props.name}</span>
         <span className={styles.featuredMeta}>{props.meta}</span>
       </div>

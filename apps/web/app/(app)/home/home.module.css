@@ -42,15 +42,6 @@
   min-width: 0;
 }
 
-.featuredIcon {
-  flex: none;
-  width: var(--layout-icon-box);
-  height: var(--layout-icon-box);
-  border-radius: var(--radius-icon-box);
-  display: grid;
-  place-items: center;
-}
-
 .featuredName {
   flex: 1;
   min-width: 0;

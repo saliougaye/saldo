@@ -1,7 +1,7 @@
-import { categoryColors, type IconName } from '@saldo/ui';
+import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Icon } from './Icon';
+import { IconBox } from './IconBox';
 import styles from './ListRow.module.css';
 
 interface Props {
@@ -29,35 +29,9 @@ export function ListRow({
   upcoming = false,
   selected = false,
 }: Props) {
-  // Wrapped here, once, as the phone's `theme.categoryColor` wraps it: an index past the end of
-  // the palette would otherwise name a variable that does not exist, which renders as no colour
-  // at all rather than as an error.
-  const paletteIndex =
-    colorIndex === undefined
-      ? undefined
-      : ((colorIndex % categoryColors.length) + categoryColors.length) % categoryColors.length;
   const body = (
     <>
-      {icon === undefined ? null : (
-        <span
-          className={styles.iconBox}
-          style={
-            paletteIndex === undefined
-              ? undefined
-              : {
-                  background: `var(--category-${paletteIndex}-tint)`,
-                  color: `var(--category-${paletteIndex})`,
-                }
-          }
-        >
-          <Icon name={icon} size={16} />
-          {badge === undefined ? null : (
-            <span className={styles.badge}>
-              <Icon name={badge} size={10} />
-            </span>
-          )}
-        </span>
-      )}
+      {icon === undefined ? null : <IconBox name={icon} colorIndex={colorIndex} badge={badge} />}
       <span className={styles.text}>
         <span className={styles.title}>{title}</span>
         {subtitle === undefined ? null : <span className={styles.subtitle}>{subtitle}</span>}
