@@ -1,0 +1,48 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.input {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-size: var(--font-size-body);
+  color: var(--color-text);
+  width: 100%;
+  min-width: 0;
+}
+
+.input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.input:focus {
+  box-shadow: inset 0 0 0 1px var(--color-text-muted);
+  outline: none;
+}
+
+.invalid,
+.invalid:focus {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* An invite code: 16 symbols of a 32-symbol alphabet, read one group at a time. */
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.08em;
+}
+
+.hint {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  line-height: 1.45;
+  text-wrap: pretty;
+}

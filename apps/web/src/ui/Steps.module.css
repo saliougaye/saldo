@@ -1,0 +1,30 @@
+.segments {
+  display: flex;
+  gap: var(--layout-step-segment-gap);
+}
+
+.segment {
+  flex: 1;
+  height: var(--layout-step-segment-height);
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+}
+
+.on {
+  background: var(--color-text);
+}
+
+.label {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  margin-top: -12px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  align-self: flex-start;
+}

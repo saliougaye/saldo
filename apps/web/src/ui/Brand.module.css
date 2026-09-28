@@ -1,0 +1,37 @@
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-icon-box);
+  background: var(--color-text);
+  color: var(--color-bg);
+  display: grid;
+  place-items: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-footnote);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.name {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.instance {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.footer {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
