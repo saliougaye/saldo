@@ -1,71 +1,12 @@
-import {
-  type Account,
-  accountSchema,
-  type Budget,
-  budgetSchema,
-  type Category,
-  categorySchema,
-  emptyUserData,
-  type Transaction,
-  transactionSchema,
-  type UserData,
-} from '@saldo/core';
+import { type Account, accountSchema, type Budget, budgetSchema, emptyUserData } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
+import { ACCOUNT, dataWith, tx } from '../test/fixtures';
 import { homeView } from './homeView';
 
 const TODAY = '2026-09-15';
 const PERIOD = { start: '2026-09-01', end: '2026-09-30' };
 const DEF = { kind: 'month', startDay: 1 } as const;
 const PERIOD_VIEW = { range: PERIOD, isCurrent: true, elapsed: 15, length: 30 };
-
-// The fixtures go through the schemas rather than through `as`: a row this test invents but the
-// app could never store would make the assertions below prove nothing (§17.1.2).
-const ACCOUNT: Account = accountSchema.parse({
-  id: 'a1',
-  name: 'Conto',
-  type: 'checking',
-  institution: null,
-  openingBalance: 0,
-  includeInSpendable: true,
-  colorIndex: 0,
-  icon: 'wallet',
-  creditCloseDay: null,
-  creditChargeDay: null,
-  creditPaymentAccountId: null,
-  archivedAt: null,
-  sortOrder: 0,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
-  deletedAt: null,
-});
-
-const CATEGORY: Category = categorySchema.parse({
-  id: 'c1',
-  name: 'Spesa',
-  direction: 'expense',
-  parentId: null,
-  icon: 'cart',
-  colorIndex: 1,
-  archivedAt: null,
-  sortOrder: 0,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
-  deletedAt: null,
-});
-
-const CATEGORY_2: Category = categorySchema.parse({
-  id: 'c2',
-  name: 'Casa',
-  direction: 'expense',
-  parentId: null,
-  icon: 'home',
-  colorIndex: 2,
-  archivedAt: null,
-  sortOrder: 1,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
-  deletedAt: null,
-});
 
 function pocket(over: {
   id: string;
@@ -123,33 +64,6 @@ const BUDGET_2: Budget = budgetSchema.parse({
   updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
   deletedAt: null,
 });
-
-function tx(over: Partial<Transaction> & Pick<Transaction, 'id' | 'amount' | 'date'>): Transaction {
-  return transactionSchema.parse({
-    kind: 'expense',
-    accountId: ACCOUNT.id,
-    toAccountId: null,
-    categoryId: CATEGORY.id,
-    description: '',
-    note: null,
-    tagIds: [],
-    excludeFromTotals: false,
-    recurrenceId: null,
-    createdAt: '2026-09-01T00:00:00.000Z',
-    updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
-    deletedAt: null,
-    ...over,
-  });
-}
-
-function dataWith(transactions: Transaction[]): UserData {
-  return {
-    ...emptyUserData(),
-    transactions,
-    accounts: [ACCOUNT],
-    categories: [CATEGORY, CATEGORY_2],
-  };
-}
 
 describe('homeView', () => {
   it('summarises the period exactly as summarizePeriod does', () => {
