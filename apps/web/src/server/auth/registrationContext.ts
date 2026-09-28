@@ -7,11 +7,14 @@ import { z } from 'zod';
  */
 export interface RegistrationContext {
   name: string;
+  /** Required from D32 on; empty when the client sent none, which `resolveUser` refuses. */
+  email: string;
   invite: string | null;
 }
 
 const schema = z.object({
   name: z.string(),
+  email: z.string().optional(),
   invite: z.string().optional(),
 });
 
@@ -22,9 +25,10 @@ const schema = z.object({
  */
 export function encodeRegistrationContext(value: {
   name: string;
+  email: string;
   invite?: string | undefined;
 }): string {
-  return JSON.stringify({ name: value.name, invite: value.invite });
+  return JSON.stringify({ name: value.name, email: value.email, invite: value.invite });
 }
 
 /**
@@ -34,14 +38,19 @@ export function encodeRegistrationContext(value: {
  * invites existed.
  */
 export function readRegistrationContext(context: string | null | undefined): RegistrationContext {
-  if (context === null || context === undefined) return { name: '', invite: null };
+  if (context === null || context === undefined) return { name: '', email: '', invite: null };
   let raw: unknown;
   try {
     raw = JSON.parse(context);
   } catch {
-    return { name: context.trim(), invite: null };
+    // Not JSON: what the form sent before invites and emails existed, a bare display name.
+    return { name: context.trim(), email: '', invite: null };
   }
   const parsed = schema.safeParse(raw);
-  if (!parsed.success) return { name: '', invite: null };
-  return { name: parsed.data.name.trim(), invite: parsed.data.invite?.trim() ?? null };
+  if (!parsed.success) return { name: '', email: '', invite: null };
+  return {
+    name: parsed.data.name.trim(),
+    email: parsed.data.email?.trim() ?? '',
+    invite: parsed.data.invite?.trim() ?? null,
+  };
 }
