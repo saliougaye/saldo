@@ -8,6 +8,7 @@ import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
+import { invitePlugin } from './invitePlugin';
 import { completeRegistration, resolveRegistration } from './registration';
 import { readRegistrationContext } from './registrationContext';
 
@@ -111,6 +112,7 @@ export function buildAuthOptions() {
             }),
         },
       }),
+      invitePlugin(registration),
       admin({ defaultRole: MEMBER_ROLE, adminRoles: [ADMIN_ROLE] }),
       bearer(),
       oneTimeToken({ expiresIn: ONE_TIME_TOKEN_MINUTES, storeToken: 'hashed' }),
