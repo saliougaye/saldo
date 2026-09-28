@@ -12,6 +12,8 @@ export const MEMBER_ROLE = 'user';
 export interface AccountSummary {
   id: string;
   displayName: string;
+  /** D32: an identifier, not a credential. Synthetic (§9.1) for an account created before 0.3b. */
+  email: string;
   role: string;
   revoked: boolean;
   revokedReason: string | null;
@@ -132,6 +134,7 @@ export async function listAccounts(db: ServerDatabase): Promise<AccountSummary[]
     .select({
       id: user.id,
       name: user.name,
+      email: user.email,
       role: user.role,
       banned: user.banned,
       banReason: user.banReason,
@@ -142,6 +145,7 @@ export async function listAccounts(db: ServerDatabase): Promise<AccountSummary[]
   return rows.map((row) => ({
     id: row.id,
     displayName: row.name,
+    email: row.email,
     role: row.role ?? MEMBER_ROLE,
     revoked: row.banned === true,
     revokedReason: row.banReason,
