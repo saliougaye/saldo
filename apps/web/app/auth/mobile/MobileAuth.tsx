@@ -3,6 +3,22 @@
 import { useEffect, useState } from 'react';
 import { authClient } from '../../../src/client/authClient';
 import { log } from '../../../src/client/log';
+import { describeAuthError } from '../../../src/features/auth/authErrors';
+import {
+  type RegisterStep,
+  registerSteps,
+  stepBefore,
+  stepForErrorCode,
+} from '../../../src/features/auth/registerSteps';
+import { registrationContextJson } from '../../../src/features/auth/registrationBody';
+import type { InstanceInfo } from '../../../src/server/instance';
+import { Alert } from '../../../src/ui/Alert';
+import { Brand } from '../../../src/ui/Brand';
+import { Button } from '../../../src/ui/Button';
+import { Icon } from '../../../src/ui/Icon';
+import { Steps, stepsBackClass } from '../../../src/ui/Steps';
+import { TextField } from '../../../src/ui/TextField';
+import styles from '../../(auth)/auth.module.css';
 
 interface Props {
   redirectUri: string;
@@ -10,36 +26,15 @@ interface Props {
   canRegister: boolean;
   requiresInvite: boolean;
   initialMode: 'login' | 'register';
+  instance: InstanceInfo;
+  strings: Record<string, string>;
+  stepLabels: string[];
 }
 
-const button = {
-  width: '100%',
-  padding: '14px 16px',
-  borderRadius: 12,
-  border: 'none',
-  background: '#C7C7C7',
-  color: '#0A0A0A',
-  fontSize: 16,
-  fontWeight: 500,
-  cursor: 'pointer',
-} as const;
-
-const secondary = { ...button, background: 'transparent', color: '#C7C7C7' } as const;
-
-const input = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: 12,
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: '#121212',
-  color: '#EDEDED',
-  fontSize: 16,
-  boxSizing: 'border-box',
-} as const;
-
 /**
- * The two ceremonies of §9.3, run by Better Auth's passkey client. On success the browser follows
- * the `saldo://` redirect, which is what closes `openAuthSessionAsync` on the app side.
+ * §9.3 steps 4–5. The ceremony runs here because the app has no `navigator.credentials`; on success a
+ * one-time token is minted and travels back in the deep link, single use, one minute, stored hashed.
+ * The app cannot read this browser's cookie, which is the whole reason the token exists.
  */
 export function MobileAuth({
   redirectUri,
@@ -47,12 +42,30 @@ export function MobileAuth({
   canRegister,
   requiresInvite,
   initialMode,
+  instance,
+  strings,
+  stepLabels,
 }: Props) {
+  const steps = registerSteps(requiresInvite);
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  const [displayName, setDisplayName] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  const [step, setStep] = useState<RegisterStep>('identity');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [invite, setInvite] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [handedOff, setHandedOff] = useState(false);
+  const [refusal, setRefusal] = useState<{
+    step: RegisterStep;
+    title: string;
+    body: string;
+  } | null>(null);
+
+  // `strings` is a `Record<string, string>`, so `noUncheckedIndexedAccess` reads every lookup as
+  // possibly missing — true for the by-path keys `describeAuthError` names, never for the fixed
+  // labels the page always fills. A required prop like `TextField`'s `label` cannot take that
+  // `undefined`, and AGENTS.md forbids a non-null assertion, so this is the one place that turns
+  // it back into a plain `string`.
+  const label = (key: string): string => strings[key] ?? '';
 
   /**
    * The two lines that explain most failed ceremonies before anything is clicked: WebAuthn needs a
@@ -71,11 +84,20 @@ export function MobileAuth({
     });
   }, [initialMode, canRegister, requiresInvite, redirectUri]);
 
-  /**
-   * The ceremony leaves this browser holding a session. The app cannot read it, so a one-time
-   * token is minted and travels back in the deep link: single use, one minute, stored hashed.
-   */
-  const finish = async () => {
+  const refuse = (code: string | undefined) => {
+    const message = describeAuthError(code);
+    const owner = stepForErrorCode(code, steps);
+    setRefusal({
+      step: owner,
+      title: strings[message.titleKey] ?? strings['web.auth.genericError'] ?? '',
+      body: strings[message.bodyKey] ?? '',
+    });
+    setStep(owner);
+    setBusy(false);
+  };
+
+  /** The ceremony left this browser holding a session; the app gets a one-time token instead. */
+  const handOff = async () => {
     log('auth', 'the ceremony left a session here, minting the handoff token');
     const { data, error } = await authClient.oneTimeToken.generate();
     if (error !== null || data === null) {
@@ -83,142 +105,228 @@ export function MobileAuth({
         status: error?.status,
         message: error?.message,
       });
-      throw new Error(error?.message ?? 'Could not finish sign-in');
+      refuse(undefined);
+      return;
     }
     const url = new URL(redirectUri);
     url.searchParams.set('ott', data.token);
     url.searchParams.set('state', state);
-    // The scheme only. The whole point of the token is that nothing but the app ever reads it, and
-    // a console is somewhere it would be readable.
+    // The scheme only. The whole point of the token is that nothing but the app ever reads it, and a
+    // console is somewhere it would be readable.
     log('auth', `handing back to ${url.protocol}//${url.host}${url.pathname}`);
+    setHandedOff(true);
     window.location.href = url.toString();
   };
 
-  const run = async (action: () => Promise<void>) => {
+  const signIn = async () => {
+    setRefusal(null);
     setBusy(true);
-    setError(null);
-    try {
-      await action();
-    } catch (caught) {
-      // The message shown on screen is short by design; the thrown value is not, and a cancelled
-      // authenticator prompt (`NotAllowedError`) is only distinguishable here.
-      log('auth', 'the ceremony ended in an error', {
-        name: caught instanceof Error ? caught.name : typeof caught,
-        message: caught instanceof Error ? caught.message : String(caught),
-      });
-      setError(caught instanceof Error ? caught.message : 'Something went wrong');
-    } finally {
-      setBusy(false);
+    log('auth', 'asking the browser for a passkey');
+    const { error } = await authClient.signIn.passkey();
+    if (error !== null) {
+      const code = 'code' in error ? error.code : undefined;
+      log('auth', 'the passkey ceremony failed', { status: error.status, code });
+      refuse(typeof code === 'string' ? code : undefined);
+      return;
     }
+    await handOff();
   };
 
-  const login = () =>
-    run(async () => {
-      log('auth', 'asking the browser for a passkey');
-      const { error } = await authClient.signIn.passkey();
-      if (error !== null) {
-        log('auth', 'the passkey ceremony failed', {
-          status: error.status,
-          code: 'code' in error ? error.code : undefined,
-        });
-        throw new Error(error.message ?? 'Could not sign you in');
-      }
-      await finish();
-    });
+  const submitIdentity = () => {
+    setRefusal(null);
+    if (name.trim().length === 0 || !email.includes('@')) {
+      refuse('email_required');
+      return;
+    }
+    setStep(requiresInvite ? 'invite' : 'passkey');
+  };
 
-  const register = () =>
-    run(async () => {
-      const name = displayName.trim();
-      if (name.length === 0) throw new Error('Choose a name first');
-      const invite = inviteCode.trim();
-      if (requiresInvite && invite.length === 0) throw new Error('Enter your invite code');
-      // `context` is the plugin's passthrough to `resolveUser`, where the registration policy, the
-      // invite and the display name are all enforced server-side. It is one string, so both
-      // fields travel through it as JSON.
-      log('auth', 'creating a passkey for a new account', { withInvite: requiresInvite });
-      const { error } = await authClient.passkey.addPasskey({
-        context: JSON.stringify({ name, invite: requiresInvite ? invite : undefined }),
-        createSession: true,
-      });
-      if (error !== null) {
-        // The registration policy answers here — a closed server, a spent invite, a name the
-        // server refused — and the screen shows only the sentence, not which rule said no.
-        log('auth', 'the server refused the registration', {
-          status: error.status,
-          code: 'code' in error ? error.code : undefined,
-        });
-        throw new Error(error.message ?? 'Could not create the account');
-      }
-      await finish();
+  const submitInvite = async () => {
+    setRefusal(null);
+    setBusy(true);
+    const { error } = await authClient.$fetch<{ valid: boolean }>('/invite/check', {
+      method: 'POST',
+      body: { invite },
     });
+    setBusy(false);
+    if (error !== null) {
+      refuse('invalid_invite');
+      return;
+    }
+    setStep('passkey');
+  };
 
+  const createPasskey = async () => {
+    setRefusal(null);
+    setBusy(true);
+    log('auth', 'creating a passkey for a new account', { withInvite: requiresInvite });
+    const { error } = await authClient.passkey.addPasskey({
+      context: registrationContextJson({
+        name: name.trim(),
+        email: email.trim(),
+        invite: requiresInvite ? invite : null,
+      }),
+      createSession: true,
+    });
+    if (error !== null) {
+      const code = 'code' in error ? error.code : undefined;
+      log('auth', 'the server refused the registration', { status: error.status, code });
+      refuse(typeof code === 'string' ? code : undefined);
+      return;
+    }
+    await handOff();
+  };
+
+  if (handedOff) {
+    return (
+      <div className={styles.done}>
+        <span className={styles.check}>
+          <Icon name="check" size={26} />
+        </span>
+        <h1 className={styles.title}>{strings.doneTitle}</h1>
+        <p className={styles.lede}>{strings.doneBody}</p>
+      </div>
+    );
+  }
+
+  const shown = refusal !== null && refusal.step === step ? refusal : null;
+
+  if (mode === 'login') {
+    return (
+      <>
+        <Brand instanceName={instance.name} />
+        <h1 className={styles.title}>{strings.signInTitle}</h1>
+        <p className={styles.lede}>{strings.signInBody}</p>
+        {refusal === null ? null : <Alert title={refusal.title} body={refusal.body} />}
+        <Button icon="key" busy={busy} busyLabel={strings.working} onClick={() => void signIn()}>
+          {strings.signIn}
+        </Button>
+        {canRegister ? (
+          <>
+            <div className={styles.or}>{strings.or ?? ''}</div>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => {
+                setRefusal(null);
+                setStep('identity');
+                setMode('register');
+              }}
+            >
+              {strings.createAccount}
+            </Button>
+          </>
+        ) : null}
+      </>
+    );
+  }
+
+  const at = steps.indexOf(step) + 1;
   return (
-    <main style={{ padding: 24, width: '100%', maxWidth: 360, display: 'grid', gap: 16 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>
-        {mode === 'login' ? 'Sign in to Saldo' : 'Create your account'}
-      </h1>
-      <p style={{ color: '#8C8C8C', margin: 0 }}>
-        {mode === 'login'
-          ? 'Use the passkey you registered on this server.'
-          : requiresInvite
-            ? 'Enter the invite code you were sent. Your passkey stays on this device; the server only stores its public key.'
-            : 'Your passkey stays on this device; the server only stores its public key.'}
-      </p>
+    <>
+      {at > 1 ? (
+        <button
+          type="button"
+          className={stepsBackClass}
+          onClick={() => {
+            setRefusal(null);
+            const previous = stepBefore(steps, step);
+            if (previous === null) setMode('login');
+            else setStep(previous);
+          }}
+        >
+          <Icon name="chevL" size={14} />
+          {strings.back}
+        </button>
+      ) : (
+        <Brand instanceName={instance.name} />
+      )}
+      <Steps at={at} total={steps.length} label={stepLabels[at - 1] ?? ''} />
 
-      {mode === 'register' ? (
+      {step === 'identity' ? (
         <>
-          <input
-            style={input}
-            placeholder="Your name"
-            value={displayName}
-            maxLength={80}
-            onChange={(event) => setDisplayName(event.target.value)}
-            autoComplete="name"
-          />
-          {requiresInvite ? (
-            <input
-              style={{ ...input, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.08em' }}
-              placeholder="Invite code"
-              value={inviteCode}
-              maxLength={32}
-              onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              aria-label="Invite code"
+          <h1 className={styles.title}>{strings.registerTitle}</h1>
+          <p className={styles.lede}>{strings.registerBody}</p>
+          {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
+          <div className={styles.fields}>
+            <TextField
+              label={label('nameLabel')}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="name"
+              maxLength={80}
             />
-          ) : null}
+            <TextField
+              label={label('emailLabel')}
+              placeholder={strings.emailPlaceholder}
+              hint={strings.emailHint}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              invalid={shown !== null}
+            />
+          </div>
+          <Button onClick={submitIdentity}>{strings.continue}</Button>
+          <p className={styles.switchLine}>
+            {strings.haveAccount}{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setRefusal(null);
+                setMode('login');
+              }}
+            >
+              {strings.signInLink}
+            </button>
+          </p>
         </>
       ) : null}
 
-      <button
-        type="button"
-        style={button}
-        disabled={busy}
-        onClick={mode === 'login' ? login : register}
-      >
-        {busy ? 'Working…' : mode === 'login' ? 'Sign in with passkey' : 'Create account'}
-      </button>
-
-      {canRegister ? (
-        <button
-          type="button"
-          style={secondary}
-          disabled={busy}
-          onClick={() => {
-            setError(null);
-            setMode(mode === 'login' ? 'register' : 'login');
-          }}
-        >
-          {mode === 'login' ? 'Create account' : 'I already have a passkey'}
-        </button>
+      {step === 'invite' ? (
+        <>
+          <h1 className={styles.title}>{strings.inviteTitle}</h1>
+          <p className={styles.lede}>{strings.inviteBody}</p>
+          {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
+          <TextField
+            label={label('inviteLabel')}
+            hint={strings.inviteHint}
+            value={invite}
+            onChange={(event) => setInvite(event.target.value.toUpperCase())}
+            mono
+            invalid={shown !== null}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={32}
+          />
+          <Button busy={busy} busyLabel={strings.working} onClick={() => void submitInvite()}>
+            {strings.continue}
+          </Button>
+        </>
       ) : null}
 
-      {error === null ? null : (
-        <p role="alert" style={{ color: '#E8823C', margin: 0 }}>
-          {error}
-        </p>
-      )}
-    </main>
+      {step === 'passkey' ? (
+        <>
+          <span className={styles.passkeyArt}>
+            <Icon name="key" size={32} />
+          </span>
+          <h1 className={styles.title}>{strings.passkeyTitle}</h1>
+          <p className={styles.lede}>{strings.passkeyBody}</p>
+          {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
+          <Button
+            icon="key"
+            busy={busy}
+            busyLabel={strings.working}
+            onClick={() => void createPasskey()}
+          >
+            {strings.passkeyButton}
+          </Button>
+          <p className={`${styles.hint} ${styles.centred}`}>{strings.passkeyPhoneHint}</p>
+        </>
+      ) : null}
+    </>
   );
 }
