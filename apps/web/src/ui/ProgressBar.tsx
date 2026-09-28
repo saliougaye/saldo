@@ -5,7 +5,8 @@ interface Props {
   ratio: number;
   /** Where the period is: the tick the phone draws over the bar (§5.2). `null` draws none. */
   pace?: number | null;
-  tone?: 'normal' | 'over';
+  /** `done` is a goal at or above its target (§5.13): the fill turns `positive`, as on the phone. */
+  tone?: 'normal' | 'over' | 'done';
   thick?: boolean;
 }
 
@@ -14,7 +15,7 @@ export function ProgressBar({ ratio, pace = null, tone = 'normal', thick = false
   return (
     <div className={`${styles.track} ${thick ? styles.thick : ''}`}>
       <div
-        className={`${styles.fill} ${tone === 'over' ? styles.over : ''}`}
+        className={`${styles.fill} ${tone === 'normal' ? '' : styles[tone]}`}
         style={{ inlineSize: `${clamped * 100}%` }}
       />
       {pace === null ? null : (

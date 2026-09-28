@@ -10,6 +10,11 @@
   stroke: var(--color-accent);
 }
 
+/* A goal reached: the one chromatic signal Saldo allows itself (see `Palette`). */
+.done {
+  stroke: var(--color-positive);
+}
+
 .tick {
   stroke: var(--color-text-muted);
 }

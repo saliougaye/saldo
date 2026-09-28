@@ -20,6 +20,11 @@
   background: var(--color-accent);
 }
 
+/* A goal reached: the one chromatic signal Saldo allows itself (see `Palette`). */
+.done {
+  background: var(--color-positive);
+}
+
 .tick {
   position: absolute;
   inset-block: calc(-1 * var(--layout-pace-tick-overhang));

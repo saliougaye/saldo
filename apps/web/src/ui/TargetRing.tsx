@@ -8,7 +8,8 @@ interface Props {
   size: number;
   ratio: number;
   pace?: number | null;
-  tone?: 'normal' | 'over';
+  /** `done` is a goal at or above its target (§5.13): the stroke turns `positive`, as on the phone. */
+  tone?: 'normal' | 'over' | 'done';
 }
 
 /** The same geometry the phone draws with `react-native-svg`, in DOM SVG (§17.1.7). */
@@ -34,7 +35,7 @@ export function TargetRing({ size, ratio, pace = null, tone = 'normal' }: Props)
           strokeWidth={ring.stroke}
           strokeLinecap="round"
           strokeDasharray={`${ring.dash} ${ring.circumference}`}
-          className={tone === 'over' ? styles.over : styles.fill}
+          className={tone === 'normal' ? styles.fill : styles[tone]}
         />
         {ring.tick === null ? null : (
           <line {...ring.tick} strokeWidth={TICK_WIDTH} className={styles.tick} />

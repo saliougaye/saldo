@@ -1241,11 +1241,5 @@ export const es: Messages = {
       lastOneNote: 'Es tu última passkey: añade otra antes de eliminarla.',
       empty: 'No hay passkeys en esta cuenta.',
     },
-    home: {
-      stubTitle: 'Casi está',
-      stubBody:
-        'Entrar funciona. Las pantallas del web llegan en el paso siguiente; hasta entonces usa la app del móvil.',
-      signedInAs: 'Has entrado como {{name}} · {{email}}',
-    },
   },
 };

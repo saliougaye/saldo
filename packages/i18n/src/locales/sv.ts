@@ -1234,11 +1234,5 @@ export const sv: Messages = {
       lastOneNote: 'Det är din sista passnyckel: lägg till en till innan du tar bort den.',
       empty: 'Inga passnycklar på kontot.',
     },
-    home: {
-      stubTitle: 'Nästan framme',
-      stubBody:
-        'Inloggningen fungerar. Webbvyerna kommer i nästa steg; använd appen i telefonen tills dess.',
-      signedInAs: 'Inloggad som {{name}} · {{email}}',
-    },
   },
 };

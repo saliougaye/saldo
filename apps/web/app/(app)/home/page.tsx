@@ -114,7 +114,7 @@ interface FeaturedProps {
   of: string;
   ratio: number;
   pace: number | null;
-  tone: 'normal' | 'over';
+  tone: 'normal' | 'over' | 'done';
   start: string;
   end: string;
   today: string;
@@ -330,8 +330,11 @@ export default async function HomePage({
     const { state, pace } = item.progress;
     return state === 'reached' || state === 'expired' ? null : pace;
   };
-  const goalTone = (item: GoalView): 'normal' | 'over' =>
-    item.progress.state === 'expired' || item.progress.state === 'behind' ? 'over' : 'normal';
+  const goalTone = (item: GoalView): 'normal' | 'over' | 'done' => {
+    const { state } = item.progress;
+    if (state === 'reached') return 'done';
+    return state === 'expired' || state === 'behind' ? 'over' : 'normal';
+  };
   const goalStatus = (item: GoalView) => {
     const { state, gap, missing } = item.progress;
     switch (state) {

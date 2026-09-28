@@ -1237,12 +1237,6 @@ export const it = {
       lastOneNote: 'È la tua ultima passkey: aggiungine un’altra prima di eliminare questa.',
       empty: 'Nessuna passkey su questo account.',
     },
-    home: {
-      stubTitle: 'Ci siamo quasi',
-      stubBody:
-        'L’accesso funziona. Le schermate del web arrivano col prossimo passo; intanto usa l’app sul telefono.',
-      signedInAs: 'Sei entrato come {{name}} · {{email}}',
-    },
   },
 };
 
