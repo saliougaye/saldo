@@ -1215,6 +1215,8 @@ export const it = {
       comingIn0_3e: 'Arriva col prossimo passo: per ora scrivi dal telefono.',
       mainNav: 'Barra principale',
       sectionNav: 'Sezioni',
+      previousPeriod: 'Periodo precedente',
+      nextPeriod: 'Periodo successivo',
     },
     passkeys: {
       title: 'Le tue passkey',

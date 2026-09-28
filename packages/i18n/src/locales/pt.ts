@@ -1219,6 +1219,8 @@ export const pt: Messages = {
       comingIn0_3e: 'Chega no próximo passo; por agora escreve no telemóvel.',
       mainNav: 'Barra principal',
       sectionNav: 'Secções',
+      previousPeriod: 'Período anterior',
+      nextPeriod: 'Período seguinte',
     },
     passkeys: {
       title: 'As tuas passkeys',

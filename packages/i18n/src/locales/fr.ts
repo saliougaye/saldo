@@ -1226,6 +1226,8 @@ export const fr: Messages = {
       comingIn0_3e: 'À venir à la prochaine étape ; en attendant, saisis depuis le téléphone.',
       mainNav: 'Barre principale',
       sectionNav: 'Sections',
+      previousPeriod: 'Période précédente',
+      nextPeriod: 'Période suivante',
     },
     passkeys: {
       title: 'Tes passkeys',

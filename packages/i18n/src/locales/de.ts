@@ -1223,6 +1223,8 @@ export const de: Messages = {
       comingIn0_3e: 'Kommt im nächsten Schritt; trag es so lange am Telefon ein.',
       mainNav: 'Hauptleiste',
       sectionNav: 'Bereiche',
+      previousPeriod: 'Vorheriger Zeitraum',
+      nextPeriod: 'Nächster Zeitraum',
     },
     passkeys: {
       title: 'Deine Passkeys',

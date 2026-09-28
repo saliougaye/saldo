@@ -1209,6 +1209,8 @@ export const en: Messages = {
       comingIn0_3e: 'This arrives with the next step; write from the phone for now.',
       mainNav: 'Main bar',
       sectionNav: 'Sections',
+      previousPeriod: 'Previous period',
+      nextPeriod: 'Next period',
     },
     passkeys: {
       title: 'Your passkeys',

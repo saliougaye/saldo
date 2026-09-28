@@ -1212,6 +1212,8 @@ export const sv: Messages = {
       comingIn0_3e: 'Kommer i nästa steg; skriv från telefonen så länge.',
       mainNav: 'Huvudmeny',
       sectionNav: 'Avsnitt',
+      previousPeriod: 'Föregående period',
+      nextPeriod: 'Nästa period',
     },
     passkeys: {
       title: 'Dina passnycklar',

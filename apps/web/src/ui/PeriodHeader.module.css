@@ -1,0 +1,28 @@
+/* The ‹ label › of §5.4. Both steps are links, so the period survives a reload and a new tab. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  inline-size: var(--layout-header-button);
+  block-size: var(--layout-header-button);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+}
+
+.step:hover {
+  background: var(--color-surface);
+}
+
+.disabled {
+  opacity: 0.4;
+}
