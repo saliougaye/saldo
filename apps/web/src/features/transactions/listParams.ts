@@ -12,6 +12,7 @@ import { PERIOD_PARAM } from '../period/periodParams';
  */
 export function filtersFromSearch(params: Record<string, string | undefined>): TransactionFilters {
   const tag = params.tag;
+  const category = params.category;
   return {
     ...filtersFromParams({
       accountId: params.account,
@@ -19,7 +20,8 @@ export function filtersFromSearch(params: Record<string, string | undefined>): T
       onlyExcluded: params.excluded,
     }),
     query: params.q ?? '',
-    categoryId: params.category ?? null,
+    // Empty is «no filter», as `filtersFromParams` already reads an empty account.
+    categoryId: category === undefined || category === '' ? null : category,
     tagIds: tag === undefined || tag === '' ? [] : tag.split(','),
   };
 }

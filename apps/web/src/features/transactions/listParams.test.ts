@@ -23,6 +23,12 @@ describe('filtersFromSearch', () => {
     expect(filtersFromSearch({ direction: 'sideways' }).direction).toBe('all');
   });
 
+  it('reads an empty category as no filter, as it reads an empty account', () => {
+    expect(filtersFromSearch({ category: '' }).categoryId).toBeNull();
+    expect(filtersFromSearch({ account: '' }).accountId).toBeNull();
+    expect(filtersFromSearch({ category: 'c1' }).categoryId).toBe('c1');
+  });
+
   it('reads the excluded-only switch', () => {
     expect(filtersFromSearch({ excluded: '1' }).onlyExcluded).toBe(true);
     expect(filtersFromSearch({}).onlyExcluded).toBe(false);

@@ -432,9 +432,9 @@ export const it = {
     document: 'Scegli un PDF',
     open: 'Apri allegato',
     count: '{{count}} di {{max}}',
-    // Sul web l'allegato si conta, non si apre: il server non lo conserva (§17.1.9).
-    countOnPhone_one: '{{count}} allegato, solo sul telefono',
-    countOnPhone_other: '{{count}} allegati, solo sul telefono',
+    // Quanti allegati ha la voce, senza dire dove stanno: dipende dallo storage del server.
+    summary_one: '{{count}} allegato',
+    summary_other: '{{count}} allegati',
     tooLarge: 'File troppo grande (max 10 MB)',
     failed: 'Non sono riuscito ad allegarlo',
     missing: 'Questo allegato non c’è più',

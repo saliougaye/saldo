@@ -1,7 +1,7 @@
-import { EMPTY_FILTERS, emptyUserData } from '@saldo/core';
+import { accountSchema, EMPTY_FILTERS, emptyUserData, tagSchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
-import { dataWith, tx } from '../test/fixtures';
-import { listView } from './listView';
+import { ACCOUNT, ACCOUNT_2, dataWith, TAG, tx } from '../test/fixtures';
+import { filterChoices, listView } from './listView';
 
 const TODAY = '2026-09-15';
 const PERIOD = {
@@ -109,5 +109,73 @@ describe('listView', () => {
     expect(view.days).toEqual([]);
     expect(view.upcoming.count).toBe(0);
     expect(view.filtered).toBe(false);
+  });
+
+  it('counts the transfers a direction chip hides, and nothing for «all» or «transfers»', () => {
+    const data = dataWith([
+      tx({ id: 'e', amount: 300, date: '2026-09-10' }),
+      tx({
+        id: 't',
+        amount: 500,
+        date: '2026-09-11',
+        kind: 'transfer',
+        toAccountId: ACCOUNT_2.id,
+        categoryId: null,
+      }),
+    ]);
+    const base = { data, today: TODAY, def: DEF, period: PERIOD };
+    expect(
+      listView({ ...base, filters: { ...EMPTY_FILTERS, direction: 'expense' } }).hiddenTransfers,
+    ).toBe(1);
+    expect(listView({ ...base, filters: EMPTY_FILTERS }).hiddenTransfers).toBe(0);
+    expect(
+      listView({ ...base, filters: { ...EMPTY_FILTERS, direction: 'transfer' } }).hiddenTransfers,
+    ).toBe(0);
+  });
+
+  it('subtitles a row with its tags while a tag filter is on, as the phone does', () => {
+    const other = tagSchema.parse({ ...TAG, id: 'g0', name: 'Amici' });
+    const data = dataWith(
+      [tx({ id: 'a', amount: 300, date: '2026-09-10', tagIds: [TAG.id, 'g0'] })],
+      {
+        tags: [TAG, other],
+      },
+    );
+    const base = { data, today: TODAY, def: DEF, period: PERIOD };
+    const tagged = listView({ ...base, filters: { ...EMPTY_FILTERS, tagIds: [TAG.id] } });
+    expect(tagged.days[0]?.rows[0]?.subtitle).toBe('Amici · Vacanza');
+    const plain = listView({ ...base, filters: EMPTY_FILTERS });
+    expect(plain.days[0]?.rows[0]?.subtitle).toBe('Spesa');
+  });
+});
+
+describe('filterChoices', () => {
+  it('orders the accounts as the phone’s sheet does, and marks the archived ones', () => {
+    const archived = accountSchema.parse({
+      ...ACCOUNT,
+      id: 'a3',
+      name: 'Banca',
+      sortOrder: 0,
+      archivedAt: '2026-05-01T00:00:00.000Z',
+    });
+    const data = dataWith([], { accounts: [ACCOUNT_2, ACCOUNT, archived] });
+    expect(filterChoices(data).accounts).toEqual([
+      { id: 'a3', name: 'Banca', archived: true },
+      { id: 'a1', name: 'Conto', archived: false },
+      { id: 'a2', name: 'Risparmi', archived: false },
+    ]);
+  });
+
+  it('orders the tags by how often they are used, then by name', () => {
+    const amici = tagSchema.parse({ ...TAG, id: 'g0', name: 'Amici' });
+    const zeta = tagSchema.parse({ ...TAG, id: 'g2', name: 'Zeta' });
+    const data = dataWith(
+      [
+        tx({ id: 'a', amount: 1, date: '2026-09-10', tagIds: ['g2'] }),
+        tx({ id: 'b', amount: 1, date: '2026-09-10', tagIds: ['g2', 'g1'] }),
+      ],
+      { tags: [zeta, TAG, amici] },
+    );
+    expect(filterChoices(data).tags.map((tag) => tag.name)).toEqual(['Zeta', 'Vacanza', 'Amici']);
   });
 });
