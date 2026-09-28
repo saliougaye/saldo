@@ -5,12 +5,16 @@ import {
   type BudgetView,
   budgetAdvice,
   budgetCardStatus,
+  budgetEventIds,
   budgetViews,
   featuredTarget,
+  type GoalAdvice,
   type GoalCardStatus,
   type GoalTargetInput,
   type GoalView,
+  goalAdvice,
   goalCardStatus,
+  goalEventIds,
   goalViews,
   isUpcoming,
   type LocalDate,
@@ -43,17 +47,44 @@ export interface HomeRow extends TransactionRow {
   recurring: boolean;
 }
 
+/**
+ * «In arrivo» (§6.1): the rows the card shows, and how many there are.
+ *
+ * The two travel together because they are not the same number past five rows, and a page reading
+ * `rows.length` for the header would be quietly wrong exactly when the card matters most. `count`
+ * is also what decides the card exists at all: the phone hides it at zero.
+ */
+export interface HomeUpcoming {
+  rows: HomeRow[];
+  /** Every row «In arrivo», not the five shown. */
+  count: number;
+}
+
+export interface HomeBudgets {
+  items: BudgetView[];
+  featuredId: string | null;
+  /** The budgets over their limit that are not the featured one: a row each (§5.13). */
+  eventIds: string[];
+  status: BudgetCardStatus;
+  advice: BudgetAdvice | null;
+}
+
+export interface HomeGoals {
+  items: GoalView[];
+  featuredId: string | null;
+  /** Expired then reached, the featured one excluded: a row each (§5.13). */
+  eventIds: string[];
+  status: GoalCardStatus;
+  advice: GoalAdvice | null;
+}
+
 export interface HomeView {
   summary: PeriodSummary;
-  upcoming: HomeRow[];
+  upcoming: HomeUpcoming;
+  /** «Ultime transazioni». No count beside it: its header says «Tutte le transazioni», not a number. */
   recent: HomeRow[];
-  budgets: {
-    items: BudgetView[];
-    featuredId: string | null;
-    status: BudgetCardStatus;
-    advice: BudgetAdvice | null;
-  };
-  goals: { items: GoalView[]; featuredId: string | null; status: GoalCardStatus };
+  budgets: HomeBudgets;
+  goals: HomeGoals;
 }
 
 export interface HomeViewInput {
@@ -101,10 +132,7 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
 
   // «In arrivo» reaches into the next period while this one is current; everything else is
   // filtered by the period itself (§5.12, §6.15).
-  const upcoming = byDateDesc
-    .filter((tx) => isUpcoming(tx, today) && tx.date <= upcomingEnd)
-    .slice(0, HOME_ROWS)
-    .map(row);
+  const upcomingAll = byDateDesc.filter((tx) => isUpcoming(tx, today) && tx.date <= upcomingEnd);
   const recent = byDateDesc
     .filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start)
     .slice(0, HOME_ROWS)
@@ -128,33 +156,44 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
   // keep it in 0.3d and passes null: the hysteresis never applies, which is correct-but-jumpier,
   // and is the same answer on a page rendered once per request.
   const featuredBudgetId = featuredTarget(budgetInputs.map(rankBudget), null);
-  const featured = budgetItems.find((view) => view.budget.id === featuredBudgetId);
+  const featuredBudget = budgetItems.find((view) => view.budget.id === featuredBudgetId);
 
   const goalItems = goalViews(data.accounts, txs, today, def);
   const goalInputs: GoalTargetInput[] = goalItems.map((view) => ({
     id: view.account.id,
     progress: view.progress,
   }));
+  // Same `null`, same reason as the budgets above.
+  const featuredGoalId = featuredTarget(goalInputs.map(rankGoal), null);
+  const featuredGoal = goalItems.find((view) => view.account.id === featuredGoalId);
 
   return {
     summary,
-    upcoming,
+    upcoming: { rows: upcomingAll.slice(0, HOME_ROWS).map(row), count: upcomingAll.length },
     recent,
     budgets: {
       items: budgetItems,
       featuredId: featuredBudgetId,
+      eventIds: budgetEventIds(budgetInputs, featuredBudgetId),
       status: budgetCardStatus(budgetInputs),
       advice:
-        featured === undefined
+        featuredBudget === undefined
           ? null
           : // As on the phone: the budget's own range decides whether it is open, and `daysLeft`
             // excludes today while the advice spends today too.
-            budgetAdvice(featured, featured.pace, featured.open, featured.daysLeft + 1),
+            budgetAdvice(
+              featuredBudget,
+              featuredBudget.pace,
+              featuredBudget.open,
+              featuredBudget.daysLeft + 1,
+            ),
     },
     goals: {
       items: goalItems,
-      featuredId: featuredTarget(goalInputs.map(rankGoal), null),
+      featuredId: featuredGoalId,
+      eventIds: goalEventIds(goalInputs, featuredGoalId),
       status: goalCardStatus(goalInputs),
+      advice: featuredGoal === undefined ? null : goalAdvice(featuredGoal.progress),
     },
   };
 }

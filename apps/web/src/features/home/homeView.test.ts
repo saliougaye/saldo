@@ -53,6 +53,47 @@ const CATEGORY: Category = categorySchema.parse({
   deletedAt: null,
 });
 
+const CATEGORY_2: Category = categorySchema.parse({
+  id: 'c2',
+  name: 'Casa',
+  direction: 'expense',
+  parentId: null,
+  icon: 'home',
+  colorIndex: 2,
+  archivedAt: null,
+  sortOrder: 1,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
+  deletedAt: null,
+});
+
+function pocket(over: {
+  id: string;
+  name: string;
+  goalTarget: number;
+  goalDeadline: string | null;
+}): Account {
+  return accountSchema.parse({
+    type: 'pocket',
+    institution: null,
+    openingBalance: 0,
+    includeInSpendable: false,
+    colorIndex: 3,
+    icon: 'piggy',
+    creditCloseDay: null,
+    creditChargeDay: null,
+    creditPaymentAccountId: null,
+    archivedAt: null,
+    sortOrder: 1,
+    parentAccountId: ACCOUNT.id,
+    goalStartDate: '2026-09-01',
+    createdAt: '2026-09-01T00:00:00.000Z',
+    updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
+    deletedAt: null,
+    ...over,
+  });
+}
+
 const BUDGET: Budget = budgetSchema.parse({
   id: 'b1',
   name: 'Spesa',
@@ -63,6 +104,21 @@ const BUDGET: Budget = budgetSchema.parse({
   rollover: false,
   icon: 'cart',
   sortOrder: 0,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
+  deletedAt: null,
+});
+
+const BUDGET_2: Budget = budgetSchema.parse({
+  id: 'b2',
+  name: 'Casa',
+  categoryIds: ['c2'],
+  amount: 10000,
+  period: 'period',
+  alertThreshold: 80,
+  rollover: false,
+  icon: 'home',
+  sortOrder: 1,
   createdAt: '2026-09-01T00:00:00.000Z',
   updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
   deletedAt: null,
@@ -91,7 +147,7 @@ function dataWith(transactions: Transaction[]): UserData {
     ...emptyUserData(),
     transactions,
     accounts: [ACCOUNT],
-    categories: [CATEGORY],
+    categories: [CATEGORY, CATEGORY_2],
   };
 }
 
@@ -121,7 +177,8 @@ describe('homeView', () => {
       def: DEF,
       period: PERIOD_VIEW,
     });
-    expect(view.upcoming.map((row) => row.id)).toEqual(['ahead']);
+    expect(view.upcoming.rows.map((row) => row.id)).toEqual(['ahead']);
+    expect(view.upcoming.count).toBe(1);
     expect(view.recent.map((row) => row.id)).toEqual(['past']);
   });
 
@@ -147,10 +204,15 @@ describe('homeView', () => {
       period: PERIOD_VIEW,
     });
     expect(view.recent).toEqual([]);
-    expect(view.upcoming).toEqual([]);
+    expect(view.upcoming.rows).toEqual([]);
+    expect(view.upcoming.count).toBe(0);
     expect(view.summary.spent).toBe(0);
     expect(view.budgets.items).toEqual([]);
+    expect(view.budgets.eventIds).toEqual([]);
+    expect(view.budgets.advice).toBeNull();
     expect(view.goals.items).toEqual([]);
+    expect(view.goals.eventIds).toEqual([]);
+    expect(view.goals.advice).toBeNull();
   });
 
   it('features the budget the phone features, and says why', () => {
@@ -166,5 +228,72 @@ describe('homeView', () => {
     expect(view.budgets.items[0]?.spent).toBe(9000);
     expect(view.budgets.status.kind).toBe('overPace');
     expect(view.budgets.advice?.kind).toBe('perDay');
+  });
+  it('counts every row «In arrivo», not the five it shows', () => {
+    const ahead = Array.from({ length: 7 }, (_, index) =>
+      tx({ id: `u${index}`, amount: 100, date: `2026-09-${16 + index}` }),
+    );
+    const view = homeView({
+      data: dataWith(ahead),
+      today: TODAY,
+      def: DEF,
+      period: PERIOD_VIEW,
+    });
+    expect(view.upcoming.rows).toHaveLength(5);
+    expect(view.upcoming.rows[0]?.date).toBe('2026-09-22');
+    // What the card's header says, and what decides the card exists at all.
+    expect(view.upcoming.count).toBe(7);
+  });
+
+  it('gives the budgets over their limit a row each, the featured one apart', () => {
+    const data = dataWith([
+      tx({ id: 't1', amount: 15000, date: '2026-09-05' }),
+      tx({ id: 't2', amount: 12000, date: '2026-09-06', categoryId: 'c2' }),
+    ]);
+    const view = homeView({
+      data: { ...data, budgets: [BUDGET, BUDGET_2] },
+      today: TODAY,
+      def: DEF,
+      period: PERIOD_VIEW,
+    });
+    // Both are over; the larger overrun is featured and the other becomes the exception row.
+    expect(view.budgets.status).toEqual({ kind: 'overLimit', count: 2 });
+    expect(view.budgets.featuredId).toBe('b1');
+    expect(view.budgets.eventIds).toEqual(['b2']);
+    expect(view.budgets.advice).toEqual({ kind: 'overLimit', overrun: 5000 });
+  });
+
+  it('features the goal still running and gives the reached one a row, with its advice', () => {
+    const running = pocket({
+      id: 'p1',
+      name: 'Vacanza',
+      goalTarget: 100000,
+      goalDeadline: '2026-12-31',
+    });
+    const done = pocket({ id: 'p2', name: 'Cauzione', goalTarget: 5000, goalDeadline: null });
+    const transfer = (id: string, amount: number, toAccountId: string, date: string) =>
+      tx({ id, amount, date, kind: 'transfer', toAccountId, categoryId: null });
+    const data = dataWith([
+      transfer('g1', 20000, 'p1', '2026-09-05'),
+      transfer('g2', 5000, 'p2', '2026-09-02'),
+    ]);
+    const view = homeView({
+      data: { ...data, accounts: [ACCOUNT, running, done] },
+      today: TODAY,
+      def: DEF,
+      period: PERIOD_VIEW,
+    });
+    expect(view.goals.items.map((item) => item.account.id)).toEqual(['p1', 'p2']);
+    expect(view.goals.items[0]?.progress.saved).toBe(20000);
+    expect(view.goals.status).toEqual({ expired: 0, behind: 0, reached: 1 });
+    expect(view.goals.featuredId).toBe('p1');
+    expect(view.goals.eventIds).toEqual(['p2']);
+    // 80 000 still missing over the four periods to the deadline, straight from `goalAdvice`.
+    expect(view.goals.advice).toEqual({
+      kind: 'perPeriod',
+      perPeriod: 20000,
+      gap: 7705,
+      behind: false,
+    });
   });
 });
