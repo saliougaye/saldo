@@ -1,0 +1,23 @@
+.alert {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  font-size: var(--font-size-footnote);
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.icon {
+  color: var(--color-text);
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.title {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  display: block;
+  margin-bottom: 2px;
+}

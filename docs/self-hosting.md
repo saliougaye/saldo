@@ -220,6 +220,11 @@ curl -s https://saldo.example.com/api/health
 `registrationAllowed` is what decides whether it offers "create account". `inviteRequired` says
 whether that form will also ask for a code.
 
+Open the domain itself in a browser too. **The root of the instance is the web app**, not a status
+page any more: signed out it sends you to `/login`, which names the instance and shows the version
+and the host at the foot of the page; signed in it sends you to the app. There is nothing else to
+deploy and no second address to remember.
+
 ## Letting people in
 
 Under `REGISTRATION=invite` every account needs a code, including yours. Mint the first one on the
@@ -233,7 +238,17 @@ pnpm --filter web invite new --label "me"
 ```
 
 The code is printed once — the server keeps only its hash — and looks like `HNWF-SWHY-JM3T-ETQZ`.
-Open the app, choose **Create account**, and enter it. That first account becomes the admin.
+Then register, either in the app (**Create account**) or on the instance itself at `/register`, which
+takes the same code and the same passkey; `/register?invite=HNWF-SWHY-JM3T-ETQZ` prefills it, so an
+invite you send by message can be one link. That first account becomes the admin.
+
+**Registration asks for an email address.** It is an identifier, not a credential: the passkey is the
+only way in, the address is what names the account in `/admin` and in the account list, and what
+shared finances (0.6) will invite by. **Nothing is sent to it** — the server has no SMTP until 0.3f,
+so the address is never verified and never receives anything, and a household instance can use
+anything its members will recognise. An account created before 0.3b carries a synthetic
+`{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
+Profile → Server and sync, once.
 
 To invite somebody else, mint another code and send it to them:
 

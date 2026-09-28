@@ -11,6 +11,7 @@ import { swapIn } from '../../theme/motion';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { describeServerError } from './describeServerError';
+import { EmailAskDialog } from './EmailAskDialog';
 import { addressHint } from './serverProbe';
 import { type ServerSignIn, useServerSignIn } from './useServerSignIn';
 
@@ -215,6 +216,7 @@ export function ServerSignInDialogs({ s }: { s: ServerSignIn }) {
         onAlternative={() => s.answerUnowned('discard')}
         onCancel={() => s.answerUnowned('cancel')}
       />
+      <EmailAskDialog visible={s.askEmail} onSave={s.saveEmail} onDismiss={s.dismissEmailAsk} />
     </>
   );
 }

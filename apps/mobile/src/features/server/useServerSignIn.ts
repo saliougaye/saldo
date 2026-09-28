@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useState } from 'react';
 import { normaliseServerUrl, serverLabel } from '../../auth/link';
 import { useServer } from '../../auth/ServerProvider';
+import { needsEmail } from './emailAsk';
 import { failureReason, initialProbe, type ProbeState, probeReducer } from './serverProbe';
 
 type Answer<T> = { resolve: (value: T) => void } | null;
@@ -11,7 +12,7 @@ type Answer<T> = { resolve: (value: T) => void } | null;
  * the sign-in the app offers first and the one it offers later are one piece of code.
  */
 export function useServerSignIn({ onConnected }: { onConnected?: () => void } = {}) {
-  const { connect, check, lastServerUrl } = useServer();
+  const { connect, check, lastServerUrl, saveEmail } = useServer();
   // The host is what the user typed; `http://` has to stay spelled out or it would come back https.
   const [address, setAddress] = useState(() => {
     if (lastServerUrl === null) return '';
@@ -30,6 +31,8 @@ export function useServerSignIn({ onConnected }: { onConnected?: () => void } = 
     ({ pending: number } & NonNullable<Answer<boolean>>) | null
   >(null);
   const [unowned, setUnowned] = useState<Answer<'adopt' | 'discard' | 'cancel'>>(null);
+  /** Open while a freshly signed-in account still has the synthetic address of §9.1 (D32). */
+  const [askEmail, setAskEmail] = useState(false);
 
   const run = useCallback(
     async (origin: string) => {
@@ -69,13 +72,19 @@ export function useServerSignIn({ onConnected }: { onConnected?: () => void } = 
       setFailure(null);
       void (async () => {
         try {
-          await connect(probe.origin, mode, {
+          const signedIn = await connect(probe.origin, mode, {
             confirmForeignData: (pending) =>
               new Promise<boolean>((resolve) => setForeignData({ pending, resolve })),
             decideUnownedData: () =>
               new Promise<'adopt' | 'discard' | 'cancel'>((resolve) => setUnowned({ resolve })),
           });
-          onConnected?.();
+          if (needsEmail(signedIn)) {
+            // The question stands in front of `onConnected`: onboarding would otherwise leave this
+            // screen for the app and the dialog would go with it.
+            setAskEmail(true);
+          } else {
+            onConnected?.();
+          }
         } catch (caught) {
           setFailure(caught);
         } finally {
@@ -110,6 +119,12 @@ export function useServerSignIn({ onConnected }: { onConnected?: () => void } = 
     answerForeignData,
     unownedOpen: unowned !== null,
     answerUnowned,
+    askEmail,
+    saveEmail,
+    dismissEmailAsk: () => {
+      setAskEmail(false);
+      onConnected?.();
+    },
   };
 }
 

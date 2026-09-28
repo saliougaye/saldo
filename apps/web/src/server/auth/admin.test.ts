@@ -165,9 +165,14 @@ describe('listAccounts', () => {
     const rows = await listAccounts(harness.db);
     expect(rows).toHaveLength(2);
     expect(rows[0]?.id).toBe(admin.userId);
-    expect(rows[0]).toMatchObject({ displayName: 'Ada', role: ADMIN_ROLE, revoked: false });
+    expect(rows[0]).toMatchObject({
+      displayName: 'Ada',
+      role: ADMIN_ROLE,
+      revoked: false,
+      email: expect.stringContaining('@passkey.saldo.invalid'),
+    });
     expect(rows[1]).toMatchObject({ displayName: 'Bob', role: 'user', revoked: true });
-    // The synthetic `.invalid` address says nothing about anybody and is not worth returning.
-    expect(JSON.stringify(rows)).not.toContain('passkey.saldo.invalid');
+    // §17.1.8: the admin's account list shows the email so a self-hoster can tell accounts apart —
+    // synthetic or not, since only that lets an owner ask a passkey-only member for a real one.
   });
 });

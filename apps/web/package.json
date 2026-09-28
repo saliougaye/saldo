@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1130.0",
     "@aws-sdk/s3-request-presigner": "^3.1130.0",
+    "@base-ui/react": "^1.8.0",
     "@better-auth/expo": "^1.7.4",
     "@better-auth/passkey": "^1.7.4",
     "@saldo/core": "workspace:*",
@@ -27,6 +28,7 @@
     "@vercel/blob": "^2.8.0",
     "better-auth": "^1.7.4",
     "drizzle-orm": "^0.45.2",
+    "geist": "^1.7.2",
     "jose": "^6.2.12",
     "next": "^16.3.4",
     "pg": "^8.23.0",

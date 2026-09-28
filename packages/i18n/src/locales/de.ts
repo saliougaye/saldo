@@ -576,6 +576,14 @@ export const de: Messages = {
     nameRequired: 'Wähle zuerst einen Namen',
     passkeyNote:
       'Der Passkey bleibt auf diesem Handy; der Server speichert nur seinen öffentlichen Schlüssel.',
+    emailAskTitle: 'Deine E-Mail',
+    emailAskBody:
+      'Sie kennzeichnet dieses Konto: die Administration des Servers sieht diese Adresse, kein Passwort. Anmelden wirst du dich weiterhin mit dem Passkey.',
+    emailAskLater: 'Später',
+    emailAskTaken: 'Diese E-Mail gehört schon zu einem anderen Konto.',
+    emailAskInvalid: 'Gib eine gültige E-Mail-Adresse ein.',
+    emailAskFailed: 'Die Adresse konnte nicht gespeichert werden. Versuch es noch einmal.',
+    emailAddRow: 'E-Mail hinzufügen',
   },
   server: {
     title: 'Dein Saldo-Server',
@@ -1151,5 +1159,83 @@ export const de: Messages = {
     notice:
       'Das Telefon zeigt die Zeit von {{city}}, dort ist es {{time}}. Die Zahlen bleiben bei {{saved}}, bis du es änderst.',
     use: '{{city}} verwenden',
+  },
+  web: {
+    auth: {
+      signInTitle: 'Bei Saldo anmelden',
+      signInBody: 'Mit dem Passkey, den du auf diesem Server erstellt hast — am Handy oder hier.',
+      crossDeviceHint:
+        'Auf einem Rechner ohne Passkey zeigt der Browser einen QR-Code: scanne ihn mit dem Handy, auf dem du ihn erstellt hast.',
+      emailLabel: 'E-Mail',
+      emailPlaceholder: 'name@beispiel.de',
+      or: 'oder',
+      closedTitle: 'Registrierung geschlossen',
+      closedBody:
+        'Dieser Server nimmt keine neuen Konten an. Bitte die Person, die ihn betreibt, um eine Einladung.',
+      cancelledBody: 'Das Passkey-Fenster wurde geschlossen. Versuch es, wann du magst.',
+      registerTitle: 'Konto erstellen',
+      registerBody: 'Zwei Angaben zu dir, dann der Passkey. Kein Passwort.',
+      nameLabel: 'Name',
+      emailHint: 'Damit wirst du erkannt. Sie ist kein Passwort.',
+      emailTakenTitle: 'Diese E-Mail hat schon ein Konto',
+      emailTakenBody:
+        'Melde dich mit dessen Passkey an. Wenn er weg ist, frag die Administration des Servers.',
+      inviteTitle: 'Dein Einladungscode',
+      inviteBody:
+        'Dieser Server nimmt neue Konten nur mit Einladung an. Die Person, die ihn betreibt, hat dir eine geschickt.',
+      inviteLabel: 'Einladungscode',
+      inviteHint: '16 Zeichen; Groß- und Kleinschreibung und Bindestriche erledigen wir.',
+      invalidInviteTitle: 'Dieser Code ist nicht gültig',
+      invalidInviteBody:
+        'Prüfe, ob du ihn vollständig kopiert hast, oder frag nach einem neuen. Ein Code gilt einmal und läuft ab.',
+      passkeyTitle: 'Passkey erstellen',
+      passkeyBody:
+        'Der Browser fragt nach Fingerabdruck, Gesicht oder der PIN dieses Geräts. Der Passkey bleibt hier; der Server behält nur den öffentlichen Schlüssel.',
+      passkeyAccount: 'Konto für {{name}} · {{email}}',
+      passkeyPhoneHint:
+        'Lieber mit dem Handy? Wähle im Browser-Fenster «Handy verwenden» und scanne den QR-Code.',
+      passkeyButton: 'Passkey erstellen',
+      haveAccount: 'Hast du schon ein Konto?',
+      signInLink: 'Anmelden',
+      mobileSignInTitle: 'Für die App anmelden',
+      mobileSignInBody:
+        'Die Saldo-App hat dich hierher geschickt, um deinen Passkey zu nutzen. Danach kehrt sie von selbst zurück.',
+      mobileDoneTitle: 'Fertig',
+      mobileDoneBody:
+        'Du kehrst zur Saldo-App zurück. Öffnet sie sich nicht selbst, wechsle zu ihr: du bist angemeldet.',
+      linkUnusableTitle: 'Dieser Link ist nicht nutzbar',
+      linkMissing: 'Es fehlt der Redirect oder der State.',
+      emailInvalid: 'Gib eine gültige E-Mail-Adresse ein.',
+      genericError: 'Etwas ist schiefgegangen. Versuch es noch einmal.',
+      nameRequiredTitle: 'Dein Name fehlt',
+      nameRequiredBody: 'Schreib den Namen, mit dem Saldo dich ansprechen soll.',
+      handoffFailedTitle: 'Du bist angemeldet, aber die App hat es nicht bekommen',
+      handoffFailedBody:
+        'Dein Konto ist fertig. Tippe auf «Wiederholen», um zur App zurückzukehren.',
+    },
+    passkeys: {
+      title: 'Deine Passkeys',
+      body: 'Jedes Gerät, von dem du dich anmeldest, hat seinen eigenen. Der Server behält nur den öffentlichen Schlüssel.',
+      add: 'Passkey hinzufügen',
+      addedOn: 'Hinzugefügt am {{date}}',
+      inUse: 'jetzt in Benutzung',
+      synced: 'Mit deinem Passwortmanager synchronisiert',
+      notSynced: 'Nur auf diesem Gerät',
+      unknownProvider: 'Passkey',
+      renameTitle: 'Passkey umbenennen',
+      nameLabel: 'Name',
+      renameHint: 'Das ist Saldos Bezeichnung: der Name, den das Gerät vergibt, ändert sich nicht.',
+      deleteTitle: 'Diesen Passkey löschen?',
+      deleteBody:
+        'Das Gerät, das ihn hat, kommt nicht mehr in dieses Konto. Die anderen funktionieren weiter.',
+      lastOneNote: 'Das ist dein letzter Passkey: füge einen weiteren hinzu, bevor du ihn löschst.',
+      empty: 'Keine Passkeys in diesem Konto.',
+    },
+    home: {
+      stubTitle: 'Fast da',
+      stubBody:
+        'Die Anmeldung funktioniert. Die Web-Ansichten kommen im nächsten Schritt; nutze bis dahin die App am Handy.',
+      signedInAs: 'Angemeldet als {{name}} · {{email}}',
+    },
   },
 };

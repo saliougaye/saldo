@@ -574,6 +574,14 @@ export const it = {
     nameRequired: 'Prima scegli un nome',
     passkeyNote:
       'La passkey resta su questo telefono; il server conserva solo la sua chiave pubblica.',
+    emailAskTitle: 'La tua email',
+    emailAskBody:
+      'Serve per riconoscere questo account: l’amministratore del server vede questa email, non una password. Entrerai sempre con la passkey.',
+    emailAskLater: 'Più tardi',
+    emailAskTaken: 'Questa email è già di un altro account.',
+    emailAskInvalid: 'Scrivi un indirizzo email valido.',
+    emailAskFailed: 'Non è stato possibile salvare l’indirizzo. Riprova.',
+    emailAddRow: 'Aggiungi la tua email',
   },
   server: {
     title: 'Il tuo server Saldo',
@@ -1145,6 +1153,82 @@ export const it = {
     notice:
       'Il telefono è su {{city}}, dove sono le {{time}}. I conti restano su {{saved}} finché non lo cambi.',
     use: 'Usa {{city}}',
+  },
+  web: {
+    auth: {
+      signInTitle: 'Accedi a Saldo',
+      signInBody: 'Con la passkey che hai creato su questo server, dal telefono o da qui.',
+      crossDeviceHint:
+        'Su un computer senza passkey il browser mostra un QR: inquadralo con il telefono dove l’hai creata.',
+      emailLabel: 'Email',
+      emailPlaceholder: 'nome@esempio.it',
+      or: 'oppure',
+      closedTitle: 'Registrazioni chiuse',
+      closedBody: 'Questo server non accetta nuovi account. Chiedi un invito a chi lo gestisce.',
+      cancelledBody: 'La finestra della passkey è stata chiusa. Riprova quando vuoi.',
+      registerTitle: 'Crea il tuo account',
+      registerBody: 'Due cose su di te, poi la passkey. Niente password.',
+      nameLabel: 'Nome',
+      emailHint: 'Serve per riconoscerti. Non è una password.',
+      emailTakenTitle: 'Questa email ha già un account',
+      emailTakenBody:
+        'Accedi con la sua passkey. Se l’hai persa, chiedi all’amministratore del server.',
+      inviteTitle: 'Il tuo codice d’invito',
+      inviteBody:
+        'Questo server accetta nuovi account solo con un invito. Te l’ha mandato chi lo gestisce.',
+      inviteLabel: 'Codice d’invito',
+      inviteHint: '16 caratteri; maiuscole e trattini li sistemiamo noi.',
+      invalidInviteTitle: 'Il codice non è valido',
+      invalidInviteBody:
+        'Controlla di averlo copiato tutto, oppure chiedine uno nuovo. Un codice vale una volta e scade.',
+      passkeyTitle: 'Crea la tua passkey',
+      passkeyBody:
+        'Il browser ti chiederà impronta, volto o il PIN di questo dispositivo. La passkey resta qui; il server conserva solo la sua chiave pubblica.',
+      passkeyAccount: 'Account per {{name}} · {{email}}',
+      passkeyPhoneHint:
+        'Vuoi usare il telefono? Nella finestra del browser scegli «Usa un telefono» e inquadra il QR.',
+      passkeyButton: 'Crea la passkey',
+      haveAccount: 'Hai già un account?',
+      signInLink: 'Accedi',
+      mobileSignInTitle: 'Accedi per l’app',
+      mobileSignInBody:
+        'L’app Saldo ti ha mandato qui per usare la passkey. Finito, torni all’app da sola.',
+      mobileDoneTitle: 'Fatto',
+      mobileDoneBody:
+        'Stai tornando all’app Saldo. Se non si apre da sola, torna all’app: l’accesso è già pronto.',
+      linkUnusableTitle: 'Questo link non è utilizzabile',
+      linkMissing: 'Manca il redirect o lo state.',
+      emailInvalid: 'Scrivi un indirizzo email valido.',
+      genericError: 'Qualcosa è andato storto. Riprova.',
+      nameRequiredTitle: 'Manca il nome',
+      nameRequiredBody: 'Scrivi come vuoi essere chiamato in Saldo.',
+      handoffFailedTitle: 'L’accesso è fatto, ma l’app non l’ha ricevuto',
+      handoffFailedBody: 'Il tuo account è pronto. Tocca «Riprova» per tornare all’app.',
+    },
+    passkeys: {
+      title: 'Le tue passkey',
+      body: 'Ogni dispositivo da cui entri ha la sua. Il server conserva solo la chiave pubblica.',
+      add: 'Aggiungi passkey',
+      addedOn: 'Aggiunta il {{date}}',
+      inUse: 'in uso ora',
+      synced: 'Sincronizzata con il tuo gestore di password',
+      notSynced: 'Solo su questo dispositivo',
+      unknownProvider: 'Passkey',
+      renameTitle: 'Rinomina la passkey',
+      nameLabel: 'Nome',
+      renameHint: 'È l’etichetta di Saldo: il nome che il dispositivo le dà non cambia.',
+      deleteTitle: 'Eliminare questa passkey?',
+      deleteBody:
+        'Il dispositivo che la contiene non potrà più entrare in questo account. Le altre continuano a funzionare.',
+      lastOneNote: 'È la tua ultima passkey: aggiungine un’altra prima di eliminare questa.',
+      empty: 'Nessuna passkey su questo account.',
+    },
+    home: {
+      stubTitle: 'Ci siamo quasi',
+      stubBody:
+        'L’accesso funziona. Le schermate del web arrivano col prossimo passo; intanto usa l’app sul telefono.',
+      signedInAs: 'Sei entrato come {{name}} · {{email}}',
+    },
   },
 };
 

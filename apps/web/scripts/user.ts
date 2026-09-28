@@ -47,7 +47,9 @@ async function main(): Promise<void> {
       const state = row.revoked
         ? `revoked${row.revokedReason === null ? '' : `: ${row.revokedReason}`}`
         : 'active';
-      console.log(`${row.id}  ${row.role.padEnd(5)}  ${state.padEnd(20)}  ${row.displayName}`);
+      console.log(
+        `${row.id}  ${row.role.padEnd(5)}  ${state.padEnd(20)}  ${row.displayName}  ${row.email}`,
+      );
     }
     return;
   }

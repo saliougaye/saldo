@@ -55,13 +55,17 @@ afterAll(async () => {
 
 describe('the registration gate, on an open server', () => {
   it('starts the ceremony for somebody who gave a name', async () => {
-    const options = await optionsFor(encodeRegistrationContext({ name: 'Ada' }));
+    const options = await optionsFor(
+      encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' }),
+    );
     expect(options.challenge).toBeTypeOf('string');
     expect(options.user.name).toBe('Ada');
   });
 
   it('refuses a ceremony with no name to put on the account', async () => {
-    await expect(refusal(encodeRegistrationContext({ name: '   ' }))).resolves.toEqual({
+    await expect(
+      refusal(encodeRegistrationContext({ name: '   ', email: 'ada@example.com' })),
+    ).resolves.toEqual({
       status: 'BAD_REQUEST',
       message: 'Choose a name first',
     });
@@ -71,9 +75,17 @@ describe('the registration gate, on an open server', () => {
     // The same two contexts are told apart only under `invite`, below: this is what makes the
     // mode, and not the code, the thing that decides.
     await expect(
-      optionsFor(encodeRegistrationContext({ name: 'Ada', invite: 'ZZZZ-ZZZZ-ZZZZ-ZZZZ' })),
+      optionsFor(
+        encodeRegistrationContext({
+          name: 'Ada',
+          email: 'ada@example.com',
+          invite: 'ZZZZ-ZZZZ-ZZZZ-ZZZZ',
+        }),
+      ),
     ).resolves.toMatchObject({ user: { name: 'Ada' } });
-    await expect(optionsFor(encodeRegistrationContext({ name: 'Ada' }))).resolves.toMatchObject({
+    await expect(
+      optionsFor(encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' })),
+    ).resolves.toMatchObject({
       user: { name: 'Ada' },
     });
   });
@@ -105,7 +117,9 @@ describe('the registration gate, on a server that runs on invitation', () => {
       createdBy: null,
       now: new Date(),
     });
-    const options = await optionsFor(encodeRegistrationContext({ name: 'Marco', invite: code }));
+    const options = await optionsFor(
+      encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com', invite: code }),
+    );
     expect(options.user.name).toBe('Marco');
     // Invariant: a ceremony that is abandoned after this point must not have cost Marco his code.
     await expect(inviteIsUsable(harness.db, code, new Date())).resolves.toBe(true);
@@ -138,7 +152,7 @@ describe('the registration gate, on a server that runs on invitation', () => {
 
     const answers = await Promise.all(
       ['ZZZZ-ZZZZ-ZZZZ-ZZZZ', spent.code, revoked.code, expired.code].map((invite) =>
-        refusal(encodeRegistrationContext({ name: 'Marco', invite })),
+        refusal(encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com', invite })),
       ),
     );
     // One answer for unknown, spent, revoked and expired: the form must not become a way to find
@@ -152,7 +166,9 @@ describe('the registration gate, on a server that runs on invitation', () => {
   });
 
   it('refuses somebody who brought no code at all', async () => {
-    await expect(refusal(encodeRegistrationContext({ name: 'Marco' }))).resolves.toEqual({
+    await expect(
+      refusal(encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com' })),
+    ).resolves.toEqual({
       status: 'FORBIDDEN',
       message: 'That invite code is not valid',
     });

@@ -26,7 +26,7 @@ describe('GET /api/me', () => {
     const { userId, bearer } = await createTestSession(harness.db, 'Ada');
     const response = await GET(get({ authorization: bearer }));
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ id: userId, displayName: 'Ada' });
+    await expect(response.json()).resolves.toMatchObject({ id: userId, displayName: 'Ada' });
   });
 
   it('rejects a missing, malformed or unknown bearer', async () => {
@@ -45,5 +45,19 @@ describe('GET /api/me', () => {
       .set({ expiresAt: new Date(Date.now() - 1000) })
       .where(eq(session.token, bearer.replace('Bearer ', '')));
     expect((await GET(get({ authorization: bearer }))).status).toBe(401);
+  });
+
+  it('answers with the account, its email and whether the email is verified', async () => {
+    const session = await createTestSession(harness.db, 'Ada');
+    const response = await GET(
+      new Request('http://localhost/api/me', { headers: { authorization: session.bearer } }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      id: session.userId,
+      displayName: 'Ada',
+      email: `${session.userId}@passkey.saldo.invalid`,
+      emailVerified: false,
+    });
   });
 });

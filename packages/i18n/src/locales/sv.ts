@@ -571,6 +571,14 @@ export const sv: Messages = {
     registrationClosed: 'Servern tar inte emot nya konton',
     nameRequired: 'Välj ett namn först',
     passkeyNote: 'Nyckeln stannar på den här telefonen; servern sparar bara dess publika nyckel.',
+    emailAskTitle: 'Din e-post',
+    emailAskBody:
+      'Den identifierar kontot: serverns administratör ser adressen, inte något lösenord. Du loggar fortfarande in med passnyckeln.',
+    emailAskLater: 'Senare',
+    emailAskTaken: 'E-postadressen hör redan till ett annat konto.',
+    emailAskInvalid: 'Skriv en giltig e-postadress.',
+    emailAskFailed: 'Adressen kunde inte sparas. Försök igen.',
+    emailAddRow: 'Lägg till din e-post',
   },
   server: {
     title: 'Din Saldo-server',
@@ -1141,5 +1149,82 @@ export const sv: Messages = {
     notice:
       'Telefonen går på {{city}}-tid, där klockan är {{time}}. Siffrorna ligger kvar på {{saved}} tills du ändrar det.',
     use: 'Använd {{city}}',
+  },
+  web: {
+    auth: {
+      signInTitle: 'Logga in på Saldo',
+      signInBody: 'Med passnyckeln du skapade på den här servern, från telefonen eller härifrån.',
+      crossDeviceHint:
+        'På en dator utan passnyckel visar webbläsaren en QR-kod: skanna den med telefonen där du skapade din.',
+      emailLabel: 'E-post',
+      emailPlaceholder: 'namn@exempel.se',
+      or: 'eller',
+      closedTitle: 'Registreringen är stängd',
+      closedBody: 'Servern tar inte emot nya konton. Be den som driver den om en inbjudan.',
+      cancelledBody: 'Passnyckelfönstret stängdes. Försök igen när du vill.',
+      registerTitle: 'Skapa ditt konto',
+      registerBody: 'Två saker om dig, sedan passnyckeln. Inget lösenord.',
+      nameLabel: 'Namn',
+      emailHint: 'Den används för att känna igen dig. Den är inget lösenord.',
+      emailTakenTitle: 'E-postadressen har redan ett konto',
+      emailTakenBody:
+        'Logga in med dess passnyckel. Har du tappat den, fråga serverns administratör.',
+      inviteTitle: 'Din inbjudningskod',
+      inviteBody:
+        'Servern tar bara emot nya konton med en inbjudan. Den som driver den har skickat dig en.',
+      inviteLabel: 'Inbjudningskod',
+      inviteHint: '16 tecken; vi fixar versaler och bindestreck.',
+      invalidInviteTitle: 'Koden är inte giltig',
+      invalidInviteBody:
+        'Kontrollera att du kopierade hela, eller be om en ny. En kod gäller en gång och går ut.',
+      passkeyTitle: 'Skapa din passnyckel',
+      passkeyBody:
+        'Webbläsaren frågar efter fingeravtryck, ansikte eller enhetens PIN. Passnyckeln stannar här; servern sparar bara dess publika nyckel.',
+      passkeyAccount: 'Konto för {{name}} · {{email}}',
+      passkeyPhoneHint:
+        'Vill du använda telefonen? Välj ”Använd en telefon” i webbläsarens fönster och skanna QR-koden.',
+      passkeyButton: 'Skapa passnyckeln',
+      haveAccount: 'Har du redan ett konto?',
+      signInLink: 'Logga in',
+      mobileSignInTitle: 'Logga in för appen',
+      mobileSignInBody:
+        'Saldo-appen skickade dig hit för att använda passnyckeln. När du är klar återvänder den själv.',
+      mobileDoneTitle: 'Klart',
+      mobileDoneBody:
+        'Du går tillbaka till Saldo-appen. Öppnas den inte av sig själv, byt till den: du är inloggad.',
+      linkUnusableTitle: 'Den här länken går inte att använda',
+      linkMissing: 'Redirect eller state saknas.',
+      emailInvalid: 'Skriv en giltig e-postadress.',
+      genericError: 'Något gick fel. Försök igen.',
+      nameRequiredTitle: 'Ditt namn saknas',
+      nameRequiredBody: 'Skriv namnet som Saldo ska använda för dig.',
+      handoffFailedTitle: 'Du är inloggad, men appen fick det inte',
+      handoffFailedBody:
+        'Ditt konto är klart. Tryck på «Försök igen» för att gå tillbaka till appen.',
+    },
+    passkeys: {
+      title: 'Dina passnycklar',
+      body: 'Varje enhet du loggar in från har sin egen. Servern sparar bara den publika nyckeln.',
+      add: 'Lägg till passnyckel',
+      addedOn: 'Tillagd {{date}}',
+      inUse: 'används nu',
+      synced: 'Synkad med din lösenordshanterare',
+      notSynced: 'Bara på den här enheten',
+      unknownProvider: 'Passnyckel',
+      renameTitle: 'Byt namn på passnyckeln',
+      nameLabel: 'Namn',
+      renameHint: 'Det är Saldos etikett: namnet enheten ger den ändras inte.',
+      deleteTitle: 'Ta bort passnyckeln?',
+      deleteBody:
+        'Enheten som har den kommer inte in i kontot längre. De andra fortsätter att fungera.',
+      lastOneNote: 'Det är din sista passnyckel: lägg till en till innan du tar bort den.',
+      empty: 'Inga passnycklar på kontot.',
+    },
+    home: {
+      stubTitle: 'Nästan framme',
+      stubBody:
+        'Inloggningen fungerar. Webbvyerna kommer i nästa steg; använd appen i telefonen tills dess.',
+      signedInAs: 'Inloggad som {{name}} · {{email}}',
+    },
   },
 };
