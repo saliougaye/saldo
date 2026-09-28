@@ -1,0 +1,68 @@
+/**
+ * Below the breakpoint the panel is the screen: a list behind a 420px column on a phone would
+ * leave neither of them readable (§17.1.7).
+ */
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
+  overflow-y: auto;
+  background: var(--color-bg);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .panel {
+    position: sticky;
+    inset: auto;
+    top: calc(var(--layout-topbar-height) + 32px);
+    z-index: 0;
+    inline-size: var(--layout-panel-width);
+    max-block-size: calc(100dvh - var(--layout-topbar-height) - 64px);
+    padding: 0 0 0 24px;
+    border-inline-start: 1px solid var(--color-border);
+    background: transparent;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--layout-header-button);
+  block-size: var(--layout-header-button);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+}
+
+.close:hover {
+  background: var(--color-raised);
+  color: var(--color-text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+}

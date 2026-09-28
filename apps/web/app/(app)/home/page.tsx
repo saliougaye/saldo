@@ -7,18 +7,12 @@ import type {
   LocalDate,
 } from '@saldo/core';
 import { parseLocalDate } from '@saldo/core';
-import {
-  type AppLocale,
-  formatDayMonth,
-  formatMoney,
-  formatMonthYear,
-  type Translate,
-  type TranslationVars,
-} from '@saldo/i18n';
+import { type AppLocale, formatDayMonth, formatMoney, formatMonthYear } from '@saldo/i18n';
 import { categoryColors, type IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
+import { plural } from '../../../src/i18n/plural';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';
@@ -39,22 +33,6 @@ export const dynamic = 'force-dynamic';
 const ROW_RING = 28;
 /** Wide enough for «oggi» in every locale, centred on the pace tick (the phone's `FeaturedTarget`). */
 const TODAY_WIDTH = 64;
-
-/**
- * The phone's catalogs are i18next's, so a counted string is written `_one`/`_other` and
- * `makeTranslator` deliberately does not choose between them (§17.1.6). CLDR does: French takes
- * `_one` at zero as well, which a `count === 1` test would get wrong.
- */
-function plural(
-  t: Translate,
-  locale: AppLocale,
-  key: string,
-  count: number,
-  vars: TranslationVars = {},
-): string {
-  const category = new Intl.PluralRules(locale).select(count);
-  return t(`${key}_${category === 'one' ? 'one' : 'other'}`, { ...vars, count });
-}
 
 interface Segment {
   key: string;

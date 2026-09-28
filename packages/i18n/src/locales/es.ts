@@ -434,6 +434,8 @@ export const es: Messages = {
     document: 'Elegir un PDF',
     open: 'Abrir adjunto',
     count: '{{count}} de {{max}}',
+    countOnPhone_one: '{{count}} adjunto, solo en el teléfono',
+    countOnPhone_other: '{{count}} adjuntos, solo en el teléfono',
     tooLarge: 'Archivo demasiado grande (máx. 10 MB)',
     failed: 'No se pudo adjuntar',
     missing: 'Este adjunto ya no está',

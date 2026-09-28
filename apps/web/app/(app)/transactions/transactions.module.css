@@ -1,0 +1,113 @@
+.layout {
+  display: grid;
+  gap: var(--layout-section-gap-web);
+  align-items: start;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filteredTotal {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.sectionMeta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.amount {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtitle {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  font-size: var(--font-size-footnote);
+  border-top: 1px solid var(--color-border);
+}
+
+.fact:first-child {
+  border-top: 0;
+}
+
+.factLabel {
+  color: var(--color-text-muted);
+  flex: none;
+}
+
+.factValue {
+  margin: 0;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.factLink {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+.note {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.inert {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+/* The edit affordance of 0.3e, visible and deliberately not a control (§17.1.9). */
+.inertAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--layout-header-button);
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-footnote);
+}

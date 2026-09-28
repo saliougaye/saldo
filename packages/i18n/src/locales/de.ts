@@ -434,6 +434,8 @@ export const de: Messages = {
     document: 'PDF auswählen',
     open: 'Anhang öffnen',
     count: '{{count}} von {{max}}',
+    countOnPhone_one: '{{count}} Anhang, nur auf dem Handy',
+    countOnPhone_other: '{{count}} Anhänge, nur auf dem Handy',
     tooLarge: 'Datei zu groß (max. 10 MB)',
     failed: 'Anhängen fehlgeschlagen',
     missing: 'Dieser Anhang ist nicht mehr da',

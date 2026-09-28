@@ -1,0 +1,3 @@
+.form {
+  max-inline-size: var(--layout-search-width);
+}

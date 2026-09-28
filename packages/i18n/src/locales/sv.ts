@@ -432,6 +432,8 @@ export const sv: Messages = {
     document: 'Välj en PDF',
     open: 'Öppna bilaga',
     count: '{{count}} av {{max}}',
+    countOnPhone_one: '{{count}} bilaga, bara i telefonen',
+    countOnPhone_other: '{{count}} bilagor, bara i telefonen',
     tooLarge: 'Filen är för stor (max 10 MB)',
     failed: 'Det gick inte att bifoga',
     missing: 'Bilagan finns inte längre',

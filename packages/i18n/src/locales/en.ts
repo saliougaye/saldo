@@ -430,6 +430,8 @@ export const en: Messages = {
     document: 'Choose a PDF',
     open: 'Open attachment',
     count: '{{count}} of {{max}}',
+    countOnPhone_one: '{{count}} attachment, only on the phone',
+    countOnPhone_other: '{{count}} attachments, only on the phone',
     tooLarge: 'File too large (max 10 MB)',
     failed: 'It could not be attached',
     missing: 'This attachment is gone',
