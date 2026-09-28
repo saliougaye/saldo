@@ -66,3 +66,8 @@
   gap: 16px;
   padding-top: 4px;
 }
+
+/* Focus lands here on a narrow screen; the heading is not a control, so it draws no ring. */
+.title:focus {
+  outline: none;
+}

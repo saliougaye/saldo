@@ -1,22 +1,33 @@
-import { formatDayMonth, formatLongDate, formatMoney, plural } from '@saldo/i18n';
+import {
+  cadenceLabel,
+  endLabel,
+  formatDayMonth,
+  formatLongDate,
+  formatMoney,
+  plural,
+} from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PERIOD_PARAM } from '../../../src/features/period/periodParams';
-import type { DetailFactKind } from '../../../src/features/transactions/detailView';
-import { detailView } from '../../../src/features/transactions/detailView';
+import {
+  type DetailFactKind,
+  type DetailView,
+  detailView,
+} from '../../../src/features/transactions/detailView';
 import {
   filtersFromSearch,
   searchFromFilters,
   toggleHref,
 } from '../../../src/features/transactions/listParams';
-import { type DayView, listView } from '../../../src/features/transactions/listView';
+import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Band } from '../../../src/ui/Band';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { Icon } from '../../../src/ui/Icon';
+import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
@@ -32,6 +43,9 @@ const PATH = '/transactions';
 /** The parameter that carries the selected row, and the only state the panel has. */
 const SELECTION_PARAM = 't';
 
+/** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
+const MISSING = '—';
+
 /** Which label each fact of the panel takes: the phone's own, key for key (§6.6). */
 const FACT_LABELS: Record<DetailFactKind, string> = {
   from: 'txForm.from',
@@ -39,14 +53,13 @@ const FACT_LABELS: Record<DetailFactKind, string> = {
   category: 'transactions.detailCategory',
   account: 'transactions.detailAccount',
   date: 'transactions.detailDate',
-  note: 'transactions.detailNote',
 };
 
 /**
  * Transazioni on the web (§17.1.7): the period, the search and the chips of §5.12, «In arrivo» as
- * its own section, then one section per day — and the selected row's detail in a trailing panel
- * that the URL, not client state, decides. Every figure comes from `listView` and `detailView`,
- * which are the same `@saldo/core` the phone calls: nothing is added up here.
+ * a disclosure, then one section per day — and the selected row's detail in a trailing panel that
+ * the URL, not client state, decides. Every figure comes from `listView` and `detailView`, which
+ * are the same `@saldo/core` the phone calls: nothing is added up here.
  */
 export default async function TransactionsPage({
   searchParams,
@@ -56,36 +69,25 @@ export default async function TransactionsPage({
   const page = await readPage(searchParams);
   const { t, locale, currency, today, def, period, params } = page;
   const filters = filtersFromSearch(params);
-  const view = listView({
-    data: page.data,
-    filters,
-    today,
-    def,
-    period,
-    kindLabel: (kind) => t(`kinds.${kind}`),
-  });
+  const kindLabel = (kind: string) => t(`kinds.${kind}`);
+  const view = listView({ data: page.data, filters, today, def, period, kindLabel });
+  const choices = filterChoices(page.data);
   const selectedId = params[SELECTION_PARAM];
   const selected =
-    selectedId === undefined
-      ? null
-      : detailView({
-          data: page.data,
-          id: selectedId,
-          today,
-          kindLabel: (kind) => t(`kinds.${kind}`),
-        });
+    selectedId === undefined ? null : detailView({ data: page.data, id: selectedId, kindLabel });
 
   // What every link on this page carries: the filters, and the period, which is not one of them.
-  const keep: Record<string, string> = searchFromFilters(filters);
+  const periodOnly: Record<string, string> = {};
   const periodParam = params[PERIOD_PARAM];
-  if (periodParam !== undefined) keep[PERIOD_PARAM] = periodParam;
-  const href = (extra: Record<string, string> = {}) => {
-    const query = new URLSearchParams({ ...keep, ...extra }).toString();
-    return query === '' ? PATH : `${PATH}?${query}`;
+  if (periodParam !== undefined) periodOnly[PERIOD_PARAM] = periodParam;
+  const keep: Record<string, string> = { ...searchFromFilters(filters), ...periodOnly };
+  const link = (query: Record<string, string>) => {
+    const search = new URLSearchParams(query).toString();
+    return search === '' ? PATH : `${PATH}?${search}`;
   };
+  const href = (extra: Record<string, string> = {}) => link({ ...keep, ...extra });
   const keepWithoutQuery = Object.fromEntries(Object.entries(keep).filter(([key]) => key !== 'q'));
 
-  const factLabel = (kind: DetailFactKind) => t(FACT_LABELS[kind]);
   // A figure inside a sentence is plain text; `AmountText` renders the ones that stand alone.
   const money = (minor: number) => formatMoney(minor, currency, locale);
   const filteredTotal = plural(
@@ -96,29 +98,38 @@ export default async function TransactionsPage({
     { spent: money(view.totals.expense), income: money(view.totals.income) },
   );
 
-  const dayRows = (day: DayView, upcoming: boolean) =>
-    day.rows.map((row) => (
-      <ListRow
-        key={row.id}
-        href={href({ [SELECTION_PARAM]: row.id })}
-        selected={selected?.id === row.id}
-        icon={row.icon as IconName}
-        colorIndex={row.colorIndex}
-        badge={row.recurring ? 'repeat' : undefined}
-        title={row.title}
-        subtitle={upcoming ? `${formatDayMonth(row.date, locale)} · ${row.subtitle}` : row.subtitle}
-        upcoming={upcoming}
-        trailing={
-          <AmountText
-            minor={row.amount.minor}
-            currency={currency}
-            locale={locale}
-            sign={row.amount.signDisplay}
-            muted={upcoming || row.amount.muted}
-          />
-        }
-      />
-    ));
+  const daySection = (day: DayView, upcoming: boolean) => (
+    <Section
+      key={day.date}
+      title={formatDayMonth(day.date, locale)}
+      trailing={
+        <AmountText minor={day.expenseTotal} currency={currency} locale={locale} size="footnote" />
+      }
+    >
+      {day.rows.map((row) => (
+        <ListRow
+          key={row.id}
+          href={href({ [SELECTION_PARAM]: row.id })}
+          selected={selected?.id === row.id}
+          icon={row.icon as IconName}
+          colorIndex={row.colorIndex}
+          badge={row.recurring ? 'repeat' : undefined}
+          title={row.title}
+          subtitle={row.subtitle}
+          upcoming={upcoming}
+          trailing={
+            <AmountText
+              minor={row.amount.minor}
+              currency={currency}
+              locale={locale}
+              sign={row.amount.signDisplay}
+              muted={row.amount.muted}
+            />
+          }
+        />
+      ))}
+    </Section>
+  );
 
   const fact = (key: string, label: string, value: ReactNode) => (
     <div className={styles.fact} key={key}>
@@ -126,6 +137,18 @@ export default async function TransactionsPage({
       <dd className={styles.factValue}>{value}</dd>
     </div>
   );
+
+  /** The phone's «Nota» row: always there, with what it says when nothing was typed. */
+  const noteText = (detail: DetailView) => {
+    if (detail.note !== null) return detail.note;
+    const { recurrence } = detail;
+    if (recurrence === null) return t('transactions.manual');
+    return t('recurrence.recurringNote', {
+      cadence: cadenceLabel(recurrence, recurrence.startDate, t, locale).toLowerCase(),
+    });
+  };
+
+  const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
 
   return (
     <div className={styles.layout}>
@@ -165,12 +188,15 @@ export default async function TransactionsPage({
               href={toggleHref(PATH, filters, { direction: 'transfer' }, params)}
               active={filters.direction === 'transfer'}
             />
-            {/* Archived accounts are listed too, as on the phone: their rows are still in the
-                period, and a filter that cannot reach them hides them for good (§5.12). */}
-            {page.data.accounts.map((account) => (
+            {/* The phone's account sheet, as chips: every account, archived ones marked (§5.12). */}
+            {choices.accounts.map((account) => (
               <Chip
                 key={account.id}
-                label={account.name}
+                label={
+                  account.archived
+                    ? `${account.name} · ${t('accounts.archivedBadge')}`
+                    : account.name
+                }
                 href={toggleHref(PATH, filters, { accountId: account.id }, params)}
                 active={filters.accountId === account.id}
               />
@@ -181,74 +207,101 @@ export default async function TransactionsPage({
               active={filters.onlyExcluded}
             />
           </div>
-          {view.filtered ? <p className={styles.filteredTotal}>{filteredTotal}</p> : null}
+          {/* The phone's tag sheet, as a second row of chips, most used first (§6.23). */}
+          {choices.tags.length === 0 ? null : (
+            <div className={styles.chips}>
+              {choices.tags.map((tag) => (
+                <Chip
+                  key={tag.id}
+                  label={tag.name}
+                  href={toggleHref(PATH, filters, { tagId: tag.id }, params)}
+                  active={filters.tagIds.includes(tag.id)}
+                />
+              ))}
+            </div>
+          )}
+          {view.hiddenTransfers === 0 ? null : (
+            <p className={styles.filterNote}>
+              {plural(t, locale, 'transactions.transfersHidden', view.hiddenTransfers)}
+            </p>
+          )}
+          {view.filtered ? <p className={styles.filterNote}>{filteredTotal}</p> : null}
         </Band>
 
-        {view.upcoming.count === 0 ? null : (
-          <Section
-            title={t('transactions.upcoming')}
-            trailing={
-              <span className={styles.sectionMeta}>
-                {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
-                <AmountText
-                  minor={view.upcoming.net}
-                  currency={currency}
-                  locale={locale}
-                  sign="always"
-                  size="footnote"
-                />
-              </span>
-            }
-          >
-            {view.upcomingDays.flatMap((day) => dayRows(day, true))}
-          </Section>
-        )}
-
-        {view.days.length === 0 && view.upcomingDays.length === 0 ? (
-          <EmptyState
-            title={view.filtered ? t('transactions.noResults') : t('transactions.empty')}
-            body={view.filtered ? t('transactions.noResultsBody') : t('transactions.emptyBody')}
-          />
+        {!hasRows ? (
+          view.filtered ? (
+            <div className={styles.empty}>
+              <EmptyState
+                title={t('transactions.noResults')}
+                body={t('transactions.noResultsBody')}
+              />
+              <Link className={styles.reset} href={link(periodOnly)}>
+                {t('transactions.resetFilters')}
+              </Link>
+            </div>
+          ) : (
+            <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
+          )
         ) : (
-          view.days.map((day) => (
-            <Section
-              key={day.date}
-              title={formatDayMonth(day.date, locale)}
-              trailing={
-                <AmountText
-                  minor={day.expenseTotal}
-                  currency={currency}
-                  locale={locale}
-                  size="footnote"
-                />
-              }
-            >
-              {dayRows(day, false)}
-            </Section>
-          ))
+          <>
+            {/* §5.12: what is still to come is folded behind one row. A native disclosure, so it
+                opens with no client state and without JavaScript — the phone's `UpcomingRow`. */}
+            {view.upcoming.count === 0 ? null : (
+              <details className={styles.upcoming}>
+                <summary className={styles.upcomingSummary}>
+                  <IconBox name="clock" />
+                  <span className={styles.upcomingText}>
+                    <span className={styles.upcomingTitle}>{t('transactions.upcoming')}</span>
+                    <span className={styles.upcomingCount}>
+                      {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                    </span>
+                  </span>
+                  <span className={styles.upcomingNet}>{money(view.upcoming.net)}</span>
+                  <Icon name="chevD" size={16} className={styles.chevron} />
+                </summary>
+                <div className={styles.upcomingBody}>
+                  <p className={styles.divider}>{t('transactions.upcomingSection')}</p>
+                  {view.upcomingDays.map((day) => daySection(day, true))}
+                </div>
+              </details>
+            )}
+            {/* Shown by CSS only while the disclosure is open, as the phone shows it (§5.12). */}
+            {view.upcoming.count > 0 && view.days.length > 0 ? (
+              <p className={`${styles.divider} ${styles.settledDivider}`}>
+                {t('transactions.settledSection')}
+              </p>
+            ) : null}
+            {view.days.map((day) => daySection(day, false))}
+          </>
         )}
       </div>
 
       {selected === null ? null : (
-        <Panel title={selected.title} closeHref={href()} closeLabel={t('common.close')}>
-          <div className={styles.amount}>
-            <AmountText
-              minor={selected.amount.minor}
-              currency={currency}
-              locale={locale}
-              sign={selected.amount.signDisplay}
-              muted={selected.amount.muted}
-              size="hero"
-            />
-            <p className={styles.subtitle}>{selected.subtitle}</p>
-          </div>
+        <Panel
+          key={selected.id}
+          title={selected.title}
+          closeHref={href()}
+          closeLabel={t('common.close')}
+        >
+          {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
+              `-amount` / `negative` while its list row leaves it unsigned, and the web matches
+              the phone screen for screen (see `DetailView.hero`). */}
+          <AmountText
+            minor={selected.hero.minor}
+            currency={currency}
+            locale={locale}
+            sign={selected.hero.signDisplay}
+            size="hero"
+          />
 
           <dl className={styles.facts}>
             {selected.facts.map((item) =>
               fact(
                 item.kind,
-                factLabel(item.kind),
-                item.kind === 'date' ? (
+                t(FACT_LABELS[item.kind]),
+                item.value === null ? (
+                  MISSING
+                ) : item.kind === 'date' ? (
                   formatLongDate(item.value, locale)
                 ) : item.href === null ? (
                   item.value
@@ -259,31 +312,32 @@ export default async function TransactionsPage({
                 ),
               ),
             )}
-            {selected.tagNames.length === 0
-              ? null
-              : fact('tags', t('transactions.tags'), selected.tagNames.join(' · '))}
-            {selected.recurrenceId === null
+            {fact('note', t('transactions.detailNote'), noteText(selected))}
+            {selected.recurrence === null
               ? null
               : fact(
                   'recurrence',
                   t('recurrence.recurringRow'),
-                  selected.recurrenceEnd === null
-                    ? t('recurrence.noEnd')
-                    : t('recurrence.untilDate', {
-                        date: formatDayMonth(selected.recurrenceEnd, locale),
-                      }),
+                  endLabel(selected.recurrence.endDate, t, locale),
+                )}
+            {selected.excluded
+              ? fact(
+                  'excluded',
+                  t('transactions.excludedFromTotals'),
+                  <Icon name="check" size={16} />,
+                )
+              : null}
+            {selected.tagNames.length === 0
+              ? null
+              : fact('tags', t('transactions.tags'), selected.tagNames.join(' · '))}
+            {selected.attachmentCount === 0
+              ? null
+              : fact(
+                  'attachments',
+                  t('transactions.detailAttachments'),
+                  plural(t, locale, 'attachments.summary', selected.attachmentCount),
                 )}
           </dl>
-
-          {selected.upcoming ? <p className={styles.note}>{t('transactions.upcoming')}</p> : null}
-          {selected.excluded ? (
-            <p className={styles.note}>{t('transactions.excludedFromTotals')}</p>
-          ) : null}
-          {selected.attachmentCount === 0 ? null : (
-            <p className={styles.note}>
-              {plural(t, locale, 'attachments.countOnPhone', selected.attachmentCount)}
-            </p>
-          )}
 
           {/* 0.3e turns this into the form; until then it says so rather than lying (§17.1.9). */}
           <div className={styles.inert}>

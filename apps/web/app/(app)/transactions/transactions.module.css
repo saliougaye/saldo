@@ -25,28 +25,6 @@
   gap: 8px;
 }
 
-.filteredTotal {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-}
-
-.sectionMeta {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.amount {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.subtitle {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-}
-
 .facts {
   display: flex;
   flex-direction: column;
@@ -110,4 +88,113 @@
   background: var(--color-raised);
   color: var(--color-text-faint);
   font-size: var(--font-size-footnote);
+}
+
+.filterNote {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.reset {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+/* «In arrivo»: one row that opens onto the days ahead (§5.12, the phone's `UpcomingRow`). */
+.upcoming {
+  display: flex;
+  flex-direction: column;
+}
+
+.upcomingSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  list-style: none;
+}
+
+.upcomingSummary::-webkit-details-marker {
+  display: none;
+}
+
+.upcomingText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.upcomingTitle {
+  font-weight: var(--font-weight-medium);
+}
+
+.upcomingCount,
+.upcomingNet {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.upcomingNet {
+  font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+  color: var(--color-text-faint);
+  transition: transform var(--motion-press) var(--motion-easing);
+}
+
+.upcoming[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.upcomingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  padding-top: 24px;
+}
+
+/* The phone's `SectionDivider`: a caption in capitals, then a hairline to the end of the row. */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.settledDivider {
+  display: none;
+}
+
+.upcoming[open] + .settledDivider {
+  display: flex;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }
