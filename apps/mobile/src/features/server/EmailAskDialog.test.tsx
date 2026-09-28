@@ -5,6 +5,14 @@ import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { EmailAskDialog } from './EmailAskDialog';
 
+/**
+ * Both assertions below wait for a state change behind a promise. The library's default is one
+ * second, which the whole suite running in parallel with the other packages has already exceeded
+ * once on this machine — and "did the dialog eventually show the refusal" is not a question about
+ * speed. Long enough to be honest, short enough to still fail rather than hang.
+ */
+const SETTLES_IN = { timeout: 5000 };
+
 let i18n: I18nInstance;
 beforeAll(async () => {
   i18n = await createI18n('en', []);
@@ -37,7 +45,7 @@ describe('EmailAskDialog', () => {
     await renderDialog({ onSave, onDismiss: jest.fn() });
     await fireEvent.changeText(screen.getByTestId('email-ask-field'), 'ada@example.com');
     await fireEvent.press(screen.getByTestId('email-ask-save'));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith('ada@example.com'));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith('ada@example.com'), SETTLES_IN);
   });
 
   it('shows the server’s refusal and stays open', async () => {
@@ -48,8 +56,9 @@ describe('EmailAskDialog', () => {
     await renderDialog({ onSave, onDismiss });
     await fireEvent.changeText(screen.getByTestId('email-ask-field'), 'ada@example.com');
     await fireEvent.press(screen.getByTestId('email-ask-save'));
-    await waitFor(() =>
-      expect(screen.getByText(/già di un altro account|another account/i)).toBeTruthy(),
+    await waitFor(
+      () => expect(screen.getByText(/già di un altro account|another account/i)).toBeTruthy(),
+      SETTLES_IN,
     );
     expect(onDismiss).not.toHaveBeenCalled();
   });
