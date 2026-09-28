@@ -139,6 +139,9 @@ export function PasskeyList({ passkeys, strings }: Props) {
               <Button
                 busy={busy}
                 busyLabel={strings.working}
+                /** The action refuses an empty name (`updatePasskey` validates `min(1)`), so the
+                 * button does not offer to send one. */
+                disabled={name.trim().length === 0}
                 onClick={() => {
                   const target = renaming;
                   if (target === null) return;

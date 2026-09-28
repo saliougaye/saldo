@@ -10,17 +10,25 @@ import { getDb } from '../../../../src/server/db/client';
 import { log } from '../../../../src/server/log';
 
 /** What the client does with the answer: show nothing, or one line where the row is. */
-export type PasskeyActionResult = { ok: true } | { ok: false; reason: 'last_one' | 'failed' };
+export type PasskeyActionResult =
+  | { ok: true }
+  | { ok: false; reason: 'last_one' | 'empty_name' | 'failed' };
 
 const MAX_NAME_LENGTH = 60;
 
 /**
  * §17.1.7: the name is Saldo's own label — the authenticator's name does not change — so this is a
- * plain rename, and an empty one puts the row back to «Passkey».
+ * plain rename.
+ *
+ * An empty name is refused rather than taken as «clear the label»: Better Auth's `updatePasskey`
+ * validates `name` with `min(1)`, so sending one would come back as an opaque failure. A row with no
+ * label already shows its authenticator's name (`web.passkeys.unknownProvider` when the AAGUID says
+ * nothing), so there is nothing an empty name could mean that the row does not already do.
  */
 export async function renamePasskeyAction(id: string, name: string): Promise<PasskeyActionResult> {
   const user = await requireWebUser();
   const trimmed = name.trim().slice(0, MAX_NAME_LENGTH);
+  if (trimmed.length === 0) return { ok: false, reason: 'empty_name' };
   try {
     // The endpoint checks the passkey belongs to the session (`requireResourceOwnership`), so an id
     // from somewhere else is refused there rather than trusted here.
