@@ -1,0 +1,25 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-footnote);
+}
+
+.link:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.link[aria-current="page"] {
+  color: var(--color-text);
+  background: var(--color-raised);
+}
+
+.icon {
+  flex: none;
+}

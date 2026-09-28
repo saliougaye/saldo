@@ -34,7 +34,7 @@ export default async function PasskeysPage() {
   };
 
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <h1 className={styles.title}>{t('web.passkeys.title')}</h1>
       <p className={styles.body}>{t('web.passkeys.body')}</p>
       <PasskeyList
@@ -65,6 +65,6 @@ export default async function PasskeysPage() {
           {t('common.goBack')}
         </a>
       </p>
-    </main>
+    </div>
   );
 }

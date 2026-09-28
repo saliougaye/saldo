@@ -1,0 +1,28 @@
+.bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--layout-tab-bar-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  z-index: 10;
+}
+
+.bar a {
+  flex-direction: column;
+  gap: 4px;
+  height: auto;
+  padding: 8px 12px;
+  min-width: var(--layout-min-hit-target);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .bar {
+    display: none;
+  }
+}

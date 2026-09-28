@@ -1,0 +1,52 @@
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.popup {
+  min-width: 220px;
+  padding: 6px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  background: var(--color-raised);
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 6px;
+}
+
+.name {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.email {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+}
+
+.item {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-input);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.item[data-highlighted] {
+  background: var(--color-surface);
+}

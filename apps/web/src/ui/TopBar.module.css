@@ -1,0 +1,62 @@
+.bar {
+  display: none;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .bar {
+    display: block;
+    height: var(--layout-topbar-height);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+}
+
+.inner {
+  height: 100%;
+  max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+  margin: 0 auto;
+  padding: 0 var(--layout-page-padding-web);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.brand {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.sections {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.actions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.newDisabled {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-footnote);
+  cursor: not-allowed;
+}
