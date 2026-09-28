@@ -1,10 +1,16 @@
 import {
   type Account,
+  type Attachment,
   accountSchema,
+  attachmentSchema,
   type Category,
   categorySchema,
   emptyUserData,
+  type Recurrence,
+  recurrenceSchema,
+  type Tag,
   type Transaction,
+  tagSchema,
   transactionSchema,
   type UserData,
 } from '@saldo/core';
@@ -31,6 +37,60 @@ export const ACCOUNT: Account = accountSchema.parse({
   updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
   deletedAt: null,
 });
+
+export const ACCOUNT_2: Account = accountSchema.parse({
+  ...ACCOUNT,
+  id: 'a2',
+  name: 'Risparmi',
+  type: 'savings',
+  colorIndex: 3,
+  icon: 'piggy',
+  sortOrder: 1,
+});
+
+export const TAG: Tag = tagSchema.parse({
+  id: 'g1',
+  name: 'Vacanza',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
+  deletedAt: null,
+});
+
+export const RECURRENCE: Recurrence = recurrenceSchema.parse({
+  id: 'r1',
+  frequency: 'monthly',
+  interval: 1,
+  startDate: '2026-01-10',
+  endDate: '2026-12-10',
+  template: {
+    kind: 'expense',
+    amount: 500,
+    accountId: 'a1',
+    toAccountId: null,
+    categoryId: 'c1',
+    description: '',
+    tagIds: [],
+    excludeFromTotals: false,
+  },
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
+  deletedAt: null,
+});
+
+export function attachment(id: string, transactionId: string): Attachment {
+  return attachmentSchema.parse({
+    id,
+    transactionId,
+    mimeType: 'image/jpeg',
+    byteSize: 1024,
+    sha256: 'a'.repeat(64),
+    width: 100,
+    height: 100,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
+    deletedAt: null,
+  });
+}
 
 export const CATEGORY: Category = categorySchema.parse({
   id: 'c1',
@@ -80,11 +140,13 @@ export function tx(
   });
 }
 
-export function dataWith(transactions: Transaction[]): UserData {
+/** The two accounts, the two categories and whatever else a test needs on top (tags, recurrences…). */
+export function dataWith(transactions: Transaction[], over: Partial<UserData> = {}): UserData {
   return {
     ...emptyUserData(),
     transactions,
-    accounts: [ACCOUNT],
+    accounts: [ACCOUNT, ACCOUNT_2],
     categories: [CATEGORY, CATEGORY_2],
+    ...over,
   };
 }
