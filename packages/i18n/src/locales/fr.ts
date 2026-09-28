@@ -1224,6 +1224,8 @@ export const fr: Messages = {
       openMenu: 'Ouvrir le menu du profil',
       skipToContent: 'Aller au contenu',
       comingIn0_3e: 'À venir à la prochaine étape ; en attendant, saisis depuis le téléphone.',
+      mainNav: 'Barre principale',
+      sectionNav: 'Sections',
     },
     passkeys: {
       title: 'Tes passkeys',

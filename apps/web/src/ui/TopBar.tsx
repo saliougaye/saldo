@@ -10,6 +10,8 @@ interface Props {
   items: (NavItem & { label: string })[];
   user: { name: string; email: string };
   strings: {
+    /** Names the landmark: the tab bar is a second `<nav>` on the same page (§17.1.7). */
+    label: string;
     newTransaction: string;
     openMenu: string;
     profile: string;
@@ -30,7 +32,7 @@ export function TopBar({ items, user, strings }: Props) {
   const trailing = items.filter((item) => item.trailing === true);
   return (
     <header className={styles.bar}>
-      <nav className={styles.inner} aria-label="Saldo">
+      <nav className={styles.inner} aria-label={strings.label}>
         <Link className={styles.brand} href="/home">
           Saldo
         </Link>

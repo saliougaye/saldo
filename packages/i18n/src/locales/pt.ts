@@ -1217,6 +1217,8 @@ export const pt: Messages = {
       openMenu: 'Abrir o menu do perfil',
       skipToContent: 'Ir para o conteúdo',
       comingIn0_3e: 'Chega no próximo passo; por agora escreve no telemóvel.',
+      mainNav: 'Barra principal',
+      sectionNav: 'Secções',
     },
     passkeys: {
       title: 'As tuas passkeys',

@@ -1210,6 +1210,8 @@ export const sv: Messages = {
       openMenu: 'Öppna profilmenyn',
       skipToContent: 'Hoppa till innehållet',
       comingIn0_3e: 'Kommer i nästa steg; skriv från telefonen så länge.',
+      mainNav: 'Huvudmeny',
+      sectionNav: 'Avsnitt',
     },
     passkeys: {
       title: 'Dina passnycklar',

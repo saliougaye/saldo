@@ -1213,6 +1213,8 @@ export const it = {
       openMenu: 'Apri il menu del profilo',
       skipToContent: 'Vai al contenuto',
       comingIn0_3e: 'Arriva col prossimo passo: per ora scrivi dal telefono.',
+      mainNav: 'Barra principale',
+      sectionNav: 'Sezioni',
     },
     passkeys: {
       title: 'Le tue passkey',

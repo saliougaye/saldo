@@ -1207,6 +1207,8 @@ export const en: Messages = {
       openMenu: 'Open the profile menu',
       skipToContent: 'Skip to content',
       comingIn0_3e: 'This arrives with the next step; write from the phone for now.',
+      mainNav: 'Main bar',
+      sectionNav: 'Sections',
     },
     passkeys: {
       title: 'Your passkeys',

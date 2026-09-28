@@ -1,11 +1,9 @@
-import { readSettings } from '@saldo/core';
 import type { ReactNode } from 'react';
 import { navItems } from '../../src/features/shell/nav';
 import { userI18n } from '../../src/i18n/server';
 import { isAdmin } from '../../src/server/auth/admin';
 import { requireWebUser } from '../../src/server/auth/currentUser';
 import { getDb } from '../../src/server/db/client';
-import { loadUserData } from '../../src/server/userData/load';
 import { TabBar } from '../../src/ui/TabBar';
 import { TopBar } from '../../src/ui/TopBar';
 import styles from './shell.module.css';
@@ -15,23 +13,15 @@ export const dynamic = 'force-dynamic';
 
 /**
  * §17.1.7: a top bar on wide screens, the phone's tab bar on narrow ones — both rendered, CSS picks.
- * The theme is set here rather than on `<html>`, which a nested layout cannot touch; `tokensCss()`
- * writes both forced themes as attribute selectors, so this wrapper carries either of them.
+ * The theme is *not* set here: the root layout puts it on `<html>`, which is the only element a
+ * portalled popup is also inside.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();
-  const [data, admin, { t }] = await Promise.all([
-    loadUserData(user.id),
-    isAdmin(getDb(), user.id),
-    userI18n(user.id),
-  ]);
-  const settings = readSettings(data.settings);
+  const [admin, { t }] = await Promise.all([isAdmin(getDb(), user.id), userI18n(user.id)]);
   const items = navItems(admin).map((item) => ({ ...item, label: t(item.labelKey) }));
   return (
-    <div
-      className={styles.shell}
-      data-theme={settings.theme === 'system' ? undefined : settings.theme}
-    >
+    <div className={styles.shell}>
       <a className={styles.skip} href="#content">
         {t('web.shell.skipToContent')}
       </a>
@@ -39,6 +29,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         items={items}
         user={{ name: user.displayName, email: user.email }}
         strings={{
+          label: t('web.shell.mainNav'),
           newTransaction: t('web.shell.newTransaction'),
           openMenu: t('web.shell.openMenu'),
           profile: t('profile.title'),
@@ -50,7 +41,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <main className={styles.content} id="content">
         {children}
       </main>
-      <TabBar items={items.filter((item) => item.trailing !== true)} />
+      <TabBar
+        items={items.filter((item) => item.trailing !== true)}
+        label={t('web.shell.sectionNav')}
+      />
     </div>
   );
 }

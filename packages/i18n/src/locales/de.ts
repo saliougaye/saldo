@@ -1221,6 +1221,8 @@ export const de: Messages = {
       openMenu: 'Profilmenü öffnen',
       skipToContent: 'Zum Inhalt springen',
       comingIn0_3e: 'Kommt im nächsten Schritt; trag es so lange am Telefon ein.',
+      mainNav: 'Hauptleiste',
+      sectionNav: 'Bereiche',
     },
     passkeys: {
       title: 'Deine Passkeys',

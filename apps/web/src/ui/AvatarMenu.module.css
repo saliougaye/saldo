@@ -37,18 +37,43 @@
   color: var(--color-text-faint);
 }
 
+/* One row, whether it is a link or the sign-out button — `display: flex` so an icon can lead. */
 .item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   padding: 8px 10px;
   border-radius: var(--radius-input);
   font-size: var(--font-size-footnote);
   color: var(--color-text);
+  text-align: start;
   text-decoration: none;
   cursor: pointer;
 }
 
 .item[data-highlighted] {
   background: var(--color-surface);
+}
+
+/*
+ * As in `NavLink`, the row the current page belongs to says so — but the popup is already
+ * `--color-raised`, so it borrows the highlight's surface and adds the weight to stay distinct
+ * from whichever row the arrow keys are on.
+ */
+.item[aria-current="page"] {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-medium);
+}
+
+.item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.icon {
+  flex: none;
+  color: var(--color-text-muted);
 }
 
 /*
