@@ -9,6 +9,7 @@ import {
   median,
   projectEndOfCycle,
   resampleSeries,
+  sharePercent,
   upcomingExpenses,
 } from './stats';
 
@@ -102,5 +103,21 @@ describe('committedSpend / upcomingExpenses / projectEndOfCycle', () => {
     expect(
       projectEndOfCycle({ spent: 0, committed: 0, elapsed: 0, length: 31, upcoming: 500 }),
     ).toBe(500);
+  });
+});
+
+describe('sharePercent', () => {
+  it('is the rounded percentage of the whole', () => {
+    expect(sharePercent(2500, 10000)).toBe(25);
+    expect(sharePercent(1, 3)).toBe(33);
+  });
+
+  it('is 0 when there is no whole to be a share of', () => {
+    expect(sharePercent(0, 0)).toBe(0);
+    expect(sharePercent(500, 0)).toBe(0);
+  });
+
+  it('does not cap a part larger than the whole', () => {
+    expect(sharePercent(15000, 10000)).toBe(150);
   });
 });

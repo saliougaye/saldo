@@ -1,0 +1,55 @@
+.amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
+  white-space: nowrap;
+}
+
+.dim {
+  opacity: 0.5;
+}
+
+.hero {
+  font-size: var(--font-size-hero-web);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tightest);
+  line-height: 1.1;
+}
+
+.large {
+  font-size: var(--font-size-amount-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.1;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+}
+
+.headline {
+  font-size: var(--font-size-headline);
+}
+
+.body {
+  font-size: var(--font-size-body);
+}
+
+.footnote {
+  font-size: var(--font-size-footnote);
+}
+
+.positive {
+  color: var(--color-positive);
+}
+
+.negative {
+  color: var(--color-accent);
+}
+
+.neutral {
+  color: inherit;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}

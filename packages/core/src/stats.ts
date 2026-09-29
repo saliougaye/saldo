@@ -27,6 +27,16 @@ export function deltaPercent(value: number, baseline: number | null): number | n
   return Math.round(((value - baseline) / Math.abs(baseline)) * 100);
 }
 
+/**
+ * `part` as a rounded percentage of `whole`, and 0 when there is no whole to be a share of.
+ *
+ * Not clamped: a part above its whole says so (150%), because the figures that use it — a category's
+ * share of the period, the committed share of what was spent — are read, not drawn.
+ */
+export function sharePercent(part: number, whole: number): number {
+  return whole === 0 ? 0 : Math.round((part / whole) * 100);
+}
+
 /** Cumulative counted expenses per elapsed day of the range (index 0 = start day). */
 export function dailyCumulative(
   txs: readonly LedgerTx[],

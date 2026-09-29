@@ -1647,6 +1647,16 @@ public. The decisions behind this section are D30–D36.
 - **One call, loaded once per request.** `loadUserData(userId)` returns the whole `UserData`, wrapped in React's
   `cache()` so a layout and a page in the same request share one load. No query-shaped API in 0.3: core's functions
   take whole arrays, and balances and the forecast read the whole history anyway.
+  **As built (0.3d):** that one call is what every read screen uses — Home, Transazioni, Statistiche, Conti and
+  Profilo each reach it through `readPage`, which resolves the session, loads the data and derives «today» once; the
+  `(app)` shell reads the same `UserData` for the top bar's name, role and theme, and pays nothing for it because
+  `cache()` has already resolved it for the page in the same request. The screens never ask storage anything else:
+  a page that needs a figure the projection does not carry is a core function that has not been called yet.
+  The limit this section warns about now has a number beside it: the development account holds **141 live rows**
+  (92 transactions, 20 categories, 12 recurrences, 7 accounts, 5 budgets, 4 tags, 1 settings), parsed and validated
+  on every request with no measurable cost. That is a seeded account, not years of history — the point of recording
+  it is that the first real account to feel this will be one or two orders of magnitude above it, which is where the
+  cache keyed on the user's highest `seq` becomes the next step.
 - **Recurring occurrences are not materialised by the server in 0.3.** The web shows the occurrences a phone has
   already generated and synced. Server-side materialisation is an open question for a later milestone.
 
@@ -1775,6 +1785,7 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   that the gap between groups is at least twice the gap inside one. On narrow screens Home stays the phone's, cards
   included. New tokens: `topbarHeight` 64, `contentWide` 1120, `pagePaddingWeb` 48, `navItemHeight` 36,
   `fontSize.heroWeb` 56, `sectionGapWeb` 56, `columnGapWeb` 72, and the 1024px breakpoint.
+  **Built 2026-09-28 in 0.3d**, band and two columns as decided.
 - **Transazioni (decided 2026-09-27, mockup `2026-09-27-web-transactions-variants.html`, variant «2 · Pannello»).**
   The list keeps the open style of Home: period header, search (`/`), the filter chips of §5.12, the filtered total,
   «In arrivo» collapsed, days as title rows with their total and a hairline, rows separated by space, tags shown
@@ -1785,6 +1796,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   the phone's). Recurrences and attachments are shown and not edited (§17.1.9), and the form says so where they
   would be. On narrow screens the phone's patterns stay: detail full screen, the form in a bottom sheet. New
   tokens: `panelWidth` 420, `searchWidth` 320.
+  **Built 2026-09-28 in 0.3d**, read side only: the list, the search, the chips, «In arrivo», the days and the
+  panel's detail. «Modifica» and «Nuova transazione» arrive with the forms in 0.3e.
 - **Conti (decided 2026-09-27, mockup `2026-09-27-web-accounts-variants.html`, variant «1 · Lista aperta»).** A band as
   on Home: the page title with «Nuovo conto», Patrimonio complessivo at 56px, Totale spendibile beside it with its
   note. Then two open groups, «Da spendere» and «Risparmi e investimenti», rows separated by space, each account's
@@ -1792,6 +1805,9 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   accounts behind one row at the end. Account, credit card and goal details, and the account form, open in the
   trailing panel as in Transazioni (`?a={id}`, `?g={id}`). Tiles (one card per account with its sparkline) were
   considered and not taken: they brought back the cards Home removed.
+  **Built 2026-09-28 and 2026-09-29 in 0.3d** — the groups, the pockets and the totals first, then the account,
+  credit-card and goal panels. Conti's read side shipped here rather than in 0.3e (decided with the user
+  2026-09-28); only «Nuovo conto» and the account form wait for 0.3e.
 - **Statistiche (decided 2026-09-27, mockup `2026-09-27-web-stats-variants.html`, variant «3 · Navigatore», lower half
   «Andamento a sinistra» with Quota impegnata under it).** On wide screens Flussi spans the page with **ten
   columns**: six closed periods, the current one and the three forecast ones (D29 kept six because of 320px; the
@@ -1804,6 +1820,16 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   of forecast periods and the recurrences expected that month, so the phone's forecast sheet has no web counterpart.
   The period header's ‹ › stays and moves the same selection. On narrow screens Statistiche stays the phone's.
   `cashflowColumns` takes the half height as a parameter (the phone passes 54, the web 64).
+  **Built 2026-09-28 in 0.3d.** One thing the design did not foresee: a forecast column is a period the user can
+  navigate *into*, which `@saldo/core`'s `MAX_PERIODS_AHEAD` (0) forbids, because on the phone a period ahead was an
+  empty card and the forecast is read in a sheet. Rather than change a constant the phone depends on, the web's
+  `periodFromParam`/`periodSteps` take a `reach` — how many periods after the current one this screen may show — and
+  return how far ahead the period is (`ahead`). Statistiche passes the number of forecast columns, so the page must
+  compute the forecast *before* it reads the period; every other screen passes nothing and behaves as the phone does.
+  Four key figures per column kind, no hero: on a forecast column they are Entrate, Uscite, Netto and Saldo, all
+  «circa», and the two trailing sections become «Come si calcola», the table of forecast periods and «Ricorrenze
+  attese». Every category of Ripartizione is shown, rather than the phone's five plus «Vedi tutte le N»: the room is
+  there and a link that only exists to reveal rows is a link the desktop does not need.
 - **Profilo (decided 2026-09-27, mockup `2026-09-27-web-profile-variants.html`, variant «5 · Sotto-navigazione +
   pannello»).** Under the profile header (avatar, name, email, role), a sub-navigation on the leading side picks one
   section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/passkeys`,
@@ -1815,6 +1841,10 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   label, the authenticator's own name does not change), shows whether it is synced (`backed_up`) and deletes it
   after a confirmation, **never the last one**: its Elimina is disabled and says why, with a link to add another.
   Lock, permissions, server and CSV import stay the phone's. On narrow screens Profilo stays the phone's.
+  **Built 2026-09-28 in 0.3d**: the header, the sub-navigation, «Account» and «Preferenze» as summary rows, and
+  «Passkey» wrapped in the same shell (0.3b had shipped it at its own URL). Preferences are read-only rows that say
+  they apply to the phone too; the panels that edit them arrive with the forms in 0.3e, as do Categorie, Tag and
+  Dati.
 - **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
   built 2026-09-28 in 0.3b).** No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
   brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
@@ -1844,6 +1874,26 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
+- **Three view-models moved into `@saldo/core` (0.3d).** `budgetViews`, `goalViews` and `transactionRow` were
+  `apps/mobile` modules that were already pure and already depended on core alone. Leaving them there would have
+  meant writing each a second time in `apps/web`, which is what §17.1.2 forbids — so they moved, and both apps now
+  render a budget's ring, a goal's progress and a transaction row from one implementation. `transactionRow` lost its
+  `IconName` and `SignDisplay` imports on the way (core depends on no other workspace package) and returns
+  `icon: string` and its own `AmountSign` union, which each app narrows at its edge. The phone's existing tests came
+  with them unchanged, which is what shows the move changed no behaviour. This is the rule §17.1.2 states, applied:
+  when the web needs a figure the phone already shows, the calculation moves to core rather than being written twice.
+
+- **The period and the filters live in the URL (0.3d).** The period is `?p=<a date inside the range>` — written as
+  the range's start, read as any date the range contains — on every screen that has a period header, and the filters
+  of §5.12 are query parameters of their own (`direction`, `account`, `category`, `tag`, `q`, and `?t=`/`?a=`/`?g=`
+  for a panel's selection). An **offset** was considered and not taken: «three periods before now» changes meaning at
+  midnight and cannot be shared or bookmarked, while a date is the same period whenever it is opened, and
+  `describePeriod` turns it straight back into a `PeriodView`. The consequence that matters for the markup is that
+  every chip, every ‹ › and every row that opens a panel is an `<a href>`: they work with no JavaScript, they can be
+  opened in a new tab, and the back button does what the user means. A URL that could not be reached by clicking
+  falls back to the period containing «today» rather than rendering — a hand-typed `?p=` must not be able to show a
+  page the interface does not offer.
+
 - **Chart geometry is shared.** The calculations inside the phone's charts (axis scale, ticks, bar heights, the
   forecast band, arcs) move into renderer-agnostic pure functions that return coordinates. The phone draws them
   with `react-native-svg`, the web with DOM `<svg>`, so the two charts are the same chart. They live in

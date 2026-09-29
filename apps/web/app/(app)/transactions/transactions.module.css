@@ -1,0 +1,250 @@
+.layout {
+  display: grid;
+  gap: var(--layout-section-gap-web);
+  align-items: start;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* The search and the chips share one wrapping row: the search leads, the chips follow at 8px. */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters > :first-child {
+  margin-inline-end: 8px;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  font-size: var(--font-size-footnote);
+  border-top: 1px solid var(--color-border);
+}
+
+.fact:first-child {
+  border-top: 0;
+}
+
+.factLabel {
+  color: var(--color-text-muted);
+  flex: none;
+}
+
+.factValue {
+  margin: 0;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.factLink {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+.note {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.inert {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+/* The edit affordance of 0.3e, visible and deliberately not a control (§17.1.9). */
+.inertAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--layout-header-button);
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-footnote);
+}
+
+.filterNote {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.reset {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+/* «In arrivo»: one row that opens onto the days ahead (§5.12, the phone's `UpcomingRow`). */
+.upcoming {
+  display: flex;
+  flex-direction: column;
+}
+
+.upcomingSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  cursor: pointer;
+  list-style: none;
+}
+
+.upcomingSummary::-webkit-details-marker {
+  display: none;
+}
+
+.upcomingIcon {
+  flex: none;
+}
+
+.upcomingText {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcomingTitle {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .upcomingSummary:hover {
+    color: var(--color-text);
+  }
+}
+
+.chevron {
+  color: var(--color-text-faint);
+  transition: transform var(--motion-press) var(--motion-easing);
+}
+
+.upcoming[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.upcomingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  padding-top: 24px;
+}
+
+/* The phone's `SectionDivider`: a caption in capitals, then a hairline to the end of the row. */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.settledDivider {
+  display: none;
+}
+
+.upcoming[open] + .settledDivider {
+  display: flex;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+/* A day's title row: the name in the text colour, the date in the muted one. */
+.dayTitle {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+.dayName {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+/* Tags as pills on a wide screen, and only while there is room: the panel takes it back (§17.1.7). */
+.tags {
+  display: none;
+  gap: 6px;
+}
+
+@media (min-width: 1024px) {
+  .tags {
+    display: flex;
+  }
+
+  .layout[data-panel] .tags {
+    display: none;
+  }
+}
+
+.pill {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}

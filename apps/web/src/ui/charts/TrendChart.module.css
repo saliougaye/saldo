@@ -1,0 +1,30 @@
+.chart {
+  position: relative;
+  inline-size: 100%;
+}
+
+.svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+.usual,
+.current {
+  fill: none;
+}
+
+.usual {
+  stroke: var(--color-border-strong);
+}
+
+.current {
+  stroke: var(--color-accent);
+}
+
+.dot {
+  position: absolute;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+}

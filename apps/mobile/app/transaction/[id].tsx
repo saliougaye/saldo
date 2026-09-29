@@ -1,4 +1,4 @@
-import { formatLongDate } from '@saldo/i18n';
+import { cadenceLabel, endLabel, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
@@ -22,7 +22,6 @@ import {
   useTransactionQuery,
 } from '../../src/db/hooks';
 import { AttachmentTile } from '../../src/features/transactions/AttachmentTile';
-import { cadenceLabel, endLabel } from '../../src/features/transactions/recurrenceCopy';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';

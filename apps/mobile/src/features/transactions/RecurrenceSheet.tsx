@@ -5,7 +5,7 @@ import {
   type RecurrenceFrequency,
   type RecurrenceRule,
 } from '@saldo/core';
-import { formatDayMonth } from '@saldo/i18n';
+import { cadenceLabel, formatDayMonth } from '@saldo/i18n';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -20,7 +20,7 @@ import { useAppLocale } from '../../i18n/useAppLocale';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { cadenceLabel, presetOf, type RecurrencePreset, ruleForPreset } from './recurrenceCopy';
+import { presetOf, type RecurrencePreset, ruleForPreset } from './recurrenceCopy';
 
 export interface RecurrenceSheetProps {
   visible: boolean;

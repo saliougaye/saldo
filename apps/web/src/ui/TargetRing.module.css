@@ -1,0 +1,38 @@
+.track {
+  stroke: var(--color-track);
+}
+
+.fill {
+  stroke: var(--color-bar-grey);
+}
+
+.over {
+  stroke: var(--color-accent);
+}
+
+/* A goal reached: the one chromatic signal Saldo allows itself (see `Palette`). */
+.done {
+  stroke: var(--color-positive);
+}
+
+.tick {
+  stroke: var(--color-text-faint);
+}
+
+.ring {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.ring > svg {
+  position: absolute;
+  inset: 0;
+}
+
+.icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}

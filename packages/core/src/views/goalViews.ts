@@ -1,12 +1,9 @@
-import {
-  type Account,
-  type GoalProgress,
-  goalProgress,
-  isPocket,
-  type LedgerTx,
-  type LocalDate,
-  type PeriodDef,
-} from '@saldo/core';
+import type { LocalDate } from '../dates';
+import type { Account } from '../entities';
+import { type GoalProgress, goalProgress } from '../goals';
+import type { LedgerTx } from '../ledger';
+import type { PeriodDef } from '../period';
+import { isPocket } from '../pockets';
 
 /** An open goal as every screen reads it (§5.14). */
 export interface GoalView {

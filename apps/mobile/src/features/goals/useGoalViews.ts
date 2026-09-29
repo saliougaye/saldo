@@ -1,8 +1,7 @@
-import { isPocket } from '@saldo/core';
+import { goalViews, isPocket } from '@saldo/core';
 import { useMemo } from 'react';
 import { useAccountsQuery, useTransactionsOfAccountsQuery } from '../../db/hooks';
 import { usePeriod } from '../period/PeriodProvider';
-import { goalViews } from './goalViews';
 
 /**
  * Open goals with their progress. Only the pockets' own rows are read: a goal's balance covers its

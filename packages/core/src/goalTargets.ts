@@ -86,3 +86,19 @@ export function goalAdvice(progress: GoalProgress): GoalAdvice {
       };
   }
 }
+
+/**
+ * How a goal's ring and bar are painted (§5.13): `attention` while behind or expired, `done` once
+ * reached — the one green the palette allows itself — and `plain` otherwise.
+ */
+export type GoalTone = 'attention' | 'done' | 'plain';
+
+export function goalTone(progress: Pick<GoalProgress, 'state'>): GoalTone {
+  if (progress.state === 'reached') return 'done';
+  return progress.state === 'expired' || progress.state === 'behind' ? 'attention' : 'plain';
+}
+
+/** The pace tick, «oggi» included; none once the goal is reached or expired (§5.13). */
+export function goalPace(progress: Pick<GoalProgress, 'state' | 'pace'>): number | null {
+  return progress.state === 'reached' || progress.state === 'expired' ? null : progress.pace;
+}

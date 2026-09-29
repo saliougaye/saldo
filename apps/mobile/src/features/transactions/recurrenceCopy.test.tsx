@@ -1,38 +1,20 @@
+import { cadenceLabel, endLabel } from '@saldo/i18n';
 import type { i18n as I18nInstance } from 'i18next';
 import { createI18n } from '../../i18n';
-import { cadenceLabel, endLabel, presetOf, ruleForPreset } from './recurrenceCopy';
+import { presetOf, ruleForPreset } from './recurrenceCopy';
 
 let it_: I18nInstance;
-let en: I18nInstance;
 
 beforeAll(async () => {
   it_ = await createI18n('it', []);
-  en = await createI18n('en', []);
 });
 
-describe('cadenceLabel', () => {
-  it('names the cadence and its anchor', () => {
-    expect(cadenceLabel({ frequency: 'monthly', interval: 1 }, '2026-09-18', it_.t, 'it')).toBe(
-      'Ogni mese, il 18',
-    );
-    expect(cadenceLabel({ frequency: 'monthly', interval: 3 }, '2026-09-18', en.t, 'en')).toBe(
-      'Every 3 months, on the 18',
-    );
+// The strings themselves are tested in `@saldo/i18n`; this proves i18next's `t` drives them the same.
+describe('cadenceLabel and endLabel under i18next', () => {
+  it('read as they do under the web translator', () => {
     expect(cadenceLabel({ frequency: 'weekly', interval: 2 }, '2026-09-18', it_.t, 'it')).toBe(
       'Ogni 2 settimane, il venerdì',
     );
-    expect(cadenceLabel({ frequency: 'yearly', interval: 1 }, '2026-09-18', it_.t, 'it')).toBe(
-      'Ogni anno, il 18 settembre',
-    );
-    expect(cadenceLabel({ frequency: 'daily', interval: 1 }, '2026-09-18', it_.t, 'it')).toBe(
-      'Ogni giorno',
-    );
-  });
-});
-
-describe('endLabel', () => {
-  it('says how the series ends', () => {
-    expect(endLabel(null, it_.t, 'it')).toBe('senza fine');
     expect(endLabel('2026-12-18', it_.t, 'it')).toBe('fino al 18 dic');
   });
 });

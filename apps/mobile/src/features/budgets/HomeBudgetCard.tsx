@@ -1,12 +1,13 @@
 import {
   type BudgetTargetInput,
+  type BudgetView,
   budgetAdvice,
   budgetCardStatus,
   budgetEventIds,
   featuredTarget,
   rankBudget,
 } from '@saldo/core';
-import { formatDayMonth, formatMoney } from '@saldo/i18n';
+import { budgetCardStatusText, formatDayMonth, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -23,7 +24,6 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { FeaturedTarget } from '../targets/FeaturedTarget';
 import { SeeAllRow } from '../targets/SeeAllRow';
-import type { BudgetView } from './useBudgetProgress';
 
 /** Device-local (never synced): the budget featured last, for the hysteresis of §5.13. */
 export const FEATURED_BUDGET_KEY = 'home.featuredBudget';
@@ -93,12 +93,7 @@ export function HomeBudgetCard({ views }: { views: readonly BudgetView[] }) {
   const openBudget = (id: string) => router.push({ pathname: '/budgets', params: { open: id } });
 
   const status = budgetCardStatus(inputs);
-  const statusText =
-    status.kind === 'overLimit'
-      ? t('targets.overLimit', { count: status.count })
-      : status.kind === 'overPace'
-        ? t('budgets.overPace', { count: status.count })
-        : t('budgets.withinLimits');
+  const statusText = budgetCardStatusText(views.length, status, t, locale);
 
   const featured = views.find((view) => view.budget.id === featuredId);
   const eventIds = budgetEventIds(inputs, featuredId);

@@ -1,33 +1,6 @@
-import { type LocalDate, parseLocalDate, type RecurrenceRule } from '@saldo/core';
-import { type AppLocale, formatDayMonth, formatDayMonthLong, formatWeekday } from '@saldo/i18n';
-import type { TFunction } from 'i18next';
+import type { LocalDate, RecurrenceRule } from '@saldo/core';
 
-/** "Ogni 2 settimane, il venerdì": the cadence plus what `startDate` anchors it to (§5.9). */
-export function cadenceLabel(
-  rule: Pick<RecurrenceRule, 'frequency' | 'interval'>,
-  startDate: LocalDate,
-  t: TFunction,
-  locale: AppLocale,
-): string {
-  const every = t(`recurrence.every_${rule.frequency}`, { count: rule.interval });
-  switch (rule.frequency) {
-    case 'monthly':
-      return `${every}, ${t('recurrence.onDayOfMonth', { day: parseLocalDate(startDate).day })}`;
-    case 'weekly':
-      return `${every}, ${t('recurrence.onWeekday', { weekday: formatWeekday(startDate, locale) })}`;
-    case 'yearly':
-      return `${every}, ${t('recurrence.onDate', { date: formatDayMonthLong(startDate, locale) })}`;
-    case 'daily':
-      return every;
-  }
-}
-
-/** "senza fine" / "fino al 18 dic". */
-export function endLabel(endDate: LocalDate | null, t: TFunction, locale: AppLocale): string {
-  return endDate === null
-    ? t('recurrence.noEnd')
-    : t('recurrence.untilDate', { date: formatDayMonth(endDate, locale) });
-}
+// `cadenceLabel` and `endLabel` live in `@saldo/i18n`, where the web's transaction panel reads them too.
 
 /** The rows of the sheet and the chips of the form. `custom` is anything the presets do not name. */
 export type RecurrencePreset = 'never' | 'weekly' | 'biweekly' | 'monthly' | 'yearly' | 'custom';

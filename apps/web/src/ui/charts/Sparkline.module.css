@@ -1,0 +1,9 @@
+.chart {
+  inline-size: 100%;
+  block-size: 48px;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-text-muted);
+}

@@ -24,8 +24,10 @@ describe('isLocalDate / parseLocalDate / makeLocalDate', () => {
   it('accepts real dates and rejects impossible ones', () => {
     expect(isLocalDate('2026-04-18')).toBe(true);
     expect(isLocalDate('2026-02-29')).toBe(false);
+    expect(isLocalDate('2026-02-30')).toBe(false);
     expect(isLocalDate('2026-4-18')).toBe(false);
     expect(isLocalDate('2026-13-01')).toBe(false);
+    expect(isLocalDate('yesterday')).toBe(false);
   });
 
   it('parses into numeric parts', () => {

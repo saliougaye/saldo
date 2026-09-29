@@ -1,3 +1,4 @@
+import { transactionRow } from '@saldo/core';
 import { formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,7 +25,6 @@ import { useGoalViews } from '../../src/features/goals/useGoalViews';
 import { useRestoreGoal } from '../../src/features/goals/useRestoreGoal';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { FeaturedTarget } from '../../src/features/targets/FeaturedTarget';
-import { transactionRow } from '../../src/features/transactions/transactionRow';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -179,7 +179,12 @@ export default function GoalDetail() {
                   key={tx.id}
                   title={row.title}
                   subtitle={row.subtitle}
-                  leading={<IconBox name={row.icon} colour={theme.categoryColor(row.colorIndex)} />}
+                  leading={
+                    <IconBox
+                      name={row.icon as IconName}
+                      colour={theme.categoryColor(row.colorIndex)}
+                    />
+                  }
                   trailing={
                     <AmountText
                       plain

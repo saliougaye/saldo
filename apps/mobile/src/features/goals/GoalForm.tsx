@@ -1,5 +1,5 @@
 import { accountBalances, getCurrency, pocketParentCandidates } from '@saldo/core';
-import { formatMoney } from '@saldo/i18n';
+import { deadlineLabel, formatMoney } from '@saldo/i18n';
 import { categoryIconGroups } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +23,6 @@ import { InfoButton } from '../guide/InfoButton';
 import { usePeriod } from '../period/PeriodProvider';
 import type { GoalFormValues } from './goalFormValues';
 import { GOAL_STEPS, goalStepMissing } from './steps';
-import { deadlineLabel } from './useGoalText';
 
 export interface GoalFormProps {
   values: GoalFormValues;

@@ -1,6 +1,8 @@
-import { type LedgerTx, signedAmount, type TransactionKind } from '@saldo/core';
-import type { SignDisplay } from '@saldo/i18n';
-import type { IconName } from '@saldo/ui';
+import type { TransactionKind } from '../entities';
+import { type LedgerTx, signedAmount } from '../ledger';
+
+/** How an amount is signed when it is shown (`@saldo/i18n`'s `SignDisplay`, without the dependency). */
+export type AmountSign = 'negative' | 'always' | 'never';
 
 /** Last step of the category palette, the grey everything without a category of its own uses. */
 export const NEUTRAL_COLOR_INDEX = 9;
@@ -28,11 +30,11 @@ export interface TransactionRowDeps {
 export interface TransactionRow {
   title: string;
   subtitle: string;
-  icon: IconName;
+  icon: string;
   colorIndex: number;
   amount: {
     minor: number;
-    signDisplay: SignDisplay;
+    signDisplay: AmountSign;
     /** A figure that moves no money: render it in `textMuted`, not as a gain or a loss. */
     muted: boolean;
   };
@@ -71,7 +73,7 @@ export function transactionRow(tx: LedgerTx, deps: TransactionRowDeps): Transact
   return {
     title: tx.description.length > 0 ? tx.description : name,
     subtitle: name,
-    icon: (category?.icon ?? 'tag') as IconName,
+    icon: category?.icon ?? 'tag',
     colorIndex: category?.colorIndex ?? NEUTRAL_COLOR_INDEX,
     amount: {
       minor: signedAmount(tx, deps.viewpointAccountId) ?? 0,

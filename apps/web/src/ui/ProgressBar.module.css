@@ -1,0 +1,38 @@
+.track {
+  position: relative;
+  block-size: var(--layout-progress-height);
+  border-radius: var(--radius-pill);
+  background: var(--color-track);
+  overflow: visible;
+}
+
+.thick {
+  block-size: var(--layout-progress-height-thick);
+}
+
+.fill {
+  block-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-bar-grey);
+}
+
+.over {
+  background: var(--color-accent);
+}
+
+/* A goal reached: the one chromatic signal Saldo allows itself (see `Palette`). */
+.done {
+  background: var(--color-positive);
+}
+
+.tick {
+  position: absolute;
+  inset-block: calc(-1 * var(--layout-pace-tick-overhang));
+  inline-size: 1px;
+  background: var(--color-text-muted);
+}
+
+/* A thick bar takes the longer tick, as on the phone (`ProgressBar`, mobile). */
+.thick .tick {
+  inset-block: calc(-1 * var(--layout-pace-tick-overhang-thick));
+}

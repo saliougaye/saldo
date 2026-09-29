@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { GoalProgress } from './goals';
-import { goalAdvice, goalCardStatus, goalEventIds, rankGoal } from './goalTargets';
+import {
+  goalAdvice,
+  goalCardStatus,
+  goalEventIds,
+  goalPace,
+  goalTone,
+  rankGoal,
+} from './goalTargets';
 
 function progress(overrides: Partial<GoalProgress>): GoalProgress {
   return {
@@ -120,5 +127,25 @@ describe('goalAdvice', () => {
       kind: 'reached',
       target: 120_000,
     });
+  });
+});
+
+describe('goalTone', () => {
+  it('asks for attention while behind or expired, reads done once reached, plain otherwise', () => {
+    expect(goalTone(progress({ state: 'behind' }))).toBe('attention');
+    expect(goalTone(progress({ state: 'expired' }))).toBe('attention');
+    expect(goalTone(progress({ state: 'reached' }))).toBe('done');
+    expect(goalTone(progress({ state: 'onTrack' }))).toBe('plain');
+    expect(goalTone(progress({ state: 'open' }))).toBe('plain');
+  });
+});
+
+describe('goalPace', () => {
+  it('keeps the tick while the goal runs, and drops it once reached or expired', () => {
+    expect(goalPace(progress({ state: 'behind', pace: 0.4 }))).toBe(0.4);
+    expect(goalPace(progress({ state: 'onTrack', pace: 0.4 }))).toBe(0.4);
+    expect(goalPace(progress({ state: 'open', pace: null }))).toBeNull();
+    expect(goalPace(progress({ state: 'reached', pace: 0.4 }))).toBeNull();
+    expect(goalPace(progress({ state: 'expired', pace: 1 }))).toBeNull();
   });
 });

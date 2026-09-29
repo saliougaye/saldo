@@ -1,4 +1,4 @@
-import type { CurrencyCode } from '@saldo/core';
+import { type CurrencyCode, endLabels } from '@saldo/core';
 import type { AppLocale } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import type { ReactNode } from 'react';
@@ -9,7 +9,6 @@ import { IconBox } from '../../components/ListRow';
 import { ProgressBar } from '../../components/ProgressBar';
 import type { TargetTone } from '../../components/TargetRing';
 import { Text } from '../../theme/Text';
-import { endLabels } from './endLabels';
 
 /** Wide enough for «oggi» in every locale, centred on the tick. */
 const TODAY_WIDTH = 64;

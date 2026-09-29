@@ -1,5 +1,5 @@
+import type { GoalView } from '@saldo/core';
 import { goalAlertKey, pendingGoalAlerts } from './goalAlerts';
-import type { GoalView } from './goalViews';
 
 const view = (id: string, state: GoalView['progress']['state']) =>
   ({ account: { id, name: id }, progress: { state, target: 1000 } }) as unknown as GoalView;

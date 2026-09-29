@@ -1,0 +1,135 @@
+/* Variant «5» (§17.1.7): the header, then the sub-navigation beside the section. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-medium);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  font-size: var(--font-size-caption);
+}
+
+.layout {
+  display: grid;
+  gap: 24px;
+}
+
+.subnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  display: none;
+  height: 1px;
+  margin: 10px 12px;
+  border: 0;
+  background: var(--color-border);
+}
+
+/* Dressed like a `NavLink`, in the tone of a leaving: the one danger of the page. */
+.signOut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  color: var(--color-accent);
+  font-size: var(--font-size-body);
+  letter-spacing: var(--tracking-tight);
+  cursor: pointer;
+}
+
+.signOut:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .page {
+    gap: 56px;
+  }
+
+  .layout {
+    grid-template-columns: var(--layout-subnav-width) minmax(0, 1fr) auto;
+    column-gap: 48px;
+    align-items: start;
+  }
+
+  .subnav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    position: sticky;
+    top: calc(var(--layout-topbar-height) + 32px);
+  }
+
+  .subnav a {
+    width: 100%;
+  }
+
+  .separator {
+    display: block;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  min-width: 0;
+}
+
+.note {
+  margin-top: 16px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+/* An empty slot takes no column and no gap. */
+.slot:empty {
+  display: none;
+}

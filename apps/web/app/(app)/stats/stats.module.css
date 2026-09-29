@@ -1,0 +1,161 @@
+/* Flussi across the page, the period and its four figures, then the 7/5 pair — Home's shape. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .page {
+    gap: var(--layout-section-gap-web);
+  }
+
+  .figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* The line the design puts under a key figure, and under a chart. */
+.note {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+  max-width: 52ch;
+}
+
+.footnote {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+  max-width: 52ch;
+}
+
+.prose {
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+  max-width: 62ch;
+}
+
+/* A section's trailing status: «Uscite · entrate», the period a list is about. */
+.status {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+/* Quota impegnata stands where an amount stands, so it takes the amount's size. */
+.percent {
+  font-size: var(--font-size-title);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+/* The category's colour in Ripartizione's bar, repeated beside its row so the two can be read
+   together — the bar has five colours and the list has every category. */
+.dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-pill);
+  flex: none;
+}
+
+.tagAmounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* The forecast periods: a real table, because it is one — four columns of figures per period. */
+.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 10px 0;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-caption);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: start;
+}
+
+.table tbody th {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text);
+}
+
+.table tbody tr + tr th,
+.table tbody tr + tr td {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Scoped through `.table` so it outranks the head and the body rules above, which the row it
+   marks is also matched by. */
+.table .tableSelected th,
+.table .tableSelected td {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.faint {
+  color: var(--color-text-faint);
+}
+
+/* Every cell is `nowrap`, because a figure broken across two lines is worse than a missing column.
+   Four of them do not fit 390px, so the widest — «tra X e Y» — is the one that goes: the selected
+   period's own min–max is already in the key figures above, under Uscite. */
+.rangeCol {
+  display: none;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. Below it the
+   columns stack, and a sticky lead would pin a chart over the list under it. */
+@media (min-width: 1024px) {
+  .rangeCol {
+    display: table-cell;
+  }
+
+  .sticky {
+    position: sticky;
+    top: calc(var(--layout-topbar-height) + 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-section-gap-web);
+  }
+}

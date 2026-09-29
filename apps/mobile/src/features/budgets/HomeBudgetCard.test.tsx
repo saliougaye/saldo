@@ -1,11 +1,10 @@
-import type { Budget } from '@saldo/core';
+import type { Budget, BudgetView } from '@saldo/core';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { FEATURED_BUDGET_KEY, HomeBudgetCard } from './HomeBudgetCard';
-import type { BudgetView } from './useBudgetProgress';
 
 const mockPush = jest.fn();
 const mockKv = new Map<string, string>();

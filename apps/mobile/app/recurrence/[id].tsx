@@ -1,5 +1,10 @@
-import { nextOccurrence, type RecurrenceRule, touchesClosedGoal } from '@saldo/core';
-import { formatDayMonth, formatLongDate } from '@saldo/i18n';
+import {
+  NEUTRAL_COLOR_INDEX,
+  nextOccurrence,
+  type RecurrenceRule,
+  touchesClosedGoal,
+} from '@saldo/core';
+import { cadenceLabel, formatDayMonth, formatLongDate } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -29,8 +34,6 @@ import { changeRecurrenceRule, stopRecurrence } from '../../src/db/recurrenceSer
 import { useHiddenMoney } from '../../src/features/hidden/hiddenAmounts';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { RecurrenceSheet } from '../../src/features/transactions/RecurrenceSheet';
-import { cadenceLabel } from '../../src/features/transactions/recurrenceCopy';
-import { NEUTRAL_COLOR_INDEX } from '../../src/features/transactions/transactionRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { Icon } from '../../src/theme/Icon';
 import { Text } from '../../src/theme/Text';

@@ -1,0 +1,54 @@
+/* Title and days leading, the two steps as one joined control trailing (§5.4). Both steps are links, so the period survives a reload and a new tab. */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.what {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.sub {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper {
+  display: flex;
+  block-size: var(--layout-header-button);
+  border-radius: var(--radius-chip-small);
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  color: var(--color-text-muted);
+}
+
+.step + .step {
+  border-inline-start: 1px solid var(--color-border);
+}
+
+a.step:hover {
+  color: var(--color-text);
+}
+
+.disabled {
+  color: var(--color-text-faint);
+}

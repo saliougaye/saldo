@@ -1,4 +1,5 @@
-import type { Account, Transaction } from '@saldo/core';
+import { describe, expect, it } from 'vitest';
+import type { Account, Transaction } from '../entities';
 import { goalViews } from './goalViews';
 
 const meta = {

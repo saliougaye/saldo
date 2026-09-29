@@ -1,0 +1,79 @@
+.row {
+  /* The anchor of a `VisuallyHidden` label. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--layout-min-hit-target);
+  padding: 6px 8px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+a.row:hover {
+  background: var(--color-surface);
+}
+
+.selected {
+  background: var(--color-raised);
+}
+
+.upcoming {
+  border-inline-start: 2px solid var(--color-border-strong);
+  padding-inline-start: 10px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.trailing {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.open {
+  gap: 14px;
+  padding: 12px 0;
+}
+
+a.open:hover {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  /* Painted 8px past the row, so the text does not move and the neighbours are not covered. */
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-raised) 60%, transparent);
+}
+
+.open .title {
+  letter-spacing: var(--tracking-tight);
+}
+
+.open .subtitle {
+  color: var(--color-text-faint);
+  margin-top: 1px;
+}
+
+/* The wide screen's open rows say «ahead» with the muted amount alone, and have no side padding to indent. */
+@media (min-width: 1024px) {
+  .open.upcoming {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}

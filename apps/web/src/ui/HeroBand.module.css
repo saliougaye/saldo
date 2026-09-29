@@ -1,0 +1,75 @@
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: var(--layout-card-padding);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.hero .label {
+  color: var(--color-text-muted);
+}
+
+.legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px 64px;
+    align-items: end;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    margin-bottom: 64px;
+  }
+
+  .period,
+  .bar,
+  .legend {
+    grid-column: 1 / -1;
+  }
+
+  .period {
+    margin-bottom: 8px;
+  }
+
+  .stats {
+    gap: 48px;
+    padding-bottom: 10px;
+  }
+
+  .legend {
+    margin-top: -12px;
+  }
+}

@@ -1,5 +1,5 @@
+import type { GoalView } from '@saldo/core';
 import type { KvStore } from '../../db/kv';
-import type { GoalView } from './goalViews';
 
 /** kv key set once a goal's «raggiunto» notification has been sent (§5.14). */
 export function goalAlertKey(goalId: string): string {

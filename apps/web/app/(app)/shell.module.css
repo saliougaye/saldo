@@ -1,0 +1,33 @@
+.shell {
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+  margin: 0 auto;
+  padding: 24px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .content {
+    padding: 48px var(--layout-page-padding-web) 64px;
+  }
+}
+
+.skip {
+  position: absolute;
+  inset-inline-start: -9999px;
+}
+
+.skip:focus {
+  position: static;
+  display: inline-block;
+  padding: 8px 12px;
+}

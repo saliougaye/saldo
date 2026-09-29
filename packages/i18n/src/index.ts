@@ -11,8 +11,11 @@ import { withManyPlurals } from './plurals';
 
 export * from './currencyNames';
 export * from './format';
+export * from './goalText';
 export * from './languageNames';
 export type { Messages } from './locales/it';
+export * from './recurrenceText';
+export * from './targetStatus';
 export * from './timeZones';
 export * from './translate';
 export { de, en, es, fr, it, pt, sv };

@@ -1,5 +1,5 @@
+import type { BudgetView } from '@saldo/core';
 import { alertKey, pendingBudgetAlerts } from './budgetAlerts';
-import type { BudgetView } from './useBudgetProgress';
 
 function view(overrides: Partial<BudgetView> = {}): BudgetView {
   return {

@@ -7,11 +7,14 @@ import {
   hasActiveFilters,
   splitUpcoming,
   type TransactionFilters,
+  type TransactionRowDeps,
   totalsOf,
   touchesClosedGoal,
+  transactionRow,
   upcomingUntil,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
+import type { IconName } from '@saldo/ui';
 import { router as routerApi, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -42,10 +45,6 @@ import { AccountFilterSheet } from '../../src/features/transactions/AccountFilte
 import { SwipeRow } from '../../src/features/transactions/SwipeRow';
 import { TagFilterSheet } from '../../src/features/transactions/TagFilterSheet';
 import { TransactionsSkeleton } from '../../src/features/transactions/TransactionsSkeleton';
-import {
-  type TransactionRowDeps,
-  transactionRow,
-} from '../../src/features/transactions/transactionRow';
 import { UpcomingRow } from '../../src/features/transactions/UpcomingRow';
 import { useAppLocale } from '../../src/i18n/useAppLocale';
 import { appearing, leaving, reflowing } from '../../src/theme/motion';
@@ -206,7 +205,7 @@ export default function TransactionsTab() {
                     }
                     leading={
                       <IconBox
-                        name={row.icon}
+                        name={row.icon as IconName}
                         colour={colour}
                         badge={tx.recurrenceId === null ? undefined : 'repeat'}
                       />

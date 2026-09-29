@@ -9,6 +9,7 @@ import {
   palettes,
   radii,
   tracking,
+  withAlpha,
 } from './tokens';
 
 /** `textMuted` → `text-muted`: token names as CSS custom property names. */
@@ -21,6 +22,13 @@ export function kebab(name: string): string {
  * scales them; every size in `fontSize` divides into an exact binary fraction, so nothing rounds.
  */
 const ROOT_FONT_PX = 16;
+
+/**
+ * Behind a category's icon its own colour, at the alpha the phone tints an icon box with
+ * (`theme.tint(colour, 0.14)`, mobile `ListRow`). Derived here rather than typed in a stylesheet,
+ * so the web's tint cannot drift from the palette it comes from.
+ */
+const CATEGORY_TINT_ALPHA = 0.14;
 
 function paletteDeclarations(palette: Palette): string[] {
   const lines: string[] = [];
@@ -65,7 +73,10 @@ function sharedDeclarations(): string[] {
     ...Object.entries(radii).map(([name, px]) => `--radius-${kebab(name)}: ${px}px;`),
     ...Object.entries(layout).map(([name, px]) => `--layout-${kebab(name)}: ${px}px;`),
     ...motionDeclarations(),
-    ...categoryColors.map((colour, index) => `--category-${index}: ${colour};`),
+    ...categoryColors.flatMap((colour, index) => [
+      `--category-${index}: ${colour};`,
+      `--category-${index}-tint: ${withAlpha(colour, CATEGORY_TINT_ALPHA)};`,
+    ]),
   ];
 }
 
@@ -76,21 +87,24 @@ function block(selector: string, lines: readonly string[], indent = ''): string 
 
 /**
  * The tokens as CSS custom properties (§17.1.7). Dark is the default, as on the phone; `system`
- * follows `prefers-color-scheme` unless the page says `data-theme="dark"`, and `data-theme="light"`
- * forces light. The web's root layout injects this string, so there is no generated file to fall
- * out of step with `tokens.ts`. Forcing dark works on `<html>` only (there is no
- * `[data-theme="dark"]` block), and the accent the user picks overrides `--color-accent` and
- * `--color-on-accent` on `<html>` in whichever step adds it.
+ * follows `prefers-color-scheme` unless the page says `data-theme="dark"`, and either theme can be
+ * forced with `data-theme`. The web's root layout injects this string, so there is no generated
+ * file to fall out of step with `tokens.ts`; the accent the user picks overrides `--color-accent`
+ * and `--color-on-accent` on `<html>` in whichever step adds it.
+ *
+ * Both forced themes are **attribute selectors**, so any element carries them — the web's signed-in
+ * shell is a `<div>` inside a root layout it cannot touch, and it sets the theme there. `:root`
+ * alone would not do for dark: on a browser that prefers light, the `prefers-color-scheme` block
+ * has already repainted `:root`, and a nested element needs a rule of its own to take it back.
  */
 export function tokensCss(): string {
   const light = ['color-scheme: light;', ...paletteDeclarations(palettes.light)];
+  const dark = ['color-scheme: dark;', ...paletteDeclarations(palettes.dark)];
   return [
-    block(':root', [
-      'color-scheme: dark;',
-      ...paletteDeclarations(palettes.dark),
-      ...sharedDeclarations(),
-    ]),
+    block(':root', [...dark, ...sharedDeclarations()]),
     `@media (prefers-color-scheme: light) {\n${block(':root:not([data-theme="dark"])', light, '  ')}\n}`,
+    // After the media block, so a forced theme wins wherever it is carried.
+    block('[data-theme="dark"]', dark),
     block('[data-theme="light"]', light),
   ].join('\n\n');
 }
