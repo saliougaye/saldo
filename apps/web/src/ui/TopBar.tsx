@@ -15,7 +15,6 @@ interface Props {
     label: string;
     newTransaction: string;
     profile: string;
-    notYet: string;
   };
 }
 
@@ -54,12 +53,12 @@ export function TopBar({ items, user, strings }: Props) {
               ))}
             </div>
           )}
-          {/* 0.3e turns this into the form panel; until then it says so rather than lying. */}
-          <span className={styles.newDisabled} title={strings.notYet} aria-disabled="true">
+          {/* Decision 8: the form on Transazioni, from any page; `N` does the same (`Shortcuts`). */}
+          <Link className={styles.new} href="/transactions?new">
             <Icon name="plus" size={16} />
             {strings.newTransaction}
             <kbd className={styles.kbd}>N</kbd>
-          </span>
+          </Link>
           <Avatar name={user.name} label={strings.profile} />
         </div>
       </nav>

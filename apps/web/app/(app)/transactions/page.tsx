@@ -35,6 +35,7 @@ import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
+import { ListKeys } from '../../../src/ui/ListKeys';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
@@ -60,6 +61,9 @@ const EDIT_PARAM = 'edit';
 
 /** After a delete the page is `?deleted={id}`, which renders «Annulla» (decision 8). */
 const DELETED_PARAM = 'deleted';
+
+/** The DOM id of «In arrivo»'s disclosure: `ListKeys` walks its rows only while it is open. */
+const UPCOMING_ID = 'upcoming';
 
 /** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
 const MISSING = '—';
@@ -357,7 +361,7 @@ export default async function TransactionsPage({
             {/* §5.12: what is still to come is folded behind one row. A native disclosure, so it
                 opens with no client state and without JavaScript — the phone's `UpcomingRow`. */}
             {view.upcoming.count === 0 ? null : (
-              <details className={styles.upcoming}>
+              <details className={styles.upcoming} id={UPCOMING_ID}>
                 <summary className={styles.upcomingSummary}>
                   <Icon name="clock" size={16} className={styles.upcomingIcon} />
                   <span className={styles.upcomingText}>
@@ -383,6 +387,18 @@ export default async function TransactionsPage({
           </>
         )}
       </div>
+
+      {/* ↑ ↓ and E belong to the list; while the form is open the keys are the form's. */}
+      {form !== null ? null : (
+        <ListKeys
+          upcomingIds={view.upcomingDays.flatMap((day) => day.rows.map((row) => row.id))}
+          ids={view.days.flatMap((day) => day.rows.map((row) => row.id))}
+          upcomingDisclosureId={UPCOMING_ID}
+          selectedId={selected?.id ?? null}
+          href={href({ [SELECTION_PARAM]: '__ID__' })}
+          editHref={href({ [SELECTION_PARAM]: '__ID__', [EDIT_PARAM]: '' })}
+        />
+      )}
 
       {form !== null ? (
         <Panel

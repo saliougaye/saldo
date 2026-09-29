@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { isEditable } from './isEditable';
 import styles from './Panel.module.css';
 
 interface Props {
@@ -23,17 +24,6 @@ const NARROW = '(max-width: 1023px)';
 
 /** The exit is quicker than the entrance: the system answers fast where the user has already decided. */
 const EXIT_MS = 150;
-
-/** A key typed into a field belongs to the field: Esc there clears or cancels, it does not close. */
-function isEditable(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
-  );
-}
 
 /**
  * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — 420px beside the list on a wide
