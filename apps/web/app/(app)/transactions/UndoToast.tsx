@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useRef, useState, useTransition } from 'react';
 import { Toast } from '../../../src/ui/Toast';
 import { restoreTransactionAction } from './actions';
 
@@ -32,14 +32,19 @@ export function UndoToast({ id, restoredHref, withoutDeletedHref, strings }: Pro
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Once «Annulla» is pressed the timer no longer takes the toast away: not while the restore is on
+  // its way, and not after it failed, which would drop the error before it is read.
+  const undoing = useRef(false);
 
   // Stable: `Toast` restarts its timer whenever `onDismiss` changes.
   const dismiss = useCallback(() => {
+    if (undoing.current) return;
     router.replace(withoutDeletedHref);
   }, [router, withoutDeletedHref]);
 
   const undo = () => {
     if (pending) return;
+    undoing.current = true;
     startTransition(async () => {
       const result = await restoreTransactionAction(id);
       if (result.ok) {
