@@ -1,11 +1,10 @@
-import type { AccountType } from '@saldo/core';
+import { ACCOUNT_TYPES, type AccountType } from '@saldo/core';
 import { accountTypeIcons } from '@saldo/ui';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { ACCOUNT_TYPES } from './AccountTypeSheet';
 
 /**
  * Onboarding step 2's type picker (§6.29): the prototype's three-column grid, icon over label.

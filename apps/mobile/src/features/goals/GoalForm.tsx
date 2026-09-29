@@ -1,6 +1,13 @@
-import { accountBalances, getCurrency, pocketParentCandidates } from '@saldo/core';
+import {
+  accountBalances,
+  GOAL_STEPS,
+  type GoalFormValues,
+  getCurrency,
+  goalStepMissing,
+  pocketParentCandidates,
+} from '@saldo/core';
 import { deadlineLabel, formatMoney } from '@saldo/i18n';
-import { categoryIconGroups } from '@saldo/ui';
+import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -21,8 +28,6 @@ import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { InfoButton } from '../guide/InfoButton';
 import { usePeriod } from '../period/PeriodProvider';
-import type { GoalFormValues } from './goalFormValues';
-import { GOAL_STEPS, goalStepMissing } from './steps';
 
 export interface GoalFormProps {
   values: GoalFormValues;
@@ -65,7 +70,12 @@ export function GoalForm({ values, onChange, mode, onSubmit }: GoalFormProps) {
         />
         <ListRow
           title={t('common.appearance')}
-          leading={<IconBox name={values.icon} colour={theme.categoryColor(values.colorIndex)} />}
+          leading={
+            <IconBox
+              name={values.icon as IconName}
+              colour={theme.categoryColor(values.colorIndex)}
+            />
+          }
           onPress={() => setAppearanceOpen(true)}
           chevron
         />
@@ -165,7 +175,7 @@ export function GoalForm({ values, onChange, mode, onSubmit }: GoalFormProps) {
         visible={appearanceOpen}
         onClose={() => setAppearanceOpen(false)}
         colorIndex={values.colorIndex}
-        icon={values.icon}
+        icon={values.icon as IconName}
         groups={categoryIconGroups}
         searchable
         onChange={({ icon, colorIndex }) => set({ icon, colorIndex })}

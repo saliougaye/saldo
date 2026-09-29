@@ -1,4 +1,4 @@
-import { type Account, accountTypeSchema } from '@saldo/core';
+import { ACCOUNT_TYPES, type Account } from '@saldo/core';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { ListRow } from '../../components/ListRow';
@@ -6,9 +6,6 @@ import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../theme/Icon';
 import { useTheme } from '../../theme/ThemeProvider';
 import { InfoButton } from '../guide/InfoButton';
-
-/** A pocket is a goal (§5.14): made by the goal wizard, never picked as a type. */
-export const ACCOUNT_TYPES = accountTypeSchema.options.filter((type) => type !== 'pocket');
 
 /** A handful of options, chosen and closed: a sheet. */
 export function AccountTypeSheet({

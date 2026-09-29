@@ -1,4 +1,4 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import { amountBufferToMinor, type GoalFormValues, getCurrency, goalFormFrom } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,6 @@ import { useToast } from '../../../src/components/Toast';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../../src/db/hooks';
 import { GoalForm } from '../../../src/features/goals/GoalForm';
-import { type GoalFormValues, goalFormFrom } from '../../../src/features/goals/goalFormValues';
 
 /** §6.37, edit: one page; the parent never changes (§5.14). */
 export default function EditGoal() {

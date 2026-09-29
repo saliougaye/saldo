@@ -1,5 +1,7 @@
 import {
+  type AccountFormValues,
   accountBalances,
+  accountFormFrom,
   amountBufferToMinor,
   getCurrency,
   openingBalanceForCurrent,
@@ -16,11 +18,7 @@ import { useToast } from '../../../src/components/Toast';
 import { restoreAccount } from '../../../src/db/adminService';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
 import { useAccountsQuery, useSettings, useTransactionsInRangeQuery } from '../../../src/db/hooks';
-import {
-  AccountForm,
-  type AccountFormValues,
-  accountFormFrom,
-} from '../../../src/features/accounts/AccountForm';
+import { AccountForm } from '../../../src/features/accounts/AccountForm';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
 import { Text } from '../../../src/theme/Text';
 

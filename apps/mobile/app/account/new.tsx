@@ -1,13 +1,14 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import {
+  type AccountFormValues,
+  amountBufferToMinor,
+  emptyAccountForm,
+  getCurrency,
+} from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useAccounts, useSettings } from '../../src/db/hooks';
-import {
-  AccountForm,
-  type AccountFormValues,
-  emptyAccountForm,
-} from '../../src/features/accounts/AccountForm';
+import { AccountForm } from '../../src/features/accounts/AccountForm';
 
 export default function NewAccount() {
   const router = useRouter();

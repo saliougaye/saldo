@@ -1,7 +1,12 @@
 import {
   autoBudgetName,
   BUDGET_ALERT_THRESHOLDS,
+  BUDGET_STEPS,
+  type BudgetFormValues,
+  budgetFormFrom,
+  budgetStepMissing,
   categorySpendHistory,
+  emptyBudgetForm,
   getCurrency,
   periodHistory,
   previousPeriods,
@@ -31,8 +36,6 @@ import { useTheme } from '../../theme/ThemeProvider';
 import { InfoButton } from '../guide/InfoButton';
 import { useHiddenMoney } from '../hidden/hiddenAmounts';
 import { usePeriod } from '../period/PeriodProvider';
-import { type BudgetFormValues, budgetFormFrom, emptyBudgetForm } from './budgetFormValues';
-import { BUDGET_STEPS, budgetStepMissing } from './steps';
 
 const HISTORY_CYCLES = 6;
 /** §6.18 footnote: the suggestion is the median plus this much headroom. */

@@ -1,5 +1,5 @@
-import { emptyGoalForm } from './goalFormValues';
-import { goalStepMissing } from './steps';
+import { describe, expect, it } from 'vitest';
+import { emptyGoalForm, goalStepMissing } from './goalForm';
 
 const TODAY = '2026-09-24';
 const filled = {
