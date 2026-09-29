@@ -48,6 +48,32 @@ export const ACCOUNT_2: Account = accountSchema.parse({
   sortOrder: 1,
 });
 
+// Shared by `accountsView.test.ts` and `detailView.test.ts` (§17.1.2): a full row a test can bend
+// into a credit card or a pocket without ever going through `as`.
+export function account(over: Partial<Account> & { id: string; name: string }): Account {
+  return accountSchema.parse({
+    type: 'checking',
+    institution: null,
+    openingBalance: 0,
+    includeInSpendable: true,
+    colorIndex: 0,
+    icon: 'wallet',
+    creditCloseDay: null,
+    creditChargeDay: null,
+    creditPaymentAccountId: null,
+    archivedAt: null,
+    parentAccountId: null,
+    goalTarget: null,
+    goalDeadline: null,
+    goalStartDate: null,
+    sortOrder: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
+    deletedAt: null,
+    ...over,
+  });
+}
+
 export const TAG: Tag = tagSchema.parse({
   id: 'g1',
   name: 'Vacanza',

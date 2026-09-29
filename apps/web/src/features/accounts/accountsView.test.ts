@@ -1,35 +1,10 @@
-import { type Account, accountSchema, emptyUserData } from '@saldo/core';
+import { emptyUserData } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
+import { account } from '../test/fixtures';
 import { accountsView } from './accountsView';
 
 const TODAY = '2026-09-15';
 const DEF = { kind: 'month', startDay: 1 } as const;
-
-// Goes through the schema rather than `as` (§17.1.2): a row a test invents but the app could
-// never store would make its assertions prove nothing.
-function account(over: Partial<Account> & { id: string; name: string }): Account {
-  return accountSchema.parse({
-    type: 'checking',
-    institution: null,
-    openingBalance: 0,
-    includeInSpendable: true,
-    colorIndex: 0,
-    icon: 'wallet',
-    creditCloseDay: null,
-    creditChargeDay: null,
-    creditPaymentAccountId: null,
-    archivedAt: null,
-    parentAccountId: null,
-    goalTarget: null,
-    goalDeadline: null,
-    goalStartDate: null,
-    sortOrder: 0,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z-0000-web',
-    deletedAt: null,
-    ...over,
-  });
-}
 
 describe('accountsView', () => {
   it('splits savings and investments from everything else, by type', () => {

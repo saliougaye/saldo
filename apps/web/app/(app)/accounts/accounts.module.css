@@ -1,0 +1,84 @@
+.layout {
+  display: grid;
+  gap: var(--layout-section-gap-web);
+  align-items: start;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap-web);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.note {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.label {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.count {
+  font-size: var(--font-size-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+/* A pocket, and «libero», read as continuations of the account above them (§5.14). */
+.pocketRow {
+  padding-inline-start: 32px;
+}
+
+.cardRows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.periodRow {
+  display: flex;
+  gap: 24px;
+}
+
+.periodRow > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.goalHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sentence {
+  font-size: var(--font-size-body);
+  text-wrap: pretty;
+}
