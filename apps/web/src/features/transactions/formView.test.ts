@@ -108,6 +108,18 @@ describe('formView', () => {
     expect(view?.accounts[0]?.goalTarget).toBeNull();
   });
 
+  it('carries the balance with the edited row too, the `now` of the transfer preview', () => {
+    const edited = tx({ id: 't1', amount: 500, date: '2026-09-10' });
+    const other = tx({ id: 't2', amount: 200, date: '2026-09-11' });
+    const data = dataWith([edited, other], { accounts: [ACCOUNT] });
+    const view = formView({ data, today: TODAY, currency: 'EUR', mode: 'edit', id: 't1' });
+    expect(view?.accounts[0]?.balanceNow).toBe(-700);
+    expect(view?.accounts[0]?.balance).toBe(-200);
+    const fresh = formView({ data, today: TODAY, currency: 'EUR', mode: 'new', id: null });
+    expect(fresh?.accounts[0]?.balanceNow).toBe(-700);
+    expect(fresh?.accounts[0]?.balance).toBe(-700);
+  });
+
   it('keeps an archived account the edited row uses, flagged archived', () => {
     const edited = tx({ id: 't1', amount: 500, date: '2026-09-10', accountId: ARCHIVED.id });
     const data = dataWith([edited], { accounts: [ACCOUNT, ARCHIVED] });

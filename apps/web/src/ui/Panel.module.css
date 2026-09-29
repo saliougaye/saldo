@@ -134,3 +134,91 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/*
+ * `sheet`: below the breakpoint the form rises from the bottom over a scrim, the mockup's `.sheet`,
+ * rather than taking the screen. At and above it, nothing here applies and the panel is the panel.
+ */
+.panel[data-sheet] {
+  inset: auto 0 0;
+  z-index: 21;
+  max-block-size: 92dvh;
+  padding: 8px var(--layout-screen-padding-x) calc(32px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--color-surface);
+  animation: sheet-in var(--motion-sheet) var(--motion-easing);
+}
+
+.panel[data-sheet][data-closing] {
+  opacity: 1;
+  translate: 0 100%;
+}
+
+@keyframes sheet-in {
+  from {
+    translate: 0 100%;
+  }
+}
+
+.handle {
+  flex: none;
+  inline-size: var(--layout-sheet-handle-width);
+  block-size: var(--layout-sheet-handle-height);
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--color-scrim);
+  animation: scrim-in var(--motion-sheet) var(--motion-easing);
+  transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.scrim[data-closing] {
+  opacity: 0;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .scrim,
+  .handle {
+    display: none;
+  }
+
+  .panel[data-sheet] {
+    inset: auto;
+    z-index: 0;
+    max-block-size: calc(100dvh - var(--layout-topbar-height) - 64px);
+    padding: 0 0 0 24px;
+    border-radius: 0;
+    background: transparent;
+    animation-name: panel-in-wide;
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .panel[data-sheet][data-closing] {
+    opacity: 0;
+    translate: 16px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel[data-sheet] {
+    animation-name: panel-fade;
+  }
+
+  .panel[data-sheet][data-closing] {
+    opacity: 0;
+    translate: none;
+  }
+}

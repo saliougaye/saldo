@@ -76,21 +76,13 @@
   text-underline-offset: 3px;
 }
 
-.note {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  text-wrap: pretty;
-}
-
-.inert {
+.actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
+  gap: 8px;
 }
 
-/* The edit affordance of 0.3e, visible and deliberately not a control (§17.1.9). */
-.inertAction {
+/* «Modifica» (E): the mockup's `.btn-secondary` with its key beside the word. */
+.action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -98,8 +90,23 @@
   padding: 0 12px;
   border-radius: var(--radius-pill);
   background: var(--color-raised);
-  color: var(--color-text-faint);
+  color: var(--color-text);
   font-size: var(--font-size-footnote);
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.action:active {
+  scale: 0.97;
+}
+
+.kbd {
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-chip-small);
+  font-family: inherit;
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  opacity: 0.55;
 }
 
 .filterNote {

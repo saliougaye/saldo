@@ -24,8 +24,15 @@ export interface FormAccount {
   type: AccountType;
   pocket: boolean;
   archived: boolean;
+  /** As on the account row: what `fillsFromBalances` reads to leave an archived goal alone. */
+  archivedAt: string | null;
   /** Today's balance in minor units, the edited row left out (so the preview does not count it twice). */
   balance: number;
+  /**
+   * Today's balance over the whole ledger, the edited row still in it: the `now` of
+   * `previewFromBalances` (`balance` is its `without`). The same figure as `balance` for a new one.
+   */
+  balanceNow: number;
   goalTarget: number | null;
 }
 
@@ -70,6 +77,8 @@ export function formView(input: {
 
   const others = data.transactions.filter((tx) => tx.id !== editing?.id);
   const balances = accountBalances(data.accounts, others, today);
+  const balancesNow =
+    editing === undefined ? balances : accountBalances(data.accounts, data.transactions, today);
   const used = new Set([editing?.accountId, editing?.toAccountId]);
   const visible = data.accounts.filter(
     (account) => account.archivedAt === null || used.has(account.id),
@@ -86,7 +95,9 @@ export function formView(input: {
       type: account.type,
       pocket: isPocket(account),
       archived: account.archivedAt !== null,
+      archivedAt: account.archivedAt,
       balance: balances.get(account.id) ?? 0,
+      balanceNow: balancesNow.get(account.id) ?? 0,
       goalTarget: account.goalTarget ?? null,
     }),
   );

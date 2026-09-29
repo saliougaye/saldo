@@ -1283,5 +1283,25 @@ export const de: Messages = {
       lastOneNote: 'Das ist dein letzter Passkey: füge einen weiteren hinzu, bevor du ihn löschst.',
       empty: 'Keine Passkeys in diesem Konto.',
     },
+    form: {
+      kind: 'Art',
+      descriptionPlaceholder: 'Geschäft, Person, Dienst',
+      swap: 'Tauschen',
+      removeTag: '„{{name}}“ entfernen',
+      repeatNever: 'Nie',
+      repeatRecurring: 'Wiederkehrend',
+      repeatOnPhone: 'Wiederkehrende Buchungen werden auf dem Telefon angelegt und bearbeitet.',
+      keyboardHint: 'Esc zum Schließen · ⌘↵ zum Speichern',
+      error_invalid:
+        'Das Formular konnte nicht gelesen werden. Lade die Seite neu und versuche es noch einmal.',
+      error_notFound:
+        'Diese Buchung gibt es nicht mehr: Vielleicht wurde sie auf einem anderen Gerät gelöscht.',
+      error_closedGoal: 'Sie betrifft ein abgeschlossenes Ziel, das sich nicht mehr ändern lässt.',
+      error_conflict:
+        'Ein anderes Gerät hat sie im selben Moment geändert. Versuche es noch einmal.',
+      noCategories: 'Keine Kategorien dieser Art. Lege eine im Profil an.',
+      noAccounts: 'Keine Konten. Lege eines unter Konten an.',
+      deleteAction: 'Löschen',
+    },
   },
 };

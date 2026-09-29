@@ -1,10 +1,12 @@
 import { addDays } from '@saldo/core';
 import {
   cadenceLabel,
+  catalogs,
   endLabel,
   formatDayMonth,
   formatLongDate,
   formatMoney,
+  formatMoneyParts,
   formatWeekday,
   plural,
 } from '@saldo/i18n';
@@ -17,12 +19,14 @@ import {
   type DetailView,
   detailView,
 } from '../../../src/features/transactions/detailView';
+import { formView } from '../../../src/features/transactions/formView';
 import {
   filtersFromSearch,
   searchFromFilters,
   toggleHref,
 } from '../../../src/features/transactions/listParams';
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
+import { formMessages } from '../../../src/i18n/formMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Chip } from '../../../src/ui/Chip';
@@ -35,6 +39,7 @@ import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
+import { TransactionForm } from './TransactionForm';
 import styles from './transactions.module.css';
 
 export const runtime = 'nodejs';
@@ -44,6 +49,10 @@ const PATH = '/transactions';
 
 /** The parameter that carries the selected row, and the only state the panel has. */
 const SELECTION_PARAM = 't';
+
+/** `?new` opens «Nuova transazione»; `?t={id}&edit` turns the detail into the form (decision 8). */
+const NEW_PARAM = 'new';
+const EDIT_PARAM = 'edit';
 
 /** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
 const MISSING = '—';
@@ -77,6 +86,19 @@ export default async function TransactionsPage({
   const selectedId = params[SELECTION_PARAM];
   const selected =
     selectedId === undefined ? null : detailView({ data: page.data, id: selectedId, kindLabel });
+  // `new URLSearchParams({ edit: '' })` writes `edit=`: presence is what counts, so `?edit` works too.
+  const creating = params[NEW_PARAM] !== undefined;
+  const editing = selected !== null && params[EDIT_PARAM] !== undefined;
+  const form =
+    creating || editing
+      ? formView({
+          data: page.data,
+          today,
+          currency,
+          mode: creating ? 'new' : 'edit',
+          id: creating ? null : (selected?.id ?? null),
+        })
+      : null;
 
   // What every link on this page carries: the filters, and the period, which is not one of them.
   const periodOnly: Record<string, string> = {};
@@ -194,9 +216,11 @@ export default async function TransactionsPage({
   };
 
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
+  const moneyParts = formatMoneyParts(0, currency, locale, 'never');
+  const panelOpen = form !== null || selected !== null;
 
   return (
-    <div className={styles.layout} data-panel={selected === null ? undefined : ''}>
+    <div className={styles.layout} data-panel={panelOpen ? '' : undefined}>
       <div className={styles.list}>
         <div className={styles.head}>
           <PeriodHeader
@@ -329,7 +353,29 @@ export default async function TransactionsPage({
         )}
       </div>
 
-      {selected === null ? null : (
+      {form !== null ? (
+        <Panel
+          sheet
+          bare
+          title={t(form.mode === 'new' ? 'txForm.newTitle' : 'txForm.editTitle')}
+          closeHref={form.id === null ? href() : href({ [SELECTION_PARAM]: form.id })}
+          closeLabel={t('common.close')}
+        >
+          <TransactionForm
+            // A new `?t=` or a switch between «Nuova» and «Modifica» is a new form, not an edit of this one.
+            key={`${form.mode}:${form.id ?? ''}`}
+            view={form}
+            locale={locale}
+            currency={currency}
+            decimalSeparator={moneyParts.decimalSeparator}
+            symbol={moneyParts.symbol}
+            symbolPosition={moneyParts.symbolPosition}
+            messages={formMessages(catalogs[locale])}
+            closeHref={form.id === null ? href() : href({ [SELECTION_PARAM]: form.id })}
+            afterSave={href({ [SELECTION_PARAM]: '__ID__' })}
+          />
+        </Panel>
+      ) : selected === null ? null : (
         <Panel title={selected.title} closeHref={href()} closeLabel={t('common.close')}>
           {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
               `-amount` / `negative` while its list row leaves it unsigned, and the web matches
@@ -392,13 +438,15 @@ export default async function TransactionsPage({
                 )}
           </dl>
 
-          {/* 0.3e turns this into the form; until then it says so rather than lying (§17.1.9). */}
-          <div className={styles.inert}>
-            <span className={styles.inertAction}>
+          <div className={styles.actions}>
+            <Link
+              className={styles.action}
+              href={href({ [SELECTION_PARAM]: selected.id, [EDIT_PARAM]: '' })}
+            >
               <Icon name="pencil" size={14} />
               {t('common.edit')}
-            </span>
-            <p className={styles.note}>{t('web.shell.comingIn0_3e')}</p>
+              <kbd className={styles.kbd}>E</kbd>
+            </Link>
           </div>
         </Panel>
       )}

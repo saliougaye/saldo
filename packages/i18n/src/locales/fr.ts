@@ -1286,5 +1286,23 @@ export const fr: Messages = {
       lastOneNote: 'C’est ta dernière passkey : ajoutes-en une autre avant de la supprimer.',
       empty: 'Aucune passkey sur ce compte.',
     },
+    form: {
+      kind: 'Type',
+      descriptionPlaceholder: 'Magasin, personne, service',
+      swap: 'Inverser',
+      removeTag: 'Retirer « {{name}} »',
+      repeatNever: 'Jamais',
+      repeatRecurring: 'Récurrente',
+      repeatOnPhone: 'Les récurrences se créent et se modifient sur le téléphone.',
+      keyboardHint: 'Échap pour fermer · ⌘↵ pour enregistrer',
+      error_invalid: 'Nous n’avons pas pu lire le formulaire. Rechargez la page et réessayez.',
+      error_notFound:
+        'Cette transaction n’existe plus : un autre appareil l’a peut-être supprimée.',
+      error_closedGoal: 'Elle touche un objectif clôturé, qui ne peut plus être modifié.',
+      error_conflict: 'Un autre appareil l’a modifiée au même moment. Réessayez.',
+      noCategories: 'Aucune catégorie de ce type. Ajoutez-en une depuis le Profil.',
+      noAccounts: 'Aucun compte. Ajoutez-en un depuis Comptes.',
+      deleteAction: 'Supprimer',
+    },
   },
 };

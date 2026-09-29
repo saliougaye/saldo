@@ -1276,6 +1276,24 @@ export const it = {
       lastOneNote: 'È la tua ultima passkey: aggiungine un’altra prima di eliminare questa.',
       empty: 'Nessuna passkey su questo account.',
     },
+    form: {
+      kind: 'Tipo',
+      descriptionPlaceholder: 'Negozio, persona, servizio',
+      swap: 'Inverti',
+      removeTag: 'Togli «{{name}}»',
+      repeatNever: 'Mai',
+      repeatRecurring: 'Ricorrente',
+      repeatOnPhone: 'Le ricorrenze si creano e si modificano dal telefono.',
+      keyboardHint: 'Esc per chiudere · ⌘↵ per salvare',
+      error_invalid: 'Non siamo riusciti a leggere il modulo. Ricarica la pagina e riprova.',
+      error_notFound:
+        'Questa transazione non c’è più: forse è stata eliminata da un altro dispositivo.',
+      error_closedGoal: 'Tocca un obiettivo chiuso: non si può più modificare.',
+      error_conflict: 'Un altro dispositivo l’ha modificata nello stesso momento. Riprova.',
+      noCategories: 'Nessuna categoria di questo tipo. Aggiungine una dal Profilo.',
+      noAccounts: 'Nessun conto. Aggiungine uno da Conti.',
+      deleteAction: 'Elimina',
+    },
   },
 };
 

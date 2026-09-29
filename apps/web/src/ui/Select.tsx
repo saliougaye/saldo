@@ -25,6 +25,10 @@ interface Props {
   onChange: (value: string) => void;
   placeholder: string;
   invalid?: boolean;
+  /** Opens on mount: a list the person asked for with a link beside the field («Tutte le categorie»). */
+  defaultOpen?: boolean;
+  /** Leaves the hint to the list: two selects side by side have no room for it on the trigger. */
+  hintInTrigger?: boolean;
 }
 
 function OptionIcon({ option }: { option: SelectOption }) {
@@ -56,7 +60,16 @@ function grouped(options: readonly SelectOption[]) {
  * The mockup's `.input.select` over Base UI's `Select`: the trigger shows the chosen option as the
  * list does (icon, label, hint), the popup is the filter menu's.
  */
-export function Select({ label, value, options, onChange, placeholder, invalid }: Props) {
+export function Select({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder,
+  invalid,
+  defaultOpen,
+  hintInTrigger = true,
+}: Props) {
   const selected = options.find((option) => option.value === value);
   const renderItem = (option: SelectOption) => (
     <BaseSelect.Item
@@ -76,6 +89,7 @@ export function Select({ label, value, options, onChange, placeholder, invalid }
   return (
     <BaseSelect.Root<string>
       value={value}
+      defaultOpen={defaultOpen}
       onValueChange={(next) => {
         if (next !== null) onChange(next);
       }}
@@ -89,7 +103,7 @@ export function Select({ label, value, options, onChange, placeholder, invalid }
             <>
               <OptionIcon option={selected} />
               <span className={styles.label}>{selected.label}</span>
-              {selected.hint === undefined ? null : (
+              {selected.hint === undefined || !hintInTrigger ? null : (
                 <span className={styles.hint}>{selected.hint}</span>
               )}
             </>
