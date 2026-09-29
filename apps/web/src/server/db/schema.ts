@@ -104,6 +104,19 @@ export const invites = pgTable(
   (table) => [index('invites_created_at').on(table.createdAt)],
 );
 
+/**
+ * §17.1.3. The instance's own HLC when it writes as a sync client: one row (`id = 1`), advanced
+ * under a row lock so two Server Actions never mint the same stamp. `deviceId` is generated the first
+ * time the row is created and never changes, so the server's writes are told apart from every
+ * phone's and tie-breaks stay deterministic.
+ */
+export const serverClock = pgTable('server_clock', {
+  id: integer('id').primaryKey(),
+  deviceId: text('device_id').notNull(),
+  wallMs: bigint('wall_ms', { mode: 'number' }).notNull(),
+  counter: integer('counter').notNull(),
+});
+
 export const schema = {
   user,
   session,
@@ -114,4 +127,5 @@ export const schema = {
   deletedBlobs,
   dataEpochs,
   invites,
+  serverClock,
 };
