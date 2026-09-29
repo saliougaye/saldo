@@ -43,7 +43,7 @@ export default async function LoginPage() {
       />
       <div className={styles.or}>{t('web.auth.or')}</div>
       {canRegister ? (
-        <a className={styles.switchLine} href="/register">
+        <a className={styles.secondaryLink} href="/register">
           {t('sync.createAccount')}
         </a>
       ) : (

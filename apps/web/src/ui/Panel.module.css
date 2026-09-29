@@ -12,6 +12,31 @@
   padding: 16px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
   overflow-y: auto;
   background: var(--color-bg);
+  animation: panel-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition-property: opacity, translate;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Out: the entrance backwards, and quicker. */
+.panel[data-closing] {
+  opacity: 0;
+  translate: 0 16px;
+}
+
+/* It enters from where it will sit: from the trailing side beside the list, from below as a screen. */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+@keyframes panel-in-wide {
+  from {
+    opacity: 0;
+    translate: 16px 0;
+  }
 }
 
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
@@ -26,6 +51,28 @@
     padding: 0 0 0 24px;
     border-inline-start: 1px solid var(--color-border);
     background: transparent;
+    animation-name: panel-in-wide;
+  }
+
+  .panel[data-closing] {
+    translate: 16px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation-name: panel-fade;
+    transition-property: opacity;
+  }
+
+  .panel[data-closing] {
+    translate: none;
+  }
+}
+
+@keyframes panel-fade {
+  from {
+    opacity: 0;
   }
 }
 
@@ -70,4 +117,20 @@
 /* Focus lands here on a narrow screen; the heading is not a control, so it draws no ring. */
 .title:focus {
   outline: none;
+}
+
+/* A panel whose body opens with its own heading: the ✕ alone on the head, no rule under it. */
+.bare {
+  justify-content: flex-end;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

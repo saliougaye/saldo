@@ -196,6 +196,7 @@ export function RegisterFlow({
           {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
           {/* A form, so Enter in either field is «Continua» — the browser's own behaviour. */}
           <form
+            className={styles.form}
             onSubmit={(event) => {
               event.preventDefault();
               submitIdentity();
@@ -239,6 +240,7 @@ export function RegisterFlow({
           <p className={styles.lede}>{strings.inviteBody}</p>
           {shown === null ? null : <Alert title={shown.title} body={shown.body} />}
           <form
+            className={styles.form}
             onSubmit={(event) => {
               event.preventDefault();
               void submitInvite();

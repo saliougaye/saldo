@@ -49,3 +49,31 @@ a.row:hover {
   align-items: center;
   gap: 8px;
 }
+
+.open {
+  gap: 14px;
+  padding: 12px 0;
+}
+
+a.open:hover {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  /* Painted 8px past the row, so the text does not move and the neighbours are not covered. */
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-raised) 60%, transparent);
+}
+
+.open .title {
+  letter-spacing: var(--tracking-tight);
+}
+
+.open .subtitle {
+  color: var(--color-text-faint);
+  margin-top: 1px;
+}
+
+/* The wide screen's open rows say «ahead» with the muted amount alone, and have no side padding to indent. */
+@media (min-width: 1024px) {
+  .open.upcoming {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}

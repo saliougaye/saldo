@@ -65,6 +65,14 @@ describe('toggleHref', () => {
     expect(toggleHref('/transactions', one, { tagId: 'g1' })).toBe('/transactions');
   });
 
+  it('sets a category, and clears it when it is chosen again', () => {
+    expect(toggleHref('/transactions', EMPTY_FILTERS, { categoryId: 'c1' })).toBe(
+      '/transactions?category=c1',
+    );
+    const on = { ...EMPTY_FILTERS, categoryId: 'c1' };
+    expect(toggleHref('/transactions', on, { categoryId: 'c1' })).toBe('/transactions');
+  });
+
   it('drops the selected row when the filters change, because it may no longer be in the list', () => {
     expect(toggleHref('/transactions', EMPTY_FILTERS, { direction: 'expense' }, { t: 'tx1' })).toBe(
       '/transactions?direction=expense',

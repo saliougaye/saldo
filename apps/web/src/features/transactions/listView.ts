@@ -1,4 +1,5 @@
 import {
+  childCategories,
   type FilterLookup,
   filterTransactions,
   groupByDay,
@@ -14,6 +15,7 @@ import {
   type TransactionKind,
   type TransactionRow,
   type TransactionRowDeps,
+  topLevelCategories,
   totalsOf,
   transactionRow,
   type UserData,
@@ -29,6 +31,8 @@ export interface ListRowView extends TransactionRow {
    * the same way, so it is carried here rather than recomputed in the page.
    */
   recurring: boolean;
+  /** The names of its tags, in the phone's order: the pills a wide row shows. */
+  tagNames: string[];
 }
 
 export interface DayView {
@@ -123,6 +127,7 @@ export function listView({
           id: tx.id,
           date: tx.date,
           recurring: tx.recurrenceId !== null,
+          tagNames: tagsByName.filter((tag) => tx.tagIds.includes(tag.id)).map((tag) => tag.name),
         };
       }),
     }));
@@ -157,6 +162,8 @@ export interface FilterChoices {
   accounts: { id: string; name: string; archived: boolean }[];
   /** Every tag, the most used first — the phone's `TagFilterSheet` (§6.23). */
   tags: { id: string; name: string }[];
+  /** Live categories, expenses then income, each parent followed by its children (§5.11). */
+  categories: { id: string; name: string; child: boolean }[];
 }
 
 /**
@@ -182,5 +189,16 @@ export function filterChoices(data: UserData): FilterChoices {
     .sort((a, b) => (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0))
     .map((tag) => ({ id: tag.id, name: tag.name }));
 
-  return { accounts, tags };
+  const categories = (['expense', 'income'] as const).flatMap((direction) =>
+    topLevelCategories(data.categories, direction).flatMap((parent) => [
+      { id: parent.id, name: parent.name, child: false },
+      ...childCategories(data.categories, parent.id).map((child) => ({
+        id: child.id,
+        name: child.name,
+        child: true,
+      })),
+    ]),
+  );
+
+  return { accounts, tags, categories };
 }

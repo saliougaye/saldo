@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Icon } from './Icon';
 import styles from './SearchField.module.css';
-import { TextField } from './TextField';
+import { VisuallyHidden } from './VisuallyHidden';
 
 interface Props {
   /** The list this searches. */
@@ -26,6 +27,26 @@ interface Props {
 export function SearchField({ path, keep, value, label, placeholder }: Props) {
   const router = useRouter();
   const [text, setText] = useState(value);
+  const input = useRef<HTMLInputElement>(null);
+  const id = useId();
+
+  // `/` jumps to the search, as on the phone's keyboard shortcut list (§17.1.7) — unless a field already has the key.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.defaultPrevented || event.metaKey || event.ctrlKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      input.current?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
   return (
     <search className={styles.form}>
       <form
@@ -38,14 +59,24 @@ export function SearchField({ path, keep, value, label, placeholder }: Props) {
           router.push(params === '' ? path : `${path}?${params}`);
         }}
       >
-        <TextField
-          label={label}
-          placeholder={placeholder}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          type="search"
-          autoComplete="off"
-        />
+        <label className={styles.field} htmlFor={id}>
+          <VisuallyHidden>{label}</VisuallyHidden>
+          <Icon name="search" size={16} className={styles.icon} />
+          <input
+            ref={input}
+            id={id}
+            className={styles.input}
+            placeholder={placeholder}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            type="search"
+            aria-keyshortcuts="/"
+            autoComplete="off"
+          />
+          <span className={styles.kbd} aria-hidden="true">
+            /
+          </span>
+        </label>
       </form>
     </search>
   );

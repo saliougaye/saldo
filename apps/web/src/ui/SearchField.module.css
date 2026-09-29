@@ -1,3 +1,58 @@
+/* The search of the filter row: 36px like a nav item, on the raised surface, `/` in the corner. */
 .form {
-  max-inline-size: var(--layout-search-width);
+  flex: none;
+  inline-size: var(--layout-search-width);
+  max-inline-size: 100%;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  block-size: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  color: var(--color-text-faint);
+  cursor: text;
+}
+
+.field:focus-within {
+  box-shadow: inset 0 0 0 1px var(--color-text-muted);
+}
+
+.icon {
+  flex: none;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.kbd {
+  flex: none;
+  font: inherit;
+  font-size: var(--font-size-caption);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-icon-box);
+  padding: 0 5px;
+  opacity: 0.55;
+  line-height: 1.5;
 }

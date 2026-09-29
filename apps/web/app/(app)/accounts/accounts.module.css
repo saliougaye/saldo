@@ -19,6 +19,30 @@
   min-width: 0;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* The account form is 0.3e's: this is its button, dimmed, in the shape it will have. */
+.newAccount {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .title {
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-semibold);
@@ -26,8 +50,10 @@
 }
 
 .note {
+  max-width: 320px;
   font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
+  line-height: 1.45;
   text-wrap: pretty;
 }
 
@@ -44,7 +70,7 @@
 
 /* A pocket, and «libero», read as continuations of the account above them (§5.14). */
 .pocketRow {
-  padding-inline-start: 32px;
+  padding-inline-start: 46px;
 }
 
 .cardRows {

@@ -14,6 +14,7 @@ import {
   type GoalTextSubject,
   goalOf,
   goalSentence,
+  plural,
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
@@ -22,9 +23,9 @@ import { type AccountRowView, accountsView } from '../../../src/features/account
 import { accountDetail } from '../../../src/features/accounts/detailView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
-import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { EmptyState } from '../../../src/ui/EmptyState';
+import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
@@ -46,10 +47,10 @@ const GOAL_RING = 72;
 /** A key figure of the band: the label, the amount, and the line the design puts under it. */
 function Figure({ label, note, children }: { label: string; note?: string; children: ReactNode }) {
   return (
-    <BandFigure label={label}>
+    <HeroFigure label={label}>
       {children}
       {note === undefined || note === '' ? null : <span className={styles.note}>{note}</span>}
-    </BandFigure>
+    </HeroFigure>
   );
 }
 
@@ -129,6 +130,7 @@ export default async function AccountsPage({
   const accountRow = (row: AccountRowView) => (
     <ListRow
       key={row.account.id}
+      open
       href={`/accounts?a=${row.account.id}`}
       selected={accountId === row.account.id}
       icon={row.account.icon as IconName}
@@ -142,17 +144,21 @@ export default async function AccountsPage({
   const pocketRow = (pocket: AccountRowView['pockets'][number]) => (
     <div key={pocket.account.id} className={styles.pocketRow}>
       <ListRow
+        open
         href={`/accounts?g=${pocket.account.id}`}
         selected={goalId === pocket.account.id}
-        icon={pocket.account.icon as IconName}
-        colorIndex={pocket.account.colorIndex}
-        title={pocket.account.name}
-        trailing={
-          <>
-            <AmountText minor={pocket.saved} currency={currency} locale={locale} />
-            <TargetRing size={ROW_RING} ratio={pocket.ratio} pace={null} tone="normal" />
-          </>
+        leading={
+          <TargetRing
+            size={ROW_RING}
+            ratio={pocket.ratio}
+            pace={null}
+            tone={pocket.ratio >= 1 ? 'done' : 'normal'}
+            icon={pocket.account.icon as IconName}
+            colorIndex={pocket.account.colorIndex}
+          />
         }
+        title={pocket.account.name}
+        trailing={<AmountText minor={pocket.saved} currency={currency} locale={locale} />}
       />
     </div>
   );
@@ -165,6 +171,7 @@ export default async function AccountsPage({
           {row.pockets.map(pocketRow)}
           <div className={styles.pocketRow}>
             <ListRow
+              open
               title={t('goals.free')}
               trailing={<AmountText minor={row.free} currency={currency} locale={locale} muted />}
             />
@@ -233,26 +240,54 @@ export default async function AccountsPage({
   return (
     <div className={styles.layout}>
       <div className={styles.list}>
-        <Band>
-          <h1 className={styles.title}>{t('accounts.title')}</h1>
-          <BandFigures>
+        <HeroBand
+          period={
+            <div className={styles.titleRow}>
+              <h1 className={styles.title}>{t('accounts.title')}</h1>
+              {/* 0.3e turns this into the account form; until then it says so rather than lying. */}
+              <span
+                className={styles.newAccount}
+                title={t('web.shell.comingIn0_3e')}
+                aria-disabled="true"
+              >
+                <Icon name="plus" size={16} />
+                {t('accounts.newAccount')}
+              </span>
+            </div>
+          }
+          hero={
             <Figure label={t('accounts.netWorth')}>
               <AmountText minor={view.netWorth} currency={currency} locale={locale} size="hero" />
             </Figure>
+          }
+          stats={
             <Figure label={t('accounts.spendable')} note={t('accounts.spendableNote')}>
-              <AmountText minor={view.spendable} currency={currency} locale={locale} size="title" />
+              <AmountText
+                minor={view.spendable}
+                currency={currency}
+                locale={locale}
+                size="headline"
+              />
             </Figure>
-          </BandFigures>
-        </Band>
+          }
+        />
 
         {empty ? (
           <EmptyState title={t('accounts.empty')} />
         ) : (
           <>
-            <Section title={t('accounts.spending')}>{view.spending.map(group)}</Section>
+            <Section
+              open
+              title={t('accounts.spending')}
+              trailing={plural(t, locale, 'accounts.count', view.spending.length)}
+            >
+              {view.spending.map(group)}
+            </Section>
 
             {view.savings.length === 0 ? null : (
-              <Section title={t('accounts.savings')}>{view.savings.map(group)}</Section>
+              <Section open title={t('accounts.savings')} trailing={t('accounts.outsideSpendable')}>
+                {view.savings.map(group)}
+              </Section>
             )}
           </>
         )}
@@ -264,6 +299,7 @@ export default async function AccountsPage({
           <p className={styles.note}>{t('profile.archivedAccounts')}</p>
         ) : (
           <ListRow
+            open
             title={t('profile.archivedAccounts')}
             trailing={<span className={styles.count}>{view.archivedCount}</span>}
           />
@@ -271,12 +307,7 @@ export default async function AccountsPage({
       </div>
 
       {!showAccountPanel || selected === null ? null : (
-        <Panel
-          key={`a-${selected.account.id}`}
-          title={selected.account.name}
-          closeHref={PATH}
-          closeLabel={t('common.close')}
-        >
+        <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
           <span className={styles.label}>{heroLabel}</span>
           <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
           <Sparkline series={selected.series} />
@@ -341,12 +372,7 @@ export default async function AccountsPage({
       )}
 
       {!showGoalPanel || selected === null || selected.goal === null ? null : (
-        <Panel
-          key={`g-${selected.account.id}`}
-          title={selected.account.name}
-          closeHref={PATH}
-          closeLabel={t('common.close')}
-        >
+        <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
           {(() => {
             const goal = selected.goal;
             const subject: GoalTextSubject = { account: selected.account, progress: goal };

@@ -2,7 +2,7 @@
   position: relative;
   block-size: var(--layout-progress-height);
   border-radius: var(--radius-pill);
-  background: var(--color-raised);
+  background: var(--color-track);
   overflow: visible;
 }
 
@@ -13,7 +13,7 @@
 .fill {
   block-size: 100%;
   border-radius: var(--radius-pill);
-  background: var(--color-text);
+  background: var(--color-bar-grey);
 }
 
 .over {

@@ -25,7 +25,7 @@ export function navItems(admin: boolean): NavItem[] {
   return admin
     ? [
         ...TABS,
-        { key: 'admin', href: '/admin', icon: 'settings', labelKey: 'admin.title', trailing: true },
+        { key: 'admin', href: '/admin', icon: 'shield', labelKey: 'admin.title', trailing: true },
       ]
     : [...TABS];
 }

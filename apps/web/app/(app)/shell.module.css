@@ -17,7 +17,7 @@
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
 @media (min-width: 1024px) {
   .content {
-    padding: 32px var(--layout-page-padding-web) 64px;
+    padding: 48px var(--layout-page-padding-web) 64px;
   }
 }
 

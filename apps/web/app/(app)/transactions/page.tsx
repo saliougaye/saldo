@@ -1,9 +1,11 @@
+import { addDays } from '@saldo/core';
 import {
   cadenceLabel,
   endLabel,
   formatDayMonth,
   formatLongDate,
   formatMoney,
+  formatWeekday,
   plural,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
@@ -23,11 +25,10 @@ import {
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
-import { Band } from '../../../src/ui/Band';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
+import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
-import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
@@ -99,10 +100,40 @@ export default async function TransactionsPage({
     { spent: money(view.totals.expense), income: money(view.totals.income) },
   );
 
+  const accountLabel =
+    choices.accounts.find((account) => account.id === filters.accountId)?.name ??
+    t('transactions.account');
+  const categoryLabel =
+    choices.categories.find((category) => category.id === filters.categoryId)?.name ??
+    t('transactions.category');
+  const tagLabel =
+    filters.tagIds.length === 0
+      ? t('transactions.tags')
+      : filters.tagIds.length === 1
+        ? (choices.tags.find((tag) => tag.id === filters.tagIds[0])?.name ?? t('transactions.tags'))
+        : plural(t, locale, 'transactions.tagsCount', filters.tagIds.length);
+
+  /** «Oggi», «Ieri», then the weekday: the day's name in bold, its date after it. */
+  const dayTitle = (date: string) => {
+    const weekday = formatWeekday(date, locale);
+    const name =
+      date === today
+        ? t('txForm.today')
+        : date === addDays(today, -1)
+          ? t('txForm.yesterday')
+          : weekday.charAt(0).toLocaleUpperCase(locale) + weekday.slice(1);
+    return (
+      <span className={styles.dayTitle}>
+        <b className={styles.dayName}>{name}</b> · {formatDayMonth(date, locale)}
+      </span>
+    );
+  };
+
   const daySection = (day: DayView, upcoming: boolean) => (
     <Section
+      open
       key={day.date}
-      title={formatDayMonth(day.date, locale)}
+      title={dayTitle(day.date)}
       trailing={
         <AmountText minor={day.expenseTotal} currency={currency} locale={locale} size="footnote" />
       }
@@ -110,6 +141,7 @@ export default async function TransactionsPage({
       {day.rows.map((row) => (
         <ListRow
           key={row.id}
+          open
           href={href({ [SELECTION_PARAM]: row.id })}
           selected={selected?.id === row.id}
           icon={row.icon as IconName}
@@ -120,13 +152,24 @@ export default async function TransactionsPage({
           subtitle={row.subtitle}
           upcoming={upcoming}
           trailing={
-            <AmountText
-              minor={row.amount.minor}
-              currency={currency}
-              locale={locale}
-              sign={row.amount.signDisplay}
-              muted={row.amount.muted}
-            />
+            <>
+              {row.tagNames.length === 0 ? null : (
+                <span className={styles.tags}>
+                  {row.tagNames.map((name) => (
+                    <span className={styles.pill} key={name}>
+                      #{name}
+                    </span>
+                  ))}
+                </span>
+              )}
+              <AmountText
+                minor={row.amount.minor}
+                currency={currency}
+                locale={locale}
+                sign={row.amount.signDisplay}
+                muted={row.amount.muted}
+              />
+            </>
           }
         />
       ))}
@@ -153,9 +196,9 @@ export default async function TransactionsPage({
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
 
   return (
-    <div className={styles.layout}>
+    <div className={styles.layout} data-panel={selected === null ? undefined : ''}>
       <div className={styles.list}>
-        <Band>
+        <div className={styles.head}>
           <PeriodHeader
             period={period}
             def={def}
@@ -163,18 +206,54 @@ export default async function TransactionsPage({
             locale={locale}
             path={PATH}
             params={searchFromFilters(filters)}
+            status={plural(t, locale, 'transactions.periodCount', view.totals.count)}
             strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
           />
-          <SearchField
-            // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
-            key={filters.query}
-            path={PATH}
-            keep={keepWithoutQuery}
-            value={filters.query}
-            label={t('common.search')}
-            placeholder={t('transactions.searchPlaceholder')}
-          />
-          <div className={styles.chips}>
+          <div className={styles.filters}>
+            <SearchField
+              // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
+              key={filters.query}
+              path={PATH}
+              keep={keepWithoutQuery}
+              value={filters.query}
+              label={t('common.search')}
+              placeholder={t('transactions.searchPlaceholder')}
+            />
+            {/* The phone's account, category and tag sheets, as menus on the chips that open them (§5.12, §6.23). */}
+            <FilterMenu
+              label={accountLabel}
+              active={filters.accountId !== null}
+              options={choices.accounts.map((account) => ({
+                key: account.id,
+                label: account.archived
+                  ? `${account.name} · ${t('accounts.archivedBadge')}`
+                  : account.name,
+                href: toggleHref(PATH, filters, { accountId: account.id }, params),
+                selected: filters.accountId === account.id,
+              }))}
+            />
+            <FilterMenu
+              label={categoryLabel}
+              active={filters.categoryId !== null}
+              options={choices.categories.map((category) => ({
+                key: category.id,
+                label: category.child ? `— ${category.name}` : category.name,
+                href: toggleHref(PATH, filters, { categoryId: category.id }, params),
+                selected: filters.categoryId === category.id,
+              }))}
+            />
+            {choices.tags.length === 0 ? null : (
+              <FilterMenu
+                label={tagLabel}
+                active={filters.tagIds.length > 0}
+                options={choices.tags.map((tag) => ({
+                  key: tag.id,
+                  label: tag.name,
+                  href: toggleHref(PATH, filters, { tagId: tag.id }, params),
+                  selected: filters.tagIds.includes(tag.id),
+                }))}
+              />
+            )}
             <Chip
               label={t('transactions.onlyExpenses')}
               href={toggleHref(PATH, filters, { direction: 'expense' }, params)}
@@ -190,45 +269,19 @@ export default async function TransactionsPage({
               href={toggleHref(PATH, filters, { direction: 'transfer' }, params)}
               active={filters.direction === 'transfer'}
             />
-            {/* The phone's account sheet, as chips: every account, archived ones marked (§5.12). */}
-            {choices.accounts.map((account) => (
-              <Chip
-                key={account.id}
-                label={
-                  account.archived
-                    ? `${account.name} · ${t('accounts.archivedBadge')}`
-                    : account.name
-                }
-                href={toggleHref(PATH, filters, { accountId: account.id }, params)}
-                active={filters.accountId === account.id}
-              />
-            ))}
             <Chip
               label={t('transactions.onlyExcluded')}
               href={toggleHref(PATH, filters, { excluded: !filters.onlyExcluded }, params)}
               active={filters.onlyExcluded}
             />
           </div>
-          {/* The phone's tag sheet, as a second row of chips, most used first (§6.23). */}
-          {choices.tags.length === 0 ? null : (
-            <div className={styles.chips}>
-              {choices.tags.map((tag) => (
-                <Chip
-                  key={tag.id}
-                  label={tag.name}
-                  href={toggleHref(PATH, filters, { tagId: tag.id }, params)}
-                  active={filters.tagIds.includes(tag.id)}
-                />
-              ))}
-            </div>
-          )}
           {view.hiddenTransfers === 0 ? null : (
             <p className={styles.filterNote}>
               {plural(t, locale, 'transactions.transfersHidden', view.hiddenTransfers)}
             </p>
           )}
           {view.filtered ? <p className={styles.filterNote}>{filteredTotal}</p> : null}
-        </Band>
+        </div>
 
         {!hasRows ? (
           view.filtered ? (
@@ -251,14 +304,12 @@ export default async function TransactionsPage({
             {view.upcoming.count === 0 ? null : (
               <details className={styles.upcoming}>
                 <summary className={styles.upcomingSummary}>
-                  <IconBox name="clock" />
+                  <Icon name="clock" size={16} className={styles.upcomingIcon} />
                   <span className={styles.upcomingText}>
-                    <span className={styles.upcomingTitle}>{t('transactions.upcoming')}</span>
-                    <span className={styles.upcomingCount}>
-                      {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
-                    </span>
+                    <b className={styles.upcomingTitle}>{t('transactions.upcoming')}</b> ·{' '}
+                    {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
                   </span>
-                  <span className={styles.upcomingNet}>{money(view.upcoming.net)}</span>
+                  <span className={styles.upcomingShow}>{t('transactions.showUpcoming')}</span>
                   <Icon name="chevD" size={16} className={styles.chevron} />
                 </summary>
                 <div className={styles.upcomingBody}>
@@ -279,12 +330,7 @@ export default async function TransactionsPage({
       </div>
 
       {selected === null ? null : (
-        <Panel
-          key={selected.id}
-          title={selected.title}
-          closeHref={href()}
-          closeLabel={t('common.close')}
-        >
+        <Panel title={selected.title} closeHref={href()} closeLabel={t('common.close')}>
           {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
               `-amount` / `negative` while its list row leaves it unsigned, and the web matches
               the phone screen for screen (see `DetailView.hero`). */}

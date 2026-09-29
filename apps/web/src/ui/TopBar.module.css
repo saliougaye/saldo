@@ -1,7 +1,6 @@
 /**
- * Narrow first. §17.1.7 gives a narrow screen the phone's tab bar for the sections, but Profile,
- * Admin and sign-out are reached from the avatar — so the bar itself stays, carrying only the
- * brand and what the tab bar cannot: the trailing links and the avatar.
+ * Narrow first. §17.1.7 gives a narrow screen the phone's tab bar for the sections — so the bar
+ * itself stays, carrying only the brand and what the tab bar cannot: Admin and the avatar.
  */
 .bar {
   height: var(--layout-topbar-height);
@@ -19,13 +18,10 @@
   padding: 0 var(--layout-screen-padding-x);
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
 }
 
 .brand {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-tighter);
   color: var(--color-text);
   text-decoration: none;
 }
@@ -46,25 +42,38 @@
   gap: 12px;
 }
 
-/* Below the breakpoint these live in the avatar menu instead, which is where §17.1.7 puts them. */
+/* Icon-only, so it fits beside the avatar on a phone too. */
 .trailing {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* The phone writes from its own screen, and 0.3e gives the wide screen the panel this opens. */
+/* The phone writes from its own screen, and 0.3e gives the wide screen the panel this opens: until then it looks like the button it will be, dimmed, and says so on hover. */
 .newDisabled {
   display: none;
   align-items: center;
-  gap: 6px;
-  height: var(--layout-nav-item-height);
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-faint);
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.kbd {
+  font: inherit;
+  font-size: var(--font-size-caption);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-icon-box);
+  padding: 0 5px;
+  opacity: 0.55;
+  line-height: 1.5;
 }
 
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
@@ -74,10 +83,6 @@
   }
 
   .sections {
-    display: flex;
-  }
-
-  .trailing {
     display: flex;
   }
 

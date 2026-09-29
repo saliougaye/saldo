@@ -11,11 +11,23 @@
 .hero {
   font-size: var(--font-size-hero-web);
   font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tightest);
+  line-height: 1.1;
+}
+
+.large {
+  font-size: var(--font-size-amount-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.1;
 }
 
 .title {
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-semibold);
+}
+
+.headline {
+  font-size: var(--font-size-headline);
 }
 
 .body {

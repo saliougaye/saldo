@@ -1,6 +1,15 @@
 import { accountSchema, EMPTY_FILTERS, emptyUserData, tagSchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
-import { ACCOUNT, ACCOUNT_2, dataWith, TAG, tx } from '../test/fixtures';
+import {
+  ACCOUNT,
+  ACCOUNT_2,
+  CATEGORY,
+  CATEGORY_2,
+  CATEGORY_CHILD,
+  dataWith,
+  TAG,
+  tx,
+} from '../test/fixtures';
 import { filterChoices, listView } from './listView';
 
 const TODAY = '2026-09-15';
@@ -177,5 +186,14 @@ describe('filterChoices', () => {
       { tags: [zeta, TAG, amici] },
     );
     expect(filterChoices(data).tags.map((tag) => tag.name)).toEqual(['Zeta', 'Vacanza', 'Amici']);
+  });
+
+  it('lists the categories in display order, each parent followed by its children', () => {
+    const data = dataWith([], { categories: [CATEGORY_2, CATEGORY_CHILD, CATEGORY] });
+    expect(filterChoices(data).categories).toEqual([
+      { id: CATEGORY.id, name: 'Spesa', child: false },
+      { id: CATEGORY_CHILD.id, name: 'Frutta', child: true },
+      { id: CATEGORY_2.id, name: 'Casa', child: false },
+    ]);
   });
 });

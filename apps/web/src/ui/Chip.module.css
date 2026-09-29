@@ -5,15 +5,56 @@
   height: 32px;
   padding: 0 12px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
   color: var(--color-text-muted);
   font-size: var(--font-size-footnote);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition-property: scale, background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
 }
 
+.chip:active {
+  scale: 0.96;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    color: var(--color-text);
+  }
+}
+
+/* On: the chip fills, so a filter that is set reads at a glance among the ones that are not. */
 .active {
-  border-color: var(--color-text);
-  color: var(--color-text);
-  background: var(--color-raised);
+  border-color: transparent;
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .active:hover {
+    color: var(--color-bg);
+  }
+}
+
+.chevron {
+  flex: none;
+  transition: rotate var(--motion-press) var(--motion-easing);
+}
+
+.chip[data-popup-open] .chevron {
+  rotate: 180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip:active {
+    scale: 1;
+  }
+
+  .chevron {
+    transition: none;
+  }
 }

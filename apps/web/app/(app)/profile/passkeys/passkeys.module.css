@@ -1,69 +1,151 @@
+/* The description, the rows and the button are three groups: space between them, not against them. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+/* Passkeys as summary rows (§17.1.7): a row is a link that selects the key, its panel opens beside. */
 .rows {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: var(--layout-content-wide);
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 0;
+  gap: 14px;
   min-height: var(--layout-min-hit-target);
+  padding: 14px 12px;
+  margin: 0 -12px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
 }
 
-.row + .row {
-  border-top: 1px solid var(--color-border);
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  }
+}
+
+.selected,
+.selected:hover {
+  background: var(--color-raised);
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+}
+
+.selected .tile {
+  background: var(--color-surface);
+}
+
+.tileLarge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-button);
 }
 
 .text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .name {
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-body);
 }
 
 .meta {
   font-size: var(--font-size-footnote);
   color: var(--color-text-faint);
-  margin-top: 2px;
 }
 
-.badge {
-  font-size: var(--font-size-caption);
-  color: var(--color-text-muted);
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--color-raised);
-  white-space: nowrap;
+.chevron {
+  flex: none;
+  color: var(--color-text-faint);
 }
 
-.actions {
-  display: flex;
-  gap: 8px;
-  flex: 0 0 auto;
+.add {
+  align-self: flex-start;
 }
 
-.action {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  padding: 0 4px;
+.add button {
   width: auto;
-  height: auto;
-}
-
-.dangerous {
-  color: var(--color-accent);
 }
 
 .note {
   font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
-  padding-bottom: 12px;
+  color: var(--color-text-muted);
   text-wrap: pretty;
+  line-height: 1.45;
+}
+
+/* The panel's body: the key, its name, what is known about it, then the one destructive action. */
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.panelName {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 8px 0 0;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+}
+
+.factLabel {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.factValue {
+  margin: 0;
+  font-size: var(--font-size-body);
+  text-wrap: pretty;
+}
+
+.panelActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.panelActions button {
+  width: auto;
 }
 
 .dialog {

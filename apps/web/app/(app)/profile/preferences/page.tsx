@@ -1,8 +1,8 @@
 import { preferenceRows } from '../../../../src/features/profile/profileRows';
 import { readPage } from '../../../../src/server/page/context';
-import { EmptyState } from '../../../../src/ui/EmptyState';
-import { ListRow } from '../../../../src/ui/ListRow';
 import { Section } from '../../../../src/ui/Section';
+import { SummaryRow } from '../../../../src/ui/SummaryRow';
+import styles from '../profile.module.css';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,12 +12,12 @@ export default async function ProfilePreferencesPage() {
   const { t, locale, settings } = page;
   const rows = preferenceRows(settings, locale);
   return (
-    <Section title={t('settings.preferences')}>
+    <Section open title={t('settings.preferences')} trailing={t('settings.appliesToPhone')}>
       {rows.map((row) => (
-        <ListRow
+        <SummaryRow
           key={row.key}
           title={t(row.labelKey)}
-          trailing={
+          value={
             row.key === 'cycle'
               ? t('settings.cycleValue', { day: row.value })
               : row.key === 'theme'
@@ -28,7 +28,7 @@ export default async function ProfilePreferencesPage() {
           }
         />
       ))}
-      <EmptyState title={t('settings.appliesToPhone')} body={t('web.shell.comingIn0_3e')} />
+      <p className={styles.note}>{t('web.shell.comingIn0_3e')}</p>
     </Section>
   );
 }

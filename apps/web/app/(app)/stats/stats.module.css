@@ -1,8 +1,31 @@
-/* The band with Flussi across it, then the 7/5 pair — the same page shape as Home. */
+/* Flussi across the page, the period and its four figures, then the 7/5 pair — Home's shape. */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 40px;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .page {
+    gap: var(--layout-section-gap-web);
+  }
+
+  .figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 /* The line the design puts under a key figure, and under a chart. */

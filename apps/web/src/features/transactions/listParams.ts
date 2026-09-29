@@ -42,6 +42,7 @@ export function searchFromFilters(filters: TransactionFilters): Record<string, s
 export interface Toggle {
   direction?: TransactionFilters['direction'];
   accountId?: string;
+  categoryId?: string;
   tagId?: string;
   excluded?: boolean;
 }
@@ -64,6 +65,9 @@ export function toggleHref(
   }
   if (toggle.accountId !== undefined) {
     next.accountId = filters.accountId === toggle.accountId ? null : toggle.accountId;
+  }
+  if (toggle.categoryId !== undefined) {
+    next.categoryId = filters.categoryId === toggle.categoryId ? null : toggle.categoryId;
   }
   if (toggle.tagId !== undefined) {
     const tagId = toggle.tagId;

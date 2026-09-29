@@ -19,10 +19,22 @@
   min-width: 0;
 }
 
-.chips {
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* The search and the chips share one wrapping row: the search leads, the chips follow at 8px. */
+.filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.filters > :first-child {
+  margin-inline-end: 8px;
 }
 
 .facts {
@@ -122,6 +134,8 @@
   gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
   cursor: pointer;
   list-style: none;
 }
@@ -130,25 +144,24 @@
   display: none;
 }
 
+.upcomingIcon {
+  flex: none;
+}
+
 .upcomingText {
-  display: flex;
   flex: 1;
-  flex-direction: column;
   min-width: 0;
 }
 
 .upcomingTitle {
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
-.upcomingCount,
-.upcomingNet {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-}
-
-.upcomingNet {
-  font-variant-numeric: tabular-nums;
+@media (hover: hover) and (pointer: fine) {
+  .upcomingSummary:hover {
+    color: var(--color-text);
+  }
 }
 
 .chevron {
@@ -197,4 +210,41 @@
   .chevron {
     transition: none;
   }
+}
+
+/* A day's title row: the name in the text colour, the date in the muted one. */
+.dayTitle {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+.dayName {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+/* Tags as pills on a wide screen, and only while there is room: the panel takes it back (§17.1.7). */
+.tags {
+  display: none;
+  gap: 6px;
+}
+
+@media (min-width: 1024px) {
+  .tags {
+    display: flex;
+  }
+
+  .layout[data-panel] .tags {
+    display: none;
+  }
+}
+
+.pill {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
 }

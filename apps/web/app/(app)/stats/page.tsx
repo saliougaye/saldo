@@ -23,13 +23,13 @@ import {
 import { statsView } from '../../../src/features/stats/statsView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
-import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';
 import { Chip } from '../../../src/ui/Chip';
 import { Columns } from '../../../src/ui/Columns';
 import { CashflowChart } from '../../../src/ui/charts/CashflowChart';
 import { SplitBar, type SplitSegment } from '../../../src/ui/charts/SplitBar';
 import { TrendChart } from '../../../src/ui/charts/TrendChart';
 import { EmptyState } from '../../../src/ui/EmptyState';
+import { HeroFigure } from '../../../src/ui/HeroBand';
 import { ListRow } from '../../../src/ui/ListRow';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { Section } from '../../../src/ui/Section';
@@ -60,10 +60,10 @@ function segmentColour(rank: number): string {
 /** A key figure of the band: the label, the amount, and the line the design puts under it. */
 function Figure({ label, note, children }: { label: string; note?: string; children: ReactNode }) {
   return (
-    <BandFigure label={label}>
+    <HeroFigure label={label}>
       {children}
       {note === undefined || note === '' ? null : <span className={styles.note}>{note}</span>}
-    </BandFigure>
+    </HeroFigure>
   );
 }
 
@@ -120,23 +120,25 @@ export default async function StatsPage({
   };
 
   const chart = (
-    <CashflowChart
-      columns={navigator.columns}
-      currency={currency}
-      locale={locale}
-      href={(column: NavigatorColumn) => periodHref(PATH, column.range, def, today, keep)}
-      tick={(column: NavigatorColumn) => formatPeriodTick(column.range.start, def.kind, locale)}
-      label={(column: NavigatorColumn) =>
-        `${formatCycleRange(column.range, locale, today)} · ${formatMoney(column.net, currency, locale, 'always')}`
-      }
-      legend={{
-        income: t('stats.legendIncome'),
-        expenses: t('stats.legendExpenses'),
-        current: t('stats.legendCurrent'),
-        forecast: t('stats.legendForecast'),
-        range: t('stats.legendRange'),
-      }}
-    />
+    <Section open title={t('stats.cashflow')}>
+      <CashflowChart
+        columns={navigator.columns}
+        currency={currency}
+        locale={locale}
+        href={(column: NavigatorColumn) => periodHref(PATH, column.range, def, today, keep)}
+        tick={(column: NavigatorColumn) => formatPeriodTick(column.range.start, def.kind, locale)}
+        label={(column: NavigatorColumn) =>
+          `${formatCycleRange(column.range, locale, today)} · ${formatMoney(column.net, currency, locale, 'always')}`
+        }
+        legend={{
+          income: t('stats.legendIncome'),
+          expenses: t('stats.legendExpenses'),
+          current: t('stats.legendCurrent'),
+          forecast: t('stats.legendForecast'),
+          range: t('stats.legendRange'),
+        }}
+      />
+    </Section>
   );
 
   const header = (
@@ -148,6 +150,13 @@ export default async function StatsPage({
       path={PATH}
       params={keep}
       reach={forecast?.length ?? 0}
+      status={
+        period.ahead > 0
+          ? undefined
+          : period.isCurrent
+            ? t('period.inProgress', { elapsed: period.elapsed, length: period.length })
+            : t('period.closed')
+      }
       strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
     />
   );
@@ -167,16 +176,17 @@ export default async function StatsPage({
 
     return (
       <div className={styles.page}>
-        <Band>
+        <div className={styles.top}>
           {chart}
           {header}
-          <BandFigures>
+          <div className={styles.figures}>
             <Figure label={t('stats.incomeAbout')} note={t('stats.fromRecurrences')}>
               <AmountText
                 minor={selected.income}
                 currency={currency}
                 locale={locale}
-                size="title"
+                size="large"
+                positive
               />
             </Figure>
             <Figure
@@ -190,7 +200,7 @@ export default async function StatsPage({
                 minor={selected.expenses}
                 currency={currency}
                 locale={locale}
-                size="title"
+                size="large"
               />
             </Figure>
             <Figure label={t('stats.netAbout')}>
@@ -198,7 +208,7 @@ export default async function StatsPage({
                 minor={selected.income - selected.expenses}
                 currency={currency}
                 locale={locale}
-                size="title"
+                size="large"
                 sign="always"
               />
             </Figure>
@@ -210,11 +220,11 @@ export default async function StatsPage({
                 minor={selected.balance}
                 currency={currency}
                 locale={locale}
-                size="title"
+                size="large"
               />
             </Figure>
-          </BandFigures>
-        </Band>
+          </div>
+        </div>
 
         <Columns
           lead={
@@ -342,16 +352,17 @@ export default async function StatsPage({
 
   return (
     <div className={styles.page}>
-      <Band>
+      <div className={styles.top}>
         {chart}
         {header}
-        <BandFigures>
+        <div className={styles.figures}>
           <Figure label={t('stats.income')} note={period.isCurrent ? t('stats.soFar') : undefined}>
             <AmountText
               minor={view.figures.income}
               currency={currency}
               locale={locale}
-              size="title"
+              size="large"
+              positive
             />
           </Figure>
           <Figure label={t('stats.expenses')} note={spentNote}>
@@ -359,7 +370,7 @@ export default async function StatsPage({
               minor={view.figures.spent}
               currency={currency}
               locale={locale}
-              size="title"
+              size="large"
             />
           </Figure>
           <Figure label={t('stats.net')} note={period.isCurrent ? t('stats.soFar') : undefined}>
@@ -367,7 +378,7 @@ export default async function StatsPage({
               minor={view.figures.net}
               currency={currency}
               locale={locale}
-              size="title"
+              size="large"
               sign="always"
             />
           </Figure>
@@ -390,11 +401,11 @@ export default async function StatsPage({
                 { amount: formatMoney(Math.abs(projection - (median ?? 0)), currency, locale) },
               )}
             >
-              <AmountText minor={projection} currency={currency} locale={locale} size="title" />
+              <AmountText minor={projection} currency={currency} locale={locale} size="large" />
             </Figure>
           )}
-        </BandFigures>
-      </Band>
+        </div>
+      </div>
 
       <Columns
         lead={

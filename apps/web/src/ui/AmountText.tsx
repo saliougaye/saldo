@@ -19,8 +19,10 @@ interface Props {
   locale: AppLocale;
   sign?: AmountSign;
   /** `hero` is the 56px figure of a band, `body` a row's trailing amount. */
-  size?: 'hero' | 'title' | 'body' | 'footnote';
+  size?: 'hero' | 'large' | 'title' | 'headline' | 'body' | 'footnote';
   muted?: boolean;
+  /** Green without a `+`: Home's «Entrate», which is income by its label and needs no sign. */
+  positive?: boolean;
 }
 
 /**
@@ -34,12 +36,13 @@ export function AmountText({
   sign = 'negative',
   size = 'body',
   muted = false,
+  positive = false,
 }: Props) {
   const parts = formatMoneyParts(minor, currency, locale, sign);
   const symbol = <span className={styles.dim}>{parts.symbol}</span>;
   return (
     <span
-      className={`${styles.amount} ${styles[size]} ${styles[amountClass(minor, sign)]} ${
+      className={`${styles.amount} ${styles[size]} ${positive ? styles.positive : styles[amountClass(minor, sign)]} ${
         muted ? styles.muted : ''
       }`}
     >

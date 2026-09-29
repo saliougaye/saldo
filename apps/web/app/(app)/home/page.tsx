@@ -22,9 +22,10 @@ import { Fragment, type ReactNode } from 'react';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
-import { Band, BandFigure, BandFigures } from '../../../src/ui/Band';
 import { Columns } from '../../../src/ui/Columns';
 import { EmptyState } from '../../../src/ui/EmptyState';
+import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
+import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
@@ -38,7 +39,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /** The ring beside a budget or a goal row: the phone's `targetRingSmall`. */
-const ROW_RING = 28;
+const ROW_RING = 36;
 /** Wide enough for «oggi» in every locale, centred on the pace tick (the phone's `FeaturedTarget`). */
 const TODAY_WIDTH = 64;
 
@@ -117,7 +118,7 @@ function Featured(props: FeaturedProps) {
           minor={props.amount}
           currency={props.currency}
           locale={props.locale}
-          size="title"
+          size="large"
         />
       </div>
       <span className={styles.featuredOf} aria-hidden="true">
@@ -180,6 +181,7 @@ export default async function HomePage({
       title={row.title}
       subtitle={`${formatDayMonth(row.date, locale)} · ${row.subtitle}`}
       upcoming={upcoming}
+      open
       trailing={
         <AmountText
           minor={row.amount.minor}
@@ -262,24 +264,25 @@ export default async function HomePage({
   const budgetRow = (item: BudgetView) => (
     <ListRow
       key={item.budget.id}
+      open
       label={budgetLabel(item)}
-      icon={item.budget.icon as IconName}
-      colorIndex={budgetColour(item)}
+      leading={
+        <TargetRing
+          size={ROW_RING}
+          ratio={item.ratio}
+          pace={budgetPace(item)}
+          tone={budgetTone(item)}
+          icon={item.budget.icon as IconName}
+          colorIndex={budgetColour(item)}
+        />
+      }
       title={item.budget.name}
       subtitle={budgetMeta(item)}
       trailing={
-        <>
-          <span className={styles.rowStatus}>
-            <span className={styles.rowPercent}>{percent(item.ratio)}</span>
-            <span className={styles.rowStatusMeta}>{budgetStatus(item)}</span>
-          </span>
-          <TargetRing
-            size={ROW_RING}
-            ratio={item.ratio}
-            pace={budgetPace(item)}
-            tone={budgetTone(item)}
-          />
-        </>
+        <span className={`${styles.rowStatus} ${item.overLimit ? styles.rowOver : ''}`}>
+          <span className={styles.rowPercent}>{percent(item.ratio)}</span>
+          <span className={styles.rowStatusMeta}>{budgetStatus(item)}</span>
+        </span>
       }
     />
   );
@@ -328,25 +331,32 @@ export default async function HomePage({
   const goalRow = (item: GoalView) => (
     <ListRow
       key={item.account.id}
+      open
       label={goalLabel(item, goalDeps)}
       href={`/accounts?g=${item.account.id}`}
-      icon={item.account.icon as IconName}
-      colorIndex={item.account.colorIndex}
+      leading={
+        <TargetRing
+          size={ROW_RING}
+          ratio={item.progress.ratio}
+          pace={goalPace(item.progress)}
+          tone={goalWebTone(item)}
+          icon={item.account.icon as IconName}
+          colorIndex={item.account.colorIndex}
+        />
+      }
       title={item.account.name}
       subtitle={goalMeta(item, goalDeps)}
       trailing={
-        <>
-          <span className={styles.rowStatus}>
-            <span className={styles.rowPercent}>{percent(item.progress.ratio)}</span>
-            <span className={styles.rowStatusMeta}>{goalStatus(item, goalDeps)}</span>
+        <span className={styles.rowStatus}>
+          <span className={styles.rowPercent}>{percent(item.progress.ratio)}</span>
+          <span
+            className={`${styles.rowStatusMeta} ${
+              goalWebTone(item) === 'done' ? styles.rowDone : ''
+            }`}
+          >
+            {goalStatus(item, goalDeps)}
           </span>
-          <TargetRing
-            size={ROW_RING}
-            ratio={item.progress.ratio}
-            pace={goalPace(item.progress)}
-            tone={goalWebTone(item)}
-          />
-        </>
+        </span>
       }
     />
   );
@@ -363,49 +373,74 @@ export default async function HomePage({
 
   return (
     <div className={styles.page}>
-      <Band>
-        <PeriodHeader
-          period={period}
-          def={def}
-          today={today}
-          locale={locale}
-          path="/home"
-          strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
-        />
-        <BandFigures>
-          <BandFigure label={period.isCurrent ? t('home.remaining') : t('home.leftover')}>
+      <HeroBand
+        period={
+          <PeriodHeader
+            period={period}
+            def={def}
+            today={today}
+            locale={locale}
+            path="/home"
+            status={
+              period.isCurrent
+                ? t('home.dayOf', { elapsed: period.elapsed, length: period.length })
+                : t('home.closedCycle')
+            }
+            strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
+          />
+        }
+        hero={
+          <HeroFigure label={period.isCurrent ? t('home.remaining') : t('home.leftover')}>
             <AmountText
               minor={view.summary.remaining}
               currency={currency}
               locale={locale}
               size="hero"
             />
-          </BandFigure>
-          <BandFigure label={t('home.income')}>
-            <AmountText
-              minor={view.summary.income}
-              currency={currency}
-              locale={locale}
-              size="title"
-            />
-          </BandFigure>
-          <BandFigure label={t('home.expenses')}>
-            <AmountText
-              minor={view.summary.spent}
-              currency={currency}
-              locale={locale}
-              size="title"
-            />
-          </BandFigure>
-        </BandFigures>
-        <ProgressBar
-          ratio={view.summary.ratio}
-          pace={period.isCurrent ? view.summary.pace : null}
-          tone={view.summary.overPace ? 'over' : 'normal'}
-        />
+          </HeroFigure>
+        }
+        stats={
+          <>
+            <HeroFigure label={t('home.income')}>
+              <AmountText
+                minor={view.summary.income}
+                currency={currency}
+                locale={locale}
+                size="headline"
+                positive
+              />
+            </HeroFigure>
+            <HeroFigure label={t('home.expenses')}>
+              <AmountText
+                minor={view.summary.spent}
+                currency={currency}
+                locale={locale}
+                size="headline"
+              />
+            </HeroFigure>
+          </>
+        }
+        bar={
+          <ProgressBar
+            ratio={view.summary.ratio}
+            pace={period.isCurrent ? view.summary.pace : null}
+            tone={view.summary.overPace ? 'over' : 'normal'}
+          />
+        }
+        legend={
+          <>
+            <span>
+              {t('home.spentOfIncome', { percent: percent(Math.min(1, view.summary.ratio)) })}
+            </span>
+            {period.isCurrent ? (
+              <span>{t('home.todayOfPeriod', { percent: percent(view.summary.pace) })}</span>
+            ) : null}
+          </>
+        }
+      >
         {/* `/onboarding` arrives in 0.3e: until then the page renders on the defaults (§17.1.2). */}
         {page.onboarded ? null : <p className={styles.notice}>{t('web.shell.finishOnPhone')}</p>}
-      </Band>
+      </HeroBand>
 
       <Columns
         lead={
@@ -413,22 +448,21 @@ export default async function HomePage({
             {/* The phone hides «In arrivo» at zero, and counts them all past the five shown. */}
             {view.upcoming.count === 0 ? null : (
               <Section
+                open
                 title={t('home.upcoming')}
-                trailing={
-                  <Link className={styles.seeAll} href="/transactions">
-                    {plural(t, locale, 'home.upcomingCount', view.upcoming.count)}
-                  </Link>
-                }
+                trailing={plural(t, locale, 'home.upcomingCount', view.upcoming.count)}
               >
                 {view.upcoming.rows.map((row) => txRow(row, true))}
               </Section>
             )}
 
             <Section
+              open
               title={t('home.recent')}
-              trailing={
-                <Link className={styles.seeAll} href="/transactions">
-                  {t('home.allTransactions')}
+              more={
+                <Link className={styles.more} href="/transactions">
+                  <span>{t('home.allTransactions')}</span>
+                  <Icon name="chevR" size={16} />
                 </Link>
               }
             >
@@ -442,7 +476,14 @@ export default async function HomePage({
         }
         trail={
           <>
-            <Section title={t('home.budget')} trailing={budgetStatusLine}>
+            <Section
+              open
+              title={t('home.budget')}
+              trailing={budgetStatusLine}
+              attention={
+                view.budgets.items.length > 0 && view.budgets.status.kind !== 'withinLimits'
+              }
+            >
               {view.budgets.items.length === 0 ? (
                 // The header already says «Nessun budget», as on the phone: the body says what one is.
                 <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
@@ -477,7 +518,7 @@ export default async function HomePage({
               )}
             </Section>
 
-            <Section title={t('goals.title')} trailing={goalStatusLine}>
+            <Section open title={t('goals.title')} trailing={goalStatusLine}>
               {view.goals.items.length === 0 ? (
                 <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
               ) : (

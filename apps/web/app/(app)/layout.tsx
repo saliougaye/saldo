@@ -27,14 +27,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </a>
       <TopBar
         items={items}
-        user={{ name: user.displayName, email: user.email }}
+        user={{ name: user.displayName }}
         strings={{
           label: t('web.shell.mainNav'),
           newTransaction: t('web.shell.newTransaction'),
-          openMenu: t('web.shell.openMenu'),
           profile: t('profile.title'),
-          signOut: t('sync.signOut'),
-          working: t('common.loading'),
           notYet: t('web.shell.comingIn0_3e'),
         }}
       />

@@ -1,9 +1,15 @@
-/* The band, then the 7/5 pair. Below the breakpoint both become the phone's cards, so the gap is
-   what separates them there too. */
+/* The band (which brings its own 64px), then the 7/5 pair. Below the breakpoint both become the
+   phone's cards, so the gap is what separates them there. */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 0;
+  }
 }
 
 .notice {
@@ -19,17 +25,24 @@
   max-width: 52ch;
 }
 
-.seeAll {
+/* The link under a section's rows: the label, then the chevron at the trailing end. */
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--layout-min-hit-target);
+  font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
   text-decoration: none;
 }
 
-.seeAll:hover {
+.more:hover {
   color: var(--color-text);
 }
 
 .strong {
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .muted {
@@ -42,7 +55,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-block: 2px 8px;
+  margin-top: 20px;
+  text-align: start;
 }
 
 .featuredHead {
@@ -53,18 +67,22 @@
 }
 
 .featuredName {
-  flex: 1;
+  flex: none;
   min-width: 0;
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .featuredMeta {
-  flex: none;
+  flex: 1;
+  min-width: 0;
   font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -73,8 +91,10 @@
 }
 
 .featuredOf {
+  margin-top: 4px;
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .featuredBar {
@@ -84,8 +104,8 @@
 /* The three labels under the bar: the ends anchored, «oggi» centred on the tick. */
 .ends {
   position: relative;
-  height: 16px;
-  margin-top: 6px;
+  height: 14px;
+  margin-top: 8px;
 }
 
 .endStart,
@@ -112,9 +132,11 @@
 }
 
 .sentence {
-  margin-top: 12px;
-  font-size: var(--font-size-body);
-  line-height: 1.4;
+  margin-top: 16px;
+  max-width: 52ch;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  line-height: 1.5;
   text-wrap: pretty;
 }
 
@@ -123,7 +145,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 3px;
   text-align: end;
 }
 
@@ -133,8 +155,16 @@
 }
 
 .rowStatusMeta {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.rowOver .rowStatusMeta {
+  color: var(--color-accent);
+}
+
+.rowDone {
+  color: var(--color-positive);
 }
