@@ -1,3 +1,4 @@
+import { iconMarkup } from '@saldo/ui';
 import { createRepositories } from './repositories';
 import { PICKABLE_SEED_CATEGORIES, SEED_CATEGORIES, seedFromOnboarding } from './seed';
 import { createTestDatabase } from './testing';
@@ -35,6 +36,22 @@ describe('SEED_CATEGORIES', () => {
   it('keeps refunds and gifts out of the grid but in the catalogue', () => {
     const hidden = SEED_CATEGORIES.filter((category) => category.hidden === true);
     expect(hidden.map((category) => category.nameKey)).toEqual(['refunds', 'gifts']);
+  });
+
+  it('uses only icons the app can draw', () => {
+    for (const category of SEED_CATEGORIES) {
+      expect(Object.hasOwn(iconMarkup, category.icon)).toBe(true);
+      for (const child of category.children ?? []) {
+        expect(Object.hasOwn(iconMarkup, child.icon)).toBe(true);
+      }
+    }
+  });
+
+  it('gives seed categories the ids every device gives them', () => {
+    const repos = seed(['groceries']);
+    expect(repos.categories.list().map((category) => category.id)).toContain(
+      'seed-category-groceries',
+    );
   });
 });
 

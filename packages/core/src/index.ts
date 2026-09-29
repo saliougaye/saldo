@@ -27,6 +27,7 @@ export * from './recap';
 export * from './recents';
 export * from './recurrence';
 export * from './rollover';
+export * from './seed';
 export * from './stats';
 export * from './sync/hlc';
 export * from './sync/merge';
