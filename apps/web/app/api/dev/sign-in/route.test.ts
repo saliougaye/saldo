@@ -43,6 +43,20 @@ describe('GET /api/dev/sign-in (temporary, removed in 0.3e-3)', () => {
     expect(user?.id).toBe(userId);
   });
 
+  it('answers only a request made to the loopback host', async () => {
+    vi.stubEnv('SALDO_DEV_SIGN_IN', '1');
+    await createTestSession(harness.db, 'Ada');
+    const at = (url: string, headers: Record<string, string> = {}) =>
+      GET(new Request(url, { headers }));
+    expect((await at('http://saldo.example.com/api/dev/sign-in')).status).toBe(404);
+    expect((await at('http://192.168.1.20:3000/api/dev/sign-in')).status).toBe(404);
+    expect(
+      (await at('http://localhost:3000/api/dev/sign-in', { host: 'saldo.example.com' })).status,
+    ).toBe(404);
+    expect((await at('http://127.0.0.1:3000/api/dev/sign-in')).status).toBe(303);
+    expect((await at('http://[::1]:3000/api/dev/sign-in')).status).toBe(303);
+  });
+
   it('answers 404 for an email nobody has', async () => {
     vi.stubEnv('SALDO_DEV_SIGN_IN', '1');
     await createTestSession(harness.db, 'Ada');

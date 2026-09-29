@@ -37,6 +37,39 @@ async function onboarded() {
   await seedOnboarded(harness.db, userId);
 }
 
+type Collection = 'accounts' | 'categories' | 'transactions';
+const ENTITY = {
+  accounts: 'account',
+  categories: 'category',
+  transactions: 'transaction',
+} as const;
+
+/** Changes a stored row as another device would: straight through the write path, no form rules. */
+async function rewrite(collection: Collection, id: string, patch: Record<string, unknown>) {
+  const rows: readonly { id: string; updatedAt: string }[] = (
+    await readUserData(harness.db, userId)
+  )[collection];
+  const found = rows.find((row) => row.id === id);
+  if (found === undefined) throw new Error(`no ${collection}/${id}`);
+  const { updatedAt: _stamp, ...row } = found;
+  await writeChanges(
+    harness.db,
+    userId,
+    [{ entity: ENTITY[collection], id, data: { ...row, deletedAt: null, ...patch } }],
+    FIXTURE_NOW,
+  );
+}
+
+const ARCHIVED_AT = { archivedAt: FIXTURE_NOW.toISOString() };
+
+/** The phone's «Chiudi obiettivo» expense (§5.14): the only non-transfer that sits on a pocket. */
+async function closeGoalExpense(): Promise<string> {
+  const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+  if (!created.ok) throw new Error('not created');
+  await rewrite('transactions', created.id, { accountId: 'acc-goal' });
+  return created.id;
+}
+
 describe('saveTransaction', () => {
   it('creates an expense in minor units, trimmed, with no recurrence', async () => {
     await onboarded();
@@ -144,7 +177,9 @@ describe('saveTransaction', () => {
 
   it('refuses a buffer that is not a real amount, as opposed to an empty one', async () => {
     await onboarded();
-    for (const buffer of ['abc', '1e30']) {
+    // Only what the keypad can type: at most the currency's decimals, 6 integer digits for a
+    // 2-decimal currency, no leading zeros, no bare separator in front.
+    for (const buffer of ['abc', '1e30', '12.345', '007', '1234567', '.5', '9999999999999']) {
       expect(
         await saveTransaction(harness.db, userId, { ...expense, buffer }, FIXTURE_NOW),
       ).toEqual({ ok: false, error: 'invalid' });
@@ -224,21 +259,170 @@ describe('closed goals (§5.14) are read-only', () => {
   it('refuses to edit or delete a transaction that touches a closed goal', async () => {
     await onboarded();
     await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
-    const created = await saveTransaction(
-      harness.db,
-      userId,
-      { ...expense, accountId: 'acc-goal' },
-      FIXTURE_NOW,
-    );
-    if (!created.ok) throw new Error('not created');
+    const id = await closeGoalExpense();
     await writeChanges(harness.db, userId, [pocketAccount(true)], FIXTURE_NOW);
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, id: created.id }, FIXTURE_NOW),
-    ).toEqual({ ok: false, error: 'closedGoal' });
-    expect(await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW)).toEqual({
+    expect(await saveTransaction(harness.db, userId, { ...expense, id }, FIXTURE_NOW)).toEqual({
       ok: false,
       error: 'closedGoal',
     });
+    expect(await deleteTransaction(harness.db, userId, id, FIXTURE_NOW)).toEqual({
+      ok: false,
+      error: 'closedGoal',
+    });
+  });
+});
+
+describe('pockets (§5.14): money enters or leaves a goal by transfer only', () => {
+  it('refuses an expense or an income on a pocket', async () => {
+    await onboarded();
+    await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
+    expect(
+      await saveTransaction(harness.db, userId, { ...expense, accountId: 'acc-goal' }, FIXTURE_NOW),
+    ).toEqual({ ok: false, missing: 'account' });
+  });
+
+  it('refuses moving an existing expense onto a pocket', async () => {
+    await onboarded();
+    await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, accountId: 'acc-goal' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, missing: 'account' });
+  });
+
+  it('takes a transfer into a pocket', async () => {
+    await onboarded();
+    await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
+    const transfer = {
+      ...expense,
+      kind: 'transfer',
+      buffer: '50',
+      categoryId: null,
+      toAccountId: 'acc-goal',
+    };
+    expect((await saveTransaction(harness.db, userId, transfer, FIXTURE_NOW)).ok).toBe(true);
+  });
+
+  it('still edits the phone’s close-goal expense, which sits on the pocket', async () => {
+    await onboarded();
+    await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
+    const id = await closeGoalExpense();
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id, accountId: 'acc-goal', description: 'Divano' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id });
+  });
+});
+
+describe('editing a row whose account or category was archived since (§5.4)', () => {
+  it('keeps the archived account the row already uses', async () => {
+    await onboarded();
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    await rewrite('accounts', 'acc-main', ARCHIVED_AT);
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, buffer: '50' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id: created.id });
+  });
+
+  it('keeps the archived category the row already uses', async () => {
+    await onboarded();
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    await rewrite('categories', 'seed-category-groceries', ARCHIVED_AT);
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, buffer: '50' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id: created.id });
+  });
+
+  it('keeps the archived destination the transfer already uses', async () => {
+    await onboarded();
+    const transfer = {
+      ...expense,
+      kind: 'transfer',
+      buffer: '50',
+      categoryId: null,
+      toAccountId: 'acc-savings',
+    };
+    const created = await saveTransaction(harness.db, userId, transfer, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    await rewrite('accounts', 'acc-savings', ARCHIVED_AT);
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...transfer, id: created.id, buffer: '60' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id: created.id });
+  });
+
+  it('refuses an archived account or category the row did not use', async () => {
+    await onboarded();
+    await rewrite('accounts', 'acc-savings', ARCHIVED_AT);
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, accountId: 'acc-savings' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, missing: 'account' });
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, accountId: 'acc-savings' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, missing: 'account' });
+  });
+});
+
+describe('amounts the keypad cannot type', () => {
+  it('still edits a stored amount larger than the keypad types, left as it was', async () => {
+    await onboarded();
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    await rewrite('transactions', created.id, { amount: 123456789 });
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, buffer: '1234567.89', description: 'Casa' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id: created.id });
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, id: created.id, buffer: '1234568' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'invalid' });
   });
 });
 
@@ -308,16 +492,10 @@ describe('deleteTransaction and restoreTransaction', () => {
   it('refuses to restore a tombstone that now touches a closed goal', async () => {
     await onboarded();
     await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
-    const created = await saveTransaction(
-      harness.db,
-      userId,
-      { ...expense, accountId: 'acc-goal' },
-      FIXTURE_NOW,
-    );
-    if (!created.ok) throw new Error('not created');
-    await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW);
+    const id = await closeGoalExpense();
+    await deleteTransaction(harness.db, userId, id, FIXTURE_NOW);
     await writeChanges(harness.db, userId, [pocketAccount(true)], FIXTURE_NOW);
-    expect(await restoreTransaction(harness.db, userId, created.id, FIXTURE_NOW)).toEqual({
+    expect(await restoreTransaction(harness.db, userId, id, FIXTURE_NOW)).toEqual({
       ok: false,
       error: 'closedGoal',
     });

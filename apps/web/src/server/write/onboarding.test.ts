@@ -107,6 +107,12 @@ describe('finishWebOnboarding', () => {
       { ...DRAFT, periodKind: 'fortnight' },
       { ...DRAFT, accountType: 'pocket' },
       { ...DRAFT, balanceBuffer: '12,50' },
+      // What the keypad cannot type: too many decimals or integer digits, leading zeros, a sign
+      // anywhere but first.
+      { ...DRAFT, balanceBuffer: '12.505' },
+      { ...DRAFT, balanceBuffer: '1234567' },
+      { ...DRAFT, balanceBuffer: '-0012' },
+      { ...DRAFT, currency: 'JPY', balanceBuffer: '12.5' },
       { ...DRAFT, selectedCategoryKeys: ['groceries', 'nope'] },
       { ...DRAFT, cycleStartDay: 0 },
       null,

@@ -11,6 +11,7 @@ import {
   type LocalDate,
   type MinorDigits,
   type TransactionFormValues,
+  type TransactionKind,
   topCategories,
   topLevelCategories,
   type UserData,
@@ -43,6 +44,8 @@ export interface FormCategory {
   colorIndex: number;
   direction: 'expense' | 'income';
   child: boolean;
+  /** Only the edited row's own category can be archived: it keeps it, as on the phone (§5.4). */
+  archived: boolean;
 }
 
 export interface FormView {
@@ -116,6 +119,11 @@ export function formView(input: {
         categories.push({ ...pick(child), child: true });
       }
     }
+    // An archived category the edited row uses stays choosable, last in its direction.
+    const own = data.categories.find((category) => category.id === editing?.categoryId);
+    if (own !== undefined && own.direction === direction && own.archivedAt !== null) {
+      categories.push({ ...pick(own), child: own.parentId !== null });
+    }
   }
 
   const usage = new Map<string, number>();
@@ -151,5 +159,17 @@ function pick(category: UserData['categories'][number]): Omit<FormCategory, 'chi
     icon: category.icon,
     colorIndex: category.colorIndex,
     direction: category.direction,
+    archived: category.archivedAt !== null,
   };
+}
+
+/**
+ * The accounts the form offers for a kind. Money enters or leaves a pocket only by transfer
+ * (§5.14), so an expense or an income lists none — except the pocket the edited row already sits
+ * on, the phone's close-goal expense, which the server also accepts (`saveTransaction`).
+ */
+export function accountsFor(view: FormView, kind: TransactionKind): FormAccount[] {
+  if (kind === 'transfer') return view.accounts;
+  const own = view.mode === 'edit' ? view.initial.accountId : null;
+  return view.accounts.filter((account) => !account.pocket || account.id === own);
 }

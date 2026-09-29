@@ -11,13 +11,31 @@ export const dynamic = 'force-dynamic';
  * agent cannot sign in to check the UI. This signs the browser in as an existing account
  * (`?email=`, or the oldest account) by writing the session row Better Auth would write and setting
  * its signed cookie. It does not exist outside `next dev` and the tests, and even there only when
- * `SALDO_DEV_SIGN_IN=1` is set: a dev/test environment is not by itself permission to sign in as
- * anyone.
+ * `SALDO_DEV_SIGN_IN=1` is set and the request is made to a loopback host: a dev/test environment
+ * is not by itself permission to sign in as anyone.
  */
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Only a browser on this machine: the URL's host and the `Host` header must both be loopback, so a
+ * dev server reachable over the LAN (`next dev -H 0.0.0.0`) does not hand sessions to the network.
+ */
+function fromLoopback(request: Request): boolean {
+  if (!LOOPBACK.has(new URL(request.url).hostname)) return false;
+  const host = request.headers.get('host');
+  if (host === null) return true;
+  try {
+    return LOOPBACK.has(new URL(`http://${host}`).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: Request): Promise<Response> {
   if (
     (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') ||
-    process.env.SALDO_DEV_SIGN_IN !== '1'
+    process.env.SALDO_DEV_SIGN_IN !== '1' ||
+    !fromLoopback(request)
   ) {
     return new Response('Not found', { status: 404 });
   }

@@ -8,6 +8,7 @@ import {
   periodKindSchema,
   SEED_CATEGORIES,
   SETTINGS_ID,
+  sanitizeAmountInput,
 } from '@saldo/core';
 import { type AppLocale, catalogs, isTimeZone, makeTranslator } from '@saldo/i18n';
 import { accountTypeIcons } from '@saldo/ui';
@@ -71,6 +72,16 @@ export async function finishWebOnboarding(
 
   const t = makeTranslator(catalogs[locale]);
   const { minorDigits } = getCurrency(draft.currency);
+  // The shape above is currency-blind; this holds the buffer to what the keypad types in *this*
+  // currency (§5.1), and to minor units that are a safe integer.
+  const openingBalance = amountBufferToMinor(draft.balanceBuffer, minorDigits);
+  if (
+    draft.balanceBuffer !==
+      sanitizeAmountInput(draft.balanceBuffer, minorDigits, { allowNegative: true }) ||
+    !Number.isSafeInteger(openingBalance)
+  ) {
+    return { ok: false, error: 'invalid' };
+  }
   const name = draft.accountName.trim();
   const seed = onboardingSeed({
     periodKind: draft.periodKind,
@@ -83,7 +94,7 @@ export async function finishWebOnboarding(
     account: {
       name: name.length > 0 ? name : t('seed.firstAccount'),
       type: draft.accountType,
-      openingBalance: amountBufferToMinor(draft.balanceBuffer, minorDigits),
+      openingBalance,
       icon: accountTypeIcons[draft.accountType],
     },
     selectedCategoryKeys: draft.selectedCategoryKeys,
@@ -118,7 +129,7 @@ export async function finishWebOnboarding(
       return { writes, result: { ok: true } };
     });
   } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: 'conflict' };
+    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
     throw error;
   }
 }

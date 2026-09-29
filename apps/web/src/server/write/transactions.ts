@@ -1,14 +1,20 @@
 import {
   accountBalances,
+  amountBufferToMinor,
   canCreateTag,
   getCurrency,
   isLocalDate,
+  isPocket,
+  type MinorDigits,
   type MissingField,
+  minorToAmountBuffer,
   missingForSave,
   newId,
   previewFromBalances,
   readSettings,
+  sanitizeAmountInput,
   type Tag,
+  type Transaction,
   type TransactionFormValues,
   toTransactionInput,
   touchesClosedGoal,
@@ -31,9 +37,9 @@ export const transactionInputSchema = z.object({
   kind: transactionKindSchema,
   /**
    * The amount as the field holds it: `sanitizeAmountInput`'s buffer, `.` as the separator. Empty
-   * is a legitimate "missing amount" (`missingForSave` reports it as such); anything else must look
-   * like a buffer the keypad could have produced — up to 13 integer digits, an optional `.` and up
-   * to 3 decimals — so `amountBufferToMinor` never has to parse something no key press could type.
+   * is a legitimate "missing amount" (`missingForSave` reports it as such). This is only the
+   * shape; once the currency is known, `typedAmount` holds the buffer to exactly what the keypad
+   * can produce for it.
    */
   buffer: z
     .string()
@@ -72,9 +78,35 @@ const live = <T extends { id: string; archivedAt: string | null }>(
 ) => id !== null && rows.some((row) => row.id === id && row.archivedAt === null);
 
 /**
- * The phone's `missingForSave` (§6.16), with the two checks only a server has to make: every id the
- * form names must be one of **this user's** live rows, and a transfer must not overdraw its source
- * (`transferOverdrawsSource` over today's balances, the edited row left out — as the phone's form).
+ * The phone's `keepId` (§5.4): a row may keep the account or category it already uses after that
+ * one is archived, but may not move onto an archived one. Live, or the edited row's own.
+ */
+const usable = <T extends { id: string; archivedAt: string | null }>(
+  rows: readonly T[],
+  id: string | null,
+  own: string | null | undefined,
+) => id !== null && (live(rows, id) || (id === own && rows.some((row) => row.id === id)));
+
+/**
+ * The buffer is one the keypad could have typed in this currency: `sanitizeAmountInput` leaves it
+ * as it is (no extra decimals or integer digits, no leading zeros), and its minor units are a safe
+ * integer. An edit may also send back the stored amount untouched, which an import or the phone
+ * may have written larger than the keypad types.
+ */
+function typedAmount(buffer: string, minorDigits: MinorDigits, existing: Transaction | null) {
+  if (existing !== null && buffer === minorToAmountBuffer(existing.amount, minorDigits)) {
+    return true;
+  }
+  if (buffer !== sanitizeAmountInput(buffer, minorDigits)) return false;
+  return Number.isSafeInteger(amountBufferToMinor(buffer, minorDigits));
+}
+
+/**
+ * The phone's `missingForSave` (§6.16), with the checks only a server has to make: every id the
+ * form names must be one of **this user's** live rows — or the archived one the edited row already
+ * uses (`usable`) — a pocket takes money only by transfer (§5.14), and a transfer must not overdraw
+ * its source (`transferOverdrawsSource` over today's balances, the edited row left out — as the
+ * phone's form).
  *
  * `previewFromBalances` takes two balance maps: `now` over the full ledger and `without` over the
  * ledger with the edited row left out (a new transaction has nothing to leave out, so both maps are
@@ -83,15 +115,16 @@ const live = <T extends { id: string; archivedAt: string | null }>(
 function missing(
   data: UserData,
   values: TransactionFormValues,
-  editingId: string | null,
+  existing: Transaction | null,
   today: string,
 ): MissingField | null {
+  const editingId = existing?.id ?? null;
   const { minorDigits } = getCurrency(readSettings(data.settings).currency);
   const basic = missingForSave(values, minorDigits);
   if (basic !== null) return basic;
-  if (!live(data.accounts, values.accountId)) return 'account';
+  if (!usable(data.accounts, values.accountId, existing?.accountId)) return 'account';
   if (values.kind === 'transfer') {
-    if (!live(data.accounts, values.toAccountId)) return 'destination';
+    if (!usable(data.accounts, values.toAccountId, existing?.toAccountId)) return 'destination';
     const now = accountBalances(data.accounts, data.transactions, today);
     const without =
       editingId === null
@@ -116,12 +149,18 @@ function missing(
     const source = data.accounts.find((account) => account.id === values.accountId);
     return transferOverdrawsSource(source, preview.from) ? 'insufficientFunds' : null;
   }
-  // A non-transfer's category must not only be live but must point the same way as the
+  // §5.14: money enters or leaves a pocket only by transfer. The one expense that sits on one is
+  // the phone's «Chiudi obiettivo», and editing it keeps its pocket (as the phone's `keepId`).
+  const source = data.accounts.find((account) => account.id === values.accountId);
+  if (source !== undefined && isPocket(source) && source.id !== existing?.accountId) {
+    return 'account';
+  }
+  // A non-transfer's category must not only be usable but must point the same way as the
   // transaction: an expense filed under an income category (or the reverse) is not a form error
   // the phone's own picker can produce, but a server has to check it anyway.
+  if (!usable(data.categories, values.categoryId, existing?.categoryId)) return 'category';
   const category = data.categories.find((row) => row.id === values.categoryId);
-  if (category === undefined || category.archivedAt !== null) return 'category';
-  return category.direction === values.kind ? null : 'category';
+  return category?.direction === values.kind ? null : 'category';
 }
 
 export async function saveTransaction(
@@ -146,14 +185,17 @@ export async function saveTransaction(
       if (existing !== null && touchesClosedGoal(existing, data.accounts)) {
         return { writes: [], result: { ok: false, error: 'closedGoal' } };
       }
+      const { minorDigits } = getCurrency(settings.currency);
+      if (!typedAmount(input.buffer, minorDigits, existing)) {
+        return { writes: [], result: { ok: false, error: 'invalid' } };
+      }
       const values: TransactionFormValues = { ...input, recurrence: null };
-      const gap = missing(data, values, existing?.id ?? null, today);
+      const gap = missing(data, values, existing, today);
       if (gap !== null) return { writes: [], result: { ok: false, missing: gap } };
       const tagIds = [
         ...new Set(input.tagIds.filter((id) => data.tags.some((tag) => tag.id === id))),
       ];
 
-      const { minorDigits } = getCurrency(settings.currency);
       const fields = { ...toTransactionInput(values, minorDigits), tagIds };
       const id = existing?.id ?? newId();
       const row =
@@ -163,12 +205,14 @@ export async function saveTransaction(
             { ...existing, ...fields, note: existing.note, recurrenceId: existing.recurrenceId };
       const { updatedAt: _stamp, ...unstamped } = row as typeof row & { updatedAt?: string };
       return {
-        writes: [{ entity: 'transaction', id, data: unstamped }],
+        writes: [
+          { entity: 'transaction', id, data: unstamped, basis: existing?.updatedAt ?? null },
+        ],
         result: { ok: true, id },
       };
     });
   } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: 'conflict' };
+    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
     throw error;
   }
 }
@@ -190,12 +234,19 @@ export async function deleteTransaction(
       }
       const { updatedAt: _stamp, ...row } = existing;
       return {
-        writes: [{ entity: 'transaction', id, data: { ...row, deletedAt: now.toISOString() } }],
+        writes: [
+          {
+            entity: 'transaction',
+            id,
+            data: { ...row, deletedAt: now.toISOString() },
+            basis: existing.updatedAt,
+          },
+        ],
         result: { ok: true },
       };
     });
   } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: 'conflict' };
+    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
     throw error;
   }
 }
@@ -241,12 +292,19 @@ export async function restoreTransaction(
       }
       const { updatedAt: _stamp, ...unstamped } = row;
       return {
-        writes: [{ entity: 'transaction', id, data: { ...unstamped, deletedAt: null } }],
+        writes: [
+          {
+            entity: 'transaction',
+            id,
+            data: { ...unstamped, deletedAt: null },
+            basis: row.updatedAt,
+          },
+        ],
         result: { ok: true },
       };
     });
   } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: 'conflict' };
+    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
     throw error;
   }
 }
@@ -281,13 +339,18 @@ export async function createTag(
       const id = newId();
       return {
         writes: [
-          { entity: 'tag', id, data: { id, name, createdAt: now.toISOString(), deletedAt: null } },
+          {
+            entity: 'tag',
+            id,
+            data: { id, name, createdAt: now.toISOString(), deletedAt: null },
+            basis: null,
+          },
         ],
         result: { ok: true, tag: { id, name } },
       };
     });
   } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: 'conflict' };
+    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
     throw error;
   }
 }

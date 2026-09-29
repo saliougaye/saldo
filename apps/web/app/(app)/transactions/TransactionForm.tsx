@@ -30,7 +30,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { FormView } from '../../../src/features/transactions/formView';
+import { accountsFor, type FormView } from '../../../src/features/transactions/formView';
 import type { FormMessages } from '../../../src/i18n/formMessages';
 import { Alert } from '../../../src/ui/Alert';
 import { AmountField } from '../../../src/ui/AmountField';
@@ -154,6 +154,8 @@ export function TransactionForm({
     hint: money(account.balanceNow),
   });
   const accountOptions = view.accounts.map(accountOption);
+  // An expense or an income never sits on a pocket (§5.14), bar the one the edited row uses.
+  const flowAccountOptions = accountsFor(view, values.kind).map(accountOption);
 
   const message = (current: NonNullable<Problem>) =>
     'missing' in current
@@ -445,13 +447,13 @@ export function TransactionForm({
       <div className={styles.two}>
         {transfer ? null : (
           <div data-field="account">
-            {accountOptions.length === 0 ? (
+            {flowAccountOptions.length === 0 ? (
               <p className={styles.faintNote}>{t('web.form.noAccounts')}</p>
             ) : (
               <Select
                 label={t('txForm.account')}
                 value={values.accountId}
-                options={accountOptions}
+                options={flowAccountOptions}
                 onChange={(accountId) => set({ accountId })}
                 placeholder={t('txForm.account')}
                 invalid={invalid('account')}

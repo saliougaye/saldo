@@ -21,7 +21,7 @@ import {
   TAG,
   tx,
 } from '../test/fixtures';
-import { formView } from './formView';
+import { accountsFor, formView } from './formView';
 
 const TODAY = '2026-09-20';
 
@@ -173,6 +173,24 @@ describe('formView', () => {
     ]);
   });
 
+  it('keeps the archived category the edited row uses, flagged archived, after the live ones', () => {
+    const edited = tx({
+      id: 't1',
+      amount: 500,
+      date: '2026-09-10',
+      categoryId: ARCHIVED_CATEGORY.id,
+    });
+    const data = dataWith([edited], { categories: [CATEGORY, ARCHIVED_CATEGORY, INCOME] });
+    const view = formView({ data, today: TODAY, currency: 'EUR', mode: 'edit', id: 't1' });
+    expect(view?.categories.map((c) => [c.id, c.archived])).toEqual([
+      [CATEGORY.id, false],
+      [ARCHIVED_CATEGORY.id, true],
+      [INCOME.id, false],
+    ]);
+    const fresh = formView({ data, today: TODAY, currency: 'EUR', mode: 'new', id: null });
+    expect(fresh?.categories.map((c) => c.id)).not.toContain(ARCHIVED_CATEGORY.id);
+  });
+
   it('orders the tags by usage, most used first', () => {
     const tags = [tag('g1', 'Alfa'), tag('g2', 'Beta'), tag('g3', 'Gamma')];
     const data = dataWith(
@@ -187,6 +205,34 @@ describe('formView', () => {
       { id: 'g3', name: 'Gamma' },
       { id: 'g2', name: 'Beta' },
       { id: 'g1', name: 'Alfa' },
+    ]);
+  });
+});
+
+describe('accountsFor', () => {
+  const data = dataWith([], { accounts: [ACCOUNT, ACCOUNT_2, POCKET] });
+
+  it('offers pockets for a transfer only (§5.14)', () => {
+    const view = formView({ data, today: TODAY, currency: 'EUR', mode: 'new', id: null });
+    if (view === null) throw new Error('no view');
+    expect(accountsFor(view, 'transfer').map((a) => a.id)).toEqual([
+      ACCOUNT.id,
+      POCKET.id,
+      ACCOUNT_2.id,
+    ]);
+    expect(accountsFor(view, 'expense').map((a) => a.id)).toEqual([ACCOUNT.id, ACCOUNT_2.id]);
+    expect(accountsFor(view, 'income').map((a) => a.id)).toEqual([ACCOUNT.id, ACCOUNT_2.id]);
+  });
+
+  it('keeps the pocket an edited expense already sits on (the close-goal expense)', () => {
+    const edited = tx({ id: 't1', amount: 500, date: '2026-09-10', accountId: POCKET.id });
+    const withRow = dataWith([edited], { accounts: [ACCOUNT, ACCOUNT_2, POCKET] });
+    const view = formView({ data: withRow, today: TODAY, currency: 'EUR', mode: 'edit', id: 't1' });
+    if (view === null) throw new Error('no view');
+    expect(accountsFor(view, 'expense').map((a) => a.id)).toEqual([
+      ACCOUNT.id,
+      POCKET.id,
+      ACCOUNT_2.id,
     ]);
   });
 });

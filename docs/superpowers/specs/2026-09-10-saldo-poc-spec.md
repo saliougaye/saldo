@@ -1691,10 +1691,14 @@ public. The decisions behind this section are D30–D36.
 - **`writeChanges` is the one write path** (`src/server/write/writeChanges.ts`); nothing else writes `sync_rows`.
   `writeInTransaction(db, userId, now, build)` opens the transaction, takes the push route's epoch share lock, runs
   `build(tx)` — whose reads (`readUserData`, `loadRow`) happen on that same transaction — then locks the clock, then
-  each target row, mints the stamps and hands the batch to `applyPush`, the upsert `POST /api/sync/push` runs. The
-  lock order is epoch → clock → rows, so no concurrent push can move a row's `updated_at` between the read and the
-  stamp. Anything but `applied` throws `WriteRefused` and rolls the whole batch back; the Server Actions answer it as
-  `conflict`. `writeChanges` is the wrapper for a caller with nothing to read first.
+  each target row `FOR UPDATE` in (entity, id) order, mints the stamps and hands the batch to `applyPush`, the upsert
+  `POST /api/sync/push` runs. The epoch lock is a *share* lock, so a phone's push can still commit a row between
+  `build`'s read and the row lock: each write therefore carries its **`basis`**, the `updatedAt` `build` read (`null`
+  for a row it creates), and a locked row whose `updated_at` differs — or a "new" row that now exists — refuses the
+  batch as a `conflict`, instead of overwriting the phone's edit unseen. A write with no `basis` is blind and LWW
+  decides (onboarding's seed rows, which converge by id on purpose). Anything but `applied` throws `WriteRefused` and
+  rolls the whole batch back; the Server Actions answer `invalid` when a row failed its schema and `conflict`
+  otherwise. `writeChanges` is the wrapper for a caller with nothing to read first.
 - **`loadRow`** (`src/server/userData/row.ts`) reads one row **tombstones included** — the one thing the projection
   cannot answer. «Annulla» after a delete writes that row back with `deletedAt: null` and a new stamp, and only for a
   tombstone deleted in the last 10 minutes.
