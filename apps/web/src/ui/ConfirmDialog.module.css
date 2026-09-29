@@ -1,5 +1,7 @@
+/* Above the panel (20, 21: a full-screen layer below 1024px) and the toast (30). */
 .dialog {
   position: fixed;
+  z-index: 41;
   top: 50%;
   left: 50%;
   translate: -50% -50%;
@@ -16,6 +18,7 @@
 
 .backdrop {
   position: fixed;
+  z-index: 40;
   inset: 0;
   background: var(--color-dialog-scrim);
 }
@@ -34,5 +37,12 @@
 
 .buttons {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
+  margin-top: 8px;
+}
+
+/* The mockup's `.dialog.small .actions`: the two answers at their own width, right-aligned. */
+.buttons > button {
+  width: auto;
 }

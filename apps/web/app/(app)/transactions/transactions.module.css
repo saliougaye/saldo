@@ -255,3 +255,13 @@
   font-size: var(--font-size-caption);
   white-space: nowrap;
 }
+
+/* The mockup's `.actions .spacer`: «Modifica» leading, «Elimina» trailing. */
+.spacer {
+  flex: 1;
+}
+
+/* The mockup's `.btn-danger`: the secondary button, in the accent ink. */
+.danger {
+  color: var(--color-accent);
+}

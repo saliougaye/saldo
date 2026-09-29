@@ -27,7 +27,9 @@ import {
 } from '../../../src/features/transactions/listParams';
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
 import { formMessages } from '../../../src/i18n/formMessages';
+import { getDb } from '../../../src/server/db/client';
 import { readPage } from '../../../src/server/page/context';
+import { loadRow } from '../../../src/server/userData/row';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
@@ -39,8 +41,10 @@ import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
+import { DeleteTransaction } from './DeleteTransaction';
 import { TransactionForm } from './TransactionForm';
 import styles from './transactions.module.css';
+import { UndoToast } from './UndoToast';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -53,6 +57,9 @@ const SELECTION_PARAM = 't';
 /** `?new` opens «Nuova transazione»; `?t={id}&edit` turns the detail into the form (decision 8). */
 const NEW_PARAM = 'new';
 const EDIT_PARAM = 'edit';
+
+/** After a delete the page is `?deleted={id}`, which renders «Annulla» (decision 8). */
+const DELETED_PARAM = 'deleted';
 
 /** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
 const MISSING = '—';
@@ -99,6 +106,30 @@ export default async function TransactionsPage({
           id: creating ? null : (selected?.id ?? null),
         })
       : null;
+
+  // «Annulla» only for a tombstone of this user: a stale or forged `?deleted=` shows nothing.
+  const deletedId = params[DELETED_PARAM];
+  const deleted =
+    deletedId === undefined ? null : await loadRow(getDb(), page.user.id, 'transaction', deletedId);
+  const undoTitle =
+    deletedId === undefined || deleted === null || deleted.status !== 'found' || !deleted.deleted
+      ? null
+      : (detailView({
+          data: { ...page.data, transactions: [deleted.row] },
+          id: deletedId,
+          kindLabel,
+        })?.title ?? null);
+  // What a refused delete or «Annulla» says: the form's own sentences for the same `WriteError`s.
+  const writeErrors = {
+    invalid: t('web.form.error_invalid'),
+    notFound: t('web.form.error_notFound'),
+    closedGoal: t('web.form.error_closedGoal'),
+    conflict: t('web.form.error_conflict'),
+  };
+  // Decision 10: deleting an occurrence of a recurrence says so, as the phone does.
+  const selectedRecurring =
+    selected !== null &&
+    page.data.transactions.some((row) => row.id === selected.id && row.recurrenceId !== null);
 
   // What every link on this page carries: the filters, and the period, which is not one of them.
   const periodOnly: Record<string, string> = {};
@@ -447,8 +478,41 @@ export default async function TransactionsPage({
               {t('common.edit')}
               <kbd className={styles.kbd}>E</kbd>
             </Link>
+            <span className={styles.spacer} />
+            <DeleteTransaction
+              id={selected.id}
+              deletedHref={href({ [DELETED_PARAM]: selected.id })}
+              strings={{
+                action: t('common.delete'),
+                title: t('transactions.deleteTitle', { name: selected.title }),
+                body: t(
+                  selectedRecurring
+                    ? 'transactions.deleteRecurringBody'
+                    : 'transactions.deleteBody',
+                ),
+                confirm: t('common.delete'),
+                cancel: t('common.cancel'),
+                busy: t('common.loading'),
+                errors: writeErrors,
+              }}
+            />
           </div>
         </Panel>
+      )}
+
+      {deletedId === undefined || undoTitle === null ? null : (
+        <UndoToast
+          // A second delete is a new toast, with its own five seconds.
+          key={deletedId}
+          id={deletedId}
+          restoredHref={href({ [SELECTION_PARAM]: deletedId })}
+          withoutDeletedHref={href()}
+          strings={{
+            message: t('transactions.deleted', { name: undoTitle }),
+            undo: t('common.undo'),
+            errors: writeErrors,
+          }}
+        />
       )}
     </div>
   );
