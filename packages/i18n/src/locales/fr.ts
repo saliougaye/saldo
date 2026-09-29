@@ -748,6 +748,7 @@ export const fr: Messages = {
     uses_one: '{{count}} opération',
     uses_other: '{{count}} opérations',
     archivedSection: 'Archivées',
+    archivedBadge: 'Archivée',
     newCategory: 'Nouvelle catégorie',
     editCategory: 'Modifier la catégorie',
     name: 'Nom',
@@ -1301,7 +1302,7 @@ export const fr: Messages = {
       error_conflict: 'Un autre appareil l’a modifiée au même moment. Réessayez.',
       noCategories: 'Aucune catégorie de ce type. Ajoutez-en une depuis le Profil.',
       noAccounts: 'Aucun compte. Ajoutez-en un depuis Comptes.',
-      deleteAction: 'Supprimer',
+      error_unexpected: 'Quelque chose s’est mal passé. Réessaie.',
     },
   },
 };

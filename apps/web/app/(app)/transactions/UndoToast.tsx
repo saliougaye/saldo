@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState, useTransition } from 'react';
+import type { WriteError } from '../../../src/server/write/transactions';
 import { Toast } from '../../../src/ui/Toast';
 import { restoreTransactionAction } from './actions';
 
@@ -18,8 +19,8 @@ interface Props {
     /** `transactions.deleted` with the row's title. */
     message: string;
     undo: string;
-    /** `web.form.error_<error>` for every error the restore can return. */
-    errors: Record<'invalid' | 'notFound' | 'closedGoal' | 'conflict', string>;
+    /** `web.form.error_<error>` for every error the restore can return, and a throw. */
+    errors: Record<WriteError | 'unexpected', string>;
   };
 }
 
@@ -46,7 +47,13 @@ export function UndoToast({ id, restoredHref, withoutDeletedHref, strings }: Pro
     if (pending) return;
     undoing.current = true;
     startTransition(async () => {
-      const result = await restoreTransactionAction(id);
+      let result: Awaited<ReturnType<typeof restoreTransactionAction>>;
+      try {
+        result = await restoreTransactionAction(id);
+      } catch {
+        setError(strings.errors.unexpected);
+        return;
+      }
       if (result.ok) {
         router.replace(restoredHref);
         router.refresh();

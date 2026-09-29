@@ -46,10 +46,39 @@
   outline-offset: 1px;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. Above the tab bar. */
+/* One line: a long title ends in an ellipsis instead of pushing «Annulla» onto a second row. */
+.message {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The mockup's
+ * phone toast: a bar across the screen, the screen's padding from each side, and above the FAB
+ * (which sits above the tab bar) rather than beside it.
+ */
 @media (max-width: 1023px) {
   .toast {
-    bottom: calc(var(--layout-tab-bar-height) + 16px);
+    left: var(--layout-screen-padding-x);
+    right: var(--layout-screen-padding-x);
+    translate: none;
+    max-width: none;
+    bottom: calc(
+      var(--layout-tab-bar-height) +
+      env(safe-area-inset-bottom) +
+      var(--layout-fab-lift) +
+      var(--layout-fab-size) +
+      12px
+    );
+  }
+
+  @starting-style {
+    .toast {
+      translate: 0 8px;
+    }
   }
 }
 

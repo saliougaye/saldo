@@ -96,6 +96,9 @@ export function TransactionForm({
   const [pending, startTransition] = useTransition();
   const [tags, setTags] = useState(view.tags);
   const [tagQuery, setTagQuery] = useState('');
+  // The suggestions appear when the tag field first takes the focus and stay: collapsing them on
+  // blur moved everything below by a row between a press and its click (the «Escludi» switch lost
+  // its first click), and kept Tab from ever reaching them.
   const [tagsOpen, setTagsOpen] = useState(false);
   const [allCategories, setAllCategories] = useState(false);
   const { minorDigits, today } = view;
@@ -146,9 +149,11 @@ export function TransactionForm({
   const suggestions = tagSuggestions(tags, [], tagQuery, values.tagIds);
   const creatable = canCreateTag(tags, tagQuery);
 
+  // Only the edited row's own account or category can be archived (`formView`): it says so, as the
+  // list's filter menus do.
   const accountOption = (account: FormView['accounts'][number]): SelectOption => ({
     value: account.id,
-    label: account.name,
+    label: account.archived ? `${account.name} · ${t('accounts.archivedBadge')}` : account.name,
     icon: account.icon as IconName,
     colorIndex: account.colorIndex,
     hint: money(account.balanceNow),
@@ -180,20 +185,28 @@ export function TransactionForm({
       return;
     }
     startTransition(async () => {
-      const result = await saveTransactionAction({
-        id: view.id,
-        kind: values.kind,
-        buffer: values.buffer,
-        date: values.date,
-        accountId: values.accountId,
-        toAccountId: transfer ? values.toAccountId : null,
-        categoryId: transfer ? null : values.categoryId,
-        description: values.description,
-        tagIds: values.tagIds,
-        excludeFromTotals: values.excludeFromTotals,
-      });
+      let result: Awaited<ReturnType<typeof saveTransactionAction>>;
+      try {
+        result = await saveTransactionAction({
+          id: view.id,
+          kind: values.kind,
+          buffer: values.buffer,
+          date: values.date,
+          accountId: values.accountId,
+          toAccountId: transfer ? values.toAccountId : null,
+          categoryId: transfer ? null : values.categoryId,
+          description: values.description,
+          tagIds: values.tagIds,
+          excludeFromTotals: values.excludeFromTotals,
+        });
+      } catch {
+        // A thrown action (the network, the server) keeps the draft and says so.
+        setProblem({ error: 'unexpected' });
+        return;
+      }
       if (result.ok) {
-        router.push(afterSave.replace('__ID__', encodeURIComponent(result.id)));
+        // `replace`: Back from the saved row goes where the form was opened from, not into the form.
+        router.replace(afterSave.replace('__ID__', encodeURIComponent(result.id)));
         router.refresh();
         return;
       }
@@ -233,7 +246,13 @@ export function TransactionForm({
 
   const createTag = (name: string) => {
     startTransition(async () => {
-      const result = await createTagAction(name);
+      let result: Awaited<ReturnType<typeof createTagAction>>;
+      try {
+        result = await createTagAction(name);
+      } catch {
+        setProblem({ error: 'unexpected' });
+        return;
+      }
       if (!result.ok) {
         setProblem({ error: result.error });
         return;
@@ -273,7 +292,15 @@ export function TransactionForm({
   const tagName = (id: string) => tags.find((tag) => tag.id === id)?.name ?? id;
 
   return (
-    <form className={styles.form} ref={form} onSubmit={onSubmit} onKeyDown={onKeyDown} noValidate>
+    <form
+      className={styles.form}
+      ref={form}
+      onSubmit={onSubmit}
+      onKeyDown={onKeyDown}
+      noValidate
+      // N, E and ↑ ↓ do nothing while the form is open, even with the focus on the page (`ignoresShortcut`).
+      data-owns-keys=""
+    >
       {/* The panel's own heading already names the form; this is its visible title. */}
       <p className={styles.title} aria-hidden="true">
         {t(view.mode === 'new' ? 'txForm.newTitle' : 'txForm.editTitle')}
@@ -407,6 +434,9 @@ export function TransactionForm({
                           colorIndex={category.colorIndex}
                         />
                         <span className={styles.catName}>{category.name}</span>
+                        {category.archived ? (
+                          <span className={styles.catNote}>{t('categories.archivedBadge')}</span>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -418,7 +448,9 @@ export function TransactionForm({
                     defaultOpen
                     options={categories.map((category) => ({
                       value: category.id,
-                      label: category.child ? `— ${category.name}` : category.name,
+                      label: `${category.child ? `— ${category.name}` : category.name}${
+                        category.archived ? ` · ${t('categories.archivedBadge')}` : ''
+                      }`,
                       icon: category.icon as IconName,
                       colorIndex: category.colorIndex,
                     }))}
@@ -522,11 +554,10 @@ export function TransactionForm({
             onChange={(event) => setTagQuery(event.target.value)}
             onKeyDown={onTagKeyDown}
             onFocus={() => setTagsOpen(true)}
-            onBlur={() => setTagsOpen(false)}
           />
         </div>
         {tagsOpen && (suggestions.length > 0 || creatable) ? (
-          // Buttons that keep the focus in the field (`onMouseDown`), so a pick does not close the list.
+          // A pick with the pointer keeps the focus in the field (`onMouseDown`), so typing goes on.
           <div className={styles.suggestions}>
             {suggestions.map((tag) => (
               <button

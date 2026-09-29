@@ -6,6 +6,9 @@ import type { Messages } from '@saldo/i18n';
  */
 export type FormMessages = Pick<Messages, 'txForm' | 'transactions' | 'common' | 'kinds'> & {
   web: Pick<Messages['web'], 'form'>;
+  /** The edited row's archived account or category says so, as the filter menus do. */
+  accounts: Pick<Messages['accounts'], 'archivedBadge'>;
+  categories: Pick<Messages['categories'], 'archivedBadge'>;
 };
 
 export function formMessages(catalog: Messages): FormMessages {
@@ -15,5 +18,7 @@ export function formMessages(catalog: Messages): FormMessages {
     common: catalog.common,
     kinds: catalog.kinds,
     web: { form: catalog.web.form },
+    accounts: { archivedBadge: catalog.accounts.archivedBadge },
+    categories: { archivedBadge: catalog.categories.archivedBadge },
   };
 }

@@ -129,6 +129,7 @@ export default async function TransactionsPage({
     notFound: t('web.form.error_notFound'),
     closedGoal: t('web.form.error_closedGoal'),
     conflict: t('web.form.error_conflict'),
+    unexpected: t('web.form.error_unexpected'),
   };
   // Decision 10: deleting an occurrence of a recurrence says so, as the phone does.
   const selectedRecurring =
@@ -402,6 +403,8 @@ export default async function TransactionsPage({
 
       {form !== null ? (
         <Panel
+          // Not the detail's panel: closing the form mounts the detail fresh, not one still leaving.
+          key="form"
           sheet
           bare
           title={t(form.mode === 'new' ? 'txForm.newTitle' : 'txForm.editTitle')}
@@ -423,7 +426,12 @@ export default async function TransactionsPage({
           />
         </Panel>
       ) : selected === null ? null : (
-        <Panel title={selected.title} closeHref={href()} closeLabel={t('common.close')}>
+        <Panel
+          key="detail"
+          title={selected.title}
+          closeHref={href()}
+          closeLabel={t('common.close')}
+        >
           {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
               `-amount` / `negative` while its list row leaves it unsigned, and the web matches
               the phone screen for screen (see `DetailView.hero`). */}
@@ -489,10 +497,13 @@ export default async function TransactionsPage({
             <Link
               className={styles.action}
               href={href({ [SELECTION_PARAM]: selected.id, [EDIT_PARAM]: '' })}
+              aria-keyshortcuts="e"
             >
               <Icon name="pencil" size={14} />
               {t('common.edit')}
-              <kbd className={styles.kbd}>E</kbd>
+              <span aria-hidden="true">
+                <kbd className={styles.kbd}>E</kbd>
+              </span>
             </Link>
             <span className={styles.spacer} />
             <DeleteTransaction

@@ -114,7 +114,12 @@ export function Select({
         </BaseSelect.Trigger>
       </div>
       <BaseSelect.Portal>
-        <BaseSelect.Positioner sideOffset={8} align="start" alignItemWithTrigger={false}>
+        <BaseSelect.Positioner
+          className={styles.positioner}
+          sideOffset={8}
+          align="start"
+          alignItemWithTrigger={false}
+        >
           <BaseSelect.Popup className={styles.popup}>
             <BaseSelect.List>
               {grouped(options).map((block) =>

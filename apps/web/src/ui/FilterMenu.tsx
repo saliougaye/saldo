@@ -32,7 +32,7 @@ export function FilterMenu({ label, active, options }: Props) {
         <Icon name="chevD" size={14} className={chip.chevron} />
       </Menu.Trigger>
       <Menu.Portal>
-        <Menu.Positioner sideOffset={8} align="start">
+        <Menu.Positioner className={styles.positioner} sideOffset={8} align="start">
           <Menu.Popup className={styles.popup}>
             {options.map((option) => (
               <Menu.LinkItem

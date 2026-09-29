@@ -742,6 +742,7 @@ export const sv: Messages = {
     uses_one: '{{count}} post',
     uses_other: '{{count}} poster',
     archivedSection: 'Arkiverade',
+    archivedBadge: 'Arkiverad',
     newCategory: 'Ny kategori',
     editCategory: 'Redigera kategori',
     name: 'Namn',
@@ -1286,7 +1287,7 @@ export const sv: Messages = {
       error_conflict: 'En annan enhet ändrade den i samma stund. Försök igen.',
       noCategories: 'Inga kategorier av den här typen. Lägg till en under Profil.',
       noAccounts: 'Inga konton. Lägg till ett under Konton.',
-      deleteAction: 'Radera',
+      error_unexpected: 'Något gick fel. Försök igen.',
     },
   },
 };

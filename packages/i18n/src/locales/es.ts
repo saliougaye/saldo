@@ -746,6 +746,7 @@ export const es: Messages = {
     uses_one: '{{count}} movimiento',
     uses_other: '{{count}} movimientos',
     archivedSection: 'Archivadas',
+    archivedBadge: 'Archivada',
     newCategory: 'Nueva categoría',
     editCategory: 'Editar categoría',
     name: 'Nombre',
@@ -1293,7 +1294,7 @@ export const es: Messages = {
       error_conflict: 'Otro dispositivo la modificó en el mismo momento. Vuelve a intentarlo.',
       noCategories: 'No hay categorías de este tipo. Añade una desde el Perfil.',
       noAccounts: 'No hay cuentas. Añade una desde Cuentas.',
-      deleteAction: 'Eliminar',
+      error_unexpected: 'Algo ha ido mal. Vuelve a intentarlo.',
     },
   },
 };

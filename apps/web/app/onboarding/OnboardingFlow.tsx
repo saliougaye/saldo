@@ -7,6 +7,7 @@ import {
   type LocalDate,
   type PeriodKind,
   periodContaining,
+  sanitizeAmountInput,
 } from '@saldo/core';
 import { type AppLocale, formatDayMonth, formatMoneyParts } from '@saldo/i18n/format';
 import { interpolate } from '@saldo/i18n/translate';
@@ -271,7 +272,14 @@ export function OnboardingFlow({
                 options={currencies.map((option) => ({ ...option, hint: option.value }))}
                 onChange={(value) => {
                   const chosen = currencies.find((option) => option.value === value);
-                  if (chosen !== undefined) setCurrency(chosen.value);
+                  if (chosen === undefined) return;
+                  setCurrency(chosen.value);
+                  // The figure typed keeps only the decimals the new currency has (12,50 € becomes
+                  // ¥12): the old buffer is not one its field could type, and the server refuses it.
+                  const { minorDigits: next } = getCurrency(chosen.value);
+                  setBalanceBuffer((buffer) =>
+                    sanitizeAmountInput(buffer, next, { allowNegative: true }),
+                  );
                 }}
                 placeholder={strings.accountCurrency}
               />

@@ -745,6 +745,7 @@ export const it = {
     uses_one: '{{count}} voce',
     uses_other: '{{count}} voci',
     archivedSection: 'Archiviate',
+    archivedBadge: 'Archiviata',
     newCategory: 'Nuova categoria',
     editCategory: 'Modifica categoria',
     name: 'Nome',
@@ -1291,7 +1292,7 @@ export const it = {
       error_conflict: 'Un altro dispositivo l’ha modificata nello stesso momento. Riprova.',
       noCategories: 'Nessuna categoria di questo tipo. Aggiungine una dal Profilo.',
       noAccounts: 'Nessun conto. Aggiungine uno da Conti.',
-      deleteAction: 'Elimina',
+      error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
   },
 };

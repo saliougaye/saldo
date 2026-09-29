@@ -45,14 +45,18 @@ export function Panel({
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [closing, setClosing] = useState(false);
+  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (the form
+  // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
+  const [closingFor, setClosingFor] = useState<string | null>(null);
+  const closing = closingFor === closeHref;
 
   // Closing is a navigation, which unmounts the panel at once: play the exit first, then go.
   const close = useCallback(() => {
-    if (timer.current !== undefined) return;
-    setClosing(true);
+    if (closingFor === closeHref) return;
+    clearTimeout(timer.current);
+    setClosingFor(closeHref);
     timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
-  }, [router, closeHref]);
+  }, [router, closeHref, closingFor]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 

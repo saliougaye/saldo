@@ -747,6 +747,7 @@ export const pt: Messages = {
     uses_one: '{{count}} movimento',
     uses_other: '{{count}} movimentos',
     archivedSection: 'Arquivadas',
+    archivedBadge: 'Arquivada',
     newCategory: 'Nova categoria',
     editCategory: 'Editar categoria',
     name: 'Nome',
@@ -1294,7 +1295,7 @@ export const pt: Messages = {
       error_conflict: 'Outro dispositivo alterou-a no mesmo momento. Tente de novo.',
       noCategories: 'Não há categorias deste tipo. Adicione uma a partir do Perfil.',
       noAccounts: 'Não há contas. Adicione uma a partir de Contas.',
-      deleteAction: 'Eliminar',
+      error_unexpected: 'Algo correu mal. Tenta outra vez.',
     },
   },
 };

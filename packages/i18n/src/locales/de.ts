@@ -746,6 +746,7 @@ export const de: Messages = {
     uses_one: '{{count}} Eintrag',
     uses_other: '{{count}} Einträge',
     archivedSection: 'Archiviert',
+    archivedBadge: 'Archiviert',
     newCategory: 'Neue Kategorie',
     editCategory: 'Kategorie bearbeiten',
     name: 'Name',
@@ -1300,7 +1301,7 @@ export const de: Messages = {
         'Ein anderes Gerät hat sie im selben Moment geändert. Versuche es noch einmal.',
       noCategories: 'Keine Kategorien dieser Art. Lege eine im Profil an.',
       noAccounts: 'Keine Konten. Lege eines unter Konten an.',
-      deleteAction: 'Löschen',
+      error_unexpected: 'Etwas ist schiefgegangen. Versuch es noch einmal.',
     },
   },
 };

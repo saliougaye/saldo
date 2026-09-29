@@ -738,6 +738,7 @@ export const en: Messages = {
     uses_one: '{{count}} entry',
     uses_other: '{{count}} entries',
     archivedSection: 'Archived',
+    archivedBadge: 'Archived',
     newCategory: 'New category',
     editCategory: 'Edit category',
     name: 'Name',
@@ -1283,7 +1284,7 @@ export const en: Messages = {
       error_conflict: 'Another device changed it at the same moment. Try again.',
       noCategories: 'No categories of this kind. Add one from Profile.',
       noAccounts: 'No accounts. Add one from Accounts.',
-      deleteAction: 'Delete',
+      error_unexpected: 'Something went wrong. Try again.',
     },
   },
 };

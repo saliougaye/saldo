@@ -22,7 +22,7 @@ export function Toast({ message, action, durationMs, onDismiss }: Props) {
   }, [durationMs, onDismiss]);
   return (
     <div className={styles.toast} role="status">
-      <span>{message}</span>
+      <span className={styles.message}>{message}</span>
       <button
         type="button"
         className={styles.action}

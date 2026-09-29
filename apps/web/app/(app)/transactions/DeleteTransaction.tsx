@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import type { WriteError } from '../../../src/server/write/transactions';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../src/ui/Icon';
 import { deleteTransactionAction } from './actions';
@@ -20,8 +21,8 @@ interface Props {
     confirm: string;
     cancel: string;
     busy: string;
-    /** `web.form.error_<error>`, resolved by the page for every error the action can return. */
-    errors: Record<'invalid' | 'notFound' | 'closedGoal' | 'conflict', string>;
+    /** `web.form.error_<error>`, resolved by the page for every error the action can return, and a throw. */
+    errors: Record<WriteError | 'unexpected', string>;
   };
 }
 
@@ -39,7 +40,13 @@ export function DeleteTransaction({ id, deletedHref, strings }: Props) {
   const confirm = () => {
     if (pending) return;
     startTransition(async () => {
-      const result = await deleteTransactionAction(id);
+      let result: Awaited<ReturnType<typeof deleteTransactionAction>>;
+      try {
+        result = await deleteTransactionAction(id);
+      } catch {
+        setError(strings.errors.unexpected);
+        return;
+      }
       if (result.ok) {
         setOpen(false);
         router.push(deletedHref);

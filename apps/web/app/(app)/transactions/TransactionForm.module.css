@@ -106,6 +106,12 @@ legend.label {
   white-space: nowrap;
 }
 
+/* The edited row's archived category, under its name: the tile is too narrow for a « · » suffix. */
+.catNote {
+  margin-top: -4px;
+  color: var(--color-text-faint);
+}
+
 .linkish {
   align-self: flex-start;
   margin-top: 8px;
