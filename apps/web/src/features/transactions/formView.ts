@@ -10,6 +10,7 @@ import {
   isPocket,
   type LocalDate,
   type MinorDigits,
+  minorToAmountBuffer,
   type TransactionFormValues,
   type TransactionKind,
   topCategories,
@@ -59,6 +60,20 @@ export interface FormView {
   top: { expense: string[]; income: string[] };
   categories: FormCategory[];
   tags: { id: string; name: string }[];
+  /** «Registra la spesa»: saving this expense also closes that goal (§5.14). */
+  closeGoalId: string | null;
+}
+
+/**
+ * What a link may fill in a new form: «Metti da parte» / «Preleva» (`from`, `to`, `description`)
+ * and «Registra la spesa» (`closeGoal`, `amount` in minor units). Plain strings, as read from the URL.
+ */
+export interface FormPrefill {
+  from?: string;
+  to?: string;
+  description?: string;
+  closeGoal?: string;
+  amount?: string;
 }
 
 /**
@@ -71,6 +86,7 @@ export function formView(input: {
   currency: CurrencyCode;
   mode: 'new' | 'edit';
   id: string | null;
+  prefill?: FormPrefill;
 }): FormView | null {
   const { data, today } = input;
   const { minorDigits } = getCurrency(input.currency);
@@ -106,10 +122,12 @@ export function formView(input: {
   );
 
   const firstAccount = accounts.find((account) => !account.pocket && !account.archived)?.id ?? null;
+  const prefilled =
+    editing === undefined ? prefillFor(input.prefill, data, accounts, today, minorDigits) : null;
   const initial =
-    editing === undefined
-      ? emptyForm(today, firstAccount)
-      : formFromTransaction(editing, minorDigits);
+    editing !== undefined
+      ? formFromTransaction(editing, minorDigits)
+      : (prefilled?.values ?? emptyForm(today, firstAccount));
 
   const categories: FormCategory[] = [];
   for (const direction of ['expense', 'income'] as const) {
@@ -149,6 +167,58 @@ export function formView(input: {
     },
     categories,
     tags,
+    closeGoalId: prefilled?.closeGoalId ?? null,
+  };
+}
+
+/**
+ * A link's fill, or null when it names nothing usable. An account that is missing, archived or a
+ * pocket that is not open is ignored, so the field opens blank rather than on a row the server
+ * would refuse.
+ */
+function prefillFor(
+  prefill: FormPrefill | undefined,
+  data: UserData,
+  accounts: FormAccount[],
+  today: LocalDate,
+  minorDigits: MinorDigits,
+): { values: TransactionFormValues; closeGoalId: string | null } | null {
+  if (prefill === undefined) return null;
+  const usable = (id: string | undefined): string | null =>
+    id !== undefined && accounts.some((account) => account.id === id && !account.archived)
+      ? id
+      : null;
+  const description = prefill.description ?? '';
+
+  const goal = data.accounts.find((account) => account.id === prefill.closeGoal);
+  if (goal !== undefined && isPocket(goal) && goal.archivedAt === null) {
+    const amount = Number(prefill.amount);
+    return {
+      closeGoalId: goal.id,
+      values: {
+        ...emptyForm(today, goal.id),
+        kind: 'expense',
+        buffer:
+          Number.isInteger(amount) && amount > 0 ? minorToAmountBuffer(amount, minorDigits) : '',
+        description,
+      },
+    };
+  }
+
+  const from = usable(prefill.from);
+  const to = usable(prefill.to);
+  const fallback = accounts.find((account) => !account.pocket && !account.archived)?.id ?? null;
+  if (from === null && to === null) {
+    return { closeGoalId: null, values: { ...emptyForm(today, fallback), description } };
+  }
+  return {
+    closeGoalId: null,
+    values: {
+      ...emptyForm(today, from ?? fallback),
+      kind: 'transfer',
+      toAccountId: to,
+      description,
+    },
   };
 }
 

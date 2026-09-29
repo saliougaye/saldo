@@ -4,6 +4,7 @@ import {
   emptyForm,
   emptyUserData,
   formFromTransaction,
+  minorToAmountBuffer,
   type Tag,
   tagSchema,
   topCategories,
@@ -234,5 +235,72 @@ describe('accountsFor', () => {
       POCKET.id,
       ACCOUNT_2.id,
     ]);
+  });
+
+  describe('prefill', () => {
+    const data = dataWith([], { accounts: [ACCOUNT, ACCOUNT_2, POCKET, ARCHIVED] });
+    const open = (prefill: Parameters<typeof formView>[0]['prefill']) =>
+      formView({ data, today: TODAY, currency: 'EUR', mode: 'new', id: null, prefill });
+
+    it('a transfer link fills from, to and the description', () => {
+      const view = open({ from: ACCOUNT.id, to: POCKET.id, description: 'Vacanze' });
+      expect(view?.initial).toEqual({
+        ...emptyForm(TODAY, ACCOUNT.id),
+        kind: 'transfer',
+        toAccountId: POCKET.id,
+        description: 'Vacanze',
+      });
+      expect(view?.closeGoalId).toBeNull();
+    });
+
+    it('a from or to that names an account nobody can use is ignored', () => {
+      const view = open({ from: ARCHIVED.id, to: 'nope', description: 'x' });
+      expect(view?.initial.accountId).toBe(ACCOUNT.id);
+      expect(view?.initial.toAccountId).toBeNull();
+      expect(view?.initial.kind).toBe('expense');
+      const half = open({ from: 'nope', to: ACCOUNT_2.id });
+      expect(half?.initial.kind).toBe('transfer');
+      expect(half?.initial.accountId).toBe(ACCOUNT.id);
+      expect(half?.initial.toAccountId).toBe(ACCOUNT_2.id);
+    });
+
+    it('closing a goal opens an expense from that pocket for the amount, and says so', () => {
+      const view = open({ closeGoal: POCKET.id, amount: '25000', description: 'Vacanze' });
+      expect(view?.initial).toEqual({
+        ...emptyForm(TODAY, POCKET.id),
+        kind: 'expense',
+        buffer: minorToAmountBuffer(25000, 2),
+        description: 'Vacanze',
+      });
+      expect(view?.closeGoalId).toBe(POCKET.id);
+      expect(view?.accounts.some((a) => a.id === POCKET.id)).toBe(true);
+    });
+
+    it('an amount that is not a positive integer leaves the buffer empty', () => {
+      expect(open({ closeGoal: POCKET.id, amount: 'x' })?.initial.buffer).toBe('');
+      expect(open({ closeGoal: POCKET.id, amount: '-5' })?.initial.buffer).toBe('');
+    });
+
+    it('a closeGoal that is not an open pocket is ignored', () => {
+      for (const closeGoal of [ACCOUNT.id, 'nope']) {
+        const view = open({ closeGoal, amount: '100' });
+        expect(view?.closeGoalId).toBeNull();
+        expect(view?.initial).toEqual(emptyForm(TODAY, ACCOUNT.id));
+      }
+    });
+
+    it('is not read when editing', () => {
+      const row = tx({ id: 't1', amount: 100, date: '2026-09-10' });
+      const view = formView({
+        data: dataWith([row]),
+        today: TODAY,
+        currency: 'EUR',
+        mode: 'edit',
+        id: 't1',
+        prefill: { closeGoal: POCKET.id, amount: '5' },
+      });
+      expect(view?.closeGoalId).toBeNull();
+      expect(view?.initial).toEqual(formFromTransaction(row, 2));
+    });
   });
 });
