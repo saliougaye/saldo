@@ -337,7 +337,9 @@ export function previewFromBalances(
     if (accountId === null) return null;
     const current = now.get(accountId);
     if (current === undefined) return null;
-    return { now: current, after: moves ? (without.get(accountId) ?? current) + delta : current };
+    // As the ledger version: the edited row is out of `after` whether or not the draft moves.
+    const base = without.get(accountId) ?? current;
+    return { now: current, after: moves ? base + delta : base };
   };
   return {
     from: preview(draft.fromAccountId, -draft.amount),
@@ -346,8 +348,8 @@ export function previewFromBalances(
 }
 
 /**
- * `fillsFromBalances`'s shared body with `transferFillAmounts`: the one-tap amounts the transfer
- * sheet offers, computed from balances rather than the ledger (see `previewFromBalances`).
+ * `transferFillAmounts` from balances rather than the ledger (see `previewFromBalances`);
+ * `balances` must leave out the row being edited. `transferFillAmounts` delegates here.
  */
 export function fillsFromBalances(
   accounts: readonly (Pick<AccountRef, 'id' | 'type' | 'archivedAt'> & {

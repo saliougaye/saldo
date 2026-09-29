@@ -242,6 +242,13 @@ describe('previewFromBalances', () => {
         fromAccountId: saved.accountId,
         toAccountId: saved.toAccountId,
       },
+      {
+        id: saved.id,
+        amount: saved.amount,
+        date: '2026-04-30',
+        fromAccountId: saved.accountId,
+        toAccountId: saved.toAccountId,
+      },
     ];
     const now = accountBalances(A, T, TODAY);
     for (const draft of drafts) {
