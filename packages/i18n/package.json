@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./format": "./src/format.ts",
+    "./translate": "./src/translate.ts"
   },
   "scripts": {
     "test": "vitest run",
