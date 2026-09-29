@@ -1283,6 +1283,36 @@ export const de: Messages = {
       lastOneNote: 'Das ist dein letzter Passkey: füge einen weiteren hinzu, bevor du ihn löschst.',
       empty: 'Keine Passkeys in diesem Konto.',
     },
+    accounts: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Dieser Eintrag existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+      error_holdsGoals: 'Es gibt noch offene Ziele: Schließe sie, bevor du das Konto archivierst.',
+      error_parentArchived: 'Das Konto des Ziels ist archiviert: Stelle es zuerst wieder her.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+      archiveBody:
+        '„{{name}}“ verschwindet aus der Liste. Die Transaktionen bleiben und du kannst es aus den Archivierten wiederherstellen.',
+      archivedTitle: 'Archiviert',
+      archivedAccounts: 'Archivierte Konten',
+      closedGoals: 'Abgeschlossene Ziele',
+      archivedNone: 'Nichts archiviert.',
+      goalPanel: 'Neues Ziel',
+      deadlineHint: 'Leer lassen, wenn es keine Frist hat.',
+      alreadySavedHint: 'Wie viel du schon zurückgelegt hast: Wir buchen es vom Konto um.',
+      closeReturn: '{{amount}} zurück auf {{name}} buchen',
+      closeChoice: 'Was machen wir mit dem Geld?',
+    },
+    budgets: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Dieses Budget existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Es wurde auf einem anderen Gerät geändert. Öffne es erneut und versuche es noch einmal.',
+      error_taken: '„{{name}}“ ist bereits in einem anderen Budget.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+      allBudgets: 'Alle Budgets',
+      suggestion: 'Vorschlag: {{amount}}',
+    },
     form: {
       kind: 'Art',
       descriptionPlaceholder: 'Geschäft, Person, Dienst',

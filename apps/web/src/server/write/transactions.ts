@@ -28,6 +28,7 @@ import { env } from '../env';
 import { readUserData } from '../userData/read';
 import { loadRow } from '../userData/row';
 import { todayFor } from '../userData/today';
+import { tombstoned, unstamped } from './rows';
 import { WriteRefused, writeInTransaction } from './writeChanges';
 
 /** What the form sends. Parsed here, because a Server Action's argument is whatever a client posts. */
@@ -202,12 +203,14 @@ export async function saveTransaction(
         existing === null
           ? { ...fields, id, recurrenceId: null, createdAt: now.toISOString(), deletedAt: null }
           : // The note and the recurrence are not on the web's form (§17.1.9): an edit keeps them.
-            { ...existing, ...fields, note: existing.note, recurrenceId: existing.recurrenceId };
-      const { updatedAt: _stamp, ...unstamped } = row as typeof row & { updatedAt?: string };
+            unstamped({
+              ...existing,
+              ...fields,
+              note: existing.note,
+              recurrenceId: existing.recurrenceId,
+            });
       return {
-        writes: [
-          { entity: 'transaction', id, data: unstamped, basis: existing?.updatedAt ?? null },
-        ],
+        writes: [{ entity: 'transaction', id, data: row, basis: existing?.updatedAt ?? null }],
         result: { ok: true, id },
       };
     });
@@ -232,13 +235,12 @@ export async function deleteTransaction(
       if (touchesClosedGoal(existing, data.accounts)) {
         return { writes: [], result: { ok: false, error: 'closedGoal' } };
       }
-      const { updatedAt: _stamp, ...row } = existing;
       return {
         writes: [
           {
             entity: 'transaction',
             id,
-            data: { ...row, deletedAt: now.toISOString() },
+            data: tombstoned(existing, now.toISOString()),
             basis: existing.updatedAt,
           },
         ],
@@ -290,13 +292,12 @@ export async function restoreTransaction(
           return { writes: [], result: { ok: false, error: 'invalid' } };
         }
       }
-      const { updatedAt: _stamp, ...unstamped } = row;
       return {
         writes: [
           {
             entity: 'transaction',
             id,
-            data: { ...unstamped, deletedAt: null },
+            data: { ...unstamped(row), deletedAt: null },
             basis: row.updatedAt,
           },
         ],
