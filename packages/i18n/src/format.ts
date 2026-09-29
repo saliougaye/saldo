@@ -462,6 +462,12 @@ export function formatDayMonth(date: LocalDate, locale: AppLocale): string {
   return conventions.dayMonth(day, monthName(conventions.monthsShort, month));
 }
 
+/** it `settembre`, en `September`: the name of the month `date` falls in, lower-case as the catalogue has it. */
+export function formatMonthLong(date: LocalDate, locale: AppLocale): string {
+  const { month } = parseLocalDate(date);
+  return monthName(CONVENTIONS[locale].monthsLong, month);
+}
+
 /** it `18 aprile 2026`, en `April 18, 2026`, es `18 de abril de 2026` */
 export function formatLongDate(date: LocalDate, locale: AppLocale): string {
   const { year, month, day } = parseLocalDate(date);
