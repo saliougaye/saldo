@@ -12,11 +12,6 @@
   }
 }
 
-.notice {
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-}
-
 .emptyNote {
   padding-block: 4px;
   font-size: var(--font-size-footnote);

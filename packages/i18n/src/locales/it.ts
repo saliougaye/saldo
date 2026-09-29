@@ -1253,7 +1253,6 @@ export const it = {
       sectionNav: 'Sezioni',
       previousPeriod: 'Periodo precedente',
       nextPeriod: 'Periodo successivo',
-      finishOnPhone: 'Finisci la configurazione dal telefono',
     },
     passkeys: {
       title: 'Le tue passkey',

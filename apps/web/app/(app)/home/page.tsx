@@ -437,10 +437,7 @@ export default async function HomePage({
             ) : null}
           </>
         }
-      >
-        {/* `/onboarding` arrives in 0.3e: until then the page renders on the defaults (§17.1.2). */}
-        {page.onboarded ? null : <p className={styles.notice}>{t('web.shell.finishOnPhone')}</p>}
-      </HeroBand>
+      />
 
       <Columns
         lead={

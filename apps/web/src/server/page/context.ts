@@ -6,6 +6,7 @@ import {
   type Settings,
   type UserData,
 } from '@saldo/core';
+import { redirect } from 'next/navigation';
 import {
   PERIOD_PARAM,
   periodFromParam,
@@ -78,12 +79,16 @@ export interface PageContext extends PageState, WebI18n {
  * The whole beginning of a page under `(app)`, so its first line is `await readPage(searchParams)`
  * and nothing else. It takes the promise Next hands the page and narrows the query **here**: a page
  * that awaited it a second time could narrow it differently. `loadUserData` is shared with the layout.
+ *
+ * An account with no `settings` row has never onboarded (§17.1.2): every page sends it to
+ * `/onboarding` before computing anything. `redirect` throws, so nothing after it runs.
  */
 export async function readPage(
   searchParams: Promise<Record<string, string | string[] | undefined>>,
 ): Promise<PageContext> {
   const user = await requireWebUser();
   const data = await loadUserData(user.id);
+  if (data.settings === null) redirect('/onboarding');
   const i18n = await userI18n(user.id);
   const params = narrowParams(await searchParams);
   return {

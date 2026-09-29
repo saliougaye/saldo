@@ -1246,7 +1246,6 @@ export const en: Messages = {
       sectionNav: 'Sections',
       previousPeriod: 'Previous period',
       nextPeriod: 'Next period',
-      finishOnPhone: 'Finish setting up from the phone',
     },
     passkeys: {
       title: 'Your passkeys',
