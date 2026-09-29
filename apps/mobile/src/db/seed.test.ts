@@ -98,6 +98,29 @@ describe('seedFromOnboarding', () => {
     expect(repos.categories.list()).toHaveLength(0);
   });
 
+  it('leaves alone a seed category a partial first sync already delivered', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => BASE.completedAt);
+    // A pull that brought the web's seed categories but not yet its settings row.
+    repos.categories.create({
+      id: 'seed-category-groceries',
+      name: 'Spesa (dal web)',
+      direction: 'expense',
+      parentId: null,
+      icon: 'cart',
+      colorIndex: 1,
+      archivedAt: null,
+      sortOrder: 0,
+    });
+
+    expect(seedFromOnboarding(repos, { ...BASE, selectedCategoryKeys: ['groceries'] })).toBe(true);
+    const categories = repos.categories.list();
+    expect(categories.filter((category) => category.id === 'seed-category-groceries')).toEqual([
+      expect.objectContaining({ name: 'Spesa (dal web)' }),
+    ]);
+    expect(categories.map((category) => category.name)).toContain('t:supermarket');
+  });
+
   it('creates the hidden income categories even when nothing is selected', () => {
     const names = seed([])
       .categories.list()

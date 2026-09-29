@@ -56,7 +56,12 @@ export function seedFromOnboarding(repos: Repositories, input: SeedInput): boole
 
   repos.settings.create(seed.settings);
   if (seed.account !== null) repos.accounts.create(seed.account);
-  for (const category of seed.categories) repos.categories.create(category);
+  // A first pull can deliver the web's seed categories — same deterministic ids — before the
+  // settings row (the pull is paged): those rows, tombstones included, are the account's and stay
+  // as they are. Inserting them again broke on `UNIQUE constraint failed: categories.id`.
+  for (const category of seed.categories) {
+    if (repos.categories.byId(category.id) === null) repos.categories.create(category);
+  }
 
   return true;
 }
