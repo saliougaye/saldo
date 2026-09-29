@@ -1,0 +1,32 @@
+/* The mockup's `.kind`: equal segments on the raised track, the chosen one lifted onto the surface. */
+.group {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  padding: 3px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+}
+
+.option {
+  height: 32px;
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  text-align: center;
+  cursor: pointer;
+  transition-property: background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+.option[aria-checked="true"] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px var(--color-shadow);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: -2px;
+}

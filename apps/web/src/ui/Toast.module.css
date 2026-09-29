@@ -1,0 +1,66 @@
+/* The mockup's `.toast`: inverted ink, centred at the bottom, rising in as it appears. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  translate: -50% 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 12px 12px 16px;
+  border-radius: var(--radius-button);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-footnote);
+  box-shadow: 0 12px 32px var(--color-shadow);
+  transition-property: opacity, translate;
+  transition-duration: 200ms;
+  transition-timing-function: var(--motion-easing);
+}
+
+@starting-style {
+  .toast {
+    opacity: 0;
+    translate: -50% 8px;
+  }
+}
+
+.action {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: var(--radius-input);
+  font-weight: var(--font-weight-medium);
+  color: inherit;
+  cursor: pointer;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--color-bg);
+  outline-offset: 1px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. Above the tab bar. */
+@media (max-width: 1023px) {
+  .toast {
+    bottom: calc(var(--layout-tab-bar-height) + 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition-property: opacity;
+  }
+
+  @starting-style {
+    .toast {
+      translate: -50% 0;
+    }
+  }
+}
