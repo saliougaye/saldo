@@ -8,9 +8,11 @@ import {
   creditSettlementDraft,
   creditStatementAccrued,
   creditStatementDue,
+  fillsFromBalances,
   netWorth,
   nextCreditChargeDate,
   paymentAccountCandidates,
+  previewFromBalances,
   spendableTotal,
   transferBalancePreview,
   transferFillAmounts,
@@ -170,6 +172,120 @@ describe('transferBalancePreview', () => {
       fromAccountId: 'acc-ghost',
     });
     expect(preview.from).toBeNull();
+  });
+});
+
+describe('previewFromBalances', () => {
+  const balances = new Map([
+    ['a', 10000],
+    ['b', 500],
+  ]);
+  const draft = {
+    id: 'new',
+    amount: 2500,
+    date: '2026-04-18',
+    fromAccountId: 'a',
+    toAccountId: 'b',
+  };
+
+  it('moves the amount out of the source and into the destination', () => {
+    expect(previewFromBalances(balances, balances, draft, '2026-04-18')).toEqual({
+      from: { now: 10000, after: 7500 },
+      to: { now: 500, after: 3000 },
+    });
+  });
+
+  it('moves nothing for a future date, a zero amount or an incomplete pair', () => {
+    const still = { from: { now: 10000, after: 10000 }, to: { now: 500, after: 500 } };
+    expect(
+      previewFromBalances(balances, balances, { ...draft, date: '2026-04-19' }, '2026-04-18'),
+    ).toEqual(still);
+    expect(previewFromBalances(balances, balances, { ...draft, amount: 0 }, '2026-04-18')).toEqual(
+      still,
+    );
+    expect(
+      previewFromBalances(balances, balances, { ...draft, toAccountId: null }, '2026-04-18'),
+    ).toEqual({ from: { now: 10000, after: 10000 }, to: null });
+  });
+
+  it('answers null for an account it has no balance for', () => {
+    expect(
+      previewFromBalances(balances, balances, { ...draft, fromAccountId: 'gone' }, '2026-04-18')
+        .from,
+    ).toBeNull();
+  });
+
+  it('agrees with transferBalancePreview', () => {
+    const A = ACCOUNTS;
+    const T = aprilTransactions();
+    const saved = T.find((row) => row.kind === 'transfer');
+    if (saved === undefined) throw new Error('fixture must include a transfer');
+    const drafts = [
+      {
+        id: 'draft-past',
+        amount: 20000,
+        date: '2026-04-10',
+        fromAccountId: 'acc-checking',
+        toAccountId: 'acc-savings',
+      },
+      {
+        id: 'draft-future',
+        amount: 20000,
+        date: '2026-04-30',
+        fromAccountId: 'acc-checking',
+        toAccountId: 'acc-savings',
+      },
+      {
+        id: saved.id,
+        amount: saved.amount + 10000,
+        date: saved.date,
+        fromAccountId: saved.accountId,
+        toAccountId: saved.toAccountId,
+      },
+    ];
+    const now = accountBalances(A, T, TODAY);
+    for (const draft of drafts) {
+      const without = accountBalances(
+        A,
+        T.filter((row) => row.id !== draft.id),
+        TODAY,
+      );
+      expect(previewFromBalances(now, without, draft, TODAY)).toEqual(
+        transferBalancePreview(A, T, TODAY, draft),
+      );
+    }
+  });
+});
+
+describe('fillsFromBalances', () => {
+  it('offers the whole balance, and what an open goal lacks when it is less', () => {
+    const accounts = [
+      { id: 'a', type: 'checking' as const, archivedAt: null, goalTarget: null },
+      { id: 'g', type: 'pocket' as const, archivedAt: null, goalTarget: 50000 },
+    ];
+    const balances = new Map([
+      ['a', 100000],
+      ['g', 20000],
+    ]);
+    expect(fillsFromBalances(accounts, balances, { fromAccountId: 'a', toAccountId: 'g' })).toEqual(
+      [
+        { key: 'balance', minor: 100000 },
+        { key: 'missing', minor: 30000 },
+      ],
+    );
+  });
+
+  it('offers nothing towards a credit card or from an empty source', () => {
+    const accounts = [
+      { id: 'a', type: 'checking' as const, archivedAt: null, goalTarget: null },
+      { id: 'c', type: 'credit_card' as const, archivedAt: null, goalTarget: null },
+    ];
+    expect(
+      fillsFromBalances(accounts, new Map([['a', 100]]), { fromAccountId: 'a', toAccountId: 'c' }),
+    ).toEqual([]);
+    expect(
+      fillsFromBalances(accounts, new Map([['a', 0]]), { fromAccountId: 'a', toAccountId: null }),
+    ).toEqual([]);
   });
 });
 
