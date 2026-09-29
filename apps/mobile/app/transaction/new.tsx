@@ -1,4 +1,4 @@
-import { getCurrency, newId } from '@saldo/core';
+import { emptyForm, getCurrency, newId, toTransactionInput } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,6 @@ import { goalExpenseForm } from '../../src/features/goals/goalLinks';
 import { PrivacyOverlay } from '../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
-import { emptyForm, toTransactionInput } from '../../src/features/transactions/useTransactionForm';
 
 export default function NewTransaction() {
   const router = useRouter();

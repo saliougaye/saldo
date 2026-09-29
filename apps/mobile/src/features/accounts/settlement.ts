@@ -1,11 +1,12 @@
 import {
   type CreditSettlementDraft,
+  emptyForm,
   isLocalDate,
   type LocalDate,
   type MinorDigits,
   minorToAmountBuffer,
+  type TransactionFormValues,
 } from '@saldo/core';
-import { emptyForm, type TransactionFormValues } from '../transactions/useTransactionForm';
 
 /**
  * "Salda carta" opens the ordinary new-transaction sheet (§6.16) already filled in. What it is

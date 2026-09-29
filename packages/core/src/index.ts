@@ -37,4 +37,5 @@ export * from './userData';
 export * from './views/budgetViews';
 export * from './views/endLabels';
 export * from './views/goalViews';
+export * from './views/transactionForm';
 export * from './views/transactionRow';

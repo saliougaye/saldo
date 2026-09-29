@@ -1,4 +1,9 @@
-import { getCurrency, touchesClosedGoal } from '@saldo/core';
+import {
+  formFromTransaction,
+  getCurrency,
+  toTransactionInput,
+  touchesClosedGoal,
+} from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,10 +21,6 @@ import { PrivacyOverlay } from '../../../src/features/lock/PrivacyOverlay';
 import { usePeriod } from '../../../src/features/period/PeriodProvider';
 import { RecurrenceScopeSheet } from '../../../src/features/transactions/RecurrenceScopeSheet';
 import { TransactionForm } from '../../../src/features/transactions/TransactionForm';
-import {
-  formFromTransaction,
-  toTransactionInput,
-} from '../../../src/features/transactions/useTransactionForm';
 import { useLeaveGone, useLeaveRenamed } from '../../../src/navigation/leave';
 import { Text } from '../../../src/theme/Text';
 

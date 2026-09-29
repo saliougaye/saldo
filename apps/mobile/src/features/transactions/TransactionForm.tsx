@@ -2,8 +2,14 @@ import {
   accountChoices,
   amountBufferToMinor,
   type BalancePreview,
+  canCreateTag,
+  changeKind,
+  dateChoices,
   getCurrency,
   minorToAmountBuffer,
+  missingForSave,
+  type TransactionFormValues,
+  tagSuggestions,
   topCategories,
   transferBalancePreview,
   transferFillAmounts,
@@ -48,16 +54,7 @@ import { AttachmentStrip } from './AttachmentStrip';
 import { CategoryPickerSheet } from './CategoryPickerSheet';
 import { RecurrenceSheet } from './RecurrenceSheet';
 import { presetOf, ruleForPreset } from './recurrenceCopy';
-import {
-  canCreateTag,
-  changeKind,
-  dateChoices,
-  detailsOpenInitially,
-  detailsSummary,
-  missingForSave,
-  type TransactionFormValues,
-  tagSuggestions,
-} from './useTransactionForm';
+import { detailsOpenInitially, detailsSummary } from './useTransactionForm';
 
 export interface TransactionFormProps {
   /** Captured once by the caller so every screen agrees on the calendar day (§3.2). */
