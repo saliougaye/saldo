@@ -1,3 +1,4 @@
+export * from './accountTypeIcons';
 export * from './charts';
 export * from './css';
 export * from './iconNodes';

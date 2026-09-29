@@ -1,9 +1,9 @@
 import { amountBufferToMinor, getCurrency, type LocalDate } from '@saldo/core';
+import { accountTypeIcons } from '@saldo/ui';
 import type { KvStore } from '../../db/kv';
 import type { Repositories } from '../../db/repositories';
 import type { RepositoryDatabase } from '../../db/repositories/support';
 import { seedFromOnboarding } from '../../db/seed';
-import { ACCOUNT_TYPE_ICONS } from '../accounts/accountTypeIcon';
 import { seedFromImport } from './importOnboarding';
 import type { OnboardingDraft } from './state';
 
@@ -64,7 +64,7 @@ export function finishOnboarding(
         name: draft.accountName.length > 0 ? draft.accountName : translate('firstAccount'),
         type: draft.accountType,
         openingBalance: amountBufferToMinor(draft.balanceBuffer, minorDigits),
-        icon: ACCOUNT_TYPE_ICONS[draft.accountType],
+        icon: accountTypeIcons[draft.accountType],
       },
       selectedCategoryKeys: draft.selectedCategoryKeys,
     });
