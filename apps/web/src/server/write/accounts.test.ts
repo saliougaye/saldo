@@ -4,6 +4,7 @@ import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { archiveAccount, restoreAccount, saveAccount } from './accounts';
 import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { saveGoal } from './goals';
 import { saveTransaction } from './transactions';
 
 let harness: TestDatabase;
@@ -140,10 +141,40 @@ describe('saveAccount — edit', () => {
     });
   });
 
-  it.todo('never edits a pocket through the account form'); // Task 5 (saveGoal)
+  it('never edits a pocket through the account form', async () => {
+    await onboarded();
+    const goal = await saveGoal(harness.db, userId, goalInput, FIXTURE_NOW);
+    if (!goal.ok) throw new Error('goal not created');
+    expect(await saveAccount(harness.db, userId, { ...cash, id: goal.id }, FIXTURE_NOW)).toEqual({
+      ok: false,
+      error: 'notFound',
+    });
+  });
 
-  it.todo('keeps an account that holds a goal a kind that can (§5.14)'); // Task 5 (saveGoal)
+  it('keeps an account that holds a goal a kind that can (§5.14)', async () => {
+    await onboarded();
+    const goal = await saveGoal(harness.db, userId, goalInput, FIXTURE_NOW);
+    expect(goal.ok).toBe(true);
+    const result = await saveAccount(
+      harness.db,
+      userId,
+      { ...cash, id: 'acc-main', type: 'credit_card', name: 'Conto', buffer: '0' },
+      FIXTURE_NOW,
+    );
+    expect(result).toEqual({ ok: false, error: 'invalid' });
+  });
 });
+
+const goalInput = {
+  id: null,
+  name: 'Vacanza',
+  icon: 'target',
+  colorIndex: 5,
+  buffer: '1000',
+  deadline: null,
+  parentAccountId: 'acc-main',
+  savedBuffer: '',
+};
 
 describe('archive and restore', () => {
   it('archives an account and restores it', async () => {
@@ -160,7 +191,15 @@ describe('archive and restore', () => {
     expect((await accounts()).find((a) => a.id === 'acc-savings')?.archivedAt).toBeNull();
   });
 
-  it.todo('refuses to archive an account that holds an open goal (§5.14)'); // Task 5 (saveGoal)
+  it('refuses to archive an account that holds an open goal (§5.14)', async () => {
+    await onboarded();
+    const goal = await saveGoal(harness.db, userId, goalInput, FIXTURE_NOW);
+    expect(goal.ok).toBe(true);
+    expect(await archiveAccount(harness.db, userId, 'acc-main', FIXTURE_NOW)).toEqual({
+      ok: false,
+      error: 'holdsGoals',
+    });
+  });
 
   it('answers notFound for a pocket or an unknown id', async () => {
     await onboarded();
