@@ -229,7 +229,9 @@ export default async function StatsPage({
                     <tr>
                       <th scope="col">{t('stats.forecastColAt')}</th>
                       <th scope="col">{t('stats.expensesAbout')}</th>
-                      <th scope="col">{t('stats.forecastColRange')}</th>
+                      <th scope="col" className={styles.rangeCol}>
+                        {t('stats.forecastColRange')}
+                      </th>
                       <th scope="col">{t('stats.balanceAbout')}</th>
                     </tr>
                   </thead>
@@ -243,7 +245,7 @@ export default async function StatsPage({
                       >
                         <th scope="row">{formatLongDate(entry.range.end, locale)}</th>
                         <td>{formatMoney(entry.expenses, currency, locale)}</td>
-                        <td className={styles.faint}>
+                        <td className={`${styles.faint} ${styles.rangeCol}`}>
                           {t('stats.forecastRange', {
                             min: formatMajor(entry.expensesMin, currency, locale, 'never'),
                             max: formatMajor(entry.expensesMax, currency, locale, 'never'),
@@ -376,7 +378,9 @@ export default async function StatsPage({
                 amount: formatMoney(view.committed.amount, currency, locale),
               })}
             >
-              <span className={styles.percent}>{`${view.committed.share}%`}</span>
+              <span className={styles.percent}>
+                {t('targets.percent', { value: view.committed.share })}
+              </span>
             </Figure>
           ) : (
             <Figure

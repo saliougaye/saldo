@@ -14,6 +14,7 @@ import {
   periodSpendHistory,
   projectEndOfCycle,
   rollupToParents,
+  sharePercent,
   spendingByCategory,
   summarizePeriod,
   type TagTotals,
@@ -134,7 +135,7 @@ export function statsView(input: {
         categoryId,
         category: categories.get(categoryId),
         amount,
-        share: total === 0 ? 0 : Math.round((amount / total) * 100),
+        share: sharePercent(amount, total),
         delta: deltaPercent(amount, median(past)),
       };
     });
@@ -168,7 +169,7 @@ export function statsView(input: {
     committed: {
       amount: committed,
       discretionary: Math.max(0, summary.spent - committed),
-      share: summary.spent === 0 ? 0 : Math.round((committed / summary.spent) * 100),
+      share: sharePercent(committed, summary.spent),
     },
     split: {
       total,

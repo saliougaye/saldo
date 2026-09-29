@@ -2,6 +2,7 @@ import {
   type Account,
   accountBalances,
   bankBalance,
+  goalRatio,
   isPocket,
   type LocalDate,
   netWorth,
@@ -54,7 +55,7 @@ export function accountsView(input: {
     pockets: pocketsOf(data.accounts, account.id).map((pocket) => {
       const saved = balances.get(pocket.id) ?? 0;
       const target = pocket.goalTarget ?? 0;
-      return { account: pocket, saved, target, ratio: saved / Math.max(1, target) };
+      return { account: pocket, saved, target, ratio: goalRatio(saved, target) };
     }),
   });
 

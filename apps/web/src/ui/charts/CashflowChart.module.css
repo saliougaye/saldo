@@ -132,3 +132,17 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Ten columns at 390px leave about 30px each, and the net figure is `nowrap`: it would be cut
+   mid-glyph. The bars, the period's name and the link's own `aria-label` all stay, so what goes is
+   a number that could not have been read. `--layout-wide-breakpoint` (1024), which a media query
+   cannot read as a custom property. */
+.net {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .net {
+    display: block;
+  }
+}

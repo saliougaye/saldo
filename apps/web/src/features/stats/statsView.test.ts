@@ -2,6 +2,7 @@ import {
   averageSeries,
   dailyCumulative,
   describePeriod,
+  emptyUserData,
   periodHistory,
   projectEndOfCycle,
 } from '@saldo/core';
@@ -214,5 +215,23 @@ describe('statsView', () => {
     );
     // April is five periods back: inside the medians' window, outside «il solito».
     expect(view.trend.usual.at(-1)).toBe(3000);
+  });
+
+  it('is every figure at zero for an account with nothing in it', () => {
+    const view = statsView({
+      data: emptyUserData(),
+      def: DEF,
+      today: TODAY,
+      period: SEPTEMBER,
+      direction: 'expense',
+    });
+    expect(view.figures).toMatchObject({ income: 0, spent: 0, net: 0, median: null });
+    expect(view.committed).toEqual({ amount: 0, discretionary: 0, share: 0 });
+    expect(view.split.total).toBe(0);
+    expect(view.split.rows).toEqual([]);
+    expect(view.tags.tags).toEqual([]);
+    // The trend still has a point per elapsed day, all of them zero: an empty chart, not a missing one.
+    expect(view.trend.current).toHaveLength(SEPTEMBER.elapsed);
+    expect(view.trend.current.every((value) => value === 0)).toBe(true);
   });
 });

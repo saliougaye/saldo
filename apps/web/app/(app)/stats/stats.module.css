@@ -114,9 +114,20 @@
   color: var(--color-text-faint);
 }
 
+/* Every cell is `nowrap`, because a figure broken across two lines is worse than a missing column.
+   Four of them do not fit 390px, so the widest — «tra X e Y» — is the one that goes: the selected
+   period's own min–max is already in the key figures above, under Uscite. */
+.rangeCol {
+  display: none;
+}
+
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. Below it the
    columns stack, and a sticky lead would pin a chart over the list under it. */
 @media (min-width: 1024px) {
+  .rangeCol {
+    display: table-cell;
+  }
+
   .sticky {
     position: sticky;
     top: calc(var(--layout-topbar-height) + 24px);

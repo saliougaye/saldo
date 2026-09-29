@@ -13,6 +13,16 @@ export interface GoalAccount {
   goalStartDate: LocalDate;
 }
 
+/**
+ * How full a goal or a pocket is: saved over target, clamped to 0..1, and 0 for a pocket with no
+ * target. The one place that answer is written — `goalProgress` returns it as `ratio`, and the two
+ * lists of pockets (the phone's Conti tab, the web's `accountsView`) call it with the balances they
+ * already hold rather than running the whole of `goalProgress` for a ring.
+ */
+export function goalRatio(saved: MinorUnits, target: MinorUnits): number {
+  return target > 0 ? Math.min(1, Math.max(0, saved / target)) : 0;
+}
+
 /** `open` = no deadline, so no pace; `onTrack` = at or ahead of the pace. */
 export type GoalState = 'reached' | 'expired' | 'behind' | 'onTrack' | 'open';
 
@@ -84,7 +94,7 @@ export function goalProgress(
   }
 
   const missing = Math.max(0, target - saved);
-  const ratio = target > 0 ? Math.min(1, Math.max(0, saved / target)) : 0;
+  const ratio = goalRatio(saved, target);
   const deadline = goal.goalDeadline;
   const reached = saved >= target;
 

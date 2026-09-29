@@ -45,4 +45,9 @@ describe('preferenceRows', () => {
   it('marks every row read-only until the forms of 0.3e', () => {
     expect(preferenceRows(settings, 'sv').every((row) => row.editable === false)).toBe(true);
   });
+
+  it('leaves the language empty when it follows the system, for the page to name', () => {
+    const system = readSettings({ ...SETTINGS_DEFAULTS, id: 'settings', language: 'system' });
+    expect(preferenceRows(system, 'it').find((row) => row.key === 'language')?.value).toBe('');
+  });
 });

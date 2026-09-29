@@ -115,7 +115,7 @@ export function navigatorView(input: {
       selected: isSelected(range),
       running,
       values: { income: summary.income, expenses: summary.spent },
-      net: summary.income - summary.spent,
+      net: summary.remaining,
       forecast: null,
     };
   });

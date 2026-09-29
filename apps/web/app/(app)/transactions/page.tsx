@@ -33,6 +33,7 @@ import { Panel } from '../../../src/ui/Panel';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
+import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import styles from './transactions.module.css';
 
 export const runtime = 'nodejs';
@@ -114,6 +115,7 @@ export default async function TransactionsPage({
           icon={row.icon as IconName}
           colorIndex={row.colorIndex}
           badge={row.recurring ? 'repeat' : undefined}
+          badgeLabel={t('recurrence.recurringRow')}
           title={row.title}
           subtitle={row.subtitle}
           upcoming={upcoming}
@@ -324,7 +326,12 @@ export default async function TransactionsPage({
               ? fact(
                   'excluded',
                   t('transactions.excludedFromTotals'),
-                  <Icon name="check" size={16} />,
+                  // The tick is the whole value, and `Icon` is always `aria-hidden`: without the
+                  // word beside it a screen reader reads the label and then silence.
+                  <>
+                    <Icon name="check" size={16} />
+                    <VisuallyHidden>{t('common.yes')}</VisuallyHidden>
+                  </>,
                 )
               : null}
             {selected.tagNames.length === 0

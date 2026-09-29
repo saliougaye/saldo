@@ -10,6 +10,7 @@ export const it = {
     done: 'Fatto',
     reset: 'Azzera',
     close: 'Chiudi',
+    yes: 'Sì',
     continue: 'Continua',
     back: 'Indietro',
     goBack: 'Torna indietro',
@@ -683,6 +684,7 @@ export const it = {
     spendable: 'Totale spendibile',
     spendableNote:
       'Solo i conti che hai marcato come disponibili: risparmi e investimenti restano fuori.',
+    spending: 'Da spendere',
     savings: 'Risparmi e investimenti',
     netWorth: 'Patrimonio complessivo',
     archived: 'Conti archiviati',

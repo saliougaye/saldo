@@ -176,6 +176,7 @@ export default async function HomePage({
       icon={row.icon as IconName}
       colorIndex={row.colorIndex}
       badge={row.recurring ? 'repeat' : undefined}
+      badgeLabel={t('recurrence.recurringRow')}
       title={row.title}
       subtitle={`${formatDayMonth(row.date, locale)} · ${row.subtitle}`}
       upcoming={upcoming}

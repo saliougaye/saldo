@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tx } from './__tests__/fixtures';
-import { type GoalAccount, goalProgress } from './goals';
+import { type GoalAccount, goalProgress, goalRatio } from './goals';
 import type { PeriodDef } from './period';
 
 const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
@@ -149,5 +149,20 @@ describe('goalProgress', () => {
     expect(progress.state).toBe('reached');
     expect(progress.reachedOn).toBe('2026-05-05');
     expect(progress.ratio).toBe(1);
+  });
+});
+
+describe('goalRatio', () => {
+  it('is how much of the target is saved', () => {
+    expect(goalRatio(25000, 100000)).toBeCloseTo(0.25, 5);
+  });
+
+  it('never leaves 0..1: a goal past its target is full, a negative balance empty', () => {
+    expect(goalRatio(150000, 100000)).toBe(1);
+    expect(goalRatio(-2000, 100000)).toBe(0);
+  });
+
+  it('is 0 for a pocket with no target, rather than dividing by zero', () => {
+    expect(goalRatio(25000, 0)).toBe(0);
   });
 });

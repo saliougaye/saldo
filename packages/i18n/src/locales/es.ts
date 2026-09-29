@@ -12,6 +12,7 @@ export const es: Messages = {
     done: 'Listo',
     reset: 'Restablecer',
     close: 'Cerrar',
+    yes: 'Sí',
     continue: 'Continuar',
     back: 'Atrás',
     goBack: 'Volver',
@@ -684,6 +685,7 @@ export const es: Messages = {
     spendable: 'Total disponible',
     spendableNote:
       'Solo las cuentas que marcaste como disponibles: ahorro e inversiones se quedan fuera.',
+    spending: 'Para gastar',
     savings: 'Ahorro e inversiones',
     netWorth: 'Patrimonio total',
     archived: 'Cuentas archivadas',

@@ -10,6 +10,11 @@ interface Props {
   /** The category palette's index; `undefined` leaves the icon the neutral surface. */
   colorIndex?: number;
   badge?: IconName;
+  /**
+   * What the badge means, in words. `IconBox` draws the badge `aria-hidden`, so without this the
+   * one thing it says — that the row repeats — reaches nobody reading with a screen reader.
+   */
+  badgeLabel?: string;
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
@@ -28,6 +33,7 @@ export function ListRow({
   icon,
   colorIndex,
   badge,
+  badgeLabel,
   title,
   subtitle,
   trailing,
@@ -41,6 +47,9 @@ export function ListRow({
     <>
       {label === undefined ? null : <VisuallyHidden>{label}</VisuallyHidden>}
       {icon === undefined ? null : <IconBox name={icon} colorIndex={colorIndex} badge={badge} />}
+      {badge === undefined || badgeLabel === undefined || label !== undefined ? null : (
+        <VisuallyHidden>{badgeLabel}</VisuallyHidden>
+      )}
       <span className={styles.text} aria-hidden={hidden}>
         <span className={styles.title}>{title}</span>
         {subtitle === undefined ? null : <span className={styles.subtitle}>{subtitle}</span>}

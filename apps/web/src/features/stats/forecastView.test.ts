@@ -140,4 +140,11 @@ describe('forecastView', () => {
     const view = forecastView({ recurrences, periods: [], selected: SELECTED });
     expect(view.recurrences.map((row) => row.recurrenceId)).toEqual(['rA', 'rD', 'rB', 'rC']);
   });
+
+  it('has nothing to explain for an account with no recurrences at all', () => {
+    const view = forecastView({ recurrences: [], periods: [], selected: SELECTED });
+    expect(view.recurrences).toEqual([]);
+    expect(view.periods).toEqual([]);
+    expect(view.selected).toBe(SELECTED);
+  });
 });

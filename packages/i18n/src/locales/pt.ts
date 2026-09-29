@@ -13,6 +13,7 @@ export const pt: Messages = {
     done: 'Concluído',
     reset: 'Repor',
     close: 'Fechar',
+    yes: 'Sim',
     continue: 'Continuar',
     back: 'Voltar',
     goBack: 'Voltar atrás',
@@ -685,6 +686,7 @@ export const pt: Messages = {
     spendable: 'Total disponível',
     spendableNote:
       'Só as contas que marcaste como disponíveis: poupança e investimentos ficam de fora.',
+    spending: 'Para gastar',
     savings: 'Poupança e investimentos',
     netWorth: 'Património total',
     archived: 'Contas arquivadas',

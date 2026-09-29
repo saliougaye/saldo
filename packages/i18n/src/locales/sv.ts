@@ -12,6 +12,7 @@ export const sv: Messages = {
     done: 'Klar',
     reset: 'Nollställ',
     close: 'Stäng',
+    yes: 'Ja',
     continue: 'Fortsätt',
     back: 'Tillbaka',
     goBack: 'Gå tillbaka',
@@ -680,6 +681,7 @@ export const sv: Messages = {
     spendable: 'Disponibelt',
     spendableNote:
       'Bara konton du markerat som disponibla: sparande och investeringar räknas inte.',
+    spending: 'Att spendera',
     savings: 'Sparande och investeringar',
     netWorth: 'Total förmögenhet',
     archived: 'Arkiverade konton',

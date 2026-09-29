@@ -1,6 +1,7 @@
 import {
   accountBalances,
   bankBalance,
+  goalRatio,
   isPocket,
   netWorth,
   pocketsOf,
@@ -89,7 +90,7 @@ export default function AccountsTab() {
                 leading={
                   <TargetRing
                     size={theme.layout.targetRingSmall}
-                    ratio={(balances.get(pocket.id) ?? 0) / Math.max(1, pocket.goalTarget ?? 1)}
+                    ratio={goalRatio(balances.get(pocket.id) ?? 0, pocket.goalTarget ?? 0)}
                     pace={null}
                     tone="plain"
                     icon={pocket.icon as IconName}

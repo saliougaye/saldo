@@ -249,7 +249,7 @@ export default async function AccountsPage({
           <EmptyState title={t('accounts.empty')} />
         ) : (
           <>
-            <Section title="">{view.spending.map(group)}</Section>
+            <Section title={t('accounts.spending')}>{view.spending.map(group)}</Section>
 
             {view.savings.length === 0 ? null : (
               <Section title={t('accounts.savings')}>{view.savings.map(group)}</Section>

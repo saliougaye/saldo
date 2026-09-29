@@ -12,6 +12,7 @@ export const de: Messages = {
     done: 'Fertig',
     reset: 'Zurücksetzen',
     close: 'Schließen',
+    yes: 'Ja',
     continue: 'Weiter',
     back: 'Zurück',
     goBack: 'Zurückgehen',
@@ -685,6 +686,7 @@ export const de: Messages = {
     spendable: 'Verfügbar',
     spendableNote:
       'Nur die Konten, die du als verfügbar markiert hast: Sparen und Anlagen bleiben außen vor.',
+    spending: 'Zum Ausgeben',
     savings: 'Sparen und Anlagen',
     netWorth: 'Vermögen',
     archived: 'Archivierte Konten',
