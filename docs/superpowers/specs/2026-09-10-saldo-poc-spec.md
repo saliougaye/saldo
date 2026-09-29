@@ -1678,6 +1678,32 @@ public. The decisions behind this section are D30–D36.
   §9.3). The seed can: seed rows from the web and from a phone that onboarded offline have different ids, so both
   survive the merge. Resolved in the plan; the lead option is deterministic ids for seed rows on both sides.
 
+**As built (0.3e-1, 2026-09-29):**
+
+- **The clock is the `server_clock` table** (`apps/web/src/server/write/clock.ts`): one row (`id` 1, `device_id`,
+  `wall_ms`, `counter`), created on the first write with `device_id = server-{uuid}` and locked `FOR UPDATE` for the
+  rest of the write's transaction, so two writes never mint the same stamp. It is instance-wide, not per user.
+  `advanceClock` is `lockClock` + `mintStamps` (pure) + `saveClock`.
+- **Receive before stamp.** A phone's HLC may run up to 24h ahead of the server (§8.2). Stamped with `hlcNow` alone,
+  a web edit of a row the phone wrote would lose the upsert's `updated_at < excluded.updated_at` test and be dropped
+  as `stale` without a word. So for each row the clock first **receives** its current `updated_at`
+  (`hlcReceive`), and the stamp is always after it.
+- **`writeChanges` is the one write path** (`src/server/write/writeChanges.ts`); nothing else writes `sync_rows`.
+  `writeInTransaction(db, userId, now, build)` opens the transaction, takes the push route's epoch share lock, runs
+  `build(tx)` — whose reads (`readUserData`, `loadRow`) happen on that same transaction — then locks the clock, then
+  each target row, mints the stamps and hands the batch to `applyPush`, the upsert `POST /api/sync/push` runs. The
+  lock order is epoch → clock → rows, so no concurrent push can move a row's `updated_at` between the read and the
+  stamp. Anything but `applied` throws `WriteRefused` and rolls the whole batch back; the Server Actions answer it as
+  `conflict`. `writeChanges` is the wrapper for a caller with nothing to read first.
+- **`loadRow`** (`src/server/userData/row.ts`) reads one row **tombstones included** — the one thing the projection
+  cannot answer. «Annulla» after a delete writes that row back with `deletedAt: null` and a new stamp, and only for a
+  tombstone deleted in the last 10 minutes.
+- **The seed** (`@saldo/core` `seed.ts`, shared with the phone): every seed category's id is
+  `seed-category-{nameKey}` on both sides, so an offline phone onboarding and a web onboarding of the same account
+  converge on one row per category by LWW. The **first account keeps a random id**: two onboardings that named two
+  accounts described two accounts, and merging them would lose one. `settings` already converges (`id: 'settings'`).
+  `finishWebOnboarding` writes settings, the account and the seed in one `writeInTransaction`.
+
 #### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
@@ -1758,6 +1784,11 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   in the browser bundle: a client component receives the handful of strings it shows as a plain, typed prop. The locale
   is the synced `settings.language` where there is a session and the browser's `Accept-Language` where there is not
   (`apps/web/src/i18n/`). Plurals stay i18next's on the phone; nothing on the web counts anything yet.
+  **Two subpaths are allowed in client components (0.3e-1):** `@saldo/i18n/format` and `@saldo/i18n/translate`,
+  which import no catalog, so the transaction form can format a balance while the user types and build its own `t`
+  (`makeTranslator`) over the slice of the catalog it receives (`txForm`, `transactions`, `common`, `kinds`). The
+  root `@saldo/i18n`, which imports all seven catalogs, stays server-only: a test in `apps/web` refuses a
+  `'use client'` file that imports it. This relaxes 0.3d's «no number is formatted in a client component».
 - **Tokens as CSS custom properties.** A pure `tokensCss()` in `@saldo/ui` returns `:root` (dark),
   `[data-theme="light"]` and a `prefers-color-scheme: light` block for the `system` preference, with variables
   named `--color-*`, `--radius-*`, `--font-size-*`, `--font-weight-*`, `--motion-*` and `--category-*`. The root
@@ -1798,6 +1829,14 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   tokens: `panelWidth` 420, `searchWidth` 320.
   **Built 2026-09-28 in 0.3d**, read side only: the list, the search, the chips, «In arrivo», the days and the
   panel's detail. «Modifica» and «Nuova transazione» arrive with the forms in 0.3e.
+  **«Modifica» and «Nuova transazione» built 2026-09-29 in 0.3e-1.** The URL carries the form: `?new` opens «Nuova
+  transazione» in the panel, `?t={id}&edit` turns the detail into the form, and after a delete the page is
+  `?deleted={id}`, which renders the «Annulla» toast (only for a tombstone of this user; pressing «Annulla» stops
+  the toast's timer, so a pending or failed restore stays on screen). «Nuova transazione» in the top bar and the
+  FAB are links to `/transactions?new` from any page, and `N` does the same. Below 1024px the form is a **bottom
+  sheet** over a scrim (the panel's `data-sheet`), and the **FAB** sits above the tab bar at the trailing edge,
+  under the panel and the scrim. An occurrence of a recurrence is edited as that one row; «Ripeti» is read-only and
+  says recurrences are managed on the phone.
 - **Conti (decided 2026-09-27, mockup `2026-09-27-web-accounts-variants.html`, variant «1 · Lista aperta»).** A band as
   on Home: the page title with «Nuovo conto», Patrimonio complessivo at 56px, Totale spendibile beside it with its
   note. Then two open groups, «Da spendere» and «Risparmi e investimenti», rows separated by space, each account's
