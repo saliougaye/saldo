@@ -3,6 +3,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { saveGoal } from './goals';
 import { createTag, deleteTransaction, restoreTransaction, saveTransaction } from './transactions';
 import { writeChanges } from './writeChanges';
 
@@ -572,5 +573,102 @@ describe('createTag', () => {
       ok: false,
       error: 'invalid',
     });
+  });
+});
+
+describe('saveTransaction — closeGoalId (§6.38)', () => {
+  async function fundedGoal() {
+    await onboarded();
+    const goal = await saveGoal(
+      harness.db,
+      userId,
+      {
+        id: null,
+        name: 'Vacanza',
+        icon: 'target',
+        colorIndex: 5,
+        buffer: '1000',
+        deadline: null,
+        parentAccountId: 'acc-main',
+        savedBuffer: '250',
+      },
+      FIXTURE_NOW,
+    );
+    if (!goal.ok) throw new Error('goal not created');
+    return goal.id;
+  }
+
+  it('books the expense on the pocket and closes it in one write', async () => {
+    const goalId = await fundedGoal();
+    const result = await saveTransaction(
+      harness.db,
+      userId,
+      { ...expense, accountId: goalId, buffer: '250', closeGoalId: goalId },
+      FIXTURE_NOW,
+    );
+    expect(result.ok).toBe(true);
+    const data = await readUserData(harness.db, userId);
+    expect(data.accounts.find((a) => a.id === goalId)?.archivedAt).toBe(FIXTURE_NOW.toISOString());
+    // The pocket is spent to zero: no settlement transfer.
+    expect(
+      data.transactions.filter((t) => t.kind === 'transfer' && t.accountId === goalId),
+    ).toHaveLength(0);
+  });
+
+  it('settles the remainder back to the parent when the expense is partial', async () => {
+    const goalId = await fundedGoal();
+    const result = await saveTransaction(
+      harness.db,
+      userId,
+      { ...expense, accountId: goalId, buffer: '100', closeGoalId: goalId },
+      FIXTURE_NOW,
+    );
+    expect(result.ok).toBe(true);
+    const data = await readUserData(harness.db, userId);
+    const settlement = data.transactions.filter(
+      (t) => t.kind === 'transfer' && t.accountId === goalId,
+    );
+    expect(settlement).toHaveLength(1);
+    expect(settlement[0]).toMatchObject({ amount: 15000, toAccountId: 'acc-main' });
+  });
+
+  it('books an expense dated after today on today', async () => {
+    const goalId = await fundedGoal();
+    const result = await saveTransaction(
+      harness.db,
+      userId,
+      { ...expense, accountId: goalId, buffer: '250', date: '2099-01-01', closeGoalId: goalId },
+      FIXTURE_NOW,
+    );
+    expect(result.ok).toBe(true);
+    const data = await readUserData(harness.db, userId);
+    const booked = data.transactions.find((t) => t.kind === 'expense' && t.accountId === goalId);
+    expect((booked?.date ?? '9999') < '2099-01-01').toBe(true);
+  });
+
+  it('refuses when the form’s account is not that goal', async () => {
+    const goalId = await fundedGoal();
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, accountId: 'acc-main', closeGoalId: goalId },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'invalid' });
+  });
+
+  it('refuses a goal that is not open, and writes nothing', async () => {
+    await onboarded();
+    const before = (await readUserData(harness.db, userId)).transactions.length;
+    expect(
+      await saveTransaction(
+        harness.db,
+        userId,
+        { ...expense, closeGoalId: 'acc-main' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'invalid' });
+    expect((await readUserData(harness.db, userId)).transactions).toHaveLength(before);
   });
 });

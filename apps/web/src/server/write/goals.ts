@@ -15,6 +15,7 @@ import {
   readSettings,
   restoreGoalFields,
   sanitizeAmountInput,
+  type Transaction,
   type UserData,
 } from '@saldo/core';
 import { z } from 'zod';
@@ -63,12 +64,14 @@ export function closeGoalWrites(
   goalId: string,
   today: string,
   now: Date,
+  /** Rows written in the same batch, not yet stored: the plan reads them as part of the ledger. */
+  extra: readonly Transaction[] = [],
 ): EntityWrite[] | null {
   const pocket = data.accounts.find((row) => row.id === goalId);
   if (pocket === undefined || !isPocket(pocket) || pocket.archivedAt !== null) return null;
   const plan = planCloseGoal({
     pocket,
-    transactions: data.transactions,
+    transactions: [...data.transactions, ...extra],
     recurrences: data.recurrences,
     today,
   });

@@ -19,6 +19,7 @@ import {
   toTransactionInput,
   touchesClosedGoal,
   transactionKindSchema,
+  transactionSchema,
   transferOverdrawsSource,
   type UserData,
 } from '@saldo/core';
@@ -28,8 +29,9 @@ import { env } from '../env';
 import { readUserData } from '../userData/read';
 import { loadRow } from '../userData/row';
 import { todayFor } from '../userData/today';
+import { closeGoalWrites } from './goals';
 import { tombstoned, unstamped } from './rows';
-import { WriteRefused, writeInTransaction } from './writeChanges';
+import { type EntityWrite, WriteRefused, writeInTransaction } from './writeChanges';
 
 /** What the form sends. Parsed here, because a Server Action's argument is whatever a client posts. */
 export const transactionInputSchema = z.object({
@@ -53,6 +55,8 @@ export const transactionInputSchema = z.object({
   description: z.string().max(120),
   tagIds: z.array(z.string().min(1)).max(50),
   excludeFromTotals: z.boolean(),
+  /** «Registra la spesa» (§6.38): the open goal this new expense closes. */
+  closeGoalId: z.string().min(1).nullable().optional(),
 });
 
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
@@ -118,6 +122,7 @@ function missing(
   values: TransactionFormValues,
   existing: Transaction | null,
   today: string,
+  closeGoalId: string | null,
 ): MissingField | null {
   const editingId = existing?.id ?? null;
   const { minorDigits } = getCurrency(readSettings(data.settings).currency);
@@ -153,7 +158,12 @@ function missing(
   // §5.14: money enters or leaves a pocket only by transfer. The one expense that sits on one is
   // the phone's «Chiudi obiettivo», and editing it keeps its pocket (as the phone's `keepId`).
   const source = data.accounts.find((account) => account.id === values.accountId);
-  if (source !== undefined && isPocket(source) && source.id !== existing?.accountId) {
+  if (
+    source !== undefined &&
+    isPocket(source) &&
+    source.id !== existing?.accountId &&
+    source.id !== closeGoalId
+  ) {
     return 'account';
   }
   // A non-transfer's category must not only be usable but must point the same way as the
@@ -190,8 +200,27 @@ export async function saveTransaction(
       if (!typedAmount(input.buffer, minorDigits, existing)) {
         return { writes: [], result: { ok: false, error: 'invalid' } };
       }
-      const values: TransactionFormValues = { ...input, recurrence: null };
-      const gap = missing(data, values, existing, today);
+      const closeGoalId = input.closeGoalId ?? null;
+      // «Registra la spesa» (§6.38): an expense from that open goal, for a new row only.
+      if (
+        closeGoalId !== null &&
+        (existing !== null ||
+          input.kind !== 'expense' ||
+          input.accountId !== closeGoalId ||
+          !data.accounts.some(
+            (account) =>
+              account.id === closeGoalId && isPocket(account) && account.archivedAt === null,
+          ))
+      ) {
+        return { writes: [], result: { ok: false, error: 'invalid' } };
+      }
+      // Closing books the expense no later than today, as the phone's `closeGoalWithExpense`.
+      const values: TransactionFormValues = {
+        ...input,
+        date: closeGoalId !== null && input.date > today ? today : input.date,
+        recurrence: null,
+      };
+      const gap = missing(data, values, existing, today, closeGoalId);
       if (gap !== null) return { writes: [], result: { ok: false, missing: gap } };
       const tagIds = [
         ...new Set(input.tagIds.filter((id) => data.tags.some((tag) => tag.id === id))),
@@ -209,8 +238,21 @@ export async function saveTransaction(
               note: existing.note,
               recurrenceId: existing.recurrenceId,
             });
+      let closing: EntityWrite[] = [];
+      if (closeGoalId !== null) {
+        // The expense is written in this same batch, so the close plan must see it in the ledger.
+        const booked = transactionSchema.safeParse({ ...row, updatedAt: now.toISOString() });
+        const plan = booked.success
+          ? closeGoalWrites(data, closeGoalId, today, now, [booked.data])
+          : null;
+        if (plan === null) return { writes: [], result: { ok: false, error: 'invalid' } };
+        closing = plan;
+      }
       return {
-        writes: [{ entity: 'transaction', id, data: row, basis: existing?.updatedAt ?? null }],
+        writes: [
+          { entity: 'transaction', id, data: row, basis: existing?.updatedAt ?? null },
+          ...closing,
+        ],
         result: { ok: true, id },
       };
     });
