@@ -22,10 +22,18 @@ const get = (query: string) => GET(new Request(`http://localhost:3000/api/dev/si
 describe('GET /api/dev/sign-in (temporary, removed in 0.3e-3)', () => {
   it('does not exist in production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('SALDO_DEV_SIGN_IN', '1');
+    expect((await get('')).status).toBe(404);
+  });
+
+  it('does not exist in dev or test without the SALDO_DEV_SIGN_IN flag', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('SALDO_DEV_SIGN_IN', '');
     expect((await get('')).status).toBe(404);
   });
 
   it('signs a browser in as an existing user with a cookie Better Auth accepts', async () => {
+    vi.stubEnv('SALDO_DEV_SIGN_IN', '1');
     const { userId } = await createTestSession(harness.db, 'Ada');
     const response = await get('');
     expect(response.status).toBe(303);
@@ -36,6 +44,7 @@ describe('GET /api/dev/sign-in (temporary, removed in 0.3e-3)', () => {
   });
 
   it('answers 404 for an email nobody has', async () => {
+    vi.stubEnv('SALDO_DEV_SIGN_IN', '1');
     await createTestSession(harness.db, 'Ada');
     expect((await get('?email=nobody%40example.com')).status).toBe(404);
   });

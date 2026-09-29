@@ -1,10 +1,10 @@
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { dataEpochs, syncRows } from '../db/schema';
+import { dataEpochs, serverClock, syncRows } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { WriteRefused, writeChanges } from './writeChanges';
+import { WriteRefused, writeChanges, writeInTransaction } from './writeChanges';
 
 let harness: TestDatabase;
 const NOW = new Date('2026-09-29T10:00:00.000Z');
@@ -87,5 +87,50 @@ describe('writeChanges', () => {
     await writeChanges(harness.db, userId, [tag('t1', 'casa')], NOW);
     const [epoch] = await harness.db.select().from(dataEpochs).where(eq(dataEpochs.userId, userId));
     expect(epoch?.epoch).toBe(0);
+  });
+});
+
+describe('writeInTransaction', () => {
+  it('applies the writes build returns, and returns its result', async () => {
+    const { userId } = await createTestSession(harness.db);
+    const result = await writeInTransaction(harness.db, userId, NOW, async () => ({
+      writes: [tag('t1', 'casa')],
+      result: 'the id',
+    }));
+    expect(result).toBe('the id');
+    const data = await readUserData(harness.db, userId);
+    expect(data.tags.map((row) => row.name)).toEqual(['casa']);
+  });
+
+  it('writes nothing, and does not touch the clock, when build decides not to write', async () => {
+    const { userId } = await createTestSession(harness.db);
+    const result = await writeInTransaction(harness.db, userId, NOW, async () => ({
+      writes: [],
+      result: 'nothing to do',
+    }));
+    expect(result).toBe('nothing to do');
+    expect((await readUserData(harness.db, userId)).tags).toEqual([]);
+    expect(await harness.db.select().from(serverClock)).toEqual([]);
+  });
+
+  it('lets build read the account’s data on the same transaction, after the epoch lock', async () => {
+    const { userId } = await createTestSession(harness.db);
+    await writeChanges(harness.db, userId, [tag('t1', 'casa')], NOW);
+    const seenNames = await writeInTransaction(harness.db, userId, NOW, async (tx) => {
+      const data = await readUserData(tx, userId);
+      return { writes: [], result: data.tags.map((row) => row.name) };
+    });
+    expect(seenNames).toEqual(['casa']);
+  });
+
+  it('rolls back build’s writes if a later one in the batch is refused', async () => {
+    const { userId } = await createTestSession(harness.db);
+    await expect(
+      writeInTransaction(harness.db, userId, NOW, async () => ({
+        writes: [tag('t1', 'casa'), tag('t2', '')],
+        result: undefined,
+      })),
+    ).rejects.toBeInstanceOf(WriteRefused);
+    expect((await readUserData(harness.db, userId)).tags).toEqual([]);
   });
 });

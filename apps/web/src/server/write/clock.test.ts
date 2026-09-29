@@ -1,7 +1,7 @@
 import { isHlc, parseHlc } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
-import { advanceClock } from './clock';
+import { advanceClock, lockClock, mintStamps, saveClock } from './clock';
 
 let harness: TestDatabase;
 const NOW = new Date('2026-09-29T10:00:00.000Z');
@@ -38,5 +38,30 @@ describe('advanceClock', () => {
     const [stamp] = await harness.db.transaction((tx) => advanceClock(tx, NOW, [ahead]));
     if (stamp === undefined) throw new Error('no stamp');
     expect(stamp > ahead).toBe(true);
+  });
+});
+
+describe('lockClock / mintStamps / saveClock', () => {
+  it('compose to the same result as advanceClock', async () => {
+    const stamps = await harness.db.transaction(async (tx) => {
+      const state = await lockClock(tx);
+      const minted = mintStamps(state, NOW, [null, null]);
+      await saveClock(tx, minted.state);
+      return minted.stamps;
+    });
+    expect(stamps).toHaveLength(2);
+    for (const stamp of stamps) expect(isHlc(stamp)).toBe(true);
+    expect([...stamps].sort()).toEqual(stamps);
+  });
+
+  it('mintStamps does not persist by itself: only saveClock does', async () => {
+    const before = await harness.db.transaction((tx) => lockClock(tx));
+    await harness.db.transaction(async (tx) => {
+      const state = await lockClock(tx);
+      mintStamps(state, NOW, [null]);
+      // No saveClock call: the minted stamp must not be persisted.
+    });
+    const after = await harness.db.transaction((tx) => lockClock(tx));
+    expect(after).toEqual(before);
   });
 });

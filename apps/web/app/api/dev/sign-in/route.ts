@@ -10,10 +10,15 @@ export const dynamic = 'force-dynamic';
  * TEMPORARY — deleted by 0.3e-3's last task. Sign-in is passkey-only, so a browser driven by an
  * agent cannot sign in to check the UI. This signs the browser in as an existing account
  * (`?email=`, or the oldest account) by writing the session row Better Auth would write and setting
- * its signed cookie. It does not exist outside `next dev` and the tests.
+ * its signed cookie. It does not exist outside `next dev` and the tests, and even there only when
+ * `SALDO_DEV_SIGN_IN=1` is set: a dev/test environment is not by itself permission to sign in as
+ * anyone.
  */
 export async function GET(request: Request): Promise<Response> {
-  if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+  if (
+    (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') ||
+    process.env.SALDO_DEV_SIGN_IN !== '1'
+  ) {
     return new Response('Not found', { status: 404 });
   }
   const email = new URL(request.url).searchParams.get('email');

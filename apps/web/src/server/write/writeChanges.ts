@@ -9,7 +9,7 @@ import { syncRows } from '../db/schema';
 import type { ServerDatabase } from '../db/types';
 import { lockEpoch } from '../sync/epoch';
 import { applyPush } from '../sync/push';
-import { advanceClock } from './clock';
+import { lockClock, mintStamps, saveClock } from './clock';
 
 /**
  * One row the server writes: every field of the entity **except** `updatedAt`, which the clock
@@ -33,11 +33,78 @@ export class WriteRefused extends Error {
   }
 }
 
+async function stampAndApply(
+  tx: ServerDatabase,
+  userId: string,
+  writes: readonly EntityWrite[],
+  now: Date,
+): Promise<void> {
+  if (writes.length === 0) return;
+  // Lock order (§17.1.3, I4): epoch (the caller already holds it), then the clock, then each
+  // target row — in that order, so a concurrent write can never change a row's `updated_at`
+  // between the moment this reads it and the moment it mints a stamp from it.
+  const clockState = await lockClock(tx);
+  const seen: (string | null)[] = [];
+  for (const write of writes) {
+    const [row] = await tx
+      .select({ updatedAt: syncRows.updatedAt })
+      .from(syncRows)
+      .where(
+        and(
+          eq(syncRows.userId, userId),
+          eq(syncRows.entity, write.entity),
+          eq(syncRows.id, write.id),
+        ),
+      )
+      .for('update');
+    seen.push(row?.updatedAt ?? null);
+  }
+  const { state: nextState, stamps } = mintStamps(clockState, now, seen);
+  await saveClock(tx, nextState);
+  const changes: SyncChangeEnvelope[] = writes.map((write, index) => {
+    const stamp = stamps[index];
+    if (stamp === undefined) throw new Error('mintStamps returned too few stamps');
+    return {
+      entity: write.entity,
+      id: write.id,
+      updatedAt: stamp,
+      deletedAt: write.data.deletedAt,
+      data: { ...write.data, id: write.id, updatedAt: stamp },
+    };
+  });
+  const results = await applyPush(
+    tx,
+    userId,
+    { schemaVersion: SYNC_SCHEMA_VERSION, deviceId: 'server', changes },
+    now,
+  );
+  if (results.some((result) => result.status !== 'applied')) throw new WriteRefused(results);
+}
+
 /**
- * §17.1.3: **the one way the server writes a row.** The web writes as a sync client: every row gets
- * a stamp from the instance's clock and goes through `applyPush`, the same upsert and validation as
- * `POST /api/sync/push`, under the same epoch share lock — so a deletion of the account's data can
- * never interleave with a web write, and a phone receives the row on its next pull like any other.
+ * §17.1.3: **the one way the server writes a row**, for a caller that also needs to read the
+ * account's data to decide what to write. Opens the transaction, takes the epoch lock `applyPush`
+ * takes, runs `build(tx)` — every `readUserData`/`loadRow` a write needs happens in here, on the
+ * same transaction, so nothing else can change the account's data between the read and the write —
+ * then stamps and applies `build`'s writes exactly as `writeChanges` does. A `build` that decides
+ * not to write returns `writes: []` and nothing is stamped or applied.
+ */
+export async function writeInTransaction<R>(
+  db: ServerDatabase,
+  userId: string,
+  now: Date,
+  build: (tx: ServerDatabase) => Promise<{ writes: readonly EntityWrite[]; result: R }>,
+): Promise<R> {
+  return db.transaction(async (tx) => {
+    await lockEpoch(tx, userId);
+    const { writes, result } = await build(tx);
+    await stampAndApply(tx, userId, writes, now);
+    return result;
+  });
+}
+
+/**
+ * `writeInTransaction` for a caller with no reads to make first: the writes are already decided.
  */
 export async function writeChanges(
   db: ServerDatabase,
@@ -46,41 +113,5 @@ export async function writeChanges(
   now: Date,
 ): Promise<void> {
   if (writes.length === 0) return;
-  await db.transaction(async (tx) => {
-    await lockEpoch(tx, userId);
-    const seen: (string | null)[] = [];
-    for (const write of writes) {
-      const [row] = await tx
-        .select({ updatedAt: syncRows.updatedAt })
-        .from(syncRows)
-        .where(
-          and(
-            eq(syncRows.userId, userId),
-            eq(syncRows.entity, write.entity),
-            eq(syncRows.id, write.id),
-          ),
-        )
-        .limit(1);
-      seen.push(row?.updatedAt ?? null);
-    }
-    const stamps = await advanceClock(tx, now, seen);
-    const changes: SyncChangeEnvelope[] = writes.map((write, index) => {
-      const stamp = stamps[index];
-      if (stamp === undefined) throw new Error('advanceClock returned too few stamps');
-      return {
-        entity: write.entity,
-        id: write.id,
-        updatedAt: stamp,
-        deletedAt: write.data.deletedAt,
-        data: { ...write.data, id: write.id, updatedAt: stamp },
-      };
-    });
-    const results = await applyPush(
-      tx,
-      userId,
-      { schemaVersion: SYNC_SCHEMA_VERSION, deviceId: 'server', changes },
-      now,
-    );
-    if (results.some((result) => result.status !== 'applied')) throw new WriteRefused(results);
-  });
+  await writeInTransaction(db, userId, now, async () => ({ writes, result: undefined }));
 }
