@@ -467,7 +467,7 @@ export default async function HomePage({
               }
             >
               {view.recent.length === 0 ? (
-                <EmptyState title={t('transactions.empty')} body={t('web.shell.comingIn0_3e')} />
+                <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
               ) : (
                 view.recent.map((row) => txRow(row, false))
               )}
