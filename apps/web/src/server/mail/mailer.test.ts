@@ -144,6 +144,7 @@ describe('sendMail', () => {
         auth: { user: 'mailer', pass: PASSWORD },
         connectionTimeout: 10_000,
         greetingTimeout: 10_000,
+        socketTimeout: 30_000,
       },
     ]);
     expect(seen.sent).toEqual([

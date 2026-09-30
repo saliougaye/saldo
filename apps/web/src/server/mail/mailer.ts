@@ -32,6 +32,7 @@ export interface TransportOptions {
   auth?: { user: string; pass: string };
   connectionTimeout: number;
   greetingTimeout: number;
+  socketTimeout: number;
 }
 
 /** The little of a nodemailer transport this module uses, so a test can stand in for it. */
@@ -44,6 +45,13 @@ export type MailTransportFactory = (options: TransportOptions) => MailTransport;
 
 /** An unreachable host fails an action in this long instead of hanging it. */
 const TIMEOUT_MS = 10_000;
+
+/**
+ * Connect and greeting bound the start of a send; this bounds every silence after it. Without it a
+ * host that greets and then stalls holds the send for nodemailer's default of ten minutes, which a
+ * background send (where nobody is watching) would never surface.
+ */
+const SOCKET_TIMEOUT_MS = 30_000;
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
@@ -110,6 +118,7 @@ export async function sendMail(
       : {}),
     connectionTimeout: TIMEOUT_MS,
     greetingTimeout: TIMEOUT_MS,
+    socketTimeout: SOCKET_TIMEOUT_MS,
   });
   try {
     await transport.send({
