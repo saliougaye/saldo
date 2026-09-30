@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'app/**/*.test.ts'],
+    // A hundred files, most of them starting a PGlite, run side by side: on a busy machine a test
+    // that takes a second alone has been seen to take eight. The default five seconds made the
+    // suite fail on load rather than on a defect.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     // The server reads its configuration through `src/server/env.ts`, which validates it with Zod
     // and fails closed. Tests get a complete, obviously-fake configuration.
     env: {
