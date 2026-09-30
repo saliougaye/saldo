@@ -1736,6 +1736,21 @@ public. The decisions behind this section are D30–D36.
 - **The budget's suggested amount** is computed in the browser from the six past periods' spend as plain numbers,
   with core's `suggestBudgetAmount` and the phone's 12% headroom.
 
+**As built (0.3e-2b, 2026-09-30):**
+
+- **`categories.ts`** (`apps/web/src/server/write/`): `saveCategory`, `archiveCategory`, `restoreCategory` and
+  `reorderCategory`, on `writeInTransaction` with the `basis` of every row read. `CategoryWriteError` adds
+  `parentInvalid` and `moveInvalid` to the common errors. The phone's rules are re-checked on the server: a child
+  cannot have children, the parent is live, top-level, of the same direction and not the category itself; archiving a
+  parent archives its children; **archive with a move is one batch** that rewrites `categoryId` on every live
+  transaction and recurrence template that uses the category and the `categoryIds` of every budget (deduplicated),
+  the target being live, of the same direction and neither the category nor one of its children; a child whose parent
+  is archived cannot be restored; reorder renumbers one sibling group and writes nothing for a move past either end.
+  «Budget mensile» on the form creates a single-category `period` budget named after the category (alert 90, no
+  rollover) or updates that budget's amount, and switching it off leaves an existing budget alone, as the phone does.
+- The form's pure half (`CategoryFormValues`, `categoryFormFrom`, `categoryMissingForSave`) moved into `@saldo/core`
+  `views/categoryForm.ts`, with `categoryParentCandidates` and `movableTargets`.
+
 #### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
@@ -1880,20 +1895,22 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   credit-card and goal panels. Conti's read side shipped here rather than in 0.3e (decided with the user
   2026-09-28); only «Nuovo conto» and the account form wait for 0.3e.
   **Built in 0.3e-2 (2026-09-30).** The URL carries the form, as in Transazioni. «Nuovo conto» and the account form
-  open in the panel (`?new`, `?a={id}&edit`); «Nuovo obiettivo» (`?newGoal`) and the goal form (`?g={id}&edit`), the
-  phone's four steps as one panel; the archived list is a panel (`?archived`) with «Ripristina» for accounts and closed
-  goals. An account with open goals shows «Chiudi prima gli obiettivi in questo conto» instead of «Archivia»;
+  open in the panel (`?new`, `?a={id}&edit`); the archived list is a panel (`?archived`) with «Ripristina» for accounts
+  and closed goals. The goal form (the phone's four steps as one panel) was built here in Conti and **moved to Profilo →
+  Obiettivi in 0.3e-2b**: Conti's goal panel keeps the money movements and «Chiudi», and its «Modifica» opens
+  `/profile/goals?g={id}`. An account with open goals shows «Chiudi prima gli obiettivi in questo conto» instead of «Archivia»;
   archiving asks and has no undo, «Ripristina» is the way back. «Accantona» and «Preleva» are links to the transaction
   form prefilled (`/transactions?new&from=…&to=…&description=…`), not a form of their own. «Chiudi obiettivo» asks
   «Hai usato i soldi?» in a `ConfirmDialog` whose **secondary slot** carries the second choice: «Riporta in {conto}»
   and «Registra la spesa» (the expense form with `closeGoal`), and a close is one write. Below 1024px the panels are
   the bottom sheet.
-- **Budget (`/budgets`, decided in 0.3e-2; no mockup existed).** Reached from Home, as on the phone (§5.8), and not
-  in the top bar or the tab bar: the Budget section's «Tutti i budget» link, its rows (`/budgets?b={id}`) and the empty
-  card's «Crea un budget» (`/budgets?new`). The page is the open list, a ring per row as Home draws it, with the form
-  (`?new`, `?b={id}` to edit, delete asks first and has no undo) in the trailing panel. The detail chart and «Periodi
-  precedenti» stay on the phone (§17.1.9).
-  **Built 2026-09-30 in 0.3e-2.**
+- **Budget (`/profile/budgets`; decided in 0.3e-2 at `/budgets`, moved to Profilo in 0.3e-2b; no mockup existed).**
+  Reached from Home, as on the phone (§5.8), and from Profilo's sub-navigation, not from the top bar or the tab bar:
+  the Budget section's «Tutti i budget» link, its rows (`/profile/budgets?b={id}`) and the empty card's «Crea un
+  budget» (`/profile/budgets?new`). The page is the open list, a ring per row as Home draws it, with the form (`?new`,
+  `?b={id}` to edit, delete asks first and has no undo) in the trailing panel. `/budgets` is kept as a redirect that
+  preserves the query string. The detail chart and «Periodi precedenti» stay on the phone (§17.1.9).
+  **Built 2026-09-30 in 0.3e-2; moved in 0.3e-2b.**
 - **Statistiche (decided 2026-09-27, mockup `2026-09-27-web-stats-variants.html`, variant «3 · Navigatore», lower half
   «Andamento a sinistra» with Quota impegnata under it).** On wide screens Flussi spans the page with **ten
   columns**: six closed periods, the current one and the three forecast ones (D29 kept six because of 320px; the
@@ -1918,8 +1935,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   there and a link that only exists to reveal rows is a link the desktop does not need.
 - **Profilo (decided 2026-09-27, mockup `2026-09-27-web-profile-variants.html`, variant «5 · Sotto-navigazione +
   pannello»).** Under the profile header (avatar, name, email, role), a sub-navigation on the leading side picks one
-  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/passkeys`,
-  `/profile/categories`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
+  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/categories`,
+  `/profile/budgets`, `/profile/goals`, `/profile/passkeys`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
   rows showing the current value; the row picked is edited **in the trailing panel**, as in Transazioni and Conti
   (`?edit=currency`, `?k={passkeyId}`). Preferences are the synced `settings` and say they apply to the phone too;
   the currency asks for confirmation as on the phone. Passkeys are one row each (name, provider from the AAGUID,
@@ -1931,6 +1948,16 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   «Passkey» wrapped in the same shell (0.3b had shipped it at its own URL). Preferences are read-only rows that say
   they apply to the phone too; the panels that edit them arrive with the forms in 0.3e, as do Categorie, Tag and
   Dati.
+  **Built in 0.3e-2b (2026-09-30): Categorie, Budget and Obiettivi.** The sub-navigation gains the three links after
+  Preferenze and before Passkey; each section renders its form through `ProfilePanel`, which portals the panel into the
+  layout's `#profile-panel` slot. `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
+  rolled up, up/down buttons to reorder within a sibling group (drag is the phone's), no delete; «Nuova categoria» and
+  the edit form (`?new`, `?c={id}`) with name, direction (locked once the category has a parent or children), parent,
+  appearance and «Budget mensile»; archiving asks with the usage count and an optional «Sposta le transazioni in»
+  target; the archived list (`?archived`) has «Ripristina». `/profile/budgets` is the budget list and form moved from
+  `/budgets`. `/profile/goals` lists open goals with a ring and, under «Obiettivi chiusi», closed ones with
+  «Ripristina»; `?new` and `?g={id}` open the goal form, whose panel also has «Apri in Conti»: the money movements
+  (Accantona, Preleva) and «Chiudi obiettivo» stay in Conti. Tag, Dati and the preference panels remain for 0.3e-3.
 - **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
   built 2026-09-28 in 0.3b).** No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
   brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
