@@ -1438,6 +1438,26 @@ export const sv: Messages = {
       handoffFailedBody:
         'Ditt konto är klart. Tryck på «Försök igen» för att gå tillbaka till appen.',
     },
+    recoverLink: 'Har du tappat bort din passkey?',
+    recoverTitle: 'Kom in utan passkey',
+    recoverBody:
+      'Skriv in e-postadressen till ditt konto. Om den är verifierad skickar vi en länk så att du kan logga in och lägga till en ny passkey.',
+    recoverSubmit: 'Skicka länken',
+    recoverSent:
+      'Om den här adressen har ett konto med verifierad e-post har vi skickat en länk. Den gäller i 15 minuter.',
+    recoverRateLimited: 'För många försök, försök igen om en stund.',
+    recoverOffTitle: 'Återställning är inte tillgänglig',
+    recoverOffBody:
+      'Den här servern skickar inte e-post och kan därför inte skicka en återställningslänk. Fråga den som driver den.',
+    recoverExpiredTitle: 'Länken fungerar inte längre',
+    recoverExpiredBody: 'Länken har gått ut eller har redan använts. Be om en ny nedan.',
+    recoverMobileHint: 'Har du tappat bort din passkey? Öppna {{host}}/recover i en webbläsare.',
+    backToSignIn: 'Tillbaka till inloggningen',
+    emailVerifiedTitle: 'E-post verifierad',
+    emailVerifiedBody: 'Din adress är bekräftad. Du kan gå tillbaka till Saldo.',
+    emailVerifiedOpen: 'Öppna Saldo',
+    emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
+    emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
     shell: {
       newTransaction: 'Ny transaktion',
       skipToContent: 'Hoppa till innehållet',
@@ -1455,6 +1475,8 @@ export const sv: Messages = {
       error_unexpected: 'Något gick fel. Försök igen.',
     },
     passkeys: {
+      recoveredTitle: 'Du loggade in med en återställningslänk.',
+      recoveredBody: 'Lägg till en passkey nu: utan en behöver du en ny länk nästa gång.',
       title: 'Dina passnycklar',
       body: 'Varje enhet du loggar in från har sin egen. Servern sparar bara den publika nyckeln.',
       add: 'Lägg till passnyckel',
@@ -1474,6 +1496,13 @@ export const sv: Messages = {
         'Enheten som har den kommer inte in i kontot längre. De andra fortsätter att fungera.',
       lastOneNote: 'Det är din sista passnyckel: lägg till en till innan du tar bort den.',
       empty: 'Inga passnycklar på kontot.',
+    },
+    account: {
+      verified: 'verifierad',
+      unverified: 'inte verifierad',
+      verify: 'Skicka verifieringslänken',
+      verifySent: 'Länk skickad till {{email}}',
+      mailOff: 'Den här servern skickar inte e-post: adressen förblir overifierad.',
     },
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',

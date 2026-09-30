@@ -1442,6 +1442,26 @@ export const it = {
       handoffFailedTitle: 'L’accesso è fatto, ma l’app non l’ha ricevuto',
       handoffFailedBody: 'Il tuo account è pronto. Tocca «Riprova» per tornare all’app.',
     },
+    recoverLink: 'Hai perso la passkey?',
+    recoverTitle: 'Rientra senza passkey',
+    recoverBody:
+      'Scrivi l’email del tuo account. Se è verificata, ti mandiamo un link per entrare e aggiungere una nuova passkey.',
+    recoverSubmit: 'Manda il link',
+    recoverSent:
+      'Se questo indirizzo ha un account con email verificata, abbiamo mandato un link. Vale 15 minuti.',
+    recoverRateLimited: 'Troppi tentativi, riprova tra poco.',
+    recoverOffTitle: 'Il recupero non è disponibile',
+    recoverOffBody:
+      'Questo server non invia email, quindi non può mandare un link di recupero. Chiedi a chi lo gestisce.',
+    recoverExpiredTitle: 'Il link non funziona più',
+    recoverExpiredBody: 'Il link è scaduto o è già stato usato. Chiedine uno nuovo qui sotto.',
+    recoverMobileHint: 'Hai perso la passkey? Apri {{host}}/recover in un browser.',
+    backToSignIn: 'Torna all’accesso',
+    emailVerifiedTitle: 'Email verificata',
+    emailVerifiedBody: 'Il tuo indirizzo è confermato. Puoi tornare a Saldo.',
+    emailVerifiedOpen: 'Apri Saldo',
+    emailLinkInvalidTitle: 'Il link è scaduto o non è valido',
+    emailLinkInvalidBody: 'Apri Profilo › Account e chiedine uno nuovo.',
     shell: {
       newTransaction: 'Nuova transazione',
       skipToContent: 'Vai al contenuto',
@@ -1459,6 +1479,8 @@ export const it = {
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
     passkeys: {
+      recoveredTitle: 'Sei entrato con un link di recupero.',
+      recoveredBody: 'Aggiungi una passkey adesso: senza, la prossima volta servirà un altro link.',
       title: 'Le tue passkey',
       body: 'Ogni dispositivo da cui entri ha la sua. Il server conserva solo la chiave pubblica.',
       add: 'Aggiungi passkey',
@@ -1478,6 +1500,13 @@ export const it = {
         'Il dispositivo che la contiene non potrà più entrare in questo account. Le altre continuano a funzionare.',
       lastOneNote: 'È la tua ultima passkey: aggiungine un’altra prima di eliminare questa.',
       empty: 'Nessuna passkey su questo account.',
+    },
+    account: {
+      verified: 'verificata',
+      unverified: 'non verificata',
+      verify: 'Invia il link di verifica',
+      verifySent: 'Link inviato a {{email}}',
+      mailOff: 'Questo server non invia email: l’indirizzo resta non verificato.',
     },
     accounts: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',

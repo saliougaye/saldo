@@ -1436,6 +1436,26 @@ export const en: Messages = {
       handoffFailedTitle: 'You are signed in, but the app did not get it',
       handoffFailedBody: 'Your account is ready. Tap «Retry» to hand it back to the app.',
     },
+    recoverLink: 'Lost your passkey?',
+    recoverTitle: 'Get back in without a passkey',
+    recoverBody:
+      'Enter your account’s email. If it is verified, we will send you a link to sign in and add a new passkey.',
+    recoverSubmit: 'Send the link',
+    recoverSent:
+      'If this address has an account with a verified email, we have sent a link. It lasts 15 minutes.',
+    recoverRateLimited: 'Too many attempts, try again shortly.',
+    recoverOffTitle: 'Recovery is not available',
+    recoverOffBody:
+      'This server does not send email, so it cannot send a recovery link. Ask whoever runs it.',
+    recoverExpiredTitle: 'The link no longer works',
+    recoverExpiredBody: 'The link has expired or was already used. Ask for a new one below.',
+    recoverMobileHint: 'Lost your passkey? Open {{host}}/recover in a browser.',
+    backToSignIn: 'Back to sign in',
+    emailVerifiedTitle: 'Email verified',
+    emailVerifiedBody: 'Your address is confirmed. You can go back to Saldo.',
+    emailVerifiedOpen: 'Open Saldo',
+    emailLinkInvalidTitle: 'The link has expired or is not valid',
+    emailLinkInvalidBody: 'Open Profile › Account and ask for a new one.',
     shell: {
       newTransaction: 'New transaction',
       skipToContent: 'Skip to content',
@@ -1453,6 +1473,8 @@ export const en: Messages = {
       error_unexpected: 'Something went wrong. Try again.',
     },
     passkeys: {
+      recoveredTitle: 'You signed in with a recovery link.',
+      recoveredBody: 'Add a passkey now: without one, you will need another link next time.',
       title: 'Your passkeys',
       body: 'Every device you sign in from has its own. The server only keeps the public key.',
       add: 'Add a passkey',
@@ -1472,6 +1494,13 @@ export const en: Messages = {
         'The device that holds it will no longer get into this account. The others keep working.',
       lastOneNote: 'This is your last passkey: add another one before deleting it.',
       empty: 'No passkeys on this account.',
+    },
+    account: {
+      verified: 'verified',
+      unverified: 'not verified',
+      verify: 'Send the verification link',
+      verifySent: 'Link sent to {{email}}',
+      mailOff: 'This server does not send email: the address stays unverified.',
     },
     accounts: {
       error_invalid: 'Couldn’t save: check the fields and try again.',

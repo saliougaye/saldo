@@ -1454,6 +1454,27 @@ export const de: Messages = {
       handoffFailedBody:
         'Dein Konto ist fertig. Tippe auf «Wiederholen», um zur App zurückzukehren.',
     },
+    recoverLink: 'Passkey verloren?',
+    recoverTitle: 'Ohne Passkey zurück ins Konto',
+    recoverBody:
+      'Gib die E-Mail-Adresse deines Kontos ein. Ist sie bestätigt, schicken wir dir einen Link zum Anmelden und zum Hinzufügen eines neuen Passkeys.',
+    recoverSubmit: 'Link senden',
+    recoverSent:
+      'Wenn diese Adresse ein Konto mit bestätigter E-Mail hat, haben wir einen Link geschickt. Er gilt 15 Minuten.',
+    recoverRateLimited: 'Zu viele Versuche, versuche es gleich noch einmal.',
+    recoverOffTitle: 'Wiederherstellung nicht verfügbar',
+    recoverOffBody:
+      'Dieser Server verschickt keine E-Mails und kann deshalb keinen Wiederherstellungslink senden. Frag die Person, die ihn betreibt.',
+    recoverExpiredTitle: 'Der Link funktioniert nicht mehr',
+    recoverExpiredBody:
+      'Der Link ist abgelaufen oder wurde schon benutzt. Fordere unten einen neuen an.',
+    recoverMobileHint: 'Passkey verloren? Öffne {{host}}/recover in einem Browser.',
+    backToSignIn: 'Zurück zur Anmeldung',
+    emailVerifiedTitle: 'E-Mail bestätigt',
+    emailVerifiedBody: 'Deine Adresse ist bestätigt. Du kannst zu Saldo zurückkehren.',
+    emailVerifiedOpen: 'Saldo öffnen',
+    emailLinkInvalidTitle: 'Der Link ist abgelaufen oder ungültig',
+    emailLinkInvalidBody: 'Öffne Profil › Konto und fordere einen neuen an.',
     shell: {
       newTransaction: 'Neue Buchung',
       skipToContent: 'Zum Inhalt springen',
@@ -1471,6 +1492,9 @@ export const de: Messages = {
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
     passkeys: {
+      recoveredTitle: 'Du hast dich mit einem Wiederherstellungslink angemeldet.',
+      recoveredBody:
+        'Füge jetzt einen Passkey hinzu: Ohne ihn brauchst du beim nächsten Mal wieder einen Link.',
       title: 'Deine Passkeys',
       body: 'Jedes Gerät, von dem du dich anmeldest, hat seinen eigenen. Der Server behält nur den öffentlichen Schlüssel.',
       add: 'Passkey hinzufügen',
@@ -1490,6 +1514,13 @@ export const de: Messages = {
         'Das Gerät, das ihn hat, kommt nicht mehr in dieses Konto. Die anderen funktionieren weiter.',
       lastOneNote: 'Das ist dein letzter Passkey: füge einen weiteren hinzu, bevor du ihn löschst.',
       empty: 'Keine Passkeys in diesem Konto.',
+    },
+    account: {
+      verified: 'bestätigt',
+      unverified: 'nicht bestätigt',
+      verify: 'Bestätigungslink senden',
+      verifySent: 'Link an {{email}} gesendet',
+      mailOff: 'Dieser Server verschickt keine E-Mails: Die Adresse bleibt unbestätigt.',
     },
     accounts: {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',

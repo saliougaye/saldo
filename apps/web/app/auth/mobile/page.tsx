@@ -5,7 +5,11 @@ import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { ApiError } from '../../../src/server/http/errors';
 import { log } from '../../../src/server/log';
-import { pageInstanceInfo, pageRegistrationMode } from '../../../src/server/page/instanceSettings';
+import {
+  pageInstanceInfo,
+  pageMailEnabled,
+  pageRegistrationMode,
+} from '../../../src/server/page/instanceSettings';
 import { Alert } from '../../../src/ui/Alert';
 import { Brand } from '../../../src/ui/Brand';
 import authStyles from '../../(auth)/auth.module.css';
@@ -72,6 +76,7 @@ export default async function MobileAuthPage({
     canRegister,
     requiresInvite,
   });
+  const canRecover = await pageMailEnabled();
   const total = requiresInvite ? 3 : 2;
   return (
     <main className={authStyles.page}>
@@ -128,6 +133,9 @@ export default async function MobileAuthPage({
             'web.auth.handoffFailedBody': t('web.auth.handoffFailedBody'),
             'sync.cancelled': t('sync.cancelled'),
             'web.auth.cancelledBody': t('web.auth.cancelledBody'),
+            ...(canRecover
+              ? { recoverHint: t('web.auth.recoverMobileHint', { host: instance.host }) }
+              : {}),
           }}
           stepLabels={Array.from({ length: total }, (_, index) =>
             t('common.stepOf', { step: index + 1, total }),

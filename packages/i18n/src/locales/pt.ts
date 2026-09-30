@@ -1444,6 +1444,26 @@ export const pt: Messages = {
       handoffFailedTitle: 'Entraste, mas a app não recebeu',
       handoffFailedBody: 'A tua conta está pronta. Toca em «Tentar outra vez» para voltar à app.',
     },
+    recoverLink: 'Perdeste a passkey?',
+    recoverTitle: 'Voltar a entrar sem passkey',
+    recoverBody:
+      'Escreve o e-mail da tua conta. Se estiver verificado, enviamos-te um link para entrares e adicionares uma nova passkey.',
+    recoverSubmit: 'Enviar o link',
+    recoverSent:
+      'Se este endereço tiver uma conta com e-mail verificado, enviámos um link. Vale 15 minutos.',
+    recoverRateLimited: 'Demasiadas tentativas, tenta de novo daqui a pouco.',
+    recoverOffTitle: 'A recuperação não está disponível',
+    recoverOffBody:
+      'Este servidor não envia e-mails, por isso não pode mandar um link de recuperação. Pergunta a quem o gere.',
+    recoverExpiredTitle: 'O link já não funciona',
+    recoverExpiredBody: 'O link expirou ou já foi usado. Pede um novo abaixo.',
+    recoverMobileHint: 'Perdeste a passkey? Abre {{host}}/recover num navegador.',
+    backToSignIn: 'Voltar ao início de sessão',
+    emailVerifiedTitle: 'E-mail verificado',
+    emailVerifiedBody: 'O teu endereço está confirmado. Podes voltar ao Saldo.',
+    emailVerifiedOpen: 'Abrir o Saldo',
+    emailLinkInvalidTitle: 'O link expirou ou não é válido',
+    emailLinkInvalidBody: 'Abre Perfil › Conta e pede um novo.',
     shell: {
       newTransaction: 'Nova transação',
       skipToContent: 'Ir para o conteúdo',
@@ -1461,6 +1481,9 @@ export const pt: Messages = {
       error_unexpected: 'Algo correu mal. Tenta novamente.',
     },
     passkeys: {
+      recoveredTitle: 'Entraste com um link de recuperação.',
+      recoveredBody:
+        'Adiciona uma passkey agora: sem ela, da próxima vez vais precisar de outro link.',
       title: 'As tuas passkeys',
       body: 'Cada dispositivo de onde entras tem a sua. O servidor guarda apenas a chave pública.',
       add: 'Adicionar passkey',
@@ -1480,6 +1503,13 @@ export const pt: Messages = {
         'O dispositivo que a tem deixa de entrar nesta conta. As outras continuam a funcionar.',
       lastOneNote: 'É a tua última passkey: adiciona outra antes de a eliminares.',
       empty: 'Nenhuma passkey nesta conta.',
+    },
+    account: {
+      verified: 'verificado',
+      unverified: 'não verificado',
+      verify: 'Enviar o link de verificação',
+      verifySent: 'Link enviado para {{email}}',
+      mailOff: 'Este servidor não envia e-mails: o endereço continua por verificar.',
     },
     accounts: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',
