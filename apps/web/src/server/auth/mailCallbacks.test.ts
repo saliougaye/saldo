@@ -150,6 +150,16 @@ describe('sendRecoveryLink', () => {
     expect(JSON.stringify(logged)).not.toContain('t0k3n');
   });
 
+  it("points at Saldo's confirm page, which asks before it signs anybody in", async () => {
+    await enableMail(harness.db);
+    await account('ada@example.com');
+    await recover('ada@example.com');
+    expect(parts(linkOf(mail.sent[0]))).toEqual({
+      where: 'http://localhost:3000/recover/confirm',
+      query: { token: 't0k3n' },
+    });
+  });
+
   it("keeps only the token of the library's link: the callbacks are ours, never the caller's", async () => {
     await enableMail(harness.db);
     await account('ada@example.com');
@@ -162,12 +172,8 @@ describe('sendRecoveryLink', () => {
     expect(mail.sent[0]?.text).not.toContain('saldo:');
     expect(mail.sent[0]?.text).not.toContain('saldo%3A');
     expect(parts(linkOf(mail.sent[0]))).toEqual({
-      where: 'http://localhost:3000/api/auth/magic-link/verify',
-      query: {
-        token: 't0k3n',
-        callbackURL: '/profile/passkeys?recovered',
-        errorCallbackURL: '/recover',
-      },
+      where: 'http://localhost:3000/recover/confirm',
+      query: { token: 't0k3n' },
     });
   });
 });

@@ -1454,6 +1454,9 @@ export const it = {
         'Questo server non invia email, quindi non può mandare un link di recupero. Chiedi a chi lo gestisce.',
       recoverExpiredTitle: 'Il link non funziona più',
       recoverExpiredBody: 'Il link è scaduto o è già stato usato. Chiedine uno nuovo qui sotto.',
+      recoverConfirmTitle: 'Entra con il link di recupero',
+      recoverConfirmBody: 'Se non hai chiesto tu questo link, chiudi questa pagina.',
+      recoverConfirmButton: 'Entra',
       recoverMobileHint: 'Hai perso la passkey? Apri {{host}}/recover in un browser.',
       backToSignIn: 'Torna all’accesso',
       emailVerifiedTitle: 'Email verificata',
@@ -1479,8 +1482,9 @@ export const it = {
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
     passkeys: {
-      recoveredTitle: 'Sei entrato con un link di recupero.',
-      recoveredBody: 'Aggiungi una passkey adesso: senza, la prossima volta servirà un altro link.',
+      recoveredTitle: 'Sei entrato come {{email}} con un link di recupero.',
+      recoveredBody:
+        'Aggiungi una passkey adesso: senza, la prossima volta servirà un altro link. Se questo non è il tuo account, esci senza aggiungere nulla.',
       title: 'Le tue passkey',
       body: 'Ogni dispositivo da cui entri ha la sua. Il server conserva solo la chiave pubblica.',
       add: 'Aggiungi passkey',

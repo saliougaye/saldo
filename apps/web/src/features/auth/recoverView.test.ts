@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { recoverAnswer, recoverState } from './recoverView';
+import { recoverAnswer, recoverState, recoveryVerifyPath } from './recoverView';
 
 describe('recoverState', () => {
   it('says recovery is unavailable when the server sends no mail, whatever the query', () => {
@@ -37,5 +37,14 @@ describe('recoverAnswer', () => {
 
   it('only a rate limit says something else', () => {
     expect(recoverAnswer({ status: 429 })).toBe('rateLimited');
+  });
+});
+
+describe('recoveryVerifyPath', () => {
+  it("is the library's verify endpoint with our own two callbacks, and nothing else", () => {
+    expect(recoveryVerifyPath('a+b/c')).toBe(
+      '/api/auth/magic-link/verify?token=a%2Bb%2Fc' +
+        '&callbackURL=%2Fprofile%2Fpasskeys%3Frecovered&errorCallbackURL=%2Frecover',
+    );
   });
 });

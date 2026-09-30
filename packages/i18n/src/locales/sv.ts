@@ -1450,6 +1450,9 @@ export const sv: Messages = {
         'Den här servern skickar inte e-post och kan därför inte skicka en återställningslänk. Fråga den som driver den.',
       recoverExpiredTitle: 'Länken fungerar inte längre',
       recoverExpiredBody: 'Länken har gått ut eller har redan använts. Be om en ny nedan.',
+      recoverConfirmTitle: 'Logga in med återställningslänken',
+      recoverConfirmBody: 'Om du inte bad om den här länken, stäng sidan.',
+      recoverConfirmButton: 'Logga in',
       recoverMobileHint: 'Har du tappat bort din passkey? Öppna {{host}}/recover i en webbläsare.',
       backToSignIn: 'Tillbaka till inloggningen',
       emailVerifiedTitle: 'E-post verifierad',
@@ -1475,8 +1478,9 @@ export const sv: Messages = {
       error_unexpected: 'Något gick fel. Försök igen.',
     },
     passkeys: {
-      recoveredTitle: 'Du loggade in med en återställningslänk.',
-      recoveredBody: 'Lägg till en passkey nu: utan en behöver du en ny länk nästa gång.',
+      recoveredTitle: 'Du loggade in som {{email}} med en återställningslänk.',
+      recoveredBody:
+        'Lägg till en passkey nu: utan en behöver du en ny länk nästa gång. Om det här inte är ditt konto, logga ut utan att lägga till något.',
       title: 'Dina passnycklar',
       body: 'Varje enhet du loggar in från har sin egen. Servern sparar bara den publika nyckeln.',
       add: 'Lägg till passnyckel',

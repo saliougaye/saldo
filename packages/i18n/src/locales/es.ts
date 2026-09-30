@@ -1458,6 +1458,9 @@ export const es: Messages = {
         'Este servidor no envía correos, así que no puede mandar un enlace de recuperación. Pregunta a quien lo gestiona.',
       recoverExpiredTitle: 'El enlace ya no funciona',
       recoverExpiredBody: 'El enlace ha caducado o ya se usó. Pide uno nuevo más abajo.',
+      recoverConfirmTitle: 'Entra con el enlace de recuperación',
+      recoverConfirmBody: 'Si no has pedido tú este enlace, cierra esta página.',
+      recoverConfirmButton: 'Entrar',
       recoverMobileHint: '¿Has perdido la passkey? Abre {{host}}/recover en un navegador.',
       backToSignIn: 'Volver al inicio de sesión',
       emailVerifiedTitle: 'Correo verificado',
@@ -1483,8 +1486,9 @@ export const es: Messages = {
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
     },
     passkeys: {
-      recoveredTitle: 'Has entrado con un enlace de recuperación.',
-      recoveredBody: 'Añade una passkey ahora: sin ella, la próxima vez necesitarás otro enlace.',
+      recoveredTitle: 'Has entrado como {{email}} con un enlace de recuperación.',
+      recoveredBody:
+        'Añade una passkey ahora: sin ella, la próxima vez necesitarás otro enlace. Si esta no es tu cuenta, cierra sesión sin añadir nada.',
       title: 'Tus passkeys',
       body: 'Cada dispositivo desde el que entras tiene la suya. El servidor solo guarda la clave pública.',
       add: 'Añadir passkey',

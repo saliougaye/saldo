@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { createEmailVerificationToken } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { recoverState } from '../../../src/features/auth/recoverView';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { recoverState, recoveryVerifyPath } from '../../../src/features/auth/recoverView';
 import { revokeUser } from '../../../src/server/auth/admin';
 import { auth } from '../../../src/server/auth/auth';
 import { settleBackground } from '../../../src/server/background';
@@ -15,7 +15,15 @@ import {
   stopCatchingMail,
 } from '../../../src/server/test/mail';
 import { createTestSession, sessionCookie } from '../../../src/server/test/session';
+import ConfirmPage from '../../(auth)/recover/confirm/page';
 import { GET, POST } from './[...all]/route';
+
+vi.mock('../../../src/i18n/server', () => ({
+  publicI18n: async () => ({ locale: 'it', t: (key: string) => key }),
+}));
+vi.mock('../../../src/server/page/instanceSettings', () => ({
+  pageInstanceInfo: async () => ({ name: 'Saldo test', version: '0', host: 'localhost:3000' }),
+}));
 
 /**
  * 0.3f-3, through the real handler: what the two flows do, and what the new endpoints let a stranger
@@ -106,6 +114,13 @@ async function hasSessionCookie(response: Response): Promise<boolean> {
     .some((cookie) => cookie.startsWith(`${authCookies.sessionToken.name}=`));
 }
 
+/**
+ * What the confirm page's button opens: the library's verify endpoint, from the token in the mailed
+ * link. The mailed link itself points at a Saldo page and consumes nothing.
+ */
+const verifyUrl = (mailed: string) =>
+  `http://localhost:3000${recoveryVerifyPath(new URL(mailed).searchParams.get('token') ?? '')}`;
+
 const location = (response: Response) => new URL(response.headers.get('location') ?? 'x:', BASE);
 
 describe('recovery by magic link', () => {
@@ -118,7 +133,7 @@ describe('recovery by magic link', () => {
     expect(mail.sent[0]?.to).toBe(ADA);
 
     const link = linkIn(mail.sent[0]);
-    const opened = await get(link);
+    const opened = await get(verifyUrl(link));
     expect(opened.status).toBe(302);
     expect(location(opened).pathname + location(opened).search).toBe('/profile/passkeys?recovered');
     expect(await hasSessionCookie(opened)).toBe(true);
@@ -126,7 +141,7 @@ describe('recovery by magic link', () => {
     expect(sessions).toHaveLength(1);
 
     // Single use: the same link again ends on the error redirect, with no cookie.
-    const again = await get(link);
+    const again = await get(verifyUrl(link));
     expect(again.status).toBe(302);
     expect(location(again).pathname).toBe('/recover');
     expect(location(again).searchParams.get('error')).toBe('INVALID_TOKEN');
@@ -138,6 +153,24 @@ describe('recovery by magic link', () => {
         error: location(again).searchParams.get('error') ?? undefined,
       }),
     ).toBe('expiredLink');
+  });
+
+  it('mails a link to a page that asks first: opening the page consumes nothing', async () => {
+    const id = await account(ADA);
+    await askForRecovery(ADA);
+    const link = linkIn(mail.sent[0]);
+    expect(new URL(link).pathname).toBe('/recover/confirm');
+
+    // A mail scanner, or a stranger's cross-site GET, loads the page…
+    const token = new URL(link).searchParams.get('token') ?? '';
+    await ConfirmPage({ searchParams: Promise.resolve({ token }) });
+    expect(await harness.db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
+    expect(await harness.db.select().from(verification)).toHaveLength(1);
+
+    // …and the link still works afterwards, when somebody presses the button.
+    const opened = await get(verifyUrl(link));
+    expect(await hasSessionCookie(opened)).toBe(true);
+    expect(await harness.db.select().from(verification)).toHaveLength(0);
   });
 
   it('stores the token hashed and for fifteen minutes', async () => {
@@ -209,7 +242,7 @@ describe('recovery by magic link', () => {
     expect(mail.sent).toEqual([]);
 
     // …and the old one opens nothing: the `admin` plugin refuses the session.
-    const opened = await get(link);
+    const opened = await get(verifyUrl(link));
     expect(opened.status).not.toBe(200);
     expect(await hasSessionCookie(opened)).toBe(false);
     expect(await harness.db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
@@ -243,7 +276,7 @@ describe('recovery by magic link', () => {
     await account(ADA);
     await askForRecovery(ADA);
     await harness.db.update(verification).set({ expiresAt: new Date(Date.now() - 1000) });
-    const opened = await get(linkIn(mail.sent[0]));
+    const opened = await get(verifyUrl(linkIn(mail.sent[0])));
     expect(location(opened).searchParams.get('error')).toBe('INVALID_TOKEN');
     expect(await hasSessionCookie(opened)).toBe(false);
   });
@@ -436,7 +469,7 @@ describe('abusing the new endpoints', () => {
       }
       // Refused before the token was spent: the honest link still works.
       expect(await harness.db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
-      const honest = await get(linkIn(mail.sent[0]));
+      const honest = await get(verifyUrl(linkIn(mail.sent[0])));
       expect(honest.headers.get('location') ?? '').not.toContain('cookie=');
       expect(await hasSessionCookie(honest)).toBe(true);
     },

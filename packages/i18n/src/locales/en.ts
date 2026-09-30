@@ -1448,6 +1448,9 @@ export const en: Messages = {
         'This server does not send email, so it cannot send a recovery link. Ask whoever runs it.',
       recoverExpiredTitle: 'The link no longer works',
       recoverExpiredBody: 'The link has expired or was already used. Ask for a new one below.',
+      recoverConfirmTitle: 'Sign in with the recovery link',
+      recoverConfirmBody: 'If you did not ask for this link, close this page.',
+      recoverConfirmButton: 'Sign in',
       recoverMobileHint: 'Lost your passkey? Open {{host}}/recover in a browser.',
       backToSignIn: 'Back to sign in',
       emailVerifiedTitle: 'Email verified',
@@ -1473,8 +1476,9 @@ export const en: Messages = {
       error_unexpected: 'Something went wrong. Try again.',
     },
     passkeys: {
-      recoveredTitle: 'You signed in with a recovery link.',
-      recoveredBody: 'Add a passkey now: without one, you will need another link next time.',
+      recoveredTitle: 'You signed in as {{email}} with a recovery link.',
+      recoveredBody:
+        'Add a passkey now: without one, you will need another link next time. If this is not your account, sign out without adding anything.',
       title: 'Your passkeys',
       body: 'Every device you sign in from has its own. The server only keeps the public key.',
       add: 'Add a passkey',

@@ -2,6 +2,7 @@ import { readSettings } from '@saldo/core';
 import { catalogs, makeTranslator } from '@saldo/i18n';
 import { createEmailVerificationToken } from 'better-auth/api';
 import { and, eq, isNull, sql } from 'drizzle-orm';
+import { RECOVERY_CONFIRM_PATH } from '../../features/auth/recoverView';
 import { webLocale } from '../../i18n/locale';
 import { inBackground } from '../background';
 import { syncRows, user } from '../db/schema';
@@ -23,22 +24,17 @@ export const RECOVERY_TTL_SECONDS = 15 * 60;
 /** Where a verification link lands: a public page, because a mail app opens whatever browser it likes. */
 export const EMAIL_VERIFIED_PATH = '/email-verified';
 
-/** Where a recovery link lands after it signs the browser in, and where a dead one sends it. */
-export const RECOVERED_PATH = '/profile/passkeys?recovered';
-/** Better Auth sets `?error=<its code>` on this itself, so the query is left to it. */
-export const RECOVERY_ERROR_PATH = '/recover';
-
 /**
- * The address Better Auth built, reduced to its origin, its path and the **token**; the rest is ours.
- * The library copies `callbackURL`, `errorCallbackURL` and `newUserCallbackURL` from whoever asked
+ * The address Better Auth built, reduced to its origin and the **token**; the path and the rest are
+ * ours. The library copies `callbackURL`, `errorCallbackURL` and `newUserCallbackURL` from whoever asked
  * for the mail, and `saldo://` is a trusted origin: a link that carried `saldo://steal` would, when
  * opened, redirect to it with the session cookie appended by the Expo plugin. Nothing the caller
  * chose reaches the message.
  */
-function ownLink(libraryUrl: string, params: Record<string, string>): string {
-  const link = new URL(libraryUrl);
-  const token = link.searchParams.get('token');
-  link.search = '';
+function ownLink(libraryUrl: string, path: string, params: Record<string, string>): string {
+  const from = new URL(libraryUrl);
+  const link = new URL(path, from.origin);
+  const token = from.searchParams.get('token');
   if (token !== null) link.searchParams.set('token', token);
   for (const [name, value] of Object.entries(params)) link.searchParams.set(name, value);
   return link.toString();
@@ -109,10 +105,8 @@ export function sendRecoveryLink(
     // the other half, so a revoked account is not sent one at all.
     if (await isRevoked(db, account.id)) return;
     // The throttle is asked only now, so addresses with no account never occupy it.
-    const url = ownLink(input.url, {
-      callbackURL: RECOVERED_PATH,
-      errorCallbackURL: RECOVERY_ERROR_PATH,
-    });
+    // Not the library's `/magic-link/verify`: that GET signs in on sight. Ours asks first.
+    const url = ownLink(input.url, RECOVERY_CONFIRM_PATH, {});
     await deliver(db, 'recovery', account, url, input.acceptLanguage);
   });
 }
@@ -128,7 +122,10 @@ export function sendVerificationLink(
   inBackground(async () => {
     if (isSyntheticEmail(input.user.email)) return;
     if (!(await mailEnabled(db))) return;
-    const url = ownLink(input.url, { callbackURL: EMAIL_VERIFIED_PATH });
+    // The library's own verify path, which it built; only the callback is replaced.
+    const url = ownLink(input.url, new URL(input.url).pathname, {
+      callbackURL: EMAIL_VERIFIED_PATH,
+    });
     await deliver(db, 'verification', input.user, url, input.acceptLanguage);
   });
 }

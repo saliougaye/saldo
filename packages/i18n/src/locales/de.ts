@@ -1467,6 +1467,9 @@ export const de: Messages = {
       recoverExpiredTitle: 'Der Link funktioniert nicht mehr',
       recoverExpiredBody:
         'Der Link ist abgelaufen oder wurde schon benutzt. Fordere unten einen neuen an.',
+      recoverConfirmTitle: 'Mit dem Wiederherstellungslink anmelden',
+      recoverConfirmBody: 'Wenn du diesen Link nicht angefordert hast, schließe diese Seite.',
+      recoverConfirmButton: 'Anmelden',
       recoverMobileHint: 'Passkey verloren? Öffne {{host}}/recover in einem Browser.',
       backToSignIn: 'Zurück zur Anmeldung',
       emailVerifiedTitle: 'E-Mail bestätigt',
@@ -1492,9 +1495,9 @@ export const de: Messages = {
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
     passkeys: {
-      recoveredTitle: 'Du hast dich mit einem Wiederherstellungslink angemeldet.',
+      recoveredTitle: 'Du hast dich als {{email}} mit einem Wiederherstellungslink angemeldet.',
       recoveredBody:
-        'Füge jetzt einen Passkey hinzu: Ohne ihn brauchst du beim nächsten Mal wieder einen Link.',
+        'Füge jetzt einen Passkey hinzu: Ohne ihn brauchst du beim nächsten Mal wieder einen Link. Wenn das nicht dein Konto ist, melde dich ab, ohne etwas hinzuzufügen.',
       title: 'Deine Passkeys',
       body: 'Jedes Gerät, von dem du dich anmeldest, hat seinen eigenen. Der Server behält nur den öffentlichen Schlüssel.',
       add: 'Passkey hinzufügen',

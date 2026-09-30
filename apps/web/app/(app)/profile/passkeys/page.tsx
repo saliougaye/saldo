@@ -51,7 +51,10 @@ export default async function PasskeysPage({
     <Section open title={t('web.passkeys.title')}>
       <div className={passkeyStyles.stack}>
         {recovered ? (
-          <Alert title={t('web.passkeys.recoveredTitle')} body={t('web.passkeys.recoveredBody')} />
+          <Alert
+            title={t('web.passkeys.recoveredTitle', { email: user.email })}
+            body={t('web.passkeys.recoveredBody')}
+          />
         ) : null}
         <p className={styles.body}>{t('web.passkeys.body')}</p>
         <PasskeyList

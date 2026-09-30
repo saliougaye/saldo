@@ -1468,6 +1468,9 @@ export const fr: Messages = {
       recoverExpiredTitle: 'Le lien ne fonctionne plus',
       recoverExpiredBody:
         'Le lien a expiré ou a déjà été utilisé. Demandez-en un nouveau ci-dessous.',
+      recoverConfirmTitle: 'Connectez-vous avec le lien de récupération',
+      recoverConfirmBody: 'Si ce lien ne vient pas d’une demande de votre part, fermez cette page.',
+      recoverConfirmButton: 'Se connecter',
       recoverMobileHint:
         'Vous avez perdu votre passkey ? Ouvrez {{host}}/recover dans un navigateur.',
       backToSignIn: 'Retour à la connexion',
@@ -1494,9 +1497,9 @@ export const fr: Messages = {
       error_unexpected: 'Un problème est survenu. Réessayez.',
     },
     passkeys: {
-      recoveredTitle: 'Vous vous êtes connecté avec un lien de récupération.',
+      recoveredTitle: 'Vous êtes connecté en tant que {{email}} avec un lien de récupération.',
       recoveredBody:
-        'Ajoutez une passkey maintenant : sans elle, il faudra un autre lien la prochaine fois.',
+        'Ajoutez une passkey maintenant : sans elle, il faudra un autre lien la prochaine fois. Si ce n’est pas votre compte, déconnectez-vous sans rien ajouter.',
       title: 'Tes passkeys',
       body: 'Chaque appareil depuis lequel tu te connectes a la sienne. Le serveur ne garde que la clé publique.',
       add: 'Ajouter une passkey',
