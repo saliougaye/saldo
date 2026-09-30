@@ -1708,6 +1708,34 @@ public. The decisions behind this section are D30–D36.
   accounts described two accounts, and merging them would lose one. `settings` already converges (`id: 'settings'`).
   `finishWebOnboarding` writes settings, the account and the seed in one `writeInTransaction`.
 
+**As built (0.3e-2, 2026-09-30):**
+
+- **Three more write modules, all on `writeInTransaction`** (`apps/web/src/server/write/`): `accounts.ts`
+  (`saveAccount`, `archiveAccount`, `restoreAccount`), `goals.ts` (`saveGoal`, `closeGoal`, `restoreGoal`) and
+  `budgets.ts` (`saveBudget`, `deleteBudget`). Each reads with the projection on the write's own transaction and carries
+  the `basis` of every row it edits. Refusals are values, never throws: `AccountWriteError` adds `holdsGoals` (an
+  account with open goals cannot be archived) and `parentArchived` (a goal's account is archived) to the common
+  `invalid`/`notFound`/`conflict`; `BudgetWriteError` adds `taken` (a category already in another budget).
+  `saveAccount` answers `notFound` for a pocket id: the goal form is the only door to a pocket.
+- **The account form edits the current balance** (§6.22); the server turns it into an opening balance with
+  `openingBalanceForCurrent` over the whole ledger, as the phone does. A new account's typed balance is its opening
+  balance. The buffer is checked by `signedBufferOk` (`amounts.ts`).
+- **A goal is created with `openingBalance: 0`**; «Già da parte» becomes a transfer from the parent account, never an
+  opening balance (it would count the money twice in Patrimonio, §5.14).
+- **`closeGoalWrites`** (`goals.ts`) is the whole of closing a goal as a list of writes: the tombstones of its future
+  rows, the recurrence edits and deletes `planStopRecurrence` returns, the settlement transfer that takes the pocket to
+  exactly zero, and the pocket's `archivedAt`. `closeGoal` applies them as **one** `writeInTransaction`, so a close is
+  all or nothing and its rows take consecutive `seq`s.
+- **`saveTransaction` gains an optional `closeGoalId`** («Registra la spesa»): validated as an open pocket that is the
+  form's account, then `closeGoalWrites` are appended to the expense's own writes in the same transaction.
+- **What moved into `@saldo/core`** so the phone and the web run one set of rules (no re-export shims; the phone
+  imports them from core): `views/accountForm.ts`, `views/goalForm.ts` and `views/budgetForm.ts` (the forms' pure
+  half, `icon: string` because core imports no other workspace package) and `goalPlans.ts` (`newGoalFields`,
+  `newGoalTransferFields`, `planCloseGoal`, `restoreGoalFields`, `canRestoreGoal`). The phone's `goalService.ts` is a
+  thin caller of the plans and its test was not edited.
+- **The budget's suggested amount** is computed in the browser from the six past periods' spend as plain numbers,
+  with core's `suggestBudgetAmount` and the phone's 12% headroom.
+
 #### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
@@ -1851,6 +1879,21 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   **Built 2026-09-28 and 2026-09-29 in 0.3d** — the groups, the pockets and the totals first, then the account,
   credit-card and goal panels. Conti's read side shipped here rather than in 0.3e (decided with the user
   2026-09-28); only «Nuovo conto» and the account form wait for 0.3e.
+  **Built in 0.3e-2 (2026-09-30).** The URL carries the form, as in Transazioni. «Nuovo conto» and the account form
+  open in the panel (`?new`, `?a={id}&edit`); «Nuovo obiettivo» (`?newGoal`) and the goal form (`?g={id}&edit`), the
+  phone's four steps as one panel; the archived list is a panel (`?archived`) with «Ripristina» for accounts and closed
+  goals. An account with open goals shows «Chiudi prima gli obiettivi in questo conto» instead of «Archivia»;
+  archiving asks and has no undo, «Ripristina» is the way back. «Accantona» and «Preleva» are links to the transaction
+  form prefilled (`/transactions?new&from=…&to=…&description=…`), not a form of their own. «Chiudi obiettivo» asks
+  «Hai usato i soldi?» in a `ConfirmDialog` whose **secondary slot** carries the second choice: «Riporta in {conto}»
+  and «Registra la spesa» (the expense form with `closeGoal`), and a close is one write. Below 1024px the panels are
+  the bottom sheet.
+- **Budget (`/budgets`, decided in 0.3e-2; no mockup existed).** Reached from Home, as on the phone (§5.8), and not
+  in the top bar or the tab bar: the Budget section's «Tutti i budget» link, its rows (`/budgets?b={id}`) and the empty
+  card's «Crea un budget» (`/budgets?new`). The page is the open list, a ring per row as Home draws it, with the form
+  (`?new`, `?b={id}` to edit, delete asks first and has no undo) in the trailing panel. The detail chart and «Periodi
+  precedenti» stay on the phone (§17.1.9).
+  **Built 2026-09-30 in 0.3e-2.**
 - **Statistiche (decided 2026-09-27, mockup `2026-09-27-web-stats-variants.html`, variant «3 · Navigatore», lower half
   «Andamento a sinistra» with Quota impegnata under it).** On wide screens Flussi spans the page with **ten
   columns**: six closed periods, the current one and the three forecast ones (D29 kept six because of 320px; the
