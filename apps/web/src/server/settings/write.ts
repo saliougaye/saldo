@@ -21,11 +21,14 @@ import { type SettingsSource, SMTP_PASSWORD_SLOT } from './serverSettings';
  * stamps who and when. Like the readers, each takes the environment part last so a test can state
  * «the environment locks it» without touching `process.env`.
  */
-export type SettingsWriteResult = { ok: true } | { ok: false; error: 'locked' | 'invalid' };
+export type SettingsWriteResult =
+  | { ok: true }
+  | { ok: false; error: 'locked' | 'invalid' | 'passwordRequired' };
 
 const OK = { ok: true } as const;
 const LOCKED = { ok: false, error: 'locked' } as const;
 const INVALID = { ok: false, error: 'invalid' } as const;
+const PASSWORD_REQUIRED = { ok: false, error: 'passwordRequired' } as const;
 
 async function upsert(
   db: ServerDatabase,
@@ -120,6 +123,15 @@ export async function saveSmtp(
     const [row] = await db.select().from(serverSettings).where(eq(serverSettings.key, 'smtp'));
     const current = smtpRowSchema.safeParse(row?.value);
     stored = current.success ? current.data.password : null;
+    // The stored password may only go where it was sent before: a new host or user with the old
+    // password would let a stolen admin session point it at a server of its own (write-only).
+    if (
+      current.success &&
+      stored !== null &&
+      (current.data.host !== host || current.data.user !== user)
+    ) {
+      return PASSWORD_REQUIRED;
+    }
   } else if (password === null) {
     stored = null;
   } else {

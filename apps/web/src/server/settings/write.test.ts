@@ -174,13 +174,51 @@ describe('saveSmtp', () => {
   it('keeps the stored password when the field is absent', async () => {
     await saveSmtp(harness.db, null, { ...smtpInput, password: PASSWORD }, NOW, noEnv);
     const before = await storedSmtp();
+    // The port and the sender may change while the password is kept.
     expect(
-      await saveSmtp(harness.db, null, { ...smtpInput, host: 'smtp2.example.com' }, LATER, noEnv),
+      await saveSmtp(
+        harness.db,
+        null,
+        { ...smtpInput, port: 465, from: 'other@example.com' },
+        LATER,
+        noEnv,
+      ),
     ).toEqual({ ok: true });
     const after = await storedSmtp();
-    expect(after.host).toBe('smtp2.example.com');
+    expect(after).toMatchObject({ port: 465, from: 'other@example.com' });
     expect(after.password).toBe(before.password);
     expect((await smtpForSending(harness.db, noEnv))?.password).toBe(PASSWORD);
+  });
+
+  it.each([
+    ['host', { host: 'smtp.elsewhere.example' }],
+    ['user', { user: 'someone-else' }],
+    ['user removed', { user: '' }],
+  ])(
+    'needs the password again when it is kept but the %s changed, and writes nothing',
+    async (_label, patch) => {
+      await saveSmtp(harness.db, null, { ...smtpInput, password: PASSWORD }, NOW, noEnv);
+      const before = await storedRow('smtp');
+      expect(await saveSmtp(harness.db, null, { ...smtpInput, ...patch }, LATER, noEnv)).toEqual({
+        ok: false,
+        error: 'passwordRequired',
+      });
+      expect(await storedRow('smtp')).toEqual(before);
+    },
+  );
+
+  it('lets a new host come with a new password', async () => {
+    await saveSmtp(harness.db, null, { ...smtpInput, password: PASSWORD }, NOW, noEnv);
+    expect(
+      await saveSmtp(
+        harness.db,
+        null,
+        { ...smtpInput, host: 'smtp2.example.com', password: 'another-fake' },
+        LATER,
+        noEnv,
+      ),
+    ).toEqual({ ok: true });
+    expect((await smtpForSending(harness.db, noEnv))?.password).toBe('another-fake');
   });
 
   it('replaces the password when a string is given, with a fresh envelope', async () => {
