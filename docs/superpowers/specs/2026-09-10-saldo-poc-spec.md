@@ -1132,7 +1132,10 @@ Notes that follow from using the library:
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | | Required by `s3`. |
 | `S3_FORCE_PATH_STYLE` | `true` | Needed by MinIO and some S3 clones. |
 | `BLOB_READ_WRITE_TOKEN` | | Required by `vercel-blob`; Vercel injects it. |
-| `REGISTRATION` | `invite` | `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). |
+| `SETTINGS_ENCRYPTION_KEY` | 32 random bytes base64 | **Required** (0.3f-2). AES-256-GCM key for the secrets in `server_settings` (§17.1.8). Anything that does not decode to exactly 32 bytes is refused, by name. |
+| `REGISTRATION` | `invite` | **Optional** (0.3f-2). `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). Set: wins and locks the panel. Unset: the `server_settings` row, else `first-user`. |
+| `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. Wins over the stored name; unset falls back to the row, then to `WEBAUTHN_RP_NAME`. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | | Optional. `SMTP_HOST` set: the whole group comes from the environment and is locked (`SMTP_FROM` required, `SMTP_PORT` default 587, `SMTP_USER` and `SMTP_PASSWORD` together or neither). |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma list of allowed custom schemes for mobile redirects. |
 
 ### 9.3 Mobile sign-in flow (browser ceremony + one-time-token handoff)
@@ -2107,6 +2110,29 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   - Secret values (SMTP password, AI key) are encrypted at rest with AES-256-GCM under a new required variable,
     `SETTINGS_ENCRYPTION_KEY`, and are **write-only** in the panel: it shows «set» and «replace», never the value.
 
+- **As built (0.3f-2, 2026-09-30):**
+  - `server_settings(key text pk, value jsonb, updated_at, updated_by → user on delete set null)` with three keys:
+    `registration`, `instanceName`, `smtp` (`{ host, port, user, password, from }`). One resolver
+    (`src/server/settings/resolve.ts`) merges environment → row → default and says where each value came from; a
+    row that no longer parses reads as not set and is logged by key. `registrationMode` does not read the table
+    when `REGISTRATION` is set, and the gate calls it at ceremony time, so a saved mode applies to the next
+    registration without a restart.
+  - `src/server/settings/secret.ts`: `v1:{iv}:{tag}:{ciphertext}` (base64 parts), a random 12-byte IV, the slot name
+    (`smtp.password`) as additional authenticated data; a wrong key, slot, tampering or a malformed value decrypts
+    to `null`, never throws. Only `smtpForSending` opens the password; pages and actions get `SmtpView`
+    (`passwordSet`, `passwordReadable`). The stored password may be kept only while host and user are unchanged
+    (`passwordRequired` otherwise). Port 465 is implicit TLS, any other port requires STARTTLS except to
+    `localhost`, `127.0.0.1` and `::1`.
+  - Writes return `{ ok } | { error: 'locked' | 'invalid' | 'passwordRequired' }`; `locked` is decided on the
+    server from the resolver. Every Server Action in `/admin/settings` starts with `requireWebAdmin()`.
+  - `sendMail(db, message)` builds a nodemailer transport per message from the resolved configuration (10 s
+    connection and greeting timeouts), plain text only; `detail` goes to the admin's test-email panel and never to
+    a log. The test email goes to the signed-in admin's own address, in their language.
+  - `/admin/settings?edit=name|registration|smtp`; a locked setting shows «Impostata dall'ambiente» with the
+    variable (its value for `REGISTRATION` and `INSTANCE_NAME`, never `SMTP_PASSWORD`). Registration is saved with
+    «Salva», not on choice. `OptionList` moved to `src/ui/`. The panels close on save, except SMTP, which stays
+    open so the test email can be sent. Verification and recovery are 0.3f-3.
+
 #### 17.1.9 Not in 0.3
 
 Recurrence editing, attachment upload, the period recap sheet, server-side materialisation of recurrences,
@@ -2161,6 +2187,12 @@ settings from `/admin`. The projection is the only way server code reads rows.
   one-time token, minted in the browser once the passkey ceremony succeeds, stored hashed, single-use, with a 60s
   TTL, and bound to the attempt that requested it by a client-generated `state` the app verifies before it will
   exchange the token.
+- **Secrets at rest.** The one secret the server stores on an admin's behalf (the SMTP password; from 0.5 the AI
+  key) is encrypted with AES-256-GCM under `SETTINGS_ENCRYPTION_KEY`, with the slot name as authenticated data,
+  so a database backup alone does not leak it. It is write-only: no page, action response, log line or error
+  carries it or its envelope, and the stored one is kept only for the host and user it was saved with. Losing the
+  key loses that secret and nothing else. A server-side-rendered Server Action's arguments are logged by
+  `next dev` (development only); production builds do not.
 - CSV import treats every cell as text. The CSV export prefixes cells starting with `= + - @` with `'` (formula
   injection) **except** the numeric `amount` column.
 - App lock hides content in the app switcher (`expo-screen-capture` / privacy overlay on `AppState` inactive).

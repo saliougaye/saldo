@@ -28,7 +28,10 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 | `JWT_SECRET` | 32+ random bytes, base64 | Signs access tokens. `openssl rand -base64 48`. |
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | |
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
-| `REGISTRATION` | `invite` | `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. |
+| `SETTINGS_ENCRYPTION_KEY` | 32 random bytes, base64 | **Required.** Encrypts the secrets the admin panel stores (today the SMTP password). `openssl rand -base64 32`. See «Server settings» below: keep it. |
+| `REGISTRATION` | `invite` | Optional. `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. Set, it wins and locks the choice in `/admin/settings`; unset, you choose there (default `first-user`). |
+| `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. The name on the sign-in page and in invites. Set, it locks the field in `/admin/settings`; unset, you choose there, and by default it is `WEBAUTHN_RP_NAME`. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | `smtp.example.com`, `587` | Optional outgoing mail. `SMTP_HOST` set means the whole group comes from the environment and is locked in the panel: `SMTP_FROM` is then required, `SMTP_PORT` defaults to 587, and `SMTP_USER` and `SMTP_PASSWORD` come together or not at all. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
 | `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
 | `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional, default `UTC`. The time zone the web app computes «today» in for a user whose settings carry none yet; every phone fills its own at onboarding, so this matters only for accounts created before that. Not `TZ`, which Vercel reserves. |
@@ -37,6 +40,10 @@ Two things to know before you start:
 
 - **Changing `WEBAUTHN_RP_ID` invalidates every existing passkey.** A credential is bound to the
   relying party it was created for. Pick the hostname you intend to keep.
+- **Upgrading from a version before 0.3f-2: add `SETTINGS_ENCRYPTION_KEY` before you start it.** The server
+  refuses to start without it. Generate one (`openssl rand -base64 32`) and **keep it** with your other secrets:
+  it is not in the database and not in a backup of it. Losing it loses the stored SMTP password and nothing
+  else — the panel says the password no longer reads, and you enter it again. Changing it does the same.
 - Use `REGISTRATION=invite`. Nothing creates an account without a single-use code, so there is no
   window during which a stranger who finds your URL can register — you mint your own code on the
   server before you sign in for the first time. With `open`, anyone who can reach the server can
@@ -183,7 +190,8 @@ values, so a secret put there is a secret published.
 | `JWT_SECRET` | `openssl rand -base64 48` | **Secret.** |
 | `DATABASE_URL` | `postgres://…` | **Secret.** Your managed Postgres, not the compose one. |
 | `ATTACHMENT_STORAGE` | `none`, `s3` or `vercel-blob` | Never `fs` here. |
-| `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. |
+| `SETTINGS_ENCRYPTION_KEY` | `openssl rand -base64 32` | **Secret**, and **required**. Keep it: see «Server settings». |
+| `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. Optional: unset, `/admin/settings` decides. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Must match the app's `SALDO_SCHEME` at build time. |
 | `TRUSTED_PROXIES` | — | Leave empty until you have looked at what Vercel sends; see below. |
 | `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional. Vercel does not let you set `TZ`; this is the one Saldo reads. |
@@ -244,8 +252,9 @@ invite you send by message can be one link. That first account becomes the admin
 
 **Registration asks for an email address.** It is an identifier, not a credential: the passkey is the
 only way in, the address is what names the account in `/admin` and in the account list, and what
-shared finances (0.6) will invite by. **Nothing is sent to it** — the server has no SMTP until 0.3f,
-so the address is never verified and never receives anything, and a household instance can use
+shared finances (0.6) will invite by. **Nothing is sent to it** — verifying it and recovering an
+account by email are 0.3f-3; today the server can send only the test email of `/admin/settings`, so the address is
+never verified and never receives anything else, and a household instance can use
 anything its members will recognise. An account created before 0.3b carries a synthetic
 `{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
 Profile → Server and sync, once.
@@ -282,6 +291,25 @@ not an admin and cannot mint anything from the app. Give it one, once:
 pnpm --filter web user list              # find the id
 pnpm --filter web user promote <id>
 ```
+
+### Server settings
+
+From `/admin/settings` an admin changes, without editing a file or restarting, the **instance name**, the
+**registration mode** and the **outgoing email (SMTP)**. They are stored in the `server_settings` table; an
+environment variable that sets the same thing wins and locks it (the panel says which variable, and how to
+change it: edit it where the server runs and restart, or remove it and choose in the panel).
+
+- **SMTP by environment or by panel.** Either set `SMTP_HOST` (and the rest of the group) in the environment, or
+  leave them out and fill the panel. Mail is optional: without it registration and sign-in work as before. The
+  panel's **Manda un'email di prova** sends a message to *your own* address with the saved configuration, and
+  shows the server's error if it fails. Port 465 is implicit TLS; any other port requires STARTTLS, except to
+  `localhost` (a development catcher such as Mailpit).
+- **The SMTP password is write-only.** It is encrypted (AES-256-GCM) under `SETTINGS_ENCRYPTION_KEY` before it is
+  stored, is never sent back to a browser, and is replaced, not read. Changing the host or user needs the
+  password typed again, so a stolen session cannot aim the stored one at another server.
+- **The key.** `SETTINGS_ENCRYPTION_KEY` is what opens that password. Keep it with your other secrets. If it is
+  lost or changed, only the stored SMTP password is lost: enter it again in the panel. There is no key rotation in
+  0.3f — change the key, then re-enter the password.
 
 ## Local development
 

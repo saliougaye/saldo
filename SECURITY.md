@@ -57,6 +57,11 @@ administering the instance; they do not pretend to keep the owner out of Postgre
 model has two people who do not trust each other on one server, Saldo does not currently serve it —
 see the shared finances milestone in [`ROADMAP.md`](ROADMAP.md).
 
+**The one secret the admin panel stores is the SMTP password, if you set one.** It is encrypted at rest with
+`SETTINGS_ENCRYPTION_KEY` and is write-only in the admin panel, but the server can decrypt it (it has to, to send
+mail), so whoever controls the server and its environment can read it. Use an SMTP account that can do nothing
+but send.
+
 ## Supported versions
 
 This is a proof of concept before its first release. Only the current `main` is supported: there are
