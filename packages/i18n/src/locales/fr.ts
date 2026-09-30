@@ -1454,29 +1454,29 @@ export const fr: Messages = {
       nameRequiredBody: 'Écris le nom que Saldo doit utiliser pour toi.',
       handoffFailedTitle: 'Tu es connecté, mais l’app ne l’a pas reçu',
       handoffFailedBody: 'Ton compte est prêt. Touche « Réessayer » pour revenir à l’app.',
+      recoverLink: 'Vous avez perdu votre passkey ?',
+      recoverTitle: 'Revenir sans passkey',
+      recoverBody:
+        'Saisissez l’e-mail de votre compte. S’il est vérifié, nous vous envoyons un lien pour vous connecter et ajouter une nouvelle passkey.',
+      recoverSubmit: 'Envoyer le lien',
+      recoverSent:
+        'Si cette adresse a un compte avec un e-mail vérifié, nous avons envoyé un lien. Il est valable 15 minutes.',
+      recoverRateLimited: 'Trop de tentatives, réessayez dans un instant.',
+      recoverOffTitle: 'La récupération n’est pas disponible',
+      recoverOffBody:
+        'Ce serveur n’envoie pas d’e-mails, il ne peut donc pas envoyer de lien de récupération. Demandez à la personne qui le gère.',
+      recoverExpiredTitle: 'Le lien ne fonctionne plus',
+      recoverExpiredBody:
+        'Le lien a expiré ou a déjà été utilisé. Demandez-en un nouveau ci-dessous.',
+      recoverMobileHint:
+        'Vous avez perdu votre passkey ? Ouvrez {{host}}/recover dans un navigateur.',
+      backToSignIn: 'Retour à la connexion',
+      emailVerifiedTitle: 'E-mail vérifié',
+      emailVerifiedBody: 'Votre adresse est confirmée. Vous pouvez retourner dans Saldo.',
+      emailVerifiedOpen: 'Ouvrir Saldo',
+      emailLinkInvalidTitle: 'Le lien a expiré ou n’est pas valide',
+      emailLinkInvalidBody: 'Ouvrez Profil › Compte et demandez-en un nouveau.',
     },
-    recoverLink: 'Vous avez perdu votre passkey ?',
-    recoverTitle: 'Revenir sans passkey',
-    recoverBody:
-      'Saisissez l’e-mail de votre compte. S’il est vérifié, nous vous envoyons un lien pour vous connecter et ajouter une nouvelle passkey.',
-    recoverSubmit: 'Envoyer le lien',
-    recoverSent:
-      'Si cette adresse a un compte avec un e-mail vérifié, nous avons envoyé un lien. Il est valable 15 minutes.',
-    recoverRateLimited: 'Trop de tentatives, réessayez dans un instant.',
-    recoverOffTitle: 'La récupération n’est pas disponible',
-    recoverOffBody:
-      'Ce serveur n’envoie pas d’e-mails, il ne peut donc pas envoyer de lien de récupération. Demandez à la personne qui le gère.',
-    recoverExpiredTitle: 'Le lien ne fonctionne plus',
-    recoverExpiredBody:
-      'Le lien a expiré ou a déjà été utilisé. Demandez-en un nouveau ci-dessous.',
-    recoverMobileHint:
-      'Vous avez perdu votre passkey ? Ouvrez {{host}}/recover dans un navigateur.',
-    backToSignIn: 'Retour à la connexion',
-    emailVerifiedTitle: 'E-mail vérifié',
-    emailVerifiedBody: 'Votre adresse est confirmée. Vous pouvez retourner dans Saldo.',
-    emailVerifiedOpen: 'Ouvrir Saldo',
-    emailLinkInvalidTitle: 'Le lien a expiré ou n’est pas valide',
-    emailLinkInvalidBody: 'Ouvrez Profil › Compte et demandez-en un nouveau.',
     shell: {
       newTransaction: 'Nouvelle transaction',
       skipToContent: 'Aller au contenu',

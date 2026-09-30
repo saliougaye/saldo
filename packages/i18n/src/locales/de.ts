@@ -1453,28 +1453,28 @@ export const de: Messages = {
       handoffFailedTitle: 'Du bist angemeldet, aber die App hat es nicht bekommen',
       handoffFailedBody:
         'Dein Konto ist fertig. Tippe auf «Wiederholen», um zur App zurückzukehren.',
+      recoverLink: 'Passkey verloren?',
+      recoverTitle: 'Ohne Passkey zurück ins Konto',
+      recoverBody:
+        'Gib die E-Mail-Adresse deines Kontos ein. Ist sie bestätigt, schicken wir dir einen Link zum Anmelden und zum Hinzufügen eines neuen Passkeys.',
+      recoverSubmit: 'Link senden',
+      recoverSent:
+        'Wenn diese Adresse ein Konto mit bestätigter E-Mail hat, haben wir einen Link geschickt. Er gilt 15 Minuten.',
+      recoverRateLimited: 'Zu viele Versuche, versuche es gleich noch einmal.',
+      recoverOffTitle: 'Wiederherstellung nicht verfügbar',
+      recoverOffBody:
+        'Dieser Server verschickt keine E-Mails und kann deshalb keinen Wiederherstellungslink senden. Frag die Person, die ihn betreibt.',
+      recoverExpiredTitle: 'Der Link funktioniert nicht mehr',
+      recoverExpiredBody:
+        'Der Link ist abgelaufen oder wurde schon benutzt. Fordere unten einen neuen an.',
+      recoverMobileHint: 'Passkey verloren? Öffne {{host}}/recover in einem Browser.',
+      backToSignIn: 'Zurück zur Anmeldung',
+      emailVerifiedTitle: 'E-Mail bestätigt',
+      emailVerifiedBody: 'Deine Adresse ist bestätigt. Du kannst zu Saldo zurückkehren.',
+      emailVerifiedOpen: 'Saldo öffnen',
+      emailLinkInvalidTitle: 'Der Link ist abgelaufen oder ungültig',
+      emailLinkInvalidBody: 'Öffne Profil › Konto und fordere einen neuen an.',
     },
-    recoverLink: 'Passkey verloren?',
-    recoverTitle: 'Ohne Passkey zurück ins Konto',
-    recoverBody:
-      'Gib die E-Mail-Adresse deines Kontos ein. Ist sie bestätigt, schicken wir dir einen Link zum Anmelden und zum Hinzufügen eines neuen Passkeys.',
-    recoverSubmit: 'Link senden',
-    recoverSent:
-      'Wenn diese Adresse ein Konto mit bestätigter E-Mail hat, haben wir einen Link geschickt. Er gilt 15 Minuten.',
-    recoverRateLimited: 'Zu viele Versuche, versuche es gleich noch einmal.',
-    recoverOffTitle: 'Wiederherstellung nicht verfügbar',
-    recoverOffBody:
-      'Dieser Server verschickt keine E-Mails und kann deshalb keinen Wiederherstellungslink senden. Frag die Person, die ihn betreibt.',
-    recoverExpiredTitle: 'Der Link funktioniert nicht mehr',
-    recoverExpiredBody:
-      'Der Link ist abgelaufen oder wurde schon benutzt. Fordere unten einen neuen an.',
-    recoverMobileHint: 'Passkey verloren? Öffne {{host}}/recover in einem Browser.',
-    backToSignIn: 'Zurück zur Anmeldung',
-    emailVerifiedTitle: 'E-Mail bestätigt',
-    emailVerifiedBody: 'Deine Adresse ist bestätigt. Du kannst zu Saldo zurückkehren.',
-    emailVerifiedOpen: 'Saldo öffnen',
-    emailLinkInvalidTitle: 'Der Link ist abgelaufen oder ungültig',
-    emailLinkInvalidBody: 'Öffne Profil › Konto und fordere einen neuen an.',
     shell: {
       newTransaction: 'Neue Buchung',
       skipToContent: 'Zum Inhalt springen',

@@ -1437,27 +1437,27 @@ export const sv: Messages = {
       handoffFailedTitle: 'Du är inloggad, men appen fick det inte',
       handoffFailedBody:
         'Ditt konto är klart. Tryck på «Försök igen» för att gå tillbaka till appen.',
+      recoverLink: 'Har du tappat bort din passkey?',
+      recoverTitle: 'Kom in utan passkey',
+      recoverBody:
+        'Skriv in e-postadressen till ditt konto. Om den är verifierad skickar vi en länk så att du kan logga in och lägga till en ny passkey.',
+      recoverSubmit: 'Skicka länken',
+      recoverSent:
+        'Om den här adressen har ett konto med verifierad e-post har vi skickat en länk. Den gäller i 15 minuter.',
+      recoverRateLimited: 'För många försök, försök igen om en stund.',
+      recoverOffTitle: 'Återställning är inte tillgänglig',
+      recoverOffBody:
+        'Den här servern skickar inte e-post och kan därför inte skicka en återställningslänk. Fråga den som driver den.',
+      recoverExpiredTitle: 'Länken fungerar inte längre',
+      recoverExpiredBody: 'Länken har gått ut eller har redan använts. Be om en ny nedan.',
+      recoverMobileHint: 'Har du tappat bort din passkey? Öppna {{host}}/recover i en webbläsare.',
+      backToSignIn: 'Tillbaka till inloggningen',
+      emailVerifiedTitle: 'E-post verifierad',
+      emailVerifiedBody: 'Din adress är bekräftad. Du kan gå tillbaka till Saldo.',
+      emailVerifiedOpen: 'Öppna Saldo',
+      emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
+      emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
     },
-    recoverLink: 'Har du tappat bort din passkey?',
-    recoverTitle: 'Kom in utan passkey',
-    recoverBody:
-      'Skriv in e-postadressen till ditt konto. Om den är verifierad skickar vi en länk så att du kan logga in och lägga till en ny passkey.',
-    recoverSubmit: 'Skicka länken',
-    recoverSent:
-      'Om den här adressen har ett konto med verifierad e-post har vi skickat en länk. Den gäller i 15 minuter.',
-    recoverRateLimited: 'För många försök, försök igen om en stund.',
-    recoverOffTitle: 'Återställning är inte tillgänglig',
-    recoverOffBody:
-      'Den här servern skickar inte e-post och kan därför inte skicka en återställningslänk. Fråga den som driver den.',
-    recoverExpiredTitle: 'Länken fungerar inte längre',
-    recoverExpiredBody: 'Länken har gått ut eller har redan använts. Be om en ny nedan.',
-    recoverMobileHint: 'Har du tappat bort din passkey? Öppna {{host}}/recover i en webbläsare.',
-    backToSignIn: 'Tillbaka till inloggningen',
-    emailVerifiedTitle: 'E-post verifierad',
-    emailVerifiedBody: 'Din adress är bekräftad. Du kan gå tillbaka till Saldo.',
-    emailVerifiedOpen: 'Öppna Saldo',
-    emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
-    emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
     shell: {
       newTransaction: 'Ny transaktion',
       skipToContent: 'Hoppa till innehållet',
