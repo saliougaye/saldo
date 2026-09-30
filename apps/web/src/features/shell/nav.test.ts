@@ -43,6 +43,12 @@ describe('isCurrent', () => {
     expect(isCurrent('/home', '/transactions')).toBe(false);
   });
 
+  it('keeps Home lit on /budgets, which is reached from Home and has no tab', () => {
+    expect(isCurrent('/home', '/budgets')).toBe(true);
+    expect(isCurrent('/home', '/budgets?b=abc')).toBe(true);
+    expect(isCurrent('/accounts', '/budgets')).toBe(false);
+  });
+
   it('matches a sub-page of a section', () => {
     expect(isCurrent('/profile', '/profile/passkeys')).toBe(true);
     expect(isCurrent('/admin', '/admin/invites')).toBe(true);

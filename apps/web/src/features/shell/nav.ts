@@ -30,8 +30,13 @@ export function navItems(admin: boolean): NavItem[] {
     : [...TABS];
 }
 
+/** Pages that are reached from a tab and have none of their own: the tab that owns them stays lit. */
+const OWNED_BY: Record<string, string> = { '/budgets': '/home' };
+
 /** Whether a nav item owns the path being rendered: its section, and anything under it. */
 export function isCurrent(href: string, path: string): boolean {
   const [pathname = ''] = path.split('?');
+  const owner = OWNED_BY[pathname];
+  if (owner !== undefined && owner === href) return true;
   return pathname === href || pathname.startsWith(`${href}/`);
 }

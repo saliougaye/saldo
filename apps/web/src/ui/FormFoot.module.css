@@ -37,3 +37,20 @@
     flex: 1;
   }
 }
+
+.leading {
+  display: flex;
+  align-items: center;
+}
+
+/* On a narrow screen the corner is a line of its own under the two buttons. */
+@media (max-width: 1023px) {
+  .foot {
+    flex-wrap: wrap;
+  }
+
+  .leading {
+    order: 1;
+    flex: 0 0 100%;
+  }
+}
