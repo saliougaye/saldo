@@ -1317,6 +1317,7 @@ export const de: Messages = {
       repeatRecurring: 'Wiederkehrend',
       repeatOnPhone: 'Wiederkehrende Buchungen werden auf dem Telefon angelegt und bearbeitet.',
       keyboardHint: 'Esc zum Schließen · ⌘↵ zum Speichern',
+      pickerOption: '{{label}} {{index}} von {{total}}',
       error_invalid:
         'Das Formular konnte nicht gelesen werden. Lade die Seite neu und versuche es noch einmal.',
       error_notFound:

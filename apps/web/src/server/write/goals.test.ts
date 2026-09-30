@@ -1,3 +1,4 @@
+import { MAX_COLOR_INDEX } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
@@ -125,6 +126,19 @@ describe('saveGoal — new', () => {
         error: 'invalid',
       });
     }
+  });
+});
+
+describe('saveGoal — colour', () => {
+  it('refuses a colour beyond the palette before writing', async () => {
+    await onboarded();
+    const result = await saveGoal(
+      harness.db,
+      userId,
+      { ...input, colorIndex: MAX_COLOR_INDEX + 1 },
+      FIXTURE_NOW,
+    );
+    expect(result).toEqual({ ok: false, error: 'invalid' });
   });
 });
 

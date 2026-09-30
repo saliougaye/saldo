@@ -158,6 +158,8 @@ async function setArchived(
       if (existing === undefined || isPocket(existing)) {
         return { writes: [], result: { ok: false, error: 'notFound' } };
       }
+      // Already in the asked state (another tab got there first): nothing to write.
+      if ((existing.archivedAt !== null) === archive) return { writes: [], result: { ok: true } };
       if (archive && !canArchiveAccount(data.accounts, id)) {
         return { writes: [], result: { ok: false, error: 'holdsGoals' } };
       }

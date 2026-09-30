@@ -5,7 +5,7 @@ import { type KeyboardEvent, useRef } from 'react';
 import styles from './AppearancePicker.module.css';
 import { Icon } from './Icon';
 import { paletteIndex } from './IconBox';
-import { rovingTarget } from './rovingRadios';
+import { rovingTabStop, rovingTarget } from './rovingRadios';
 
 interface Props {
   colorLabel: string;
@@ -13,6 +13,8 @@ interface Props {
   colorIndex: number;
   icon: string;
   icons: readonly IconName[];
+  /** The accessible name of option `index` of `total` in the group called `label` («Colore 3 di 12»). */
+  optionLabel: (label: string, index: number, total: number) => string;
   /** A budget has no colour of its own (it follows its first category): its picker offers icons only. */
   showColors?: boolean;
   onChange: (next: { colorIndex: number; icon: string }) => void;
@@ -40,10 +42,13 @@ export function AppearancePicker({
   colorIndex,
   icon,
   icons,
+  optionLabel,
   showColors = true,
   onChange,
 }: Props) {
   const chosen = paletteIndex(colorIndex);
+  // The stored icon may not be among those offered: then the first one takes the group's tab stop.
+  const iconStop = rovingTabStop(icons.indexOf(icon as IconName), icons.length);
   const colors = useRovingRadios(categoryColors.length, (index) =>
     onChange({ colorIndex: index, icon }),
   );
@@ -64,7 +69,7 @@ export function AppearancePicker({
               type="button"
               role="radio"
               aria-checked={index === chosen}
-              aria-label={String(index + 1)}
+              aria-label={optionLabel(colorLabel, index + 1, categoryColors.length)}
               tabIndex={index === chosen ? 0 : -1}
               className={styles.swatch}
               style={{ background: `var(--category-${index})` }}
@@ -83,8 +88,8 @@ export function AppearancePicker({
             type="button"
             role="radio"
             aria-checked={name === icon}
-            aria-label={name}
-            tabIndex={name === icon ? 0 : -1}
+            aria-label={optionLabel(iconLabel, index + 1, icons.length)}
+            tabIndex={index === iconStop ? 0 : -1}
             className={styles.iconButton}
             onClick={() => onChange({ colorIndex, icon: name })}
             onKeyDown={(event) => glyphs.onKeyDown(event, index)}

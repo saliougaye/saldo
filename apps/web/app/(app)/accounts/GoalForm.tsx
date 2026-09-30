@@ -192,6 +192,7 @@ export function GoalForm({
           colorIndex={values.colorIndex}
           icon={values.icon}
           icons={GOAL_ICONS}
+          optionLabel={(label, index, total) => t('web.form.pickerOption', { label, index, total })}
           onChange={(next) => set(next)}
         />
       </div>

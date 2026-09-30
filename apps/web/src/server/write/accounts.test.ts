@@ -191,6 +191,18 @@ describe('archive and restore', () => {
     expect((await accounts()).find((a) => a.id === 'acc-savings')?.archivedAt).toBeNull();
   });
 
+  it('writes nothing when the account already is in the asked state', async () => {
+    await onboarded();
+    const later = new Date(FIXTURE_NOW.getTime() + 60_000);
+    expect(await restoreAccount(harness.db, userId, 'acc-savings', later)).toEqual({ ok: true });
+    const before = (await accounts()).find((a) => a.id === 'acc-savings');
+    expect(before?.updatedAt).not.toContain(later.toISOString());
+    await archiveAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW);
+    const archived = (await accounts()).find((a) => a.id === 'acc-savings');
+    expect(await archiveAccount(harness.db, userId, 'acc-savings', later)).toEqual({ ok: true });
+    expect((await accounts()).find((a) => a.id === 'acc-savings')).toEqual(archived);
+  });
+
   it('refuses to archive an account that holds an open goal (§5.14)', async () => {
     await onboarded();
     const goal = await saveGoal(harness.db, userId, goalInput, FIXTURE_NOW);

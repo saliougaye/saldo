@@ -1311,6 +1311,7 @@ export const es: Messages = {
       repeatRecurring: 'Recurrente',
       repeatOnPhone: 'Las recurrencias se crean y se modifican desde el teléfono.',
       keyboardHint: 'Esc para cerrar · ⌘↵ para guardar',
+      pickerOption: '{{label}} {{index}} de {{total}}',
       error_invalid: 'No hemos podido leer el formulario. Recarga la página y vuelve a intentarlo.',
       error_notFound: 'Esta transacción ya no existe: quizá se eliminó desde otro dispositivo.',
       error_closedGoal: 'Afecta a un objetivo cerrado, que ya no se puede modificar.',

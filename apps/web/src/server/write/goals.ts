@@ -7,6 +7,7 @@ import {
   goalStepMissing,
   isLocalDate,
   isPocket,
+  MAX_COLOR_INDEX,
   newGoalFields,
   newGoalTransferFields,
   newId,
@@ -32,7 +33,7 @@ export const goalInputSchema = z.object({
   id: z.string().min(1).nullable(),
   name: z.string().max(60),
   icon: z.string().min(1).max(40),
-  colorIndex: z.number().int().min(0).max(63),
+  colorIndex: z.number().int().min(0).max(MAX_COLOR_INDEX),
   /** The target, as the field holds it. */
   buffer: z
     .string()

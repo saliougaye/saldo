@@ -1304,6 +1304,7 @@ export const sv: Messages = {
       repeatRecurring: 'Återkommande',
       repeatOnPhone: 'Återkommande transaktioner skapas och ändras i telefonen.',
       keyboardHint: 'Esc för att stänga · ⌘↵ för att spara',
+      pickerOption: '{{label}} {{index}} av {{total}}',
       error_invalid: 'Vi kunde inte läsa formuläret. Ladda om sidan och försök igen.',
       error_notFound: 'Transaktionen finns inte längre: kanske raderades den på en annan enhet.',
       error_closedGoal: 'Den rör ett avslutat mål, som inte längre kan ändras.',

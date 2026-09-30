@@ -10,3 +10,8 @@ export function rovingTarget(key: string, index: number, count: number): number 
   if (key === 'End') return count - 1;
   return null;
 }
+
+/** The one option of a radio group that is in the tab order: the selected one, else the first. */
+export function rovingTabStop(selected: number, count: number): number {
+  return selected >= 0 && selected < count ? selected : 0;
+}

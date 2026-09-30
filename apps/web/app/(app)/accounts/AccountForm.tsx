@@ -221,6 +221,7 @@ export function AccountForm({
           colorIndex={values.colorIndex}
           icon={values.icon}
           icons={accountIconOptions}
+          optionLabel={(label, index, total) => t('web.form.pickerOption', { label, index, total })}
           onChange={(next) => set(next)}
         />
       </div>

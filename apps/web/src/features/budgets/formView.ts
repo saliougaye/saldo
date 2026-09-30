@@ -21,8 +21,18 @@ export interface BudgetFormView {
   mode: 'new' | 'edit';
   id: string | null;
   initial: BudgetFormValues;
-  /** Top-level live expense categories; `taken` when another budget already covers one. */
-  categories: { id: string; name: string; icon: string; colorIndex: number; taken: boolean }[];
+  /**
+   * Top-level live expense categories; `taken` when another budget already covers one. An edited
+   * budget keeps the archived categories it already holds, `archived`, so they can be deselected.
+   */
+  categories: {
+    id: string;
+    name: string;
+    icon: string;
+    colorIndex: number;
+    taken: boolean;
+    archived: boolean;
+  }[];
   /** The six periods before this one, spend per category id, for `suggestBudgetAmount`. */
   history: Record<string, number>[];
   /** Every category, for `suggestBudgetAmount`'s expansion of a parent into its children. */
@@ -61,7 +71,7 @@ export function budgetFormView(input: {
         (category) =>
           category.direction === 'expense' &&
           category.parentId === null &&
-          category.archivedAt === null,
+          (category.archivedAt === null || editing?.categoryIds.includes(category.id) === true),
       )
       .map((category) => ({
         id: category.id,
@@ -69,6 +79,7 @@ export function budgetFormView(input: {
         icon: category.icon,
         colorIndex: category.colorIndex,
         taken: taken.has(category.id),
+        archived: category.archivedAt !== null,
       })),
     history,
     categoryRefs: data.categories.map((category) => ({

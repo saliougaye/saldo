@@ -1308,6 +1308,7 @@ export const it = {
       repeatRecurring: 'Ricorrente',
       repeatOnPhone: 'Le ricorrenze si creano e si modificano dal telefono.',
       keyboardHint: 'Esc per chiudere · ⌘↵ per salvare',
+      pickerOption: '{{label}} {{index}} di {{total}}',
       error_invalid: 'Non siamo riusciti a leggere il modulo. Ricarica la pagina e riprova.',
       error_notFound:
         'Questa transazione non c’è più: forse è stata eliminata da un altro dispositivo.',

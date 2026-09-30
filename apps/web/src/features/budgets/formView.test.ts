@@ -92,6 +92,18 @@ describe('budgetFormView', () => {
     expect(view?.categoryRefs).toContainEqual({ id: 'c1', parentId: null });
   });
 
+  it("an edit keeps the budget's archived category as a selected, archived tile", () => {
+    const held = { ...data, budgets: [{ ...BUDGET, categoryIds: ['c1', 'c9'] }] };
+    const view = budgetFormView({ ...base, data: held, mode: 'edit', id: 'b1' });
+    expect(view?.categories.map((c) => [c.id, c.archived, c.taken])).toEqual([
+      ['c1', false, false],
+      ['c2', false, false],
+      ['c9', true, false],
+    ]);
+    const fresh = budgetFormView({ ...base, data: held, mode: 'new', id: null });
+    expect(fresh?.categories.some((c) => c.id === 'c9')).toBe(false);
+  });
+
   it('is null for an unknown id', () => {
     expect(budgetFormView({ ...base, data, mode: 'edit', id: 'nope' })).toBeNull();
   });

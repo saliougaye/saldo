@@ -77,13 +77,16 @@ export async function saveBudget(
       const gap = budgetStepMissing('details', input, minorDigits);
       if (gap !== null) return { writes: [], result: { ok: false, missing: gap } };
 
-      // Categories: distinct, live, spending ones (the phone's grid offers top-level expense
-      // categories; a child rides with its parent through `expandCategoryIds`).
+      // Categories: distinct, spending ones, live unless the budget already holds them (the phone's
+      // grid offers top-level expense categories; a child rides with its parent through
+      // `expandCategoryIds`). An archived one it holds can stay, as an account keeps its own.
       const ids = [...new Set(input.categoryIds)];
       const valid = ids.every((id) =>
         data.categories.some(
           (category) =>
-            category.id === id && category.direction === 'expense' && category.archivedAt === null,
+            category.id === id &&
+            category.direction === 'expense' &&
+            (category.archivedAt === null || existing?.categoryIds.includes(id) === true),
         ),
       );
       if (!valid) return fail('invalid');

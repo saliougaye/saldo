@@ -1301,6 +1301,7 @@ export const en: Messages = {
       repeatRecurring: 'Recurring',
       repeatOnPhone: 'Recurrences are created and edited on the phone.',
       keyboardHint: 'Esc to close · ⌘↵ to save',
+      pickerOption: '{{label}} {{index}} of {{total}}',
       error_invalid: 'We couldn’t read the form. Reload the page and try again.',
       error_notFound: 'This transaction is gone: another device may have deleted it.',
       error_closedGoal: 'It touches a closed goal, which can no longer be changed.',

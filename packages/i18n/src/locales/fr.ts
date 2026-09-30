@@ -1319,6 +1319,7 @@ export const fr: Messages = {
       repeatRecurring: 'Récurrente',
       repeatOnPhone: 'Les récurrences se créent et se modifient sur le téléphone.',
       keyboardHint: 'Échap pour fermer · ⌘↵ pour enregistrer',
+      pickerOption: '{{label}} {{index}} sur {{total}}',
       error_invalid: 'Nous n’avons pas pu lire le formulaire. Rechargez la page et réessayez.',
       error_notFound:
         'Cette transaction n’existe plus : un autre appareil l’a peut-être supprimée.',

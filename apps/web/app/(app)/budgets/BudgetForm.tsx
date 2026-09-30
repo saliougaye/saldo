@@ -23,6 +23,7 @@ import {
   useTransition,
 } from 'react';
 import type { BudgetFormView } from '../../../src/features/budgets/formView';
+import { resolveBudgetName } from '../../../src/features/budgets/name';
 import { budgetWriteErrors } from '../../../src/features/budgets/writeErrors';
 import type { BudgetMessages } from '../../../src/i18n/budgetMessages';
 import { Alert } from '../../../src/ui/Alert';
@@ -147,7 +148,7 @@ export function BudgetForm({
         // The phone's `onSubmit(name)`: the typed name, or the one built from the categories.
         result = await saveBudgetAction({
           id: view.id,
-          name: values.name.trim() || autoName,
+          name: resolveBudgetName(values.name, autoName),
           categoryIds: values.categoryIds,
           buffer: values.buffer,
           period: values.period,
@@ -238,7 +239,11 @@ export function BudgetForm({
                 onClick={() => toggle(category.id, category.name, category.taken)}
               >
                 <IconBox name={category.icon as IconName} colorIndex={category.colorIndex} />
-                <span className={styles.tileName}>{category.name}</span>
+                <span className={styles.tileName}>
+                  {category.archived
+                    ? `${category.name} · ${t('categories.archivedBadge')}`
+                    : category.name}
+                </span>
                 {taken ? <span className={styles.takenDot} aria-hidden="true" /> : null}
               </button>
             );
@@ -328,8 +333,9 @@ export function BudgetForm({
       <div className={styles.field}>
         <AppearancePicker
           showColors={false}
-          colorLabel={t('common.appearance')}
-          iconLabel={t('common.appearance')}
+          colorLabel={t('categories.colour')}
+          iconLabel={t('categories.icon')}
+          optionLabel={(label, index, total) => t('web.form.pickerOption', { label, index, total })}
           colorIndex={iconColorIndex}
           icon={icon}
           icons={BUDGET_ICONS}

@@ -147,6 +147,37 @@ describe('saveBudget', () => {
     }
   });
 
+  it('lets a budget keep a category archived since, but not take another archived one', async () => {
+    await onboarded();
+    await addCategory('cat-old', {});
+    await addCategory('cat-other', { archivedAt: FIXTURE_NOW.toISOString() });
+    const created = await saveBudget(
+      harness.db,
+      userId,
+      { ...input, categoryIds: ['cat-old'] },
+      FIXTURE_NOW,
+    );
+    if (!created.ok) throw new Error('not created');
+    await addCategory('cat-old', { archivedAt: FIXTURE_NOW.toISOString() });
+    expect(
+      await saveBudget(
+        harness.db,
+        userId,
+        { ...input, id: created.id, categoryIds: ['cat-old'], buffer: '350' },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true, id: created.id });
+    expect((await budgets())[0]?.amount).toBe(35000);
+    expect(
+      await saveBudget(
+        harness.db,
+        userId,
+        { ...input, id: created.id, categoryIds: ['cat-old', 'cat-other'] },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'invalid' });
+  });
+
   it('answers notFound for an unknown budget id', async () => {
     await onboarded();
     expect(await saveBudget(harness.db, userId, { ...input, id: 'nope' }, FIXTURE_NOW)).toEqual({

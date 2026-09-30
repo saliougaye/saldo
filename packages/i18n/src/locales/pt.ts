@@ -1311,6 +1311,7 @@ export const pt: Messages = {
       repeatRecurring: 'Recorrente',
       repeatOnPhone: 'As recorrências criam-se e alteram-se no telemóvel.',
       keyboardHint: 'Esc para fechar · ⌘↵ para guardar',
+      pickerOption: '{{label}} {{index}} de {{total}}',
       error_invalid: 'Não conseguimos ler o formulário. Recarregue a página e tente de novo.',
       error_notFound:
         'Esta transação já não existe: talvez tenha sido eliminada noutro dispositivo.',
