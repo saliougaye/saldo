@@ -1,4 +1,5 @@
 import {
+  canArchiveAccount,
   type GoalProgress,
   goalPace,
   goalTone,
@@ -23,8 +24,10 @@ import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
+import { archivedView } from '../../../src/features/accounts/archivedView';
 import { accountDetail } from '../../../src/features/accounts/detailView';
 import { accountFormView } from '../../../src/features/accounts/formView';
+import { accountWriteErrors } from '../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
@@ -32,13 +35,16 @@ import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
+import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
 import { AccountForm } from './AccountForm';
+import { ArchiveAccount } from './ArchiveAccount';
 import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
+import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -149,6 +155,15 @@ export default async function AccountsPage({
       : null;
   const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
+
+  // `?archived` opens the list of archived accounts and closed goals; a form or a detail wins.
+  const archived = archivedView(page.data);
+  const archivedOpen =
+    params.archived !== undefined && form === null && !showAccountPanel && !showGoalPanel;
+  const archivedTotal = view.archivedCount + archived.goals.length;
+  const writeErrors = accountWriteErrors(catalogs[locale].web.accounts);
+  const canArchive =
+    selected !== null && canArchiveAccount(page.data.accounts, selected.account.id);
 
   const accountRow = (row: AccountRowView) => (
     <ListRow
@@ -310,16 +325,15 @@ export default async function AccountsPage({
           </>
         )}
 
-        {/* The archived list is a 0.3e screen (§17.1.9): with nowhere to send it yet, the row never
-            links — at zero there is also nothing to count, so it reads as a plain line instead of a
-            row that looks like it leads somewhere. */}
-        {view.archivedCount === 0 ? (
+        {archivedTotal === 0 ? (
           <p className={styles.note}>{t('profile.archivedAccounts')}</p>
         ) : (
           <ListRow
             open
+            href={`${PATH}?archived`}
+            selected={archivedOpen}
             title={t('profile.archivedAccounts')}
-            trailing={<span className={styles.count}>{view.archivedCount}</span>}
+            trailing={<span className={styles.count}>{archivedTotal}</span>}
           />
         )}
       </div>
@@ -350,6 +364,73 @@ export default async function AccountsPage({
         </Panel>
       )}
 
+      {!archivedOpen ? null : (
+        <Panel
+          key="archived"
+          title={t('web.accounts.archivedTitle')}
+          closeHref={PATH}
+          closeLabel={t('common.close')}
+        >
+          {archived.accounts.length === 0 && archived.goals.length === 0 ? (
+            <EmptyState title={t('accounts.archivedEmpty')} />
+          ) : (
+            <>
+              {archived.accounts.length === 0 ? null : (
+                <Section title={t('web.accounts.archivedAccounts')}>
+                  {archived.accounts.map((row) => (
+                    <ListRow
+                      key={row.id}
+                      leading={
+                        <span className={formStyles.faded}>
+                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                        </span>
+                      }
+                      title={row.name}
+                      subtitle={t('accounts.archivedBadge')}
+                      trailing={
+                        <RestoreButton
+                          id={row.id}
+                          kind="account"
+                          label={t('accounts.restore')}
+                          busyLabel={t('common.loading')}
+                          errors={writeErrors}
+                        />
+                      }
+                    />
+                  ))}
+                </Section>
+              )}
+              {archived.goals.length === 0 ? null : (
+                <Section title={t('web.accounts.closedGoals')}>
+                  {archived.goals.map((row) => (
+                    <ListRow
+                      key={row.id}
+                      leading={
+                        <span className={formStyles.faded}>
+                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                        </span>
+                      }
+                      title={row.name}
+                      subtitle={row.parentName}
+                      trailing={
+                        <RestoreButton
+                          id={row.id}
+                          kind="goal"
+                          label={t('accounts.restore')}
+                          busyLabel={t('common.loading')}
+                          errors={writeErrors}
+                          disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
+                        />
+                      }
+                    />
+                  ))}
+                </Section>
+              )}
+            </>
+          )}
+        </Panel>
+      )}
+
       {form !== null || !showAccountPanel || selected === null ? null : (
         <Panel
           key="detail"
@@ -361,7 +442,23 @@ export default async function AccountsPage({
             <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
               {t('common.edit')}
             </Link>
-            {/* «Archivia» (Task 10) joins this row when the account holds no open goal. */}
+            {canArchive ? (
+              <ArchiveAccount
+                id={selected.account.id}
+                afterHref={PATH}
+                strings={{
+                  action: t('accounts.archive'),
+                  title: t('accounts.archive'),
+                  body: t('web.accounts.archiveBody', { name: selected.account.name }),
+                  confirm: t('common.archive'),
+                  cancel: t('common.cancel'),
+                  busy: t('common.loading'),
+                  errors: writeErrors,
+                }}
+              />
+            ) : (
+              <span className={formStyles.muted}>{t('goals.closeFirst')}</span>
+            )}
           </div>
           <span className={styles.label}>{heroLabel}</span>
           <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
