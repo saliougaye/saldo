@@ -18,7 +18,7 @@ export default async function LoginPage() {
   if ((await currentUser()) !== null) redirect('/home');
   const { t } = await publicI18n();
   const instance = instanceInfo();
-  const canRegister = await registrationAllowed(getDb(), env().registration);
+  const canRegister = await registrationAllowed(getDb(), env().registration ?? 'first-user');
   return (
     <div className={styles.column}>
       {/* D26: Rocky is the welcome, and appears on this page only — never beside an error. */}

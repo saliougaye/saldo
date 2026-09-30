@@ -35,10 +35,20 @@ services:
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?set WEBAUTHN_RP_ID}
       WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-Saldo}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      # 32 random bytes, base64: `openssl rand -base64 32`. Keep it; it encrypts the stored SMTP password.
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:?set SETTINGS_ENCRYPTION_KEY}
       # Without this the server would keep no attachments at all: `none` is the default (§10).
       ATTACHMENT_STORAGE: ${ATTACHMENT_STORAGE:-fs}
       STORAGE_DIR: /data/attachments
-      REGISTRATION: ${REGISTRATION:-first-user}
+      # Empty means «not set here»: the admin panel chooses (first-user until it does). Set, it locks the panel.
+      REGISTRATION: ${REGISTRATION:-}
+      INSTANCE_NAME: ${INSTANCE_NAME:-}
+      # Outgoing email. A host here makes the whole group the configuration and locks the panel's form.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       APP_REDIRECT_SCHEMES: ${APP_REDIRECT_SCHEMES:-saldo}
     volumes:
       - attachments:/data/attachments

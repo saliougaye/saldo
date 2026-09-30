@@ -36,8 +36,9 @@ const SESSION_EXPIRES_IN_DAYS = 180;
  * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
  */
 export function buildAuthOptions() {
-  const { publicUrl, rpId, rpName, appRedirectSchemes, registration, secret, trustedProxies } =
-    env();
+  const { publicUrl, rpId, rpName, appRedirectSchemes, secret, trustedProxies } = env();
+  // Unset means the documented default; 0.3f-2 Task 3 moves this to the server-settings resolver.
+  const registration = env().registration ?? 'first-user';
   const db = getDb();
   return {
     appName: 'Saldo',

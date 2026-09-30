@@ -18,14 +18,14 @@ export default async function RegisterPage({
   searchParams: Promise<{ invite?: string }>;
 }) {
   if ((await currentUser()) !== null) redirect('/home');
-  if (!(await registrationAllowed(getDb(), env().registration))) redirect('/login');
+  if (!(await registrationAllowed(getDb(), env().registration ?? 'first-user'))) redirect('/login');
   const { t } = await publicI18n();
   const instance = instanceInfo();
   const { invite } = await searchParams;
   return (
     <div className={styles.column}>
       <RegisterFlow
-        requiresInvite={registrationRequiresInvite(env().registration)}
+        requiresInvite={registrationRequiresInvite(env().registration ?? 'first-user')}
         initialInvite={invite ?? ''}
         instance={instance}
         strings={{
@@ -67,11 +67,11 @@ export default async function RegisterPage({
         }}
         // «Passo {{step}} di {{total}}», rendered here because the count is known server-side.
         stepLabels={Array.from(
-          { length: registrationRequiresInvite(env().registration) ? 3 : 2 },
+          { length: registrationRequiresInvite(env().registration ?? 'first-user') ? 3 : 2 },
           (_, index) =>
             t('common.stepOf', {
               step: index + 1,
-              total: registrationRequiresInvite(env().registration) ? 3 : 2,
+              total: registrationRequiresInvite(env().registration ?? 'first-user') ? 3 : 2,
             }),
         )}
       />

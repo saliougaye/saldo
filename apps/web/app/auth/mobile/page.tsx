@@ -64,10 +64,10 @@ export default async function MobileAuthPage({
     return problem(error instanceof ApiError ? error.message : t('web.auth.genericError'));
   }
 
-  const canRegister = await registrationAllowed(getDb(), env().registration);
-  const requiresInvite = registrationRequiresInvite(env().registration);
+  const canRegister = await registrationAllowed(getDb(), env().registration ?? 'first-user');
+  const requiresInvite = registrationRequiresInvite(env().registration ?? 'first-user');
   log('auth', 'serving the sign-in page', {
-    registration: env().registration,
+    registration: env().registration ?? 'first-user',
     canRegister,
     requiresInvite,
   });

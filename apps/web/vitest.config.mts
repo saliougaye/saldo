@@ -16,6 +16,8 @@ export default defineConfig({
       WEBAUTHN_RP_ID: 'localhost',
       WEBAUTHN_RP_NAME: 'Saldo test',
       JWT_SECRET: 'dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=',
+      // 32 bytes of 'A', base64: visibly fake, never a real key.
+      SETTINGS_ENCRYPTION_KEY: 'QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=',
       DATABASE_URL: 'postgres://saldo:saldo@localhost:5432/saldo_test',
       STORAGE_DIR: '/tmp/saldo-test-attachments',
       REGISTRATION: 'open',
