@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { InviteSummary } from '../../server/auth/invites';
-import { activeInviteCount, invitePanel, inviteRows } from './invitesView';
+import { activeInviteCount, invitePanel, inviteRows, usedByAddress } from './invitesView';
 
 const invite = (over: Partial<InviteSummary> = {}): InviteSummary => ({
   id: 'i1',
@@ -70,6 +70,21 @@ describe('inviteRows', () => {
     });
   });
 
+  it('never shows a synthetic address: it reads as nobody', () => {
+    const [row] = inviteRows([
+      invite({
+        status: 'used',
+        usedAt: '2026-09-03T10:00:00.000Z',
+        usedByEmail: 'u2@passkey.saldo.invalid',
+      }),
+    ]);
+    expect(row?.subtitle).toEqual({
+      key: 'admin.invites.subUsedAnonymous',
+      vars: { date: '2026-09-03T10:00:00.000Z' },
+      dateVars: ['date'],
+    });
+  });
+
   it('dates a revoked invite by its revocation and an expired one by its deadline', () => {
     const rows = inviteRows([
       invite({ status: 'revoked', revokedAt: '2026-09-02T08:00:00.000Z' }),
@@ -129,5 +144,13 @@ describe('invitePanel', () => {
 
   it('reads the first value when a parameter is repeated', () => {
     expect(invitePanel({ i: ['a', 'b'] }, list)).toEqual({ kind: 'invite', invite: list[0] });
+  });
+});
+
+describe('usedByAddress', () => {
+  it('is the address to show, or null for nobody or a synthetic one', () => {
+    expect(usedByAddress(invite({ usedByEmail: 'a@example.com' }))).toBe('a@example.com');
+    expect(usedByAddress(invite({ usedByEmail: null }))).toBeNull();
+    expect(usedByAddress(invite({ usedByEmail: 'x@passkey.saldo.invalid' }))).toBeNull();
   });
 });

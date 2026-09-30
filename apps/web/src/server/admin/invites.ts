@@ -61,3 +61,11 @@ export async function revokeInviteById(
 ): Promise<RevokeInviteResult> {
   return (await revokeInvite(db, id, now)) ? { ok: true } : { ok: false, error: 'notFound' };
 }
+
+/**
+ * What `mintInviteAction` returns: the mint result plus the expiry as a date in the admin's zone and
+ * language, so the panel (a client component, with no formatter or zone of its own) can say it.
+ */
+export type MintActionResult =
+  | (Extract<MintResult, { ok: true }> & { expiresOn: string })
+  | Extract<MintResult, { ok: false }>;

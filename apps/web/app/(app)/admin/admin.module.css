@@ -1,0 +1,300 @@
+/* §17.1.7, Admin: the header, then the same sub-navigation shell as Profilo. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.headCount {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .page {
+    gap: 56px;
+  }
+}
+
+/* ---- Rows ---- */
+.avatar,
+.tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+}
+
+.avatar {
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.tile {
+  border-radius: var(--radius-input);
+}
+
+/* History (a revoked account, a spent invite): the row reads, but quieter. */
+.muted > :is(a, div) {
+  color: var(--color-text-muted);
+}
+
+.newLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0 0 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}
+
+.role {
+  white-space: nowrap;
+}
+
+.revoked {
+  color: var(--color-accent);
+}
+
+/* ---- The panel ---- */
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.avatarBig,
+.tileBig {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+}
+
+.avatarBig {
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.tileBig {
+  border-radius: var(--radius-input);
+}
+
+.whoText {
+  min-width: 0;
+}
+
+.whoName {
+  margin: 0;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.whoSub {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px 24px;
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+
+.facts dt {
+  color: var(--color-text-faint);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.factMuted {
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.warn {
+  margin: 12px 0 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 40px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dangerTitle {
+  margin: 0;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-accent);
+}
+
+.dangerButton {
+  margin-top: 12px;
+}
+
+.feedback {
+  margin-top: 12px;
+}
+
+.confirmField {
+  margin-top: 4px;
+}
+
+/* ---- Nuovo invito ---- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (max-width: 1023px) {
+  .form {
+    gap: 20px;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+/* ---- The code, shown once ---- */
+.minted {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mintedTitle {
+  margin: 0;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.code {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-title);
+  letter-spacing: var(--tracking-tight);
+  text-align: center;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copyRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.linkBox {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Dark on light in both themes (`--color-qr-*` do not follow the theme): an inverted code is not read by every scanner. */
+.qr {
+  align-self: center;
+  width: min(100%, 240px);
+  height: auto;
+  border-radius: var(--radius-input);
+}
+
+.qrLight {
+  fill: var(--color-qr-light);
+}
+
+.qrDark {
+  fill: var(--color-qr-dark);
+}
+
+.caption {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.45;
+  text-wrap: pretty;
+}

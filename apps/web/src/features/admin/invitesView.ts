@@ -1,3 +1,4 @@
+import { isSyntheticEmail } from '../../server/auth/email';
 import type { InviteStatus, InviteSummary } from '../../server/auth/invites';
 import type { AdminMessage } from './message';
 
@@ -14,6 +15,12 @@ export interface InviteRowView {
   subtitle: AdminMessage;
 }
 
+/** The address a used invite shows: none for a synthetic one, which is never displayed. */
+export function usedByAddress(invite: Pick<InviteSummary, 'usedByEmail'>): string | null {
+  const email = invite.usedByEmail;
+  return email === null || isSyntheticEmail(email) ? null : email;
+}
+
 function subtitle(invite: InviteSummary): AdminMessage {
   switch (invite.status) {
     case 'active':
@@ -26,11 +33,12 @@ function subtitle(invite: InviteSummary): AdminMessage {
       // `used_at` is written before the account exists and `used_by` after (see `burnInvite`), and
       // the account may be deleted later: a used invite can honestly have nobody's name on it.
       const date = invite.usedAt ?? invite.createdAt;
-      return invite.usedByEmail === null
+      const email = usedByAddress(invite);
+      return email === null
         ? { key: 'admin.invites.subUsedAnonymous', vars: { date }, dateVars: ['date'] }
         : {
             key: 'admin.invites.subUsed',
-            vars: { date, email: invite.usedByEmail },
+            vars: { date, email },
             dateVars: ['date'],
           };
     }

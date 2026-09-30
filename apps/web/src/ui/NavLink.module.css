@@ -23,3 +23,11 @@
 .icon {
   flex: none;
 }
+
+.count {
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}

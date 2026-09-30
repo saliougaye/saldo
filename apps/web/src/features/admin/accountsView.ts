@@ -1,6 +1,7 @@
 import { type AccountDetail, type AccountSummary, ADMIN_ROLE } from '../../server/auth/admin';
 import { isSyntheticEmail } from '../../server/auth/email';
 import { initials } from '../../ui/initials';
+import { confirmationMatches } from './confirmation';
 import type { AdminMessage } from './message';
 
 const roleKey = (role: string) => (role === ADMIN_ROLE ? 'admin.roleAdmin' : 'admin.roleMember');
@@ -158,6 +159,5 @@ export function deleteConfirmationMatches(
   typed: string,
   account: Pick<AccountDetail, 'email' | 'displayName'>,
 ): boolean {
-  const given = typed.trim().toLowerCase();
-  return given !== '' && given === deleteConfirmation(account).expected.trim().toLowerCase();
+  return confirmationMatches(typed, deleteConfirmation(account).expected);
 }

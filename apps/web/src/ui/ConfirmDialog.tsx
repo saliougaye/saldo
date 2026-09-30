@@ -17,6 +17,8 @@ interface Props {
   /** While true the confirm button is disabled and says `busyLabel`. */
   busy: boolean;
   busyLabel?: string;
+  /** The confirm button waits for something the question asks (the typed name of an account). */
+  confirmDisabled?: boolean;
   /**
    * A third answer between «cancel» and the confirm button (a second way to go on, as closing a
    * goal's «Riporta in …»). It draws its own button; absent, the dialog is the plain question.
@@ -38,6 +40,7 @@ export function ConfirmDialog({
   cancelLabel,
   busy,
   busyLabel,
+  confirmDisabled = false,
   secondary,
   children,
   onConfirm,
@@ -57,7 +60,12 @@ export function ConfirmDialog({
               {cancelLabel}
             </Button>
             {secondary}
-            <Button busy={busy} busyLabel={busyLabel} onClick={onConfirm}>
+            <Button
+              busy={busy}
+              busyLabel={busyLabel}
+              disabled={confirmDisabled}
+              onClick={onConfirm}
+            >
               {confirmLabel}
             </Button>
           </div>
