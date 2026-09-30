@@ -2037,6 +2037,21 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   it and shows the choices disabled; the SMTP panel holds the form, with the password as «impostata» and
   «Sostituisci» (write-only) and a test email. A table with tabs was considered and not taken: a household instance
   has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
+  **Built in 0.3f-1 (2026-09-30): Account, Inviti and Istanza.** `/admin` redirects to `/admin/accounts`; the head is
+  «Admin» over «{instance name} · {N} account», and the sub-navigation (Account, Inviti with the count of *active*
+  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). Every page and every Server Action starts with
+  `requireWebAdmin()`: a member gets a 404, nobody signed in goes to `/login`; an admin who has not onboarded still
+  gets in, in the default time zone. **Account** (`?u={id}`; an id that names nothing opens nothing): the facts (role,
+  state and reason, email verified or not, created and the invite's label, last sign-in, passkeys, synced rows), and
+  for another account «Rendi admin» (asks first: it cannot be undone from the panel or the CLI), «Revoca accesso»
+  (asks; sessions close at once, data stays), «Ripristina accesso» and, in «Zona pericolosa», «Elimina account», which
+  asks for the account's email (its display name when the address is synthetic), disabled until it matches, checked
+  again on the server, and removes the attachment bytes with the rows. An admin's own panel has the facts and a note,
+  no actions: nobody can lock themselves out, so the last admin is never lost. **Inviti** (`?new` mints, `?i={id}`
+  inspects and revokes; `?new` wins): «Nuovo invito» takes a label and 1, 7, 30 or 90 days and shows the code once
+  as text, link and QR, held in the panel's state and never in a URL, cookie or storage; the QR is drawn dark on light in
+  both themes (`--color-qr-*`). **Istanza**: five read-only rows. What differs from the mockup: no «dal telefono» on
+  the last sign-in (nothing reliable says which device), and «Impostazioni» is not in the sub-navigation until 0.3f-2.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
@@ -2080,6 +2095,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   0.3b (D32), so `scripts/user.ts list` shows it too — synthetic or real.
 - **Invites:** mint (the code is shown once, as text, link and QR code), list, revoke.
 - **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver. (Rows skipped by the projection: deferred, §17.1.2.)
+- **Built in 0.3f-1 (2026-09-30):** accounts, invites and instance are in the panel (§17.1.7); the CLI stays, for the
+  first invite and for the day no admin can sign in. Server settings, SMTP, verification and recovery are 0.3f-2 and 0.3f-3.
 - **Server settings** (D33): a `server_settings` table (`key`, `value jsonb`, `updated_at`, `updated_by`).
   - Infrastructure stays in the environment and needs a restart: `DATABASE_URL`, `PUBLIC_URL`, `WEBAUTHN_*`,
     secrets, attachment storage.

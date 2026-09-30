@@ -250,7 +250,10 @@ anything its members will recognise. An account created before 0.3b carries a sy
 `{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
 Profile → Server and sync, once.
 
-To invite somebody else, mint another code and send it to them:
+To invite somebody else, mint another code and send it to them. Once you can sign in as an admin, the panel at
+`/admin` does this too (**Inviti**, «Nuovo invito»: the code, a link and a QR, shown once), and so do the accounts
+below (**Account**: promote, revoke, restore, delete). The commands stay the way in when no admin can sign in, and for
+the first invite:
 
 ```bash
 pnpm --filter web invite new --label "Marco" --days 3
@@ -258,7 +261,7 @@ pnpm --filter web invite list
 pnpm --filter web invite revoke <id>     # withdraw one that has not been used
 ```
 
-To manage the accounts themselves:
+To manage the accounts themselves from the command line:
 
 ```bash
 pnpm --filter web user list
