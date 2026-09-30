@@ -1,13 +1,13 @@
 'use server';
 
-import { requireWebUser } from '../../../src/server/auth/currentUser';
-import { getDb } from '../../../src/server/db/client';
+import { requireWebUser } from '../../../../src/server/auth/currentUser';
+import { getDb } from '../../../../src/server/db/client';
 import {
   type BudgetResult,
   type BudgetSaveResult,
   deleteBudget as deleteFor,
   saveBudget as saveFor,
-} from '../../../src/server/write/budgets';
+} from '../../../../src/server/write/budgets';
 
 export async function saveBudgetAction(input: unknown): Promise<BudgetSaveResult> {
   const user = await requireWebUser();

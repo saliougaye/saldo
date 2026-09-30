@@ -200,7 +200,7 @@ export default async function HomePage({
     percent,
     categories: page.data.categories,
     styles,
-    href: (item) => `/budgets?b=${item.budget.id}`,
+    href: (item) => `/profile/budgets?b=${item.budget.id}`,
   });
   const budgetSentence = (advice: BudgetAdvice, item: BudgetView): ReactNode => {
     const end = formatDayMonth(item.range.end, locale);
@@ -435,7 +435,7 @@ export default async function HomePage({
               }
               more={
                 view.budgets.items.length === 0 ? undefined : (
-                  <Link className={styles.more} href="/budgets">
+                  <Link className={styles.more} href="/profile/budgets">
                     <span>{t('web.budgets.allBudgets')}</span>
                     <Icon name="chevR" size={16} />
                   </Link>
@@ -446,7 +446,12 @@ export default async function HomePage({
                 // The header already says «Nessun budget», as on the phone: the body says what one is.
                 <>
                   <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
-                  <ListRow open href="/budgets?new" icon="plus" title={t('targets.createBudget')} />
+                  <ListRow
+                    open
+                    href="/profile/budgets?new"
+                    icon="plus"
+                    title={t('targets.createBudget')}
+                  />
                 </>
               ) : (
                 <>

@@ -2,15 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import type { BudgetWriteError } from '../../../src/server/write/budgets';
-import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
-import { Icon } from '../../../src/ui/Icon';
+import type { BudgetWriteError } from '../../../../src/server/write/budgets';
+import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
+import { Icon } from '../../../../src/ui/Icon';
 import { deleteBudgetAction } from './actions';
 import styles from './budgets.module.css';
 
 interface Props {
   id: string;
-  /** Where the page goes once the budget is gone: `/budgets`. */
+  /** Where the page goes once the budget is gone: `/profile/budgets`. */
   afterHref: string;
   strings: {
     /** The button in the form's foot, «Elimina budget». */

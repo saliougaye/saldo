@@ -43,10 +43,9 @@ describe('isCurrent', () => {
     expect(isCurrent('/home', '/transactions')).toBe(false);
   });
 
-  it('keeps Home lit on /budgets, which is reached from Home and has no tab', () => {
-    expect(isCurrent('/home', '/budgets')).toBe(true);
-    expect(isCurrent('/home', '/budgets?b=abc')).toBe(true);
-    expect(isCurrent('/accounts', '/budgets')).toBe(false);
+  it('does not light Home on /profile/budgets, which belongs to the avatar', () => {
+    expect(isCurrent('/home', '/profile/budgets')).toBe(false);
+    expect(isCurrent('/profile', '/profile/budgets?b=abc')).toBe(true);
   });
 
   it('matches a sub-page of a section', () => {

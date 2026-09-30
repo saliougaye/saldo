@@ -22,18 +22,18 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { BudgetFormView } from '../../../src/features/budgets/formView';
-import { resolveBudgetName } from '../../../src/features/budgets/name';
-import { budgetWriteErrors } from '../../../src/features/budgets/writeErrors';
-import type { BudgetMessages } from '../../../src/i18n/budgetMessages';
-import { Alert } from '../../../src/ui/Alert';
-import { AmountField } from '../../../src/ui/AmountField';
-import { AppearancePicker } from '../../../src/ui/AppearancePicker';
-import { FormFoot } from '../../../src/ui/FormFoot';
-import { IconBox } from '../../../src/ui/IconBox';
-import { Segmented } from '../../../src/ui/Segmented';
-import { Switch } from '../../../src/ui/Switch';
-import { TextField } from '../../../src/ui/TextField';
+import type { BudgetFormView } from '../../../../src/features/budgets/formView';
+import { resolveBudgetName } from '../../../../src/features/budgets/name';
+import { budgetWriteErrors } from '../../../../src/features/budgets/writeErrors';
+import type { BudgetMessages } from '../../../../src/i18n/budgetMessages';
+import { Alert } from '../../../../src/ui/Alert';
+import { AmountField } from '../../../../src/ui/AmountField';
+import { AppearancePicker } from '../../../../src/ui/AppearancePicker';
+import { FormFoot } from '../../../../src/ui/FormFoot';
+import { IconBox } from '../../../../src/ui/IconBox';
+import { Segmented } from '../../../../src/ui/Segmented';
+import { Switch } from '../../../../src/ui/Switch';
+import { TextField } from '../../../../src/ui/TextField';
 import { saveBudgetAction } from './actions';
 import styles from './budgets.module.css';
 import { DeleteBudget } from './DeleteBudget';
