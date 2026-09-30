@@ -4,8 +4,8 @@ import { validateRedirectUri } from '../../../src/server/auth/redirect';
 import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { ApiError } from '../../../src/server/http/errors';
-import { instanceInfo } from '../../../src/server/instance';
 import { log } from '../../../src/server/log';
+import { pageInstanceInfo, pageRegistrationMode } from '../../../src/server/page/instanceSettings';
 import { Alert } from '../../../src/ui/Alert';
 import { Brand } from '../../../src/ui/Brand';
 import authStyles from '../../(auth)/auth.module.css';
@@ -31,7 +31,7 @@ export default async function MobileAuthPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { t } = await publicI18n();
-  const instance = instanceInfo();
+  const instance = await pageInstanceInfo();
   const params = await searchParams;
   const redirectUri = params.redirect_uri ?? '';
   const state = params.state ?? '';
@@ -64,10 +64,11 @@ export default async function MobileAuthPage({
     return problem(error instanceof ApiError ? error.message : t('web.auth.genericError'));
   }
 
-  const canRegister = await registrationAllowed(getDb(), env().registration ?? 'first-user');
-  const requiresInvite = registrationRequiresInvite(env().registration ?? 'first-user');
+  const mode = await pageRegistrationMode();
+  const canRegister = await registrationAllowed(getDb(), mode);
+  const requiresInvite = registrationRequiresInvite(mode);
   log('auth', 'serving the sign-in page', {
-    registration: env().registration ?? 'first-user',
+    registration: mode,
     canRegister,
     requiresInvite,
   });

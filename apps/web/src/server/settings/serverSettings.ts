@@ -42,10 +42,17 @@ export async function readServerSettings(
   });
 }
 
+/**
+ * The mode the gate applies. When `REGISTRATION` is set it is that value, **without** reading the
+ * table: an instance configured the way it was before 0.3f-2 behaves exactly as it did, and does
+ * not depend on the table for its gate. When it is not set the table is read, and a read that
+ * fails rejects: the caller refuses the registration, it does not guess a mode.
+ */
 export async function registrationMode(
   db: ServerDatabase,
   source: SettingsSource = env(),
 ): Promise<RegistrationMode> {
+  if (source.registration !== null) return source.registration;
   return (await readServerSettings(db, source)).registration.value;
 }
 
@@ -53,6 +60,7 @@ export async function instanceName(
   db: ServerDatabase,
   source: SettingsSource = env(),
 ): Promise<string> {
+  if (source.instanceName !== null) return source.instanceName;
   return (await readServerSettings(db, source)).instanceName.value;
 }
 

@@ -7,6 +7,7 @@ import { admin, bearer, oneTimeToken } from 'better-auth/plugins';
 import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
+import { registrationMode } from '../settings/serverSettings';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
 import { invitePlugin } from './invitePlugin';
 import { completeRegistration, resolveRegistration } from './registration';
@@ -37,9 +38,10 @@ const SESSION_EXPIRES_IN_DAYS = 180;
  */
 export function buildAuthOptions() {
   const { publicUrl, rpId, rpName, appRedirectSchemes, secret, trustedProxies } = env();
-  // Unset means the documented default; 0.3f-2 Task 3 moves this to the server-settings resolver.
-  const registration = env().registration ?? 'first-user';
   const db = getDb();
+  // Asked when a ceremony runs, never captured here: a mode saved in the admin panel applies to the
+  // next registration with no rebuild. A read that fails rejects, and the registration with it.
+  const mode = () => registrationMode(db);
   return {
     appName: 'Saldo',
     baseURL: publicUrl,
@@ -84,14 +86,14 @@ export function buildAuthOptions() {
           /** Before the ceremony: the policy, the name, the email and the invite. See `registration.ts`. */
           resolveUser: async ({ context }) =>
             resolveRegistration(db, {
-              mode: registration,
+              mode: await mode(),
               context: readRegistrationContext(context),
               now: new Date(),
             }),
           /** After it: the account row, the role, the invite — or nothing at all when it exists. */
           afterVerification: async ({ ctx, context, user: resolved }) =>
             completeRegistration(db, {
-              mode: registration,
+              mode: await mode(),
               context: readRegistrationContext(context),
               resolved: { id: resolved.id, name: resolved.name },
               store: {
@@ -113,7 +115,7 @@ export function buildAuthOptions() {
             }),
         },
       }),
-      invitePlugin(registration),
+      invitePlugin(mode),
       admin({ defaultRole: MEMBER_ROLE, adminRoles: [ADMIN_ROLE] }),
       bearer(),
       oneTimeToken({ expiresIn: ONE_TIME_TOKEN_MINUTES, storeToken: 'hashed' }),

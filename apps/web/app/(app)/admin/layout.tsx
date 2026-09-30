@@ -5,8 +5,8 @@ import { listAccounts } from '../../../src/server/auth/admin';
 import { requireWebAdmin } from '../../../src/server/auth/currentUser';
 import { listInvites } from '../../../src/server/auth/invites';
 import { getDb } from '../../../src/server/db/client';
-import { instanceInfo } from '../../../src/server/instance';
 import { adminContext } from '../../../src/server/page/adminContext';
+import { pageInstanceInfo } from '../../../src/server/page/instanceSettings';
 import { NavLink } from '../../../src/ui/NavLink';
 import { SubnavLayout } from '../../../src/ui/SubnavLayout';
 import styles from './admin.module.css';
@@ -22,17 +22,18 @@ export const dynamic = 'force-dynamic';
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const user = await requireWebAdmin();
   const db = getDb();
-  const [{ t, locale }, accounts, invites] = await Promise.all([
+  const [{ t, locale }, accounts, invites, instance] = await Promise.all([
     adminContext(user),
     listAccounts(db),
     listInvites(db, new Date()),
+    pageInstanceInfo(),
   ]);
   return (
     <div className={styles.page}>
       <header className={styles.head}>
         <h1 className={styles.title}>{t('admin.title')}</h1>
         <p className={styles.headCount}>
-          {plural(t, locale, 'admin.headCount', accounts.length, { name: instanceInfo().name })}
+          {plural(t, locale, 'admin.headCount', accounts.length, { name: instance.name })}
         </p>
       </header>
       <SubnavLayout

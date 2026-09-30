@@ -3,8 +3,7 @@ import { publicI18n } from '../../../src/i18n/server';
 import { currentUser } from '../../../src/server/auth/currentUser';
 import { registrationAllowed, registrationRequiresInvite } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
-import { env } from '../../../src/server/env';
-import { instanceInfo } from '../../../src/server/instance';
+import { pageInstanceInfo, pageRegistrationMode } from '../../../src/server/page/instanceSettings';
 import styles from '../auth.module.css';
 import { RegisterFlow } from './RegisterFlow';
 
@@ -18,14 +17,15 @@ export default async function RegisterPage({
   searchParams: Promise<{ invite?: string }>;
 }) {
   if ((await currentUser()) !== null) redirect('/home');
-  if (!(await registrationAllowed(getDb(), env().registration ?? 'first-user'))) redirect('/login');
+  const mode = await pageRegistrationMode();
+  if (!(await registrationAllowed(getDb(), mode))) redirect('/login');
   const { t } = await publicI18n();
-  const instance = instanceInfo();
+  const instance = await pageInstanceInfo();
   const { invite } = await searchParams;
   return (
     <div className={styles.column}>
       <RegisterFlow
-        requiresInvite={registrationRequiresInvite(env().registration ?? 'first-user')}
+        requiresInvite={registrationRequiresInvite(mode)}
         initialInvite={invite ?? ''}
         instance={instance}
         strings={{
@@ -66,13 +66,11 @@ export default async function RegisterPage({
           'web.auth.cancelledBody': t('web.auth.cancelledBody'),
         }}
         // «Passo {{step}} di {{total}}», rendered here because the count is known server-side.
-        stepLabels={Array.from(
-          { length: registrationRequiresInvite(env().registration ?? 'first-user') ? 3 : 2 },
-          (_, index) =>
-            t('common.stepOf', {
-              step: index + 1,
-              total: registrationRequiresInvite(env().registration ?? 'first-user') ? 3 : 2,
-            }),
+        stepLabels={Array.from({ length: registrationRequiresInvite(mode) ? 3 : 2 }, (_, index) =>
+          t('common.stepOf', {
+            step: index + 1,
+            total: registrationRequiresInvite(mode) ? 3 : 2,
+          }),
         )}
       />
     </div>

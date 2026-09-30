@@ -1,5 +1,8 @@
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { serverSettings } from '../db/schema';
+import { schema, serverSettings } from '../db/schema';
+import type { ServerDatabase } from '../db/types';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { encryptSecret } from './secret';
 import {
@@ -216,5 +219,22 @@ describe('smtpForSending', () => {
       from: 'saldo@env.example',
     };
     expect(await smtpForSending(harness.db, { ...noEnv, smtp: fromEnv })).toEqual(fromEnv);
+  });
+});
+
+describe('registrationMode and instanceName when the settings cannot be read', () => {
+  // A database that was never migrated: there is no `server_settings` to read.
+  const client = new PGlite();
+  const broken: ServerDatabase = drizzle(client, { schema });
+  afterAll(() => client.close());
+
+  it('rejects, rather than answering with a default, when the mode is not locked', async () => {
+    await expect(registrationMode(broken, noEnv)).rejects.toThrow();
+    await expect(instanceName(broken, noEnv)).rejects.toThrow();
+  });
+
+  it('does not ask the table at all when the environment sets the value', async () => {
+    expect(await registrationMode(broken, { ...noEnv, registration: 'closed' })).toBe('closed');
+    expect(await instanceName(broken, { ...noEnv, instanceName: 'Casa' })).toBe('Casa');
   });
 });

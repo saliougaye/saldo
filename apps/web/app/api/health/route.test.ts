@@ -1,5 +1,6 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { serverSettings } from '../../../src/server/db/schema';
 import { resetEnvCache } from '../../../src/server/env';
 import { resetStoreCache } from '../../../src/server/storage';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
@@ -65,5 +66,45 @@ describe('GET /api/health', () => {
       resetEnvCache();
       resetStoreCache();
     }
+  });
+
+  describe('with no REGISTRATION in the environment', () => {
+    let previous: string | undefined;
+
+    beforeAll(() => {
+      previous = process.env.REGISTRATION;
+      delete process.env.REGISTRATION;
+      resetEnvCache();
+    });
+
+    afterAll(() => {
+      if (previous === undefined) delete process.env.REGISTRATION;
+      else process.env.REGISTRATION = previous;
+      resetEnvCache();
+    });
+
+    const store = (registration: string) =>
+      harness.db.insert(serverSettings).values({
+        key: 'registration',
+        value: registration,
+        updatedAt: new Date(),
+        updatedBy: null,
+      });
+
+    it('reports the mode saved in the table', async () => {
+      await store('closed');
+      await expect((await GET()).json()).resolves.toMatchObject({
+        registrationAllowed: false,
+        inviteRequired: false,
+      });
+    });
+
+    it('asks for a code when the saved mode is invite', async () => {
+      await store('invite');
+      await expect((await GET()).json()).resolves.toMatchObject({
+        registrationAllowed: true,
+        inviteRequired: true,
+      });
+    });
   });
 });
