@@ -36,6 +36,12 @@ export interface Palette {
   scrim: string;
   dialogScrim: string;
   shadow: string;
+  /**
+   * A QR code is dark on light in **both** themes — an inverted one is not read by every scanner —
+   * so these two are the same in `dark` and `light` (the web's invite panel draws with them).
+   */
+  qrDark: string;
+  qrLight: string;
 }
 
 export const palettes: Record<ThemeName, Palette> = {
@@ -65,6 +71,8 @@ export const palettes: Record<ThemeName, Palette> = {
     scrim: 'rgba(0,0,0,0.55)',
     dialogScrim: 'rgba(0,0,0,0.6)',
     shadow: 'rgba(0,0,0,0.5)',
+    qrDark: '#000000',
+    qrLight: '#FFFFFF',
   },
   light: {
     page: '#E9E9E7',
@@ -91,6 +99,8 @@ export const palettes: Record<ThemeName, Palette> = {
     scrim: 'rgba(0,0,0,0.55)',
     dialogScrim: 'rgba(0,0,0,0.6)',
     shadow: 'rgba(0,0,0,0.5)',
+    qrDark: '#000000',
+    qrLight: '#FFFFFF',
   },
 };
 

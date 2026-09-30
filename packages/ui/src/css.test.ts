@@ -29,6 +29,19 @@ describe('tokensCss', () => {
     expect(root).toContain(`--color-border-strong: ${palettes.dark.borderStrong};`);
   });
 
+  it('emits the QR colours with one value in every theme block', () => {
+    const blocks = [
+      block(css, ':root'),
+      block(css, '[data-theme="light"]'),
+      block(css, '[data-theme="dark"]'),
+      block(css, ':root:not([data-theme="dark"])'),
+    ];
+    for (const declarations of blocks) {
+      expect(declarations).toContain(`--color-qr-dark: ${palettes.dark.qrDark};`);
+      expect(declarations).toContain(`--color-qr-light: ${palettes.dark.qrLight};`);
+    }
+  });
+
   it('declares the light palette for data-theme="light"', () => {
     const light = block(css, '[data-theme="light"]');
     expect(light).toContain('color-scheme: light;');

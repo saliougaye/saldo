@@ -37,6 +37,13 @@ describe('palettes', () => {
     expect(Object.keys(palettes.light).sort()).toEqual(Object.keys(palettes.dark).sort());
   });
 
+  it('keeps a QR code dark on light in both themes (an inverted one is not read by every scanner)', () => {
+    expect(palettes.dark.qrDark).toBe(palettes.light.qrDark);
+    expect(palettes.dark.qrLight).toBe(palettes.light.qrLight);
+    expect(contrast(palettes.dark.qrDark, palettes.dark.qrLight)).toBeGreaterThan(7);
+    expect(luminance(palettes.dark.qrDark)).toBeLessThan(luminance(palettes.dark.qrLight));
+  });
+
   it('only contain valid colours', () => {
     for (const colour of [...flatten(palettes.dark), ...flatten(palettes.light)]) {
       expect(colour).toMatch(COLOR);
