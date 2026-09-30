@@ -1747,7 +1747,8 @@ public. The decisions behind this section are D30–D36.
   the target being live, of the same direction and neither the category nor one of its children; a child whose parent
   is archived cannot be restored; reorder renumbers one sibling group and writes nothing for a move past either end.
   «Budget mensile» on the form creates a single-category `period` budget named after the category (alert 90, no
-  rollover) or updates that budget's amount, and switching it off leaves an existing budget alone, as the phone does.
+  rollover) or updates that budget's amount, and switching it off (or an amount of 0) removes an existing
+  single-category budget, as the phone's edit does. Income categories never get one.
 - The form's pure half (`CategoryFormValues`, `categoryFormFrom`, `categoryMissingForSave`) moved into `@saldo/core`
   `views/categoryForm.ts`, with `categoryParentCandidates` and `movableTargets`.
 
