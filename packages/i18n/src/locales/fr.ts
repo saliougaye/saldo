@@ -176,6 +176,10 @@ export const fr: Messages = {
       timeZone: 'Fuseau par défaut',
       timeZoneNote: 'pour ceux qui n’en ont pas défini',
     },
+    mail: {
+      subject: 'E-mail de test de {{instance}}',
+      body: 'Ceci est un e-mail de test de « {{instance}} » ({{host}}). Si vous le lisez, l’envoi d’e-mails fonctionne.',
+    },
   },
   kinds: {
     expense: 'Dépense',

@@ -175,6 +175,10 @@ export const es: Messages = {
       timeZone: 'Zona horaria predeterminada',
       timeZoneNote: 'para quien no ha configurado una',
     },
+    mail: {
+      subject: 'Correo de prueba de {{instance}}',
+      body: 'Este es un correo de prueba de «{{instance}}» ({{host}}). Si lo estás leyendo, el envío de correo funciona.',
+    },
   },
   kinds: {
     expense: 'Gasto',

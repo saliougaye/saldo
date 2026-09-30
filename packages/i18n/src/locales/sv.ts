@@ -175,6 +175,10 @@ export const sv: Messages = {
       timeZone: 'Standardtidszon',
       timeZoneNote: 'för den som inte har ställt in någon',
     },
+    mail: {
+      subject: 'Testmejl från {{instance}}',
+      body: 'Det här är ett testmejl från ”{{instance}}” ({{host}}). Om du läser det fungerar utgående e-post.',
+    },
   },
   kinds: {
     expense: 'Utgift',

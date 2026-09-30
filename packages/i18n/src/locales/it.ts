@@ -173,6 +173,10 @@ export const it = {
       timeZone: 'Fuso predefinito',
       timeZoneNote: 'per chi non ne ha impostato uno',
     },
+    mail: {
+      subject: 'Email di prova da {{instance}}',
+      body: 'Questa è un’email di prova da «{{instance}}» ({{host}}). Se la leggi, l’invio delle email funziona.',
+    },
   },
   kinds: {
     expense: 'Uscita',

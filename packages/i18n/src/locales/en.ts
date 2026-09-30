@@ -174,6 +174,10 @@ export const en: Messages = {
       timeZone: 'Default time zone',
       timeZoneNote: 'for anyone who hasn’t set one',
     },
+    mail: {
+      subject: 'Test email from {{instance}}',
+      body: 'This is a test email from “{{instance}}” ({{host}}). If you are reading it, outgoing email works.',
+    },
   },
   kinds: {
     expense: 'Expense',

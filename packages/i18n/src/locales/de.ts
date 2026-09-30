@@ -177,6 +177,10 @@ export const de: Messages = {
       timeZone: 'Standardzeitzone',
       timeZoneNote: 'für alle, die keine eingestellt haben',
     },
+    mail: {
+      subject: 'Test-E-Mail von {{instance}}',
+      body: 'Dies ist eine Test-E-Mail von „{{instance}}“ ({{host}}). Wenn du sie liest, funktioniert der E-Mail-Versand.',
+    },
   },
   kinds: {
     expense: 'Ausgabe',
