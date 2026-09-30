@@ -323,6 +323,7 @@ export function SmtpPanel({
             {strings.saved}
           </p>
         ) : null}
+        <div>{testButton}</div>
         {outcome === null ? null : outcome.ok ? (
           <p className={styles.status} role="status">
             {outcome.text}
@@ -330,9 +331,7 @@ export function SmtpPanel({
         ) : (
           <Alert body={outcome.text} />
         )}
-        {locked ? (
-          <div>{testButton}</div>
-        ) : (
+        {locked ? null : (
           <FormFoot
             hint={strings.keyboardHint}
             cancelHref={closeHref}
@@ -340,7 +339,6 @@ export function SmtpPanel({
             submitLabel={strings.save}
             busyLabel={strings.busy}
             pending={pending}
-            leading={testButton}
           />
         )}
       </form>
