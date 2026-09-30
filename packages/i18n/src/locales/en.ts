@@ -1310,6 +1310,12 @@ export const en: Messages = {
       error_parentArchived: 'The parent category is archived: restore it first.',
       error_unexpected: 'Something went wrong. Try again.',
     },
+    tags: {
+      error_invalid: 'Couldn’t save: check the name and try again.',
+      error_notFound: 'This tag no longer exists. Refresh the page.',
+      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_unexpected: 'Something went wrong. Try again.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Shop, person, service',

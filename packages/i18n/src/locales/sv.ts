@@ -1313,6 +1313,12 @@ export const sv: Messages = {
       error_parentArchived: 'Den överordnade kategorin är arkiverad: återställ den först.',
       error_unexpected: 'Något gick fel. Försök igen.',
     },
+    tags: {
+      error_invalid: 'Det gick inte att spara: kontrollera namnet och försök igen.',
+      error_notFound: 'Den här taggen finns inte längre. Uppdatera sidan.',
+      error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
+      error_unexpected: 'Något gick fel. Försök igen.',
+    },
     form: {
       kind: 'Typ',
       descriptionPlaceholder: 'Butik, person, tjänst',

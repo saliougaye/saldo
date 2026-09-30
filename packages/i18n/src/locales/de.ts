@@ -1329,6 +1329,13 @@ export const de: Messages = {
         'Die übergeordnete Kategorie ist archiviert: Stelle sie zuerst wieder her.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
+    tags: {
+      error_invalid: 'Speichern nicht möglich: Prüfe den Namen und versuche es erneut.',
+      error_notFound: 'Diesen Tag gibt es nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+    },
     form: {
       kind: 'Art',
       descriptionPlaceholder: 'Geschäft, Person, Dienst',

@@ -1318,6 +1318,12 @@ export const it = {
       error_parentArchived: 'La categoria madre è archiviata: ripristinala prima.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
+    tags: {
+      error_invalid: 'Non riesco a salvare: controlla il nome e riprova.',
+      error_notFound: 'Questo tag non esiste più. Aggiorna la pagina.',
+      error_conflict: 'È stato modificato da un altro dispositivo. Riapri e riprova.',
+      error_unexpected: 'Qualcosa è andato storto. Riprova.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Negozio, persona, servizio',

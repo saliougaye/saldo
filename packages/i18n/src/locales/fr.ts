@@ -1329,6 +1329,12 @@ export const fr: Messages = {
       error_parentArchived: 'La catégorie parente est archivée : restaurez-la d’abord.',
       error_unexpected: 'Une erreur s’est produite. Réessayez.',
     },
+    tags: {
+      error_invalid: 'Enregistrement impossible : vérifiez le nom et réessayez.',
+      error_notFound: 'Ce tag n’existe plus. Actualisez la page.',
+      error_conflict: 'Il a été modifié depuis un autre appareil. Rouvrez-le et réessayez.',
+      error_unexpected: 'Une erreur s’est produite. Réessayez.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Magasin, personne, service',

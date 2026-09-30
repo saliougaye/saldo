@@ -1320,6 +1320,12 @@ export const pt: Messages = {
       error_parentArchived: 'A categoria principal está arquivada: restaura-a primeiro.',
       error_unexpected: 'Algo correu mal. Tenta de novo.',
     },
+    tags: {
+      error_invalid: 'Não foi possível guardar: verifica o nome e tenta de novo.',
+      error_notFound: 'Esta etiqueta já não existe. Atualiza a página.',
+      error_conflict: 'Foi alterada noutro dispositivo. Abre-a de novo e tenta outra vez.',
+      error_unexpected: 'Algo correu mal. Tenta de novo.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Loja, pessoa, serviço',

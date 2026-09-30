@@ -1320,6 +1320,12 @@ export const es: Messages = {
       error_parentArchived: 'La categoría principal está archivada: restáurala primero.',
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
     },
+    tags: {
+      error_invalid: 'No se pudo guardar: revisa el nombre e inténtalo de nuevo.',
+      error_notFound: 'Esta etiqueta ya no existe. Actualiza la página.',
+      error_conflict: 'Se modificó desde otro dispositivo. Ábrela de nuevo e inténtalo otra vez.',
+      error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Tienda, persona, servicio',
