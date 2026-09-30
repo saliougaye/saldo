@@ -122,6 +122,7 @@ export function sendVerificationLink(
   inBackground(async () => {
     if (isSyntheticEmail(input.user.email)) return;
     if (!(await mailEnabled(db))) return;
+    if (await isRevoked(db, input.user.id)) return;
     // The library's own verify path, which it built; only the callback is replaced.
     const url = ownLink(input.url, new URL(input.url).pathname, {
       callbackURL: EMAIL_VERIFIED_PATH,
@@ -152,6 +153,7 @@ export function requestVerification(
     if (account === undefined || account.emailVerified) return;
     if (isSyntheticEmail(account.email)) return;
     if (!(await mailEnabled(db))) return;
+    if (await isRevoked(db, account.id)) return;
     const token = await createEmailVerificationToken(
       input.secret,
       account.email,

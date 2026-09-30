@@ -260,6 +260,19 @@ describe('sendVerificationLink', () => {
     expect(mail.sent).toEqual([]);
   });
 
+  it('mails nothing to a revoked account', async () => {
+    await enableMail(harness.db);
+    const id = await account('ada@example.com', { verified: false });
+    await revokeUser(harness.db, id, 'gone', new Date());
+    sendVerificationLink(harness.db, {
+      user: { id, email: 'ada@example.com' },
+      url: VERIFY_URL,
+      acceptLanguage: null,
+    });
+    await settleBackground();
+    expect(mail.sent).toEqual([]);
+  });
+
   it('mails nothing without SMTP', async () => {
     await verify('ada@example.com');
     expect(mail.sent).toEqual([]);
@@ -300,6 +313,15 @@ describe('requestVerification', () => {
     expect(link).toMatch(
       /^http:\/\/localhost:3000\/api\/auth\/verify-email\?token=[\w.-]+&callbackURL=%2Femail-verified$/,
     );
+  });
+
+  it('mails nothing to a revoked account', async () => {
+    await enableMail(harness.db);
+    const id = await account('ada@example.com', { verified: false });
+    await revokeUser(harness.db, id, 'gone', new Date());
+    requestVerification(harness.db, { userId: id, ...links, acceptLanguage: null });
+    await settleBackground();
+    expect(mail.sent).toEqual([]);
   });
 
   it('mails nothing for a synthetic address, a verified one or an unknown id', async () => {
