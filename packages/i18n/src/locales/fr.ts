@@ -86,6 +86,10 @@ export const fr: Messages = {
       syncedRows_other: '{{count}} lignes',
       selfNote: 'C’est ton propre compte : tu ne peux ni le révoquer ni le supprimer d’ici.',
       promote: 'Nommer admin',
+      promoteTitle: 'Nommer {{name}} administrateur ?',
+      promoteNote:
+        'Un administrateur gère les comptes, les invitations et les réglages du serveur. Cela ne peut pas être annulé d’ici.',
+      promoteConfirm: 'Nommer admin',
       revoke: 'Révoquer l’accès',
       revokeTitle: 'Révoquer l’accès de {{name}} ?',
       revokeNote:

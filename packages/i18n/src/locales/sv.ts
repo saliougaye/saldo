@@ -86,6 +86,10 @@ export const sv: Messages = {
       syncedRows_other: '{{count}} rader',
       selfNote: 'Det här är ditt eget konto: härifrån kan du varken återkalla eller radera det.',
       promote: 'Gör till admin',
+      promoteTitle: 'Göra {{name}} till administratör?',
+      promoteNote:
+        'En administratör kan hantera konton, inbjudningar och serverns inställningar. Det går inte att ångra härifrån.',
+      promoteConfirm: 'Gör till admin',
       revoke: 'Återkalla åtkomst',
       revokeTitle: 'Återkalla {{name}}s åtkomst?',
       revokeNote:

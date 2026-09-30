@@ -84,6 +84,10 @@ export const it = {
       syncedRows_other: '{{count}} righe',
       selfNote: 'Questo è il tuo account: da qui non puoi revocarlo né eliminarlo.',
       promote: 'Rendi admin',
+      promoteTitle: 'Rendere {{name}} amministratore?',
+      promoteNote:
+        'Un amministratore gestisce account, inviti e impostazioni del server. Da qui non si può annullare.',
+      promoteConfirm: 'Rendi admin',
       revoke: 'Revoca accesso',
       revokeTitle: 'Revocare l’accesso di {{name}}?',
       revokeNote:

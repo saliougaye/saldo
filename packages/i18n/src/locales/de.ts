@@ -86,6 +86,10 @@ export const de: Messages = {
       syncedRows_other: '{{count}} Zeilen',
       selfNote: 'Das ist dein eigenes Konto: Von hier aus kannst du es weder sperren noch löschen.',
       promote: 'Zum Admin machen',
+      promoteTitle: '{{name}} zum Administrator machen?',
+      promoteNote:
+        'Ein Admin verwaltet Konten, Einladungen und die Einstellungen des Servers. Von hier aus lässt sich das nicht rückgängig machen.',
+      promoteConfirm: 'Zum Admin machen',
       revoke: 'Zugang sperren',
       revokeTitle: 'Zugang von {{name}} sperren?',
       revokeNote:

@@ -16,6 +16,9 @@ interface Props {
     promote: string;
     revoke: string;
     restore: string;
+    promoteTitle: string;
+    promoteNote: string;
+    promoteConfirm: string;
     revokeTitle: string;
     revokeNote: string;
     revokeConfirm: string;
@@ -25,10 +28,12 @@ interface Props {
   };
 }
 
-/** «Rendi admin», «Revoca accesso» (which asks first) and «Ripristina accesso» (which does not). */
+/** «Rendi admin» and «Revoca accesso» (both ask first) and «Ripristina accesso» (which does not).
+ * Promotion cannot be undone from the panel or the CLI, hence the question.
+ */
 export function AccountActions({ id, can, strings }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<'promote' | 'revoke' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -44,7 +49,7 @@ export function AccountActions({ id, can, strings }: Props) {
       }
       if (result.ok) {
         setError(null);
-        setOpen(false);
+        setOpen(null);
         router.refresh();
         return;
       }
@@ -62,9 +67,11 @@ export function AccountActions({ id, can, strings }: Props) {
         {can.promote ? (
           <Button
             variant="secondary"
-            busy={pending}
-            busyLabel={strings.busy}
-            onClick={() => run(promoteAccountAction)}
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              setOpen('promote');
+            }}
           >
             {strings.promote}
           </Button>
@@ -75,7 +82,7 @@ export function AccountActions({ id, can, strings }: Props) {
             disabled={pending}
             onClick={() => {
               setError(null);
-              setOpen(true);
+              setOpen('revoke');
             }}
           >
             {strings.revoke}
@@ -93,16 +100,31 @@ export function AccountActions({ id, can, strings }: Props) {
         ) : null}
       </div>
       {can.revoke ? <p className={styles.warn}>{strings.revokeNote}</p> : null}
-      {error !== null && !open ? (
+      {error !== null && open === null ? (
         <div className={styles.feedback}>
           <Alert body={error} />
         </div>
       ) : null}
       <ConfirmDialog
-        open={open}
+        open={open === 'promote'}
         onOpenChange={(next) => {
           if (pending) return;
-          setOpen(next);
+          setOpen(next ? 'promote' : null);
+        }}
+        title={strings.promoteTitle}
+        body={strings.promoteNote}
+        error={error ?? undefined}
+        confirmLabel={strings.promoteConfirm}
+        cancelLabel={strings.cancel}
+        busy={pending}
+        busyLabel={strings.busy}
+        onConfirm={() => run(promoteAccountAction)}
+      />
+      <ConfirmDialog
+        open={open === 'revoke'}
+        onOpenChange={(next) => {
+          if (pending) return;
+          setOpen(next ? 'revoke' : null);
         }}
         title={strings.revokeTitle}
         body={strings.revokeNote}

@@ -86,6 +86,10 @@ export const es: Messages = {
       syncedRows_other: '{{count}} filas',
       selfNote: 'Esta es tu propia cuenta: desde aquí no puedes revocarla ni eliminarla.',
       promote: 'Hacer admin',
+      promoteTitle: '¿Hacer administrador a {{name}}?',
+      promoteNote:
+        'Un administrador puede gestionar cuentas, invitaciones y los ajustes del servidor. No se puede deshacer desde aquí.',
+      promoteConfirm: 'Hacer admin',
       revoke: 'Revocar acceso',
       revokeTitle: '¿Revocar el acceso de {{name}}?',
       revokeNote:

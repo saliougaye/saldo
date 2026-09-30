@@ -84,6 +84,10 @@ export const en: Messages = {
       syncedRows_other: '{{count}} rows',
       selfNote: 'This is your own account: you can’t revoke or delete it from here.',
       promote: 'Make admin',
+      promoteTitle: 'Make {{name}} an administrator?',
+      promoteNote:
+        'An admin can manage accounts, invites and the server’s settings. This cannot be undone from here.',
+      promoteConfirm: 'Make admin',
       revoke: 'Revoke access',
       revokeTitle: 'Revoke {{name}}’s access?',
       revokeNote:
