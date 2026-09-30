@@ -269,6 +269,52 @@ describe('listInvites', () => {
   });
 });
 
+describe('invite attribution', () => {
+  it('names who minted an invite and who spent it, and null for a CLI mint', async () => {
+    const admin = await createTestSession(harness.db, 'Ada', 'admin');
+    const member = await createTestSession(harness.db, 'Bob');
+    await harness.db
+      .update(user)
+      .set({ email: 'bob@example.com' })
+      .where(eq(user.id, member.userId));
+    const minted = await createInvite(harness.db, {
+      label: 'web',
+      ttlDays: 7,
+      createdBy: admin.userId,
+      now: NOW,
+    });
+    await createInvite(harness.db, { label: 'cli', ttlDays: 7, createdBy: null, now: LATER });
+    await burnInvite(harness.db, minted.code, NOW);
+    await attributeInvite(harness.db, minted.invite.id, member.userId);
+
+    const rows = await listInvites(harness.db, LATER);
+    const byLabel = new Map(rows.map((row) => [row.label, row]));
+    expect(byLabel.get('web')).toMatchObject({
+      createdByName: 'Ada',
+      usedByEmail: 'bob@example.com',
+    });
+    expect(byLabel.get('cli')).toMatchObject({ createdByName: null, usedByEmail: null });
+  });
+
+  it("carries the minter's name on the summary createInvite returns", async () => {
+    const admin = await createTestSession(harness.db, 'Ada', 'admin');
+    const web = await createInvite(harness.db, {
+      label: null,
+      ttlDays: 7,
+      createdBy: admin.userId,
+      now: NOW,
+    });
+    expect(web.invite).toMatchObject({ createdByName: 'Ada', usedByEmail: null });
+    const cli = await createInvite(harness.db, {
+      label: null,
+      ttlDays: 7,
+      createdBy: null,
+      now: NOW,
+    });
+    expect(cli.invite).toMatchObject({ createdByName: null, usedByEmail: null });
+  });
+});
+
 describe('revokeInvite', () => {
   it('reports whether there was anything to revoke, and leaves a spent invite spent', async () => {
     const { invite } = await createInvite(harness.db, {

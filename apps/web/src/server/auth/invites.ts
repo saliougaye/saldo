@@ -1,5 +1,6 @@
 import { and, desc, eq, gt, isNull } from 'drizzle-orm';
-import { invites } from '../db/schema';
+import { alias } from 'drizzle-orm/pg-core';
+import { invites, user } from '../db/schema';
 import type { ServerDatabase } from '../db/types';
 import { generateInviteCode, hashInviteCode } from './inviteCode';
 
@@ -21,6 +22,10 @@ export interface InviteSummary {
   usedBy: string | null;
   revokedAt: string | null;
   status: InviteStatus;
+  /** The display name of whoever minted it; null for a CLI mint, or when that account is gone. */
+  createdByName: string | null;
+  /** The address of whoever spent it; null while unspent, or when that account is gone. */
+  usedByEmail: string | null;
 }
 
 interface InviteRow {
@@ -31,6 +36,8 @@ interface InviteRow {
   usedAt: Date | null;
   usedBy: string | null;
   revokedAt: Date | null;
+  createdByName: string | null;
+  usedByEmail: string | null;
 }
 
 export interface CreateInviteInput {
@@ -50,6 +57,8 @@ function summarise(row: InviteRow, now: Date): InviteSummary {
     usedAt: row.usedAt?.toISOString() ?? null,
     usedBy: row.usedBy,
     revokedAt: row.revokedAt?.toISOString() ?? null,
+    createdByName: row.createdByName,
+    usedByEmail: row.usedByEmail,
     status:
       row.usedAt !== null
         ? 'used'
@@ -82,7 +91,17 @@ export async function createInvite(
     revokedAt: null,
   };
   await db.insert(invites).values(row);
-  return { code, invite: summarise(row, input.now) };
+  const [minter] =
+    input.createdBy === null
+      ? []
+      : await db.select({ name: user.name }).from(user).where(eq(user.id, input.createdBy));
+  return {
+    code,
+    invite: summarise(
+      { ...row, createdByName: minter?.name ?? null, usedByEmail: null },
+      input.now,
+    ),
+  };
 }
 
 /** The conditions under which a code opens the door, in one place so the two callers agree. */
@@ -160,6 +179,10 @@ export async function releaseInvite(db: ServerDatabase, id: string): Promise<voi
 }
 
 export async function listInvites(db: ServerDatabase, now: Date): Promise<InviteSummary[]> {
+  // Two joins on the same table, hence the alias. Left joins: `created_by` and `used_by` are both
+  // nullable, and an invite must not vanish from the list because its account was deleted.
+  const minter = alias(user, 'minter');
+  const spender = alias(user, 'spender');
   const rows = await db
     .select({
       id: invites.id,
@@ -169,8 +192,12 @@ export async function listInvites(db: ServerDatabase, now: Date): Promise<Invite
       usedAt: invites.usedAt,
       usedBy: invites.usedBy,
       revokedAt: invites.revokedAt,
+      createdByName: minter.name,
+      usedByEmail: spender.email,
     })
     .from(invites)
+    .leftJoin(minter, eq(minter.id, invites.createdBy))
+    .leftJoin(spender, eq(spender.id, invites.usedBy))
     .orderBy(desc(invites.createdAt));
   return rows.map((row) => summarise(row, now));
 }
