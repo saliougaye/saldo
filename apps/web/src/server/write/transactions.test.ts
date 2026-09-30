@@ -4,7 +4,7 @@ import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { FIXTURE_NOW, seedOnboarded } from './fixtures';
 import { saveGoal } from './goals';
-import { createTag, deleteTransaction, restoreTransaction, saveTransaction } from './transactions';
+import { deleteTransaction, restoreTransaction, saveTransaction } from './transactions';
 import { writeChanges } from './writeChanges';
 
 let harness: TestDatabase;
@@ -551,25 +551,6 @@ describe('deleteTransaction and restoreTransaction', () => {
       FIXTURE_NOW,
     );
     expect(await restoreTransaction(harness.db, userId, created.id, FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-  });
-});
-
-describe('createTag', () => {
-  it('creates a tag, and returns the existing one for the same name', async () => {
-    await onboarded();
-    const first = await createTag(harness.db, userId, ' Casa ', FIXTURE_NOW);
-    const second = await createTag(harness.db, userId, 'casa', FIXTURE_NOW);
-    expect(first).toMatchObject({ ok: true, tag: { name: 'Casa' } });
-    expect(second).toEqual(first);
-    expect((await readUserData(harness.db, userId)).tags).toHaveLength(1);
-  });
-
-  it('refuses an empty name', async () => {
-    await onboarded();
-    expect(await createTag(harness.db, userId, '  ', FIXTURE_NOW)).toEqual({
       ok: false,
       error: 'invalid',
     });

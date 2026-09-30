@@ -1,7 +1,6 @@
 import {
   accountBalances,
   amountBufferToMinor,
-  canCreateTag,
   getCurrency,
   isLocalDate,
   isPocket,
@@ -13,7 +12,6 @@ import {
   previewFromBalances,
   readSettings,
   sanitizeAmountInput,
-  type Tag,
   type Transaction,
   type TransactionFormValues,
   toTransactionInput,
@@ -344,52 +342,6 @@ export async function restoreTransaction(
           },
         ],
         result: { ok: true },
-      };
-    });
-  } catch (error) {
-    if (error instanceof WriteRefused) return { ok: false, error: error.reason };
-    throw error;
-  }
-}
-
-export type CreateTagResult =
-  | { ok: true; tag: Pick<Tag, 'id' | 'name'> }
-  | { ok: false; error: 'invalid' | 'conflict' };
-
-/** «Crea «X»» in the tag field (§5.10): a new tag, or the one that already has the name. */
-export async function createTag(
-  db: ServerDatabase,
-  userId: string,
-  rawName: string,
-  now: Date,
-): Promise<CreateTagResult> {
-  const name = rawName.trim();
-  if (name.length === 0 || name.length > 40) return { ok: false, error: 'invalid' };
-  try {
-    return await writeInTransaction<CreateTagResult>(db, userId, now, async (tx) => {
-      const data = await readUserData(tx, userId);
-      if (!canCreateTag(data.tags, name)) {
-        const existing = data.tags.find(
-          (tag) => tag.name.trim().toLowerCase() === name.toLowerCase(),
-        );
-        if (existing !== undefined) {
-          return {
-            writes: [],
-            result: { ok: true, tag: { id: existing.id, name: existing.name } },
-          };
-        }
-      }
-      const id = newId();
-      return {
-        writes: [
-          {
-            entity: 'tag',
-            id,
-            data: { id, name, createdAt: now.toISOString(), deletedAt: null },
-            basis: null,
-          },
-        ],
-        result: { ok: true, tag: { id, name } },
       };
     });
   } catch (error) {

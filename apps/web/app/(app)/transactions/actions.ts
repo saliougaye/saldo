@@ -2,8 +2,8 @@
 
 import { requireWebUser } from '../../../src/server/auth/currentUser';
 import { getDb } from '../../../src/server/db/client';
+import { createTag as createTagFor } from '../../../src/server/write/tags';
 import {
-  createTag as createTagFor,
   deleteTransaction as deleteFor,
   type Result,
   restoreTransaction as restoreFor,
