@@ -1324,6 +1324,13 @@ export const it = {
       error_conflict: 'È stato modificato da un altro dispositivo. Riapri e riprova.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
+    data: {
+      title: 'Dati',
+      csvAllHint: 'Una riga per transazione, dalla più recente alla più vecchia.',
+      csvPeriodHint: 'Solo il periodo in corso: {{range}}.',
+      phoneNote:
+        'Il backup contiene i dati degli allegati, non i file. Il backup con foto e PDF (ZIP), il ripristino, l’importazione da CSV e «{{deleteAll}}» si fanno dal telefono.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Negozio, persona, servizio',

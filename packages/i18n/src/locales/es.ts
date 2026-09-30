@@ -1326,6 +1326,13 @@ export const es: Messages = {
       error_conflict: 'Se modificó desde otro dispositivo. Ábrela de nuevo e inténtalo otra vez.',
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
     },
+    data: {
+      title: 'Datos',
+      csvAllHint: 'Una fila por movimiento, del más reciente al más antiguo.',
+      csvPeriodHint: 'Solo el periodo en curso: {{range}}.',
+      phoneNote:
+        'La copia contiene los datos de los adjuntos, no los archivos. La copia con fotos y PDF (ZIP), la restauración, la importación de CSV y «{{deleteAll}}» se hacen desde el teléfono.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Tienda, persona, servicio',

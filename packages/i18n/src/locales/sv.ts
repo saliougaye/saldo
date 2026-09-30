@@ -1319,6 +1319,13 @@ export const sv: Messages = {
       error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
       error_unexpected: 'Något gick fel. Försök igen.',
     },
+    data: {
+      title: 'Data',
+      csvAllHint: 'En rad per transaktion, den senaste först.',
+      csvPeriodHint: 'Bara den pågående perioden: {{range}}.',
+      phoneNote:
+        'Säkerhetskopian innehåller uppgifterna om bilagorna, inte filerna. Säkerhetskopian med foton och PDF:er (ZIP), återställning, CSV-import och ”{{deleteAll}}” görs från telefonen.',
+    },
     form: {
       kind: 'Typ',
       descriptionPlaceholder: 'Butik, person, tjänst',

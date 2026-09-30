@@ -1336,6 +1336,13 @@ export const de: Messages = {
         'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
+    data: {
+      title: 'Daten',
+      csvAllHint: 'Eine Zeile pro Buchung, die neueste zuerst.',
+      csvPeriodHint: 'Nur der laufende Zeitraum: {{range}}.',
+      phoneNote:
+        'Das Backup enthält die Angaben zu den Anhängen, nicht die Dateien. Das Backup mit Fotos und PDFs (ZIP), die Wiederherstellung, der CSV-Import und „{{deleteAll}}“ laufen über das Telefon.',
+    },
     form: {
       kind: 'Art',
       descriptionPlaceholder: 'Geschäft, Person, Dienst',

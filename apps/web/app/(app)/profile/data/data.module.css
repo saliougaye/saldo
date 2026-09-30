@@ -1,0 +1,15 @@
+/* Profilo → Dati: what the download rows add to `SummaryRow`. */
+
+/* The arrow at the end of a row: it says «this saves a file», quietly. */
+.save {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+/* What is not here, and where it is: the phone. */
+.note {
+  margin: 12px 0 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}

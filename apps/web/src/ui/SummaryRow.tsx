@@ -16,6 +16,11 @@ interface Props {
   href?: string;
   /** Its editor is the one open in the panel. */
   selected?: boolean;
+  /**
+   * The row is a file to save (Profilo → Dati): a plain `<a download>`, which the browser answers
+   * by itself — `Link` would try to navigate to a route handler as if it were a page.
+   */
+  download?: boolean;
 }
 
 /** Profilo's row (§17.1.7): the setting and what it is now — the editor opens in the panel. */
@@ -27,6 +32,7 @@ export function SummaryRow({
   trailing,
   href,
   selected = false,
+  download = false,
 }: Props) {
   const body = (
     <>
@@ -40,6 +46,13 @@ export function SummaryRow({
     </>
   );
   if (href === undefined) return <div className={styles.row}>{body}</div>;
+  if (download) {
+    return (
+      <a className={styles.row} href={href} download>
+        {body}
+      </a>
+    );
+  }
   return (
     <Link
       className={`${styles.row} ${selected ? styles.selected : ''}`}

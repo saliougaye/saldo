@@ -1326,6 +1326,13 @@ export const pt: Messages = {
       error_conflict: 'Foi alterada noutro dispositivo. Abre-a de novo e tenta outra vez.',
       error_unexpected: 'Algo correu mal. Tenta de novo.',
     },
+    data: {
+      title: 'Dados',
+      csvAllHint: 'Uma linha por movimento, do mais recente ao mais antigo.',
+      csvPeriodHint: 'Só o período em curso: {{range}}.',
+      phoneNote:
+        'A cópia contém os dados dos anexos, não os ficheiros. A cópia com fotos e PDF (ZIP), o restauro, a importação de CSV e «{{deleteAll}}» fazem-se no telemóvel.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Loja, pessoa, serviço',

@@ -1316,6 +1316,13 @@ export const en: Messages = {
       error_conflict: 'It was changed on another device. Reopen it and try again.',
       error_unexpected: 'Something went wrong. Try again.',
     },
+    data: {
+      title: 'Data',
+      csvAllHint: 'One row per transaction, newest first.',
+      csvPeriodHint: 'Only the current period: {{range}}.',
+      phoneNote:
+        'The backup holds the attachments’ details, not their files. The backup with photos and PDFs (ZIP), restoring, CSV import and “{{deleteAll}}” are done from the phone.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Shop, person, service',

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * §17.1.7, variant «5»: the header, then a sub-navigation that picks one section, and «Esci» at
- * its end. Categorie, Budget and Obiettivi are sections of their own (0.3e-2b), Tag since 0.3e-3; Dati joins next.
+ * its end. Categorie, Budget and Obiettivi are sections of their own (0.3e-2b), Tag and Dati since 0.3e-3.
  */
 export default async function ProfileLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();
@@ -42,6 +42,7 @@ export default async function ProfileLayout({ children }: { children: ReactNode 
           <NavLink href="/profile/budgets" icon="target" label={t('budgets.title')} />
           <NavLink href="/profile/goals" icon="piggy" label={t('goals.title')} />
           <NavLink href="/profile/passkeys" icon="key" label={t('web.passkeys.title')} />
+          <NavLink href="/profile/data" icon="archive" label={t('web.data.title')} />
           <hr className={styles.separator} />
           <SignOutButton
             variant="row"

@@ -1335,6 +1335,13 @@ export const fr: Messages = {
       error_conflict: 'Il a été modifié depuis un autre appareil. Rouvrez-le et réessayez.',
       error_unexpected: 'Une erreur s’est produite. Réessayez.',
     },
+    data: {
+      title: 'Données',
+      csvAllHint: 'Une ligne par opération, de la plus récente à la plus ancienne.',
+      csvPeriodHint: 'Seulement la période en cours : {{range}}.',
+      phoneNote:
+        'La sauvegarde contient les informations des pièces jointes, pas les fichiers. La sauvegarde avec photos et PDF (ZIP), la restauration, l’import CSV et « {{deleteAll}} » se font depuis le téléphone.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Magasin, personne, service',
