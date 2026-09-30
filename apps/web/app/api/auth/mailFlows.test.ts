@@ -381,4 +381,56 @@ describe('abusing the new endpoints', () => {
       expect(response.headers.get('location'), path).toBeNull();
     }
   });
+
+  // `saldo://*` is a trusted origin for the phone's own flows, so the library lets these through; the
+  // Expo plugin would then append the session cookie to the redirect. No mail flow may name one.
+  const APP_SCHEME = ['saldo://steal', 'saldo:///steal?x=1'];
+
+  it.each(APP_SCHEME)(
+    'refuses %s as a callback of a recovery or verification request',
+    async (url) => {
+      await account(ADA);
+      for (const field of ['callbackURL', 'errorCallbackURL', 'newUserCallbackURL']) {
+        const response = await post('/sign-in/magic-link', {
+          email: ADA,
+          ...RECOVER,
+          [field]: url,
+        });
+        expect(response.status, field).toBe(403);
+      }
+      const verification_ = await post('/send-verification-email', {
+        email: ADA,
+        callbackURL: url,
+      });
+      expect(verification_.status).toBe(403);
+      await settleBackground();
+      expect(mail.sent).toEqual([]);
+      expect(await harness.db.select().from(verification)).toHaveLength(0);
+    },
+  );
+
+  it.each(APP_SCHEME)(
+    'will not follow a hand-made link to %s, nor hand it the cookie',
+    async (url) => {
+      const id = await account(ADA);
+      await askForRecovery(ADA);
+      const token = new URL(linkIn(mail.sent[0])).searchParams.get('token') ?? '';
+      const encoded = encodeURIComponent(url);
+      for (const path of [
+        `/magic-link/verify?token=${token}&callbackURL=${encoded}`,
+        `/magic-link/verify?token=${token}&errorCallbackURL=${encoded}`,
+        `/verify-email?token=x&callbackURL=${encoded}`,
+      ]) {
+        const response = await get(`${BASE}${path}`);
+        expect(response.status, path).toBe(403);
+        expect(response.headers.get('location') ?? '', path).not.toContain('cookie=');
+        expect(await hasSessionCookie(response), path).toBe(false);
+      }
+      // Refused before the token was spent: the honest link still works.
+      expect(await harness.db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
+      const honest = await get(linkIn(mail.sent[0]));
+      expect(honest.headers.get('location') ?? '').not.toContain('cookie=');
+      expect(await hasSessionCookie(honest)).toBe(true);
+    },
+  );
 });

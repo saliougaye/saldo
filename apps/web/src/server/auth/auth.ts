@@ -10,6 +10,7 @@ import { env } from '../env';
 import { registrationMode } from '../settings/serverSettings';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
 import { invitePlugin } from './invitePlugin';
+import { mailCallbackGuard } from './mailCallbackGuard';
 import {
   RECOVERY_TTL_SECONDS,
   requestVerification,
@@ -76,6 +77,7 @@ export function buildAuthOptions() {
       autoSignInAfterVerification: false,
       expiresIn: VERIFICATION_TTL_SECONDS,
     },
+    hooks: { before: mailCallbackGuard },
     session: {
       expiresIn: 60 * 60 * 24 * SESSION_EXPIRES_IN_DAYS,
       updateAge: 60 * 60 * 24 * SESSION_UPDATE_AGE_DAYS,

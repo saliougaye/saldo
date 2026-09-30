@@ -37,6 +37,19 @@ afterAll(async () => {
 });
 
 const URL_ = 'http://localhost:3000/api/auth/magic-link/verify?token=t0k3n&callbackURL=%2F';
+/** What the library builds from a caller who chose every callback: the `saldo://` ones are trusted origins. */
+const HOSTILE_URL =
+  'http://localhost:3000/api/auth/magic-link/verify?token=t0k3n&callbackURL=saldo%3A%2F%2Fsteal' +
+  '&errorCallbackURL=saldo%3A%2F%2Ferr&newUserCallbackURL=saldo%3A%2F%2Fnew';
+
+/** A mailed address, apart: the origin and path, then each query parameter by name. */
+function parts(link: string | undefined): { where: string; query: Record<string, string> } {
+  const url = new URL(link ?? 'x:');
+  return { where: url.origin + url.pathname, query: Object.fromEntries(url.searchParams) };
+}
+
+const linkOf = (message: { text: string } | undefined) =>
+  message?.text.split('\n').find((line) => line.startsWith('http'));
 
 async function account(
   email: string,
@@ -65,7 +78,7 @@ describe('sendRecoveryLink', () => {
     await recover('ada@example.com');
     expect(mail.sent).toHaveLength(1);
     expect(mail.sent[0]?.to).toBe('ada@example.com');
-    expect(mail.sent[0]?.text.split('\n')).toContain(URL_);
+    expect(parts(linkOf(mail.sent[0])).query.token).toBe('t0k3n');
     expect(mail.sent[0]?.from).toBe('Saldo <saldo@example.com>');
   });
 
@@ -134,7 +147,28 @@ describe('sendRecoveryLink', () => {
     await expect(recover('ada@example.com')).resolves.toBeUndefined();
     expect(mail.sent).toEqual([]);
     expect(JSON.stringify(logged)).not.toContain('ada@example.com');
-    expect(JSON.stringify(logged)).not.toContain(URL_);
+    expect(JSON.stringify(logged)).not.toContain('t0k3n');
+  });
+
+  it("keeps only the token of the library's link: the callbacks are ours, never the caller's", async () => {
+    await enableMail(harness.db);
+    await account('ada@example.com');
+    sendRecoveryLink(harness.db, {
+      email: 'ada@example.com',
+      url: HOSTILE_URL,
+      acceptLanguage: null,
+    });
+    await settleBackground();
+    expect(mail.sent[0]?.text).not.toContain('saldo:');
+    expect(mail.sent[0]?.text).not.toContain('saldo%3A');
+    expect(parts(linkOf(mail.sent[0]))).toEqual({
+      where: 'http://localhost:3000/api/auth/magic-link/verify',
+      query: {
+        token: 't0k3n',
+        callbackURL: '/profile/passkeys?recovered',
+        errorCallbackURL: '/recover?error=link',
+      },
+    });
   });
 });
 
@@ -192,7 +226,26 @@ describe('sendVerificationLink', () => {
     await verify('ada@example.com');
     expect(mail.sent).toHaveLength(1);
     expect(mail.sent[0]?.to).toBe('ada@example.com');
-    expect(mail.sent[0]?.text.split('\n')).toContain(VERIFY_URL);
+    expect(parts(linkOf(mail.sent[0]))).toEqual({
+      where: 'http://localhost:3000/api/auth/verify-email',
+      query: { token: 'abc', callbackURL: '/email-verified' },
+    });
+  });
+
+  it("keeps only the token of the library's link: the callback is ours, never the caller's", async () => {
+    await enableMail(harness.db);
+    const id = await account('ada@example.com', { verified: false });
+    sendVerificationLink(harness.db, {
+      user: { id, email: 'ada@example.com' },
+      url: 'http://localhost:3000/api/auth/verify-email?token=abc&callbackURL=saldo%3A%2F%2Fsteal',
+      acceptLanguage: null,
+    });
+    await settleBackground();
+    expect(mail.sent[0]?.text).not.toContain('saldo:');
+    expect(parts(linkOf(mail.sent[0])).query).toEqual({
+      token: 'abc',
+      callbackURL: '/email-verified',
+    });
   });
 
   it('never mails a synthetic address', async () => {

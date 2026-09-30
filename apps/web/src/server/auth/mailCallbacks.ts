@@ -23,6 +23,26 @@ export const RECOVERY_TTL_SECONDS = 15 * 60;
 /** Where a verification link lands: a public page, because a mail app opens whatever browser it likes. */
 export const EMAIL_VERIFIED_PATH = '/email-verified';
 
+/** Where a recovery link lands after it signs the browser in, and where a dead one sends it. */
+export const RECOVERED_PATH = '/profile/passkeys?recovered';
+export const RECOVERY_ERROR_PATH = '/recover?error=link';
+
+/**
+ * The address Better Auth built, reduced to its origin, its path and the **token**; the rest is ours.
+ * The library copies `callbackURL`, `errorCallbackURL` and `newUserCallbackURL` from whoever asked
+ * for the mail, and `saldo://` is a trusted origin: a link that carried `saldo://steal` would, when
+ * opened, redirect to it with the session cookie appended by the Expo plugin. Nothing the caller
+ * chose reaches the message.
+ */
+function ownLink(libraryUrl: string, params: Record<string, string>): string {
+  const link = new URL(libraryUrl);
+  const token = link.searchParams.get('token');
+  link.search = '';
+  if (token !== null) link.searchParams.set('token', token);
+  for (const [name, value] of Object.entries(params)) link.searchParams.set(name, value);
+  return link.toString();
+}
+
 /**
  * The recipient's own `settings.language` when they have settings and it is not `system`; otherwise
  * the `Accept-Language` of the request that triggered the send; otherwise English (`webLocale`).
@@ -88,7 +108,11 @@ export function sendRecoveryLink(
     // the other half, so a revoked account is not sent one at all.
     if (await isRevoked(db, account.id)) return;
     // The throttle is asked only now, so addresses with no account never occupy it.
-    await deliver(db, 'recovery', account, input.url, input.acceptLanguage);
+    const url = ownLink(input.url, {
+      callbackURL: RECOVERED_PATH,
+      errorCallbackURL: RECOVERY_ERROR_PATH,
+    });
+    await deliver(db, 'recovery', account, url, input.acceptLanguage);
   });
 }
 
@@ -103,7 +127,8 @@ export function sendVerificationLink(
   inBackground(async () => {
     if (isSyntheticEmail(input.user.email)) return;
     if (!(await mailEnabled(db))) return;
-    await deliver(db, 'verification', input.user, input.url, input.acceptLanguage);
+    const url = ownLink(input.url, { callbackURL: EMAIL_VERIFIED_PATH });
+    await deliver(db, 'verification', input.user, url, input.acceptLanguage);
   });
 }
 
