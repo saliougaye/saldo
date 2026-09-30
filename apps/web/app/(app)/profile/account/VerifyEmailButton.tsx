@@ -58,7 +58,7 @@ export function VerifyEmailButton({
   };
 
   return (
-    <>
+    <div className={styles.verify}>
       <Button
         variant="secondary"
         busy={busy}
@@ -73,6 +73,6 @@ export function VerifyEmailButton({
           {status === 'sent' ? strings.sent : strings.failed}
         </span>
       )}
-    </>
+    </div>
   );
 }

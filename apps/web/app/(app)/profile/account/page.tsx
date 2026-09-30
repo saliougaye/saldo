@@ -31,20 +31,18 @@ export default async function ProfileAccountPage() {
             ? undefined
             : t(state === 'verified' ? 'web.account.verified' : 'web.account.unverified')
         }
-        trailing={
-          state === 'canVerify' ? (
-            <VerifyEmailButton
-              email={page.user.email}
-              strings={{
-                send: t('web.account.verify'),
-                working: t('common.loading'),
-                sent: t('web.account.verifySent', { email: page.user.email }),
-                failed: t('web.auth.genericError'),
-              }}
-            />
-          ) : undefined
-        }
       />
+      {state === 'canVerify' ? (
+        <VerifyEmailButton
+          email={page.user.email}
+          strings={{
+            send: t('web.account.verify'),
+            working: t('common.loading'),
+            sent: t('web.account.verifySent', { email: page.user.email }),
+            failed: t('web.auth.genericError'),
+          }}
+        />
+      ) : null}
       {state === 'mailOff' ? <p className={styles.meta}>{t('web.account.mailOff')}</p> : null}
     </Section>
   );
