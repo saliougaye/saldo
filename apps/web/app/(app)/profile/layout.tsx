@@ -6,7 +6,7 @@ import { getDb } from '../../../src/server/db/client';
 import { initials } from '../../../src/ui/initials';
 import { NavLink } from '../../../src/ui/NavLink';
 import { SignOutButton } from '../../../src/ui/SignOutButton';
-import { PANEL_SLOT } from './panelSlot';
+import { SubnavLayout, SubnavSeparator } from '../../../src/ui/SubnavLayout';
 import styles from './profile.module.css';
 
 export const runtime = 'nodejs';
@@ -33,29 +33,31 @@ export default async function ProfileLayout({ children }: { children: ReactNode 
           </p>
         </div>
       </header>
-      <div className={styles.layout}>
-        <nav className={styles.subnav} aria-label={t('profile.title')}>
-          <NavLink href="/profile/account" icon="settings" label={t('profile.title')} />
-          <NavLink href="/profile/preferences" icon="wrench" label={t('settings.preferences')} />
-          <NavLink href="/profile/categories" icon="grip" label={t('categories.title')} />
-          <NavLink href="/profile/tags" icon="tag" label={t('tags.title')} />
-          <NavLink href="/profile/budgets" icon="target" label={t('budgets.title')} />
-          <NavLink href="/profile/goals" icon="piggy" label={t('goals.title')} />
-          <NavLink href="/profile/passkeys" icon="key" label={t('web.passkeys.title')} />
-          <NavLink href="/profile/data" icon="archive" label={t('web.data.title')} />
-          <hr className={styles.separator} />
-          <SignOutButton
-            variant="row"
-            icon="arrowUR"
-            className={styles.signOut}
-            label={t('sync.signOut')}
-            working={t('common.loading')}
-          />
-        </nav>
-        <div className={styles.section}>{children}</div>
-        {/* Where a section's panel opens (`createPortal` from a client component): beside the section, as in Transazioni. */}
-        <div id={PANEL_SLOT} className={styles.slot} />
-      </div>
+      <SubnavLayout
+        navLabel={t('profile.title')}
+        nav={
+          <>
+            <NavLink href="/profile/account" icon="settings" label={t('profile.title')} />
+            <NavLink href="/profile/preferences" icon="wrench" label={t('settings.preferences')} />
+            <NavLink href="/profile/categories" icon="grip" label={t('categories.title')} />
+            <NavLink href="/profile/tags" icon="tag" label={t('tags.title')} />
+            <NavLink href="/profile/budgets" icon="target" label={t('budgets.title')} />
+            <NavLink href="/profile/goals" icon="piggy" label={t('goals.title')} />
+            <NavLink href="/profile/passkeys" icon="key" label={t('web.passkeys.title')} />
+            <NavLink href="/profile/data" icon="archive" label={t('web.data.title')} />
+            <SubnavSeparator />
+            <SignOutButton
+              variant="row"
+              icon="arrowUR"
+              className={styles.signOut}
+              label={t('sync.signOut')}
+              working={t('common.loading')}
+            />
+          </>
+        }
+      >
+        {children}
+      </SubnavLayout>
     </div>
   );
 }

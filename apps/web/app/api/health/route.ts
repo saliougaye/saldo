@@ -4,7 +4,7 @@ import { getDb } from '../../../src/server/db/client';
 import { env } from '../../../src/server/env';
 import { handle } from '../../../src/server/http/errors';
 import { getStore } from '../../../src/server/storage';
-import { APP_VERSION } from '../../../src/server/version';
+import { API_VERSION, APP_VERSION } from '../../../src/server/version';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export function GET(): Promise<Response> {
     const allowed = await registrationAllowed(getDb(), env().registration);
     return Response.json({
       app: 'saldo',
-      apiVersion: 1,
+      apiVersion: API_VERSION,
       /** §8.1: the app compares this before it exchanges any row. */
       schemaVersion: SYNC_SCHEMA_VERSION,
       version: APP_VERSION,

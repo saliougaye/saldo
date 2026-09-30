@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
+import { getDb } from '../db/client';
+import { isAdmin } from './admin';
 import { type AuthenticatedUser, authenticate } from './session';
 
 /**
@@ -21,5 +23,16 @@ export const currentUser: () => Promise<AuthenticatedUser | null> = cache(async 
 export async function requireWebUser(): Promise<AuthenticatedUser> {
   const user = await currentUser();
   if (user === null) redirect('/login');
+  return user;
+}
+
+/**
+ * What every admin page and every admin Server Action starts with. A member gets a 404, not a 403:
+ * the panel does not admit that it exists. A layout does not run for a Server Action, so the guard
+ * belongs in each page **and** each action, never only in `app/(app)/admin/layout.tsx`.
+ */
+export async function requireWebAdmin(): Promise<AuthenticatedUser> {
+  const user = await requireWebUser();
+  if (!(await isAdmin(getDb(), user.id))) notFound();
   return user;
 }
