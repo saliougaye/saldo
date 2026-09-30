@@ -1256,11 +1256,18 @@ export const de: Messages = {
     shell: {
       newTransaction: 'Neue Buchung',
       skipToContent: 'Zum Inhalt springen',
-      comingIn0_3e: 'Kommt im nächsten Schritt; trag es so lange am Telefon ein.',
       mainNav: 'Hauptleiste',
       sectionNav: 'Bereiche',
       previousPeriod: 'Vorheriger Zeitraum',
       nextPeriod: 'Nächster Zeitraum',
+    },
+    preferences: {
+      systemFollows: '„System“ folgt den Einstellungen des Geräts, das du gerade benutzt.',
+      zoneCurrentAndDevice: 'Aktuell und dieses Gerät',
+      error_invalid: 'Speichern nicht möglich: Lade die Seite neu und versuche es erneut.',
+      error_notFound: 'Die Einstellungen existieren nicht mehr. Aktualisiere die Seite.',
+      error_conflict: 'Sie wurden auf einem anderen Gerät geändert. Versuche es erneut.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
     passkeys: {
       title: 'Deine Passkeys',

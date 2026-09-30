@@ -1242,11 +1242,18 @@ export const en: Messages = {
     shell: {
       newTransaction: 'New transaction',
       skipToContent: 'Skip to content',
-      comingIn0_3e: 'This arrives with the next step; write from the phone for now.',
       mainNav: 'Main bar',
       sectionNav: 'Sections',
       previousPeriod: 'Previous period',
       nextPeriod: 'Next period',
+    },
+    preferences: {
+      systemFollows: '“System” follows the settings of the device you’re using.',
+      zoneCurrentAndDevice: 'Current and this device',
+      error_invalid: 'Couldn’t save: reload the page and try again.',
+      error_notFound: 'The settings no longer exist. Refresh the page.',
+      error_conflict: 'They were changed on another device. Try again.',
+      error_unexpected: 'Something went wrong. Try again.',
     },
     passkeys: {
       title: 'Your passkeys',

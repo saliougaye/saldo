@@ -1245,11 +1245,18 @@ export const sv: Messages = {
     shell: {
       newTransaction: 'Ny transaktion',
       skipToContent: 'Hoppa till innehållet',
-      comingIn0_3e: 'Kommer i nästa steg; skriv från telefonen så länge.',
       mainNav: 'Huvudmeny',
       sectionNav: 'Avsnitt',
       previousPeriod: 'Föregående period',
       nextPeriod: 'Nästa period',
+    },
+    preferences: {
+      systemFollows: '”System” följer inställningarna på enheten du använder.',
+      zoneCurrentAndDevice: 'Nuvarande och den här enheten',
+      error_invalid: 'Det gick inte att spara: ladda om sidan och försök igen.',
+      error_notFound: 'Inställningarna finns inte längre. Uppdatera sidan.',
+      error_conflict: 'De ändrades på en annan enhet. Försök igen.',
+      error_unexpected: 'Något gick fel. Försök igen.',
     },
     passkeys: {
       title: 'Dina passnycklar',

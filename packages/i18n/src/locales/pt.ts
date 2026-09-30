@@ -1252,11 +1252,18 @@ export const pt: Messages = {
     shell: {
       newTransaction: 'Nova transação',
       skipToContent: 'Ir para o conteúdo',
-      comingIn0_3e: 'Chega no próximo passo; por agora escreve no telemóvel.',
       mainNav: 'Barra principal',
       sectionNav: 'Secções',
       previousPeriod: 'Período anterior',
       nextPeriod: 'Período seguinte',
+    },
+    preferences: {
+      systemFollows: '«Sistema» segue as definições do dispositivo que estás a usar.',
+      zoneCurrentAndDevice: 'Atual e este dispositivo',
+      error_invalid: 'Não foi possível guardar: recarrega a página e tenta novamente.',
+      error_notFound: 'As definições já não existem. Atualiza a página.',
+      error_conflict: 'Foram alteradas noutro dispositivo. Tenta novamente.',
+      error_unexpected: 'Algo correu mal. Tenta novamente.',
     },
     passkeys: {
       title: 'As tuas passkeys',

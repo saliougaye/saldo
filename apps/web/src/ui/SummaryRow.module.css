@@ -4,6 +4,19 @@
   gap: 16px;
   min-height: var(--layout-min-hit-target);
   padding: 14px 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+/* A row that opens its editor: the hover is painted 8px past the row, as `ListRow`'s open rows. */
+a.row {
+  border-radius: var(--radius-input);
+}
+
+a.row:hover,
+a.selected {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-raised) 60%, transparent);
 }
 
 .text {

@@ -1249,11 +1249,18 @@ export const it = {
     shell: {
       newTransaction: 'Nuova transazione',
       skipToContent: 'Vai al contenuto',
-      comingIn0_3e: 'Arriva col prossimo passo: per ora scrivi dal telefono.',
       mainNav: 'Barra principale',
       sectionNav: 'Sezioni',
       previousPeriod: 'Periodo precedente',
       nextPeriod: 'Periodo successivo',
+    },
+    preferences: {
+      systemFollows: '«Sistema» segue le impostazioni del dispositivo che stai usando.',
+      zoneCurrentAndDevice: 'Attuale e questo dispositivo',
+      error_invalid: 'Non riesco a salvare: ricarica la pagina e riprova.',
+      error_notFound: 'Le impostazioni non esistono più. Aggiorna la pagina.',
+      error_conflict: 'Sono state modificate da un altro dispositivo. Riprova.',
+      error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
     passkeys: {
       title: 'Le tue passkey',

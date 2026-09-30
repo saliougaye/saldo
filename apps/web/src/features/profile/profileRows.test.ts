@@ -1,7 +1,7 @@
 // apps/web/src/features/profile/profileRows.test.ts
 import { readSettings, SETTINGS_DEFAULTS } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
-import { preferenceRows } from './profileRows';
+import { editPanel, preferenceRows } from './profileRows';
 
 describe('preferenceRows', () => {
   const settings = readSettings({
@@ -42,12 +42,34 @@ describe('preferenceRows', () => {
     );
   });
 
-  it('marks every row read-only until the forms of 0.3e', () => {
-    expect(preferenceRows(settings, 'sv').every((row) => row.editable === false)).toBe(true);
+  it('links every row to its panel', () => {
+    expect(preferenceRows(settings, 'sv').map((row) => row.href)).toEqual([
+      '/profile/preferences?edit=cycle',
+      '/profile/preferences?edit=currency',
+      '/profile/preferences?edit=language',
+      '/profile/preferences?edit=theme',
+      '/profile/preferences?edit=timeZone',
+    ]);
   });
 
   it('leaves the language empty when it follows the system, for the page to name', () => {
     const system = readSettings({ ...SETTINGS_DEFAULTS, id: 'settings', language: 'system' });
     expect(preferenceRows(system, 'it').find((row) => row.key === 'language')?.value).toBe('');
   });
+});
+
+describe('editPanel', () => {
+  it.each(['cycle', 'currency', 'language', 'theme', 'timeZone'] as const)(
+    'opens the %s panel',
+    (key) => {
+      expect(editPanel(key)).toBe(key);
+    },
+  );
+
+  it.each([undefined, '', 'periodKind', 'Theme', 'timezone', 'constructor'])(
+    'opens nothing for %o',
+    (param) => {
+      expect(editPanel(param)).toBeNull();
+    },
+  );
 });

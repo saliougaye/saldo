@@ -1259,11 +1259,18 @@ export const fr: Messages = {
     shell: {
       newTransaction: 'Nouvelle transaction',
       skipToContent: 'Aller au contenu',
-      comingIn0_3e: 'À venir à la prochaine étape ; en attendant, saisis depuis le téléphone.',
       mainNav: 'Barre principale',
       sectionNav: 'Sections',
       previousPeriod: 'Période précédente',
       nextPeriod: 'Période suivante',
+    },
+    preferences: {
+      systemFollows: '« Système » suit les réglages de l’appareil utilisé.',
+      zoneCurrentAndDevice: 'Actuel et cet appareil',
+      error_invalid: 'Impossible d’enregistrer : rechargez la page et réessayez.',
+      error_notFound: 'Les réglages n’existent plus. Actualisez la page.',
+      error_conflict: 'Ils ont été modifiés depuis un autre appareil. Réessayez.',
+      error_unexpected: 'Un problème est survenu. Réessayez.',
     },
     passkeys: {
       title: 'Tes passkeys',
