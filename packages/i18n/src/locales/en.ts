@@ -1294,6 +1294,15 @@ export const en: Messages = {
       error_unexpected: 'Something went wrong. Try again.',
       allBudgets: 'All budgets',
     },
+    categories: {
+      error_invalid: 'Couldn’t save: check the fields and try again.',
+      error_notFound: 'This category no longer exists. Refresh the page.',
+      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_parentInvalid: 'That parent doesn’t work: pick another one.',
+      error_moveInvalid: 'The transactions can’t move to that category: pick another one.',
+      error_parentArchived: 'The parent category is archived: restore it first.',
+      error_unexpected: 'Something went wrong. Try again.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Shop, person, service',

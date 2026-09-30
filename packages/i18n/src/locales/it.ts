@@ -1301,6 +1301,16 @@ export const it = {
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
       allBudgets: 'Tutti i budget',
     },
+    categories: {
+      error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
+      error_notFound: 'Questa categoria non esiste più. Aggiorna la pagina.',
+      error_conflict: 'È stata modificata da un altro dispositivo. Riaprila e riprova.',
+      error_parentInvalid: 'Questa categoria madre non va bene: scegline un’altra.',
+      error_moveInvalid:
+        'Non si possono spostare le transazioni in quella categoria: scegline un’altra.',
+      error_parentArchived: 'La categoria madre è archiviata: ripristinala prima.',
+      error_unexpected: 'Qualcosa è andato storto. Riprova.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Negozio, persona, servizio',

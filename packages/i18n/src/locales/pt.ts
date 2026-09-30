@@ -1304,6 +1304,15 @@ export const pt: Messages = {
       error_unexpected: 'Algo correu mal. Tenta novamente.',
       allBudgets: 'Todos os orçamentos',
     },
+    categories: {
+      error_invalid: 'Não foi possível guardar: verifica os campos e tenta de novo.',
+      error_notFound: 'Esta categoria já não existe. Atualiza a página.',
+      error_conflict: 'Foi alterada noutro dispositivo. Abre-a de novo e tenta outra vez.',
+      error_parentInvalid: 'Essa categoria principal não serve: escolhe outra.',
+      error_moveInvalid: 'As transações não podem passar para essa categoria: escolhe outra.',
+      error_parentArchived: 'A categoria principal está arquivada: restaura-a primeiro.',
+      error_unexpected: 'Algo correu mal. Tenta de novo.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Loja, pessoa, serviço',

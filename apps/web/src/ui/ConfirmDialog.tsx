@@ -22,6 +22,8 @@ interface Props {
    * goal's «Riporta in …»). It draws its own button; absent, the dialog is the plain question.
    */
   secondary?: ReactNode;
+  /** A field the question needs between the body and the buttons (the archive dialog's «Sposta in»). */
+  children?: ReactNode;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -37,6 +39,7 @@ export function ConfirmDialog({
   busy,
   busyLabel,
   secondary,
+  children,
   onConfirm,
   onOpenChange,
 }: Props) {
@@ -47,6 +50,7 @@ export function ConfirmDialog({
         <AlertDialog.Popup className={styles.dialog}>
           <AlertDialog.Title className={styles.title}>{title}</AlertDialog.Title>
           <AlertDialog.Description className={styles.body}>{body}</AlertDialog.Description>
+          {children}
           {error === undefined ? null : <Alert body={error} />}
           <div className={`${styles.buttons} ${secondary === undefined ? '' : styles.stacked}`}>
             <Button variant="secondary" onClick={() => onOpenChange(false)}>

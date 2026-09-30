@@ -1297,6 +1297,15 @@ export const sv: Messages = {
       error_unexpected: 'Något gick fel. Försök igen.',
       allBudgets: 'Alla budgetar',
     },
+    categories: {
+      error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
+      error_notFound: 'Den här kategorin finns inte längre. Uppdatera sidan.',
+      error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
+      error_parentInvalid: 'Den överordnade kategorin fungerar inte: välj en annan.',
+      error_moveInvalid: 'Transaktionerna kan inte flyttas till den kategorin: välj en annan.',
+      error_parentArchived: 'Den överordnade kategorin är arkiverad: återställ den först.',
+      error_unexpected: 'Något gick fel. Försök igen.',
+    },
     form: {
       kind: 'Typ',
       descriptionPlaceholder: 'Butik, person, tjänst',

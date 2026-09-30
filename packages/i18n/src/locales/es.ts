@@ -1304,6 +1304,15 @@ export const es: Messages = {
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
       allBudgets: 'Todos los presupuestos',
     },
+    categories: {
+      error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
+      error_notFound: 'Esta categoría ya no existe. Actualiza la página.',
+      error_conflict: 'Se modificó desde otro dispositivo. Ábrela de nuevo e inténtalo otra vez.',
+      error_parentInvalid: 'Esa categoría principal no sirve: elige otra.',
+      error_moveInvalid: 'Las transacciones no se pueden mover a esa categoría: elige otra.',
+      error_parentArchived: 'La categoría principal está archivada: restáurala primero.',
+      error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
+    },
     form: {
       kind: 'Tipo',
       descriptionPlaceholder: 'Tienda, persona, servicio',

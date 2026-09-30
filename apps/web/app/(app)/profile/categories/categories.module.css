@@ -1,0 +1,152 @@
+.newCategory {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}
+
+/* A row: the link to the form, then the two reorder arrows outside it (a button cannot sit in a link). */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.line > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A child is indented under its parent. */
+.child {
+  padding-inline-start: 28px;
+}
+
+.uses {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.reorder {
+  display: flex;
+  gap: 4px;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.arrow:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
+}
+
+.up {
+  rotate: 180deg;
+}
+
+.error {
+  flex-basis: 100%;
+  font-size: var(--font-size-footnote);
+  color: var(--color-accent);
+  text-wrap: pretty;
+}
+
+.faded {
+  display: inline-flex;
+  opacity: 0.5;
+}
+
+.restore {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: end;
+}
+
+.count {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- The form ---- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (max-width: 1023px) {
+  .form {
+    gap: 20px;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.archiveButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.archiveButton:hover {
+  background: var(--color-raised);
+}

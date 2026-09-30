@@ -1310,6 +1310,18 @@ export const de: Messages = {
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
       allBudgets: 'Alle Budgets',
     },
+    categories: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Diese Kategorie existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Sie wurde auf einem anderen Gerät geändert. Öffne sie erneut und versuche es noch einmal.',
+      error_parentInvalid: 'Diese übergeordnete Kategorie passt nicht: Wähle eine andere.',
+      error_moveInvalid:
+        'Die Transaktionen lassen sich nicht in diese Kategorie verschieben: Wähle eine andere.',
+      error_parentArchived:
+        'Die übergeordnete Kategorie ist archiviert: Stelle sie zuerst wieder her.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+    },
     form: {
       kind: 'Art',
       descriptionPlaceholder: 'Geschäft, Person, Dienst',

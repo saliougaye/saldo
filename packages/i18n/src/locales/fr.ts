@@ -1312,6 +1312,16 @@ export const fr: Messages = {
       error_unexpected: 'Un problème est survenu. Réessayez.',
       allBudgets: 'Tous les budgets',
     },
+    categories: {
+      error_invalid: 'Enregistrement impossible : vérifiez les champs et réessayez.',
+      error_notFound: 'Cette catégorie n’existe plus. Actualisez la page.',
+      error_conflict: 'Elle a été modifiée depuis un autre appareil. Rouvrez-la et réessayez.',
+      error_parentInvalid: 'Cette catégorie parente ne convient pas : choisissez-en une autre.',
+      error_moveInvalid:
+        'Les transactions ne peuvent pas passer dans cette catégorie : choisissez-en une autre.',
+      error_parentArchived: 'La catégorie parente est archivée : restaurez-la d’abord.',
+      error_unexpected: 'Une erreur s’est produite. Réessayez.',
+    },
     form: {
       kind: 'Type',
       descriptionPlaceholder: 'Magasin, personne, service',
