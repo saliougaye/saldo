@@ -47,3 +47,31 @@ function decodeQuery(value: string): string {
     return value;
   }
 }
+
+/**
+ * 0.3f-3 review, finding D. A link minted before an account was revoked is refused by the `admin`
+ * plugin's session hook, which throws `FORBIDDEN BANNED_USER` — as JSON, to a browser that followed a
+ * link from a mail. Here that one error becomes what every other failure of this endpoint already is:
+ * a redirect to the error callback (`/recover?error=BANNED_USER`, which `/recover` reads as «this link
+ * no longer works», telling nothing about why). The token was spent, and no session exists. It returns
+ * a `Response` rather than throwing `ctx.redirect`: a thrown redirect keeps the 403 of the error it
+ * replaces, and a browser does not follow a 403.
+ */
+export const revokedLinkRedirect = createAuthMiddleware(async (ctx) => {
+  if (ctx.path !== '/magic-link/verify') return;
+  const returned: unknown = ctx.context.returned;
+  if (!(returned instanceof APIError) || returned.body?.code !== 'BANNED_USER') return;
+  const query: unknown = ctx.query;
+  const requested =
+    typeof query === 'object' && query !== null
+      ? Reflect.get(query, 'errorCallbackURL')
+      : undefined;
+  const target = new URL(
+    typeof requested === 'string' && isRelativePath(decodeQuery(requested))
+      ? decodeQuery(requested)
+      : '/',
+    ctx.context.baseURL,
+  );
+  target.searchParams.set('error', 'BANNED_USER');
+  return new Response(null, { status: 302, headers: { location: target.toString() } });
+});

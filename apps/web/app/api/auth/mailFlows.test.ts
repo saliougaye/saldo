@@ -243,8 +243,18 @@ describe('recovery by magic link', () => {
 
     // …and the old one opens nothing: the `admin` plugin refuses the session.
     const opened = await get(verifyUrl(link));
-    expect(opened.status).not.toBe(200);
     expect(await hasSessionCookie(opened)).toBe(false);
+    // The plugin answers a banned account with JSON; a browser must land on /recover instead, where
+    // any `error` reads as «this link no longer works».
+    expect(opened.status).toBe(302);
+    expect(location(opened).pathname).toBe('/recover');
+    expect(location(opened).searchParams.get('error')).toBe('BANNED_USER');
+    expect(
+      recoverState({
+        mailEnabled: true,
+        error: location(opened).searchParams.get('error') ?? undefined,
+      }),
+    ).toBe('expiredLink');
     expect(await harness.db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
   });
 
