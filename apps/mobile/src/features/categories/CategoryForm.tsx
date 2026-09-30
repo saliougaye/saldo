@@ -1,4 +1,8 @@
-import { type Category, minorToAmountBuffer } from '@saldo/core';
+import {
+  type CategoryFormValues,
+  categoryMissingForSave,
+  categoryParentCandidates,
+} from '@saldo/core';
 import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,54 +23,6 @@ import { Icon } from '../../theme/Icon';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
 import { ParentPickerSheet } from './ParentPickerSheet';
-
-export interface CategoryFormValues {
-  name: string;
-  direction: Category['direction'];
-  icon: IconName;
-  colorIndex: number;
-  parentId: string | null;
-  /** §6.19: a single-category cycle budget, created or updated on save. */
-  budgetEnabled: boolean;
-  budgetBuffer: string;
-}
-
-export function emptyCategoryForm(): CategoryFormValues {
-  return {
-    name: '',
-    direction: 'expense',
-    icon: 'tag',
-    colorIndex: 0,
-    parentId: null,
-    budgetEnabled: false,
-    budgetBuffer: '',
-  };
-}
-
-export function categoryFormFrom(
-  category: Category,
-  budgetAmount: number | null,
-  minorDigits: 0 | 2 | 3,
-): CategoryFormValues {
-  return {
-    name: category.name,
-    direction: category.direction,
-    icon: category.icon as IconName,
-    colorIndex: category.colorIndex,
-    parentId: category.parentId,
-    budgetEnabled: budgetAmount !== null,
-    budgetBuffer: budgetAmount === null ? '' : minorToAmountBuffer(budgetAmount, minorDigits),
-  };
-}
-
-/**
- * What the form is still waiting for, or `null` when nothing is. Only the name is required (§6.19):
- * the direction, the icon and the colour all start from a default, so the footer can name the one
- * thing that is missing instead of leaving the button grey and unexplained.
- */
-export function categoryMissingForSave(values: CategoryFormValues): 'name' | null {
-  return values.name.trim().length > 0 ? null : 'name';
-}
 
 export interface CategoryFormProps {
   values: CategoryFormValues;
@@ -100,13 +56,7 @@ export function CategoryForm({
 
   // A child cannot have children (§4), so the parent picker disappears once one exists.
   const hasChildren = categories.some((category) => category.parentId === editingCategoryId);
-  const parents = categories.filter(
-    (category) =>
-      category.parentId === null &&
-      category.direction === values.direction &&
-      category.archivedAt === null &&
-      category.id !== editingCategoryId,
-  );
+  const parents = categoryParentCandidates(categories, values.direction, editingCategoryId ?? null);
   const parentName =
     values.parentId === null
       ? t('categories.noParent')
@@ -156,7 +106,7 @@ export function CategoryForm({
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <IconBox name={values.icon} colour={colour} />
+          <IconBox name={values.icon as IconName} colour={colour} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text weight="medium" numberOfLines={1}>
               {values.name.length > 0 ? values.name : t('categories.name')}
@@ -235,7 +185,7 @@ export function CategoryForm({
         visible={sheet === 'appearance'}
         onClose={close}
         colorIndex={values.colorIndex}
-        icon={values.icon}
+        icon={values.icon as IconName}
         groups={categoryIconGroups}
         searchable
         onChange={({ colorIndex, icon }) => set({ colorIndex, icon })}

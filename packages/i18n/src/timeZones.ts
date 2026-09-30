@@ -3,7 +3,7 @@ import type { AppLocale } from './format';
 import { CITY_NAMES } from './timeZoneCities';
 import { TIME_ZONE_ALIASES, TIME_ZONE_GENERIC_NAMES, TIME_ZONES } from './timeZones.generated';
 
-export { TIME_ZONES };
+export { TIME_ZONE_ALIASES, TIME_ZONES };
 
 /**
  * The id `TIME_ZONES` lists a zone under: `Asia/Kolkata`, as phones report it, is CLDR's

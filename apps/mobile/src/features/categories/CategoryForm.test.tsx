@@ -1,10 +1,11 @@
+import { type CategoryFormValues, emptyCategoryForm } from '@saldo/core';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import type { i18n as I18nInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { createI18n } from '../../i18n';
 import { ThemeProvider } from '../../theme/ThemeProvider';
-import { CategoryForm, type CategoryFormValues, emptyCategoryForm } from './CategoryForm';
+import { CategoryForm } from './CategoryForm';
 
 // `ScreenHeader` pulls in expo-router, whose `standard-navigation` dependency ships ESM that the
 // jest transform does not reach. Every component test in this app mocks it for the same reason.

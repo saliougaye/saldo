@@ -746,6 +746,7 @@ export const de: Messages = {
     uses_one: '{{count}} Eintrag',
     uses_other: '{{count}} Einträge',
     archivedSection: 'Archiviert',
+    archivedBadge: 'Archiviert',
     newCategory: 'Neue Kategorie',
     editCategory: 'Kategorie bearbeiten',
     name: 'Name',
@@ -1255,12 +1256,18 @@ export const de: Messages = {
     shell: {
       newTransaction: 'Neue Buchung',
       skipToContent: 'Zum Inhalt springen',
-      comingIn0_3e: 'Kommt im nächsten Schritt; trag es so lange am Telefon ein.',
       mainNav: 'Hauptleiste',
       sectionNav: 'Bereiche',
       previousPeriod: 'Vorheriger Zeitraum',
       nextPeriod: 'Nächster Zeitraum',
-      finishOnPhone: 'Schließ die Einrichtung am Telefon ab',
+    },
+    preferences: {
+      systemFollows: '„System“ folgt den Einstellungen des Geräts, das du gerade benutzt.',
+      zoneCurrentAndDevice: 'Aktuell und dieses Gerät',
+      error_invalid: 'Speichern nicht möglich: Lade die Seite neu und versuche es erneut.',
+      error_notFound: 'Die Einstellungen existieren nicht mehr. Aktualisiere die Seite.',
+      error_conflict: 'Sie wurden auf einem anderen Gerät geändert. Versuche es erneut.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
     passkeys: {
       title: 'Deine Passkeys',
@@ -1282,6 +1289,80 @@ export const de: Messages = {
         'Das Gerät, das ihn hat, kommt nicht mehr in dieses Konto. Die anderen funktionieren weiter.',
       lastOneNote: 'Das ist dein letzter Passkey: füge einen weiteren hinzu, bevor du ihn löschst.',
       empty: 'Keine Passkeys in diesem Konto.',
+    },
+    accounts: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Dieser Eintrag existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+      error_holdsGoals: 'Es gibt noch offene Ziele: Schließe sie, bevor du das Konto archivierst.',
+      error_parentArchived: 'Das Konto des Ziels ist archiviert: Stelle es zuerst wieder her.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+      archiveBody:
+        '„{{name}}“ verschwindet aus der Liste. Die Transaktionen bleiben und du kannst es aus den Archivierten wiederherstellen.',
+      archivedTitle: 'Archiviert',
+      archivedAccounts: 'Archivierte Konten',
+      closedGoals: 'Abgeschlossene Ziele',
+      openInAccounts: 'In Konten öffnen',
+      goalNeedsAccount: 'Für ein Ziel brauchst du zuerst ein Konto.',
+      deadlineHint: 'Leer lassen, wenn es keine Frist hat.',
+      alreadySavedHint: 'Wie viel du schon zurückgelegt hast: Wir buchen es vom Konto um.',
+    },
+    budgets: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Dieses Budget existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Es wurde auf einem anderen Gerät geändert. Öffne es erneut und versuche es noch einmal.',
+      error_taken: '„{{name}}“ ist bereits in einem anderen Budget.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+      allBudgets: 'Alle Budgets',
+    },
+    categories: {
+      error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
+      error_notFound: 'Diese Kategorie existiert nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Sie wurde auf einem anderen Gerät geändert. Öffne sie erneut und versuche es noch einmal.',
+      error_parentInvalid: 'Diese übergeordnete Kategorie passt nicht: Wähle eine andere.',
+      error_moveInvalid:
+        'Die Transaktionen lassen sich nicht in diese Kategorie verschieben: Wähle eine andere.',
+      error_parentArchived:
+        'Die übergeordnete Kategorie ist archiviert: Stelle sie zuerst wieder her.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+    },
+    tags: {
+      error_invalid: 'Speichern nicht möglich: Prüfe den Namen und versuche es erneut.',
+      error_notFound: 'Diesen Tag gibt es nicht mehr. Aktualisiere die Seite.',
+      error_conflict:
+        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+      error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+    },
+    data: {
+      title: 'Daten',
+      csvAllHint: 'Eine Zeile pro Buchung, die neueste zuerst.',
+      csvPeriodHint: 'Nur der laufende Zeitraum: {{range}}.',
+      phoneNote:
+        'Das Backup enthält die Angaben zu den Anhängen, nicht die Dateien. Das Backup mit Fotos und PDFs (ZIP), die Wiederherstellung, der CSV-Import und „{{deleteAll}}“ laufen über das Telefon.',
+    },
+    form: {
+      kind: 'Art',
+      descriptionPlaceholder: 'Geschäft, Person, Dienst',
+      swap: 'Tauschen',
+      removeTag: '„{{name}}“ entfernen',
+      repeatNever: 'Nie',
+      repeatRecurring: 'Wiederkehrend',
+      repeatOnPhone: 'Wiederkehrende Buchungen werden auf dem Telefon angelegt und bearbeitet.',
+      keyboardHint: 'Esc zum Schließen · ⌘↵ zum Speichern',
+      pickerOption: '{{label}} {{index}} von {{total}}',
+      error_invalid:
+        'Das Formular konnte nicht gelesen werden. Lade die Seite neu und versuche es noch einmal.',
+      error_notFound:
+        'Diese Buchung gibt es nicht mehr: Vielleicht wurde sie auf einem anderen Gerät gelöscht.',
+      error_closedGoal: 'Sie betrifft ein abgeschlossenes Ziel, das sich nicht mehr ändern lässt.',
+      error_conflict:
+        'Ein anderes Gerät hat sie im selben Moment geändert. Versuche es noch einmal.',
+      noCategories: 'Keine Kategorien dieser Art. Lege eine im Profil an.',
+      noAccounts: 'Keine Konten. Lege eines unter Konten an.',
+      error_unexpected: 'Etwas ist schiefgegangen. Versuch es noch einmal.',
     },
   },
 };

@@ -4,6 +4,7 @@ import { userI18n } from '../../src/i18n/server';
 import { isAdmin } from '../../src/server/auth/admin';
 import { requireWebUser } from '../../src/server/auth/currentUser';
 import { getDb } from '../../src/server/db/client';
+import { Shortcuts } from '../../src/ui/Shortcuts';
 import { TabBar } from '../../src/ui/TabBar';
 import { TopBar } from '../../src/ui/TopBar';
 import styles from './shell.module.css';
@@ -32,7 +33,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           label: t('web.shell.mainNav'),
           newTransaction: t('web.shell.newTransaction'),
           profile: t('profile.title'),
-          notYet: t('web.shell.comingIn0_3e'),
         }}
       />
       <main className={styles.content} id="content">
@@ -41,7 +41,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <TabBar
         items={items.filter((item) => item.trailing !== true)}
         label={t('web.shell.sectionNav')}
+        newTransaction={t('web.shell.newTransaction')}
       />
+      <Shortcuts />
     </div>
   );
 }

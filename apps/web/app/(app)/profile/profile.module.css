@@ -122,13 +122,6 @@
   min-width: 0;
 }
 
-.note {
-  margin-top: 16px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  text-wrap: pretty;
-}
-
 /* An empty slot takes no column and no gap. */
 .slot:empty {
   display: none;

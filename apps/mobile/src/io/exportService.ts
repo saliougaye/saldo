@@ -1,69 +1,45 @@
 import {
-  type Backup,
-  buildBackup,
-  csvRows,
+  backupFile,
+  csvFile,
   type DateRange,
+  type ExportFile,
   type LocalDate,
-  type Transaction,
-  toCsv,
+  NothingToExportError,
+  type UserData,
 } from '@saldo/core';
 import { zipSync } from 'fflate';
 import type { Repositories } from '../db/repositories';
 
-/** What an export produced: a file name and its contents, ready to be written and shared. */
-export interface ExportFile {
-  name: string;
-  contents: string;
-  mimeType: string;
-}
+// What goes inside a file is `@saldo/core`'s (`io/exportFiles`), shared with the web's export
+// routes; this module only collects the rows from the repositories, and zips.
+export { type ExportFile, NothingToExportError };
 
-/**
- * Nothing can be exported before onboarding has written settings — a backup without them could
- * not be restored, since the restore replaces settings too.
- */
-export class NothingToExportError extends Error {
-  constructor() {
-    super('There are no settings to export yet');
-    this.name = 'NothingToExportError';
-  }
-}
-
-function collect(repos: Repositories) {
-  const settings = repos.settings.get();
-  if (settings === null) throw new NothingToExportError();
+/** Every live row, as `@saldo/core` sees it: an attachment without what only this device knows. */
+function collect(repos: Repositories): UserData {
+  const transactions = repos.transactions.list();
   return {
-    settings,
+    settings: repos.settings.get(),
     accounts: repos.accounts.list(),
     categories: repos.categories.list(),
     tags: repos.tags.list(),
-    transactions: repos.transactions.list(),
+    transactions,
     recurrences: repos.recurrences.list(),
     budgets: repos.budgets.list(),
-    attachments: repos.transactions
-      .list()
+    attachments: transactions
       .flatMap((tx) => repos.attachments.listFor(tx.id))
       .map(({ localUri: _uri, blobState: _state, ...entity }) => entity),
   };
 }
 
 /**
- * §11.1. Every live row, as `@saldo/core` sees it — `list()` already leaves tombstones out, and a
- * restore is a replacement, so a deleted row has nothing to say.
+ * §11.1. Every live row — `list()` already leaves tombstones out, and a restore is a replacement,
+ * so a deleted row has nothing to say. Throws `NothingToExportError` before onboarding.
  */
 export function buildBackupFile(
   repos: Repositories,
   options: { today: LocalDate; exportedAt: string; appVersion: string },
 ): ExportFile {
-  const backup: Backup = buildBackup({
-    exportedAt: options.exportedAt,
-    appVersion: options.appVersion,
-    data: collect(repos),
-  });
-  return {
-    name: `saldo-backup-${options.today}.json`,
-    contents: JSON.stringify(backup),
-    mimeType: 'application/json',
-  };
+  return backupFile(collect(repos), options);
 }
 
 /** What a ZIP backup needs from the device: the bytes of each attachment it can still find. */
@@ -110,10 +86,6 @@ export function buildZipBackup(
   };
 }
 
-function inRange(tx: Transaction, range: DateRange | null): boolean {
-  return range === null || (tx.date >= range.start && tx.date <= range.end);
-}
-
 /**
  * §11.2. `range` is the selected period, or null for everything. Rows come out newest first, the
  * order the transaction list shows them in.
@@ -122,21 +94,14 @@ export function buildCsvFile(
   repos: Repositories,
   options: { today: LocalDate; range: DateRange | null },
 ): ExportFile {
-  const settings = repos.settings.get();
-  if (settings === null) throw new NothingToExportError();
-  const transactions = repos.transactions
-    .list()
-    .filter((tx) => inRange(tx, options.range))
-    .sort((a, b) => (a.date === b.date ? a.id.localeCompare(b.id) : b.date.localeCompare(a.date)));
-  const rows = csvRows(transactions, {
-    currency: settings.currency,
-    accounts: repos.accounts.list(),
-    categories: repos.categories.list(),
-    tags: repos.tags.list(),
-  });
-  return {
-    name: `saldo-transactions-${options.today}.csv`,
-    contents: toCsv(rows),
-    mimeType: 'text/csv',
-  };
+  return csvFile(
+    {
+      settings: repos.settings.get(),
+      accounts: repos.accounts.list(),
+      categories: repos.categories.list(),
+      tags: repos.tags.list(),
+      transactions: repos.transactions.list(),
+    },
+    options,
+  );
 }

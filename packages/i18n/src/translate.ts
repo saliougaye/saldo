@@ -1,5 +1,4 @@
 import type { AppLocale } from './format';
-import type { Messages } from './locales/it';
 
 export type TranslationVars = Record<string, string | number>;
 
@@ -19,8 +18,11 @@ export type Translate = (key: string, vars?: TranslationVars) => string;
  *
  * It does not choose plural forms by itself: a counted string goes through `plural` below, which
  * any translator can sit under — this one on the web, i18next's `t` on the phone.
+ *
+ * It takes any object, not only a whole `Messages`: a client component gets a slice of the catalog
+ * (`formMessages`), never all of it.
  */
-export function makeTranslator(messages: Messages): Translate {
+export function makeTranslator(messages: object): Translate {
   return (key, vars) => {
     let node: unknown = messages;
     for (const part of key.split('.')) {

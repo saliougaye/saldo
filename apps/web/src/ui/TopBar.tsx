@@ -15,7 +15,6 @@ interface Props {
     label: string;
     newTransaction: string;
     profile: string;
-    notYet: string;
   };
 }
 
@@ -54,12 +53,15 @@ export function TopBar({ items, user, strings }: Props) {
               ))}
             </div>
           )}
-          {/* 0.3e turns this into the form panel; until then it says so rather than lying. */}
-          <span className={styles.newDisabled} title={strings.notYet} aria-disabled="true">
+          {/* Decision 8: the form on Transazioni, from any page; `N` does the same (`Shortcuts`). */}
+          {/* The key is said by `aria-keyshortcuts`, not read as part of the link's name. */}
+          <Link className={styles.new} href="/transactions?new" aria-keyshortcuts="n">
             <Icon name="plus" size={16} />
             {strings.newTransaction}
-            <kbd className={styles.kbd}>N</kbd>
-          </span>
+            <span aria-hidden="true">
+              <kbd className={styles.kbd}>N</kbd>
+            </span>
+          </Link>
           <Avatar name={user.name} label={strings.profile} />
         </div>
       </nav>

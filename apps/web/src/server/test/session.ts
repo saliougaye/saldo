@@ -44,3 +44,22 @@ export async function createTestSession(
   auth();
   return { userId: created.id, token, bearer: `Bearer ${token}` };
 }
+
+/**
+ * The `Cookie` header a browser holding that session would send: Better Auth's signed cookie,
+ * `token.base64(HMAC-SHA256(secret, token))`, URI-encoded. For routes the web calls with its cookie
+ * session rather than a bearer.
+ */
+export async function sessionCookie(token: string): Promise<string> {
+  const { secret, authCookies } = await auth().$context;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(token));
+  const signature = Buffer.from(mac).toString('base64');
+  return `${authCookies.sessionToken.name}=${encodeURIComponent(`${token}.${signature}`)}`;
+}

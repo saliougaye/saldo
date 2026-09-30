@@ -1,4 +1,4 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import { amountBufferToMinor, emptyGoalForm, type GoalFormValues, getCurrency } from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,6 @@ import { useRepositories } from '../../src/db/DatabaseProvider';
 import { createGoal } from '../../src/db/goalService';
 import { useAccounts, useSettings } from '../../src/db/hooks';
 import { GoalForm } from '../../src/features/goals/GoalForm';
-import { emptyGoalForm, type GoalFormValues } from '../../src/features/goals/goalFormValues';
 import { usePeriod } from '../../src/features/period/PeriodProvider';
 
 /** §6.37. */

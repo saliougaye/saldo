@@ -1,6 +1,5 @@
 'use client';
 
-import { AlertDialog } from '@base-ui/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
@@ -15,6 +14,7 @@ import {
 } from '../../../../src/features/passkeys/list';
 import { passkeyProvider } from '../../../../src/features/passkeys/provider';
 import { Button } from '../../../../src/ui/Button';
+import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';
 import { Panel } from '../../../../src/ui/Panel';
 import { TextField } from '../../../../src/ui/TextField';
@@ -216,43 +216,28 @@ export function PasskeyList({ passkeys, strings }: Props) {
             slot,
           )}
 
-      <AlertDialog.Root open={deleting !== null} onOpenChange={(open) => open || setDeleting(null)}>
-        <AlertDialog.Portal>
-          <AlertDialog.Backdrop className={styles.backdrop} />
-          <AlertDialog.Popup className={styles.dialog}>
-            <AlertDialog.Title className={styles.dialogTitle}>
-              {strings.deleteTitle}
-            </AlertDialog.Title>
-            <AlertDialog.Description className={styles.dialogBody}>
-              {strings.deleteBody}
-            </AlertDialog.Description>
-            <div className={styles.dialogButtons}>
-              <Button variant="secondary" onClick={() => setDeleting(null)}>
-                {strings.cancel}
-              </Button>
-              <Button
-                busy={busy}
-                busyLabel={strings.working}
-                onClick={() => {
-                  const target = deleting;
-                  if (target === null) return;
-                  startTransition(async () => {
-                    const result = await deletePasskeyAction(target.id);
-                    // The action's own reason, so a refusal to delete the last one says that and not
-                    // «something went wrong» — the two are refused for very different causes.
-                    if (!result.ok)
-                      setFailure(result.reason === 'last_one' ? 'lastOneNote' : 'failed');
-                    setDeleting(null);
-                    if (result.ok) router.replace(PATH);
-                  });
-                }}
-              >
-                {strings.remove}
-              </Button>
-            </div>
-          </AlertDialog.Popup>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => open || setDeleting(null)}
+        title={label('deleteTitle')}
+        body={label('deleteBody')}
+        confirmLabel={label('remove')}
+        cancelLabel={label('cancel')}
+        busy={busy}
+        busyLabel={strings.working}
+        onConfirm={() => {
+          const target = deleting;
+          if (target === null) return;
+          startTransition(async () => {
+            const result = await deletePasskeyAction(target.id);
+            // The action's own reason, so a refusal to delete the last one says that and not
+            // «something went wrong» — the two are refused for very different causes.
+            if (!result.ok) setFailure(result.reason === 'last_one' ? 'lastOneNote' : 'failed');
+            setDeleting(null);
+            if (result.ok) router.replace(PATH);
+          });
+        }}
+      />
     </>
   );
 }

@@ -1,0 +1,351 @@
+/* The mockup's `.form` (variant 2, «Pannello»): one column, 28px between fields; 20px in the sheet. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.title {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.label {
+  padding: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+/* `legend` does not take part in a flex column: it needs its own gap below. */
+legend.label {
+  margin-bottom: 8px;
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font: inherit;
+  font-size: var(--font-size-body);
+  color: var(--color-text);
+  inline-size: 100%;
+  min-width: 0;
+  color-scheme: inherit;
+}
+
+.input:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--color-text-muted);
+  outline: none;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.two > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* The category tiles: four across, the selected one on the raised surface. */
+.cats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border-radius: var(--radius-input);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  text-align: center;
+  min-width: 0;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.cat:active {
+  scale: 0.96;
+}
+
+.cat[aria-pressed="true"] {
+  background: var(--color-raised);
+  color: var(--color-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cat:hover {
+    color: var(--color-text);
+  }
+}
+
+.catName {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The edited row's archived category, under its name: the tile is too narrow for a « · » suffix. */
+.catNote {
+  margin-top: -4px;
+  color: var(--color-text-faint);
+}
+
+.linkish {
+  align-self: flex-start;
+  margin-top: 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+/* Da ⇄ A: two selects with the swap button between them, on their trigger's line. */
+.transfer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.swap {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .swap:hover {
+    color: var(--color-text);
+  }
+}
+
+.faintNote {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}
+
+.warning {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.chip:active {
+  scale: 0.96;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.small {
+  height: 26px;
+  padding: 0 10px;
+  font-size: var(--font-size-caption);
+}
+
+.separator {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+/* Tags: the chosen ones as pills inside the field, then the input for the next. */
+.tagBox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 4px 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+}
+
+.tagBox:focus-within {
+  box-shadow: inset 0 0 0 1px var(--color-text-muted);
+}
+
+.tagInput {
+  flex: 1;
+  min-inline-size: 8ch;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-body);
+  color: var(--color-text);
+}
+
+.tagInput::placeholder {
+  color: var(--color-text-faint);
+}
+
+.tagInput:focus {
+  outline: none;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.pillRemove {
+  display: grid;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-faint);
+}
+
+.pillRemove:hover {
+  color: var(--color-text);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* «Ripeti»: read-only on the web (§17.1.9), the mockup's `.toggle-row` with a value for a switch. */
+.repeat {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.repeatText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.repeatValue {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hint {
+  display: none;
+  margin-inline-end: auto;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+}
+
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat:active,
+  .chip:active {
+    scale: 1;
+  }
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .hint {
+    display: inline;
+  }
+}
+
+/* The mockup's `.sheet .form` and `.narrow .two`: tighter, and Conto/Data one above the other. */
+@media (max-width: 1023px) {
+  .form {
+    gap: 20px;
+  }
+
+  .two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .foot > :last-child {
+    flex: 1;
+  }
+}

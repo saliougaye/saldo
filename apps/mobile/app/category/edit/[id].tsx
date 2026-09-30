@@ -1,11 +1,11 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import { amountBufferToMinor, categoryFormFrom, getCurrency } from '@saldo/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { NotFoundScreen } from '../../../src/components/NotFoundScreen';
 import { useRepositories } from '../../../src/db/DatabaseProvider';
 import { useBudgets, useCategories, useSettings } from '../../../src/db/hooks';
 import { ArchiveCategorySheet } from '../../../src/features/categories/ArchiveCategorySheet';
-import { CategoryForm, categoryFormFrom } from '../../../src/features/categories/CategoryForm';
+import { CategoryForm } from '../../../src/features/categories/CategoryForm';
 import { useLeaveGone } from '../../../src/navigation/leave';
 
 export default function EditCategory() {

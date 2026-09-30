@@ -1,4 +1,5 @@
 import {
+  canArchiveAccount,
   type GoalProgress,
   goalPace,
   goalTone,
@@ -7,9 +8,12 @@ import {
   transactionRow,
 } from '@saldo/core';
 import {
+  catalogs,
   formatDayMonth,
   formatDayMonthLong,
+  formatLongDate,
   formatMoney,
+  formatMoneyParts,
   type GoalTextDeps,
   type GoalTextSubject,
   goalOf,
@@ -18,20 +22,36 @@ import {
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
+import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
+import { archivedView } from '../../../src/features/accounts/archivedView';
 import { accountDetail } from '../../../src/features/accounts/detailView';
+import { accountFormView } from '../../../src/features/accounts/formView';
+import {
+  goalEditHref,
+  goalExpenseHref,
+  goalTransferHref,
+} from '../../../src/features/accounts/goalLinks';
+import { accountWriteErrors } from '../../../src/features/accounts/writeErrors';
+import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
+import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
+import { AccountForm } from './AccountForm';
+import { ArchiveAccount } from './ArchiveAccount';
+import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
+import { CloseGoal } from './CloseGoal';
+import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -126,6 +146,37 @@ export default async function AccountsPage({
       : accountDetail({ data: page.data, id: selectedId, today, def });
   const showGoalPanel = goalId !== undefined && selected !== null && selected.goal !== null;
   const showAccountPanel = !showGoalPanel && accountId !== undefined && selected !== null;
+
+  // `?new` opens «Nuovo conto»; `?a={id}&edit` opens «Modifica conto». Presence is what counts.
+  const creating = params.new !== undefined;
+  const editing = !creating && showAccountPanel && params.edit !== undefined;
+  const form =
+    creating || editing
+      ? accountFormView({
+          data: page.data,
+          today,
+          currency,
+          mode: creating ? 'new' : 'edit',
+          id: creating ? null : (selected?.account.id ?? null),
+        })
+      : null;
+  const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
+
+  const goalParent =
+    selected?.account.parentAccountId == null
+      ? null
+      : (page.data.accounts.find((row) => row.id === selected.account.parentAccountId) ?? null);
+  const formOpen = form !== null;
+  const moneyParts = formatMoneyParts(0, currency, locale, 'never');
+
+  // `?archived` opens the list of archived accounts and closed goals; a form or a detail wins.
+  const archived = archivedView(page.data);
+  const archivedOpen =
+    params.archived !== undefined && !formOpen && !showAccountPanel && !showGoalPanel;
+  const archivedTotal = view.archivedCount + archived.goals.length;
+  const writeErrors = accountWriteErrors(catalogs[locale].web.accounts);
+  const canArchive =
+    selected !== null && canArchiveAccount(page.data.accounts, selected.account.id);
 
   const accountRow = (row: AccountRowView) => (
     <ListRow
@@ -244,15 +295,10 @@ export default async function AccountsPage({
           period={
             <div className={styles.titleRow}>
               <h1 className={styles.title}>{t('accounts.title')}</h1>
-              {/* 0.3e turns this into the account form; until then it says so rather than lying. */}
-              <span
-                className={styles.newAccount}
-                title={t('web.shell.comingIn0_3e')}
-                aria-disabled="true"
-              >
+              <Link className={styles.newAccount} href={`${PATH}?new`}>
                 <Icon name="plus" size={16} />
                 {t('accounts.newAccount')}
-              </span>
+              </Link>
             </div>
           }
           hero={
@@ -292,22 +338,141 @@ export default async function AccountsPage({
           </>
         )}
 
-        {/* The archived list is a 0.3e screen (§17.1.9): with nowhere to send it yet, the row never
-            links — at zero there is also nothing to count, so it reads as a plain line instead of a
-            row that looks like it leads somewhere. */}
-        {view.archivedCount === 0 ? (
+        {archivedTotal === 0 ? (
           <p className={styles.note}>{t('profile.archivedAccounts')}</p>
         ) : (
           <ListRow
             open
+            href={`${PATH}?archived`}
+            selected={archivedOpen}
             title={t('profile.archivedAccounts')}
-            trailing={<span className={styles.count}>{view.archivedCount}</span>}
+            trailing={<span className={styles.count}>{archivedTotal}</span>}
           />
         )}
       </div>
 
-      {!showAccountPanel || selected === null ? null : (
-        <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
+      {form === null ? null : (
+        <Panel
+          // Not the detail's panel: closing the form mounts the detail fresh, not one still leaving.
+          key="form"
+          sheet
+          bare
+          title={t(form.mode === 'new' ? 'accounts.newAccount' : 'accounts.editAccount')}
+          closeHref={formCloseHref}
+          closeLabel={t('common.close')}
+        >
+          <AccountForm
+            // A switch between «Nuovo» and «Modifica», or between two accounts, is a new form.
+            key={`${form.mode}:${form.id ?? ''}`}
+            view={form}
+            locale={locale}
+            currency={currency}
+            decimalSeparator={moneyParts.decimalSeparator}
+            symbol={moneyParts.symbol}
+            symbolPosition={moneyParts.symbolPosition}
+            messages={accountMessages(catalogs[locale])}
+            closeHref={formCloseHref}
+            afterSave={`${PATH}?a=__ID__`}
+          />
+        </Panel>
+      )}
+
+      {!archivedOpen ? null : (
+        <Panel
+          key="archived"
+          title={t('web.accounts.archivedTitle')}
+          closeHref={PATH}
+          closeLabel={t('common.close')}
+        >
+          {archived.accounts.length === 0 && archived.goals.length === 0 ? (
+            <EmptyState title={t('accounts.archivedEmpty')} />
+          ) : (
+            <>
+              {archived.accounts.length === 0 ? null : (
+                <Section title={t('web.accounts.archivedAccounts')}>
+                  {archived.accounts.map((row) => (
+                    <ListRow
+                      key={row.id}
+                      leading={
+                        <span className={formStyles.faded}>
+                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                        </span>
+                      }
+                      title={row.name}
+                      subtitle={t('accounts.archivedBadge')}
+                      trailing={
+                        <RestoreButton
+                          id={row.id}
+                          kind="account"
+                          label={t('accounts.restore')}
+                          busyLabel={t('common.loading')}
+                          errors={writeErrors}
+                        />
+                      }
+                    />
+                  ))}
+                </Section>
+              )}
+              {archived.goals.length === 0 ? null : (
+                <Section title={t('web.accounts.closedGoals')}>
+                  {archived.goals.map((row) => (
+                    <ListRow
+                      key={row.id}
+                      leading={
+                        <span className={formStyles.faded}>
+                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                        </span>
+                      }
+                      title={row.name}
+                      subtitle={row.parentName}
+                      trailing={
+                        <RestoreButton
+                          id={row.id}
+                          kind="goal"
+                          label={t('accounts.restore')}
+                          busyLabel={t('common.loading')}
+                          errors={writeErrors}
+                          disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
+                        />
+                      }
+                    />
+                  ))}
+                </Section>
+              )}
+            </>
+          )}
+        </Panel>
+      )}
+
+      {formOpen || !showAccountPanel || selected === null ? null : (
+        <Panel
+          key="detail"
+          title={selected.account.name}
+          closeHref={PATH}
+          closeLabel={t('common.close')}
+        >
+          <div className={formStyles.actions}>
+            <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
+              {t('common.edit')}
+            </Link>
+            {canArchive ? (
+              <ArchiveAccount
+                id={selected.account.id}
+                afterHref={PATH}
+                strings={{
+                  action: t('accounts.archive'),
+                  title: t('accounts.archive'),
+                  body: t('web.accounts.archiveBody', { name: selected.account.name }),
+                  confirm: t('common.archive'),
+                  cancel: t('common.cancel'),
+                  busy: t('common.loading'),
+                  errors: writeErrors,
+                }}
+              />
+            ) : (
+              <span className={formStyles.muted}>{t('goals.closeFirst')}</span>
+            )}
+          </div>
           <span className={styles.label}>{heroLabel}</span>
           <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
           <Sparkline series={selected.series} />
@@ -371,10 +536,11 @@ export default async function AccountsPage({
         </Panel>
       )}
 
-      {!showGoalPanel || selected === null || selected.goal === null ? null : (
+      {form !== null || !showGoalPanel || selected === null || selected.goal === null ? null : (
         <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
           {(() => {
             const goal = selected.goal;
+            const parentLive = goalParent !== null && goalParent.archivedAt === null;
             const subject: GoalTextSubject = { account: selected.account, progress: goal };
             const { action, state } = goalSentence(subject, goalDeps);
             const sentence = <Rich text={richText(action, t, locale)} />;
@@ -401,6 +567,93 @@ export default async function AccountsPage({
                   {sentence}
                   {state === null ? null : <span className={styles.note}> {state}</span>}
                 </p>
+
+                {parentLive ? (
+                  <div className={formStyles.actions}>
+                    <Link
+                      className={formStyles.actionLink}
+                      href={goalTransferHref(
+                        selected.account.parentAccountId ?? '',
+                        selected.account.id,
+                        selected.account.name,
+                      )}
+                    >
+                      {t('goals.setAside')}
+                    </Link>
+                    <Link
+                      className={formStyles.actionLink}
+                      href={goalTransferHref(
+                        selected.account.id,
+                        selected.account.parentAccountId ?? '',
+                        selected.account.name,
+                      )}
+                    >
+                      {t('goals.withdraw')}
+                    </Link>
+                  </div>
+                ) : null}
+
+                <div className={styles.cardRows}>
+                  <ListRow
+                    title={t('goals.parent')}
+                    trailing={<span className={styles.count}>{goalParent?.name ?? '—'}</span>}
+                  />
+                  <ListRow
+                    title={t('goals.deadline')}
+                    trailing={
+                      <span className={styles.count}>
+                        {selected.account.goalDeadline == null
+                          ? t('goals.deadlineNone')
+                          : formatLongDate(selected.account.goalDeadline, locale)}
+                      </span>
+                    }
+                  />
+                  <ListRow
+                    title={t('goals.createdOn')}
+                    trailing={
+                      <span className={styles.count}>
+                        {formatLongDate(selected.account.goalStartDate ?? today, locale)}
+                      </span>
+                    }
+                  />
+                </div>
+
+                <Section title={t('goals.movements')}>
+                  {recentTransactions.length === 0 ? (
+                    <EmptyState title={t('goals.noMovements')} />
+                  ) : (
+                    recentTransactions.map(recentRow)
+                  )}
+                </Section>
+
+                <div className={formStyles.actions}>
+                  <Link className={formStyles.actionLink} href={goalEditHref(selected.account.id)}>
+                    {t('common.edit')}
+                  </Link>
+                  <CloseGoal
+                    id={selected.account.id}
+                    afterHref={PATH}
+                    expenseHref={
+                      goal.saved > 0
+                        ? goalExpenseHref(selected.account.id, goal.saved, selected.account.name)
+                        : null
+                    }
+                    strings={{
+                      action: t('goals.close'),
+                      title: goal.saved > 0 ? t('goals.closeTitle') : t('goals.close'),
+                      body:
+                        goal.saved > 0
+                          ? t('goals.closeBody', { amount: money(goal.saved) })
+                          : t('goals.closeEmpty'),
+                      confirm: t('goals.confirmClose'),
+                      recordExpense: t('goals.recordExpense'),
+                      returnTo: t('goals.returnTo', { name: goalParent?.name ?? '' }),
+                      cancel: t('common.cancel'),
+                      busy: t('common.loading'),
+                      errors: writeErrors,
+                    }}
+                  />
+                </div>
               </>
             );
           })()}

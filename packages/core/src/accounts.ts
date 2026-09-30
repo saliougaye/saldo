@@ -314,6 +314,68 @@ export function transferBalancePreview(
   return { from: preview(draft.fromAccountId), to: preview(draft.toAccountId) };
 }
 
+/**
+ * `transferBalancePreview` for a caller that holds balances rather than the ledger: the web's form,
+ * which cannot ship every transaction to the browser (§17.1.3). Two maps, both `accountBalances`
+ * over the same accounts and `today`: `now` over the full ledger (the row being edited included, as
+ * `transferBalancePreview` reports `now` against it too), `without` over the ledger with that row
+ * left out (the base `after` moves the draft from). A new draft — nothing to leave out — passes the
+ * same map twice. A parity test keeps the two functions answering the same.
+ */
+export function previewFromBalances(
+  now: ReadonlyMap<string, MinorUnits>,
+  without: ReadonlyMap<string, MinorUnits>,
+  draft: TransferDraft,
+  today: LocalDate,
+): { from: BalancePreview | null; to: BalancePreview | null } {
+  const moves =
+    draft.fromAccountId !== null &&
+    draft.toAccountId !== null &&
+    draft.amount > 0 &&
+    draft.date <= today;
+  const preview = (accountId: string | null, delta: MinorUnits): BalancePreview | null => {
+    if (accountId === null) return null;
+    const current = now.get(accountId);
+    if (current === undefined) return null;
+    // As the ledger version: the edited row is out of `after` whether or not the draft moves.
+    const base = without.get(accountId) ?? current;
+    return { now: current, after: moves ? base + delta : base };
+  };
+  return {
+    from: preview(draft.fromAccountId, -draft.amount),
+    to: preview(draft.toAccountId, draft.amount),
+  };
+}
+
+/**
+ * `transferFillAmounts` from balances rather than the ledger (see `previewFromBalances`);
+ * `balances` must leave out the row being edited. `transferFillAmounts` delegates here.
+ */
+export function fillsFromBalances(
+  accounts: readonly (Pick<AccountRef, 'id' | 'type' | 'archivedAt'> & {
+    goalTarget?: MinorUnits | null;
+  })[],
+  balances: ReadonlyMap<string, MinorUnits>,
+  draft: Pick<TransferDraft, 'fromAccountId' | 'toAccountId'>,
+): TransferFill[] {
+  if (draft.fromAccountId === null) return [];
+  const destination = accounts.find((account) => account.id === draft.toAccountId);
+  if (destination?.type === 'credit_card') return [];
+  const balance = balances.get(draft.fromAccountId) ?? 0;
+  if (balance <= 0) return [];
+  const fills: TransferFill[] = [{ key: 'balance', minor: balance }];
+  if (
+    destination !== undefined &&
+    destination.type === 'pocket' &&
+    destination.archivedAt === null &&
+    typeof destination.goalTarget === 'number'
+  ) {
+    const missing = destination.goalTarget - (balances.get(destination.id) ?? 0);
+    if (missing > 0 && missing < balance) fills.push({ key: 'missing', minor: missing });
+  }
+  return fills;
+}
+
 /** A one-tap amount for a transfer: the source's whole balance, or what a goal still lacks. */
 export interface TransferFill {
   key: 'balance' | 'missing';
@@ -335,27 +397,12 @@ export function transferFillAmounts(
   today: LocalDate,
   draft: Pick<TransferDraft, 'id' | 'fromAccountId' | 'toAccountId'>,
 ): TransferFill[] {
-  if (draft.fromAccountId === null) return [];
-  const destination = accounts.find((account) => account.id === draft.toAccountId);
-  if (destination?.type === 'credit_card') return [];
   const balances = accountBalances(
     accounts,
     txs.filter((tx) => tx.id !== draft.id),
     today,
   );
-  const balance = balances.get(draft.fromAccountId) ?? 0;
-  if (balance <= 0) return [];
-  const fills: TransferFill[] = [{ key: 'balance', minor: balance }];
-  if (
-    destination !== undefined &&
-    destination.type === 'pocket' &&
-    destination.archivedAt === null &&
-    typeof destination.goalTarget === 'number'
-  ) {
-    const missing = destination.goalTarget - (balances.get(destination.id) ?? 0);
-    if (missing > 0 && missing < balance) fills.push({ key: 'missing', minor: missing });
-  }
-  return fills;
+  return fillsFromBalances(accounts, balances, draft);
 }
 
 /**

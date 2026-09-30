@@ -43,6 +43,11 @@ describe('isCurrent', () => {
     expect(isCurrent('/home', '/transactions')).toBe(false);
   });
 
+  it('does not light Home on /profile/budgets, which belongs to the avatar', () => {
+    expect(isCurrent('/home', '/profile/budgets')).toBe(false);
+    expect(isCurrent('/profile', '/profile/budgets?b=abc')).toBe(true);
+  });
+
   it('matches a sub-page of a section', () => {
     expect(isCurrent('/profile', '/profile/passkeys')).toBe(true);
     expect(isCurrent('/admin', '/admin/invites')).toBe(true);

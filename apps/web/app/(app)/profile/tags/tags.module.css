@@ -1,0 +1,92 @@
+.newTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* The line under the title: what a tag is for (the phone's footnote). */
+.note {
+  margin: 0 0 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}
+
+.uses {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- The form ---- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (max-width: 1023px) {
+  .form {
+    gap: 20px;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* «Vedi le transazioni»: a row that leaves for the list, with what it will find there. */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--layout-min-hit-target);
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
+}
+
+.linkText {
+  flex: 1;
+  min-width: 0;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background: var(--color-raised);
+}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { isEditable } from './isEditable';
 import styles from './Panel.module.css';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   closeLabel: string;
   /** The body carries its own heading: the title stays as the name of the landmark and the focus target. */
   bare?: boolean;
+  /** Below the breakpoint, a bottom sheet over a scrim instead of the whole screen: the form's shape. */
+  sheet?: boolean;
   children: ReactNode;
 }
 
@@ -21,17 +24,6 @@ const NARROW = '(max-width: 1023px)';
 
 /** The exit is quicker than the entrance: the system answers fast where the user has already decided. */
 const EXIT_MS = 150;
-
-/** A key typed into a field belongs to the field: Esc there clears or cancels, it does not close. */
-function isEditable(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
-  );
-}
 
 /**
  * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — 420px beside the list on a wide
@@ -42,24 +34,38 @@ function isEditable(target: EventTarget | null): boolean {
  * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
  * and still closes; only the key does nothing.
  */
-export function Panel({ title, closeHref, closeLabel, bare = false, children }: Props) {
+export function Panel({
+  title,
+  closeHref,
+  closeLabel,
+  bare = false,
+  sheet = false,
+  children,
+}: Props) {
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [closing, setClosing] = useState(false);
+  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (the form
+  // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
+  const [closingFor, setClosingFor] = useState<string | null>(null);
+  const closing = closingFor === closeHref;
 
   // Closing is a navigation, which unmounts the panel at once: play the exit first, then go.
   const close = useCallback(() => {
-    if (timer.current !== undefined) return;
-    setClosing(true);
+    if (closingFor === closeHref) return;
+    clearTimeout(timer.current);
+    setClosingFor(closeHref);
     timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
-  }, [router, closeHref]);
+  }, [router, closeHref, closingFor]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
   // Full-screen, the panel covers the list the focus was left on: move it into the panel. Beside
   // the list it stays where it was, so the next row is one Tab away.
+  // Unless something inside already took it: a form that opens on its first field (`autoFocus`).
   useEffect(() => {
+    const panel = heading.current?.closest('aside');
+    if (panel?.contains(document.activeElement) === true) return;
     if (window.matchMedia(NARROW).matches) heading.current?.focus();
   }, []);
 
@@ -81,16 +87,39 @@ export function Panel({ title, closeHref, closeLabel, bare = false, children }: 
   };
 
   return (
-    <aside className={styles.panel} aria-label={title} data-closing={closing ? '' : undefined}>
-      <div className={`${styles.head} ${bare ? styles.bare : ''}`}>
-        <h2 className={`${styles.title} ${bare ? styles.hidden : ''}`} ref={heading} tabIndex={-1}>
-          {title}
-        </h2>
-        <Link className={styles.close} href={closeHref} aria-label={closeLabel} onClick={onClose}>
-          <Icon name="x" size={16} />
-        </Link>
-      </div>
-      <div className={styles.body}>{children}</div>
-    </aside>
+    <>
+      {sheet ? (
+        // The scrim closes as the ✕ does; it is not a second control, so it stays out of the tab order.
+        <Link
+          className={styles.scrim}
+          href={closeHref}
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={onClose}
+          data-closing={closing ? '' : undefined}
+        />
+      ) : null}
+      <aside
+        className={styles.panel}
+        aria-label={title}
+        data-closing={closing ? '' : undefined}
+        data-sheet={sheet ? '' : undefined}
+      >
+        {sheet ? <span className={styles.handle} aria-hidden="true" /> : null}
+        <div className={`${styles.head} ${bare ? styles.bare : ''}`}>
+          <h2
+            className={`${styles.title} ${bare ? styles.hidden : ''}`}
+            ref={heading}
+            tabIndex={-1}
+          >
+            {title}
+          </h2>
+          <Link className={styles.close} href={closeHref} aria-label={closeLabel} onClick={onClose}>
+            <Icon name="x" size={16} />
+          </Link>
+        </div>
+        <div className={styles.body}>{children}</div>
+      </aside>
+    </>
   );
 }

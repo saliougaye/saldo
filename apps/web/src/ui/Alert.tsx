@@ -2,7 +2,8 @@ import styles from './Alert.module.css';
 import { Icon } from './Icon';
 
 interface Props {
-  title: string;
+  /** A one-line alert has no title: the body is the whole message. */
+  title?: string;
   body: string;
 }
 
@@ -12,7 +13,7 @@ export function Alert({ title, body }: Props) {
     <div className={styles.alert} role="alert">
       <Icon name="info" size={18} className={styles.icon} />
       <div>
-        <b className={styles.title}>{title}</b>
+        {title === undefined ? null : <b className={styles.title}>{title}</b>}
         {body}
       </div>
     </div>

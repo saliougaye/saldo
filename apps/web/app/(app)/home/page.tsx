@@ -1,5 +1,5 @@
 import type { BudgetAdvice, BudgetView, CurrencyCode, GoalView } from '@saldo/core';
-import { endLabels, goalPace, goalTone } from '@saldo/core';
+import { endLabels, goalPace, goalTone, pocketParentCandidates } from '@saldo/core';
 import {
   type AppLocale,
   budgetCardStatusText,
@@ -19,6 +19,8 @@ import {
 import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
+import { NEW_GOAL_HREF } from '../../../src/features/accounts/goalLinks';
+import { budgetRowFor, ROW_RING } from '../../../src/features/budgets/budgetRow';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
@@ -38,8 +40,6 @@ import styles from './home.module.css';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** The ring beside a budget or a goal row: the phone's `targetRingSmall`. */
-const ROW_RING = 36;
 /** Wide enough for «oggi» in every locale, centred on the pace tick (the phone's `FeaturedTarget`). */
 const TODAY_WIDTH = 64;
 
@@ -195,28 +195,14 @@ export default async function HomePage({
   );
 
   // ---- Budget (§5.13) -------------------------------------------------------------------------
-  const budgetPace = (item: BudgetView) => (item.open ? item.pace : null);
-  const budgetTone = (item: BudgetView): 'normal' | 'over' =>
-    item.overPace || item.overLimit ? 'over' : 'normal';
-  const budgetColour = (item: BudgetView) =>
-    page.data.categories.find((category) => category.id === item.budget.categoryIds[0])
-      ?.colorIndex ?? 9;
-  const budgetMeta = (item: BudgetView) => {
-    if (item.overLimit) return t('targets.overLimitMeta');
-    if (item.open) return t('targets.left', { amount: money(item.limit - item.spent) });
-    return t('targets.closedMeta');
-  };
-  const budgetStatus = (item: BudgetView) => {
-    if (item.overLimit) {
-      return t('targets.overLimitBy', { amount: money(item.spent - item.limit) });
-    }
-    if (item.overPace) {
-      return t('targets.overPaceBy', {
-        amount: money(Math.round(item.spent - item.limit * item.pace)),
-      });
-    }
-    return t('targets.inLine');
-  };
+  const budgets = budgetRowFor({
+    t,
+    money,
+    percent,
+    categories: page.data.categories,
+    styles,
+    href: (item) => `/profile/budgets?b=${item.budget.id}`,
+  });
   const budgetSentence = (advice: BudgetAdvice, item: BudgetView): ReactNode => {
     const end = formatDayMonth(item.range.end, locale);
     if (advice.kind === 'perDay') {
@@ -254,38 +240,6 @@ export default async function HomePage({
       />
     );
   };
-  const budgetLabel = (item: BudgetView) =>
-    t('targets.itemLabel', {
-      name: item.budget.name,
-      amount: money(item.spent),
-      limit: money(item.limit),
-      status: budgetStatus(item),
-    });
-  const budgetRow = (item: BudgetView) => (
-    <ListRow
-      key={item.budget.id}
-      open
-      label={budgetLabel(item)}
-      leading={
-        <TargetRing
-          size={ROW_RING}
-          ratio={item.ratio}
-          pace={budgetPace(item)}
-          tone={budgetTone(item)}
-          icon={item.budget.icon as IconName}
-          colorIndex={budgetColour(item)}
-        />
-      }
-      title={item.budget.name}
-      subtitle={budgetMeta(item)}
-      trailing={
-        <span className={`${styles.rowStatus} ${item.overLimit ? styles.rowOver : ''}`}>
-          <span className={styles.rowPercent}>{percent(item.ratio)}</span>
-          <span className={styles.rowStatusMeta}>{budgetStatus(item)}</span>
-        </span>
-      }
-    />
-  );
 
   const budgetStatusLine = budgetCardStatusText(
     view.budgets.items.length,
@@ -437,10 +391,7 @@ export default async function HomePage({
             ) : null}
           </>
         }
-      >
-        {/* `/onboarding` arrives in 0.3e: until then the page renders on the defaults (§17.1.2). */}
-        {page.onboarded ? null : <p className={styles.notice}>{t('web.shell.finishOnPhone')}</p>}
-      </HeroBand>
+      />
 
       <Columns
         lead={
@@ -467,7 +418,7 @@ export default async function HomePage({
               }
             >
               {view.recent.length === 0 ? (
-                <EmptyState title={t('transactions.empty')} body={t('web.shell.comingIn0_3e')} />
+                <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
               ) : (
                 view.recent.map((row) => txRow(row, false))
               )}
@@ -483,18 +434,34 @@ export default async function HomePage({
               attention={
                 view.budgets.items.length > 0 && view.budgets.status.kind !== 'withinLimits'
               }
+              more={
+                view.budgets.items.length === 0 ? undefined : (
+                  <Link className={styles.more} href="/profile/budgets">
+                    <span>{t('web.budgets.allBudgets')}</span>
+                    <Icon name="chevR" size={16} />
+                  </Link>
+                )
+              }
             >
               {view.budgets.items.length === 0 ? (
                 // The header already says «Nessun budget», as on the phone: the body says what one is.
-                <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
+                <>
+                  <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
+                  <ListRow
+                    open
+                    href="/profile/budgets?new"
+                    icon="plus"
+                    title={t('targets.createBudget')}
+                  />
+                </>
               ) : (
                 <>
                   {featuredBudget === undefined || view.budgets.advice === null ? null : (
                     <Featured
                       icon={featuredBudget.budget.icon as IconName}
-                      colorIndex={budgetColour(featuredBudget)}
+                      colorIndex={budgets.colour(featuredBudget)}
                       name={featuredBudget.budget.name}
-                      meta={budgetMeta(featuredBudget)}
+                      meta={budgets.meta(featuredBudget)}
                       amount={featuredBudget.spent}
                       currency={currency}
                       locale={locale}
@@ -503,24 +470,29 @@ export default async function HomePage({
                         percent: percent(featuredBudget.ratio),
                       })}
                       ratio={featuredBudget.ratio}
-                      pace={budgetPace(featuredBudget)}
-                      tone={budgetTone(featuredBudget)}
+                      pace={budgets.pace(featuredBudget)}
+                      tone={budgets.tone(featuredBudget)}
                       start={formatDayMonth(featuredBudget.range.start, locale)}
                       end={formatDayMonth(featuredBudget.range.end, locale)}
                       today={t('targets.today')}
                       sentence={budgetSentence(view.budgets.advice, featuredBudget)}
-                      label={budgetLabel(featuredBudget)}
+                      label={budgets.label(featuredBudget)}
                     />
                   )}
-                  {budgetEvents.map(budgetRow)}
-                  {budgetRest.map(budgetRow)}
+                  {budgetEvents.map(budgets.row)}
+                  {budgetRest.map(budgets.row)}
                 </>
               )}
             </Section>
 
             <Section open title={t('goals.title')} trailing={goalStatusLine}>
               {view.goals.items.length === 0 ? (
-                <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
+                <>
+                  <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
+                  {pocketParentCandidates(page.data.accounts).length === 0 ? null : (
+                    <ListRow open href={NEW_GOAL_HREF} icon="plus" title={t('goals.create')} />
+                  )}
+                </>
               ) : (
                 <>
                   {featuredGoal === undefined ? null : (

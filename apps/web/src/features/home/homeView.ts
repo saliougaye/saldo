@@ -6,7 +6,6 @@ import {
   budgetAdvice,
   budgetCardStatus,
   budgetEventIds,
-  budgetViews,
   featuredTarget,
   type GoalCardStatus,
   type GoalTargetInput,
@@ -31,6 +30,7 @@ import {
   type UserData,
   upcomingUntil,
 } from '@saldo/core';
+import { budgetsView } from '../budgets/budgetsView';
 
 /** How many rows «In arrivo» and «Ultime transazioni» show before «Vedi tutte» (§6.2). */
 export const HOME_ROWS = 5;
@@ -139,14 +139,7 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
     .slice(0, HOME_ROWS)
     .map(row);
 
-  const budgetItems = budgetViews({
-    budgets: data.budgets,
-    categories: data.categories,
-    transactions: txs,
-    period: period.range,
-    def,
-    today,
-  });
+  const { items: budgetItems } = budgetsView({ data, today, def, period });
   const budgetInputs: BudgetTargetInput[] = budgetItems.map((view) => ({
     id: view.budget.id,
     progress: view,

@@ -2,8 +2,14 @@
 import { getCurrency, type Settings } from '@saldo/core';
 import { type AppLocale, canonicalTimeZone, LANGUAGE_NAMES, timeZoneCity } from '@saldo/i18n';
 
+/** The five preferences, in the phone's order; each is also the `?edit=` value that opens its panel. */
+export const PREFERENCE_KEYS = ['cycle', 'currency', 'language', 'theme', 'timeZone'] as const;
+export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
+
+export const PREFERENCES_PATH = '/profile/preferences';
+
 export interface PreferenceRow {
-  key: 'cycle' | 'currency' | 'language' | 'theme' | 'timeZone';
+  key: PreferenceKey;
   /** A dotted i18n path for the label; the page resolves it. */
   labelKey: string;
   /**
@@ -12,41 +18,38 @@ export interface PreferenceRow {
    * `profile.light`) rather than names — the page resolves them, so this stays free of a translator.
    */
   value: string;
-  /** False in 0.3d: the settings form is 0.3e. The row still shows what is set. */
-  editable: false;
+  /** Where the row goes: the same page with its panel open. */
+  href: string;
+}
+
+/** Which panel `?edit=` opens; anything that is not one of the five opens none. */
+export function editPanel(param: string | undefined): PreferenceKey | null {
+  return PREFERENCE_KEYS.find((key) => key === param) ?? null;
 }
 
 /**
  * Profilo's preferences (§6.28): the same five rows as the phone, reading the same synced `settings`,
- * so a change made on the phone is what the web shows on its next request.
+ * so a change made on the phone is what the web shows on its next request. The cycle's row shows
+ * whatever the period kind is, as on the phone: the day is kept for when the kind is the cycle.
  */
 export function preferenceRows(settings: Settings, locale: AppLocale): PreferenceRow[] {
   const zone = canonicalTimeZone(settings.timeZone ?? 'UTC');
-  return [
-    {
-      key: 'cycle',
-      labelKey: 'profile.cycleStart',
-      value: String(settings.cycleStartDay),
-      editable: false,
-    },
-    {
-      key: 'currency',
+  const values: Record<PreferenceKey, { labelKey: string; value: string }> = {
+    cycle: { labelKey: 'profile.cycleStart', value: String(settings.cycleStartDay) },
+    currency: {
       labelKey: 'profile.currency',
       value: `${getCurrency(settings.currency).symbol} ${settings.currency}`,
-      editable: false,
     },
-    {
-      key: 'language',
+    language: {
       labelKey: 'profile.language',
       value: settings.language === 'system' ? '' : LANGUAGE_NAMES[settings.language],
-      editable: false,
     },
-    { key: 'theme', labelKey: 'profile.theme', value: settings.theme, editable: false },
-    {
-      key: 'timeZone',
-      labelKey: 'profile.timeZone',
-      value: timeZoneCity(zone, locale),
-      editable: false,
-    },
-  ];
+    theme: { labelKey: 'profile.theme', value: settings.theme },
+    timeZone: { labelKey: 'profile.timeZone', value: timeZoneCity(zone, locale) },
+  };
+  return PREFERENCE_KEYS.map((key) => ({
+    key,
+    ...values[key],
+    href: `${PREFERENCES_PATH}?edit=${key}`,
+  }));
 }

@@ -1678,6 +1678,110 @@ public. The decisions behind this section are D30–D36.
   §9.3). The seed can: seed rows from the web and from a phone that onboarded offline have different ids, so both
   survive the merge. Resolved in the plan; the lead option is deterministic ids for seed rows on both sides.
 
+**As built (0.3e-1, 2026-09-29):**
+
+- **The clock is the `server_clock` table** (`apps/web/src/server/write/clock.ts`): one row (`id` 1, `device_id`,
+  `wall_ms`, `counter`), created on the first write with `device_id = server-{uuid}` and locked `FOR UPDATE` for the
+  rest of the write's transaction, so two writes never mint the same stamp. It is instance-wide, not per user.
+  `advanceClock` is `lockClock` + `mintStamps` (pure) + `saveClock`.
+- **Receive before stamp.** A phone's HLC may run up to 24h ahead of the server (§8.2). Stamped with `hlcNow` alone,
+  a web edit of a row the phone wrote would lose the upsert's `updated_at < excluded.updated_at` test and be dropped
+  as `stale` without a word. So for each row the clock first **receives** its current `updated_at`
+  (`hlcReceive`), and the stamp is always after it.
+- **`writeChanges` is the one write path** (`src/server/write/writeChanges.ts`); nothing else writes `sync_rows`.
+  `writeInTransaction(db, userId, now, build)` opens the transaction, takes the push route's epoch share lock, runs
+  `build(tx)` — whose reads (`readUserData`, `loadRow`) happen on that same transaction — then locks the clock, then
+  each target row `FOR UPDATE` in (entity, id) order, mints the stamps and hands the batch to `applyPush`, the upsert
+  `POST /api/sync/push` runs. The epoch lock is a *share* lock, so a phone's push can still commit a row between
+  `build`'s read and the row lock: each write therefore carries its **`basis`**, the `updatedAt` `build` read (`null`
+  for a row it creates), and a locked row whose `updated_at` differs — or a "new" row that now exists — refuses the
+  batch as a `conflict`, instead of overwriting the phone's edit unseen. A write with no `basis` is blind and LWW
+  decides (onboarding's seed rows, which converge by id on purpose). Anything but `applied` throws `WriteRefused` and
+  rolls the whole batch back; the Server Actions answer `invalid` when a row failed its schema and `conflict`
+  otherwise. `writeChanges` is the wrapper for a caller with nothing to read first.
+- **`loadRow`** (`src/server/userData/row.ts`) reads one row **tombstones included** — the one thing the projection
+  cannot answer. «Annulla» after a delete writes that row back with `deletedAt: null` and a new stamp, and only for a
+  tombstone deleted in the last 10 minutes.
+- **The seed** (`@saldo/core` `seed.ts`, shared with the phone): every seed category's id is
+  `seed-category-{nameKey}` on both sides, so an offline phone onboarding and a web onboarding of the same account
+  converge on one row per category by LWW. The **first account keeps a random id**: two onboardings that named two
+  accounts described two accounts, and merging them would lose one. `settings` already converges (`id: 'settings'`).
+  `finishWebOnboarding` writes settings, the account and the seed in one `writeInTransaction`.
+
+**As built (0.3e-2, 2026-09-30):**
+
+- **Three more write modules, all on `writeInTransaction`** (`apps/web/src/server/write/`): `accounts.ts`
+  (`saveAccount`, `archiveAccount`, `restoreAccount`), `goals.ts` (`saveGoal`, `closeGoal`, `restoreGoal`) and
+  `budgets.ts` (`saveBudget`, `deleteBudget`). Each reads with the projection on the write's own transaction and carries
+  the `basis` of every row it edits. Refusals are values, never throws: `AccountWriteError` adds `holdsGoals` (an
+  account with open goals cannot be archived) and `parentArchived` (a goal's account is archived) to the common
+  `invalid`/`notFound`/`conflict`; `BudgetWriteError` adds `taken` (a category already in another budget).
+  `saveAccount` answers `notFound` for a pocket id: the goal form is the only door to a pocket.
+- **The account form edits the current balance** (§6.22); the server turns it into an opening balance with
+  `openingBalanceForCurrent` over the whole ledger, as the phone does. A new account's typed balance is its opening
+  balance. The buffer is checked by `signedBufferOk` (`amounts.ts`).
+- **A goal is created with `openingBalance: 0`**; «Già da parte» becomes a transfer from the parent account, never an
+  opening balance (it would count the money twice in Patrimonio, §5.14).
+- **`closeGoalWrites`** (`goals.ts`) is the whole of closing a goal as a list of writes: the tombstones of its future
+  rows, the recurrence edits and deletes `planStopRecurrence` returns, the settlement transfer that takes the pocket to
+  exactly zero, and the pocket's `archivedAt`. `closeGoal` applies them as **one** `writeInTransaction`, so a close is
+  all or nothing and its rows take consecutive `seq`s.
+- **`saveTransaction` gains an optional `closeGoalId`** («Registra la spesa»): validated as an open pocket that is the
+  form's account, then `closeGoalWrites` are appended to the expense's own writes in the same transaction.
+- **What moved into `@saldo/core`** so the phone and the web run one set of rules (no re-export shims; the phone
+  imports them from core): `views/accountForm.ts`, `views/goalForm.ts` and `views/budgetForm.ts` (the forms' pure
+  half, `icon: string` because core imports no other workspace package) and `goalPlans.ts` (`newGoalFields`,
+  `newGoalTransferFields`, `planCloseGoal`, `restoreGoalFields`, `canRestoreGoal`). The phone's `goalService.ts` is a
+  thin caller of the plans and its test was not edited.
+- **The budget's suggested amount** is computed in the browser from the six past periods' spend as plain numbers,
+  with core's `suggestBudgetAmount` and the phone's 12% headroom.
+
+**As built (0.3e-2b, 2026-09-30):**
+
+- **`categories.ts`** (`apps/web/src/server/write/`): `saveCategory`, `archiveCategory`, `restoreCategory` and
+  `reorderCategory`, on `writeInTransaction` with the `basis` of every row read. `CategoryWriteError` adds
+  `parentInvalid` and `moveInvalid` to the common errors. The phone's rules are re-checked on the server: a child
+  cannot have children, the parent is live, top-level, of the same direction and not the category itself; archiving a
+  parent archives its children; **archive with a move is one batch** that rewrites `categoryId` on every live
+  transaction and recurrence template that uses the category and the `categoryIds` of every budget (deduplicated),
+  the target being live, of the same direction and neither the category nor one of its children; a child whose parent
+  is archived cannot be restored; reorder renumbers one sibling group and writes nothing for a move past either end.
+  «Budget mensile» on the form creates a single-category `period` budget named after the category (alert 90, no
+  rollover) or updates that budget's amount, and switching it off (or an amount of 0) removes an existing
+  single-category budget, as the phone's edit does. Income categories never get one.
+- The form's pure half (`CategoryFormValues`, `categoryFormFrom`, `categoryMissingForSave`) moved into `@saldo/core`
+  `views/categoryForm.ts`, with `categoryParentCandidates` and `movableTargets`.
+
+**As built (0.3e-3, 2026-09-30):**
+
+- **`settings.ts`** (`apps/web/src/server/write/`): `saveSetting` takes **one preference at a time** — `language`,
+  `theme`, `currency`, `cycleStartDay` (1–28, narrower than the entity's schema) or `timeZone` — and writes the
+  settings row back with that field changed and the row's `basis`. No settings row is `notFound` (a preference does not
+  onboard an account); a value already stored writes nothing. The time zone is checked with `isTimeZone` and stored
+  under the id the list holds (`canonicalTimeZone`: `Asia/Kolkata` is saved as `Asia/Calcutta`); a settings row with no
+  `timeZone` yet is handled. `periodKind` is not writable.
+- **`tags.ts`**: `createTag` (moved from `transactions.ts`; the transaction form's «Crea «X»» — it answers the tag that
+  already has the name, with `created: false`), `newTag` (Profilo's «Nuovo tag»: a name in use is refused as `taken`),
+  `renameTag` (keeps the id; its own name or a change of case only is allowed, the same name writes nothing),
+  `mergeTags` and `deleteTag`. Merge and delete are **one batch** each: every live transaction **and recurrence
+  template** carrying the tag is rewritten (the target replaces the source, deduplicated; or the id is removed) with
+  its `basis`, and the tag is tombstoned in the same `writeInTransaction`.
+- **Export** is two route handlers, not Server Actions: `GET /api/export/backup` and
+  `GET /api/export/csv?range=all|period&p=<date>` (`app/api/export/`, shared start in
+  `src/server/export/exportRequest.ts`). They authenticate with `requireUser`, so the browser's cookie and a bearer
+  token are both accepted — the same user could read the same rows through `/api/sync/pull` — and answer 401 without a
+  session, 409 `nothing_to_export` without settings, 400 `invalid_query` for an unreadable `range` or `p` (a file that
+  silently covers something else is worse than none). The response is `Content-Disposition: attachment` with the
+  phone's file names (`saldo-backup-{today}.json`, `saldo-transactions-{today}.csv`, «today» being the user's, §17.1.5)
+  and `Cache-Control: no-store`.
+- **`@saldo/core` `io/exportFiles.ts`**: `backupFile`, `csvFile`, `ExportFile` and `NothingToExportError` moved out of
+  the phone's `exportService.ts`, which now only collects its rows and zips. Both sides therefore write the same file —
+  same sort (newest first, id within a day), same CSV guard (§18) — and a backup taken on the web restores on the phone.
+- **No way in but a passkey.** 0.3e-1 to 0.3e-3 were checked in a browser through a temporary, loopback-only route that
+  signed the browser in as an existing account; it was deleted when 0.3e closed. A UI check in a browser now needs a
+  real passkey (§17.1.4); route handlers are tested with a session row and its signed cookie
+  (`src/server/test/session.ts`).
+
 #### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
@@ -1758,6 +1862,11 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   in the browser bundle: a client component receives the handful of strings it shows as a plain, typed prop. The locale
   is the synced `settings.language` where there is a session and the browser's `Accept-Language` where there is not
   (`apps/web/src/i18n/`). Plurals stay i18next's on the phone; nothing on the web counts anything yet.
+  **Two subpaths are allowed in client components (0.3e-1):** `@saldo/i18n/format` and `@saldo/i18n/translate`,
+  which import no catalog, so the transaction form can format a balance while the user types and build its own `t`
+  (`makeTranslator`) over the slice of the catalog it receives (`txForm`, `transactions`, `common`, `kinds`). The
+  root `@saldo/i18n`, which imports all seven catalogs, stays server-only: a test in `apps/web` refuses a
+  `'use client'` file that imports it. This relaxes 0.3d's «no number is formatted in a client component».
 - **Tokens as CSS custom properties.** A pure `tokensCss()` in `@saldo/ui` returns `:root` (dark),
   `[data-theme="light"]` and a `prefers-color-scheme: light` block for the `system` preference, with variables
   named `--color-*`, `--radius-*`, `--font-size-*`, `--font-weight-*`, `--motion-*` and `--category-*`. The root
@@ -1798,6 +1907,14 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   tokens: `panelWidth` 420, `searchWidth` 320.
   **Built 2026-09-28 in 0.3d**, read side only: the list, the search, the chips, «In arrivo», the days and the
   panel's detail. «Modifica» and «Nuova transazione» arrive with the forms in 0.3e.
+  **«Modifica» and «Nuova transazione» built 2026-09-29 in 0.3e-1.** The URL carries the form: `?new` opens «Nuova
+  transazione» in the panel, `?t={id}&edit` turns the detail into the form, and after a delete the page is
+  `?deleted={id}`, which renders the «Annulla» toast (only for a tombstone of this user; pressing «Annulla» stops
+  the toast's timer, so a pending or failed restore stays on screen). «Nuova transazione» in the top bar and the
+  FAB are links to `/transactions?new` from any page, and `N` does the same. Below 1024px the form is a **bottom
+  sheet** over a scrim (the panel's `data-sheet`), and the **FAB** sits above the tab bar at the trailing edge,
+  under the panel and the scrim. An occurrence of a recurrence is edited as that one row; «Ripeti» is read-only and
+  says recurrences are managed on the phone.
 - **Conti (decided 2026-09-27, mockup `2026-09-27-web-accounts-variants.html`, variant «1 · Lista aperta»).** A band as
   on Home: the page title with «Nuovo conto», Patrimonio complessivo at 56px, Totale spendibile beside it with its
   note. Then two open groups, «Da spendere» and «Risparmi e investimenti», rows separated by space, each account's
@@ -1808,6 +1925,23 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   **Built 2026-09-28 and 2026-09-29 in 0.3d** — the groups, the pockets and the totals first, then the account,
   credit-card and goal panels. Conti's read side shipped here rather than in 0.3e (decided with the user
   2026-09-28); only «Nuovo conto» and the account form wait for 0.3e.
+  **Built in 0.3e-2 (2026-09-30).** The URL carries the form, as in Transazioni. «Nuovo conto» and the account form
+  open in the panel (`?new`, `?a={id}&edit`); the archived list is a panel (`?archived`) with «Ripristina» for accounts
+  and closed goals. The goal form (the phone's four steps as one panel) was built here in Conti and **moved to Profilo →
+  Obiettivi in 0.3e-2b**: Conti's goal panel keeps the money movements and «Chiudi», and its «Modifica» opens
+  `/profile/goals?g={id}`. An account with open goals shows «Chiudi prima gli obiettivi in questo conto» instead of «Archivia»;
+  archiving asks and has no undo, «Ripristina» is the way back. «Accantona» and «Preleva» are links to the transaction
+  form prefilled (`/transactions?new&from=…&to=…&description=…`), not a form of their own. «Chiudi obiettivo» asks
+  «Hai usato i soldi?» in a `ConfirmDialog` whose **secondary slot** carries the second choice: «Riporta in {conto}»
+  and «Registra la spesa» (the expense form with `closeGoal`), and a close is one write. Below 1024px the panels are
+  the bottom sheet.
+- **Budget (`/profile/budgets`; decided in 0.3e-2 at `/budgets`, moved to Profilo in 0.3e-2b; no mockup existed).**
+  Reached from Home, as on the phone (§5.8), and from Profilo's sub-navigation, not from the top bar or the tab bar:
+  the Budget section's «Tutti i budget» link, its rows (`/profile/budgets?b={id}`) and the empty card's «Crea un
+  budget» (`/profile/budgets?new`). The page is the open list, a ring per row as Home draws it, with the form (`?new`,
+  `?b={id}` to edit, delete asks first and has no undo) in the trailing panel. `/budgets` is kept as a redirect that
+  preserves the query string. The detail chart and «Periodi precedenti» stay on the phone (§17.1.9).
+  **Built 2026-09-30 in 0.3e-2; moved in 0.3e-2b.**
 - **Statistiche (decided 2026-09-27, mockup `2026-09-27-web-stats-variants.html`, variant «3 · Navigatore», lower half
   «Andamento a sinistra» with Quota impegnata under it).** On wide screens Flussi spans the page with **ten
   columns**: six closed periods, the current one and the three forecast ones (D29 kept six because of 320px; the
@@ -1832,8 +1966,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   there and a link that only exists to reveal rows is a link the desktop does not need.
 - **Profilo (decided 2026-09-27, mockup `2026-09-27-web-profile-variants.html`, variant «5 · Sotto-navigazione +
   pannello»).** Under the profile header (avatar, name, email, role), a sub-navigation on the leading side picks one
-  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/passkeys`,
-  `/profile/categories`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
+  section at a time, each with its URL (`/profile/account`, `/profile/preferences`, `/profile/categories`,
+  `/profile/budgets`, `/profile/goals`, `/profile/passkeys`, `/profile/tags`, `/profile/data`), and «Esci» at its end. A section is a list of summary
   rows showing the current value; the row picked is edited **in the trailing panel**, as in Transazioni and Conti
   (`?edit=currency`, `?k={passkeyId}`). Preferences are the synced `settings` and say they apply to the phone too;
   the currency asks for confirmation as on the phone. Passkeys are one row each (name, provider from the AAGUID,
@@ -1845,6 +1979,38 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   «Passkey» wrapped in the same shell (0.3b had shipped it at its own URL). Preferences are read-only rows that say
   they apply to the phone too; the panels that edit them arrive with the forms in 0.3e, as do Categorie, Tag and
   Dati.
+  **Built in 0.3e-2b (2026-09-30): Categorie, Budget and Obiettivi.** The sub-navigation gains the three links after
+  Preferenze and before Passkey; each section renders its form through `ProfilePanel`, which portals the panel into the
+  layout's `#profile-panel` slot. `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
+  rolled up, up/down buttons to reorder within a sibling group (drag is the phone's), no delete; «Nuova categoria» and
+  the edit form (`?new`, `?c={id}`) with name, direction (locked once the category has a parent or children), parent,
+  appearance and «Budget mensile»; archiving asks with the usage count and an optional «Sposta le transazioni in»
+  target; the archived list (`?archived`) has «Ripristina». `/profile/budgets` is the budget list and form moved from
+  `/budgets`. `/profile/goals` lists open goals with a ring and, under «Obiettivi chiusi», closed ones with
+  «Ripristina»; `?new` and `?g={id}` open the goal form, whose panel also has «Apri in Conti»: the money movements
+  (Accantona, Preleva) and «Chiudi obiettivo» stay in Conti. Tag, Dati and the preference panels remain for 0.3e-3.
+  **Built in 0.3e-3 (2026-09-30): the preference panels, Tag and Dati.** The sub-navigation is now Profilo,
+  Preferenze, Categorie, Tag, Budget, Obiettivi, Passkey, Dati, «Esci». **Preferenze**: each of the five rows is a link
+  that opens its panel at `/profile/preferences?edit=cycle|currency|language|theme|timeZone` (anything else opens
+  none). A choice is **saved as it is made**, as on the phone, and the panel stays open on the new selection; after the
+  write `router.refresh()` re-renders the root layout, so a language change re-renders the whole shell and a theme
+  change flips `<html data-theme>` at once. Only the currency asks first, with the phone's «Cambiare valuta?» and, when
+  the two currencies keep a different number of decimals, the before/after figure («€1,842.60 will read as ¥184,260»):
+  it reformats, never converts. «Inizio del ciclo» is the 1–28 grid over the preview range; the row shows whatever the
+  period kind is, and `periodKind` cannot be changed after onboarding, as on the phone. The time zone list is the
+  phone's (saved zone first, this browser's under it when they differ, then every zone, searchable); with no zone
+  stored the browser's shows selected and choosing it is what stores it. Deviations from the plan: the option lists are
+  radio groups with one tab stop where the arrows move the **focus only** and Space/Enter chooses (a selection that
+  followed the arrows would write once per option walked past); a second choice made while a save is still in flight is
+  ignored; a refused or thrown save says why and the selection goes back. **Tag** (`/profile/tags`, §5.10): every tag
+  with «N transazioni», most used first then by name; `?new` for «Nuovo tag», `?tag={id}` for the panel that renames,
+  merges («Unisci a un altro tag», asks with the count, cannot be undone) and deletes («Elimina tag», asks; the
+  transactions stay). Names are unique case-insensitively among **live** tags — a merged or deleted tag's name is free
+  again. The tag view (totals, split) is not on the web: «Vedi le transazioni» opens `/transactions?tag={id}`.
+  **Dati** (`/profile/data`): three plain download links — the JSON backup, the CSV of every transaction and the CSV
+  of the current period — that work without JavaScript. The backup holds the attachments' rows, not their bytes.
+  **What stays on the phone:** the ZIP backup with the attachments' files, restore, CSV import, «Elimina tutti i
+  dati», the tag view, and changing the period kind.
 - **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
   built 2026-09-28 in 0.3b).** No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
   brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the

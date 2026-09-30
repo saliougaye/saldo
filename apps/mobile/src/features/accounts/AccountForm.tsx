@@ -1,11 +1,9 @@
 import {
   type Account,
-  amountBufferToMinor,
-  minorToAmountBuffer,
-  openingBalanceForCurrent,
-  POCKET_PARENT_TYPES,
+  type AccountFormValues,
+  accountMissingForSave,
+  accountTypesFor,
   paymentAccountCandidates,
-  pocketsOf,
 } from '@saldo/core';
 import { accountIconOptions, type IconName } from '@saldo/ui';
 import { useState } from 'react';
@@ -25,89 +23,8 @@ import { useSettings } from '../../db/hooks';
 import { useAppLocale } from '../../i18n/useAppLocale';
 import { Text } from '../../theme/Text';
 import { useTheme } from '../../theme/ThemeProvider';
-import { ACCOUNT_TYPES, AccountTypeSheet } from './AccountTypeSheet';
+import { AccountTypeSheet } from './AccountTypeSheet';
 import { PaymentAccountSheet } from './PaymentAccountSheet';
-
-export interface AccountFormValues {
-  name: string;
-  institution: string;
-  type: Account['type'];
-  /** Keypad buffer of the **current** balance, not the opening one (§6.22). */
-  buffer: string;
-  includeInSpendable: boolean;
-  colorIndex: number;
-  icon: IconName;
-  creditCloseDay: number | null;
-  creditChargeDay: number | null;
-  /** Credit cards only: the account the card is charged to (§4, §6.22). */
-  creditPaymentAccountId: string | null;
-}
-
-export function emptyAccountForm(): AccountFormValues {
-  return {
-    name: '',
-    institution: '',
-    type: 'checking',
-    buffer: '',
-    includeInSpendable: true,
-    colorIndex: 0,
-    icon: 'landmark',
-    creditCloseDay: null,
-    creditChargeDay: null,
-    creditPaymentAccountId: null,
-  };
-}
-
-export function accountFormFrom(
-  account: Account,
-  currentBalance: number,
-  minorDigits: 0 | 2 | 3,
-): AccountFormValues {
-  return {
-    name: account.name,
-    institution: account.institution ?? '',
-    type: account.type,
-    buffer: minorToAmountBuffer(currentBalance, minorDigits),
-    includeInSpendable: account.includeInSpendable,
-    colorIndex: account.colorIndex,
-    icon: account.icon as IconName,
-    creditCloseDay: account.creditCloseDay,
-    creditChargeDay: account.creditChargeDay,
-    creditPaymentAccountId: account.creditPaymentAccountId,
-  };
-}
-
-/**
- * The opening balance to store for what the user typed (§6.22). In edit mode the amount is the
- * *current* balance, so it has to be turned back into an opening balance.
- */
-export function openingBalanceFrom(
-  values: AccountFormValues,
-  minorDigits: 0 | 2 | 3,
-  context: {
-    accountId: string | null;
-    txs: Parameters<typeof openingBalanceForCurrent>[0]['txs'];
-    today: string;
-  },
-): number {
-  const current = amountBufferToMinor(values.buffer, minorDigits);
-  if (context.accountId === null) return current;
-  return openingBalanceForCurrent({
-    accountId: context.accountId,
-    currentBalance: current,
-    txs: context.txs,
-    today: context.today,
-  });
-}
-
-/**
- * What the form is still waiting for, or `null` when nothing is. The name is the only thing an
- * account cannot be saved without (§6.22) — a balance of zero is a balance — so the footer names it
- * rather than leaving the button grey and unexplained.
- */
-export function accountMissingForSave(values: AccountFormValues): 'name' | null {
-  return values.name.trim().length > 0 ? null : 'name';
-}
 
 export interface AccountFormProps {
   values: AccountFormValues;
@@ -217,7 +134,7 @@ export function AccountForm({
           />
           <ListRow
             title={t('common.appearance')}
-            leading={<IconBox name={values.icon} colour={colour} />}
+            leading={<IconBox name={values.icon as IconName} colour={colour} />}
             onPress={() => setSheet('appearance')}
             chevron
           />
@@ -267,19 +184,14 @@ export function AccountForm({
         onClose={close}
         value={values.type}
         onSelect={(type) => set({ type })}
-        types={
-          // An account that holds goals stays one that can (§5.14, D24): no card, no investments.
-          accountId !== null && pocketsOf(accounts, accountId).length > 0
-            ? ACCOUNT_TYPES.filter((type) => POCKET_PARENT_TYPES.includes(type))
-            : ACCOUNT_TYPES
-        }
+        types={accountTypesFor(accounts, accountId)}
       />
 
       <AppearanceSheet
         visible={sheet === 'appearance'}
         onClose={close}
         colorIndex={values.colorIndex}
-        icon={values.icon}
+        icon={values.icon as IconName}
         groups={[{ key: 'accounts', icons: accountIconOptions }]}
         onChange={({ colorIndex, icon }) => set({ colorIndex, icon })}
       />

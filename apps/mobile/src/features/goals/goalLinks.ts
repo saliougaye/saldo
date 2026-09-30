@@ -1,5 +1,10 @@
-import { type LocalDate, type MinorDigits, minorToAmountBuffer } from '@saldo/core';
-import { emptyForm, type TransactionFormValues } from '../transactions/useTransactionForm';
+import {
+  emptyForm,
+  type LocalDate,
+  type MinorDigits,
+  minorToAmountBuffer,
+  type TransactionFormValues,
+} from '@saldo/core';
 
 /**
  * «Accantona» / «Preleva» (§5.14): the ordinary transfer sheet, filled like «Salda carta»

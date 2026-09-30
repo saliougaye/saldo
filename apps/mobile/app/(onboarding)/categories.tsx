@@ -1,3 +1,4 @@
+import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -75,7 +76,7 @@ export default function CategoriesStep() {
                     opacity: isSelected ? 1 : 0.45,
                   }}
                 >
-                  <Icon name={category.icon} size={20} color={colour} />
+                  <Icon name={category.icon as IconName} size={20} color={colour} />
                   <Text size="caption" numberOfLines={1}>
                     {t(`seed.${category.nameKey}`)}
                   </Text>

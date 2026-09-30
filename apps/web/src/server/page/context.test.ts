@@ -1,6 +1,25 @@
-import { emptyUserData, type Settings } from '@saldo/core';
-import { describe, expect, it } from 'vitest';
-import { narrowParams, pageState } from './context';
+import { emptyUserData, type Settings, type UserData } from '@saldo/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { narrowParams, pageState, readPage } from './context';
+
+// `readPage` is the request's own code (a session, a database, Next's `redirect`): these stand in
+// for them, so the one thing under test is what it does with a projection that has no settings.
+const loaded = vi.hoisted(() => ({ data: null as UserData | null }));
+vi.mock('next/navigation', () => ({
+  redirect: (to: string) => {
+    throw new Error(`redirect:${to}`);
+  },
+}));
+vi.mock('../auth/currentUser', () => ({
+  requireWebUser: async () => ({ id: 'user-1', displayName: 'Ada', email: 'ada@example.com' }),
+}));
+vi.mock('../userData/load', () => ({
+  loadUserData: async () => loaded.data,
+}));
+vi.mock('../../i18n/server', () => ({
+  userI18n: async () => ({ locale: 'it', t: (key: string) => key }),
+}));
+vi.mock('../env', () => ({ env: () => ({ defaultTimeZone: 'Europe/Rome' }) }));
 
 const data = emptyUserData();
 const now = new Date('2026-09-28T09:00:00Z');
@@ -69,6 +88,25 @@ describe('pageState', () => {
     // The defaults still make the page renderable rather than blank.
     expect(state.currency).toBe('EUR');
     expect(state.def).toEqual({ kind: 'month', startDay: 27 });
+  });
+});
+
+describe('readPage', () => {
+  beforeEach(() => {
+    loaded.data = null;
+  });
+
+  it('sends an account that has never onboarded to /onboarding (§17.1.2)', async () => {
+    loaded.data = { ...data, settings: null };
+    await expect(readPage(Promise.resolve({}))).rejects.toThrow('redirect:/onboarding');
+  });
+
+  it('renders an onboarded account', async () => {
+    loaded.data = { ...data, settings: settingsRow({ currency: 'SEK' }) };
+    const page = await readPage(Promise.resolve({ q: ['bar', 'baz'] }));
+    expect(page.onboarded).toBe(true);
+    expect(page.currency).toBe('SEK');
+    expect(page.params.q).toBe('bar');
   });
 });
 

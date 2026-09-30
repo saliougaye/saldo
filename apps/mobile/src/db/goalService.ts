@@ -1,8 +1,12 @@
 import {
   type Account,
-  accountBalances,
+  canRestoreGoal,
   type LocalDate,
-  planStopRecurrence,
+  type NewGoalInput,
+  newGoalFields,
+  newGoalTransferFields,
+  planCloseGoal,
+  restoreGoalFields,
   type Transaction,
 } from '@saldo/core';
 import type { Repositories } from './repositories';
@@ -11,19 +15,6 @@ import type { RepositoryDatabase } from './repositories/support';
 type TransactionInput = Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> & {
   id?: string;
 };
-
-export interface NewGoalInput {
-  name: string;
-  icon: string;
-  colorIndex: number;
-  parentAccountId: string;
-  goalTarget: number;
-  goalDeadline: LocalDate | null;
-  /** «Già da parte»: moved from the parent on creation, never an opening balance. */
-  alreadySaved: number;
-  today: LocalDate;
-  sortOrder: number;
-}
 
 /**
  * Creates a goal (§5.14): an empty, unspendable pocket inside its parent, plus — when something is
@@ -39,39 +30,9 @@ export function createGoal(
   input: NewGoalInput,
 ): Account {
   return db.transaction(() => {
-    const pocket = repos.accounts.create({
-      name: input.name,
-      type: 'pocket',
-      institution: null,
-      openingBalance: 0,
-      includeInSpendable: false,
-      colorIndex: input.colorIndex,
-      icon: input.icon,
-      creditCloseDay: null,
-      creditChargeDay: null,
-      creditPaymentAccountId: null,
-      archivedAt: null,
-      sortOrder: input.sortOrder,
-      parentAccountId: input.parentAccountId,
-      goalTarget: input.goalTarget,
-      goalDeadline: input.goalDeadline,
-      goalStartDate: input.today,
-    });
-    if (input.alreadySaved > 0) {
-      repos.transactions.create({
-        kind: 'transfer',
-        amount: input.alreadySaved,
-        date: input.today,
-        accountId: input.parentAccountId,
-        toAccountId: pocket.id,
-        categoryId: null,
-        description: input.name,
-        note: null,
-        tagIds: [],
-        excludeFromTotals: false,
-        recurrenceId: null,
-      });
-    }
+    const pocket = repos.accounts.create(newGoalFields(input));
+    const transfer = newGoalTransferFields(input, pocket.id);
+    if (transfer !== null) repos.transactions.create(transfer);
     return pocket;
   });
 }
@@ -97,41 +58,18 @@ function closeGoalIn(repos: Repositories, goalId: string, today: LocalDate, nowI
   ) {
     throw new Error(`No open goal ${goalId}`);
   }
-  const touches = (tx: { accountId: string; toAccountId: string | null }) =>
-    tx.accountId === goalId || tx.toAccountId === goalId;
-
-  for (const recurrence of repos.recurrences.list()) {
-    if (!touches(recurrence.template)) continue;
-    const occurrences = repos.transactions
-      .list()
-      .filter((tx) => tx.recurrenceId === recurrence.id)
-      .map((tx) => ({ id: tx.id, date: tx.date }));
-    const plan = planStopRecurrence(recurrence, occurrences, today);
-    for (const id of plan.tombstoneOccurrenceIds) repos.transactions.remove(id);
-    if (plan.deleteRecurrence) repos.recurrences.remove(recurrence.id);
-    else if (plan.endDate !== null)
-      repos.recurrences.update(recurrence.id, { endDate: plan.endDate });
+  const plan = planCloseGoal({
+    pocket,
+    transactions: repos.transactions.list(),
+    recurrences: repos.recurrences.list(),
+    today,
+  });
+  for (const edit of plan.recurrenceEdits) {
+    if (edit.delete) repos.recurrences.remove(edit.id);
+    else repos.recurrences.update(edit.id, { endDate: edit.endDate });
   }
-  for (const tx of repos.transactions.list()) {
-    if (tx.date > today && touches(tx)) repos.transactions.remove(tx.id);
-  }
-
-  const balance = accountBalances([pocket], repos.transactions.list(), today).get(goalId) ?? 0;
-  if (balance !== 0) {
-    repos.transactions.create({
-      kind: 'transfer',
-      amount: Math.abs(balance),
-      date: today,
-      accountId: balance > 0 ? goalId : parentId,
-      toAccountId: balance > 0 ? parentId : goalId,
-      categoryId: null,
-      description: pocket.name,
-      note: null,
-      tagIds: [],
-      excludeFromTotals: false,
-      recurrenceId: null,
-    });
-  }
+  for (const id of plan.tombstoneTransactionIds) repos.transactions.remove(id);
+  if (plan.settlement !== null) repos.transactions.create(plan.settlement);
   repos.accounts.update(goalId, { archivedAt: nowIso });
 }
 
@@ -185,15 +123,8 @@ export function closeGoalWithExpense(
 export function restoreGoal(repos: Repositories, goalId: string, today: LocalDate): void {
   const pocket = repos.accounts.byId(goalId);
   if (pocket == null || pocket.type !== 'pocket') throw new Error(`No goal ${goalId}`);
-  const parent =
-    pocket.parentAccountId == null ? null : repos.accounts.byId(pocket.parentAccountId);
-  if (parent == null || parent.archivedAt !== null) {
+  if (!canRestoreGoal(pocket, repos.accounts.list())) {
     throw new Error(`The parent of goal ${goalId} is archived`);
   }
-  repos.accounts.update(goalId, {
-    archivedAt: null,
-    goalStartDate: today,
-    goalDeadline:
-      pocket.goalDeadline != null && pocket.goalDeadline > today ? pocket.goalDeadline : null,
-  });
+  repos.accounts.update(goalId, restoreGoalFields(pocket, today));
 }

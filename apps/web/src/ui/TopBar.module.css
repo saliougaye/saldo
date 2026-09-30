@@ -49,8 +49,8 @@
   gap: 12px;
 }
 
-/* The phone writes from its own screen, and 0.3e gives the wide screen the panel this opens: until then it looks like the button it will be, dimmed, and says so on hover. */
-.newDisabled {
+/* The mockup's `.btn-primary`. Below the breakpoint the tab bar's FAB is the same link. */
+.new {
   display: none;
   align-items: center;
   gap: 8px;
@@ -62,8 +62,12 @@
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
-  opacity: 0.5;
-  cursor: not-allowed;
+  text-decoration: none;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.new:active {
+  scale: 0.98;
 }
 
 .kbd {
@@ -86,7 +90,7 @@
     display: flex;
   }
 
-  .newDisabled {
+  .new {
     display: inline-flex;
   }
 }

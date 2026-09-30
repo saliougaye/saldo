@@ -1,3 +1,4 @@
+import { iconMarkup } from '@saldo/ui';
 import { createRepositories } from './repositories';
 import { PICKABLE_SEED_CATEGORIES, SEED_CATEGORIES, seedFromOnboarding } from './seed';
 import { createTestDatabase } from './testing';
@@ -35,6 +36,22 @@ describe('SEED_CATEGORIES', () => {
   it('keeps refunds and gifts out of the grid but in the catalogue', () => {
     const hidden = SEED_CATEGORIES.filter((category) => category.hidden === true);
     expect(hidden.map((category) => category.nameKey)).toEqual(['refunds', 'gifts']);
+  });
+
+  it('uses only icons the app can draw', () => {
+    for (const category of SEED_CATEGORIES) {
+      expect(Object.hasOwn(iconMarkup, category.icon)).toBe(true);
+      for (const child of category.children ?? []) {
+        expect(Object.hasOwn(iconMarkup, child.icon)).toBe(true);
+      }
+    }
+  });
+
+  it('gives seed categories the ids every device gives them', () => {
+    const repos = seed(['groceries']);
+    expect(repos.categories.list().map((category) => category.id)).toContain(
+      'seed-category-groceries',
+    );
   });
 });
 
@@ -79,6 +96,29 @@ describe('seedFromOnboarding', () => {
     expect(repos.settings.get()?.cycleStartDay).toBe(1);
     expect(repos.accounts.list()).toHaveLength(0);
     expect(repos.categories.list()).toHaveLength(0);
+  });
+
+  it('leaves alone a seed category a partial first sync already delivered', () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db, () => BASE.completedAt);
+    // A pull that brought the web's seed categories but not yet its settings row.
+    repos.categories.create({
+      id: 'seed-category-groceries',
+      name: 'Spesa (dal web)',
+      direction: 'expense',
+      parentId: null,
+      icon: 'cart',
+      colorIndex: 1,
+      archivedAt: null,
+      sortOrder: 0,
+    });
+
+    expect(seedFromOnboarding(repos, { ...BASE, selectedCategoryKeys: ['groceries'] })).toBe(true);
+    const categories = repos.categories.list();
+    expect(categories.filter((category) => category.id === 'seed-category-groceries')).toEqual([
+      expect.objectContaining({ name: 'Spesa (dal web)' }),
+    ]);
+    expect(categories.map((category) => category.name)).toContain('t:supermarket');
   });
 
   it('creates the hidden income categories even when nothing is selected', () => {
