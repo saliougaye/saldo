@@ -1777,6 +1777,10 @@ public. The decisions behind this section are D30–D36.
 - **`@saldo/core` `io/exportFiles.ts`**: `backupFile`, `csvFile`, `ExportFile` and `NothingToExportError` moved out of
   the phone's `exportService.ts`, which now only collects its rows and zips. Both sides therefore write the same file —
   same sort (newest first, id within a day), same CSV guard (§18) — and a backup taken on the web restores on the phone.
+- **No way in but a passkey.** 0.3e-1 to 0.3e-3 were checked in a browser through a temporary, loopback-only route that
+  signed the browser in as an existing account; it was deleted when 0.3e closed. A UI check in a browser now needs a
+  real passkey (§17.1.4); route handlers are tested with a session row and its signed cookie
+  (`src/server/test/session.ts`).
 
 #### 17.1.4 Authentication on the web
 
