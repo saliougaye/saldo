@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * §17.1.4 (0.3f-3): the way back for somebody who lost their passkey, on an instance whose admin
- * configured SMTP. `?error=link` is where Better Auth sends a link that expired or was used.
+ * configured SMTP. `?error=<code>` is where Better Auth sends a link that expired or was used.
  */
 export default async function RecoverPage({
   searchParams,
@@ -40,11 +40,10 @@ export default async function RecoverPage({
               title={t('web.auth.recoverExpiredTitle')}
               body={t('web.auth.recoverExpiredBody')}
             />
-          ) : (
-            <p className={styles.lede}>{t('web.auth.recoverBody')}</p>
-          )}
+          ) : null}
           <RecoverForm
             strings={{
+              intro: state === 'expiredLink' ? null : t('web.auth.recoverBody'),
               emailLabel: t('web.auth.emailLabel'),
               emailPlaceholder: t('web.auth.emailPlaceholder'),
               submit: t('web.auth.recoverSubmit'),

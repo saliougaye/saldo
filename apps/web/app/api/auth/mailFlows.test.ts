@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { createEmailVerificationToken } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { recoverState } from '../../../src/features/auth/recoverView';
 import { revokeUser } from '../../../src/server/auth/admin';
 import { auth } from '../../../src/server/auth/auth';
 import { settleBackground } from '../../../src/server/background';
@@ -82,7 +83,7 @@ function get(url: string): Promise<Response> {
 
 const RECOVER = {
   callbackURL: '/profile/passkeys?recovered',
-  errorCallbackURL: '/recover?error=link',
+  errorCallbackURL: '/recover',
 };
 
 async function askForRecovery(email: string, extra: Record<string, unknown> = {}) {
@@ -130,6 +131,13 @@ describe('recovery by magic link', () => {
     expect(location(again).pathname).toBe('/recover');
     expect(location(again).searchParams.get('error')).toBe('INVALID_TOKEN');
     expect(await hasSessionCookie(again)).toBe(false);
+    // What the browser lands on is what /recover maps to its «this link no longer works» line.
+    expect(
+      recoverState({
+        mailEnabled: true,
+        error: location(again).searchParams.get('error') ?? undefined,
+      }),
+    ).toBe('expiredLink');
   });
 
   it('stores the token hashed and for fifteen minutes', async () => {

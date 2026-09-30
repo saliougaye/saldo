@@ -11,12 +11,15 @@ describe('recoverState', () => {
     expect(recoverState({ mailEnabled: true, error: undefined })).toBe('form');
   });
 
-  it('adds the expired-link line when the library sent the browser back with ?error=link', () => {
-    expect(recoverState({ mailEnabled: true, error: 'link' })).toBe('expiredLink');
+  it('adds the expired-link line for whatever ?error= the library sent the browser back with', () => {
+    // Better Auth replaces the query of `errorCallbackURL` with its own code.
+    for (const error of ['INVALID_TOKEN', 'new_user_signup_disabled', 'BANNED_USER', 'link']) {
+      expect(recoverState({ mailEnabled: true, error })).toBe('expiredLink');
+    }
   });
 
-  it('ignores any other ?error= value', () => {
-    expect(recoverState({ mailEnabled: true, error: 'INVALID_TOKEN' })).toBe('form');
+  it('shows the plain form for an empty ?error=', () => {
+    expect(recoverState({ mailEnabled: true, error: '' })).toBe('form');
   });
 });
 

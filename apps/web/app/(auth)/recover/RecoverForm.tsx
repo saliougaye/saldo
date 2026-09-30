@@ -10,6 +10,8 @@ import { TextField } from '../../../src/ui/TextField';
 import styles from '../auth.module.css';
 
 export interface RecoverStrings {
+  /** The line above the field; null when the page already shows an alert in its place. */
+  intro: string | null;
   emailLabel: string;
   emailPlaceholder: string;
   submit: string;
@@ -23,7 +25,7 @@ export interface RecoverStrings {
  * Asks Better Auth for a magic link. The answer is the **same** sentence whatever the address is
  * and whatever the endpoint said (`recoverAnswer`): the page must not tell which addresses have an
  * account, nor which are verified. The link lands on the passkeys page, where the alert asks for a
- * new passkey; a link that is expired or already used comes back to `/recover?error=link`.
+ * new passkey; a link that is expired or already used comes back to `/recover?error=…`.
  */
 export function RecoverForm({ strings }: { strings: RecoverStrings }) {
   const [email, setEmail] = useState('');
@@ -37,7 +39,7 @@ export function RecoverForm({ strings }: { strings: RecoverStrings }) {
       .magicLink({
         email: email.trim(),
         callbackURL: '/profile/passkeys?recovered',
-        errorCallbackURL: '/recover?error=link',
+        errorCallbackURL: '/recover',
       })
       .catch((): { error: { status?: number } } => ({ error: {} }));
     // Only the status reaches the log: never the address, never the body.
@@ -66,6 +68,7 @@ export function RecoverForm({ strings }: { strings: RecoverStrings }) {
         void submit();
       }}
     >
+      {strings.intro === null ? null : <p className={styles.lede}>{strings.intro}</p>}
       {answer === 'rateLimited' ? <Alert body={strings.rateLimited} /> : null}
       <div className={styles.fields}>
         <TextField

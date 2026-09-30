@@ -166,7 +166,7 @@ describe('sendRecoveryLink', () => {
       query: {
         token: 't0k3n',
         callbackURL: '/profile/passkeys?recovered',
-        errorCallbackURL: '/recover?error=link',
+        errorCallbackURL: '/recover',
       },
     });
   });

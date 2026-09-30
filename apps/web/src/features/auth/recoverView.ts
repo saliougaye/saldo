@@ -1,4 +1,8 @@
-/** What `/recover` shows before any request is made. `?error=link` is where `errorCallbackURL` sends the browser. */
+/**
+ * What `/recover` shows before any request is made. `errorCallbackURL` sends the browser to
+ * `/recover?error=<code>`, the code being Better Auth's own (`INVALID_TOKEN`, …: it overwrites any
+ * `error` we put on the URL), so any non-empty `error` means the link did not work.
+ */
 export type RecoverState = 'unavailable' | 'form' | 'expiredLink';
 
 export function recoverState(input: {
@@ -6,7 +10,7 @@ export function recoverState(input: {
   error: string | undefined;
 }): RecoverState {
   if (!input.mailEnabled) return 'unavailable';
-  return input.error === 'link' ? 'expiredLink' : 'form';
+  return input.error === undefined || input.error === '' ? 'form' : 'expiredLink';
 }
 
 /**

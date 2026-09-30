@@ -25,7 +25,8 @@ export const EMAIL_VERIFIED_PATH = '/email-verified';
 
 /** Where a recovery link lands after it signs the browser in, and where a dead one sends it. */
 export const RECOVERED_PATH = '/profile/passkeys?recovered';
-export const RECOVERY_ERROR_PATH = '/recover?error=link';
+/** Better Auth sets `?error=<its code>` on this itself, so the query is left to it. */
+export const RECOVERY_ERROR_PATH = '/recover';
 
 /**
  * The address Better Auth built, reduced to its origin, its path and the **token**; the rest is ours.
