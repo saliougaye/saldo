@@ -1,5 +1,5 @@
 import type { BudgetAdvice, BudgetView, CurrencyCode, GoalView } from '@saldo/core';
-import { endLabels, goalPace, goalTone } from '@saldo/core';
+import { endLabels, goalPace, goalTone, pocketParentCandidates } from '@saldo/core';
 import {
   type AppLocale,
   budgetCardStatusText,
@@ -481,7 +481,12 @@ export default async function HomePage({
 
             <Section open title={t('goals.title')} trailing={goalStatusLine}>
               {view.goals.items.length === 0 ? (
-                <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
+                <>
+                  <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
+                  {pocketParentCandidates(page.data.accounts).length === 0 ? null : (
+                    <ListRow open href="/accounts?newGoal" icon="plus" title={t('goals.create')} />
+                  )}
+                </>
               ) : (
                 <>
                   {featuredGoal === undefined ? null : (

@@ -344,22 +344,8 @@ export default async function AccountsPage({
               {view.spending.map(group)}
             </Section>
 
-            {view.savings.length === 0 && !canCreateGoal ? null : (
-              <Section
-                open
-                title={t('accounts.savings')}
-                trailing={
-                  <div className={styles.titleRow}>
-                    <span>{t('accounts.outsideSpendable')}</span>
-                    {canCreateGoal ? (
-                      <Link className={styles.newAccount} href={`${PATH}?newGoal`}>
-                        <Icon name="plus" size={16} />
-                        {t('goals.newGoal')}
-                      </Link>
-                    ) : null}
-                  </div>
-                }
-              >
+            {view.savings.length === 0 ? null : (
+              <Section open title={t('accounts.savings')} trailing={t('accounts.outsideSpendable')}>
                 {view.savings.map(group)}
               </Section>
             )}
