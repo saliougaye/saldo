@@ -1299,12 +1299,8 @@ export const fr: Messages = {
       archivedTitle: 'Archivés',
       archivedAccounts: 'Comptes archivés',
       closedGoals: 'Objectifs clos',
-      archivedNone: 'Rien d’archivé.',
-      goalPanel: 'Nouvel objectif',
       deadlineHint: 'Laissez vide s’il n’a pas d’échéance.',
       alreadySavedHint: 'Ce que vous avez déjà mis de côté : nous le déplaçons depuis le compte.',
-      closeReturn: 'Remettre {{amount}} sur {{name}}',
-      closeChoice: 'Que fait-on de l’argent ?',
     },
     budgets: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',
@@ -1313,7 +1309,6 @@ export const fr: Messages = {
       error_taken: '« {{name}} » est déjà dans un autre budget.',
       error_unexpected: 'Un problème est survenu. Réessayez.',
       allBudgets: 'Tous les budgets',
-      suggestion: 'Suggéré : {{amount}}',
     },
     form: {
       kind: 'Type',

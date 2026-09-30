@@ -1281,12 +1281,8 @@ export const en: Messages = {
       archivedTitle: 'Archived',
       archivedAccounts: 'Archived accounts',
       closedGoals: 'Closed goals',
-      archivedNone: 'Nothing archived.',
-      goalPanel: 'New goal',
       deadlineHint: 'Leave empty if it has no deadline.',
       alreadySavedHint: 'How much you’ve already set aside: we move it from the account.',
-      closeReturn: 'Return {{amount}} to {{name}}',
-      closeChoice: 'What do we do with the money?',
     },
     budgets: {
       error_invalid: 'Couldn’t save: check the fields and try again.',
@@ -1295,7 +1291,6 @@ export const en: Messages = {
       error_taken: '“{{name}}” is already in another budget.',
       error_unexpected: 'Something went wrong. Try again.',
       allBudgets: 'All budgets',
-      suggestion: 'Suggested: {{amount}}',
     },
     form: {
       kind: 'Type',

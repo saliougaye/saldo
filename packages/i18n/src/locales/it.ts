@@ -1288,12 +1288,8 @@ export const it = {
       archivedTitle: 'Archiviati',
       archivedAccounts: 'Conti archiviati',
       closedGoals: 'Obiettivi chiusi',
-      archivedNone: 'Niente di archiviato.',
-      goalPanel: 'Nuovo obiettivo',
       deadlineHint: 'Lascia vuoto se non ha una scadenza.',
       alreadySavedHint: 'Quanto hai già messo da parte: lo spostiamo dal conto.',
-      closeReturn: 'Riporta {{amount}} in {{name}}',
-      closeChoice: 'Cosa ne facciamo dei soldi?',
     },
     budgets: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
@@ -1302,7 +1298,6 @@ export const it = {
       error_taken: '«{{name}}» è già in un altro budget.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
       allBudgets: 'Tutti i budget',
-      suggestion: 'Suggerito: {{amount}}',
     },
     form: {
       kind: 'Tipo',

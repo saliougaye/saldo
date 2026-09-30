@@ -1291,12 +1291,8 @@ export const pt: Messages = {
       archivedTitle: 'Arquivados',
       archivedAccounts: 'Contas arquivadas',
       closedGoals: 'Objetivos fechados',
-      archivedNone: 'Nada arquivado.',
-      goalPanel: 'Novo objetivo',
       deadlineHint: 'Deixa vazio se não tiver prazo.',
       alreadySavedHint: 'Quanto já puseste de lado: movemos da conta.',
-      closeReturn: 'Devolver {{amount}} a {{name}}',
-      closeChoice: 'O que fazemos ao dinheiro?',
     },
     budgets: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',
@@ -1305,7 +1301,6 @@ export const pt: Messages = {
       error_taken: '«{{name}}» já está noutro orçamento.',
       error_unexpected: 'Algo correu mal. Tenta novamente.',
       allBudgets: 'Todos os orçamentos',
-      suggestion: 'Sugerido: {{amount}}',
     },
     form: {
       kind: 'Tipo',

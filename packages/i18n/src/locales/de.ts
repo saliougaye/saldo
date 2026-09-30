@@ -1296,12 +1296,8 @@ export const de: Messages = {
       archivedTitle: 'Archiviert',
       archivedAccounts: 'Archivierte Konten',
       closedGoals: 'Abgeschlossene Ziele',
-      archivedNone: 'Nichts archiviert.',
-      goalPanel: 'Neues Ziel',
       deadlineHint: 'Leer lassen, wenn es keine Frist hat.',
       alreadySavedHint: 'Wie viel du schon zurückgelegt hast: Wir buchen es vom Konto um.',
-      closeReturn: '{{amount}} zurück auf {{name}} buchen',
-      closeChoice: 'Was machen wir mit dem Geld?',
     },
     budgets: {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
@@ -1311,7 +1307,6 @@ export const de: Messages = {
       error_taken: '„{{name}}“ ist bereits in einem anderen Budget.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
       allBudgets: 'Alle Budgets',
-      suggestion: 'Vorschlag: {{amount}}',
     },
     form: {
       kind: 'Art',

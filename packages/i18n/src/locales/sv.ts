@@ -1284,12 +1284,8 @@ export const sv: Messages = {
       archivedTitle: 'Arkiverade',
       archivedAccounts: 'Arkiverade konton',
       closedGoals: 'Stängda mål',
-      archivedNone: 'Inget arkiverat.',
-      goalPanel: 'Nytt mål',
       deadlineHint: 'Lämna tomt om det saknar slutdatum.',
       alreadySavedHint: 'Hur mycket du redan har sparat: vi flyttar det från kontot.',
-      closeReturn: 'För tillbaka {{amount}} till {{name}}',
-      closeChoice: 'Vad gör vi med pengarna?',
     },
     budgets: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
@@ -1298,7 +1294,6 @@ export const sv: Messages = {
       error_taken: '”{{name}}” ingår redan i en annan budget.',
       error_unexpected: 'Något gick fel. Försök igen.',
       allBudgets: 'Alla budgetar',
-      suggestion: 'Föreslaget: {{amount}}',
     },
     form: {
       kind: 'Typ',
