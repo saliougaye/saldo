@@ -1,0 +1,39 @@
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hint {
+  display: none;
+  margin-inline-end: auto;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+}
+
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .hint {
+    display: inline;
+  }
+}
+
+@media (max-width: 1023px) {
+  .foot > :last-child {
+    flex: 1;
+  }
+}

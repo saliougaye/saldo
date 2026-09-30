@@ -1,0 +1,57 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-pill);
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.swatch:active,
+.iconButton:active {
+  scale: 0.96;
+}
+
+.swatch[aria-checked="true"] {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.iconButton[aria-checked="true"] {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.swatch:focus-visible,
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch:active,
+  .iconButton:active {
+    scale: 1;
+  }
+}

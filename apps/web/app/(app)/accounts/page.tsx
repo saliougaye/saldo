@@ -7,9 +7,11 @@ import {
   transactionRow,
 } from '@saldo/core';
 import {
+  catalogs,
   formatDayMonth,
   formatDayMonthLong,
   formatMoney,
+  formatMoneyParts,
   type GoalTextDeps,
   type GoalTextSubject,
   goalOf,
@@ -18,9 +20,12 @@ import {
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
+import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { accountDetail } from '../../../src/features/accounts/detailView';
+import { accountFormView } from '../../../src/features/accounts/formView';
+import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
@@ -31,6 +36,8 @@ import { ListRow } from '../../../src/ui/ListRow';
 import { Panel } from '../../../src/ui/Panel';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
+import { AccountForm } from './AccountForm';
+import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
 
 export const runtime = 'nodejs';
@@ -126,6 +133,22 @@ export default async function AccountsPage({
       : accountDetail({ data: page.data, id: selectedId, today, def });
   const showGoalPanel = goalId !== undefined && selected !== null && selected.goal !== null;
   const showAccountPanel = !showGoalPanel && accountId !== undefined && selected !== null;
+
+  // `?new` opens «Nuovo conto»; `?a={id}&edit` opens «Modifica conto». Presence is what counts.
+  const creating = params.new !== undefined;
+  const editing = !creating && showAccountPanel && params.edit !== undefined;
+  const form =
+    creating || editing
+      ? accountFormView({
+          data: page.data,
+          today,
+          currency,
+          mode: creating ? 'new' : 'edit',
+          id: creating ? null : (selected?.account.id ?? null),
+        })
+      : null;
+  const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
+  const moneyParts = formatMoneyParts(0, currency, locale, 'never');
 
   const accountRow = (row: AccountRowView) => (
     <ListRow
@@ -244,15 +267,10 @@ export default async function AccountsPage({
           period={
             <div className={styles.titleRow}>
               <h1 className={styles.title}>{t('accounts.title')}</h1>
-              {/* 0.3e turns this into the account form; until then it says so rather than lying. */}
-              <span
-                className={styles.newAccount}
-                title={t('web.shell.comingIn0_3e')}
-                aria-disabled="true"
-              >
+              <Link className={styles.newAccount} href={`${PATH}?new`}>
                 <Icon name="plus" size={16} />
                 {t('accounts.newAccount')}
-              </span>
+              </Link>
             </div>
           }
           hero={
@@ -306,8 +324,45 @@ export default async function AccountsPage({
         )}
       </div>
 
-      {!showAccountPanel || selected === null ? null : (
-        <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
+      {form === null ? null : (
+        <Panel
+          // Not the detail's panel: closing the form mounts the detail fresh, not one still leaving.
+          key="form"
+          sheet
+          bare
+          title={t(form.mode === 'new' ? 'accounts.newAccount' : 'accounts.editAccount')}
+          closeHref={formCloseHref}
+          closeLabel={t('common.close')}
+        >
+          <AccountForm
+            // A switch between «Nuovo» and «Modifica», or between two accounts, is a new form.
+            key={`${form.mode}:${form.id ?? ''}`}
+            view={form}
+            locale={locale}
+            currency={currency}
+            decimalSeparator={moneyParts.decimalSeparator}
+            symbol={moneyParts.symbol}
+            symbolPosition={moneyParts.symbolPosition}
+            messages={accountMessages(catalogs[locale])}
+            closeHref={formCloseHref}
+            afterSave={`${PATH}?a=__ID__`}
+          />
+        </Panel>
+      )}
+
+      {form !== null || !showAccountPanel || selected === null ? null : (
+        <Panel
+          key="detail"
+          title={selected.account.name}
+          closeHref={PATH}
+          closeLabel={t('common.close')}
+        >
+          <div className={formStyles.actions}>
+            <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
+              {t('common.edit')}
+            </Link>
+            {/* «Archivia» (Task 10) joins this row when the account holds no open goal. */}
+          </div>
           <span className={styles.label}>{heroLabel}</span>
           <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
           <Sparkline series={selected.series} />
