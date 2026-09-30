@@ -1561,4 +1561,20 @@ export const fr: Messages = {
       error_unexpected: 'Quelque chose s’est mal passé. Réessaie.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Confirmez votre adresse e-mail sur {{instance}}',
+      intro:
+        'Vous avez demandé à confirmer cette adresse e-mail sur {{instance}} ({{host}}). Ouvrez le lien ci-dessous pour la confirmer :',
+      expires: 'Le lien est valable 24 heures.',
+    },
+    recovery: {
+      subject: 'Votre lien pour retrouver l’accès à {{instance}}',
+      intro:
+        'Vous avez demandé un lien pour retrouver l’accès à {{instance}} ({{host}}) sans votre passkey. Ouvrez le lien ci-dessous, puis ajoutez une nouvelle passkey :',
+      expires: 'Le lien est valable 15 minutes et ne fonctionne qu’une seule fois.',
+    },
+    ignore:
+      'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : sans le lien, personne ne peut entrer.',
+  },
 };

@@ -1566,4 +1566,20 @@ export const de: Messages = {
       error_unexpected: 'Etwas ist schiefgegangen. Versuch es noch einmal.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Bestätige deine E-Mail-Adresse bei {{instance}}',
+      intro:
+        'Du hast darum gebeten, diese E-Mail-Adresse bei {{instance}} ({{host}}) zu bestätigen. Öffne den Link unten, um sie zu bestätigen:',
+      expires: 'Der Link ist 24 Stunden gültig.',
+    },
+    recovery: {
+      subject: 'Dein Link zurück in {{instance}}',
+      intro:
+        'Du hast einen Link angefordert, um ohne deinen Passkey wieder in {{instance}} ({{host}}) zu kommen. Öffne den Link unten und füge dann einen neuen Passkey hinzu:',
+      expires: 'Der Link ist 15 Minuten gültig und lässt sich nur einmal verwenden.',
+    },
+    ignore:
+      'Wenn du das nicht angefordert hast, ignoriere diese Nachricht: Ohne den Link kommt niemand hinein.',
+  },
 };

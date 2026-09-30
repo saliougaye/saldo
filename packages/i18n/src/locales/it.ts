@@ -1547,6 +1547,22 @@ export const it = {
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Conferma il tuo indirizzo email su {{instance}}',
+      intro:
+        'Hai chiesto di confermare questo indirizzo email su {{instance}} ({{host}}). Apri il link qui sotto per confermarlo:',
+      expires: 'Il link vale 24 ore.',
+    },
+    recovery: {
+      subject: 'Il tuo link per rientrare in {{instance}}',
+      intro:
+        'Hai chiesto un link per rientrare in {{instance}} ({{host}}) senza la passkey. Apri il link qui sotto, poi aggiungi una nuova passkey:',
+      expires: 'Il link vale 15 minuti e si può usare una volta sola.',
+    },
+    ignore:
+      'Se non sei stato tu a chiederlo, ignora questo messaggio: senza il link nessuno entra.',
+  },
 };
 
 export type Messages = typeof it;

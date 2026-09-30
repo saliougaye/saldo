@@ -1539,4 +1539,19 @@ export const en: Messages = {
       error_unexpected: 'Something went wrong. Try again.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Confirm your email address on {{instance}}',
+      intro:
+        'You asked to confirm this email address on {{instance}} ({{host}}). Open the link below to confirm it:',
+      expires: 'The link is valid for 24 hours.',
+    },
+    recovery: {
+      subject: 'Your link to get back into {{instance}}',
+      intro:
+        'You asked for a link to get back into {{instance}} ({{host}}) without your passkey. Open the link below, then add a new passkey:',
+      expires: 'The link is valid for 15 minutes and works once.',
+    },
+    ignore: 'If you did not ask for this, ignore this message: nobody gets in without the link.',
+  },
 };

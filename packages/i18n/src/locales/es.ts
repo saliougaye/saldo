@@ -1549,4 +1549,19 @@ export const es: Messages = {
       error_unexpected: 'Algo ha ido mal. Vuelve a intentarlo.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Confirma tu dirección de correo en {{instance}}',
+      intro:
+        'Has pedido confirmar esta dirección de correo en {{instance}} ({{host}}). Abre el enlace de abajo para confirmarla:',
+      expires: 'El enlace es válido durante 24 horas.',
+    },
+    recovery: {
+      subject: 'Tu enlace para volver a entrar en {{instance}}',
+      intro:
+        'Has pedido un enlace para volver a entrar en {{instance}} ({{host}}) sin tu passkey. Abre el enlace de abajo y luego añade una nueva passkey:',
+      expires: 'El enlace es válido durante 15 minutos y solo se puede usar una vez.',
+    },
+    ignore: 'Si no lo has pedido tú, ignora este mensaje: sin el enlace nadie entra.',
+  },
 };

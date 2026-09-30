@@ -1548,4 +1548,19 @@ export const pt: Messages = {
       error_unexpected: 'Algo correu mal. Tenta outra vez.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Confirme o seu endereço de e-mail em {{instance}}',
+      intro:
+        'Pediu para confirmar este endereço de e-mail em {{instance}} ({{host}}). Abra a ligação abaixo para o confirmar:',
+      expires: 'A ligação é válida durante 24 horas.',
+    },
+    recovery: {
+      subject: 'A sua ligação para voltar a entrar em {{instance}}',
+      intro:
+        'Pediu uma ligação para voltar a entrar em {{instance}} ({{host}}) sem a sua passkey. Abra a ligação abaixo e depois adicione uma nova passkey:',
+      expires: 'A ligação é válida durante 15 minutos e só pode ser usada uma vez.',
+    },
+    ignore: 'Se não foi você a pedir, ignore esta mensagem: sem a ligação ninguém entra.',
+  },
 };

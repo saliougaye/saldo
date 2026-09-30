@@ -1541,4 +1541,20 @@ export const sv: Messages = {
       error_unexpected: 'Något gick fel. Försök igen.',
     },
   },
+  mail: {
+    verification: {
+      subject: 'Bekräfta din e-postadress hos {{instance}}',
+      intro:
+        'Du har bett om att bekräfta den här e-postadressen hos {{instance}} ({{host}}). Öppna länken nedan för att bekräfta den:',
+      expires: 'Länken gäller i 24 timmar.',
+    },
+    recovery: {
+      subject: 'Din länk för att komma tillbaka till {{instance}}',
+      intro:
+        'Du har bett om en länk för att komma tillbaka till {{instance}} ({{host}}) utan din passkey. Öppna länken nedan och lägg sedan till en ny passkey:',
+      expires: 'Länken gäller i 15 minuter och kan användas en gång.',
+    },
+    ignore:
+      'Om det inte var du som bad om detta kan du ignorera meddelandet: ingen kommer in utan länken.',
+  },
 };
