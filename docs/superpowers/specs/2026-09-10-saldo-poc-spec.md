@@ -1752,6 +1752,32 @@ public. The decisions behind this section are D30–D36.
 - The form's pure half (`CategoryFormValues`, `categoryFormFrom`, `categoryMissingForSave`) moved into `@saldo/core`
   `views/categoryForm.ts`, with `categoryParentCandidates` and `movableTargets`.
 
+**As built (0.3e-3, 2026-09-30):**
+
+- **`settings.ts`** (`apps/web/src/server/write/`): `saveSetting` takes **one preference at a time** — `language`,
+  `theme`, `currency`, `cycleStartDay` (1–28, narrower than the entity's schema) or `timeZone` — and writes the
+  settings row back with that field changed and the row's `basis`. No settings row is `notFound` (a preference does not
+  onboard an account); a value already stored writes nothing. The time zone is checked with `isTimeZone` and stored
+  under the id the list holds (`canonicalTimeZone`: `Asia/Kolkata` is saved as `Asia/Calcutta`); a settings row with no
+  `timeZone` yet is handled. `periodKind` is not writable.
+- **`tags.ts`**: `createTag` (moved from `transactions.ts`; the transaction form's «Crea «X»» — it answers the tag that
+  already has the name, with `created: false`), `newTag` (Profilo's «Nuovo tag»: a name in use is refused as `taken`),
+  `renameTag` (keeps the id; its own name or a change of case only is allowed, the same name writes nothing),
+  `mergeTags` and `deleteTag`. Merge and delete are **one batch** each: every live transaction **and recurrence
+  template** carrying the tag is rewritten (the target replaces the source, deduplicated; or the id is removed) with
+  its `basis`, and the tag is tombstoned in the same `writeInTransaction`.
+- **Export** is two route handlers, not Server Actions: `GET /api/export/backup` and
+  `GET /api/export/csv?range=all|period&p=<date>` (`app/api/export/`, shared start in
+  `src/server/export/exportRequest.ts`). They authenticate with `requireUser`, so the browser's cookie and a bearer
+  token are both accepted — the same user could read the same rows through `/api/sync/pull` — and answer 401 without a
+  session, 409 `nothing_to_export` without settings, 400 `invalid_query` for an unreadable `range` or `p` (a file that
+  silently covers something else is worse than none). The response is `Content-Disposition: attachment` with the
+  phone's file names (`saldo-backup-{today}.json`, `saldo-transactions-{today}.csv`, «today» being the user's, §17.1.5)
+  and `Cache-Control: no-store`.
+- **`@saldo/core` `io/exportFiles.ts`**: `backupFile`, `csvFile`, `ExportFile` and `NothingToExportError` moved out of
+  the phone's `exportService.ts`, which now only collects its rows and zips. Both sides therefore write the same file —
+  same sort (newest first, id within a day), same CSV guard (§18) — and a backup taken on the web restores on the phone.
+
 #### 17.1.4 Authentication on the web
 
 - Same Better Auth instance. The web uses its **cookie session**; the phone keeps its bearer token.
@@ -1959,6 +1985,28 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   `/budgets`. `/profile/goals` lists open goals with a ring and, under «Obiettivi chiusi», closed ones with
   «Ripristina»; `?new` and `?g={id}` open the goal form, whose panel also has «Apri in Conti»: the money movements
   (Accantona, Preleva) and «Chiudi obiettivo» stay in Conti. Tag, Dati and the preference panels remain for 0.3e-3.
+  **Built in 0.3e-3 (2026-09-30): the preference panels, Tag and Dati.** The sub-navigation is now Profilo,
+  Preferenze, Categorie, Tag, Budget, Obiettivi, Passkey, Dati, «Esci». **Preferenze**: each of the five rows is a link
+  that opens its panel at `/profile/preferences?edit=cycle|currency|language|theme|timeZone` (anything else opens
+  none). A choice is **saved as it is made**, as on the phone, and the panel stays open on the new selection; after the
+  write `router.refresh()` re-renders the root layout, so a language change re-renders the whole shell and a theme
+  change flips `<html data-theme>` at once. Only the currency asks first, with the phone's «Cambiare valuta?» and, when
+  the two currencies keep a different number of decimals, the before/after figure («€1,842.60 will read as ¥184,260»):
+  it reformats, never converts. «Inizio del ciclo» is the 1–28 grid over the preview range; the row shows whatever the
+  period kind is, and `periodKind` cannot be changed after onboarding, as on the phone. The time zone list is the
+  phone's (saved zone first, this browser's under it when they differ, then every zone, searchable); with no zone
+  stored the browser's shows selected and choosing it is what stores it. Deviations from the plan: the option lists are
+  radio groups with one tab stop where the arrows move the **focus only** and Space/Enter chooses (a selection that
+  followed the arrows would write once per option walked past); a second choice made while a save is still in flight is
+  ignored; a refused or thrown save says why and the selection goes back. **Tag** (`/profile/tags`, §5.10): every tag
+  with «N transazioni», most used first then by name; `?new` for «Nuovo tag», `?tag={id}` for the panel that renames,
+  merges («Unisci a un altro tag», asks with the count, cannot be undone) and deletes («Elimina tag», asks; the
+  transactions stay). Names are unique case-insensitively among **live** tags — a merged or deleted tag's name is free
+  again. The tag view (totals, split) is not on the web: «Vedi le transazioni» opens `/transactions?tag={id}`.
+  **Dati** (`/profile/data`): three plain download links — the JSON backup, the CSV of every transaction and the CSV
+  of the current period — that work without JavaScript. The backup holds the attachments' rows, not their bytes.
+  **What stays on the phone:** the ZIP backup with the attachments' files, restore, CSV import, «Elimina tutti i
+  dati», the tag view, and changing the period kind.
 - **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
   built 2026-09-28 in 0.3b).** No top bar. `/login` is one open column of 380px in the middle of the page: Rocky waving (the welcome, D26), the
   brand and the instance name, «Accedi a Saldo», the **email field with `autocomplete="username webauthn"`** so the
