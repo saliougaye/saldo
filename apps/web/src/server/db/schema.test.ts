@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
-import { dataEpochs, invites, syncRows, user } from './schema';
+import { dataEpochs, invites, serverSettings, syncRows, user } from './schema';
 
 let harness: TestDatabase;
 
@@ -113,5 +113,45 @@ describe('invites', () => {
     const [row] = await db.select().from(invites).where(eq(invites.id, 'invite-2'));
     // `set null`, not `cascade`: removing an account must not erase the record of who it invited.
     expect(row?.createdBy).toBeNull();
+  });
+});
+
+describe('server_settings', () => {
+  it('keeps one json value per key, stamped with who changed it and when', async () => {
+    const { db } = harness;
+    const { userId } = await createTestSession(db);
+    const updatedAt = new Date('2026-09-30T09:00:00.000Z');
+    await db
+      .insert(serverSettings)
+      .values({ key: 'registration', value: 'invite', updatedAt, updatedBy: userId });
+    await db.insert(serverSettings).values({
+      key: 'smtp',
+      value: { host: 'localhost', port: 1025 },
+      updatedAt,
+      updatedBy: userId,
+    });
+
+    const [row] = await db.select().from(serverSettings).where(eq(serverSettings.key, 'smtp'));
+    expect(row?.value).toEqual({ host: 'localhost', port: 1025 });
+    expect(row?.updatedAt.toISOString()).toBe('2026-09-30T09:00:00.000Z');
+    await expect(
+      db.insert(serverSettings).values({ key: 'smtp', value: {}, updatedAt, updatedBy: null }),
+    ).rejects.toThrow();
+  });
+
+  it('keeps the setting when the admin who changed it is deleted', async () => {
+    const { db } = harness;
+    const { userId } = await createTestSession(db);
+    await db.insert(serverSettings).values({
+      key: 'instanceName',
+      value: 'Casa',
+      updatedAt: new Date(),
+      updatedBy: userId,
+    });
+    await db.delete(user).where(eq(user.id, userId));
+    const [row] = await db.select().from(serverSettings);
+    // `set null`, not `cascade`: the instance's configuration outlives whoever typed it.
+    expect(row?.value).toBe('Casa');
+    expect(row?.updatedBy).toBeNull();
   });
 });

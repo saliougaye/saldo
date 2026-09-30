@@ -117,6 +117,20 @@ export const serverClock = pgTable('server_clock', {
   counter: integer('counter').notNull(),
 });
 
+/**
+ * §17.1.8. The instance's own settings, edited from `/admin/settings`: one row per key
+ * (`registration`, `instanceName`, `smtp`). A missing row means «not set here». Read through
+ * `settings/resolve.ts`, which puts the environment first. Secrets inside a value are encrypted
+ * (`settings/secret.ts`) — this table never holds one in the clear.
+ */
+export const serverSettings = pgTable('server_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
+  /** `set null`: the configuration outlives the admin who typed it. */
+  updatedBy: text('updated_by').references(() => user.id, { onDelete: 'set null' }),
+});
+
 export const schema = {
   user,
   session,
@@ -128,4 +142,5 @@ export const schema = {
   dataEpochs,
   invites,
   serverClock,
+  serverSettings,
 };
