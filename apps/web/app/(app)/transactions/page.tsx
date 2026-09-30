@@ -108,6 +108,16 @@ export default async function TransactionsPage({
           currency,
           mode: creating ? 'new' : 'edit',
           id: creating ? null : (selected?.id ?? null),
+          // «Metti da parte», «Preleva» and «Registra la spesa» fill a new form from the URL.
+          prefill: creating
+            ? {
+                from: params.from,
+                to: params.to,
+                description: params.description,
+                closeGoal: params.closeGoal,
+                amount: params.amount,
+              }
+            : undefined,
         })
       : null;
 
@@ -422,7 +432,10 @@ export default async function TransactionsPage({
             symbolPosition={moneyParts.symbolPosition}
             messages={formMessages(catalogs[locale])}
             closeHref={form.id === null ? href() : href({ [SELECTION_PARAM]: form.id })}
-            afterSave={href({ [SELECTION_PARAM]: '__ID__' })}
+            // A closing expense ends on Conti, where the goal has just left the list.
+            afterSave={
+              form.closeGoalId === null ? href({ [SELECTION_PARAM]: '__ID__' }) : '/accounts'
+            }
           />
         </Panel>
       ) : selected === null ? null : (

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertDialog } from '@base-ui/react';
+import type { ReactNode } from 'react';
 import { Alert } from './Alert';
 import { Button } from './Button';
 import styles from './ConfirmDialog.module.css';
@@ -16,6 +17,11 @@ interface Props {
   /** While true the confirm button is disabled and says `busyLabel`. */
   busy: boolean;
   busyLabel?: string;
+  /**
+   * A third answer between «cancel» and the confirm button (a second way to go on, as closing a
+   * goal's «Riporta in …»). It draws its own button; absent, the dialog is the plain question.
+   */
+  secondary?: ReactNode;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -30,6 +36,7 @@ export function ConfirmDialog({
   cancelLabel,
   busy,
   busyLabel,
+  secondary,
   onConfirm,
   onOpenChange,
 }: Props) {
@@ -41,10 +48,11 @@ export function ConfirmDialog({
           <AlertDialog.Title className={styles.title}>{title}</AlertDialog.Title>
           <AlertDialog.Description className={styles.body}>{body}</AlertDialog.Description>
           {error === undefined ? null : <Alert body={error} />}
-          <div className={styles.buttons}>
+          <div className={`${styles.buttons} ${secondary === undefined ? '' : styles.stacked}`}>
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               {cancelLabel}
             </Button>
+            {secondary}
             <Button busy={busy} busyLabel={busyLabel} onClick={onConfirm}>
               {confirmLabel}
             </Button>

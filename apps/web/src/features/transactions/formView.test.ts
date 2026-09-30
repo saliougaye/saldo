@@ -225,6 +225,19 @@ describe('accountsFor', () => {
     expect(accountsFor(view, 'income').map((a) => a.id)).toEqual([ACCOUNT.id, ACCOUNT_2.id]);
   });
 
+  it('keeps the pocket a new closing expense is prefilled with («Registra la spesa»)', () => {
+    const view = formView({
+      data,
+      today: TODAY,
+      currency: 'EUR',
+      mode: 'new',
+      id: null,
+      prefill: { closeGoal: POCKET.id, amount: '500' },
+    });
+    if (view === null) throw new Error('no view');
+    expect(accountsFor(view, 'expense').map((a) => a.id)).toContain(POCKET.id);
+  });
+
   it('keeps the pocket an edited expense already sits on (the close-goal expense)', () => {
     const edited = tx({ id: 't1', amount: 500, date: '2026-09-10', accountId: POCKET.id });
     const withRow = dataWith([edited], { accounts: [ACCOUNT, ACCOUNT_2, POCKET] });

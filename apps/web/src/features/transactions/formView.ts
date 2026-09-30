@@ -240,6 +240,6 @@ function pick(category: UserData['categories'][number]): Omit<FormCategory, 'chi
  */
 export function accountsFor(view: FormView, kind: TransactionKind): FormAccount[] {
   if (kind === 'transfer') return view.accounts;
-  const own = view.mode === 'edit' ? view.initial.accountId : null;
+  const own = view.mode === 'edit' ? view.initial.accountId : view.closeGoalId;
   return view.accounts.filter((account) => !account.pocket || account.id === own);
 }

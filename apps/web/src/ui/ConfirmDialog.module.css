@@ -37,6 +37,7 @@
 
 .buttons {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 8px;
@@ -45,4 +46,14 @@
 /* The mockup's `.dialog.small .actions`: the two answers at their own width, right-aligned. */
 .buttons > button {
   width: auto;
+}
+
+/* Three answers do not fit in a row: the main one on top, «cancel» last, each the dialog's width. */
+.buttons.stacked {
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+
+.buttons.stacked > button {
+  width: 100%;
 }

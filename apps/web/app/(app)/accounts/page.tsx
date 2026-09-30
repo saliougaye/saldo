@@ -5,12 +5,14 @@ import {
   goalTone,
   newestFirst,
   nextCreditChargeDate,
+  pocketParentCandidates,
   transactionRow,
 } from '@saldo/core';
 import {
   catalogs,
   formatDayMonth,
   formatDayMonthLong,
+  formatLongDate,
   formatMoney,
   formatMoneyParts,
   type GoalTextDeps,
@@ -26,7 +28,8 @@ import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { archivedView } from '../../../src/features/accounts/archivedView';
 import { accountDetail } from '../../../src/features/accounts/detailView';
-import { accountFormView } from '../../../src/features/accounts/formView';
+import { accountFormView, goalFormView } from '../../../src/features/accounts/formView';
+import { goalExpenseHref, goalTransferHref } from '../../../src/features/accounts/goalLinks';
 import { accountWriteErrors } from '../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
@@ -44,6 +47,8 @@ import { AccountForm } from './AccountForm';
 import { ArchiveAccount } from './ArchiveAccount';
 import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
+import { CloseGoal } from './CloseGoal';
+import { GoalForm } from './GoalForm';
 import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
@@ -154,12 +159,34 @@ export default async function AccountsPage({
         })
       : null;
   const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
+
+  // `?newGoal` opens «Nuovo obiettivo»; `?g={id}&edit` opens «Modifica obiettivo». A goal needs an
+  // account to live in, so «Nuovo obiettivo» is offered only when one can hold it.
+  const canCreateGoal = pocketParentCandidates(page.data.accounts).length > 0;
+  const creatingGoal = form === null && params.newGoal !== undefined && canCreateGoal;
+  const editingGoal = form === null && !creatingGoal && showGoalPanel && params.edit !== undefined;
+  const goalForm =
+    creatingGoal || editingGoal
+      ? goalFormView({
+          data: page.data,
+          today,
+          currency,
+          mode: creatingGoal ? 'new' : 'edit',
+          id: creatingGoal ? null : (selected?.account.id ?? null),
+        })
+      : null;
+  const goalFormCloseHref = goalForm?.id == null ? PATH : `${PATH}?g=${goalForm.id}`;
+  const goalParent =
+    selected?.account.parentAccountId == null
+      ? null
+      : (page.data.accounts.find((row) => row.id === selected.account.parentAccountId) ?? null);
+  const formOpen = form !== null || goalForm !== null;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
 
   // `?archived` opens the list of archived accounts and closed goals; a form or a detail wins.
   const archived = archivedView(page.data);
   const archivedOpen =
-    params.archived !== undefined && form === null && !showAccountPanel && !showGoalPanel;
+    params.archived !== undefined && !formOpen && !showAccountPanel && !showGoalPanel;
   const archivedTotal = view.archivedCount + archived.goals.length;
   const writeErrors = accountWriteErrors(catalogs[locale].web.accounts);
   const canArchive =
@@ -317,8 +344,22 @@ export default async function AccountsPage({
               {view.spending.map(group)}
             </Section>
 
-            {view.savings.length === 0 ? null : (
-              <Section open title={t('accounts.savings')} trailing={t('accounts.outsideSpendable')}>
+            {view.savings.length === 0 && !canCreateGoal ? null : (
+              <Section
+                open
+                title={t('accounts.savings')}
+                trailing={
+                  <div className={styles.titleRow}>
+                    <span>{t('accounts.outsideSpendable')}</span>
+                    {canCreateGoal ? (
+                      <Link className={styles.newAccount} href={`${PATH}?newGoal`}>
+                        <Icon name="plus" size={16} />
+                        {t('goals.newGoal')}
+                      </Link>
+                    ) : null}
+                  </div>
+                }
+              >
                 {view.savings.map(group)}
               </Section>
             )}
@@ -360,6 +401,31 @@ export default async function AccountsPage({
             messages={accountMessages(catalogs[locale])}
             closeHref={formCloseHref}
             afterSave={`${PATH}?a=__ID__`}
+          />
+        </Panel>
+      )}
+
+      {goalForm === null ? null : (
+        <Panel
+          key="goalForm"
+          sheet
+          bare
+          title={t(goalForm.mode === 'new' ? 'goals.newGoal' : 'goals.editGoal')}
+          closeHref={goalFormCloseHref}
+          closeLabel={t('common.close')}
+        >
+          <GoalForm
+            key={`${goalForm.mode}:${goalForm.id ?? ''}`}
+            view={goalForm}
+            locale={locale}
+            currency={currency}
+            decimalSeparator={moneyParts.decimalSeparator}
+            symbol={moneyParts.symbol}
+            symbolPosition={moneyParts.symbolPosition}
+            messages={accountMessages(catalogs[locale])}
+            parentName={goalParent?.name ?? null}
+            closeHref={goalFormCloseHref}
+            afterSave={`${PATH}?g=__ID__`}
           />
         </Panel>
       )}
@@ -431,7 +497,7 @@ export default async function AccountsPage({
         </Panel>
       )}
 
-      {form !== null || !showAccountPanel || selected === null ? null : (
+      {formOpen || !showAccountPanel || selected === null ? null : (
         <Panel
           key="detail"
           title={selected.account.name}
@@ -523,10 +589,15 @@ export default async function AccountsPage({
         </Panel>
       )}
 
-      {!showGoalPanel || selected === null || selected.goal === null ? null : (
+      {goalForm !== null ||
+      form !== null ||
+      !showGoalPanel ||
+      selected === null ||
+      selected.goal === null ? null : (
         <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
           {(() => {
             const goal = selected.goal;
+            const parentLive = goalParent !== null && goalParent.archivedAt === null;
             const subject: GoalTextSubject = { account: selected.account, progress: goal };
             const { action, state } = goalSentence(subject, goalDeps);
             const sentence = <Rich text={richText(action, t, locale)} />;
@@ -553,6 +624,96 @@ export default async function AccountsPage({
                   {sentence}
                   {state === null ? null : <span className={styles.note}> {state}</span>}
                 </p>
+
+                {parentLive ? (
+                  <div className={formStyles.actions}>
+                    <Link
+                      className={formStyles.actionLink}
+                      href={goalTransferHref(
+                        selected.account.parentAccountId ?? '',
+                        selected.account.id,
+                        selected.account.name,
+                      )}
+                    >
+                      {t('goals.setAside')}
+                    </Link>
+                    <Link
+                      className={formStyles.actionLink}
+                      href={goalTransferHref(
+                        selected.account.id,
+                        selected.account.parentAccountId ?? '',
+                        selected.account.name,
+                      )}
+                    >
+                      {t('goals.withdraw')}
+                    </Link>
+                  </div>
+                ) : null}
+
+                <div className={styles.cardRows}>
+                  <ListRow
+                    title={t('goals.parent')}
+                    trailing={<span className={styles.count}>{goalParent?.name ?? '—'}</span>}
+                  />
+                  <ListRow
+                    title={t('goals.deadline')}
+                    trailing={
+                      <span className={styles.count}>
+                        {selected.account.goalDeadline == null
+                          ? t('goals.deadlineNone')
+                          : formatLongDate(selected.account.goalDeadline, locale)}
+                      </span>
+                    }
+                  />
+                  <ListRow
+                    title={t('goals.createdOn')}
+                    trailing={
+                      <span className={styles.count}>
+                        {formatLongDate(selected.account.goalStartDate ?? today, locale)}
+                      </span>
+                    }
+                  />
+                </div>
+
+                <Section title={t('goals.movements')}>
+                  {recentTransactions.length === 0 ? (
+                    <EmptyState title={t('goals.noMovements')} />
+                  ) : (
+                    recentTransactions.map(recentRow)
+                  )}
+                </Section>
+
+                <div className={formStyles.actions}>
+                  <Link
+                    className={formStyles.actionLink}
+                    href={`${PATH}?g=${selected.account.id}&edit`}
+                  >
+                    {t('common.edit')}
+                  </Link>
+                  <CloseGoal
+                    id={selected.account.id}
+                    afterHref={PATH}
+                    expenseHref={
+                      goal.saved > 0
+                        ? goalExpenseHref(selected.account.id, goal.saved, selected.account.name)
+                        : null
+                    }
+                    strings={{
+                      action: t('goals.close'),
+                      title: goal.saved > 0 ? t('goals.closeTitle') : t('goals.close'),
+                      body:
+                        goal.saved > 0
+                          ? t('goals.closeBody', { amount: money(goal.saved) })
+                          : t('goals.closeEmpty'),
+                      confirm: t('goals.confirmClose'),
+                      recordExpense: t('goals.recordExpense'),
+                      returnTo: t('goals.returnTo', { name: goalParent?.name ?? '' }),
+                      cancel: t('common.cancel'),
+                      busy: t('common.loading'),
+                      errors: writeErrors,
+                    }}
+                  />
+                </div>
               </>
             );
           })()}

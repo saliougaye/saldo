@@ -198,6 +198,7 @@ export function TransactionForm({
           description: values.description,
           tagIds: values.tagIds,
           excludeFromTotals: values.excludeFromTotals,
+          closeGoalId: view.closeGoalId,
         });
       } catch {
         // A thrown action (the network, the server) keeps the draft and says so.

@@ -120,3 +120,15 @@
   display: inline-flex;
   opacity: 0.5;
 }
+
+/* An edit's parent line: the account a goal lives in never changes (§5.14). */
+.readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.readonlyValue {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+}
