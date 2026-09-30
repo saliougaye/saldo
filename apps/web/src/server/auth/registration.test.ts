@@ -1,10 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { settleBackground } from '../background';
 import { invites, user } from '../db/schema';
 import type { ServerDatabase } from '../db/types';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
+import { catchMail, enableMail, stopCatchingMail } from '../test/mail';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
 import { createInvite } from './invites';
+import { requestVerification } from './mailCallbacks';
 import { completeRegistration, resolveRegistration, type UserStore } from './registration';
 import { readRegistrationContext } from './registrationContext';
 
@@ -154,7 +157,7 @@ describe('completeRegistration', () => {
       store: storeFor(harness.db),
       now: new Date(),
     });
-    expect(result).toEqual({ userId: resolved.id });
+    expect(result).toEqual({ userId: resolved.id, created: true });
     const [row] = await harness.db.select().from(user).where(eq(user.id, resolved.id));
     expect(row?.email).toBe('ada@example.com');
     expect(row?.role).toBe(ADMIN_ROLE);
@@ -288,8 +291,90 @@ describe('completeRegistration', () => {
       store: storeFor(harness.db),
       now: new Date(),
     });
-    expect(result).toEqual({ userId: resolved.id });
+    expect(result).toEqual({ userId: resolved.id, created: false });
     const [row] = await harness.db.select().from(invites).where(eq(invites.id, invite.id));
     expect(row?.usedAt).toBeNull();
+  });
+  it('runs afterCreate for a new account and for nothing else', async () => {
+    const created: string[] = [];
+    const afterCreate = async (userId: string) => {
+      created.push(userId);
+    };
+    const base = {
+      mode: 'open' as const,
+      context: context({ name: 'Ada', email: 'ada@example.com' }),
+      resolved,
+      store: storeFor(harness.db),
+      now: new Date(),
+      afterCreate,
+    };
+    await completeRegistration(harness.db, base);
+    expect(created).toEqual([resolved.id]);
+    // «Add a passkey» to that account: the id already names one, so nothing is created, nothing sent.
+    const again = await completeRegistration(harness.db, base);
+    expect(again).toEqual({ userId: resolved.id, created: false });
+    expect(created).toEqual([resolved.id]);
+  });
+
+  it('succeeds when afterCreate throws: a mail that fails never fails a registration', async () => {
+    const result = await completeRegistration(harness.db, {
+      mode: 'open',
+      context: context({ name: 'Ada', email: 'ada@example.com' }),
+      resolved,
+      store: storeFor(harness.db),
+      now: new Date(),
+      afterCreate: async () => {
+        throw new Error('smtp down');
+      },
+    });
+    expect(result).toEqual({ userId: resolved.id, created: true });
+    const [row] = await harness.db.select().from(user).where(eq(user.id, resolved.id));
+    expect(row?.email).toBe('ada@example.com');
+  });
+
+  it('succeeds, and sends nothing, when the verification mail itself fails', async () => {
+    const mail = catchMail();
+    await enableMail(harness.db);
+    mail.failWith(new Error('550 refused'));
+    const result = await completeRegistration(harness.db, {
+      mode: 'open',
+      context: context({ name: 'Ada', email: 'ada@example.com' }),
+      resolved,
+      store: storeFor(harness.db),
+      now: new Date(),
+      afterCreate: async (userId) =>
+        requestVerification(harness.db, {
+          userId,
+          secret: 'test-secret-test-secret',
+          baseURL: 'http://localhost:3000/api/auth',
+          acceptLanguage: null,
+        }),
+    });
+    await settleBackground();
+    expect(result).toEqual({ userId: resolved.id, created: true });
+    expect(mail.sent).toEqual([]);
+    stopCatchingMail();
+  });
+
+  it('sends the verification link for the new account when mail works', async () => {
+    const mail = catchMail();
+    await enableMail(harness.db);
+    await completeRegistration(harness.db, {
+      mode: 'open',
+      context: context({ name: 'Ada', email: 'ada@example.com' }),
+      resolved,
+      store: storeFor(harness.db),
+      now: new Date(),
+      afterCreate: async (userId) =>
+        requestVerification(harness.db, {
+          userId,
+          secret: 'test-secret-test-secret',
+          baseURL: 'http://localhost:3000/api/auth',
+          acceptLanguage: null,
+        }),
+    });
+    await settleBackground();
+    expect(mail.sent.map((m) => m.to)).toEqual(['ada@example.com']);
+    stopCatchingMail();
   });
 });

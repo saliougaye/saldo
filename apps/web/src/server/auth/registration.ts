@@ -81,11 +81,17 @@ export async function completeRegistration(
     resolved: { id: string; name: string };
     store: UserStore;
     now: Date;
+    /**
+     * Runs once, after a **new** account exists (the verification mail, 0.3f-3 decision 5a). Best
+     * effort like the role and the invite: whatever it does, a throw is logged and the registration
+     * still succeeds — the account exists and its owner has to be able to sign in.
+     */
+    afterCreate?: (userId: string) => Promise<void>;
   },
-): Promise<{ userId: string }> {
-  const { mode, context, resolved, store, now } = options;
+): Promise<{ userId: string; created: boolean }> {
+  const { mode, context, resolved, store, now, afterCreate } = options;
   const existing = await store.findUserById(resolved.id);
-  if (existing !== null) return { userId: existing.id };
+  if (existing !== null) return { userId: existing.id, created: false };
 
   if (!(await registrationAllowed(db, mode))) {
     throw refuse('FORBIDDEN', 'registration_closed', 'This server is not accepting new accounts');
@@ -157,5 +163,14 @@ export async function completeRegistration(
       error: String(error),
     });
   }
-  return { userId: created.id };
+  try {
+    await afterCreate?.(created.id);
+  } catch (error) {
+    // The kind of error only: its text can carry the address that was being mailed.
+    log('auth', 'the new account was written but its follow-up failed', {
+      user: shortId(created.id),
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+  }
+  return { userId: created.id, created: true };
 }

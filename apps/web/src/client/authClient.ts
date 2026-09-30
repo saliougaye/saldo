@@ -1,7 +1,7 @@
 'use client';
 
 import { passkeyClient } from '@better-auth/passkey/client';
-import { oneTimeTokenClient } from 'better-auth/client/plugins';
+import { magicLinkClient, oneTimeTokenClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
 
 /**
@@ -10,5 +10,5 @@ import { createAuthClient } from 'better-auth/react';
  * check pass.
  */
 export const authClient = createAuthClient({
-  plugins: [passkeyClient(), oneTimeTokenClient()],
+  plugins: [passkeyClient(), oneTimeTokenClient(), magicLinkClient()],
 });
