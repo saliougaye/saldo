@@ -21,6 +21,19 @@ period kind, so a user tracking by calendar month reads about a cycle they never
 changed only from the period sheet. The row should read «Periodo · Mese solare» (or «Ciclo di stipendio · dal 27»)
 and open a screen with the four kinds, the day grid under the cycle only — the onboarding step 1 layout.
 
+### Change of a real email address, with verification
+
+`POST /api/me/email` only fills a synthetic address and answers `email_already_set` for a real one, because replacing
+it needs proof that the new address belongs to the person. SMTP and verification exist since 0.3f-3, so the change can
+be built: ask for the new address, mail it a link, swap only when it is opened (and tell the old address), keep the old
+one verified until then.
+
+### Native review of the non-Italian translations of the 0.3f strings
+
+The 0.3f strings (admin settings, SMTP, verification, recovery, `mail.*`) were written in Italian and translated into
+English, German, Spanish, French, Portuguese and Swedish without a native reader. The six should be reviewed by
+someone who speaks each, the mail texts first, since they are what a person reads in their inbox.
+
 ## Ideas
 
 Directions worth keeping, not yet asked for as work. Most reopen a product decision.

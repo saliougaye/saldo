@@ -252,10 +252,9 @@ invite you send by message can be one link. That first account becomes the admin
 
 **Registration asks for an email address.** It is an identifier, not a credential: the passkey is the
 only way in, the address is what names the account in `/admin` and in the account list, and what
-shared finances (0.6) will invite by. **Nothing is sent to it** — verifying it and recovering an
-account by email are 0.3f-3; today the server can send only the test email of `/admin/settings`, so the address is
-never verified and never receives anything else, and a household instance can use
-anything its members will recognise. An account created before 0.3b carries a synthetic
+shared finances (0.6) will invite by. **Without SMTP nothing is sent to it**: the address stays unverified and
+there is no recovery by email, so a household instance can use anything its members will recognise. With SMTP (see
+«Server settings» below) it is sent a verification link and, once verified, can be used to recover the account. An account created before 0.3b carries a synthetic
 `{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
 Profile → Server and sync, once.
 
@@ -304,6 +303,18 @@ change it: edit it where the server runs and restart, or remove it and choose in
   panel's **Manda un'email di prova** sends a message to *your own* address with the saved configuration, and
   shows the server's error if it fails. Port 465 is implicit TLS; any other port requires STARTTLS, except to
   `localhost` (a development catcher such as Mailpit).
+- **What SMTP enables.** A new account, and Profilo → Account on request, sends a link that verifies the address
+  (valid 24 hours; it does not sign anybody in, and verification is not required to use the app). And `/login` gains
+  **«Hai perso la passkey?»**: somebody who lost their passkey asks for a link at `/recover`, which is mailed **only** to
+  a verified address of a non-revoked account, valid 15 minutes and single-use; it signs a browser in and asks for a new
+  passkey. That makes the mailbox as strong as the passkey (see [`SECURITY.md`](../SECURITY.md)). **Leaving SMTP
+  unconfigured disables all of it**: `/recover` says recovery is not available, `/login` has no link, and the way
+  back in for a lost passkey is an admin (`pnpm --filter web user …`). Each address is sent at most one message of
+  a kind a minute and five an hour; that counter, like the rate limiter, lives in the process, so several replicas
+  multiply it. `PUBLIC_URL` must be the site's origin with no path prefix: the confirmation link is built from it.
+- **Testing mail locally.** Run [Mailpit](https://mailpit.axllent.org) — `docker run --rm -d -p 1025:1025
+  -p 8025:8025 axllent/mailpit` — and set SMTP host `localhost`, port `1025`, no user, any sender, in `/admin/settings`
+  (a plain connection is allowed to `localhost`). Every message the server sends appears at <http://localhost:8025>.
 - **The SMTP password is write-only.** It is encrypted (AES-256-GCM) under `SETTINGS_ENCRYPTION_KEY` before it is
   stored, is never sent back to a browser, and is replaced, not read. Changing the host or user needs the
   password typed again, so a stolen session cannot aim the stored one at another server.

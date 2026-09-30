@@ -1109,8 +1109,10 @@ Notes that follow from using the library:
   **Superseded by D32 (§17.1.4):** from milestone 0.3 registration asks for a real email. Built in 0.3b: an account
   created before it keeps the synthetic address until the phone asks for a real one (onboarding, or Profile → server),
   which `POST /api/me/email` stores. That route only ever fills an empty seat — it answers `email_already_set` when the
-  current address is not synthetic, because replacing a real one means proving the new one belongs to the person, and
-  there is no SMTP until 0.3f. `isSyntheticEmail` is the test, in `apps/web/src/server/auth/email.ts`.
+  current address is not synthetic, because replacing a real one means proving the new one belongs to the person.
+  SMTP now exists (0.3f-2, 0.3f-3), so that proof is buildable — a verified change of a real address is a follow-up
+  in `TODO.md`; today a filled address stays as it is. `isSyntheticEmail` is the test, in
+  `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -1606,8 +1608,8 @@ public. The decisions behind this section are D30–D36.
   certificate, a shared cookie domain and a parent-domain RP id.
 - `/admin/**` is the admin panel (§17.1.8). The public marketing site and docs library are **not** here: they are
   their own app, `apps/site`, with their own deploy (D35, roadmap 0.8).
-- Routes in 0.3: `/login`, `/register`, `/onboarding`, `/home`, `/transactions`, `/stats`, `/profile`,
-  `/admin/**`.
+- Routes in 0.3: `/login`, `/register`, `/recover`, `/recover/confirm`, `/email-verified`, `/onboarding`, `/home`,
+  `/transactions`, `/stats`, `/profile`, `/admin/**`.
 
 #### 17.1.2 The projection: the only way server code reads rows
 
@@ -1830,6 +1832,47 @@ public. The decisions behind this section are D30–D36.
   `resolveUser` and still calls `afterVerification`, which is exactly what «add a passkey» does; without the early
   return it would re-check the registration policy, burn an invite and try to create a row that is already there.
   Nothing exercised that path before 0.3b, so it was a latent bug this step fixed.
+
+**As built (0.3f-3, 2026-10-01):**
+
+- **Better Auth does both**: its core `emailVerification` and its `magicLink` plugin (no new table, no migration).
+  Saldo supplies the send callbacks, which resolve SMTP at call time, decide who may be mailed and throttle per
+  recipient, and the pages around them. The browser calls the library's endpoints through `authClient`, so both
+  flows sit behind the instance's one rate limiter and origin check.
+- **Verification.** A new account, and an address filled by `POST /api/me/email`, is sent a link (24 hours,
+  `autoSignInAfterVerification: false`: opening a link never signs a browser in) whose callback is
+  `/email-verified`, a public page («Email verificata», or, with `?error=`, «Il link è scaduto o non è valido»).
+  Profilo → Account shows «verificata» / «non verificata» and, with SMTP and a real unverified address, «Invia il
+  link di verifica»; without SMTP it says the address stays unverified. A mail failure never fails a registration.
+  Verification is not required to use the app.
+- **Recovery.** With SMTP configured, `/login` offers «Hai perso la passkey?» → `/recover` (the phone's `/auth/mobile`
+  carries a line pointing to `{host}/recover` in a browser). `POST /sign-in/magic-link` mails a link **only** when
+  the account exists, its address is **verified**, it is **not revoked** and the throttle allows it. Every other case
+  does nothing, silently, and the page gives the same sentence whatever the address: **no enumeration**, and the
+  send is not awaited (`inBackground`, `after()` in a request scope), so the response time does not tell either.
+  `magicLink` is configured `disableSignUp: true` (otherwise its verify endpoint would create an account for an
+  unknown address, round the registration policy and the invites), `storeToken: 'hashed'`, `expiresIn` 15 minutes,
+  single-use.
+- **The confirm step.** The mailed link is `{PUBLIC_URL}/recover/confirm?token=…`, a public page that consumes
+  nothing and shows a button. Only the button navigates to the library's `GET /api/auth/magic-link/verify`, which
+  spends the token and sets the session. A mail scanner that follows links, or another site that makes the browser
+  GET a link, therefore cannot spend it or sign a browser in to an account the person did not choose. The browser
+  lands on `/profile/passkeys?recovered`, whose alert names the signed-in email and asks for a new passkey; the
+  lost one is deleted from the same list.
+- **Fixed callbacks.** The link's callbacks are built by the server from the token alone. `mailCallbackGuard`
+  (`hooks.before`) refuses, with 403, any `callbackURL`, `errorCallbackURL` or `newUserCallbackURL` that is not a
+  path on this site (no scheme, no `//`, no control characters) on `/sign-in/magic-link`,
+  `/send-verification-email`, `/magic-link/verify` and `/verify-email`. Without it the session cookie of a verify
+  could be carried to an attacker's `saldo://` or off-site URL. The mobile app calls none of these endpoints.
+- **A revoked account cannot recover**: it is not mailed, and a link minted before the revocation dies too, because
+  the `admin` plugin refuses a session for a banned user; an `hooks.after` turns that into a redirect to
+  `/recover?error=BANNED_USER` (the page's «il link non funziona più» line, no JSON). A revoked account is not
+  sent verification mail either.
+- **Per-recipient throttle** (`server/mail/throttle.ts`): at most one message per kind per address per 60 seconds and
+  five per hour whatever the kinds, asked only after an account qualifies. In memory and per process, like the rate
+  limiter.
+- **Mail** is plain text in the recipient's `settings.language` (else the request's `Accept-Language`, else `en`):
+  what it is, the link alone on its own line, how long it lasts, and «if you did not ask for this, ignore it».
 
 #### 17.1.5 «Today» on the server
 
@@ -2099,7 +2142,7 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 - **Invites:** mint (the code is shown once, as text, link and QR code), list, revoke.
 - **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver. (Rows skipped by the projection: deferred, §17.1.2.)
 - **Built in 0.3f-1 (2026-09-30):** accounts, invites and instance are in the panel (§17.1.7); the CLI stays, for the
-  first invite and for the day no admin can sign in. Server settings, SMTP, verification and recovery are 0.3f-2 and 0.3f-3.
+  first invite and for the day no admin can sign in. Server settings and SMTP are 0.3f-2; verification and recovery are 0.3f-3 (§17.1.4).
 - **Server settings** (D33): a `server_settings` table (`key`, `value jsonb`, `updated_at`, `updated_by`).
   - Infrastructure stays in the environment and needs a restart: `DATABASE_URL`, `PUBLIC_URL`, `WEBAUTHN_*`,
     secrets, attachment storage.
@@ -2141,7 +2184,8 @@ data, end-to-end browser tests.
 
 #### 17.1.10 Done when
 
-A user registers on the web (email, passkey, and an invite where required), or signs in with the phone's passkey;
+A user registers on the web (email, passkey, and an invite where required), or signs in with the phone's passkey; on
+an instance with SMTP, verifies the address and gets back in without the passkey through a link to that address;
 sees Home, Transazioni and Statistiche matching the phone to the cent; adds and edits a transaction that reaches
 the phone on its next sync; installs the app to the home screen. An admin manages accounts, invites and server
 settings from `/admin`. The projection is the only way server code reads rows.
@@ -2193,6 +2237,15 @@ settings from `/admin`. The projection is the only way server code reads rows.
   carries it or its envelope, and the stored one is kept only for the host and user it was saved with. Losing the
   key loses that secret and nothing else. A server-side-rendered Server Action's arguments are logged by
   `next dev` (development only); production builds do not.
+- **Recovery by email makes the mailbox as strong as the passkey**, on an instance whose admin configured SMTP and
+  only there. Bounded: only a **verified** address is ever sent a link, never a revoked account, never a synthetic
+  address; the link is single-use, stored hashed, lives 15 minutes and spends only when a person presses the
+  button on `/recover/confirm`; callbacks are fixed paths on this site; the response does not reveal whether an
+  address has an account or is verified (the send is not awaited); each mailbox gets at most one message per kind per
+  minute and five per hour, on top of the per-caller rate limit. The throttle and the limiter are **per process**:
+  more than one replica multiplies them. `POST /sign-in/magic-link` writes a `verification` row for any address it
+  is given, bounded by the plugin's rate limit and the 15-minute expiry. An admin who does not want recovery leaves
+  SMTP unconfigured.
 - CSV import treats every cell as text. The CSV export prefixes cells starting with `= + - @` with `'` (formula
   injection) **except** the numeric `amount` column.
 - App lock hides content in the app switcher (`expo-screen-capture` / privacy overlay on `AppState` inactive).
