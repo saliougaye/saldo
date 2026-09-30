@@ -299,3 +299,43 @@
   line-height: 1.45;
   text-wrap: pretty;
 }
+
+/* ---- Impostazioni ---- */
+/* Host and port on one line: the port needs room for five digits and no more. */
+.twoCols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 12px;
+}
+
+/* «impostata» and «Sostituisci» where the password field would be. */
+.secretRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.secret {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+}
+
+.dotOk {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-positive);
+}
+
+/* What the last save or test said, when it is good news. */
+.status {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}

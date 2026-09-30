@@ -1,9 +1,9 @@
 'use client';
 
 import { type KeyboardEvent, useRef } from 'react';
-import { Icon } from '../../../../src/ui/Icon';
-import { rovingTabStop, rovingTarget } from '../../../../src/ui/rovingRadios';
-import styles from './preferences.module.css';
+import { Icon } from './Icon';
+import styles from './OptionList.module.css';
+import { rovingTabStop, rovingTarget } from './rovingRadios';
 
 export interface ListOption<V extends string> {
   value: V;
@@ -45,10 +45,18 @@ interface Props<V extends string> {
   groups: readonly ListGroup<V>[];
   selected: V | null;
   onSelect: (value: V) => void;
+  /** The choices are shown and cannot be changed (a setting the environment locks). */
+  disabled?: boolean;
 }
 
 /** The phone's `OptionRow`s: the selected one is a check, not a colour the user has to compare. */
-export function OptionList<V extends string>({ label, groups, selected, onSelect }: Props<V>) {
+export function OptionList<V extends string>({
+  label,
+  groups,
+  selected,
+  onSelect,
+  disabled = false,
+}: Props<V>) {
   const flat = groups.flatMap((group) => group.options);
   const roving = useRovingFocus(flat.length);
   const stop = rovingTabStop(
@@ -74,6 +82,7 @@ export function OptionList<V extends string>({ label, groups, selected, onSelect
                   type="button"
                   role="radio"
                   aria-checked={checked}
+                  disabled={disabled}
                   tabIndex={at === stop ? 0 : -1}
                   className={styles.option}
                   onClick={() => onSelect(option.value)}

@@ -58,6 +58,7 @@ export const fr: Messages = {
       accounts: 'Comptes',
       invites: 'Invitations',
       instance: 'Instance',
+      settings: 'Paramètres',
     },
     accounts: {
       count_one: '{{count}} compte',
@@ -175,6 +176,75 @@ export const fr: Messages = {
       address: 'Adresse',
       timeZone: 'Fuseau par défaut',
       timeZoneNote: 'pour ceux qui n’en ont pas défini',
+    },
+    settings: {
+      title: 'Paramètres du serveur',
+      trailing: 's’appliquent sans redémarrage',
+      lockedSubtitle: 'défini par l’environnement',
+      saved: 'Enregistré.',
+      name: {
+        title: 'Nom de l’instance',
+        subtitle: 'sur la page de connexion et dans les invitations',
+        field: 'Nom',
+        hint: 'Visible par quiconque ouvre la page de connexion ou reçoit une invitation. Vide : le nom par défaut revient.',
+      },
+      registration: {
+        title: 'Inscription',
+        subtitle: 'qui peut créer un compte',
+        open: 'Ouverte',
+        openNote: 'n’importe qui peut créer un compte',
+        firstUser: 'Le premier seulement',
+        firstUserNote: 'tant qu’aucun compte n’existe',
+        invite: 'Sur invitation',
+        inviteNote: 'un code par compte',
+        closed: 'Fermée',
+        closedNote: 'aucun nouveau compte',
+      },
+      smtp: {
+        title: 'E-mail (SMTP)',
+        note: 'Sert à vérifier les adresses e-mail et à récupérer l’accès. Sans cela, l’inscription fonctionne quand même.',
+        notConfigured: 'non configuré',
+        configured: 'configuré',
+        host: 'Serveur',
+        port: 'Port',
+        user: 'Utilisateur',
+        password: 'Mot de passe',
+        passwordSet: 'défini',
+        replace: 'Remplacer',
+        passwordHint: 'Chiffré sur le serveur. Il ne se relit pas : on le remplace.',
+        passwordUnreadable:
+          'Le mot de passe ne peut plus être lu avec la clé actuelle : saisissez-le à nouveau.',
+        from: 'Expéditeur',
+        test: 'Envoyer un e-mail de test',
+        testSaveFirst: 'Enregistrez d’abord',
+        remove: 'Supprimer la configuration',
+        removeTitle: 'Supprimer la configuration e-mail ?',
+        removeBody:
+          'Les e-mails ne partiront plus et le mot de passe enregistré est effacé. L’inscription fonctionne quand même sans e-mail.',
+        removeConfirm: 'Supprimer',
+      },
+      locked: {
+        title: 'Défini par l’environnement',
+        body: 'La variable {{variables}} l’emporte sur cette page. Pour la changer, modifiez-la là où tourne le serveur et redémarrez-le ; ou retirez-la, et on choisit ensuite ici.',
+        bodyGroup:
+          'Les variables {{variables}} l’emportent sur cette page. Pour les changer, modifiez-les là où tourne le serveur et redémarrez-le ; ou retirez-les, et on choisit ensuite ici.',
+      },
+      errors: {
+        locked: 'Ce paramètre vient de l’environnement : il ne se change pas ici.',
+        invalid: 'Vérifiez les champs : quelque chose n’est pas valide.',
+        passwordRequired:
+          'Vous avez changé le serveur ou l’utilisateur : saisissez à nouveau le mot de passe.',
+        unexpected: 'Une erreur est survenue. Réessayez.',
+      },
+      test: {
+        sent: 'E-mail de test envoyé à {{email}}.',
+        syntheticEmail:
+          'Votre compte n’a pas de véritable adresse e-mail : définissez-en une avant de tester.',
+        notConfigured:
+          'L’e-mail n’est pas configuré, ou le mot de passe enregistré ne peut plus être lu : enregistrez la configuration et réessayez.',
+        failed: 'Échec de l’envoi : {{detail}}',
+        failedNoDetail: 'Échec de l’envoi.',
+      },
     },
     mail: {
       subject: 'E-mail de test de {{instance}}',

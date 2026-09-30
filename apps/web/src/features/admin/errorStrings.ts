@@ -14,3 +14,17 @@ export function adminErrorStrings(t: Translate): AdminErrorStrings {
     unexpected: t('admin.errors.unexpected'),
   };
 }
+
+export type SettingsErrorKey = 'locked' | 'invalid' | 'passwordRequired' | 'unexpected';
+
+/** `admin.settings.errors.*`: every way a settings write answers «no», for the three panels. */
+export type SettingsErrorStrings = Record<SettingsErrorKey, string>;
+
+export function settingsErrorStrings(t: Translate): SettingsErrorStrings {
+  return {
+    locked: t('admin.settings.errors.locked'),
+    invalid: t('admin.settings.errors.invalid'),
+    passwordRequired: t('admin.settings.errors.passwordRequired'),
+    unexpected: t('admin.settings.errors.unexpected'),
+  };
+}

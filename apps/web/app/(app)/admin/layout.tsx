@@ -53,6 +53,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               count={activeInviteCount(invites)}
             />
             <NavLink href="/admin/instance" icon="info" label={t('admin.nav.instance')} />
+            <NavLink href="/admin/settings" icon="settings" label={t('admin.nav.settings')} />
           </>
         }
       >

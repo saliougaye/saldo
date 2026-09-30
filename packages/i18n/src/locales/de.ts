@@ -58,6 +58,7 @@ export const de: Messages = {
       accounts: 'Konten',
       invites: 'Einladungen',
       instance: 'Instanz',
+      settings: 'Einstellungen',
     },
     accounts: {
       count_one: '{{count}} Konto',
@@ -176,6 +177,76 @@ export const de: Messages = {
       address: 'Adresse',
       timeZone: 'Standardzeitzone',
       timeZoneNote: 'für alle, die keine eingestellt haben',
+    },
+    settings: {
+      title: 'Servereinstellungen',
+      trailing: 'gelten ohne Neustart',
+      lockedSubtitle: 'von der Umgebung gesetzt',
+      saved: 'Gespeichert.',
+      name: {
+        title: 'Name der Instanz',
+        subtitle: 'auf der Anmeldeseite und in Einladungen',
+        field: 'Name',
+        hint: 'Sieht, wer die Anmeldeseite öffnet oder eine Einladung erhält. Leer: Der Standardname kehrt zurück.',
+      },
+      registration: {
+        title: 'Registrierung',
+        subtitle: 'wer ein Konto erstellen darf',
+        open: 'Offen',
+        openNote: 'jeder kann ein Konto erstellen',
+        firstUser: 'Nur das erste',
+        firstUserNote: 'solange noch kein Konto existiert',
+        invite: 'Nur mit Einladung',
+        inviteNote: 'ein Code pro Konto',
+        closed: 'Geschlossen',
+        closedNote: 'keine neuen Konten',
+      },
+      smtp: {
+        title: 'E-Mail (SMTP)',
+        note: 'Dient dazu, E-Mail-Adressen zu bestätigen und den Zugang wiederherzustellen. Ohne sie funktioniert die Registrierung trotzdem.',
+        notConfigured: 'nicht eingerichtet',
+        configured: 'eingerichtet',
+        host: 'Server',
+        port: 'Port',
+        user: 'Benutzer',
+        password: 'Passwort',
+        passwordSet: 'gesetzt',
+        replace: 'Ersetzen',
+        passwordHint:
+          'Auf dem Server verschlüsselt. Es wird nicht wieder angezeigt: Du ersetzt es.',
+        passwordUnreadable:
+          'Das Passwort lässt sich mit dem aktuellen Schlüssel nicht mehr lesen: Gib es erneut ein.',
+        from: 'Absender',
+        test: 'Test-E-Mail senden',
+        testSaveFirst: 'Erst speichern',
+        remove: 'Konfiguration entfernen',
+        removeTitle: 'E-Mail-Konfiguration entfernen?',
+        removeBody:
+          'Es werden keine E-Mails mehr verschickt, und das gespeicherte Passwort wird gelöscht. Die Registrierung funktioniert auch ohne E-Mail.',
+        removeConfirm: 'Entfernen',
+      },
+      locked: {
+        title: 'Von der Umgebung gesetzt',
+        body: 'Die Variable {{variables}} hat Vorrang vor dieser Seite. Um sie zu ändern, bearbeite sie dort, wo der Server läuft, und starte ihn neu; oder entferne sie, dann wählst du ab da hier.',
+        bodyGroup:
+          'Die Variablen {{variables}} haben Vorrang vor dieser Seite. Um sie zu ändern, bearbeite sie dort, wo der Server läuft, und starte ihn neu; oder entferne sie, dann wählst du ab da hier.',
+      },
+      errors: {
+        locked: 'Diese Einstellung kommt aus der Umgebung: Sie lässt sich hier nicht ändern.',
+        invalid: 'Prüfe die Felder: Etwas ist ungültig.',
+        passwordRequired:
+          'Du hast den Server oder den Benutzer geändert: Gib das Passwort erneut ein.',
+        unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
+      },
+      test: {
+        sent: 'Test-E-Mail an {{email}} gesendet.',
+        syntheticEmail:
+          'Dein Konto hat keine echte E-Mail-Adresse: Lege erst eine fest, bevor du testest.',
+        notConfigured:
+          'E-Mail ist nicht eingerichtet, oder das gespeicherte Passwort lässt sich nicht mehr lesen: Speichere die Konfiguration und versuche es erneut.',
+        failed: 'Senden fehlgeschlagen: {{detail}}',
+        failedNoDetail: 'Senden fehlgeschlagen.',
+      },
     },
     mail: {
       subject: 'Test-E-Mail von {{instance}}',

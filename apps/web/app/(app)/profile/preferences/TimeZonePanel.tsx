@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { listedZone } from '../../../../src/features/profile/deviceZone';
 import type { ZoneOption } from '../../../../src/features/profile/preferenceOptions';
 import { Alert } from '../../../../src/ui/Alert';
+import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
-import { type ListOption, OptionList } from './OptionList';
 import styles from './preferences.module.css';
 import { type SettingErrors, useSaveSetting } from './useSaveSetting';
 

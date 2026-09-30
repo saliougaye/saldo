@@ -58,6 +58,7 @@ export const es: Messages = {
       accounts: 'Cuentas',
       invites: 'Invitaciones',
       instance: 'Instancia',
+      settings: 'Ajustes',
     },
     accounts: {
       count_one: '{{count}} cuenta',
@@ -174,6 +175,74 @@ export const es: Messages = {
       address: 'Dirección',
       timeZone: 'Zona horaria predeterminada',
       timeZoneNote: 'para quien no ha configurado una',
+    },
+    settings: {
+      title: 'Ajustes del servidor',
+      trailing: 'cambian sin reiniciar',
+      lockedSubtitle: 'definido por el entorno',
+      saved: 'Guardado.',
+      name: {
+        title: 'Nombre de la instancia',
+        subtitle: 'en la página de acceso y en las invitaciones',
+        field: 'Nombre',
+        hint: 'Lo ve quien abre la página de acceso o recibe una invitación. Vacío: vuelve el nombre predeterminado.',
+      },
+      registration: {
+        title: 'Registro',
+        subtitle: 'quién puede crear una cuenta',
+        open: 'Abierto',
+        openNote: 'cualquiera puede crear una cuenta',
+        firstUser: 'Solo el primero',
+        firstUserNote: 'mientras no exista ninguna cuenta',
+        invite: 'Solo con invitación',
+        inviteNote: 'un código por cuenta',
+        closed: 'Cerrado',
+        closedNote: 'sin cuentas nuevas',
+      },
+      smtp: {
+        title: 'Correo (SMTP)',
+        note: 'Sirve para verificar los correos y recuperar el acceso. Sin él, el registro funciona igualmente.',
+        notConfigured: 'sin configurar',
+        configured: 'configurado',
+        host: 'Servidor',
+        port: 'Puerto',
+        user: 'Usuario',
+        password: 'Contraseña',
+        passwordSet: 'definida',
+        replace: 'Sustituir',
+        passwordHint: 'Cifrada en el servidor. No se vuelve a leer: se sustituye.',
+        passwordUnreadable:
+          'La contraseña ya no se puede leer con la clave actual: vuelve a introducirla.',
+        from: 'Remitente',
+        test: 'Enviar un correo de prueba',
+        testSaveFirst: 'Guarda primero',
+        remove: 'Quitar la configuración',
+        removeTitle: '¿Quitar la configuración de correo?',
+        removeBody:
+          'Los correos dejarán de salir y la contraseña guardada se borra. El registro funciona igualmente sin correo.',
+        removeConfirm: 'Quitar',
+      },
+      locked: {
+        title: 'Definido por el entorno',
+        body: 'La variable {{variables}} prevalece sobre esta página. Para cambiarla, edítala donde se ejecuta el servidor y reinícialo; o quítala, y desde entonces se elige aquí.',
+        bodyGroup:
+          'Las variables {{variables}} prevalecen sobre esta página. Para cambiarlas, edítalas donde se ejecuta el servidor y reinícialo; o quítalas, y desde entonces se elige aquí.',
+      },
+      errors: {
+        locked: 'Este ajuste viene del entorno: no se cambia desde aquí.',
+        invalid: 'Revisa los campos: algo no es válido.',
+        passwordRequired:
+          'Has cambiado el servidor o el usuario: vuelve a introducir la contraseña.',
+        unexpected: 'Algo salió mal. Inténtalo de nuevo.',
+      },
+      test: {
+        sent: 'Correo de prueba enviado a {{email}}.',
+        syntheticEmail: 'Tu cuenta no tiene un correo real: define uno antes de probar.',
+        notConfigured:
+          'El correo no está configurado, o la contraseña guardada ya no se puede leer: guarda la configuración e inténtalo de nuevo.',
+        failed: 'Envío fallido: {{detail}}',
+        failedNoDetail: 'Envío fallido.',
+      },
     },
     mail: {
       subject: 'Correo de prueba de {{instance}}',
