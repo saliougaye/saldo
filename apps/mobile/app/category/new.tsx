@@ -1,13 +1,14 @@
-import { amountBufferToMinor, getCurrency } from '@saldo/core';
+import {
+  amountBufferToMinor,
+  type CategoryFormValues,
+  emptyCategoryForm,
+  getCurrency,
+} from '@saldo/core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useRepositories } from '../../src/db/DatabaseProvider';
 import { useBudgets, useCategories, useSettings } from '../../src/db/hooks';
-import {
-  CategoryForm,
-  type CategoryFormValues,
-  emptyCategoryForm,
-} from '../../src/features/categories/CategoryForm';
+import { CategoryForm } from '../../src/features/categories/CategoryForm';
 
 export default function NewCategory() {
   const router = useRouter();

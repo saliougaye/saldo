@@ -39,6 +39,7 @@ export * from './userData';
 export * from './views/accountForm';
 export * from './views/budgetForm';
 export * from './views/budgetViews';
+export * from './views/categoryForm';
 export * from './views/endLabels';
 export * from './views/goalForm';
 export * from './views/goalViews';
