@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { goalExpenseHref, goalTransferHref } from './goalLinks';
+import {
+  goalAccountsHref,
+  goalEditHref,
+  goalExpenseHref,
+  goalTransferHref,
+  NEW_GOAL_HREF,
+} from './goalLinks';
 
 describe('goalTransferHref', () => {
   it('points a new transfer from one account to the other with the goal name as description', () => {
@@ -25,5 +31,13 @@ describe('goalExpenseHref', () => {
     expect(url.searchParams.get('closeGoal')).toBe('g1');
     expect(url.searchParams.get('amount')).toBe('12050');
     expect(url.searchParams.get('description')).toBe('Car');
+  });
+});
+
+describe('profile and Conti goal links', () => {
+  it('edits in Profilo and opens in Conti', () => {
+    expect(goalEditHref('g1')).toBe('/profile/goals?g=g1');
+    expect(goalAccountsHref('g 1')).toBe('/accounts?g=g%201');
+    expect(NEW_GOAL_HREF).toBe('/profile/goals?new');
   });
 });

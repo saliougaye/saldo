@@ -1284,6 +1284,8 @@ export const sv: Messages = {
       archivedTitle: 'Arkiverade',
       archivedAccounts: 'Arkiverade konton',
       closedGoals: 'Stängda mål',
+      openInAccounts: 'Öppna i Konton',
+      goalNeedsAccount: 'För att skapa ett mål behöver du först ett konto.',
       deadlineHint: 'Lämna tomt om det saknar slutdatum.',
       alreadySavedHint: 'Hur mycket du redan har sparat: vi flyttar det från kontot.',
     },

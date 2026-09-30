@@ -19,6 +19,7 @@ import {
 import type { IconName } from '@saldo/ui';
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
+import { NEW_GOAL_HREF } from '../../../src/features/accounts/goalLinks';
 import { budgetRowFor, ROW_RING } from '../../../src/features/budgets/budgetRow';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
@@ -489,7 +490,7 @@ export default async function HomePage({
                 <>
                   <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
                   {pocketParentCandidates(page.data.accounts).length === 0 ? null : (
-                    <ListRow open href="/accounts?newGoal" icon="plus" title={t('goals.create')} />
+                    <ListRow open href={NEW_GOAL_HREF} icon="plus" title={t('goals.create')} />
                   )}
                 </>
               ) : (

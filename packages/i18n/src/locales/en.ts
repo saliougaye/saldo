@@ -1281,6 +1281,8 @@ export const en: Messages = {
       archivedTitle: 'Archived',
       archivedAccounts: 'Archived accounts',
       closedGoals: 'Closed goals',
+      openInAccounts: 'Open in Accounts',
+      goalNeedsAccount: 'To create a goal, first create an account.',
       deadlineHint: 'Leave empty if it has no deadline.',
       alreadySavedHint: 'How much you’ve already set aside: we move it from the account.',
     },

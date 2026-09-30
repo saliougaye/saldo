@@ -1288,6 +1288,8 @@ export const it = {
       archivedTitle: 'Archiviati',
       archivedAccounts: 'Conti archiviati',
       closedGoals: 'Obiettivi chiusi',
+      openInAccounts: 'Apri in Conti',
+      goalNeedsAccount: 'Per creare un obiettivo serve prima un conto.',
       deadlineHint: 'Lascia vuoto se non ha una scadenza.',
       alreadySavedHint: 'Quanto hai già messo da parte: lo spostiamo dal conto.',
     },

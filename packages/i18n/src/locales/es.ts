@@ -1291,6 +1291,8 @@ export const es: Messages = {
       archivedTitle: 'Archivados',
       archivedAccounts: 'Cuentas archivadas',
       closedGoals: 'Objetivos cerrados',
+      openInAccounts: 'Abrir en Cuentas',
+      goalNeedsAccount: 'Para crear un objetivo, primero crea una cuenta.',
       deadlineHint: 'Déjalo vacío si no tiene fecha límite.',
       alreadySavedHint: 'Cuánto has apartado ya: lo movemos desde la cuenta.',
     },

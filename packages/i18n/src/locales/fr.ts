@@ -1299,6 +1299,8 @@ export const fr: Messages = {
       archivedTitle: 'Archivés',
       archivedAccounts: 'Comptes archivés',
       closedGoals: 'Objectifs clos',
+      openInAccounts: 'Ouvrir dans Comptes',
+      goalNeedsAccount: 'Pour créer un objectif, créez d’abord un compte.',
       deadlineHint: 'Laissez vide s’il n’a pas d’échéance.',
       alreadySavedHint: 'Ce que vous avez déjà mis de côté : nous le déplaçons depuis le compte.',
     },

@@ -1,0 +1,42 @@
+.newGoal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  text-wrap: pretty;
+}
+
+/* A goal's saved figure over «di 1.000 €». */
+.rowAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  text-align: end;
+}
+
+.rowOf {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The link out of the form: movements and «Chiudi» stay in Conti. */
+.panelLinks {
+  display: flex;
+  margin-top: 20px;
+}

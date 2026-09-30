@@ -5,7 +5,6 @@ import {
   goalTone,
   newestFirst,
   nextCreditChargeDate,
-  pocketParentCandidates,
   transactionRow,
 } from '@saldo/core';
 import {
@@ -28,8 +27,12 @@ import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { archivedView } from '../../../src/features/accounts/archivedView';
 import { accountDetail } from '../../../src/features/accounts/detailView';
-import { accountFormView, goalFormView } from '../../../src/features/accounts/formView';
-import { goalExpenseHref, goalTransferHref } from '../../../src/features/accounts/goalLinks';
+import { accountFormView } from '../../../src/features/accounts/formView';
+import {
+  goalEditHref,
+  goalExpenseHref,
+  goalTransferHref,
+} from '../../../src/features/accounts/goalLinks';
 import { accountWriteErrors } from '../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
@@ -48,7 +51,6 @@ import { ArchiveAccount } from './ArchiveAccount';
 import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
 import { CloseGoal } from './CloseGoal';
-import { GoalForm } from './GoalForm';
 import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
@@ -160,27 +162,11 @@ export default async function AccountsPage({
       : null;
   const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
 
-  // `?newGoal` opens «Nuovo obiettivo»; `?g={id}&edit` opens «Modifica obiettivo». A goal needs an
-  // account to live in, so «Nuovo obiettivo» is offered only when one can hold it.
-  const canCreateGoal = pocketParentCandidates(page.data.accounts).length > 0;
-  const creatingGoal = form === null && params.newGoal !== undefined && canCreateGoal;
-  const editingGoal = form === null && !creatingGoal && showGoalPanel && params.edit !== undefined;
-  const goalForm =
-    creatingGoal || editingGoal
-      ? goalFormView({
-          data: page.data,
-          today,
-          currency,
-          mode: creatingGoal ? 'new' : 'edit',
-          id: creatingGoal ? null : (selected?.account.id ?? null),
-        })
-      : null;
-  const goalFormCloseHref = goalForm?.id == null ? PATH : `${PATH}?g=${goalForm.id}`;
   const goalParent =
     selected?.account.parentAccountId == null
       ? null
       : (page.data.accounts.find((row) => row.id === selected.account.parentAccountId) ?? null);
-  const formOpen = form !== null || goalForm !== null;
+  const formOpen = form !== null;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
 
   // `?archived` opens the list of archived accounts and closed goals; a form or a detail wins.
@@ -391,31 +377,6 @@ export default async function AccountsPage({
         </Panel>
       )}
 
-      {goalForm === null ? null : (
-        <Panel
-          key="goalForm"
-          sheet
-          bare
-          title={t(goalForm.mode === 'new' ? 'goals.newGoal' : 'goals.editGoal')}
-          closeHref={goalFormCloseHref}
-          closeLabel={t('common.close')}
-        >
-          <GoalForm
-            key={`${goalForm.mode}:${goalForm.id ?? ''}`}
-            view={goalForm}
-            locale={locale}
-            currency={currency}
-            decimalSeparator={moneyParts.decimalSeparator}
-            symbol={moneyParts.symbol}
-            symbolPosition={moneyParts.symbolPosition}
-            messages={accountMessages(catalogs[locale])}
-            parentName={goalParent?.name ?? null}
-            closeHref={goalFormCloseHref}
-            afterSave={`${PATH}?g=__ID__`}
-          />
-        </Panel>
-      )}
-
       {!archivedOpen ? null : (
         <Panel
           key="archived"
@@ -575,11 +536,7 @@ export default async function AccountsPage({
         </Panel>
       )}
 
-      {goalForm !== null ||
-      form !== null ||
-      !showGoalPanel ||
-      selected === null ||
-      selected.goal === null ? null : (
+      {form !== null || !showGoalPanel || selected === null || selected.goal === null ? null : (
         <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
           {(() => {
             const goal = selected.goal;
@@ -670,10 +627,7 @@ export default async function AccountsPage({
                 </Section>
 
                 <div className={formStyles.actions}>
-                  <Link
-                    className={formStyles.actionLink}
-                    href={`${PATH}?g=${selected.account.id}&edit`}
-                  >
+                  <Link className={formStyles.actionLink} href={goalEditHref(selected.account.id)}>
                     {t('common.edit')}
                   </Link>
                   <CloseGoal
