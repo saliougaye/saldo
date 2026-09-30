@@ -256,9 +256,10 @@
   user-select: all;
 }
 
+/* `Button` is full width: beside the link it left the address no room and it wrapped one character per line. */
 .copyRow {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
 }
 
