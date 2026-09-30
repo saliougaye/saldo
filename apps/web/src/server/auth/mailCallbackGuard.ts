@@ -9,9 +9,18 @@ const GUARDED_PATHS = new Set([
 ]);
 const CALLBACK_FIELDS = ['callbackURL', 'errorCallbackURL', 'newUserCallbackURL'] as const;
 
-/** A path on this site: one slash, not two (`//host`), no backslash a browser reads as a slash. */
+/**
+ * A path on this site: one slash, not two (`//host`), no backslash a browser reads as a slash, and no
+ * control character — a browser strips tabs and newlines first, so `/\t/host` would become `//host`.
+ */
 export function isRelativePath(value: string): boolean {
-  return value.startsWith('/') && !value.startsWith('//') && !value.includes('\\');
+  return (
+    value.startsWith('/') &&
+    !value.startsWith('//') &&
+    !value.includes('\\') &&
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: control characters are what it refuses.
+    !/[\u0000-\u001f\u007f]/.test(value)
+  );
 }
 
 /**
