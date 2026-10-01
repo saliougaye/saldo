@@ -7,6 +7,7 @@ import { getDb } from '../../../../src/server/db/client';
 import { env } from '../../../../src/server/env';
 import { loadUserData } from '../../../../src/server/userData/load';
 import { resolveTimeZone } from '../../../../src/server/userData/today';
+import { Alert } from '../../../../src/ui/Alert';
 import { Section } from '../../../../src/ui/Section';
 import styles from '../../app.module.css';
 import { PasskeyList } from './PasskeyList';
@@ -20,12 +21,19 @@ export const dynamic = 'force-dynamic';
  * (never the last one), and sign out». The Profile shell and its sub-navigation come with 0.3d; this
  * page keeps its final URL so that step wraps it rather than moving it.
  */
-export default async function PasskeysPage() {
+export default async function PasskeysPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ recovered?: string }>;
+}) {
   const user = await requireWebUser();
   const { t, locale } = await userI18n(user.id);
   const settings = readSettings((await loadUserData(user.id)).settings);
   const timeZone = resolveTimeZone(settings.timeZone, env().defaultTimeZone);
   const passkeys = await listPasskeysForUser(getDb(), user.id);
+  // `?recovered` is where a magic link lands (0.3f-3). This page reads the session itself, not
+  // `readPage`, so an account that never onboarded is not sent to `/onboarding` and sees the alert.
+  const recovered = (await searchParams).recovered !== undefined;
 
   /** The day the passkey was added, in the user's own zone (§17.1.5) — not the server's. */
   const addedOn = (iso: string | null) => {
@@ -42,6 +50,12 @@ export default async function PasskeysPage() {
   return (
     <Section open title={t('web.passkeys.title')}>
       <div className={passkeyStyles.stack}>
+        {recovered ? (
+          <Alert
+            title={t('web.passkeys.recoveredTitle', { email: user.email })}
+            body={t('web.passkeys.recoveredBody')}
+          />
+        ) : null}
         <p className={styles.body}>{t('web.passkeys.body')}</p>
         <PasskeyList
           passkeys={passkeys.map((passkey) => {

@@ -1,5 +1,5 @@
-import { asc, eq, sql } from 'drizzle-orm';
-import { session, user } from '../db/schema';
+import { asc, desc, eq, sql } from 'drizzle-orm';
+import { invites, passkey, session, syncRows, user } from '../db/schema';
 import type { ServerDatabase } from '../db/types';
 
 /**
@@ -151,4 +151,74 @@ export async function listAccounts(db: ServerDatabase): Promise<AccountSummary[]
     revokedReason: row.banReason,
     createdAt: row.createdAt.toISOString(),
   }));
+}
+
+/** What the admin's panel shows for one account: the list row, plus what only a lookup can say. */
+export interface AccountDetail extends AccountSummary {
+  emailVerified: boolean;
+  /**
+   * The newest `session.created_at`. A session row is written at sign-in, so this is the last
+   * **sign-in**, not the last request; null for an account with no session left.
+   */
+  lastSignInAt: string | null;
+  passkeyCount: number;
+  /** `sync_rows` of the account, tombstones included: what deleting it would carry away. */
+  syncedRows: number;
+  /** The invite whose `used_by` is this account, if it came in through one. */
+  invite: { id: string; label: string | null } | null;
+}
+
+export async function accountDetail(
+  db: ServerDatabase,
+  userId: string,
+): Promise<AccountDetail | null> {
+  const [row] = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      role: user.role,
+      banned: user.banned,
+      banReason: user.banReason,
+      createdAt: user.createdAt,
+    })
+    .from(user)
+    .where(eq(user.id, userId));
+  if (row === undefined) return null;
+
+  const [latest] = await db
+    .select({ createdAt: session.createdAt })
+    .from(session)
+    .where(eq(session.userId, userId))
+    .orderBy(desc(session.createdAt))
+    .limit(1);
+  const [passkeys] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(passkey)
+    .where(eq(passkey.userId, userId));
+  const [rows] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(syncRows)
+    .where(eq(syncRows.userId, userId));
+  const [invite] = await db
+    .select({ id: invites.id, label: invites.label })
+    .from(invites)
+    .where(eq(invites.usedBy, userId))
+    .limit(1);
+
+  return {
+    id: row.id,
+    displayName: row.name,
+    email: row.email,
+    role: row.role ?? MEMBER_ROLE,
+    revoked: row.banned === true,
+    revokedReason: row.banReason,
+    createdAt: row.createdAt.toISOString(),
+    emailVerified: row.emailVerified,
+    lastSignInAt: latest?.createdAt.toISOString() ?? null,
+    passkeyCount: passkeys?.n ?? 0,
+    syncedRows: rows?.n ?? 0,
+    invite: invite ?? null,
+  };
 }

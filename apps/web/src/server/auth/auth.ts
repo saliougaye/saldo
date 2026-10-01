@@ -1,16 +1,29 @@
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
-import { betterAuth } from 'better-auth';
+import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
-import { admin, bearer, oneTimeToken } from 'better-auth/plugins';
+import { admin, bearer, magicLink, oneTimeToken } from 'better-auth/plugins';
 import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
+import { registrationMode } from '../settings/serverSettings';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
 import { invitePlugin } from './invitePlugin';
+import { mailCallbackGuard, revokedLinkRedirect } from './mailCallbackGuard';
+import {
+  RECOVERY_TTL_SECONDS,
+  requestVerification,
+  sendRecoveryLink,
+  sendVerificationLink,
+  VERIFICATION_TTL_SECONDS,
+} from './mailCallbacks';
 import { completeRegistration, resolveRegistration } from './registration';
 import { readRegistrationContext } from './registrationContext';
+
+type SendVerificationEmail = NonNullable<
+  NonNullable<BetterAuthOptions['emailVerification']>['sendVerificationEmail']
+>;
 
 /** The handoff token lives just long enough to travel one deep link. */
 const ONE_TIME_TOKEN_MINUTES = 1;
@@ -36,9 +49,18 @@ const SESSION_EXPIRES_IN_DAYS = 180;
  * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
  */
 export function buildAuthOptions() {
-  const { publicUrl, rpId, rpName, appRedirectSchemes, registration, secret, trustedProxies } =
-    env();
+  const { publicUrl, rpId, rpName, appRedirectSchemes, secret, trustedProxies } = env();
   const db = getDb();
+  // Asked when a ceremony runs, never captured here: a mode saved in the admin panel applies to the
+  // next registration with no rebuild. A read that fails rejects, and the registration with it.
+  const mode = () => registrationMode(db);
+  const sendVerification: SendVerificationEmail = async ({ user: recipient, url }, request) => {
+    sendVerificationLink(db, {
+      user: { id: recipient.id, email: recipient.email },
+      url,
+      acceptLanguage: request?.headers.get('accept-language') ?? null,
+    });
+  };
   return {
     appName: 'Saldo',
     baseURL: publicUrl,
@@ -46,6 +68,16 @@ export function buildAuthOptions() {
     database: drizzleAdapter(db, { provider: 'pg', schema }),
     // A passkey is the only credential: no weaker path to the same account.
     emailAndPassword: { enabled: false },
+    // 0.3f-3. The library's two endpoints, with our own sender: Saldo decides who is mailed (see
+    // `mailCallbacks.ts`). We send after a registration ourselves, so `sendOnSignUp` stays off, and
+    // opening a link must not sign a browser in.
+    emailVerification: {
+      sendVerificationEmail: sendVerification,
+      sendOnSignUp: false,
+      autoSignInAfterVerification: false,
+      expiresIn: VERIFICATION_TTL_SECONDS,
+    },
+    hooks: { before: mailCallbackGuard, after: revokedLinkRedirect },
     session: {
       expiresIn: 60 * 60 * 24 * SESSION_EXPIRES_IN_DAYS,
       updateAge: 60 * 60 * 24 * SESSION_UPDATE_AGE_DAYS,
@@ -56,6 +88,9 @@ export function buildAuthOptions() {
     // second replica or a Vercel deployment gets its own bucket, silently raising the real limit).
     rateLimit: { enabled: true, window: 60, max: 20 },
     advanced: {
+      // The library's default in production; stated so the suite, where Better Auth would otherwise
+      // switch it off, exercises the callback and origin checks the mail links depend on.
+      disableOriginCheck: false,
       ipAddress: {
         ipAddressHeaders: ['x-forwarded-for'],
         /**
@@ -83,14 +118,14 @@ export function buildAuthOptions() {
           /** Before the ceremony: the policy, the name, the email and the invite. See `registration.ts`. */
           resolveUser: async ({ context }) =>
             resolveRegistration(db, {
-              mode: registration,
+              mode: await mode(),
               context: readRegistrationContext(context),
               now: new Date(),
             }),
           /** After it: the account row, the role, the invite — or nothing at all when it exists. */
-          afterVerification: async ({ ctx, context, user: resolved }) =>
-            completeRegistration(db, {
-              mode: registration,
+          afterVerification: async ({ ctx, context, user: resolved }) => {
+            const { userId } = await completeRegistration(db, {
+              mode: await mode(),
               context: readRegistrationContext(context),
               resolved: { id: resolved.id, name: resolved.name },
               store: {
@@ -109,10 +144,35 @@ export function buildAuthOptions() {
                   ),
               },
               now: new Date(),
-            }),
+              afterCreate: async (userId) =>
+                requestVerification(db, {
+                  userId,
+                  secret: ctx.context.secret,
+                  baseURL: ctx.context.baseURL,
+                  acceptLanguage: ctx.request?.headers.get('accept-language') ?? null,
+                }),
+            });
+            return { userId };
+          },
         },
       }),
-      invitePlugin(registration),
+      invitePlugin(mode),
+      // Recovery by mail (0.3f-3 decisions 2, 3, 9). `disableSignUp` is the one that matters: without
+      // it `/magic-link/verify` creates an account for an address it has never seen, a way round the
+      // registration policy and the invites. The token is stored hashed and lives 15 minutes; it is
+      // consumed on first use.
+      magicLink({
+        disableSignUp: true,
+        storeToken: 'hashed',
+        expiresIn: RECOVERY_TTL_SECONDS,
+        sendMagicLink: async ({ email, url }, ctx) => {
+          sendRecoveryLink(db, {
+            email,
+            url,
+            acceptLanguage: (ctx?.request?.headers ?? ctx?.headers)?.get('accept-language') ?? null,
+          });
+        },
+      }),
       admin({ defaultRole: MEMBER_ROLE, adminRoles: [ADMIN_ROLE] }),
       bearer(),
       oneTimeToken({ expiresIn: ONE_TIME_TOKEN_MINUTES, storeToken: 'hashed' }),

@@ -3,8 +3,11 @@ import { publicI18n } from '../../../src/i18n/server';
 import { currentUser } from '../../../src/server/auth/currentUser';
 import { registrationAllowed } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
-import { env } from '../../../src/server/env';
-import { instanceInfo } from '../../../src/server/instance';
+import {
+  pageInstanceInfo,
+  pageMailEnabled,
+  pageRegistrationMode,
+} from '../../../src/server/page/instanceSettings';
 import { Alert } from '../../../src/ui/Alert';
 import { AuthFooter, Brand } from '../../../src/ui/Brand';
 import styles from '../auth.module.css';
@@ -17,8 +20,9 @@ export const dynamic = 'force-dynamic';
 export default async function LoginPage() {
   if ((await currentUser()) !== null) redirect('/home');
   const { t } = await publicI18n();
-  const instance = instanceInfo();
-  const canRegister = await registrationAllowed(getDb(), env().registration);
+  const instance = await pageInstanceInfo();
+  const canRegister = await registrationAllowed(getDb(), await pageRegistrationMode());
+  const canRecover = await pageMailEnabled();
   return (
     <div className={styles.column}>
       {/* D26: Rocky is the welcome, and appears on this page only — never beside an error. */}
@@ -41,6 +45,11 @@ export default async function LoginPage() {
           genericBody: t('web.auth.crossDeviceHint'),
         }}
       />
+      {canRecover ? (
+        <a className={styles.textLink} href="/recover">
+          {t('web.auth.recoverLink')}
+        </a>
+      ) : null}
       <div className={styles.or}>{t('web.auth.or')}</div>
       {canRegister ? (
         <a className={styles.secondaryLink} href="/register">

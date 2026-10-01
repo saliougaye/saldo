@@ -243,6 +243,11 @@ export function MobileAuth({
             {strings.signIn}
           </Button>
         )}
+        {/* Only sent when the server can mail; the ceremony this page waits for cannot be finished by
+            a link opened in another browser, so the way back is a line of text, not a link. */}
+        {strings.recoverHint === undefined ? null : (
+          <p className={`${styles.hint} ${styles.centred}`}>{strings.recoverHint}</p>
+        )}
         {canRegister ? (
           <>
             <div className={styles.or}>{strings.or ?? ''}</div>

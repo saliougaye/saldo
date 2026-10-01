@@ -13,8 +13,7 @@ let harness: TestDatabase;
 
 beforeAll(async () => {
   // `env()` caches its result for the process; the module-level assignment above only has an
-  // effect if the cache is thrown away before `createTestDatabase()` rebuilds the Better Auth
-  // instance (which is what reads `env().registration` into the plugin).
+  // effect if the cache is thrown away first (the mode is read through `env()` at request time).
   resetEnvCache();
   harness = await createTestDatabase();
 });

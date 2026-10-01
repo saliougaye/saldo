@@ -1,10 +1,10 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { registrationAllowed, registrationRequiresInvite } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
-import { env } from '../../../src/server/env';
 import { handle } from '../../../src/server/http/errors';
+import { registrationMode } from '../../../src/server/settings/serverSettings';
 import { getStore } from '../../../src/server/storage';
-import { APP_VERSION } from '../../../src/server/version';
+import { API_VERSION, APP_VERSION } from '../../../src/server/version';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,10 +15,11 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(): Promise<Response> {
   return handle(async () => {
-    const allowed = await registrationAllowed(getDb(), env().registration);
+    const mode = await registrationMode(getDb());
+    const allowed = await registrationAllowed(getDb(), mode);
     return Response.json({
       app: 'saldo',
-      apiVersion: 1,
+      apiVersion: API_VERSION,
       /** §8.1: the app compares this before it exchanges any row. */
       schemaVersion: SYNC_SCHEMA_VERSION,
       version: APP_VERSION,
@@ -28,7 +29,7 @@ export function GET(): Promise<Response> {
        * today — the ceremony runs in the browser, which reads the same flag server-side — but a
        * client that ever collects the code itself needs to know before it asks.
        */
-      inviteRequired: registrationRequiresInvite(env().registration),
+      inviteRequired: registrationRequiresInvite(mode),
       /**
        * §10: false is a supported answer, not a fault. The app then keeps attachments on this
        * phone and says so, instead of queueing an upload that could never succeed.

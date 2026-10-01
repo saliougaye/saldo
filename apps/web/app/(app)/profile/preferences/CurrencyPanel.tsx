@@ -6,8 +6,8 @@ import { useMemo, useState } from 'react';
 import { currencyConfirmBody } from '../../../../src/features/profile/currencyConfirm';
 import type { CurrencyOption } from '../../../../src/features/profile/preferenceOptions';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
+import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
-import { type ListOption, OptionList } from './OptionList';
 import styles from './preferences.module.css';
 import { type SettingErrors, useSaveSetting } from './useSaveSetting';
 

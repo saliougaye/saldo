@@ -20,6 +20,11 @@
   min-width: 0;
 }
 
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .input::placeholder {
   color: var(--color-text-faint);
 }

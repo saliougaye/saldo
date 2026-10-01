@@ -2,7 +2,7 @@
 
 import type { Settings } from '@saldo/core';
 import { Alert } from '../../../../src/ui/Alert';
-import { OptionList } from './OptionList';
+import { OptionList } from '../../../../src/ui/OptionList';
 import styles from './preferences.module.css';
 import { type SettingErrors, useSaveSetting } from './useSaveSetting';
 

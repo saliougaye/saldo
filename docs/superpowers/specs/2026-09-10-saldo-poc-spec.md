@@ -1109,8 +1109,10 @@ Notes that follow from using the library:
   **Superseded by D32 (§17.1.4):** from milestone 0.3 registration asks for a real email. Built in 0.3b: an account
   created before it keeps the synthetic address until the phone asks for a real one (onboarding, or Profile → server),
   which `POST /api/me/email` stores. That route only ever fills an empty seat — it answers `email_already_set` when the
-  current address is not synthetic, because replacing a real one means proving the new one belongs to the person, and
-  there is no SMTP until 0.3f. `isSyntheticEmail` is the test, in `apps/web/src/server/auth/email.ts`.
+  current address is not synthetic, because replacing a real one means proving the new one belongs to the person.
+  SMTP now exists (0.3f-2, 0.3f-3), so that proof is buildable — a verified change of a real address is a follow-up
+  in `TODO.md`; today a filled address stays as it is. `isSyntheticEmail` is the test, in
+  `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -1132,7 +1134,10 @@ Notes that follow from using the library:
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | | Required by `s3`. |
 | `S3_FORCE_PATH_STYLE` | `true` | Needed by MinIO and some S3 clones. |
 | `BLOB_READ_WRITE_TOKEN` | | Required by `vercel-blob`; Vercel injects it. |
-| `REGISTRATION` | `invite` | `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). |
+| `SETTINGS_ENCRYPTION_KEY` | 32 random bytes base64 | **Required** (0.3f-2). AES-256-GCM key for the secrets in `server_settings` (§17.1.8). Anything that does not decode to exactly 32 bytes is refused, by name. |
+| `REGISTRATION` | `invite` | **Optional** (0.3f-2). `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). Set: wins and locks the panel. Unset: the `server_settings` row, else `first-user`. |
+| `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. Wins over the stored name; unset falls back to the row, then to `WEBAUTHN_RP_NAME`. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | | Optional. `SMTP_HOST` set: the whole group comes from the environment and is locked (`SMTP_FROM` required, `SMTP_PORT` default 587, `SMTP_USER` and `SMTP_PASSWORD` together or neither). |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma list of allowed custom schemes for mobile redirects. |
 
 ### 9.3 Mobile sign-in flow (browser ceremony + one-time-token handoff)
@@ -1603,8 +1608,8 @@ public. The decisions behind this section are D30–D36.
   certificate, a shared cookie domain and a parent-domain RP id.
 - `/admin/**` is the admin panel (§17.1.8). The public marketing site and docs library are **not** here: they are
   their own app, `apps/site`, with their own deploy (D35, roadmap 0.8).
-- Routes in 0.3: `/login`, `/register`, `/onboarding`, `/home`, `/transactions`, `/stats`, `/profile`,
-  `/admin/**`.
+- Routes in 0.3: `/login`, `/register`, `/recover`, `/recover/confirm`, `/email-verified`, `/onboarding`, `/home`,
+  `/transactions`, `/stats`, `/profile`, `/admin/**`.
 
 #### 17.1.2 The projection: the only way server code reads rows
 
@@ -1828,6 +1833,47 @@ public. The decisions behind this section are D30–D36.
   return it would re-check the registration policy, burn an invite and try to create a row that is already there.
   Nothing exercised that path before 0.3b, so it was a latent bug this step fixed.
 
+**As built (0.3f-3, 2026-10-01):**
+
+- **Better Auth does both**: its core `emailVerification` and its `magicLink` plugin (no new table, no migration).
+  Saldo supplies the send callbacks, which resolve SMTP at call time, decide who may be mailed and throttle per
+  recipient, and the pages around them. The browser calls the library's endpoints through `authClient`, so both
+  flows sit behind the instance's one rate limiter and origin check.
+- **Verification.** A new account, and an address filled by `POST /api/me/email`, is sent a link (24 hours,
+  `autoSignInAfterVerification: false`: opening a link never signs a browser in) whose callback is
+  `/email-verified`, a public page («Email verificata», or, with `?error=`, «Il link è scaduto o non è valido»).
+  Profilo → Account shows «verificata» / «non verificata» and, with SMTP and a real unverified address, «Invia il
+  link di verifica»; without SMTP it says the address stays unverified. A mail failure never fails a registration.
+  Verification is not required to use the app.
+- **Recovery.** With SMTP configured, `/login` offers «Hai perso la passkey?» → `/recover` (the phone's `/auth/mobile`
+  carries a line pointing to `{host}/recover` in a browser). `POST /sign-in/magic-link` mails a link **only** when
+  the account exists, its address is **verified**, it is **not revoked** and the throttle allows it. Every other case
+  does nothing, silently, and the page gives the same sentence whatever the address: **no enumeration**, and the
+  send is not awaited (`inBackground`, `after()` in a request scope), so the response time does not tell either.
+  `magicLink` is configured `disableSignUp: true` (otherwise its verify endpoint would create an account for an
+  unknown address, round the registration policy and the invites), `storeToken: 'hashed'`, `expiresIn` 15 minutes,
+  single-use.
+- **The confirm step.** The mailed link is `{PUBLIC_URL}/recover/confirm?token=…`, a public page that consumes
+  nothing and shows a button. Only the button navigates to the library's `GET /api/auth/magic-link/verify`, which
+  spends the token and sets the session. A mail scanner that follows links, or another site that makes the browser
+  GET a link, therefore cannot spend it or sign a browser in to an account the person did not choose. The browser
+  lands on `/profile/passkeys?recovered`, whose alert names the signed-in email and asks for a new passkey; the
+  lost one is deleted from the same list.
+- **Fixed callbacks.** The link's callbacks are built by the server from the token alone. `mailCallbackGuard`
+  (`hooks.before`) refuses, with 403, any `callbackURL`, `errorCallbackURL` or `newUserCallbackURL` that is not a
+  path on this site (no scheme, no `//`, no control characters) on `/sign-in/magic-link`,
+  `/send-verification-email`, `/magic-link/verify` and `/verify-email`. Without it the session cookie of a verify
+  could be carried to an attacker's `saldo://` or off-site URL. The mobile app calls none of these endpoints.
+- **A revoked account cannot recover**: it is not mailed, and a link minted before the revocation dies too, because
+  the `admin` plugin refuses a session for a banned user; an `hooks.after` turns that into a redirect to
+  `/recover?error=BANNED_USER` (the page's «il link non funziona più» line, no JSON). A revoked account is not
+  sent verification mail either.
+- **Per-recipient throttle** (`server/mail/throttle.ts`): at most one message per kind per address per 60 seconds and
+  five per hour whatever the kinds, asked only after an account qualifies. In memory and per process, like the rate
+  limiter.
+- **Mail** is plain text in the recipient's `settings.language` (else the request's `Accept-Language`, else `en`):
+  what it is, the link alone on its own line, how long it lasts, and «if you did not ask for this, ignore it».
+
 #### 17.1.5 «Today» on the server
 
 - The server derives `today` as a `LocalDate` in the user's `settings.timeZone` (§4.1) and injects it into core,
@@ -2037,6 +2083,21 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   it and shows the choices disabled; the SMTP panel holds the form, with the password as «impostata» and
   «Sostituisci» (write-only) and a test email. A table with tabs was considered and not taken: a household instance
   has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
+  **Built in 0.3f-1 (2026-09-30): Account, Inviti and Istanza.** `/admin` redirects to `/admin/accounts`; the head is
+  «Admin» over «{instance name} · {N} account», and the sub-navigation (Account, Inviti with the count of *active*
+  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). Every page and every Server Action starts with
+  `requireWebAdmin()`: a member gets a 404, nobody signed in goes to `/login`; an admin who has not onboarded still
+  gets in, in the default time zone. **Account** (`?u={id}`; an id that names nothing opens nothing): the facts (role,
+  state and reason, email verified or not, created and the invite's label, last sign-in, passkeys, synced rows), and
+  for another account «Rendi admin» (asks first: it cannot be undone from the panel or the CLI), «Revoca accesso»
+  (asks; sessions close at once, data stays), «Ripristina accesso» and, in «Zona pericolosa», «Elimina account», which
+  asks for the account's email (its display name when the address is synthetic), disabled until it matches, checked
+  again on the server, and removes the attachment bytes with the rows. An admin's own panel has the facts and a note,
+  no actions: nobody can lock themselves out, so the last admin is never lost. **Inviti** (`?new` mints, `?i={id}`
+  inspects and revokes; `?new` wins): «Nuovo invito» takes a label and 1, 7, 30 or 90 days and shows the code once
+  as text, link and QR, held in the panel's state and never in a URL, cookie or storage; the QR is drawn dark on light in
+  both themes (`--color-qr-*`). **Istanza**: five read-only rows. What differs from the mockup: no «dal telefono» on
+  the last sign-in (nothing reliable says which device), and «Impostazioni» is not in the sub-navigation until 0.3f-2.
 - Screens in 0.3: Home, Transazioni (list and form), Statistiche (including the forecast), Conti (accounts,
   pockets and their goals, as the phone's tab; added 2026-09-27, since the web writes accounts), Profile
   (preferences, passkeys, export), Admin.
@@ -2080,6 +2141,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   0.3b (D32), so `scripts/user.ts list` shows it too — synthetic or real.
 - **Invites:** mint (the code is shown once, as text, link and QR code), list, revoke.
 - **Instance:** version, `apiVersion`, `SYNC_SCHEMA_VERSION`, storage driver. (Rows skipped by the projection: deferred, §17.1.2.)
+- **Built in 0.3f-1 (2026-09-30):** accounts, invites and instance are in the panel (§17.1.7); the CLI stays, for the
+  first invite and for the day no admin can sign in. Server settings and SMTP are 0.3f-2; verification and recovery are 0.3f-3 (§17.1.4).
 - **Server settings** (D33): a `server_settings` table (`key`, `value jsonb`, `updated_at`, `updated_by`).
   - Infrastructure stays in the environment and needs a restart: `DATABASE_URL`, `PUBLIC_URL`, `WEBAUTHN_*`,
     secrets, attachment storage.
@@ -2090,6 +2153,29 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   - Secret values (SMTP password, AI key) are encrypted at rest with AES-256-GCM under a new required variable,
     `SETTINGS_ENCRYPTION_KEY`, and are **write-only** in the panel: it shows «set» and «replace», never the value.
 
+- **As built (0.3f-2, 2026-09-30):**
+  - `server_settings(key text pk, value jsonb, updated_at, updated_by → user on delete set null)` with three keys:
+    `registration`, `instanceName`, `smtp` (`{ host, port, user, password, from }`). One resolver
+    (`src/server/settings/resolve.ts`) merges environment → row → default and says where each value came from; a
+    row that no longer parses reads as not set and is logged by key. `registrationMode` does not read the table
+    when `REGISTRATION` is set, and the gate calls it at ceremony time, so a saved mode applies to the next
+    registration without a restart.
+  - `src/server/settings/secret.ts`: `v1:{iv}:{tag}:{ciphertext}` (base64 parts), a random 12-byte IV, the slot name
+    (`smtp.password`) as additional authenticated data; a wrong key, slot, tampering or a malformed value decrypts
+    to `null`, never throws. Only `smtpForSending` opens the password; pages and actions get `SmtpView`
+    (`passwordSet`, `passwordReadable`). The stored password may be kept only while host and user are unchanged
+    (`passwordRequired` otherwise). Port 465 is implicit TLS, any other port requires STARTTLS except to
+    `localhost`, `127.0.0.1` and `::1`.
+  - Writes return `{ ok } | { error: 'locked' | 'invalid' | 'passwordRequired' }`; `locked` is decided on the
+    server from the resolver. Every Server Action in `/admin/settings` starts with `requireWebAdmin()`.
+  - `sendMail(db, message)` builds a nodemailer transport per message from the resolved configuration (10 s
+    connection and greeting timeouts), plain text only; `detail` goes to the admin's test-email panel and never to
+    a log. The test email goes to the signed-in admin's own address, in their language.
+  - `/admin/settings?edit=name|registration|smtp`; a locked setting shows «Impostata dall'ambiente» with the
+    variable (its value for `REGISTRATION` and `INSTANCE_NAME`, never `SMTP_PASSWORD`). Registration is saved with
+    «Salva», not on choice. `OptionList` moved to `src/ui/`. The panels close on save, except SMTP, which stays
+    open so the test email can be sent. Verification and recovery are 0.3f-3.
+
 #### 17.1.9 Not in 0.3
 
 Recurrence editing, attachment upload, the period recap sheet, server-side materialisation of recurrences,
@@ -2098,7 +2184,8 @@ data, end-to-end browser tests.
 
 #### 17.1.10 Done when
 
-A user registers on the web (email, passkey, and an invite where required), or signs in with the phone's passkey;
+A user registers on the web (email, passkey, and an invite where required), or signs in with the phone's passkey; on
+an instance with SMTP, verifies the address and gets back in without the passkey through a link to that address;
 sees Home, Transazioni and Statistiche matching the phone to the cent; adds and edits a transaction that reaches
 the phone on its next sync; installs the app to the home screen. An admin manages accounts, invites and server
 settings from `/admin`. The projection is the only way server code reads rows.
@@ -2144,6 +2231,21 @@ settings from `/admin`. The projection is the only way server code reads rows.
   one-time token, minted in the browser once the passkey ceremony succeeds, stored hashed, single-use, with a 60s
   TTL, and bound to the attempt that requested it by a client-generated `state` the app verifies before it will
   exchange the token.
+- **Secrets at rest.** The one secret the server stores on an admin's behalf (the SMTP password; from 0.5 the AI
+  key) is encrypted with AES-256-GCM under `SETTINGS_ENCRYPTION_KEY`, with the slot name as authenticated data,
+  so a database backup alone does not leak it. It is write-only: no page, action response, log line or error
+  carries it or its envelope, and the stored one is kept only for the host and user it was saved with. Losing the
+  key loses that secret and nothing else. A server-side-rendered Server Action's arguments are logged by
+  `next dev` (development only); production builds do not.
+- **Recovery by email makes the mailbox as strong as the passkey**, on an instance whose admin configured SMTP and
+  only there. Bounded: only a **verified** address is ever sent a link, never a revoked account, never a synthetic
+  address; the link is single-use, stored hashed, lives 15 minutes and spends only when a person presses the
+  button on `/recover/confirm`; callbacks are fixed paths on this site; the response does not reveal whether an
+  address has an account or is verified (the send is not awaited); each mailbox gets at most one message per kind per
+  minute and five per hour, on top of the per-caller rate limit. The throttle and the limiter are **per process**:
+  more than one replica multiplies them. `POST /sign-in/magic-link` writes a `verification` row for any address it
+  is given, bounded by the plugin's rate limit and the 15-minute expiry. An admin who does not want recovery leaves
+  SMTP unconfigured.
 - CSV import treats every cell as text. The CSV export prefixes cells starting with `= + - @` with `'` (formula
   injection) **except** the numeric `amount` column.
 - App lock hides content in the app switcher (`expo-screen-capture` / privacy overlay on `AppState` inactive).

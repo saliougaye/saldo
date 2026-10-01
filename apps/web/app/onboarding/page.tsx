@@ -12,7 +12,7 @@ import { redirect } from 'next/navigation';
 import { userI18n } from '../../src/i18n/server';
 import { requireWebUser } from '../../src/server/auth/currentUser';
 import { env } from '../../src/server/env';
-import { instanceInfo } from '../../src/server/instance';
+import { pageInstanceInfo } from '../../src/server/page/instanceSettings';
 import { loadUserData } from '../../src/server/userData/load';
 import { todayFor } from '../../src/server/userData/today';
 import styles from '../(auth)/auth.module.css';
@@ -32,7 +32,7 @@ export default async function OnboardingPage() {
   const data = await loadUserData(user.id);
   if (data.settings !== null) redirect('/home');
   const { t, locale } = await userI18n(user.id);
-  const instance = instanceInfo();
+  const instance = await pageInstanceInfo();
   // No settings, so no zone of theirs yet: the instance's, for the period's preview line only.
   const { today } = todayFor(null, env().defaultTimeZone, new Date());
 

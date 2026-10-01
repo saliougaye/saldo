@@ -4,8 +4,8 @@ import { type LocalDate, periodContaining } from '@saldo/core';
 import { type AppLocale, formatCycleRange } from '@saldo/i18n/format';
 import { interpolate } from '@saldo/i18n/translate';
 import { Alert } from '../../../../src/ui/Alert';
+import { useRovingFocus } from '../../../../src/ui/OptionList';
 import { rovingTabStop } from '../../../../src/ui/rovingRadios';
-import { useRovingFocus } from './OptionList';
 import styles from './preferences.module.css';
 import { type SettingErrors, useSaveSetting } from './useSaveSetting';
 

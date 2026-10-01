@@ -57,6 +57,30 @@ administering the instance; they do not pretend to keep the owner out of Postgre
 model has two people who do not trust each other on one server, Saldo does not currently serve it —
 see the shared finances milestone in [`ROADMAP.md`](ROADMAP.md).
 
+**The one secret the admin panel stores is the SMTP password, if you set one.** It is encrypted at rest with
+`SETTINGS_ENCRYPTION_KEY` and is write-only in the admin panel, but the server can decrypt it (it has to, to send
+mail), so whoever controls the server and its environment can read it. Use an SMTP account that can do nothing
+but send.
+
+**If you configure SMTP, anybody who controls a verified email address of an account can get into that account.**
+Without SMTP there is no recovery: the passkey is the only way in (and, for a lost one, an admin with
+`pnpm --filter web user …`). With SMTP, an account that has verified its address can ask at `/recover` for a link that
+signs a browser in, and then registers a new passkey — so the mailbox is as strong as the passkey, and a stolen mailbox
+is a stolen account. What bounds it:
+
+- Only a **verified** address is sent a link. A revoked account never is, and a link minted before a revocation stops
+  working. The address you typed at registration is unverified until you open the verification link.
+- The link is single-use, stored hashed, and valid for 15 minutes. It opens a confirmation page that does nothing by
+  itself: a mail scanner or another site that loads the link cannot spend it or sign a browser in; a person presses
+  «Entra».
+- Nobody can learn from the page, or from how long it takes, whether an address has an account or is verified.
+- Each mailbox is sent at most one message of a kind a minute and five an hour; the endpoints are also rate limited per
+  caller. Both limits are per server process.
+- Recovery can only sign an existing account in; it never creates one.
+
+If that trade is not one you want, leave SMTP unconfigured: verification and recovery then do not exist, and nothing
+else changes.
+
 ## Supported versions
 
 This is a proof of concept before its first release. Only the current `main` is supported: there are

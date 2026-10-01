@@ -11,6 +11,8 @@ const complete = {
   WEBAUTHN_RP_NAME: 'Saldo',
   JWT_SECRET: 'c2VjcmV0LXNlY3JldC1zZWNyZXQtc2VjcmV0LXNlY3JldC0=',
   DATABASE_URL: 'postgres://u:p@db:5432/saldo',
+  // 32 bytes of 'A': obviously fake.
+  SETTINGS_ENCRYPTION_KEY: Buffer.alloc(32, 'A').toString('base64'),
   STORAGE_DIR: '/data/attachments',
   REGISTRATION: 'first-user',
   APP_REDIRECT_SCHEMES: 'saldo, saldo-dev',
@@ -34,10 +36,10 @@ describe('readEnv', () => {
     expect(env.appRedirectSchemes).toEqual(['saldo', 'saldo-dev']);
   });
 
-  it('defaults registration to first-user and the schemes to saldo', () => {
+  it('leaves registration null when unset (the resolver defaults it) and the schemes to saldo', () => {
     const { REGISTRATION, APP_REDIRECT_SCHEMES, ...rest } = complete;
     const env = readEnv(rest);
-    expect(env.registration).toBe('first-user');
+    expect(env.registration).toBeNull();
     expect(env.appRedirectSchemes).toEqual(['saldo']);
   });
 
@@ -71,6 +73,107 @@ describe('readEnv', () => {
     expect(readEnv({ ...complete, PUBLIC_URL: 'https://saldo.example.com/' }).publicUrl).toBe(
       'https://saldo.example.com',
     );
+  });
+});
+
+describe('SETTINGS_ENCRYPTION_KEY', () => {
+  it('decodes a 32-byte base64 key into a Buffer', () => {
+    const { settingsKey } = readEnv(complete);
+    expect(Buffer.isBuffer(settingsKey)).toBe(true);
+    expect(settingsKey).toHaveLength(32);
+  });
+
+  it('is required, by name', () => {
+    const { SETTINGS_ENCRYPTION_KEY: _dropped, ...rest } = complete;
+    expect(() => readEnv(rest)).toThrow(/SETTINGS_ENCRYPTION_KEY/);
+  });
+
+  it('refuses a value that is not base64, or not 32 bytes, by name', () => {
+    expect(() => readEnv({ ...complete, SETTINGS_ENCRYPTION_KEY: 'not base64 at all!' })).toThrow(
+      /SETTINGS_ENCRYPTION_KEY/,
+    );
+    const short = Buffer.alloc(16, 'A').toString('base64');
+    const long = Buffer.alloc(33, 'A').toString('base64');
+    expect(() => readEnv({ ...complete, SETTINGS_ENCRYPTION_KEY: short })).toThrow(
+      /SETTINGS_ENCRYPTION_KEY/,
+    );
+    expect(() => readEnv({ ...complete, SETTINGS_ENCRYPTION_KEY: long })).toThrow(
+      /SETTINGS_ENCRYPTION_KEY/,
+    );
+  });
+});
+
+describe('REGISTRATION and INSTANCE_NAME', () => {
+  it('reads a set registration mode', () => {
+    expect(readEnv({ ...complete, REGISTRATION: 'invite' }).registration).toBe('invite');
+  });
+
+  it('leaves the instance name null when unset, and trims a set one', () => {
+    expect(readEnv(complete).instanceName).toBeNull();
+    expect(readEnv({ ...complete, INSTANCE_NAME: '  Casa Gaye ' }).instanceName).toBe('Casa Gaye');
+  });
+
+  it('reads an empty variable as unset, as a compose file writes it', () => {
+    expect(readEnv({ ...complete, INSTANCE_NAME: '', REGISTRATION: '' }).instanceName).toBeNull();
+    expect(readEnv({ ...complete, INSTANCE_NAME: '   ' }).instanceName).toBeNull();
+    expect(readEnv({ ...complete, REGISTRATION: '' }).registration).toBeNull();
+    expect(readEnv({ ...complete, SMTP_HOST: '' }).smtp).toBeNull();
+  });
+
+  it('refuses a too-long instance name, by name', () => {
+    expect(() => readEnv({ ...complete, INSTANCE_NAME: 'x'.repeat(61) })).toThrow(/INSTANCE_NAME/);
+    expect(readEnv({ ...complete, INSTANCE_NAME: 'x'.repeat(60) }).instanceName).toHaveLength(60);
+  });
+});
+
+describe('SMTP_*', () => {
+  const smtp = { SMTP_HOST: 'smtp.example.com', SMTP_FROM: 'Saldo <saldo@example.com>' };
+
+  it('is null when SMTP_HOST is unset, whatever else is set', () => {
+    expect(readEnv(complete).smtp).toBeNull();
+    expect(readEnv({ ...complete, SMTP_PORT: '2525' }).smtp).toBeNull();
+  });
+
+  it('takes the whole group from the environment, port defaulting to 587', () => {
+    expect(readEnv({ ...complete, ...smtp }).smtp).toEqual({
+      host: 'smtp.example.com',
+      port: 587,
+      user: null,
+      password: null,
+      from: 'Saldo <saldo@example.com>',
+    });
+    expect(
+      readEnv({
+        ...complete,
+        ...smtp,
+        SMTP_PORT: '465',
+        SMTP_USER: 'mailer',
+        SMTP_PASSWORD: 'fake-password',
+      }).smtp,
+    ).toEqual({
+      host: 'smtp.example.com',
+      port: 465,
+      user: 'mailer',
+      password: 'fake-password',
+      from: 'Saldo <saldo@example.com>',
+    });
+  });
+
+  it('requires SMTP_FROM once SMTP_HOST is set, by name', () => {
+    expect(() => readEnv({ ...complete, SMTP_HOST: 'smtp.example.com' })).toThrow(/SMTP_FROM/);
+  });
+
+  it('wants SMTP_USER and SMTP_PASSWORD together or not at all, each named', () => {
+    expect(() => readEnv({ ...complete, ...smtp, SMTP_USER: 'mailer' })).toThrow(/SMTP_PASSWORD/);
+    expect(() => readEnv({ ...complete, ...smtp, SMTP_PASSWORD: 'fake-password' })).toThrow(
+      /SMTP_USER/,
+    );
+  });
+
+  it('refuses a port that is not 1-65535, by name', () => {
+    for (const port of ['0', '65536', 'abc', '25.5']) {
+      expect(() => readEnv({ ...complete, ...smtp, SMTP_PORT: port })).toThrow(/SMTP_PORT/);
+    }
   });
 });
 

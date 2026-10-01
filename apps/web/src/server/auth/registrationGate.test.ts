@@ -1,5 +1,7 @@
 import { APIError } from 'better-auth/api';
+import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { serverSettings } from '../db/schema';
 import { resetEnvCache } from '../env';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { auth, resetAuthForTests } from './auth';
@@ -172,5 +174,66 @@ describe('the registration gate, on a server that runs on invitation', () => {
       status: 'FORBIDDEN',
       message: 'That invite code is not valid',
     });
+  });
+});
+
+describe('the registration gate, when the mode is stored and not in the environment', () => {
+  let previous: string | undefined;
+
+  beforeAll(() => {
+    // No `REGISTRATION`: the mode is whatever the panel saved, read at ceremony time. `auth()` is
+    // built once below and never rebuilt, which is what these tests are about.
+    previous = process.env.REGISTRATION;
+    delete process.env.REGISTRATION;
+    resetEnvCache();
+    resetAuthForTests();
+  });
+
+  afterAll(() => {
+    if (previous === undefined) delete process.env.REGISTRATION;
+    else process.env.REGISTRATION = previous;
+    resetEnvCache();
+    resetAuthForTests();
+  });
+
+  const store = (registration: string) =>
+    harness.db
+      .insert(serverSettings)
+      .values({ key: 'registration', value: registration, updatedAt: new Date(), updatedBy: null })
+      .onConflictDoUpdate({
+        target: serverSettings.key,
+        set: { value: registration },
+      });
+
+  it('honours a mode saved after the instance was built, on the very next ceremony', async () => {
+    const context = encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' });
+    // Builds `auth()` while the table is empty: the default, `first-user`, lets the first in.
+    await expect(optionsFor(context)).resolves.toMatchObject({ user: { name: 'Ada' } });
+
+    await store('closed');
+    await expect(refusal(context)).resolves.toEqual({
+      status: 'FORBIDDEN',
+      message: 'This server is not accepting new accounts',
+    });
+
+    await store('invite');
+    await expect(refusal(context)).resolves.toEqual({
+      status: 'FORBIDDEN',
+      message: 'That invite code is not valid',
+    });
+
+    await store('open');
+    await expect(optionsFor(context)).resolves.toMatchObject({ user: { name: 'Ada' } });
+  });
+
+  it('fails closed when the settings cannot be read: an error, never an open door', async () => {
+    const context = encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' });
+    await store('open');
+    await harness.db.execute(sql`alter table server_settings rename to server_settings_away`);
+    try {
+      await expect(optionsFor(context)).rejects.toThrow();
+    } finally {
+      await harness.db.execute(sql`alter table server_settings_away rename to server_settings`);
+    }
   });
 });

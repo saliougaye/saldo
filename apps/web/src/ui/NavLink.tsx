@@ -16,12 +16,15 @@ export function NavLink({
   icon,
   label,
   iconOnly = false,
+  count,
 }: {
   href: string;
   icon: IconName;
   label: string;
   /** The label then only names the link for a screen reader (the top bar's Admin). */
   iconOnly?: boolean;
+  /** How many there are, at the end of the link (the admin's «Account 4»); absent, nothing is drawn. */
+  count?: number;
 }) {
   const current = isCurrent(href, usePathname());
   return (
@@ -33,6 +36,7 @@ export function NavLink({
     >
       <Icon name={icon} size={18} className={styles.icon} />
       {iconOnly ? null : <span>{label}</span>}
+      {count === undefined ? null : <span className={styles.count}>{count}</span>}
     </Link>
   );
 }

@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { session, user } from '../db/schema';
+import { invites, passkey, session, syncRows, user } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import {
   ADMIN_ROLE,
+  accountDetail,
   claimRoleForNewUser,
   deleteUser,
   isAdmin,
@@ -174,5 +175,126 @@ describe('listAccounts', () => {
     expect(rows[1]).toMatchObject({ displayName: 'Bob', role: 'user', revoked: true });
     // §17.1.8: the admin's account list shows the email so a self-hoster can tell accounts apart —
     // synthetic or not, since only that lets an owner ask a passkey-only member for a real one.
+  });
+});
+
+describe('accountDetail', () => {
+  it('answers null for an id that names nothing', async () => {
+    await expect(accountDetail(harness.db, 'nobody')).resolves.toBeNull();
+  });
+
+  it('carries the summary and, for a fresh account, empty counts', async () => {
+    const { userId } = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
+    await harness.db.delete(session).where(eq(session.userId, userId));
+    const detail = await accountDetail(harness.db, userId);
+    expect(detail).toMatchObject({
+      id: userId,
+      displayName: 'Ada',
+      role: ADMIN_ROLE,
+      revoked: false,
+      emailVerified: false,
+      lastSignInAt: null,
+      passkeyCount: 0,
+      syncedRows: 0,
+      invite: null,
+    });
+  });
+
+  it('counts passkeys and synced rows of that account only', async () => {
+    const ada = await createTestSession(harness.db, 'Ada');
+    const bob = await createTestSession(harness.db, 'Bob');
+    for (const [userId, n] of [
+      [ada.userId, 2],
+      [bob.userId, 1],
+    ] as const) {
+      for (let i = 0; i < n; i += 1) {
+        await harness.db.insert(passkey).values({
+          id: crypto.randomUUID(),
+          publicKey: 'k',
+          userId,
+          credentialID: crypto.randomUUID(),
+          counter: 0,
+          deviceType: 'singleDevice',
+          backedUp: false,
+        });
+      }
+    }
+    await harness.db.insert(syncRows).values(
+      ['a', 'b', 'c'].map((id, seq) => ({
+        userId: ada.userId,
+        entity: 'tag',
+        id,
+        updatedAt: 'h',
+        deletedAt: null,
+        data: {},
+        seq,
+      })),
+    );
+    await harness.db.insert(syncRows).values({
+      userId: bob.userId,
+      entity: 'tag',
+      id: 'z',
+      updatedAt: 'h',
+      deletedAt: null,
+      data: {},
+      seq: 10,
+    });
+    const detail = await accountDetail(harness.db, ada.userId);
+    expect(detail?.passkeyCount).toBe(2);
+    expect(detail?.syncedRows).toBe(3);
+  });
+
+  it('reports the newest session as the last sign-in, as an ISO string', async () => {
+    const { userId } = await createTestSession(harness.db, 'Ada');
+    await harness.db.delete(session).where(eq(session.userId, userId));
+    for (const [token, createdAt] of [
+      ['t1', new Date('2026-09-01T08:00:00.000Z')],
+      ['t2', new Date('2026-09-05T08:00:00.000Z')],
+      ['t3', new Date('2026-09-03T08:00:00.000Z')],
+    ] as const) {
+      await harness.db.insert(session).values({
+        id: crypto.randomUUID(),
+        userId,
+        token,
+        expiresAt: new Date('2027-01-01T00:00:00.000Z'),
+        createdAt,
+        updatedAt: createdAt,
+      });
+    }
+    const detail = await accountDetail(harness.db, userId);
+    expect(detail?.lastSignInAt).toBe('2026-09-05T08:00:00.000Z');
+  });
+
+  it('names the invite that let the account in', async () => {
+    const { userId } = await createTestSession(harness.db, 'Bob');
+    const other = await createTestSession(harness.db, 'Cy');
+    await harness.db.insert(invites).values([
+      {
+        id: 'inv-1',
+        codeHash: 'h1',
+        label: 'Per Bob',
+        createdAt: NOW,
+        expiresAt: NOW,
+        usedAt: NOW,
+        usedBy: userId,
+      },
+      {
+        id: 'inv-2',
+        codeHash: 'h2',
+        label: 'Per Cy',
+        createdAt: NOW,
+        expiresAt: NOW,
+        usedAt: NOW,
+        usedBy: other.userId,
+      },
+    ]);
+    const detail = await accountDetail(harness.db, userId);
+    expect(detail?.invite).toEqual({ id: 'inv-1', label: 'Per Bob' });
+  });
+
+  it('reports whether the address is verified', async () => {
+    const { userId } = await createTestSession(harness.db, 'Ada');
+    await harness.db.update(user).set({ emailVerified: true }).where(eq(user.id, userId));
+    expect((await accountDetail(harness.db, userId))?.emailVerified).toBe(true);
   });
 });
