@@ -1,16 +1,28 @@
 import { readSettings } from '@saldo/core';
 import type { AppLocale } from '@saldo/i18n';
-import { tokensCss } from '@saldo/ui';
+import { palettes, tokensCss } from '@saldo/ui';
 import { GeistSans } from 'geist/font/sans';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { publicI18n, userI18n } from '../src/i18n/server';
+import { RegisterServiceWorker } from '../src/pwa/RegisterServiceWorker';
 import { currentUser } from '../src/server/auth/currentUser';
 import { loadUserData } from '../src/server/userData/load';
 import './globals.css';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Saldo',
   description: 'Saldo',
+  // §17.1.7: opened from the home screen it runs full-screen, under its own name.
+  appleWebApp: { capable: true, title: 'Saldo', statusBarStyle: 'default' },
+};
+
+/** The browser's title bar follows the system scheme, as `tokensCss()` does when no theme is chosen. */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: palettes.light.bg },
+    { media: '(prefers-color-scheme: dark)', color: palettes.dark.bg },
+  ],
 };
 
 /**
@@ -64,7 +76,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant built from tokens.ts, never user input; React would entity-escape the quotes in the selectors and font stack if it were a text child. */}
         <style dangerouslySetInnerHTML={{ __html: TOKENS }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <RegisterServiceWorker />
+      </body>
     </html>
   );
 }

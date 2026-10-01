@@ -64,6 +64,10 @@ const nextConfig: NextConfig = {
               "img-src 'self' data:",
               "font-src 'self'",
               "connect-src 'self'",
+              // §17.1.7: the service worker and the manifest. `default-src` already covers both;
+              // naming them keeps installation working if `default-src` is ever tightened.
+              "worker-src 'self'",
+              "manifest-src 'self'",
               "frame-ancestors 'none'",
               "base-uri 'none'",
               "form-action 'self'",
