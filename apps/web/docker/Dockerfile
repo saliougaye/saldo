@@ -23,6 +23,8 @@ ENV NODE_ENV=production
 RUN addgroup -S saldo && adduser -S saldo -G saldo
 COPY --from=builder --chown=saldo:saldo /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=saldo:saldo /app/apps/web/.next/static ./apps/web/.next/static
+# Standalone does not copy `public/`: the PWA icons (and the mascot) are served from it.
+COPY --from=builder --chown=saldo:saldo /app/apps/web/public ./apps/web/public
 # Migrations run from the entrypoint, so the SQL and drizzle's journal must ship too.
 COPY --from=builder --chown=saldo:saldo /app/apps/web/drizzle ./apps/web/drizzle
 COPY --from=builder --chown=saldo:saldo /app/apps/web/migrate.cjs ./apps/web/migrate.cjs

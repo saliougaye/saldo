@@ -1469,6 +1469,11 @@ export const es: Messages = {
       emailLinkInvalidTitle: 'El enlace ha caducado o no es válido',
       emailLinkInvalidBody: 'Abre Perfil › Cuenta y pide uno nuevo.',
     },
+    offline: {
+      title: 'Estás sin conexión',
+      body: 'Saldo necesita una conexión. Revisa tu red e inténtalo de nuevo.',
+      retry: 'Reintentar',
+    },
     shell: {
       newTransaction: 'Nueva transacción',
       skipToContent: 'Ir al contenido',

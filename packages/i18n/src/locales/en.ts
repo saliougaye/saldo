@@ -1459,6 +1459,11 @@ export const en: Messages = {
       emailLinkInvalidTitle: 'The link has expired or is not valid',
       emailLinkInvalidBody: 'Open Profile › Account and ask for a new one.',
     },
+    offline: {
+      title: 'You are offline',
+      body: 'Saldo needs a connection. Check your network and try again.',
+      retry: 'Try again',
+    },
     shell: {
       newTransaction: 'New transaction',
       skipToContent: 'Skip to content',
