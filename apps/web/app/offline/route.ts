@@ -15,7 +15,7 @@ export async function GET(): Promise<Response> {
   return new Response(offlineHtml(locale, t), {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      // The worker refreshes it on every activate; the browser need not keep its own copy.
+      // The worker fetches it again on every install (a new version); the browser need not keep its own copy.
       'Cache-Control': 'no-cache',
       Vary: 'Accept-Language',
     },
