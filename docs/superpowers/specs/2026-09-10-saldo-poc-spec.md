@@ -2132,6 +2132,11 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   `<svg>` components arrive with the screens (0.3d).
 - **PWA:** a web manifest, icons, and a minimal service worker that serves an offline page. No offline data: the
   web app is online-only by decision (roadmap 0.3).
+  *Built in 0.3g:* the manifest (`/manifest.webmanifest`) carries the instance name and `display: standalone`;
+  icons are the phone's mascot (`public/icons/`, `app/icon.png`, `app/apple-icon.png`, plus a maskable one at 80%
+  on the icon's own background). `/sw.js` (generated, `Cache-Control: no-cache`, scope `/`) intercepts navigations
+  only: network first, on failure the cached `/offline`, a self-contained page in the `Accept-Language` locale.
+  API calls, Server Actions, assets and signed-in pages are never cached. Registered in production builds only.
 
 #### 17.1.8 Admin panel (`/admin`)
 
