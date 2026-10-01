@@ -1461,6 +1461,11 @@ export const sv: Messages = {
       emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
       emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
     },
+    offline: {
+      title: 'Du är offline',
+      body: 'Saldo behöver en anslutning. Kontrollera nätverket och försök igen.',
+      retry: 'Försök igen',
+    },
     shell: {
       newTransaction: 'Ny transaktion',
       skipToContent: 'Hoppa till innehållet',

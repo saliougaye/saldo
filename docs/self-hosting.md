@@ -17,6 +17,10 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 - **A domain served over HTTPS.** This is not a preference: passkeys (WebAuthn) only work in a
   secure context. The single exception browsers make is `http://localhost`, which is why local
   development works without a certificate.
+- **Installing to the home screen** is the same requirement: browsers only register the service worker
+  (and offer «Install» / «Add to Home Screen») on HTTPS. Nothing to configure: the manifest takes its name
+  from the instance name, and the Docker image ships the icons. The service worker only keeps an «you are
+  offline» page; the web app needs the server for everything else and caches no data.
 
 ## Configuration
 

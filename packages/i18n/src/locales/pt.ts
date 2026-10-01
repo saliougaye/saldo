@@ -1467,6 +1467,11 @@ export const pt: Messages = {
       emailLinkInvalidTitle: 'O link expirou ou não é válido',
       emailLinkInvalidBody: 'Abre Perfil › Conta e pede um novo.',
     },
+    offline: {
+      title: 'Estás offline',
+      body: 'O Saldo precisa de ligação. Verifica a rede e tenta novamente.',
+      retry: 'Tentar novamente',
+    },
     shell: {
       newTransaction: 'Nova transação',
       skipToContent: 'Ir para o conteúdo',

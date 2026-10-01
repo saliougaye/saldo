@@ -1465,6 +1465,11 @@ export const it = {
       emailLinkInvalidTitle: 'Il link è scaduto o non è valido',
       emailLinkInvalidBody: 'Apri Profilo › Account e chiedine uno nuovo.',
     },
+    offline: {
+      title: 'Sei offline',
+      body: 'Saldo ha bisogno di una connessione. Controlla la rete e riprova.',
+      retry: 'Riprova',
+    },
     shell: {
       newTransaction: 'Nuova transazione',
       skipToContent: 'Vai al contenuto',

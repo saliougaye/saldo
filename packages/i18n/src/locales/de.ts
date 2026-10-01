@@ -1478,6 +1478,11 @@ export const de: Messages = {
       emailLinkInvalidTitle: 'Der Link ist abgelaufen oder ungültig',
       emailLinkInvalidBody: 'Öffne Profil › Konto und fordere einen neuen an.',
     },
+    offline: {
+      title: 'Du bist offline',
+      body: 'Saldo braucht eine Verbindung. Prüfe dein Netzwerk und versuche es erneut.',
+      retry: 'Erneut versuchen',
+    },
     shell: {
       newTransaction: 'Neue Buchung',
       skipToContent: 'Zum Inhalt springen',
