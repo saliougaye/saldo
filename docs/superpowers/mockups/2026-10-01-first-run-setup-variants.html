@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup al primo avvio — varianti</title>
+<!--
+  Decisioni (2026-10-01):
+  - Variante scelta: A · Wizard.
+  - Nessuno step SMTP nel wizard. SMTP resta un product setting (D33, §17.1.8): si configura da
+    /admin/settings?edit=smtp, già costruito in 0.3f-2, con SMTP_HOST in env che vince e blocca.
+    Il wizard fa solo ciò che serve a un admin funzionante; la registrazione non dipende dalla mail
+    (D32) e il test email ha bisogno di un account a cui spedire, che qui non esiste ancora.
+    Lo step «Pronto» mostra lo stato email e, se manca, il link alle Impostazioni.
+  - Quattro step: Benvenuto → Il tuo server → Il tuo account → Pronto.
+-->
+<style>
+@font-face{font-family:Geist;font-weight:400;src:url("../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf")}
+@font-face{font-family:Geist;font-weight:500;src:url("../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf")}
+@font-face{font-family:Geist;font-weight:600;src:url("../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf")}
+
+/* Tokens: packages/ui/src/tokens.ts (palettes, radii, fontSize, layout, motion). */
+:root{
+  --page:#050505;--bg:#0A0A0A;--surface:#121212;--raised:#1A1A1A;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.12);
+  --text:#EDEDED;--text-muted:#8C8C8C;--text-faint:#5C5C5C;
+  --positive:#5FBF7F;--negative:#E5484D;--on-accent:#0A0A0A;
+  --r-icon:8px;--r-input:10px;--r-button:12px;--r-card:14px;--r-dialog:16px;--r-pill:999px;
+  --fs-caption:11px;--fs-foot:13px;--fs-body:15px;--fs-head:17px;--fs-title:24px;--fs-display:34px;
+  --auth-width:380px;--panel-width:420px;
+  --ease:cubic-bezier(0.32,0.72,0,1);
+  --ease-out:cubic-bezier(0.2,0,0,1);
+}
+[data-theme="light"]{
+  --page:#E9E9E7;--bg:#FFFFFF;--surface:#FAFAF9;--raised:#F1F1EF;
+  --border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.18);
+  --text:#171717;--text-muted:#6E6E6E;--text-faint:#9A9A9A;
+  --positive:#2E8A50;--negative:#C8333A;--on-accent:#FFFFFF;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:Geist,"Inter Tight",system-ui,sans-serif;font-size:var(--fs-body);
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:6px}
+
+/* ───────── primitives (mirror apps/web/src/ui) ───────── */
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:28px;height:28px;border-radius:var(--r-icon);background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:600;font-size:var(--fs-foot);letter-spacing:-.02em}
+.brand .name{font-size:var(--fs-head);font-weight:600;letter-spacing:-.02em}
+.brand .inst{font-size:var(--fs-foot);color:var(--text-faint)}
+
+.segments{display:flex;gap:6px}
+.segments i{flex:1;height:2px;border-radius:var(--r-pill);background:var(--border-strong);transition:background .3s var(--ease)}
+.segments i.on{background:var(--text)}
+.steplabel{font-size:var(--fs-foot);color:var(--text-faint);margin-top:-12px}
+
+.title{font-size:var(--fs-title);font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.lede{color:var(--text-muted);line-height:1.5;text-wrap:pretty;margin-top:-12px}
+.hint{font-size:var(--fs-foot);color:var(--text-faint);line-height:1.45;text-wrap:pretty}
+
+.fields{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:var(--fs-foot);color:var(--text-muted);font-weight:500;display:flex;justify-content:space-between}
+.field label small{font-weight:400;color:var(--text-faint);font-size:var(--fs-foot)}
+.field input{
+  height:44px;padding:0 12px;border-radius:var(--r-input);
+  background:var(--raised);border:1px solid transparent;outline:0;
+  transition:border-color .15s var(--ease-out),background .15s var(--ease-out);
+}
+.field input::placeholder{color:var(--text-faint)}
+.field input:focus{border-color:var(--border-strong);background:var(--surface)}
+.field input:disabled{opacity:.55;cursor:not-allowed}
+.row2{display:grid;grid-template-columns:1fr 96px;gap:12px}
+
+.btn{
+  height:44px;border-radius:var(--r-button);display:flex;align-items:center;justify-content:center;gap:8px;
+  font-weight:500;width:100%;
+  transition:transform .12s var(--ease-out),opacity .15s var(--ease-out),background .15s var(--ease-out);
+}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--text);color:var(--bg)}
+.btn.primary:hover{opacity:.9}
+.btn.secondary{background:var(--raised)}
+.btn.secondary:hover{background:color-mix(in srgb,var(--raised) 80%,var(--text) 6%)}
+.btn.ghost{color:var(--text-muted);height:36px;font-size:var(--fs-foot);width:auto;padding:0 8px}
+.btn.ghost:hover{color:var(--text)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.actions{display:flex;flex-direction:column;gap:10px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-foot);color:var(--text-muted);align-self:flex-start}
+.back:hover{color:var(--text)}
+
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+
+/* OptionList: radio rows inside one card */
+.options{border-radius:var(--r-card);background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.option{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;min-height:56px;transition:background .15s var(--ease-out)}
+.option+.option{border-top:1px solid var(--border)}
+.option:hover{background:var(--raised)}
+.option .txt{flex:1;display:flex;flex-direction:column;gap:2px}
+.option .txt b{font-weight:500}
+.option .txt span{font-size:var(--fs-foot);color:var(--text-faint)}
+.option .tag{font-size:var(--fs-caption);color:var(--text-muted);background:var(--raised);padding:3px 7px;border-radius:var(--r-pill)}
+.radio{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);display:grid;place-items:center;flex:none;transition:border-color .15s}
+.radio::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--text);transform:scale(0);transition:transform .2s var(--ease)}
+.option[aria-checked="true"] .radio{border-color:var(--text)}
+.option[aria-checked="true"] .radio::after{transform:scale(1)}
+.options.locked .option{pointer-events:none;opacity:.5}
+.options.locked .option[aria-checked="true"]{opacity:1}
+
+.alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-card);background:var(--raised);font-size:var(--fs-foot);line-height:1.45}
+.alert svg{flex:none;margin-top:1px;color:var(--text-muted)}
+.alert b{display:block;font-weight:500;margin-bottom:2px}
+.alert span{color:var(--text-muted)}
+.alert.err svg{color:var(--negative)}
+
+.locknote{display:flex;align-items:center;gap:8px;font-size:var(--fs-foot);color:var(--text-muted)}
+.locknote code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--raised);padding:2px 6px;border-radius:6px;color:var(--text)}
+
+.art{width:72px;height:72px;border-radius:var(--r-dialog);background:var(--raised);display:grid;place-items:center}
+.check{width:56px;height:56px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--positive) 16%,transparent);color:var(--positive);display:grid;place-items:center}
+.done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.done .lede{margin-top:0}
+
+.summary{border-radius:var(--r-card);background:var(--surface);border:1px solid var(--border)}
+.summary div{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;font-size:var(--fs-foot)}
+.summary div+div{border-top:1px solid var(--border)}
+.summary dt{color:var(--text-muted)}
+.summary dd{text-align:right;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--positive)}
+.summary a{color:var(--text);text-decoration:underline;text-underline-offset:3px}
+
+.invite{border-radius:var(--r-card);background:var(--surface);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:14px;text-align:left;width:100%}
+.invite h3{font-size:var(--fs-body);font-weight:500}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:20px;letter-spacing:.06em;text-align:center;padding:14px;border-radius:var(--r-input);background:var(--raised);user-select:all}
+.linkrow{display:flex;gap:8px;align-items:center}
+.linkrow input{flex:1;height:36px;font-size:var(--fs-foot);padding:0 10px;border-radius:var(--r-input);background:var(--raised);border:0;color:var(--text-muted);min-width:0}
+.linkrow .btn{width:auto;height:36px;padding:0 12px;font-size:var(--fs-foot)}
+
+/* step enter */
+.enter{animation:enter .32s var(--ease) both}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.enter{animation:fade .2s both}@keyframes fade{from{opacity:0}}}
+
+/* ───────── Variant A: wizard (as /register) ───────── */
+.vA{min-height:100dvh;display:grid;place-items:center;padding:48px 24px}
+.vA .col{width:100%;max-width:var(--auth-width);display:flex;flex-direction:column;gap:24px}
+.vA .foot{font-size:var(--fs-caption);color:var(--text-faint);display:flex;gap:12px;justify-content:center;margin-top:8px}
+@media (max-width:1023px){.vA{place-items:start center;padding:72px 20px 32px}}
+
+/* ───────── Variant B: one page, sections unlock ───────── */
+.vB{min-height:100dvh;display:flex;justify-content:center;padding:64px 24px}
+.vB .col{width:100%;max-width:560px;display:flex;flex-direction:column;gap:28px}
+.vB .head{display:flex;flex-direction:column;gap:16px}
+.vB .head .lede{margin-top:-8px}
+.sec{border-radius:var(--r-dialog);border:1px solid var(--border);background:var(--surface);transition:opacity .3s var(--ease),border-color .3s var(--ease)}
+.sec.future{opacity:.45}
+.sec.current{border-color:var(--border-strong);background:var(--bg)}
+.sec .sh{display:flex;align-items:center;gap:12px;padding:16px 18px}
+.sec .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-caption);font-weight:600;background:var(--raised);color:var(--text-muted);flex:none}
+.sec.current .num{background:var(--text);color:var(--bg)}
+.sec.past .num{background:color-mix(in srgb,var(--positive) 16%,transparent);color:var(--positive)}
+.sec .st{flex:1;display:flex;flex-direction:column;gap:2px}
+.sec .st b{font-weight:500}
+.sec .st span{font-size:var(--fs-foot);color:var(--text-faint)}
+.sec .sb{padding:0 18px 18px 54px;display:flex;flex-direction:column;gap:20px}
+@media (max-width:600px){.sec .sb{padding:0 16px 16px}}
+
+/* ───────── Variant C: split, live preview ───────── */
+.vC{min-height:100dvh;display:grid;grid-template-columns:minmax(380px,1fr) minmax(420px,560px)}
+.vC aside{background:var(--page);border-right:1px solid var(--border);padding:40px 48px;display:flex;flex-direction:column;gap:40px;position:relative;overflow:hidden}
+.vC main{display:grid;place-items:center;padding:48px}
+.vC main .col{width:100%;max-width:var(--auth-width);display:flex;flex-direction:column;gap:24px}
+.rail{list-style:none;display:flex;flex-direction:column;gap:2px}
+.rail li{display:flex;align-items:center;gap:12px;padding:8px 0;color:var(--text-faint);font-size:var(--fs-foot);transition:color .2s}
+.rail li i{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-strong);display:grid;place-items:center;flex:none;font-style:normal;transition:all .25s var(--ease)}
+.rail li.current{color:var(--text)}
+.rail li.current i{border-color:var(--text)}
+.rail li.current i::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--text)}
+.rail li.past{color:var(--text-muted)}
+.rail li.past i{background:var(--positive);border-color:var(--positive);color:var(--bg)}
+.preview{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.preview .cap{font-size:var(--fs-caption);color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em}
+.pcard{border-radius:var(--r-dialog);background:var(--bg);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:16px;max-width:340px;box-shadow:0 24px 60px -30px rgba(0,0,0,.5)}
+.pcard .t{font-size:var(--fs-head);font-weight:600;letter-spacing:-.02em}
+.pcard .fake{height:36px;border-radius:var(--r-input);background:var(--raised)}
+.pcard .fakebtn{height:36px;border-radius:var(--r-button);background:var(--text);opacity:.9}
+.pcard .meta{font-size:var(--fs-caption);color:var(--text-faint);display:flex;gap:6px;align-items:center}
+.swap{display:inline-block;animation:enter .25s var(--ease-out)}
+@media (max-width:1023px){
+  .vC{grid-template-columns:1fr}
+  .vC aside{padding:20px;gap:16px;border-right:0;border-bottom:1px solid var(--border)}
+  .vC .rail{flex-direction:row;gap:12px;overflow-x:auto}
+  .vC .rail li span{display:none}
+  .vC .rail li.current span{display:inline}
+  .vC .preview{display:none}
+  .vC main{place-items:start center;padding:32px 20px}
+}
+
+/* ───────── Tweaks ───────── */
+.tw-fab{position:fixed;right:16px;bottom:16px;z-index:50;height:36px;padding:0 14px;border-radius:var(--r-pill);background:var(--raised);border:1px solid var(--border-strong);font-size:var(--fs-foot);font-weight:500;box-shadow:0 8px 24px -8px rgba(0,0,0,.4)}
+.tw{position:fixed;right:16px;bottom:16px;z-index:51;width:280px;border-radius:var(--r-dialog);background:var(--surface);border:1px solid var(--border-strong);box-shadow:0 24px 64px -16px rgba(0,0,0,.6);padding:14px;display:none;flex-direction:column;gap:14px;font-size:var(--fs-foot)}
+.tw.open{display:flex;animation:enter .25s var(--ease)}
+.tw header{display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.tw .grp{display:flex;flex-direction:column;gap:6px}
+.tw .grp>span{color:var(--text-faint);font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:.06em}
+.seg{display:flex;background:var(--raised);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;height:28px;border-radius:7px;font-size:12px;color:var(--text-muted);transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tw label.chk{display:flex;align-items:center;gap:8px;color:var(--text-muted);cursor:pointer}
+.tw select{height:30px;border-radius:8px;background:var(--raised);border:0;color:var(--text);padding:0 8px;font:inherit;font-size:12px}
+</style>
+</head>
+<body data-theme="dark">
+<div id="app"></div>
+
+<button class="tw-fab" id="twFab">Tweaks</button>
+<div class="tw" id="tw" role="dialog" aria-label="Tweaks">
+  <header>Tweaks <button class="btn ghost" id="twClose" aria-label="Chiudi">✕</button></header>
+  <div class="grp"><span>Variante</span>
+    <div class="seg" data-tw="variant">
+      <button data-v="A">A · Wizard</button><button data-v="B">B · Pagina</button><button data-v="C">C · Split</button>
+    </div>
+  </div>
+  <div class="grp"><span>Tema</span>
+    <div class="seg" data-tw="theme"><button data-v="dark">Scuro</button><button data-v="light">Chiaro</button></div>
+  </div>
+  <div class="grp"><span>Salta a</span>
+    <select id="twJump">
+      <option value="0">Benvenuto</option><option value="1">Istanza</option>
+      <option value="2">Account</option><option value="3">Fatto</option>
+    </select>
+  </div>
+  <div class="grp"><span>Scenari</span>
+    <label class="chk"><input type="checkbox" id="twEnv"> REGISTRATION e INSTANCE_NAME dall'ambiente</label>
+    <label class="chk"><input type="checkbox" id="twSmtpEnv"> SMTP_HOST dall'ambiente</label>
+    <label class="chk"><input type="checkbox" id="twCancel"> La passkey viene annullata</label>
+  </div>
+</div>
+
+<script>
+/* ───────── icons (stroke, 1.5, like apps/web Icon) ───────── */
+const I = {
+  back:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  check:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  checkLg:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  key:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M17 6l3 3M15 8l2 2"/></svg>',
+  server:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
+  info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16h.01"/></svg>',
+  lock:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+};
+
+/* ───────── state ───────── */
+const DEFAULT_NAME = 'Saldo';
+const HOST = 'saldo.casa-rossi.it';
+const S = {
+  variant:'A', theme:'dark', step:0, env:false, smtpEnv:false, cancel:false,
+  name:'', mode:'invite',
+  displayName:'', email:'',
+  passkey:'idle', // idle | working | cancelled
+  error:null, testing:false,
+  inviteLabel:'', invite:null, inviteMinting:false, copied:false,
+};
+const STEPS = ['Benvenuto','Il tuo server','Il tuo account','Pronto'];
+const MODES = [
+  {id:'invite', t:'Solo con invito', n:'un codice per ogni account', tag:'consigliata'},
+  {id:'open',   t:'Aperta',          n:'chiunque può creare un account'},
+  {id:'closed', t:'Chiusa',          n:'nessun nuovo account, solo il tuo'},
+];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hasName = () => S.env || S.name.trim() !== '';
+const instName = () => S.env ? 'Casa Rossi' : (S.name.trim() || DEFAULT_NAME);
+const modeLabel = () => MODES.find(m => m.id === (S.env ? 'invite' : S.mode)).t;
+
+/* ───────── step bodies (shared by all variants) ───────── */
+function field({id, label, value='', ph='', type='text', opt=false, disabled=false, auto=''}){
+  return `<div class="field"><label for="${id}">${label}${opt?'<small>facoltativo</small>':''}</label>
+    <input id="${id}" data-bind="${id}" type="${type}" value="${esc(value)}" placeholder="${esc(ph)}" ${disabled?'disabled':''} ${auto?`autocomplete="${auto}"`:''}></div>`;
+}
+function alertBox(e){
+  if(!e) return '';
+  return `<div class="alert err enter" role="alert">${I.warn}<div><b>${e.t}</b><span>${e.b}</span></div></div>`;
+}
+
+const body = {
+  0: () => ({
+    art:`<div class="art">${I.server}</div>`,
+    title:'Configuriamo il tuo server',
+    lede:`Saldo è in esecuzione su <b style="color:var(--text);font-weight:500">${HOST}</b>. Dai un nome all’istanza, scegli chi può entrare e crea il tuo account: sarai l’amministratore.`,
+    content:`<div class="summary"><dl>
+      <div><dt>Versione</dt><dd>0.3.0</dd></div>
+      <div><dt>Database</dt><dd><span class="dot"></span>connesso</dd></div>
+      <div><dt>Account</dt><dd>nessuno</dd></div></dl></div>`,
+    primary:{label:'Inizia', action:'next'},
+    hint:'Ci vogliono un paio di minuti. Tutto si cambia dopo da Admin → Impostazioni.',
+  }),
+  1: () => {
+    const locked = S.env;
+    return {
+      title:'Il tuo server',
+      lede:'Il nome lo vede chi apre la pagina d’accesso o riceve un invito.',
+      content:`<div class="fields">
+        ${field({id:'name', label:'Nome dell’istanza', value: locked ? 'Casa Rossi' : S.name, ph:'Es. Casa Rossi', disabled:locked})}
+        <div class="field"><label>Registrazione</label>
+          <div class="options ${locked?'locked':''}" role="radiogroup" aria-label="Registrazione">
+          ${MODES.map(m => `<button class="option" role="radio" data-action="mode" data-mode="${m.id}" aria-checked="${(locked?'invite':S.mode)===m.id}">
+            <i class="radio"></i><span class="txt"><b>${m.t}</b><span>${m.n}</span></span>${m.tag?`<span class="tag">${m.tag}</span>`:''}</button>`).join('')}
+          </div>
+        </div>
+        ${locked ? `<div class="locknote">${I.lock}<span>Impostati da <code>REGISTRATION</code> e <code>INSTANCE_NAME</code></span></div>` : ''}
+      </div>`,
+      primary:{label:'Continua', action:'next'},
+    };
+  },
+  2: () => {
+    const working = S.passkey === 'working';
+    return {
+      art:`<div class="art">${I.key}</div>`,
+      title:'Il tuo account',
+      lede:`Sarai l’amministratore di ${esc(instName())}. Niente password: entri con una passkey salvata su questo dispositivo.`,
+      content:`<div class="fields">
+        ${field({id:'displayName', label:'Nome', value:S.displayName, ph:'Es. Giulia', auto:'given-name'})}
+        ${field({id:'email', label:'Email', value:S.email, ph:'giulia@esempio.it', type:'email', auto:'email'})}
+      </div>`,
+      primary:{label: working ? '<span class="spinner"></span>In attesa della passkey…' : 'Crea passkey e account', action:'passkey', disabled:working},
+      hint:'Puoi aggiungere la passkey del telefono dopo, da Profilo → Sicurezza.',
+    };
+  },
+  3: () => ({
+    done:true,
+    title:'Il server è pronto',
+    lede:`${esc(S.displayName.trim() || 'Giulia')}, ora gestisci ${esc(instName())}: sei l’amministratore.`,
+    content:`<div class="summary" style="width:100%"><dl>
+        <div><dt>Istanza</dt><dd>${esc(instName())}</dd></div>
+        <div><dt>Registrazione</dt><dd>${modeLabel()}</dd></div>
+        <div><dt>Email</dt><dd>${emailStatus()}</dd></div>
+      </dl></div>
+      ${(S.env || S.mode==='invite') ? inviteCard() : ''}`,
+    primary:{label:'Vai a Saldo', action:'finish'},
+  }),
+};
+
+function emailStatus(){
+  if(S.smtpEnv) return '<span class="dot"></span>configurata dall’ambiente';
+  return 'non configurata · <a href="#" data-action="smtp">Configurala in Impostazioni</a>';
+}
+
+function inviteCard(){
+  if(S.invite){
+    const link = `https://${HOST}/register?invite=${S.invite}`;
+    return `<div class="invite enter"><h3>Invito creato</h3>
+      <div class="code">${S.invite}</div>
+      <div class="linkrow"><input readonly value="${link}" aria-label="Link d’invito"><button class="btn secondary" data-action="copy">${S.copied?'Copiato':'Copia link'}</button></div>
+      <p class="hint">Si vede una volta sola: il server ne salva solo l’hash. Scade fra 7 giorni.</p></div>`;
+  }
+  return `<div class="invite"><h3>Invita qualcuno <span class="hint" style="font-weight:400">· facoltativo</span></h3>
+    ${field({id:'inviteLabel', label:'Per chi è', value:S.inviteLabel, ph:'Es. Marco', opt:true})}
+    <button class="btn secondary" data-action="mint" ${S.inviteMinting?'disabled':''}>${S.inviteMinting?'<span class="spinner"></span>':''}Crea invito</button></div>`;
+}
+
+function stepBlock(n, {withArt=true} = {}){
+  const b = body[n]();
+  const actions = `<div class="actions">
+      ${b.primary ? `<button class="btn primary" data-action="${b.primary.action}" ${b.primary.disabled?'disabled':''}>${b.primary.label}</button>`:''}
+      ${b.secondary ? `<button class="btn secondary" data-action="${b.secondary.action}">${b.secondary.label}</button>`:''}
+    </div>`;
+  if(b.done){
+    return `<div class="done"><div class="check">${I.checkLg}</div><h1 class="title">${b.title}</h1><p class="lede">${b.lede}</p></div>
+      ${b.content}${actions}`;
+  }
+  return `${withArt && b.art ? b.art : ''}
+    <h1 class="title">${b.title}</h1><p class="lede">${b.lede}</p>
+    ${alertBox(S.error)}
+    ${b.content}${actions}
+    ${b.hint ? `<p class="hint" style="text-align:center">${b.hint}</p>`:''}`;
+}
+
+/* ───────── variants ───────── */
+function brand(){
+  const n = (S.step >= 2 && hasName()) || S.env ? instName() : null;
+  return `<div class="brand"><span class="mark">S</span><span class="name">Saldo</span>${n?`<span class="inst">· ${esc(n)}</span>`:''}</div>`;
+}
+function backLink(){
+  return S.step > 0 && S.step < 3 ? `<button class="back" data-action="back">${I.back}Indietro</button>` : '';
+}
+
+function variantA(){
+  const showSteps = S.step > 0 && S.step < 3;
+  return `<div class="vA"><div class="col enter" data-k="${S.step}">
+    ${S.step === 0 ? brand() : backLink()}
+    ${showSteps ? `<div class="segments">${[1,2].map(i=>`<i class="${i<=S.step?'on':''}"></i>`).join('')}</div><div class="steplabel">Passo ${S.step} di 2</div>` : ''}
+    ${stepBlock(S.step)}
+    ${S.step === 0 ? `<div class="foot"><span>Saldo 0.3.0</span><span>·</span><span>${HOST}</span></div>` : ''}
+  </div></div>`;
+}
+
+function variantB(){
+  const secs = [1,2];
+  const sum = {
+    1: () => `${esc(instName())} · ${modeLabel()}`,
+    2: () => S.step > 2 ? esc(S.email || S.displayName) : 'tu, l’amministratore',
+  };
+  if(S.step === 3){
+    return `<div class="vB"><div class="col enter">${brand()}${stepBlock(3)}</div></div>`;
+  }
+  return `<div class="vB"><div class="col">
+    <div class="head">${brand()}
+      <h1 class="title" style="font-size:var(--fs-display);letter-spacing:-.03em">Configura il tuo server</h1>
+      <p class="lede">Due passi su <b style="color:var(--text);font-weight:500">${HOST}</b>. Si cambia tutto dopo da Admin.</p>
+    </div>
+    ${secs.map(n => {
+      const st = n < S.step ? 'past' : n === S.step ? 'current' : 'future';
+      const head = `<div class="sh"><span class="num">${st==='past'?I.check:n}</span>
+        <span class="st"><b>${STEPS[n]}</b><span>${sum[n]()}</span></span>
+        ${st==='past' ? `<button class="btn ghost" data-action="goto" data-step="${n}">Modifica</button>` : ''}</div>`;
+      if(st !== 'current') return `<section class="sec ${st}">${head}</section>`;
+      const b = body[n]();
+      return `<section class="sec current">${head}<div class="sb enter">
+        <p class="lede" style="margin-top:0">${b.lede}</p>${alertBox(S.error)}${b.content}
+        <div class="actions" style="flex-direction:row">
+          ${b.secondary?`<button class="btn secondary" data-action="${b.secondary.action}">${b.secondary.label}</button>`:''}
+          <button class="btn primary" data-action="${b.primary.action}" ${b.primary.disabled?'disabled':''}>${b.primary.label}</button>
+        </div></div></section>`;
+    }).join('')}
+    <p class="hint" style="text-align:center">Saldo 0.3.0 · ${HOST}</p>
+  </div></div>`;
+}
+
+function variantC(){
+  const rail = STEPS.map((s,i) => {
+    const st = i < S.step ? 'past' : i === S.step ? 'current' : '';
+    return `<li class="${st}"><i>${st==='past'?I.check:''}</i><span>${s}</span></li>`;
+  }).join('');
+  return `<div class="vC">
+    <aside>${brand()}
+      <ol class="rail">${rail}</ol>
+      <div class="preview"><span class="cap">Così ti vedranno gli altri</span>
+        <div class="pcard">
+          <div class="brand"><span class="mark">S</span><span class="name">Saldo</span><span class="inst">${hasName() ? '· ' + esc(instName()) : ''}</span></div>
+          <div class="t">${(S.env?'invite':S.mode)==='closed' ? 'Accedi' : 'Accedi o crea un account'}</div>
+          <div class="fakebtn"></div>
+          ${(S.env?'invite':S.mode)==='invite' ? '<div class="meta">'+I.lock+' Serve un codice d’invito</div>' : ''}
+        </div></div>
+    </aside>
+    <main><div class="col enter" data-k="${S.step}">${backLink()}${stepBlock(S.step)}</div></main>
+  </div>`;
+}
+
+/* ───────── render + events ───────── */
+const app = document.getElementById('app');
+function render(){
+  document.body.dataset.theme = S.theme;
+  app.innerHTML = S.variant === 'A' ? variantA() : S.variant === 'B' ? variantB() : variantC();
+  document.querySelectorAll('.seg[data-tw]').forEach(seg => seg.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-pressed', String(S[seg.dataset.tw] === b.dataset.v))));
+  document.getElementById('twJump').value = String(S.step);
+}
+function go(n){ S.step = Math.max(0, Math.min(3, n)); S.error = null; S.passkey = 'idle'; render(); window.scrollTo({top:0}); }
+
+app.addEventListener('input', e => {
+  const k = e.target.dataset.bind; if(!k) return;
+  S[k] = e.target.value;
+  if(S.variant === 'C' && k === 'name'){
+    const el = app.querySelector('.pcard .inst'); if(el) el.textContent = hasName() ? '· ' + instName() : '';
+  }
+});
+
+const actions = {
+  next(){
+    if(S.step === 1 && !S.env && S.name.trim().length > 60){
+      S.error = {t:'Nome troppo lungo', b:'Al massimo 60 caratteri.'}; return render();
+    }
+    go(S.step + 1);
+  },
+  back(){ go(S.step - 1); },
+  goto(el){ go(Number(el.dataset.step)); },
+  mode(el){ if(S.env) return; S.mode = el.dataset.mode; render(); },
+  passkey(){
+    if(!S.displayName.trim()){ S.error = {t:'Come ti chiami?', b:'Il nome serve a riconoscere il tuo account nell’elenco.'}; return render(); }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim())){ S.error = {t:'Email non valida', b:'Controlla l’indirizzo: è quello con cui recuperi l’accesso.'}; return render(); }
+    S.error = null; S.passkey = 'working'; render();
+    setTimeout(() => {
+      if(S.cancel){ S.passkey = 'cancelled'; S.error = {t:'Passkey annullata', b:'Nessun account è stato creato. Puoi riprovare subito.'}; render(); }
+      else go(3);
+    }, 1400);
+  },
+  mint(){
+    S.inviteMinting = true; render();
+    setTimeout(() => {
+      const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', g = () => Array.from({length:4}, () => a[Math.floor(Math.random()*a.length)]).join('');
+      S.invite = [g(),g(),g(),g()].join('-'); S.inviteMinting = false; render();
+    }, 600);
+  },
+  copy(){ S.copied = true; render(); setTimeout(() => { S.copied = false; render(); }, 1600); },
+  finish(){ alert('→ /home (Admin disponibile nella barra in alto)'); },
+  smtp(){ alert('→ /admin/settings?edit=smtp'); },
+};
+app.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if(!el) return;
+  if(el.tagName === 'A') e.preventDefault();
+  actions[el.dataset.action]?.(el);
+});
+app.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.matches('input[data-bind]')){
+    const p = app.querySelector('.btn.primary:not([disabled])'); if(p) p.click();
+  }
+});
+
+/* tweaks */
+const tw = document.getElementById('tw'), fab = document.getElementById('twFab');
+fab.onclick = () => { tw.classList.add('open'); fab.style.display = 'none'; };
+document.getElementById('twClose').onclick = () => { tw.classList.remove('open'); fab.style.display = ''; };
+document.querySelectorAll('.seg[data-tw]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return; S[seg.dataset.tw] = b.dataset.v; render();
+}));
+document.getElementById('twJump').onchange = e => go(Number(e.target.value));
+document.getElementById('twEnv').onchange = e => { S.env = e.target.checked; render(); };
+document.getElementById('twSmtpEnv').onchange = e => { S.smtpEnv = e.target.checked; render(); };
+document.getElementById('twCancel').onchange = e => { S.cancel = e.target.checked; };
+
+render();
+</script>
+</body>
+</html>
