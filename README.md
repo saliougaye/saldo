@@ -153,20 +153,17 @@ xcrun simctl get_app_container booted io.github.saldo.app data
 rm -f "<that path>/Documents/SQLite/saldo.db"
 ```
 
-`.env.example` ships `REGISTRATION=invite`, so nothing creates an account without a code — yours
-included. Mint one before you try to sign in:
+`.env.example` ships `REGISTRATION=invite`. The **first** account needs no code: open the server in a
+browser and `/setup` walks you through naming the instance and creating your admin account with a
+passkey. Every later account needs a code, which you mint from `/admin` (**Inviti**) or on the server:
 
 ```bash
 pnpm --filter web invite new --label me
 ```
 
-That prints the code once. Once the app has found the server it offers "Create account", the
-browser page asks for the code, and the first account to register becomes the instance's admin.
-
-Setting `REGISTRATION=first-user` in your own `.env` skips the code and lets exactly one account
-through, which is quicker — at the cost of never exercising locally the path every real deployment
-uses. The passkey ceremony needs a platform authenticator either way: on the simulator, enrol Face
-ID first (Features → Face ID → Enrolled).
+Once the app has found the server it offers "Create account"; on a fresh instance that also creates
+the first account, with no code, and it becomes the admin. The passkey ceremony needs a platform
+authenticator either way: on the simulator, enrol Face ID first (Features → Face ID → Enrolled).
 
 ### Step 4 — stop
 

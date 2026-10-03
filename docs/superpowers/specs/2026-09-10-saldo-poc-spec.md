@@ -1136,7 +1136,7 @@ Notes that follow from using the library:
 | `S3_FORCE_PATH_STYLE` | `true` | Needed by MinIO and some S3 clones. |
 | `BLOB_READ_WRITE_TOKEN` | | Required by `vercel-blob`; Vercel injects it. |
 | `SETTINGS_ENCRYPTION_KEY` | 32 random bytes base64 | **Required** (0.3f-2). AES-256-GCM key for the secrets in `server_settings` (§17.1.8). Anything that does not decode to exactly 32 bytes is refused, by name. |
-| `REGISTRATION` | `invite` | **Optional** (0.3f-2). `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). Set: wins and locks the panel. Unset: the `server_settings` row, else `first-user`. |
+| `REGISTRATION` | `invite` | **Optional** (0.3f-2). `open` \| `first-user` (only when no users exist) \| `closed` \| `invite` (§9.5). Set: wins and locks the panel. Unset: the `server_settings` row, else `first-user`. **0.3h:** the first account is allowed under every mode and needs no code; `/setup` creates it. |
 | `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. Wins over the stored name; unset falls back to the row, then to `WEBAUTHN_RP_NAME`. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | | Optional. `SMTP_HOST` set: the whole group comes from the environment and is locked (`SMTP_FROM` required, `SMTP_PORT` default 587, `SMTP_USER` and `SMTP_PASSWORD` together or neither). |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma list of allowed custom schemes for mobile redirects. |
@@ -1610,7 +1610,7 @@ public. The decisions behind this section are D30–D36.
 - `/admin/**` is the admin panel (§17.1.8). The public marketing site and docs library are **not** here: they are
   their own app, `apps/site`, with their own deploy (D35, roadmap 0.8).
 - Routes in 0.3: `/login`, `/register`, `/recover`, `/recover/confirm`, `/email-verified`, `/onboarding`, `/home`,
-  `/transactions`, `/stats`, `/profile`, `/admin/**`.
+  `/transactions`, `/stats`, `/profile`, `/admin/**`, `/setup` (0.3h, only while the instance has no account).
 
 #### 17.1.2 The projection: the only way server code reads rows
 
@@ -1874,6 +1874,22 @@ public. The decisions behind this section are D30–D36.
   limiter.
 - **Mail** is plain text in the recipient's `settings.language` (else the request's `Accept-Language`, else `en`):
   what it is, the link alone on its own line, how long it lasts, and «if you did not ask for this, ignore it».
+
+**As built (0.3h, 2026-10-03):**
+
+- **First-run setup.** While the instance has no `user` row, `/`, `/login` and `/register` redirect to
+  `/setup`: Benvenuto (version, database, no account), Il tuo server (instance name, registration mode;
+  a value set by `INSTANCE_NAME` or `REGISTRATION` is shown locked), Il tuo account (name, email, the
+  passkey ceremony: the first account, which `claimRoleForNewUser` makes the admin), Pronto (summary,
+  the email status — «configurata dall'ambiente», «configurata» or «non configurata» with a link to
+  `/admin/settings?edit=smtp` — and, under `invite`, an optional first invite minted with the session the
+  ceremony created). The server step writes `server_settings` only where the environment does not set
+  the value, guarded by «no account exists» rather than a session. Once an account exists `/setup`
+  redirects to `/`.
+- **The policy lets the first account in under every mode, with no code.** `registrationAllowed` is
+  true and `registrationRequiresInvite` false while `userCount` is zero. This is what retires the CLI's
+  first invite; the window is the one `first-user` always had and closes with the first account. The
+  CLI (`invite`, `user`) stays for the day no admin can sign in. No SMTP step (decision of 2026-10-01).
 
 #### 17.1.5 «Today» on the server
 

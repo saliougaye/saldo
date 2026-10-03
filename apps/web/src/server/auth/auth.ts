@@ -156,7 +156,7 @@ export function buildAuthOptions() {
           },
         },
       }),
-      invitePlugin(mode),
+      invitePlugin(db, mode),
       // Recovery by mail (0.3f-3 decisions 2, 3, 9). `disableSignUp` is the one that matters: without
       // it `/magic-link/verify` creates an account for an address it has never seen, a way round the
       // registration policy and the invites. The token is stored hashed and lives 15 minutes; it is

@@ -5,7 +5,7 @@ delete process.env.REGISTRATION;
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { resetAuthForTests } from '../../../src/server/auth/auth';
-import { serverSettings } from '../../../src/server/db/schema';
+import { serverSettings, user } from '../../../src/server/db/schema';
 import { resetEnvCache } from '../../../src/server/env';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
 import { POST } from './[...all]/route';
@@ -40,6 +40,13 @@ const check = (invite: string) =>
 
 describe('POST /api/auth/invite/check with the mode stored in the table', () => {
   it('has nothing to check until the saved mode asks for a code, and then checks', async () => {
+    // An account first: a fresh instance asks for no code under any mode (0.3h).
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: 'ada@example.com',
+      emailVerified: false,
+    });
     expect((await check('ZZZZ-ZZZZ-ZZZZ-ZZZZ')).status).toBe(200);
 
     await harness.db

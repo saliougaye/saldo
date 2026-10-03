@@ -1,6 +1,6 @@
 import { SYNC_SCHEMA_VERSION } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { serverSettings } from '../../../src/server/db/schema';
+import { serverSettings, user } from '../../../src/server/db/schema';
 import { resetEnvCache } from '../../../src/server/env';
 import { resetStoreCache } from '../../../src/server/storage';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
@@ -91,7 +91,30 @@ describe('GET /api/health', () => {
         updatedBy: null,
       });
 
+    const addUser = () =>
+      harness.db.insert(user).values({
+        id: crypto.randomUUID(),
+        name: 'Ada',
+        email: 'ada@example.com',
+        emailVerified: false,
+      });
+
+    it('lets the first account in under every saved mode, with no code (0.3h)', async () => {
+      await store('closed');
+      await expect((await GET()).json()).resolves.toMatchObject({
+        registrationAllowed: true,
+        inviteRequired: false,
+      });
+      await harness.db.delete(serverSettings);
+      await store('invite');
+      await expect((await GET()).json()).resolves.toMatchObject({
+        registrationAllowed: true,
+        inviteRequired: false,
+      });
+    });
+
     it('reports the mode saved in the table', async () => {
+      await addUser();
       await store('closed');
       await expect((await GET()).json()).resolves.toMatchObject({
         registrationAllowed: false,
@@ -100,6 +123,7 @@ describe('GET /api/health', () => {
     });
 
     it('asks for a code when the saved mode is invite', async () => {
+      await addUser();
       await store('invite');
       await expect((await GET()).json()).resolves.toMatchObject({
         registrationAllowed: true,

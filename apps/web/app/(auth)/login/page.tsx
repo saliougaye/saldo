@@ -7,6 +7,7 @@ import {
   pageInstanceInfo,
   pageMailEnabled,
   pageRegistrationMode,
+  pageSetupNeeded,
 } from '../../../src/server/page/instanceSettings';
 import { Alert } from '../../../src/ui/Alert';
 import { AuthFooter, Brand } from '../../../src/ui/Brand';
@@ -18,6 +19,7 @@ export const dynamic = 'force-dynamic';
 
 /** §17.1.1: `/login` for a browser with no session. One already signed in has nothing to do here. */
 export default async function LoginPage() {
+  if (await pageSetupNeeded()) redirect('/setup');
   if ((await currentUser()) !== null) redirect('/home');
   const { t } = await publicI18n();
   const instance = await pageInstanceInfo();

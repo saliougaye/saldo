@@ -17,6 +17,7 @@ export function GET(): Promise<Response> {
   return handle(async () => {
     const mode = await registrationMode(getDb());
     const allowed = await registrationAllowed(getDb(), mode);
+    const inviteRequired = await registrationRequiresInvite(getDb(), mode);
     return Response.json({
       app: 'saldo',
       apiVersion: API_VERSION,
@@ -29,7 +30,7 @@ export function GET(): Promise<Response> {
        * today — the ceremony runs in the browser, which reads the same flag server-side — but a
        * client that ever collects the code itself needs to know before it asks.
        */
-      inviteRequired: registrationRequiresInvite(mode),
+      inviteRequired,
       /**
        * §10: false is a supported answer, not a fault. The app then keeps attachments on this
        * phone and says so, instead of queueing an upload that could never succeed.

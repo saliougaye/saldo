@@ -1,0 +1,122 @@
+/* The three facts of «Benvenuto» and the summary of «Pronto»: label left, value right, one line each. */
+.summary {
+  margin: 0;
+  width: 100%;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  font-size: var(--font-size-footnote);
+}
+
+.summaryRow + .summaryRow {
+  border-top: 1px solid var(--color-border);
+}
+
+.summaryRow dt {
+  color: var(--color-text-muted);
+}
+
+.summaryRow dd {
+  margin: 0;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summaryRow a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-positive);
+}
+
+/* The label of a field group that is not a `TextField`: the radio list of step 2. */
+.groupLabel {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lockNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.lockNote code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--color-raised);
+  padding: 2px 6px;
+  border-radius: var(--radius-icon-box);
+  color: var(--color-text);
+}
+
+/* «Invita qualcuno»: the optional card of the last step. */
+.invite {
+  width: 100%;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+.inviteTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.inviteTitle small {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-footnote);
+}
+
+.code {
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-title);
+  letter-spacing: var(--tracking-tight);
+  text-align: center;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
+.linkBox {
+  padding: 12px 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}

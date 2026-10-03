@@ -62,6 +62,10 @@ describe('resolveRegistration', () => {
   });
 
   it('refuses a closed instance', async () => {
+    // Once it has an account: a fresh instance lets its first one in under every mode (0.3h).
+    await harness.db
+      .insert(user)
+      .values({ id: 'u1', name: 'Grace', email: 'grace@example.com', emailVerified: false });
     await expect(
       resolveRegistration(harness.db, {
         mode: 'closed',
@@ -128,6 +132,9 @@ describe('resolveRegistration', () => {
   });
 
   it('refuses an unusable invite under invite mode, and nothing is spent', async () => {
+    await harness.db
+      .insert(user)
+      .values({ id: 'u1', name: 'Grace', email: 'grace@example.com', emailVerified: false });
     const { invite } = await createInvite(harness.db, {
       label: null,
       ttlDays: 7,
@@ -179,6 +186,10 @@ describe('completeRegistration', () => {
   });
 
   it('spends the invite and records whose it was', async () => {
+    // With an account already there, so that the code is required and really gets spent (0.3h).
+    await harness.db
+      .insert(user)
+      .values({ id: 'u1', name: 'Grace', email: 'grace@example.com', emailVerified: false });
     const { code, invite } = await createInvite(harness.db, {
       label: null,
       ttlDays: 7,
@@ -198,6 +209,9 @@ describe('completeRegistration', () => {
   });
 
   it('gives the invite back when the account cannot be written', async () => {
+    await harness.db
+      .insert(user)
+      .values({ id: 'u1', name: 'Grace', email: 'grace@example.com', emailVerified: false });
     const { code, invite } = await createInvite(harness.db, {
       label: null,
       ttlDays: 7,
