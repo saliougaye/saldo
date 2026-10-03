@@ -1,9 +1,8 @@
+import type { ToolScope } from '@saldo/core';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import { oauthAccessToken, oauthClient, user } from '../db/schema';
 import { bearerToken, hashOAuthToken } from './oauthToken';
-// TODO(0.4a-1 merge): import from @saldo/core
-import type { ToolScope } from './toolScope';
 import { mcpResourceUrl, protectedResourceMetadataUrl } from './urls';
 
 /** Who is calling `/mcp`: the user who consented, the client they consented to, what they granted. */

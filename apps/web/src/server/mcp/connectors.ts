@@ -1,3 +1,4 @@
+import type { ToolScope } from '@saldo/core';
 import { and, count, countDistinct, desc, eq, gte } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import {
@@ -9,8 +10,6 @@ import {
   user,
 } from '../db/schema';
 import { log, shortId } from '../log';
-// TODO(0.4a-1 merge): import from @saldo/core
-import type { ToolScope } from './toolScope';
 import { forgetMcpUsage } from './usage';
 
 /** One row of «Autorizzate» on `/profile/connectors` (§17.4.3). */

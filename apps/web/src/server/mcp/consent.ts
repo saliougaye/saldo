@@ -1,12 +1,11 @@
 import { verifyOAuthQueryParams } from '@better-auth/oauth-provider';
+import type { ToolScope } from '@saldo/core';
 import { and, eq } from 'drizzle-orm';
 import { auth } from '../auth/auth';
 import { getDb } from '../db/client';
 import { oauthClient, oauthConsent } from '../db/schema';
 import { log, shortId } from '../log';
 import { mcpEnabled } from '../settings/serverSettings';
-// TODO(0.4a-1 merge): import from @saldo/core
-import type { ToolScope } from './toolScope';
 import { oauthIssuer } from './urls';
 
 /** Decision 11: a client registered less than this long ago, that nobody has consented to, is «fresh». */
