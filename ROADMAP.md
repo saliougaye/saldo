@@ -439,12 +439,12 @@ units plus the currency.
       the `initialize.instructions` text — lives in `@saldo/core/assistant`, which 0.5 reuses. Amounts come as
       `{ minor, currency, amount }`; no aggregate is computed outside core, and a parity test checks a tool
       against the page it mirrors.
-- [x] **Profile → «App collegate»** (`/profile/apps`): the endpoint to copy, one row per consent with the scopes,
+- [x] **Profile → «Connettori»** (`/profile/connectors`, the name Claude uses; it was «App collegate» in the mockup): the endpoint to copy, one row per consent with the scopes,
       the dates and «Ultimo uso» (a table of ours, written at most once a minute per pair), «Revoca». The admin
       has a page of its own, `/admin/mcp`, with the switch (`mcp.enabled`; `MCP_ENABLED` wins and locks) and
       three aggregate numbers. The copy says «MCP», never «assistente» (spec §17.4.3).
 - [x] **Limits:** 120 requests per minute per token, 1 MB bodies, one registration per minute per IP; `SECURITY.md`
-      gains «MCP e app collegate», `docs/self-hosting.md` «Collegare un client MCP» (`PUBLIC_URL` must be
+      gains «MCP e connettori», `docs/self-hosting.md` «Collegare un client MCP» (`PUBLIC_URL` must be
       `https`).
 - [x] **Out:** device authorization grant, client credentials, OIDC, DPoP, CIMD, resources/prompts/sampling —
       each the day a client needs it.
@@ -453,9 +453,11 @@ units plus the currency.
 
 | Step | Content | Depends on |
 |---|---|---|
-| 0.4-ui | **Done 2026-10-03.** Design pass first (asked by the user 2026-10-03): one harness `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html` with variants of `/profile/apps`, `/oauth/consent` and the admin panel in their states; the user picked — App collegate: «Collega» of C with the rows and panel of B; consent: C; admin: C, its own page `/admin/mcp`; the copy says «MCP» — and spec §17.4.3 records it | 0.3 |
-| 0.4a | The OAuth provider and its tables, the discovery documents, `/oauth/consent`, `/profile/apps`, `/admin/mcp`, `/mcp` with the **read** tools and the catalogue in core, the docs — on the chosen variants | ui |
-| 0.4b | The **write** tools on the same catalogue, through `apps/web/src/server/write/*` | a |
+| 0.4-ui | **Done 2026-10-03.** Design pass first (asked by the user 2026-10-03): one harness `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html` with variants of `/profile/apps`, `/oauth/consent` and the admin panel in their states; the user picked — Profile (renamed «Connettori», `/profile/connectors`): «Collega» of C with the rows and panel of B; consent: C; admin: C, its own page `/admin/mcp`; the copy says «MCP» — and spec §17.4.3 records it | 0.3 |
+| 0.4a-1 | Plan `2026-10-03-0.4a-1-mcp-core-catalogue.md`: the tool catalogue in `@saldo/core` — the eleven read tools (`get_preferences`, `list_*`, summaries, forecast), `assistantInstructions`, parity tests against the pages | ui |
+| 0.4a-2 | Plan `2026-10-03-0.4a-2-mcp-oauth-endpoint.md`: `@better-auth/oauth-provider` (better-auth → ^1.7.7), discovery documents, `mcp.enabled`/`MCP_ENABLED`, `mcp_usage`, `POST /mcp` on `@modelcontextprotocol/server` v2, the full OAuth flow test | ui (beside a-1; its server tasks wait for a-1's exports) |
+| 0.4a-3 | Plan `2026-10-03-0.4a-3-mcp-screens-docs.md`: `/profile/connectors` («Connettori»), `/oauth/consent`, `/admin/mcp` on the chosen variants, strings in seven locales, `SECURITY.md` and `docs/self-hosting.md` | a-1, a-2 |
+| 0.4b | Plan `2026-10-03-0.4b-mcp-write-tools.md`: the fourteen **write** tools through `apps/web/src/server/write/*`, with the `updatedAt` version check so an assistant never overwrites a phone edit | a |
 
 **Done when:** a user connects an MCP client to their instance through the browser consent alone, asks about the
 current period, and the answer matches Statistiche to the cent; with `write` granted, a transaction the assistant

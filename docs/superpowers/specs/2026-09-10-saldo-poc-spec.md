@@ -2240,10 +2240,11 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 #### 17.4.1 One authorization server, OAuth 2.1 only (D39)
 
 - **Saldo is the authorization server for its own MCP endpoint.** The `@better-auth/oauth-provider` plugin is
-  mounted on the existing Better Auth instance (§9, §17.1.4), so the OAuth endpoints live under `/auth/oauth2/*`
-  (`register`, `authorize`, `token`, `revoke`, `introspect`) and the two discovery documents MCP clients require
-  are served at the root by a Next rewrite: RFC 8414 `/.well-known/oauth-authorization-server` and RFC 9728
-  `/.well-known/oauth-protected-resource`. The issuer is `PUBLIC_URL`.
+  mounted on the existing Better Auth instance (§9, §17.1.4), so the OAuth endpoints live under
+  `/api/auth/oauth2/*` (`register`, `authorize`, `token`, `revoke`, `introspect`) and the two discovery documents
+  MCP clients require are served at the root: RFC 8414 `/.well-known/oauth-authorization-server` and RFC 9728
+  `/.well-known/oauth-protected-resource`. The issuer is `{PUBLIC_URL}/api/auth` (the plugin's, checked against
+  `@better-auth/oauth-provider` 1.7.7 while planning 0.4a-2; it needs `better-auth` ^1.7.7).
 - **No personal access tokens.** The ROADMAP sketched a token pasted into the client; it is dropped. One
   credential surface is enough to describe and to defend, and OAuth is the only one the connectors of claude.ai
   and the mobile Claude apps accept. A CLI client that cannot open a browser uses `mcp-remote` or its own
@@ -2265,7 +2266,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **Two scopes: `read` and `write` (D40).** A client asks for one or both; the consent page shows them as two
   lines and the user can refuse `write`. Tools are filtered by scope when the server is built for a request
   (§17.4.2), so a `read` token never even lists a write tool; a call that slips through anyway is refused with the
-  JSON-RPC error `insufficient_scope`. Nothing else is granted: no OpenID Connect, no id token, no `userinfo`
+  JSON-RPC error `insufficient_scope`. The plugin issues a refresh token only when `offline_access` is in the
+  scope, so Saldo adds it as a third, hidden scope that the consent page never shows. Nothing else is granted: no OpenID Connect, no id token, no `userinfo`
   claims beyond what the plugin needs, no client credentials, no DPoP, no CIMD. Each is added the day a client needs it.
 - **Consent at `/oauth/consent`**, on the auth layout of §17.1.7. The plugin sends the browser there with a signed
   query (`verifyOAuthQueryParams`); a visitor who is not signed in goes through `/login` first and comes back. The
@@ -2275,7 +2277,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **An admin can switch it off.** `mcp.enabled` in `server_settings` (default on), shown on its own admin page
   `/admin/mcp` (§17.4.3); `MCP_ENABLED=true|false` in the environment wins and locks the switch, like the other
   settings (D33). Off: `/mcp` and both `.well-known` documents answer 404, `/oauth/consent` refuses, and
-  `/profile/apps` says so. Tokens already issued stop working while it is off and work again when it is on.
+  `/profile/connectors` says so. Tokens already issued stop working at `/mcp` while it is off and work again when it
+  is on; refreshing and revoking a token keep working while it is off, so a client can still clean up.
 
 #### 17.4.2 The endpoint and the tools
 
@@ -2295,8 +2298,12 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **The route is thin**: authenticate → `loadUserData` and `todayFor` (§17.1.2, §17.1.5) → build the server →
   answer. A read tool is `run(data, ctx, input)`. A write tool maps its input onto the server's existing write
   functions (`apps/web/src/server/write/*`, §17.1.3) — the same code the web's forms call, with the rules in core,
-  `writeInTransaction` and the `basis` check — so an assistant can neither write what a form could not nor
-  overwrite an edit the phone made meanwhile. A refused write (rule, conflict, unknown id) comes back as a tool
+  `writeInTransaction` and the `basis` check — so an assistant cannot write what a form could not. It cannot
+  overwrite an edit the phone made meanwhile either, but `basis` alone does not give that (it covers only the
+  instant between the function's own read and its lock): the read tools hand out each row's `updatedAt`, an
+  update sends back the one it read as `expectedUpdatedAt`, and the write function refuses inside its
+  transaction when the row has moved on. Updates are partial — the id, `expectedUpdatedAt`, the changed fields
+  (0.4b). A refused write (rule, conflict, unknown id) comes back as a tool
   error with a readable message, never as an exception or a 500.
 - **Results.** Every tool returns `structuredContent` and the same JSON as `content[0].text`. An amount is
   `{ "minor": 12345, "currency": "EUR", "amount": "123.45" }` — the model reads `amount`, which
@@ -2307,7 +2314,7 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   `forecastPeriods`, …), and a parity test checks that a tool and the page it mirrors say the same numbers.
 - **Periods.** A tool that takes a period accepts `period`: `"current"`, `"previous"`, or a `YYYY-MM-DD` date
   inside the period wanted — the web's `?p=` — or an explicit `from`/`to` pair; resolution is `period.ts`'s.
-- **Read tools (scope `read`):** `get_context` (today, time zone, currency, period kind and the current period's
+- **Read tools (scope `read`):** `get_preferences` (today, time zone, currency, period kind and the current period's
   bounds, language) · `list_accounts` (balances, pockets; archived on request) · `list_categories` ·
   `list_tags` · `list_transactions` (filters: period, kind, account, category, tag, text; `limit` ≤ 200 and
   `offset`) · `get_period_summary` (income, expenses, balance, «Quota impegnata», the previous period beside it)
@@ -2321,7 +2328,7 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   add a second confirmation.
 - **Not offered:** resources, prompts, sampling, elicitation, notifications.
 
-#### 17.4.3 «App collegate» in Profile, consent, and what the admin sees
+#### 17.4.3 «Connettori» in Profile, consent, and what the admin sees
 
 - **The look was decided before it was built (0.4-ui, 2026-10-03).** As 0.3c did for every web page, the three
   screens were first drawn as variants in one HTML harness, `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html`,
@@ -2332,7 +2339,11 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   empty state, the «switched off» notices, the consent page, the admin page, its sub-navigation entry —
   never «assistente» or «assistenti». The in-app assistant is 0.5's; this milestone is a protocol endpoint the
   user points their own client at, and the copy names it so. The same goes for the docs' headings (§17.4.4).
-- **`/profile/apps`** («App collegate»), a section of Profilo's sub-navigation after Passkey (icon `plug`). Two
+- **The Profile section is «Connettori»** (decided 2026-10-03, replacing the mockup's «App collegate»): the word
+  Claude uses for the same remote MCP servers, so a user moving between the two apps meets one name. What the
+  section lists are «connettori» too — counts, empty state, notes, the admin's numbers. The consent page keeps
+  «app» for the external application asking to connect, because there it names a program, not a list entry.
+- **`/profile/connectors`** («Connettori»), a section of Profilo's sub-navigation after Passkey (icon `plug`). Two
   sections, the top one from variant C and the rows from variant B:
   - **«Collega»**: one line of explanation (give this address to your MCP client; no key to copy; the client
     brings you back here, you sign in with your passkey and choose what it may do), the endpoint
@@ -2341,14 +2352,14 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
     **Claude** (Settings › Connectors › Add custom connector, paste the address), **Altro client** (any MCP client
     with HTTP and OAuth discovers the rest from `/.well-known/oauth-protected-resource`; `npx mcp-remote` for a
     terminal without a browser).
-  - **«Autorizzate»** with a count: one row per consent — the client's tile, its name, the granted scopes as
+  - **«Autorizzati»** with a count: one row per consent — the client's tile, its name, the granted scopes as
     chips (only those granted: «Lettura», «Scrittura»), when it was authorized, when it was last used, and a
     chevron. A row opens the trailing panel of §17.1.7, the passkeys' pattern: the facts (scopes, the redirect
     host it returns to, authorized on, last used, calls since), one line on what a client sees and may change,
     and «Revoca accesso» at the bottom with an inline confirmation («Revocare {client}? Smetterà di funzionare
     alla prossima chiamata»). On the phone-width layout the panel is a pushed screen titled with the client's
     name. Under the rows, the 180-day and next-call notes.
-  - **No consent**: «Collega» as usual and, under «Autorizzate», the empty state («Nessuna app collegata»).
+  - **No consent**: «Collega» as usual and, under «Autorizzati», the empty state («Nessun connettore collegato»).
     **MCP switched off**: «Collega» is replaced by a warning («MCP è disattivato su questa istanza»); to an
     admin it says they switched it off and links to `/admin/mcp`. The rows stay, so revoking still works.
 - **`/oauth/consent`**, variant C («Carta del client»), on the auth layout: the brand, the title «Un'app chiede di
@@ -2358,17 +2369,17 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   Then «Cosa può fare a tuo nome:» and the two scopes as checkbox rows — «Leggere i tuoi dati» always on and marked
   «richiesto», «Aggiungere e modificare» only when the client asked for `write`, untickable. Then who is signed in
   with «Non sei tu?», «Autorizza» (it reads «Autorizza solo la lettura» when `write` was unticked) and «Nega»,
-  and the revocation note. States drawn: both scopes, read only, a client asking for `read` alone, refused
+  and the revocation note («… da Profilo › Connettori»). States drawn: both scopes, read only, a client asking for `read` alone, refused
   («Accesso negato», back to Saldo) and switched off («MCP è disattivato»).
 - **Admin: its own page `/admin/mcp`**, variant C — an entry «MCP» (icon `plug`) in the admin sub-navigation
   after Impostazioni; `/admin/settings` gets no MCP row. The page holds:
   - the switch «Permetti agli utenti di collegare client MCP» with one paragraph on what on and off mean (each user
-    authorizes their own clients with their passkey; off: the endpoint answers 404 and authorized apps stop until it
-    is back on). Switching **off** asks first, inline, naming what stops («3 utenti hanno 5 app autorizzate:
+    authorizes their own clients with their passkey; off: the endpoint answers 404 and authorized connectors stop
+    until it is back on). Switching **off** asks first, inline, naming what stops («3 utenti hanno 5 connettori autorizzati:
     smetteranno di rispondere alla prossima chiamata»), «Annulla» / «Spegni»; switching on needs no confirmation.
     With `MCP_ENABLED` set, a lock note names the variable and the switch is disabled;
-  - three numbers: **users with an app connected** (out of all accounts), **apps authorized**, **apps used in the
-    last 7 days** — aggregates only, no client names, no user's detail. (The mockup's first draft had «calls
+  - three numbers: **users with a connector** (out of all accounts), **connectors authorized**, **connectors used
+    in the last 7 days** — aggregates only, no client names, no user's detail. (The mockup's first draft had «calls
     today»; `mcp_usage` keeps a running count per pair, not per day, so it became the 7-day count, which
     `last_used_at` answers.) Istanza (`/admin`) shows nothing about MCP: the numbers live here;
   - «Cosa dare a un client»: the endpoint with «Copia», and a line naming the two `.well-known` documents served
@@ -2376,11 +2387,11 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **«Ultimo uso»** is a table of ours, `mcp_usage (user_id, client_id, last_used_at, calls)`, written on a request
   to `/mcp` at most once a minute per pair (the calls of that minute added in one write). It feeds the rows, the
   panel and the admin's 7-day count.
-- Strings under `web.apps.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
+- Strings under `web.connectors.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
 
 #### 17.4.4 Security, documentation, steps
 
-- §18 gains a paragraph, and `SECURITY.md` a section «MCP e app collegate»: what a token is and is not,
+- §18 gains a paragraph, and `SECURITY.md` a section «MCP e connettori»: what a token is and is not,
   the audience, the scopes, the immediate revocation, the 180 days, that no token is ever logged or accepted in a
   URL, that a write goes through the same path as the web's, and that this server never calls a model itself.
 - `docs/self-hosting.md` gains «Collegare un client MCP»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
@@ -2388,10 +2399,13 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
   on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call
   into a 401, the switch; the consent page; `resolveSettings` with `MCP_ENABLED`; the i18n parity.
-- **Three steps, three plans:** **0.4-ui** — the mockup harness of §17.4.3, iterated with the user until a variant
-  per screen was picked and written into the spec (**done 2026-10-03**); **0.4a** — the OAuth provider, consent,
-  `/profile/apps`, `/admin/mcp`, `/mcp` with the read tools, the docs, on the chosen variants; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and
-  `phase/0.4b-mcp-write`; 0.4-ui has no branch.
+- **Three steps, four plans** (`docs/superpowers/plans/2026-10-03-0.4*.md`): **0.4-ui** — the mockup harness of
+  §17.4.3, iterated with the user until a variant per screen was picked and written into the spec (**done
+  2026-10-03**, no branch); **0.4a**, on `phase/0.4a-mcp-read`, in three plans — **0.4a-1** the tool catalogue in
+  core (read tools), **0.4a-2** the OAuth provider, the discovery documents, the switch, `mcp_usage` and `/mcp`,
+  **0.4a-3** `/profile/connectors`, `/oauth/consent`, `/admin/mcp`, the strings and the docs; 0.4a-1 and 0.4a-2
+  run side by side, 0.4a-3 after both; **0.4b**, on `phase/0.4b-mcp-write` from `main` once 0.4a is merged — the
+  write tools and the `updatedAt` version check.
 
 #### 17.4.5 Done when
 

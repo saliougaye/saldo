@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>0.4 MCP — App collegate, consenso, admin — varianti</title>
+<title>0.4 MCP — Connettori, consenso, admin — varianti</title>
 <!--
   Step 0.4-ui (spec §17.4.3). Tre schermi, tre varianti ciascuno, con i loro stati.
   Decisioni (utente, 2026-10-03) — variante «S · Scelta», registrata in spec §17.4.3:
-    apps     la parte alta di C (sezione «Collega» con tab per client) + le righe e il pannello a lato di B
+    apps     «Connettori» (non «App collegate»), /profile/connectors: la parte alta di C (sezione «Collega» con tab per client) + le righe e il pannello a lato di B
     consent  C · Carta del client
     admin    C · voce propria «MCP» nella sub-nav dell'admin, /admin/mcp
     copy     si dice «MCP» / «client MCP», mai «assistente/assistenti», in tutte le schermate
 
   Schermi:
-    apps     /profile/apps          A · Card + righe   B · Righe = passkey (pannello)   C · Due sezioni
+    apps     /profile/connectors    A · Card + righe   B · Righe = passkey (pannello)   C · Due sezioni
     consent  /oauth/consent         A · Scope con spunte   B · Compatto   C · Carta del client
     admin    /admin/settings        A · Riga + pannello   B · Interruttore nella riga   C · Sezione «MCP» (/admin/mcp)
 
@@ -283,7 +283,7 @@ code.env{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(
 </head>
 <body>
 <div class="toolbar">
-  <div class="grp"><span class="label">Schermo</span><div class="seg" data-k="screen"><button data-v="apps">App collegate</button><button data-v="consent">Consenso</button><button data-v="admin">Admin</button></div></div>
+  <div class="grp"><span class="label">Schermo</span><div class="seg" data-k="screen"><button data-v="apps">Connettori</button><button data-v="consent">Consenso</button><button data-v="admin">Admin</button></div></div>
   <div class="grp"><span class="label">Variante</span><div class="seg" data-k="variant"><button data-v="S">★ Scelta</button><button data-v="A">A</button><button data-v="B">B</button><button data-v="C">C</button></div></div>
   <div class="grp"><span class="label">Stato</span><div class="seg" data-k="state" id="states"></div></div>
   <div class="grp"><span class="label">Tema</span><div class="seg" data-k="theme"><button data-v="dark">Scuro</button><button data-v="light">Chiaro</button></div></div>
@@ -331,7 +331,7 @@ const icon = (n) => `<span class="ico"><svg viewBox="0 0 24 24">${ICONS[n] || ''
 
 /* ---------- harness state ---------- */
 const SCREENS = {
-  apps: { title: 'Profilo › App collegate', states: [['filled','2 app'],['empty','Vuoto'],['revoke','Revoca'],['off','MCP spento'],['offAdmin','Spento (sei admin)']] },
+  apps: { title: 'Profilo › Connettori', states: [['filled','2 connettori'],['empty','Vuoto'],['revoke','Revoca'],['off','MCP spento'],['offAdmin','Spento (sei admin)']] },
   consent: { title: '/oauth/consent', states: [['both','Lettura + scrittura'],['read','Solo lettura'],['readonlyClient','Chiede solo lettura'],['denied','Negato'],['off','MCP spento']] },
   admin: { title: 'Admin › Impostazioni', states: [['on','Attivo'],['off','Spento'],['locked','Da env'],['confirm','Conferma spegnimento']] },
 };
@@ -342,10 +342,10 @@ const VARIANT_NAMES = {
 };
 const CAPTIONS = {
   apps: {
-    S: '<b>★ Scelta.</b> In alto la sezione «Collega» di C: endpoint da copiare, tab per client (Claude Code · Claude · Altro) con lo snippet esatto. Sotto, «Autorizzate» con le righe di B: cliccando una si apre il pannello a lato con i fatti e «Revoca» in fondo; su mobile il pannello è una schermata spinta.',
+    S: '<b>★ Scelta.</b> In alto la sezione «Collega» di C: endpoint da copiare, tab per client (Claude Code · Claude · Altro) con lo snippet esatto. Sotto, «Autorizzati» con le righe di B: cliccando una si apre il pannello a lato con i fatti e «Revoca» in fondo; su mobile il pannello è una schermata spinta.',
     A: '<b>A · Card + righe.</b> In testa la card «Collega un client MCP» con l’endpoint da copiare e due istruzioni; sotto, una riga per app con scope come chip, data e ultimo uso, «Revoca» a destra con conferma in linea. Tutto su una colonna, niente pannello.',
     B: '<b>B · Righe come passkey.</b> La pagina ripete Passkey: un paragrafo, le righe (nome, scope, ultimo uso), cliccando una si apre il pannello a lato con i fatti (host del redirect, autorizzata il, chiamate) e «Revoca» in fondo. Le istruzioni di collegamento stanno in una disclosure «Come collegare» sotto le righe.',
-    C: '<b>C · Due sezioni.</b> «Collega» con tab per client (Claude Code · Claude · Altro) e lo snippet esatto da incollare; «Autorizzate» con le righe e «Revoca» in linea. Più verbosa, più didattica.',
+    C: '<b>C · Due sezioni.</b> «Collega» con tab per client (Claude Code · Claude · Altro) e lo snippet esatto da incollare; «Autorizzati» con le righe e «Revoca» in linea. Più verbosa, più didattica.',
   },
   consent: {
     S: '<b>★ Scelta = C · Carta del client.</b> Prima la carta dell’app (iniziale, nome, host, «registrata adesso» con avviso se mai vista prima), poi gli scope con spunte, poi i bottoni.',
@@ -354,10 +354,10 @@ const CAPTIONS = {
     C: '<b>C · Carta del client.</b> Prima la carta dell’app (iniziale, nome, host, «registrata adesso» con avviso se mai vista prima), poi gli scope con spunte, poi i bottoni. Mette il «chi» prima del «cosa».',
   },
   admin: {
-    S: '<b>★ Scelta = C · Sezione «MCP».</b> Voce propria nella sub-nav dell’admin (/admin/mcp): l’interruttore, tre numeri (utenti con app, app autorizzate, app usate negli ultimi 7 giorni) e l’endpoint con gli URL di discovery.',
+    S: '<b>★ Scelta = C · Sezione «MCP».</b> Voce propria nella sub-nav dell’admin (/admin/mcp): l’interruttore, tre numeri (utenti con connettori, connettori autorizzati, usati negli ultimi 7 giorni) e l’endpoint con gli URL di discovery.',
     A: '<b>A · Riga + pannello.</b> Come le altre impostazioni: la riga «MCP · Attivo» apre il pannello a lato con l’interruttore, la spiegazione e «Salva». Da env: la riga mostra il lucchetto e il pannello dice quale variabile.',
     B: '<b>B · Interruttore nella riga.</b> L’interruttore sta nella riga, si salva al tocco; spegnere chiede conferma (ferma N utenti). Niente pannello. Da env: interruttore disabilitato con nota.',
-    C: '<b>C · Sezione «MCP».</b> Una voce propria nella sub-nav dell’admin: l’interruttore, tre numeri (utenti con app, app autorizzate, app usate negli ultimi 7 giorni) e gli URL di discovery da verificare. Più spazio, una voce in più.',
+    C: '<b>C · Sezione «MCP».</b> Una voce propria nella sub-nav dell’admin: l’interruttore, tre numeri (utenti con connettori, connettori autorizzati, usati negli ultimi 7 giorni) e gli URL di discovery da verificare. Più spazio, una voce in più.',
   },
 };
 
@@ -393,7 +393,7 @@ function subnav(cur, items, leave) {
   return `<nav class="subnav">${items.map(([n,i]) => `<button class="press" ${n === cur ? 'aria-current="page"' : ''}>${icon(i)}${n}</button>`).join('')}
     <div class="sep"></div><button class="press leave">${icon('arrowUR')}${leave}</button></nav>`;
 }
-const PROFILE_ITEMS = [['Account','settings'],['Preferenze','wrench'],['Categorie','grip'],['Tag','tag'],['Budget','target'],['Obiettivi','piggy'],['Passkey','key'],['Dati','archive'],['App collegate','plug']];
+const PROFILE_ITEMS = [['Account','settings'],['Preferenze','wrench'],['Categorie','grip'],['Tag','tag'],['Budget','target'],['Obiettivi','piggy'],['Passkey','key'],['Dati','archive'],['Connettori','plug']];
 const ADMIN_ITEMS = [['Account','users'],['Inviti','ticket'],['Istanza','server'],['Impostazioni','settings']];
 
 /* ---------- shared pieces ---------- */
@@ -404,7 +404,7 @@ const snippet = (tab) => tab === 'claude-code'
   : tab === 'claude'
   ? `<ol class="steps"><li><b>1</b><span>In Claude (web o app) apri Impostazioni › Connettori › Aggiungi connettore personalizzato.</span></li><li><b>2</b><span>Incolla l’indirizzo qui sopra come URL del server. Nessuna chiave: ti verrà chiesto di accedere a Saldo con la passkey.</span></li></ol>`
   : `<p class="hint">Qualunque client MCP con trasporto HTTP e OAuth: incolla l’indirizzo, il resto lo scopre da solo (<code class="env">/.well-known/oauth-protected-resource</code>). Da terminale senza browser: <code class="env">npx mcp-remote ${ENDPOINT}</code>.</p>`;
-const offAlert = (admin) => `<div class="alert warn">${icon('alert')}<div><b>MCP è disattivato su questa istanza</b><span>${admin ? 'L’hai spento tu in <a href="#">Amministrazione › MCP</a>. Le app già autorizzate restano in lista e riprendono quando lo riattivi.' : 'L’amministratore ha spento l’accesso MCP. Le app già autorizzate restano in lista e riprendono quando viene riattivato.'}</span></div></div>`;
+const offAlert = (admin) => `<div class="alert warn">${icon('alert')}<div><b>MCP è disattivato su questa istanza</b><span>${admin ? 'L’hai spento tu in <a href="#">Amministrazione › MCP</a>. I connettori già autorizzati restano in lista e riprendono quando lo riattivi.' : 'L’amministratore ha spento l’accesso MCP. I connettori già autorizzati restano in lista e riprendono quando viene riattivato.'}</span></div></div>`;
 const revokeInline = () => `<div class="inline-confirm"><span>Claude Code smetterà di funzionare alla prossima chiamata.</span><button class="btn-secondary press">Annulla</button><button class="btn-secondary btn-danger press">Revoca</button></div>`;
 
 function appRow(a, i, { trailing = 'revoke', selectable = false, revoking = false } = {}) {
@@ -416,9 +416,9 @@ function appRow(a, i, { trailing = 'revoke', selectable = false, revoking = fals
     <span class="text"><span class="title">${a.name}</span><span class="sub">${scopeChips(a.scopes)}<span>· autorizzata il ${a.authorized}</span><span class="last-n">· usata ${a.last}</span></span></span>
     <span class="trail">${trail}</span></${selectable ? 'button' : 'div'}>`;
 }
-const emptyApps = () => `<div class="empty">${icon('plug')}<b>Nessuna app collegata</b><span>Quando autorizzi un client MCP dal browser, compare qui con quello che può fare.</span></div>`;
+const emptyApps = () => `<div class="empty">${icon('plug')}<b>Nessun connettore collegato</b><span>Quando autorizzi un client MCP dal browser, compare qui con quello che può fare.</span></div>`;
 
-/* ---------- screen: /profile/apps ---------- */
+/* ---------- screen: /profile/connectors ---------- */
 function appsSection() {
   const { variant, state } = S;
   const off = state === 'off' || state === 'offAdmin';
@@ -429,12 +429,12 @@ function appsSection() {
     <ol class="steps"><li><b>1</b><span><b>Claude Code</b> · <code class="env">claude mcp add --transport http saldo ${ENDPOINT}</code></span></li><li><b>2</b><span><b>Claude, Cursor e gli altri</b> · incolla l’indirizzo dove il client chiede un server MCP remoto.</span></li></ol></div>`;
 
   if (variant === 'A') {
-    return `<section class="section"><h2>App collegate ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">
+    return `<section class="section"><h2>Connettori ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">
       ${off ? offAlert(state === 'offAdmin') : ''}${off ? '' : connectCard}${rows}
-      <p class="hint">Un’app revocata riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
+      <p class="hint">Un connettore revocato riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
   }
   if (variant === 'B') {
-    return `<section class="section"><h2>App collegate</h2><div class="stack">
+    return `<section class="section"><h2>Connettori</h2><div class="stack">
       ${off ? offAlert(state === 'offAdmin') : ''}
       <p class="body">I client MCP che hai autorizzato a leggere o scrivere i tuoi dati. Qui vedi cosa possono fare e quando l’hanno fatto l’ultima volta; una revoca li ferma alla chiamata successiva.</p>
       ${rows}
@@ -446,14 +446,14 @@ function appsSection() {
     return `<section class="section"><h2>Collega</h2><div class="stack">
       ${off ? offAlert(state === 'offAdmin') : `<p class="hint">Dai questo indirizzo al tuo client MCP. Nessuna chiave da copiare: il client ti riporta qui, accedi con la passkey e scegli cosa può fare.</p>${endpointCode()}<div class="tabs">${[['claude-code','Claude Code'],['claude','Claude'],['other','Altro client']].map(([id,l]) => `<button data-tab="${id}" aria-selected="${S.tab===id}">${l}</button>`).join('')}</div>${snippet(S.tab)}`}
     </div></section>
-    <section class="section"><h2>Autorizzate ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">${rows}
-      <p class="hint">Un’app revocata riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
+    <section class="section"><h2>Autorizzati ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">${rows}
+      <p class="hint">Un connettore revocato riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
   }
   return `<section class="section"><h2>Collega</h2><div class="stack">
       ${off ? offAlert(state === 'offAdmin') : `${endpointCode()}<div class="tabs">${[['claude-code','Claude Code'],['claude','Claude'],['other','Altro client']].map(([id,l]) => `<button data-tab="${id}" aria-selected="${S.tab===id}">${l}</button>`).join('')}</div>${snippet(S.tab)}`}
     </div></section>
-    <section class="section"><h2>Autorizzate ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">${rows}
-      <p class="hint">Un’app revocata riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
+    <section class="section"><h2>Autorizzati ${apps.length ? `<span class="count">${apps.length}</span>` : ''}</h2><div class="stack">${rows}
+      <p class="hint">Un connettore revocato riceve un errore alla chiamata successiva. Un’autorizzazione non usata per 180 giorni scade da sola.</p></div></section>`;
 }
 function appsPanel() {
   const a = APPS[S.open] || APPS[0];
@@ -469,11 +469,11 @@ function renderApps(el, narrow) {
   const body = pushed
     ? `<div class="page"><div class="push-head"><button class="btn-ghost press">${icon('chevL')}</button><span class="t">${(APPS[S.open] || APPS[0]).name}</span></div>${appsPanel().replace('class="panel"', 'class="panel pushed"')}</div>`
     : narrow
-    ? `<div class="page ${S.variant === 'C' || S.variant === 'S' ? '' : 'solo'}"><div class="push-head"><button class="btn-ghost press">${icon('chevL')}</button><span class="t">App collegate</span></div>${appsSection()}</div>`
-    : `<div class="page">${profileHead()}<div class="settings ${withPanel ? 'with-panel' : ''}">${subnav('App collegate', PROFILE_ITEMS, 'Esci')}<div>${appsSection()}</div>${withPanel ? appsPanel() : ''}</div></div>`;
+    ? `<div class="page ${S.variant === 'C' || S.variant === 'S' ? '' : 'solo'}"><div class="push-head"><button class="btn-ghost press">${icon('chevL')}</button><span class="t">Connettori</span></div>${appsSection()}</div>`
+    : `<div class="page">${profileHead()}<div class="settings ${withPanel ? 'with-panel' : ''}">${subnav('Connettori', PROFILE_ITEMS, 'Esci')}<div>${appsSection()}</div>${withPanel ? appsPanel() : ''}</div></div>`;
   el.className = `app ${narrow ? 'narrow' : ''}`;
   el.innerHTML = narrow ? `<main class="main" style="grid-row:1/-1">${body}</main>` : `${topbar(false)}<main class="main">${body}</main>`;
-  return `${HOST}/profile/apps`;
+  return `${HOST}/profile/connectors`;
 }
 
 /* ---------- screen: /oauth/consent ---------- */
@@ -484,7 +484,7 @@ function consentColumn() {
   const writeOn = wantsWrite && S.writeOn && state !== 'read';
   const brand = `<div class="brand"><span class="mark">S</span><span class="name">Saldo</span><span class="inst">· Casa Gaye</span></div>`;
   const me = `<div class="me"><span class="avatar">SG</span><span>Accedi come <b style="color:var(--color-text);font-weight:500">gayesaliou29@gmail.com</b></span><a href="#">Non sei tu?</a></div>`;
-  const hint = `<p class="hint" style="text-align:center">Potrai revocare l’accesso in qualsiasi momento da Profilo › App collegate. Il client non riceve mai la tua passkey.</p>`;
+  const hint = `<p class="hint" style="text-align:center">Potrai revocare l’accesso in qualsiasi momento da Profilo › Connettori. Il client non riceve mai la tua passkey.</p>`;
 
   if (state === 'off') {
     return `${brand}<div class="center"><span class="art bad">${icon('plug')}</span><h1 class="title">MCP è disattivato</h1><p class="lede" style="margin-top:0">L’amministratore di questa istanza ha spento l’accesso MCP. ${client.name} non può essere autorizzata finché non viene riattivato.</p></div><a class="btn-secondary press lg" href="#">Torna a Saldo</a>`;
@@ -545,7 +545,7 @@ function mcpPanel() {
   return `<aside class="panel"><div class="ph"><span class="tile lg">${icon('plug')}</span><h3>MCP</h3><button class="btn-ghost press" aria-label="Chiudi">${icon('x')}</button></div>
     ${locked ? `<div class="alert">${icon('lock')}<div><b>Impostato dall’ambiente</b><span>Il server legge <code class="env">MCP_ENABLED=${on ? 'true' : 'false'}</code>. Per cambiarlo, cambia la variabile e riavvia.</span></div></div>` : ''}
     <div class="toggle-row"><div class="txt"><span>Permetti agli utenti di collegare client MCP</span><span class="note">Ogni utente autorizza i propri client dal browser, con la passkey, e sceglie se possono anche scrivere. Spento: l’endpoint <code class="env">/mcp</code> risponde 404 e le app già autorizzate si fermano finché non lo riaccendi.</span></div><button class="switch" role="switch" aria-checked="${on}" ${locked ? 'disabled' : ''}></button></div>
-    <dl class="facts"><div><dt>Endpoint</dt><dd><code>${ENDPOINT}</code></dd></div><div><dt>Utenti con app collegate</dt><dd>3</dd></div><div><dt>Usate negli ultimi 7 giorni</dt><dd>4 app</dd></div></dl>
+    <dl class="facts"><div><dt>Endpoint</dt><dd><code>${ENDPOINT}</code></dd></div><div><dt>Utenti con connettori</dt><dd>3</dd></div><div><dt>Usati negli ultimi 7 giorni</dt><dd>4</dd></div></dl>
     ${locked ? '' : `<div class="form-foot"><span class="k">⌘↵ salva</span><span class="spacer"></span><button class="btn-secondary press">Annulla</button><button class="btn-primary press" style="height:36px">Salva</button></div>`}</aside>`;
 }
 function adminSectionC() {
@@ -555,8 +555,8 @@ function adminSectionC() {
   return `<section class="section"><h2>MCP</h2><div class="stack">
     ${locked ? `<div class="locknote">${icon('lock')}Impostato dall’ambiente: <code class="env">MCP_ENABLED=${on ? 'true' : 'false'}</code></div>` : ''}
     <div class="toggle-row"><div class="txt"><span>Permetti agli utenti di collegare client MCP</span><span class="note">Ogni utente autorizza i propri client dal browser, con la passkey, e sceglie se possono anche scrivere. Spento: l’endpoint risponde 404 e le app già autorizzate si fermano finché non lo riaccendi.</span></div><button class="switch" role="switch" aria-checked="${on}" ${locked ? 'disabled' : ''}></button></div>
-    ${state === 'confirm' ? `<div class="alert warn">${icon('alert')}<div><b>Spegnere MCP?</b><span>3 utenti hanno 5 app autorizzate: smetteranno di rispondere alla prossima chiamata. Le autorizzazioni restano e riprendono quando riaccendi.</span></div></div><div class="inline-confirm"><button class="btn-secondary press">Annulla</button><button class="btn-secondary btn-danger press">Spegni</button></div>` : ''}
-    <dl class="kv"><div><dt>Utenti con app collegate</dt><dd>3<small>su 4</small></dd></div><div><dt>App autorizzate</dt><dd>5</dd></div><div><dt>Usate negli ultimi 7 giorni</dt><dd>4<small>app</small></dd></div></dl>
+    ${state === 'confirm' ? `<div class="alert warn">${icon('alert')}<div><b>Spegnere MCP?</b><span>3 utenti hanno 5 connettori autorizzati: smetteranno di rispondere alla prossima chiamata. Le autorizzazioni restano e riprendono quando riaccendi.</span></div></div><div class="inline-confirm"><button class="btn-secondary press">Annulla</button><button class="btn-secondary btn-danger press">Spegni</button></div>` : ''}
+    <dl class="kv"><div><dt>Utenti con connettori</dt><dd>3<small>su 4</small></dd></div><div><dt>Connettori autorizzati</dt><dd>5</dd></div><div><dt>Usati negli ultimi 7 giorni</dt><dd>4</dd></div></dl>
     <h3 style="font-size:var(--font-size-body);font-weight:500;margin-top:8px">Cosa dare a un client</h3>${endpointCode()}
     <p class="hint">I client scoprono il resto da soli: <code class="env">/.well-known/oauth-protected-resource</code> e <code class="env">/.well-known/oauth-authorization-server</code> rispondono su questo host. Serve <code class="env">PUBLIC_URL</code> in HTTPS: i client MCP rifiutano l’autorizzazione in chiaro.</p>
     </div></section>`;
@@ -566,7 +566,7 @@ function renderAdmin(el, narrow) {
   const variant = S.variant === 'S' ? 'C' : S.variant;
   const openPanel = variant === 'A' && !narrow;
   let body;
-  const confirm = variant === 'B' && state === 'confirm' ? `<div class="alert warn" style="margin-top:16px">${icon('alert')}<div><b>Spegnere MCP?</b><span>3 utenti hanno 5 app autorizzate: smetteranno di rispondere alla prossima chiamata. Le autorizzazioni restano e riprendono quando riaccendi.</span></div></div><div class="inline-confirm" style="margin-top:10px"><button class="btn-secondary press">Annulla</button><button class="btn-secondary btn-danger press">Spegni</button></div>` : '';
+  const confirm = variant === 'B' && state === 'confirm' ? `<div class="alert warn" style="margin-top:16px">${icon('alert')}<div><b>Spegnere MCP?</b><span>3 utenti hanno 5 connettori autorizzati: smetteranno di rispondere alla prossima chiamata. Le autorizzazioni restano e riprendono quando riaccendi.</span></div></div><div class="inline-confirm" style="margin-top:10px"><button class="btn-secondary press">Annulla</button><button class="btn-secondary btn-danger press">Spegni</button></div>` : '';
   if (variant === 'C') {
     body = `<div class="page">${adminHead()}<div class="settings">${subnav('MCP', [...ADMIN_ITEMS, ['MCP','plug']], 'Torna al profilo')}<div>${adminSectionC()}</div></div></div>`;
   } else {
