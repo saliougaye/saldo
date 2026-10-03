@@ -2303,7 +2303,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   instant between the function's own read and its lock): the read tools hand out each row's `updatedAt`, an
   update sends back the one it read as `expectedUpdatedAt`, and the write function refuses inside its
   transaction when the row has moved on. Updates are partial — the id, `expectedUpdatedAt`, the changed fields
-  (0.4b). A refused write (rule, conflict, unknown id) comes back as a tool
+  (0.4b). The web's forms adopt the same check in 0.4b (decided 2026-10-03): today a form saved over a phone edit
+  made after the page loaded overwrites it. A refused write (rule, conflict, unknown id) comes back as a tool
   error with a readable message, never as an exception or a 500.
 - **Results.** Every tool returns `structuredContent` and the same JSON as `content[0].text`. An amount is
   `{ "minor": 12345, "currency": "EUR", "amount": "123.45" }` — the model reads `amount`, which
@@ -2319,7 +2320,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   `list_tags` · `list_transactions` (filters: period, kind, account, category, tag, text; `limit` ≤ 200 and
   `offset`) · `get_period_summary` (income, expenses, balance, «Quota impegnata», the previous period beside it)
   · `spending_by_category` (totals per category, rolled up to parents) · `list_budgets` (with progress) ·
-  `list_goals` · `list_upcoming` (next occurrences of the recurrences) · `get_forecast` (the three periods of 0.2).
+  `list_goals` · `list_upcoming` (next occurrences of the recurrences and the one-off transactions dated after today — decided
+  2026-10-03) · `get_forecast` (the three periods of 0.2).
 - **Write tools (scope `write`)**, the web's perimeter and no more: `save_transaction` (create, or update by id) ·
   `delete_transaction` · `save_account` · `archive_account` (and restore) · `save_category` · `archive_category`
   (and restore, with the move of §6) · `save_tag` · `merge_tags` · `delete_tag` · `save_budget` · `delete_budget`
