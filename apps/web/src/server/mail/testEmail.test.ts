@@ -8,6 +8,7 @@ import { sendTestEmail } from './testEmail';
 const source: SettingsSource = {
   registration: null,
   instanceName: null,
+  mcpEnabled: null,
   rpName: 'Saldo test',
   settingsKey: Buffer.alloc(32, 'A'),
   smtp: {

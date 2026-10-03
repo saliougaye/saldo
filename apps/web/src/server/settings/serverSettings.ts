@@ -19,7 +19,7 @@ import { decryptSecret } from './secret';
  */
 export type SettingsSource = Pick<
   ServerEnv,
-  'registration' | 'instanceName' | 'rpName' | 'smtp' | 'settingsKey'
+  'registration' | 'instanceName' | 'rpName' | 'smtp' | 'settingsKey' | 'mcpEnabled'
 >;
 
 /** The slot the SMTP password is sealed under (`secret.ts`): it fixes what the envelope decrypts as. */
@@ -62,6 +62,27 @@ export async function instanceName(
 ): Promise<string> {
   if (source.instanceName !== null) return source.instanceName;
   return (await readServerSettings(db, source)).instanceName.value;
+}
+
+/**
+ * §17.4.1: whether MCP is served. With `MCP_ENABLED` set the table is not read (like
+ * `registrationMode`); otherwise one indexed read per call, so a switch saved in `/admin/mcp` applies
+ * to the very next request — `/mcp`, the discovery documents and new authorizations alike.
+ */
+export async function mcpEnabled(
+  db: ServerDatabase,
+  source: SettingsSource = env(),
+): Promise<boolean> {
+  if (source.mcpEnabled !== null) return source.mcpEnabled;
+  return (await readServerSettings(db, source)).mcpEnabled.value;
+}
+
+/** The switch with where it came from, for `/admin/mcp` (locked when `source` is `env`). */
+export async function mcpSetting(
+  db: ServerDatabase,
+  source: SettingsSource = env(),
+): Promise<Resolved<boolean>> {
+  return (await readServerSettings(db, source)).mcpEnabled;
 }
 
 /**

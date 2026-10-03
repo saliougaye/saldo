@@ -25,6 +25,7 @@ const key = Buffer.alloc(32, 'A');
 const noEnv: SettingsSource = {
   registration: null,
   instanceName: null,
+  mcpEnabled: null,
   rpName: 'Saldo test',
   smtp: null,
   settingsKey: key,

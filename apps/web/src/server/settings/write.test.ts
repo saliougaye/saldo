@@ -7,13 +7,14 @@ import { smtpRowSchema } from './resolve';
 import { decryptSecret } from './secret';
 import {
   instanceName,
+  mcpEnabled,
   registrationMode,
   type SettingsSource,
   SMTP_PASSWORD_SLOT,
   smtpForSending,
   smtpView,
 } from './serverSettings';
-import { removeSmtp, saveInstanceName, saveRegistration, saveSmtp } from './write';
+import { removeSmtp, saveInstanceName, saveMcpEnabled, saveRegistration, saveSmtp } from './write';
 
 let harness: TestDatabase;
 
@@ -38,6 +39,7 @@ const LATER = new Date('2026-10-01T09:00:00.000Z');
 const noEnv: SettingsSource = {
   registration: null,
   instanceName: null,
+  mcpEnabled: null,
   rpName: 'Saldo test',
   smtp: null,
   settingsKey: key,
@@ -333,5 +335,31 @@ describe('removeSmtp', () => {
 
   it('is fine when there was nothing to remove', async () => {
     expect(await removeSmtp(harness.db, null, noEnv)).toEqual({ ok: true });
+  });
+});
+
+describe('saveMcpEnabled', () => {
+  it('stores the switch as a boolean and stamps who and when', async () => {
+    const { userId } = await createTestSession(harness.db, 'Ada', 'admin');
+    expect(await saveMcpEnabled(harness.db, userId, false, NOW, noEnv)).toEqual({ ok: true });
+    expect(await storedRow('mcp.enabled')).toMatchObject({ value: false, updatedBy: userId });
+    expect(await mcpEnabled(harness.db, noEnv)).toBe(false);
+    expect(await saveMcpEnabled(harness.db, userId, true, LATER, noEnv)).toEqual({ ok: true });
+    expect(await mcpEnabled(harness.db, noEnv)).toBe(true);
+  });
+
+  it.each(['false', 0, null, 'off'])('refuses %j as invalid', async (raw) => {
+    expect(await saveMcpEnabled(harness.db, null, raw, NOW, noEnv)).toEqual({
+      ok: false,
+      error: 'invalid',
+    });
+    expect(await storedRow('mcp.enabled')).toBeUndefined();
+  });
+
+  it('is locked when MCP_ENABLED is set, and writes nothing', async () => {
+    expect(
+      await saveMcpEnabled(harness.db, null, false, NOW, { ...noEnv, mcpEnabled: true }),
+    ).toEqual({ ok: false, error: 'locked' });
+    expect(await storedRow('mcp.enabled')).toBeUndefined();
   });
 });

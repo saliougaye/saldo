@@ -7,6 +7,7 @@ const noEnv: SettingsEnvPart = {
   instanceName: null,
   rpName: 'Saldo',
   smtp: null,
+  mcpEnabled: null,
 };
 
 const envSmtp = {
@@ -163,5 +164,39 @@ describe('rows', () => {
     expect(bad).toEqual(['registration']);
     expect(resolved.registration.source).toBe('default');
     expect(resolved.instanceName.value).toBe('Casa');
+  });
+});
+
+describe('mcp.enabled', () => {
+  it('is the environment first, locked', () => {
+    expect(
+      resolveSettings({ ...noEnv, mcpEnabled: false }, [{ key: 'mcp.enabled', value: true }])
+        .mcpEnabled,
+    ).toEqual({ value: false, source: 'env', envVar: 'MCP_ENABLED' });
+  });
+
+  it('is the stored row when the environment sets none', () => {
+    expect(resolveSettings(noEnv, [{ key: 'mcp.enabled', value: false }]).mcpEnabled).toEqual({
+      value: false,
+      source: 'database',
+      envVar: null,
+    });
+  });
+
+  it('is on when neither says', () => {
+    expect(resolveSettings(noEnv, []).mcpEnabled).toEqual({
+      value: true,
+      source: 'default',
+      envVar: null,
+    });
+  });
+
+  it('reads a row that is not a boolean as not set, and reports it', () => {
+    const bad: string[] = [];
+    const resolved = resolveSettings(noEnv, [{ key: 'mcp.enabled', value: 'off' }], (key) =>
+      bad.push(key),
+    );
+    expect(resolved.mcpEnabled).toEqual({ value: true, source: 'default', envVar: null });
+    expect(bad).toEqual(['mcp.enabled']);
   });
 });

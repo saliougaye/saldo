@@ -66,6 +66,9 @@ const schema = z.object({
   // Optional: set, it wins over the admin panel and locks it; unset, the panel chooses (default first-user).
   REGISTRATION: z.preprocess(blankIsUnset, z.enum(REGISTRATION_MODES).optional()),
   INSTANCE_NAME: z.preprocess(blankIsUnset, z.string().trim().min(1).max(60).optional()),
+  // Optional: `true` or `false` wins over the admin panel's MCP switch and locks it (§17.4.1);
+  // unset, the panel decides and the default is on.
+  MCP_ENABLED: z.preprocess(blankIsUnset, z.enum(['true', 'false']).optional()),
   // Set SMTP_HOST and the whole group comes from here and locks the panel (`requireSmtpGroup`).
   SMTP_HOST: z.preprocess(blankIsUnset, z.string().min(1).optional()),
   SMTP_PORT: z.preprocess(
@@ -200,6 +203,8 @@ export interface ServerEnv {
   registration: RegistrationMode | null;
   /** `INSTANCE_NAME`, or `null`: then the panel's value, then `rpName`. */
   instanceName: string | null;
+  /** `MCP_ENABLED` as a boolean, or `null`: then the panel's switch, then on (§17.4.1). */
+  mcpEnabled: boolean | null;
   /** The `SMTP_*` group when `SMTP_HOST` is set, else `null`. */
   smtp: SmtpEnv | null;
   appRedirectSchemes: string[];
@@ -227,6 +232,7 @@ export function readEnv(source: Record<string, string | undefined>): ServerEnv {
     settingsKey: Buffer.from(value.SETTINGS_ENCRYPTION_KEY, 'base64'),
     registration: value.REGISTRATION ?? null,
     instanceName: value.INSTANCE_NAME ?? null,
+    mcpEnabled: value.MCP_ENABLED === undefined ? null : value.MCP_ENABLED === 'true',
     smtp: smtpConfig(value),
     appRedirectSchemes: value.APP_REDIRECT_SCHEMES.split(',')
       .map((scheme) => scheme.trim())
