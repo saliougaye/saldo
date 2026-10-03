@@ -3,7 +3,11 @@ import { publicI18n } from '../../../src/i18n/server';
 import { currentUser } from '../../../src/server/auth/currentUser';
 import { registrationAllowed, registrationRequiresInvite } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
-import { pageInstanceInfo, pageRegistrationMode } from '../../../src/server/page/instanceSettings';
+import {
+  pageInstanceInfo,
+  pageRegistrationMode,
+  pageSetupNeeded,
+} from '../../../src/server/page/instanceSettings';
 import styles from '../auth.module.css';
 import { RegisterFlow } from './RegisterFlow';
 
@@ -16,6 +20,7 @@ export default async function RegisterPage({
 }: {
   searchParams: Promise<{ invite?: string }>;
 }) {
+  if (await pageSetupNeeded()) redirect('/setup');
   if ((await currentUser()) !== null) redirect('/home');
   const mode = await pageRegistrationMode();
   if (!(await registrationAllowed(getDb(), mode))) redirect('/login');
