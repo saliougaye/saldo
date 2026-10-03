@@ -2388,7 +2388,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
     on this host and that `PUBLIC_URL` has to be `https://`.
 - **«Ultimo uso»** is a table of ours, `mcp_usage (user_id, client_id, last_used_at, calls)`, written on a request
   to `/mcp` at most once a minute per pair (the calls of that minute added in one write). It feeds the rows, the
-  panel and the admin's 7-day count.
+  panel and the admin's 7-day count. Best effort: up to a minute of counts can be lost when the process restarts
+  (decided 2026-10-03).
 - Strings under `web.connectors.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
 
 #### 17.4.4 Security, documentation, steps
