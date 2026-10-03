@@ -31,8 +31,10 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   return {
     db,
     reset: async () => {
+      // `oauth_resource` is left alone: the plugin seeds it once per Better Auth instance, and the
+      // instance outlives a reset.
       await db.execute(
-        sql`truncate table sync_rows, deleted_blobs, data_epochs, invites, server_clock, server_settings, passkey, session, account, verification, "user" cascade`,
+        sql`truncate table sync_rows, deleted_blobs, data_epochs, invites, server_clock, server_settings, mcp_usage, oauth_access_token, oauth_refresh_token, oauth_consent, oauth_client_resource, oauth_client, oauth_client_assertion, passkey, session, account, verification, "user" cascade`,
       );
     },
     close: async () => {
