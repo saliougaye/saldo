@@ -21,6 +21,7 @@
     "@better-auth/expo": "^1.7.7",
     "@better-auth/oauth-provider": "^1.7.7",
     "@better-auth/passkey": "^1.7.7",
+    "@better-auth/utils": "0.4.2",
     "@modelcontextprotocol/server": "^2.3.0",
     "@saldo/core": "workspace:*",
     "@saldo/i18n": "workspace:*",

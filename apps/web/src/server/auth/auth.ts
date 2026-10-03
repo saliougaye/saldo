@@ -7,6 +7,8 @@ import { admin, bearer, magicLink, oneTimeToken } from 'better-auth/plugins';
 import { getDb } from '../db/client';
 import { schema } from '../db/schema';
 import { env } from '../env';
+import { mcpOAuthProvider } from '../mcp/oauthProvider';
+import { mcpRegistrationGuard } from '../mcp/registrationGuard';
 import { registrationMode } from '../settings/serverSettings';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
 import { invitePlugin } from './invitePlugin';
@@ -176,6 +178,10 @@ export function buildAuthOptions() {
       admin({ defaultRole: MEMBER_ROLE, adminRoles: [ADMIN_ROLE] }),
       bearer(),
       oneTimeToken({ expiresIn: ONE_TIME_TOKEN_MINUTES, storeToken: 'hashed' }),
+      // §17.4.1: Saldo is the authorization server of its own `/mcp`. The guard checks a client's
+      // registration before the provider stores it.
+      mcpRegistrationGuard(),
+      mcpOAuthProvider(publicUrl),
       expo(),
       // Must stay last (Better Auth's Next.js integration requires it).
       nextCookies(),
