@@ -453,7 +453,8 @@ units plus the currency.
 
 | Step | Content | Depends on |
 |---|---|---|
-| 0.4a | The OAuth provider and its tables, the discovery documents, `/oauth/consent`, `/profile/apps`, the admin switch, `/mcp` with the **read** tools and the catalogue in core, the docs | 0.3 |
+| 0.4-ui | Design pass first (asked by the user 2026-10-03): one harness `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html` with variants of `/profile/apps`, `/oauth/consent` and the admin panel in their states; the user picks, spec §17.4.3 records the choices | 0.3 |
+| 0.4a | The OAuth provider and its tables, the discovery documents, `/oauth/consent`, `/profile/apps`, the admin switch, `/mcp` with the **read** tools and the catalogue in core, the docs — on the chosen variants | ui |
 | 0.4b | The **write** tools on the same catalogue, through `apps/web/src/server/write/*` | a |
 
 **Done when:** a user connects an MCP client to their instance through the browser consent alone, asks about the

@@ -2323,6 +2323,12 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 
 #### 17.4.3 «App collegate» in Profile, and what the admin sees
 
+- **The look is decided before it is built (0.4-ui).** As 0.3c did for every web page, the three screens of this
+  milestone — `/profile/apps`, `/oauth/consent`, the «Assistenti (MCP)» panel of `/admin/settings` with the Istanza
+  line — are first drawn as variants in one HTML harness, `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html`,
+  on the web tokens and the shells of §17.1.7, with their empty, filled, «switched off» and error states. The user
+  picks a variant per screen; the choices are recorded here, under this bullet, and only then does 0.4a build them.
+  What follows is the brief for the mockup, not the final layout.
 - `/profile/apps`, a section of Profilo's sub-navigation after Passkey. At the top a card «Collega un assistente»
   with the endpoint `{PUBLIC_URL}/mcp` to copy and two lines of instructions (Claude Code; other clients). Below,
   one row per consent: the client's name, the scopes as chips (Lettura · Scrittura), when it was authorized, when
@@ -2343,8 +2349,11 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 - **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
   on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call
   into a 401, the switch; the consent page; `resolveSettings` with `MCP_ENABLED`; the i18n parity.
-- **Two steps, two plans:** **0.4a** — the OAuth provider, consent, `/profile/apps`, the admin panel, `/mcp` with
-  the read tools, the docs; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and `phase/0.4b-mcp-write`.
+- **Three steps, three plans:** **0.4-ui** — the mockup harness of §17.4.3, iterated with the user until a variant
+  per screen is picked and written into the spec (design work, written in the main checkout as the earlier
+  harnesses were); **0.4a** — the OAuth provider, consent, `/profile/apps`, the admin panel, `/mcp` with the read
+  tools, the docs, on the chosen variants; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and
+  `phase/0.4b-mcp-write`; 0.4-ui has no branch.
 
 #### 17.4.5 Done when
 
