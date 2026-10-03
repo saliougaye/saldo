@@ -326,6 +326,141 @@ change it: edit it where the server runs and restart, or remove it and choose in
   lost or changed, only the stored SMTP password is lost: enter it again in the panel. There is no key rotation in
   0.3f — change the key, then re-enter the password.
 
+#### Provider via SMTP
+
+Saldo sends only through SMTP, and that is enough for a transactional provider: every one of them runs an SMTP relay
+that takes the same five values as a mail server of your own. There is no `MAIL_TRANSPORT` switch or per-provider API
+driver, because none is needed (decided 2026-10-01). What changes from one provider to the next is three things: the
+host, what it wants as the user and password, and what it asks of your domain before it accepts a sender.
+
+The five values are the `SMTP_*` group of the environment, or the same fields of `/admin/settings?edit=smtp`
+(**Server**, **Porta**, **Utente**, **Password**, **Mittente**). The sender can be a bare address or
+`Name <address>`; its domain is the one you verify with the provider. The check is the same every time: save, then
+**Manda un'email di prova** — it sends to *your own* address with the saved configuration and shows the server's
+error if the provider refuses (a wrong password, an unverified sender, a blocked port). The provider's own log says
+the rest.
+
+**Ports.** The rule is `transportSecurity` in `apps/web/src/server/mail/mailer.ts`: port **465** is implicit TLS
+(the connection is encrypted before the first byte); **any other port requires STARTTLS**, and the send fails if the
+server does not offer it, so a password is never sent over a connection that was not upgraded. A plain connection is
+allowed only to `localhost`, `127.0.0.1` or `::1` — Mailpit, below. Every provider here supports both 465 and 587,
+except Postmark (STARTTLS only: 587, 2525 or 25). If the host blocks the usual ports, Resend and Amazon SES also
+listen on **2465** (implicit TLS) and **2587** (STARTTLS); Mailgun, Brevo and Postmark on **2525** (STARTTLS). Port 25
+is often throttled or blocked by hosts; prefer the others.
+
+**Domain verification, once.** The provider will not accept a sender it has not verified, and the records it asks for
+are the same three everywhere, under its own names and values:
+
+- **SPF** — a `TXT` (sometimes also an `MX`) record on the domain or on a return-path subdomain, naming the provider
+  as allowed to send for it.
+- **DKIM** — one `TXT` or a few `CNAME` records under `<selector>._domainkey.<domain>`, carrying the provider's
+  signing key.
+- **DMARC** — a `TXT` at `_dmarc.<domain>`, e.g. `v=DMARC1; p=none; rua=mailto:…`. Brevo requires it to call a domain
+  authenticated; the others recommend it and Gmail and Yahoo ask it of anyone sending in volume. `p=none` is enough.
+
+Copy each record from the provider's domain page rather than from a guide: the values are generated for your domain.
+Then wait for the provider to mark the domain verified (minutes to a few hours; DNS can take up to 72) before the
+first test. Sending from a subdomain (`saldo.example.com`, `mail.example.com`) rather than the apex is what Resend
+recommends and what keeps the domain's own mail unaffected. Postmark and SES also verify a **single address** by a
+confirmation link, which is enough to start; Mailgun's and SES's sandboxes send only to addresses *you* have verified
+until you add a domain (Mailgun) or ask for production access (SES).
+
+**Resend** — host `smtp.resend.com`; user is the literal `resend`; the password is an API key with sending permission;
+the sender must be on a verified domain. Ports 465 or 587 (2465, 2587 and 25 also answer).
+
+```bash
+SMTP_HOST=smtp.resend.com
+SMTP_PORT=465
+SMTP_USER=resend
+SMTP_PASSWORD=re_xxxxxxxxxxxxxxxxxxxxxxxx
+SMTP_FROM=Saldo <saldo@example.com>
+```
+
+In the panel: Server `smtp.resend.com`, Porta `465`, Utente `resend`, Password the API key, Mittente
+`Saldo <saldo@example.com>`. Domain: Resend's **Domains** page lists DKIM (`TXT`) and SPF (`MX` + `TXT`, by default on
+a `send.` subdomain used as the return path); DMARC is recommended after verification.
+
+**Postmark** — host `smtp.postmarkapp.com`; **user and password are both the Server API Token** (the stream is the
+server's default transactional one; Saldo sends no stream header). A **Sender Signature**, confirmed by email, is
+enough to send from that one address; verifying the domain (DKIM `TXT` + Return-Path `CNAME` `pm_bounces` →
+`pm.mtasv.net`, which is also what makes SPF align) covers every address on it. STARTTLS only: port 587, or 2525 if
+587 is blocked.
+
+```bash
+SMTP_HOST=smtp.postmarkapp.com
+SMTP_PORT=587
+SMTP_USER=<server API token>
+SMTP_PASSWORD=<the same server API token>
+SMTP_FROM=Saldo <saldo@example.com>
+```
+
+In the panel: Server `smtp.postmarkapp.com`, Porta `587`, Utente and Password the same token, Mittente a confirmed
+signature or an address on the verified domain. Postmark also issues **SMTP Tokens** (an Access Key as user and a
+Secret Key as password), if you would rather not hand the server API token itself to Saldo.
+
+**Amazon SES** — host `email-smtp.<region>.amazonaws.com` for the region the identity is verified in
+(`email-smtp.eu-west-1.amazonaws.com`, `email-smtp.eu-central-1.amazonaws.com`, …; not every region has an SMTP
+endpoint — Milan does not). The **SMTP credentials are not your AWS keys**: the SES console (*SMTP settings* →
+*Create SMTP credentials*) creates an IAM user whose SMTP user name is its access key id and whose SMTP password is
+derived from its secret key *for that region*; they are shown once. Ports 465 or 2465 (implicit TLS), 587 or 2587
+(STARTTLS). The sender must be a verified identity: a domain (Easy DKIM: three `CNAME` records; an optional custom
+MAIL FROM subdomain adds an `MX` and an SPF `TXT`) or a single address confirmed by email. A new account is in the
+**sandbox** — 200 messages a day, and only *to* verified addresses — until you request production access.
+
+```bash
+SMTP_HOST=email-smtp.eu-west-1.amazonaws.com
+SMTP_PORT=465
+SMTP_USER=AKIAxxxxxxxxxxxxxxxx
+SMTP_PASSWORD=<the SMTP password SES generated, not the secret access key>
+SMTP_FROM=Saldo <saldo@example.com>
+```
+
+In the panel: Server the regional endpoint, Porta `465`, Utente the SMTP user name, Password the SMTP password,
+Mittente an address on the verified identity.
+
+**Mailgun** — host `smtp.mailgun.org`, or `smtp.eu.mailgun.org` for a domain created in the EU region (a domain lives
+in one region; use the host of its region). Credentials are **per domain**: *Domain settings → SMTP credentials*. The
+default login is `postmaster@<your domain>`; the password is the one Mailgun gives you there when you create or reset
+it. Ports 465 (implicit TLS) or 587 (STARTTLS; 2525 and 25 also). The domain is verified with an SPF `TXT`
+(`v=spf1 include:mailgun.org ~all`) and a DKIM `TXT` from the control panel; the `MX` and tracking `CNAME` Mailgun
+lists are for receiving and click tracking, which Saldo does not use. The **sandbox** domain every account starts with
+sends only to up to five authorized recipients.
+
+```bash
+SMTP_HOST=smtp.eu.mailgun.org
+SMTP_PORT=465
+SMTP_USER=postmaster@mg.example.com
+SMTP_PASSWORD=<the SMTP password of that credential>
+SMTP_FROM=Saldo <saldo@mg.example.com>
+```
+
+In the panel: Server `smtp.eu.mailgun.org` (or `smtp.mailgun.org`), Porta `465`, Utente `postmaster@mg.example.com`,
+Password that credential's password, Mittente an address on the verified domain.
+
+**Brevo** — host `smtp-relay.brevo.com`. The login is the **SMTP login** shown under *SMTP & API → SMTP* (the account's
+email, or on newer accounts a generated `…@smtp-brevo.com` address); the password is an **SMTP key** from the same
+tab — *not* an API key and not the account password. Ports 465 (implicit TLS) or 587 (STARTTLS; 2525 also). Brevo
+authenticates a domain with three `TXT` records — a **Brevo code** proving ownership, **DKIM**, and **DMARC**
+(`v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com` if you have none) — and the sender must be on an authenticated
+domain or be a sender you have confirmed by email.
+
+```bash
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=465
+SMTP_USER=<your SMTP login>
+SMTP_PASSWORD=<your SMTP key>
+SMTP_FROM=Saldo <saldo@example.com>
+```
+
+In the panel: Server `smtp-relay.brevo.com`, Porta `465`, Utente the SMTP login, Password the SMTP key, Mittente an
+address on the authenticated domain.
+
+**Set the group whole or not at all.** With `SMTP_HOST` in the environment, `SMTP_FROM` is required, `SMTP_PORT`
+defaults to 587, `SMTP_USER` and `SMTP_PASSWORD` come together, and the panel's form is locked and says so. The same
+values typed into the panel need no restart and take effect on the next message. For local development, keep using
+Mailpit (above): host `localhost`, port `1025`, no user, any sender — the only case where a plain connection is
+accepted.
+
 ## Local development
 
 One compose file brings up everything the server talks to — Postgres, and
