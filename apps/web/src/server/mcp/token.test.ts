@@ -1,8 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { revokeUser } from '../auth/admin';
-import { oauthAccessToken, oauthClient } from '../db/schema';
+import { oauthAccessToken, oauthClient, oauthConsent } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
-import { createTestClient, issueTestAccessToken } from '../test/oauth';
+import { createTestClient, grantTestConsent, issueTestAccessToken } from '../test/oauth';
 import { createTestSession } from '../test/session';
 import { type AccessTokenRow, acceptAccessToken, verifyMcpRequest } from './token';
 
@@ -94,6 +94,11 @@ describe('verifyMcpRequest', () => {
   it('resolves a stored token to its user, client and tool scopes', async () => {
     const { userId } = await createTestSession(harness.db);
     const { clientId } = await createTestClient(harness.db);
+    await grantTestConsent(harness.db, {
+      userId,
+      clientId,
+      scopes: ['read', 'write', 'offline_access'],
+    });
     const { bearer } = await issueTestAccessToken(harness.db, {
       userId,
       clientId,
@@ -108,6 +113,7 @@ describe('verifyMcpRequest', () => {
   it('stops accepting it once deleted, once the client is disabled, once the account is revoked', async () => {
     const { userId } = await createTestSession(harness.db);
     const { clientId } = await createTestClient(harness.db);
+    await grantTestConsent(harness.db, { userId, clientId, scopes: ['read'] });
     const first = await issueTestAccessToken(harness.db, { userId, clientId });
     await harness.db.delete(oauthAccessToken);
     expect((await verifyMcpRequest(post({ authorization: first.bearer }))).ok).toBe(false);
@@ -119,5 +125,19 @@ describe('verifyMcpRequest', () => {
 
     await revokeUser(harness.db, userId, null, new Date());
     expect((await verifyMcpRequest(post({ authorization: second.bearer }))).ok).toBe(false);
+  });
+
+  it('refuses a token whose user-client pair has no consent (a code exchanged after revocation)', async () => {
+    // The plugin's code and refresh grants never look at `oauth_consent`: a client that held back its
+    // code while the user revoked the app would otherwise get a token the user can neither see nor revoke.
+    const { userId } = await createTestSession(harness.db);
+    const { clientId } = await createTestClient(harness.db);
+    const { bearer } = await issueTestAccessToken(harness.db, { userId, clientId });
+    expect((await verifyMcpRequest(post({ authorization: bearer }))).ok).toBe(false);
+
+    await grantTestConsent(harness.db, { userId, clientId, scopes: ['read'] });
+    expect((await verifyMcpRequest(post({ authorization: bearer }))).ok).toBe(true);
+    await harness.db.delete(oauthConsent);
+    expect((await verifyMcpRequest(post({ authorization: bearer }))).ok).toBe(false);
   });
 });

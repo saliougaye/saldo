@@ -1,7 +1,7 @@
 import type { ToolScope } from '@saldo/core';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDb } from '../db/client';
-import { oauthAccessToken, oauthClient, user } from '../db/schema';
+import { oauthAccessToken, oauthClient, oauthConsent, user } from '../db/schema';
 import { bearerToken, hashOAuthToken } from './oauthToken';
 import { mcpResourceUrl, protectedResourceMetadataUrl } from './urls';
 
@@ -24,7 +24,8 @@ const TOOL_SCOPES: readonly string[] = ['read', 'write'] satisfies readonly Tool
 const isToolScope = (scope: string): scope is ToolScope => TOOL_SCOPES.includes(scope);
 
 /**
- * §17.4.1, decision 4: the whole acceptance rule, pure. The browser session the consent was given in
+ * §17.4.1, decision 4: the acceptance rule for the row the lookup found — which it finds only while the
+ * user–client pair has a consent — pure. The browser session the consent was given in
  * is deliberately not consulted — an MCP client must not stop when its user signs out of the web.
  */
 export function acceptAccessToken(
@@ -111,6 +112,16 @@ export async function verifyMcpRequest(
     .from(oauthAccessToken)
     .innerJoin(oauthClient, eq(oauthClient.clientId, oauthAccessToken.clientId))
     .innerJoin(user, eq(user.id, oauthAccessToken.userId))
+    // The consent is the one source of truth for «this app may read my data»: the plugin's code and
+    // refresh grants never check it, so a code exchanged after «Revoca accesso» would otherwise mint a
+    // token that `/profile/connectors` neither shows nor can revoke.
+    .innerJoin(
+      oauthConsent,
+      and(
+        eq(oauthConsent.clientId, oauthAccessToken.clientId),
+        eq(oauthConsent.userId, oauthAccessToken.userId),
+      ),
+    )
     .where(eq(oauthAccessToken.token, hashOAuthToken(token)))
     .limit(1);
   const verdict = acceptAccessToken(row ?? null, new Date(), mcpResourceUrl());
