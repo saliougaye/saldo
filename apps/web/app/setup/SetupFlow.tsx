@@ -235,7 +235,13 @@ export function SetupFlow(props: Props) {
       {step === 0 ? <Brand instanceName={nameLocked ? instance.name : undefined} /> : null}
       {step === 1 || step === 2 ? (
         <>
-          <button type="button" className={stepsBackClass} onClick={() => go(step === 1 ? 0 : 1)}>
+          <button
+            type="button"
+            className={stepsBackClass}
+            // Not while the server step is saving: its reply would move a person who went back.
+            disabled={pending || busy}
+            onClick={() => go(step === 1 ? 0 : 1)}
+          >
             <Icon name="chevL" size={14} />
             {label('back')}
           </button>
