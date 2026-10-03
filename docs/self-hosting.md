@@ -33,7 +33,7 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | |
 | `STORAGE_DIR` | `/data/attachments` | Where attachment blobs are written (used from phase 08). |
 | `SETTINGS_ENCRYPTION_KEY` | 32 random bytes, base64 | **Required.** Encrypts the secrets the admin panel stores (today the SMTP password). `openssl rand -base64 32`. See «Server settings» below: keep it. |
-| `REGISTRATION` | `invite` | Optional. `open`, `first-user` (allowed only while no account exists), `closed`, or `invite` — nobody gets in without a code, including you. Set, it wins and locks the choice in `/admin/settings`; unset, you choose there (default `first-user`). |
+| `REGISTRATION` | `invite` | Optional. `open`, `closed`, `invite` — nobody gets in without a code — or `first-user`. **The first account is always allowed, whatever the mode**: a fresh instance opens on `/setup`, a short wizard that creates it (0.3h). Set, it wins and locks the choice in `/admin/settings`; unset, the wizard asks and you can change it there later (default `first-user`). |
 | `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. The name on the sign-in page and in invites. Set, it locks the field in `/admin/settings`; unset, you choose there, and by default it is `WEBAUTHN_RP_NAME`. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | `smtp.example.com`, `587` | Optional outgoing mail. `SMTP_HOST` set means the whole group comes from the environment and is locked in the panel: `SMTP_FROM` is then required, `SMTP_PORT` defaults to 587, and `SMTP_USER` and `SMTP_PASSWORD` come together or not at all. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
@@ -48,10 +48,11 @@ Two things to know before you start:
   refuses to start without it. Generate one (`openssl rand -base64 32`) and **keep it** with your other secrets:
   it is not in the database and not in a backup of it. Losing it loses the stored SMTP password and nothing
   else — the panel says the password no longer reads, and you enter it again. Changing it does the same.
-- Use `REGISTRATION=invite`. Nothing creates an account without a single-use code, so there is no
-  window during which a stranger who finds your URL can register — you mint your own code on the
-  server before you sign in for the first time. With `open`, anyone who can reach the server can
-  create an account; `first-user` leaves the door open until somebody walks through it.
+- Use `REGISTRATION=invite`. Once your account exists, nothing creates another without a single-use code,
+  so there is no window during which a stranger who finds your URL can register. The one exception is
+  the **first** account: a fresh instance accepts whoever arrives first at `/setup` and closes the door
+  behind them, so visit it as soon as the server is up. With `open`, anyone who can reach the server can
+  create an account.
 
 ## Run it with Docker
 
@@ -195,7 +196,7 @@ values, so a secret put there is a secret published.
 | `DATABASE_URL` | `postgres://…` | **Secret.** Your managed Postgres, not the compose one. |
 | `ATTACHMENT_STORAGE` | `none`, `s3` or `vercel-blob` | Never `fs` here. |
 | `SETTINGS_ENCRYPTION_KEY` | `openssl rand -base64 32` | **Secret**, and **required**. Keep it: see «Server settings». |
-| `REGISTRATION` | `invite` | Nothing creates an account without a code, yours included. Optional: unset, `/admin/settings` decides. |
+| `REGISTRATION` | `invite` | Nothing creates an account without a code — except the first, which `/setup` creates. Optional: unset, `/admin/settings` decides. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | Must match the app's `SALDO_SCHEME` at build time. |
 | `TRUSTED_PROXIES` | — | Leave empty until you have looked at what Vercel sends; see below. |
 | `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional. Vercel does not let you set `TZ`; this is the one Saldo reads. |
@@ -239,8 +240,14 @@ deploy and no second address to remember.
 
 ## Letting people in
 
-Under `REGISTRATION=invite` every account needs a code, including yours. Mint the first one on the
-server, before you have signed in at all:
+**The first account** is made by the first-run wizard. A fresh instance sends `/`, `/login` and
+`/register` to `/setup`, which asks for the instance's name and who may register (unless `INSTANCE_NAME`
+or `REGISTRATION` already say so), then creates your account with a passkey — no code, whatever
+`REGISTRATION` says — and makes it the admin. The last step says whether email is configured and, under
+`invite`, mints the first invite for somebody else. Once an account exists `/setup` is gone, and so is the
+exception: from then on every account needs a code under `invite`.
+
+The command line still works, and is the way in on the day no admin can sign in:
 
 ```bash
 # Docker
@@ -250,9 +257,7 @@ pnpm --filter web invite new --label "me"
 ```
 
 The code is printed once — the server keeps only its hash — and looks like `HNWF-SWHY-JM3T-ETQZ`.
-Then register, either in the app (**Create account**) or on the instance itself at `/register`, which
-takes the same code and the same passkey; `/register?invite=HNWF-SWHY-JM3T-ETQZ` prefills it, so an
-invite you send by message can be one link. That first account becomes the admin.
+`/register?invite=HNWF-SWHY-JM3T-ETQZ` prefills it, so an invite you send by message can be one link.
 
 **Registration asks for an email address.** It is an identifier, not a credential: the passkey is the
 only way in, the address is what names the account in `/admin` and in the account list, and what
@@ -264,8 +269,7 @@ Profile → Server and sync, once.
 
 To invite somebody else, mint another code and send it to them. Once you can sign in as an admin, the panel at
 `/admin` does this too (**Inviti**, «Nuovo invito»: the code, a link and a QR, shown once), and so do the accounts
-below (**Account**: promote, revoke, restore, delete). The commands stay the way in when no admin can sign in, and for
-the first invite:
+below (**Account**: promote, revoke, restore, delete). The commands stay the way in when no admin can sign in:
 
 ```bash
 pnpm --filter web invite new --label "Marco" --days 3
