@@ -2272,8 +2272,8 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   page names the client as it registered itself, shows the redirect host in full, explains the two scopes in one
   line each, and offers «Autorizza» / «Nega». A refusal redirects with `access_denied`. Consent is remembered: the
   same client asking for the same or fewer scopes is not asked again.
-- **An admin can switch it off.** `mcp.enabled` in `server_settings` (default on), shown as a panel of
-  `/admin/settings`; `MCP_ENABLED=true|false` in the environment wins and locks the panel, like the other
+- **An admin can switch it off.** `mcp.enabled` in `server_settings` (default on), shown on its own admin page
+  `/admin/mcp` (§17.4.3); `MCP_ENABLED=true|false` in the environment wins and locks the switch, like the other
   settings (D33). Off: `/mcp` and both `.well-known` documents answer 404, `/oauth/consent` refuses, and
   `/profile/apps` says so. Tokens already issued stop working while it is off and work again when it is on.
 
@@ -2321,38 +2321,76 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   add a second confirmation.
 - **Not offered:** resources, prompts, sampling, elicitation, notifications.
 
-#### 17.4.3 «App collegate» in Profile, and what the admin sees
+#### 17.4.3 «App collegate» in Profile, consent, and what the admin sees
 
-- **The look is decided before it is built (0.4-ui).** As 0.3c did for every web page, the three screens of this
-  milestone — `/profile/apps`, `/oauth/consent`, the «Assistenti (MCP)» panel of `/admin/settings` with the Istanza
-  line — are first drawn as variants in one HTML harness, `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html`,
+- **The look was decided before it was built (0.4-ui, 2026-10-03).** As 0.3c did for every web page, the three
+  screens were first drawn as variants in one HTML harness, `docs/superpowers/mockups/2026-10-03-mcp-apps-variants.html`,
   on the web tokens and the shells of §17.1.7, with their empty, filled, «switched off» and error states. The user
-  picks a variant per screen; the choices are recorded here, under this bullet, and only then does 0.4a build them.
-  What follows is the brief for the mockup, not the final layout.
-- `/profile/apps`, a section of Profilo's sub-navigation after Passkey. At the top a card «Collega un assistente»
-  with the endpoint `{PUBLIC_URL}/mcp` to copy and two lines of instructions (Claude Code; other clients). Below,
-  one row per consent: the client's name, the scopes as chips (Lettura · Scrittura), when it was authorized, when
-  it was last used, and «Revoca» with an inline confirmation, the passkeys' pattern. No consent: the card alone.
-  MCP switched off: the card says so and, to an admin, links to the panel.
+  picked; the harness's «★ Scelta» variant (its default) is the reference 0.4a builds, and the bullets below
+  describe it.
+- **The word is «MCP».** Every user-visible string of this milestone says «MCP» or «client MCP» — the card, the
+  empty state, the «switched off» notices, the consent page, the admin page, its sub-navigation entry —
+  never «assistente» or «assistenti». The in-app assistant is 0.5's; this milestone is a protocol endpoint the
+  user points their own client at, and the copy names it so. The same goes for the docs' headings (§17.4.4).
+- **`/profile/apps`** («App collegate»), a section of Profilo's sub-navigation after Passkey (icon `plug`). Two
+  sections, the top one from variant C and the rows from variant B:
+  - **«Collega»**: one line of explanation (give this address to your MCP client; no key to copy; the client
+    brings you back here, you sign in with your passkey and choose what it may do), the endpoint
+    `{PUBLIC_URL}/mcp` with «Copia», and tabs per client — **Claude Code** (the exact
+    `claude mcp add --transport http saldo {PUBLIC_URL}/mcp` line, and that the first call opens the browser),
+    **Claude** (Settings › Connectors › Add custom connector, paste the address), **Altro client** (any MCP client
+    with HTTP and OAuth discovers the rest from `/.well-known/oauth-protected-resource`; `npx mcp-remote` for a
+    terminal without a browser).
+  - **«Autorizzate»** with a count: one row per consent — the client's tile, its name, the granted scopes as
+    chips (only those granted: «Lettura», «Scrittura»), when it was authorized, when it was last used, and a
+    chevron. A row opens the trailing panel of §17.1.7, the passkeys' pattern: the facts (scopes, the redirect
+    host it returns to, authorized on, last used, calls since), one line on what a client sees and may change,
+    and «Revoca accesso» at the bottom with an inline confirmation («Revocare {client}? Smetterà di funzionare
+    alla prossima chiamata»). On the phone-width layout the panel is a pushed screen titled with the client's
+    name. Under the rows, the 180-day and next-call notes.
+  - **No consent**: «Collega» as usual and, under «Autorizzate», the empty state («Nessuna app collegata»).
+    **MCP switched off**: «Collega» is replaced by a warning («MCP è disattivato su questa istanza»); to an
+    admin it says they switched it off and links to `/admin/mcp`. The rows stay, so revoking still works.
+- **`/oauth/consent`**, variant C («Carta del client»), on the auth layout: the brand, the title «Un'app chiede di
+  collegarsi», then the client's card (initial, name as it registered itself, «torna a {redirect host}», and
+  «registrata adesso» or «già autorizzata il …»). A client registered moments ago — not seen before — gets a note
+  under the card: the name is chosen by the app itself, trust it only if you started the request a moment ago.
+  Then «Cosa può fare a tuo nome:» and the two scopes as checkbox rows — «Leggere i tuoi dati» always on and marked
+  «richiesto», «Aggiungere e modificare» only when the client asked for `write`, untickable. Then who is signed in
+  with «Non sei tu?», «Autorizza» (it reads «Autorizza solo la lettura» when `write` was unticked) and «Nega»,
+  and the revocation note. States drawn: both scopes, read only, a client asking for `read` alone, refused
+  («Accesso negato», back to Saldo) and switched off («MCP è disattivato»).
+- **Admin: its own page `/admin/mcp`**, variant C — an entry «MCP» (icon `plug`) in the admin sub-navigation
+  after Impostazioni; `/admin/settings` gets no MCP row. The page holds:
+  - the switch «Permetti agli utenti di collegare client MCP» with one paragraph on what on and off mean (each user
+    authorizes their own clients with their passkey; off: the endpoint answers 404 and authorized apps stop until it
+    is back on). Switching **off** asks first, inline, naming what stops («3 utenti hanno 5 app autorizzate:
+    smetteranno di rispondere alla prossima chiamata»), «Annulla» / «Spegni»; switching on needs no confirmation.
+    With `MCP_ENABLED` set, a lock note names the variable and the switch is disabled;
+  - three numbers: **users with an app connected** (out of all accounts), **apps authorized**, **apps used in the
+    last 7 days** — aggregates only, no client names, no user's detail. (The mockup's first draft had «calls
+    today»; `mcp_usage` keeps a running count per pair, not per day, so it became the 7-day count, which
+    `last_used_at` answers.) Istanza (`/admin`) shows nothing about MCP: the numbers live here;
+  - «Cosa dare a un client»: the endpoint with «Copia», and a line naming the two `.well-known` documents served
+    on this host and that `PUBLIC_URL` has to be `https://`.
 - **«Ultimo uso»** is a table of ours, `mcp_usage (user_id, client_id, last_used_at, calls)`, written on a request
-  to `/mcp` at most once a minute per pair. Istanza (`/admin`) shows how many users have an app connected; the
-  admin sees no client names and no calls.
+  to `/mcp` at most once a minute per pair (the calls of that minute added in one write). It feeds the rows, the
+  panel and the admin's 7-day count.
 - Strings under `web.apps.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
 
 #### 17.4.4 Security, documentation, steps
 
-- §18 gains a paragraph, and `SECURITY.md` a section «Assistenti e app collegate»: what a token is and is not,
+- §18 gains a paragraph, and `SECURITY.md` a section «MCP e app collegate»: what a token is and is not,
   the audience, the scopes, the immediate revocation, the 180 days, that no token is ever logged or accepted in a
   URL, that a write goes through the same path as the web's, and that this server never calls a model itself.
-- `docs/self-hosting.md` gains «Collegare un assistente»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
+- `docs/self-hosting.md` gains «Collegare un client MCP»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
   to be `https://` — MCP clients refuse to authorize against plain `http` anywhere but on the same machine.
 - **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
   on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call
   into a 401, the switch; the consent page; `resolveSettings` with `MCP_ENABLED`; the i18n parity.
 - **Three steps, three plans:** **0.4-ui** — the mockup harness of §17.4.3, iterated with the user until a variant
-  per screen is picked and written into the spec (design work, written in the main checkout as the earlier
-  harnesses were); **0.4a** — the OAuth provider, consent, `/profile/apps`, the admin panel, `/mcp` with the read
-  tools, the docs, on the chosen variants; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and
+  per screen was picked and written into the spec (**done 2026-10-03**); **0.4a** — the OAuth provider, consent,
+  `/profile/apps`, `/admin/mcp`, `/mcp` with the read tools, the docs, on the chosen variants; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and
   `phase/0.4b-mcp-write`; 0.4-ui has no branch.
 
 #### 17.4.5 Done when
@@ -2360,7 +2398,7 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
 A user connects an MCP client to their instance through the browser consent alone, asks about the current period,
 and the answer matches Statistiche to the cent; with `write` granted, a transaction the assistant creates reaches
 the phone on its next sync; revoking the app in Profile turns the assistant's next call into a 401; an admin
-switches the whole thing off from `/admin/settings`.
+switches the whole thing off from `/admin/mcp`.
 
 
 ---
