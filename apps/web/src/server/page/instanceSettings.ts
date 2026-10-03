@@ -4,6 +4,7 @@ import type { RegistrationMode } from '../env';
 import { describeInstance, type InstanceInfo } from '../instance';
 import { mailEnabled } from '../mail/mailer';
 import { readServerSettings } from '../settings/serverSettings';
+import { setupNeeded } from '../setup/state';
 
 /**
  * §17.1.8 for pages: the settings read once per request, however many of these a layout and its
@@ -24,3 +25,6 @@ export async function pageInstanceInfo(): Promise<InstanceInfo> {
  * sign-in line and Profilo's email row all ask, and each asks for the same answer.
  */
 export const pageMailEnabled = cache(() => mailEnabled(getDb()));
+
+/** 0.3h: whether the instance still has no account, read once per request by the pages that send to `/setup`. */
+export const pageSetupNeeded = cache(() => setupNeeded(getDb()));
