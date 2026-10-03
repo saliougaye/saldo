@@ -529,6 +529,26 @@ Asked for by the user on 2026-09-11 as three **investigations**. All three ended
   grid, and `CustomRangeSheet` uses the same component in range mode, so there is one calendar.
   "Oggi" and "Ieri" stay chips on the form, so the common case opens no sheet at all.
 
+### Notifications for future transactions & the period recap 🚧 planned
+
+Not built yet. Card charge-day reminders (§5.3) and budget alerts (§5.8) already use
+`expo-notifications`; these three reuse that same permission flow and scheduling pattern
+(`{kind}:{id}` notification ids, rescheduled on write, none when the thing they warn about no
+longer applies).
+
+- **Reminder ahead of a future (scheduled) transaction.** A per-transaction lead time (e.g. "1
+  giorno prima" / "il giorno stesso") so a user with `date > today` (§5.3, "In arrivo") gets warned
+  before it lands, not just on the day. Needs a field on the transaction (or a global default) for
+  how far ahead to notify.
+- **Notification when a scheduled transaction reaches its date.** Distinct from the reminder above:
+  fires *on* the day a transaction moves from "In arrivo" into the counted totals, so the user
+  learns balances changed without opening the app. One per transaction (`transaction-due:{id}`),
+  cancelled if the transaction is edited to a later date or deleted before firing.
+- **Notification when the period recap is ready.** Today §5.15's recap only ever surfaces on the
+  first app open after a period closes — there is no push telling the user it is waiting. Add a
+  local notification the moment a period closes (same "seen once" / `lastRecapPeriod` bookkeeping),
+  tapping it opens the recap sheet directly.
+
 ### Backlog from hands-on use 🚧 planned
 
 **Plan:** `2026-09-13-11z-backlog-cleanup.md`, which closes the transfers bullet below, moves the recents rule into

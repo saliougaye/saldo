@@ -361,6 +361,21 @@ calls. No calculation is written twice; if the web app shows a number the phone 
       section is what 0.3b's account needs to be safe (a second passkey, a rename, a delete), and it is already at
       the URL §17.1.7 gives it; 0.3d wraps it in the sub-navigation and the trailing panel rather than moving it.
 - [x] **Out:** desktop extras (bulk edit, CSV preview, print) until after release; browser e2e tests.
+- [x] **First-run setup is a wizard, without an SMTP step (decided 2026-10-01).** A fresh instance greets the
+      self-hoster with a short wizard instead of the `first-user` door and the CLI's first invite (0.3h). SMTP is
+      not in it: it is a product setting of `/admin/settings` (D33), registration never depends on mail (D32),
+      and the test email needs an account to be sent to, which the wizard is still creating. The last step shows
+      the email status and, when it is missing, links to the panel. Variant A · Wizard of
+      `.variants/first-run-setup.html` (local; it moves to `docs/superpowers/mockups/` with the plan).
+- [x] **Mail stays SMTP, and a provider is used through its SMTP relay (decided 2026-10-01).** No native driver
+      for Resend, Postmark, SES or the others: every one of them exposes an SMTP relay that works with the
+      `SMTP_*` group or the panel as they are (Resend: `smtp.resend.com`, port 465 or 587, user `resend`, the API
+      key as the password, a sender on a verified domain). What is missing is the explanation, not the code —
+      `docs/self-hosting.md` only ever names Mailpit. 0.3i writes it. A `MAIL_TRANSPORT=smtp|resend` env switch
+      with a `fetch` driver (the Documenso and Plausible shape; env-only, locking the panel like `SMTP_HOST`)
+      stays an option if a host turns out to block the SMTP ports; the model of the panel (D33, as Immich does
+      it) does not change. Survey of how Gitea, Grafana, Mastodon, Immich, Vaultwarden, Nextcloud, Documenso,
+      Plausible, Cal.com and Dub do it: in the session of 2026-10-01.
 
 **Steps** (each gets its own plan under `docs/superpowers/plans/`):
 
@@ -373,10 +388,13 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 | 0.3e | **Done 2026-09-30.** Writes: server HLC, Server Actions through the push upsert, transaction/account/category/budget forms, web onboarding and seed. Four plans, executed in order on `phase/0.3e-writes`: **0.3e-1 done (2026-09-29)** — the server clock, `writeChanges`, the transaction form (new, edit, delete, «Annulla»), «Nuova transazione» in the top bar and the FAB, the keyboard, `/onboarding` and the seed with deterministic category ids; plan `docs/superpowers/plans/2026-09-29-0.3e-1-write-path.md`. **0.3e-2 done (2026-09-30)** — Conti: «Nuovo conto» and the account form, archive/restore and the archived list, goals (new, edit, «Accantona», «Preleva», close in one write, restore), and `/budgets` with the budget form; the forms' rules and the goal plans moved into `@saldo/core`; plan `docs/superpowers/plans/2026-09-30-0.3e-2-conti-budgets-writes.md`. **0.3e-2b done (2026-09-30)** — Profilo's Categorie (create, edit, reorder, archive with move, restore, «Budget mensile»), Budget (moved from `/budgets`) and Obiettivi (the goal form moved out of Conti); plan `docs/superpowers/plans/2026-09-30-0.3e-2b-profile-sections.md`. **0.3e-3 done (2026-09-30)** — Profilo: the preference panels saved on choice (`/profile/preferences?edit=`; language, theme, cycle day, time zone, and the currency after a confirmation), Tag (`/profile/tags`: new, rename, merge, delete) and Dati (`/profile/data`: the JSON backup and the CSV as downloads from `/api/export/*`, built by core's `io/exportFiles`, shared with the phone); the temporary route 0.3e-1 added to sign a browser in without a passkey is deleted, so checking the web UI in a browser now needs a real passkey; plan `docs/superpowers/plans/2026-09-30-0.3e-3-profile-preferences-tags-data.md` | d |
 | 0.3f | **Done 2026-10-01.** Admin: accounts, invites, instance, `server_settings` with encryption, SMTP, email verification and recovery. **0.3f-1 done (2026-09-30)** — `/admin` with Account (facts, promote, revoke, restore, delete with the email typed), Inviti (mint with the code shown once as text, link and QR; inspect; revoke) and Istanza, on Profilo's shared shell; plan `docs/superpowers/plans/2026-09-30-0.3f-1-admin-accounts-invites-instance.md`. **0.3f-2 done (2026-09-30)** — `server_settings` with the SMTP password encrypted at rest, `/admin/settings` (instance name, registration mode, SMTP with a test email; an environment variable wins and locks), `SETTINGS_ENCRYPTION_KEY` required, `REGISTRATION` optional; plan `docs/superpowers/plans/2026-09-30-0.3f-2-server-settings-smtp.md`. **0.3f-3 done (2026-10-01)** — email verification (on registration and from Profilo → Account) and recovery of a lost passkey by a magic link to a verified address, through a confirmation page; needs SMTP, without it nothing changes; plan `docs/superpowers/plans/2026-09-30-0.3f-3-email-verification-recovery.md`. | b |
 | 0.3g | **Done 2026-10-01.** PWA: a manifest named after the instance, icons from the mascot (192, 512, maskable, apple-touch, favicon), a hand-written service worker that serves a localized offline page to a navigation with no network and caches nothing else, registered in production only; the Docker image now ships `public/`; plan `docs/superpowers/plans/2026-10-01-0.3g-pwa.md` | d |
+| 0.3h | **Planned 2026-10-01.** First-run setup: while the instance has no account, `/`, `/login` and `/register` send to `/setup`, a four-step wizard — **Benvenuto** (version, database reached, no account yet), **Il tuo server** (instance name, registration mode; a value set by `INSTANCE_NAME` or `REGISTRATION` shows locked), **Il tuo account** (name, email, passkey: the first account, with the `admin` role), **Pronto** (summary; the email line reads «configurata dall'ambiente» under `SMTP_HOST`, otherwise «non configurata» with a link to `/admin/settings?edit=smtp`; an optional first invite when the mode is `invite`) → `/home`. Writes the name and the mode to `server_settings` only where the environment does not set them. Once an account exists `/setup` is gone, so `first-user` loses its reason on a fresh instance; the CLI stays for the day no admin can sign in. No SMTP step (see the decision above). Mockup `.variants/first-run-setup.html`, variant A | b, f |
+| 0.3i | **Planned 2026-10-01.** Docs only: how to send mail through a provider. A «Provider via SMTP» section in `docs/self-hosting.md` with one worked example per provider (Resend, Postmark, Amazon SES, Mailgun, Brevo), each as the five `SMTP_*` lines and as the same values typed into `/admin/settings?edit=smtp`; the domain verification (SPF, DKIM) the provider asks for before it accepts a sender; which ports pass `transportSecurity` (465 implicit TLS, 587 STARTTLS; Resend also 2465 and 2587 for hosts that block the usual ones); the test email as the check. The same example, shortened, in `apps/web/.env.example` and the compose file's comments. No code, no spec change. | f |
 
 **Done when:** a user registers on the web or signs in with the phone's passkey, sees Home, transactions and
 Statistics matching the phone to the cent, adds a transaction that reaches the phone on its next sync, and
-installs the app to the home screen; an admin runs the instance from `/admin`; the projection is the only way
+installs the app to the home screen; a self-hoster's first visit to a fresh instance ends with an admin account and
+nothing left to do on the command line; an admin runs the instance from `/admin`; the projection is the only way
 server code reads rows.
 
 ---
@@ -407,9 +425,15 @@ units plus the currency.
 
 **To decide before planning:**
 
-- [ ] Whether this replaces the spending insights half of 0.5 or sits beside it. A user with Claude on the
-      desktop gets insights through MCP without giving Saldo a key at all; receipt analysis still needs the
-      in-app flow, so 0.5 does not disappear. Answer this before planning 0.5, not before planning this.
+- [x] **Sits beside it (decided 2026-10-01, D38).** Two audiences: a technical user runs Claude Code or
+      another MCP client, connects the instance and combines it with their other integrations; a
+      non-technical member of the same instance wants the insights in the app without a client to set up. On an
+      instance the admin holds the key anyway (D36), so the second audience costs them nothing. The price is
+      two paths that must answer alike: the insights prompt of 0.5 is fed by **the same tool functions** this
+      milestone writes, called in-process, so there is one definition of «what a model is told about the user»,
+      one §18 paragraph for both, and a question asked in Claude and in the app gives the same numbers. MCP
+      still ships first: it has no key, no consent screen and no prompt to tune, and it is where the tool
+      shapes get tested before a prompt depends on them.
 - [ ] Token model: one token per client, expiry, and what a revoked token does to an in-flight conversation.
 - [ ] Rate limits and the audit trail: a token that reads everything deserves a «last used» column in Profile.
 - [ ] Spec section (`§17.4 MCP server`), then the plan.
@@ -446,14 +470,16 @@ URL, model id configurable.
 ### Spending insights (§17.3)
 
 Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.2 — never raw
-descriptions unless the user opts in; results cached per cycle. **Only if 0.4 has not made it redundant**: a
-user whose assistant already reads their data through MCP may not need Saldo to hold a key for this.
+descriptions unless the user opts in; results cached per cycle. **Ships beside 0.4, not instead of it**
+(decided 2026-10-01, D38): the user with an MCP client gets the same answers from their own assistant, the user
+without one gets them in the app. The prompt is built from the output of the MCP tool functions of 0.4, called
+in-process, so the two never describe the user's finances differently.
 
 **To decide before planning:**
 
 - [x] Key **per instance** (decided 2026-09-26, D36): the admin sets it in `/admin` (server settings of 0.3,
       encrypted at rest), everyone on the instance uses it, the admin pays.
-- [ ] Whether insights ship at all, given 0.4.
+- [x] Insights ship, beside 0.4 (decided 2026-10-01, D38; see 0.4). Their input is the 0.4 tool output.
 - [ ] The wording of the §18 change and of the consent screen.
 - [ ] The local-only mode (0.1, «A first run with no server») has no AI. Write that down where that
       idea is planned.
