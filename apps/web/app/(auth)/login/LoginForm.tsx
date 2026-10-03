@@ -31,7 +31,7 @@ export interface LoginStrings {
  * `@simplewebauthn/browser` aborts any ceremony in flight when a new one starts, so pressing the
  * button while autofill is armed is safe; the armed one then fails with an abort, which is ignored.
  */
-export function LoginForm({ strings }: { strings: LoginStrings }) {
+export function LoginForm({ strings, next }: { strings: LoginStrings; next: string | null }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ title: string; body: string } | null>(null);
@@ -39,12 +39,19 @@ export function LoginForm({ strings }: { strings: LoginStrings }) {
 
   const succeed = (credentialId: string | undefined) => {
     if (credentialId !== undefined) rememberPasskey(credentialId);
+    // §17.4.1: an MCP authorization in progress. A full navigation, because the next stop is an API
+    // route that redirects (to the consent page, or straight back to the client).
+    if (next !== null) {
+      window.location.assign(next);
+      return;
+    }
     // `replace`: the sign-in page must not come back on a hardware back from inside the app.
     router.replace('/home');
   };
 
   // The ceremony is armed once per page, not once per render — `succeed` is stable enough for that
-  // (it only closes over `router`, which Next guarantees stable) and listing it would re-arm on
+  // (it only closes over `router`, which Next guarantees stable, and `next`, fixed by the server for
+  // the page) and listing it would re-arm on
   // every render of a component that never unmounts before the ceremony resolves.
   // biome-ignore lint/correctness/useExhaustiveDependencies: armed once per page, not once per render.
   useEffect(() => {

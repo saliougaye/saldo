@@ -3,6 +3,8 @@ import { publicI18n } from '../../../src/i18n/server';
 import { currentUser } from '../../../src/server/auth/currentUser';
 import { registrationAllowed } from '../../../src/server/auth/policy';
 import { getDb } from '../../../src/server/db/client';
+import { consentSearchParams } from '../../../src/server/mcp/consent';
+import { oauthResumePath } from '../../../src/server/mcp/resume';
 import {
   pageInstanceInfo,
   pageMailEnabled,
@@ -17,10 +19,18 @@ import { LoginForm } from './LoginForm';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** §17.1.1: `/login` for a browser with no session. One already signed in has nothing to do here. */
-export default async function LoginPage() {
+/**
+ * §17.1.1: `/login` for a browser with no session. One already signed in has nothing to do here —
+ * unless an MCP client sent it (§17.4.1): then it goes straight back to the authorization.
+ */
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   if (await pageSetupNeeded()) redirect('/setup');
-  if ((await currentUser()) !== null) redirect('/home');
+  const resume = await oauthResumePath(consentSearchParams(await searchParams));
+  if ((await currentUser()) !== null) redirect(resume ?? '/home');
   const { t } = await publicI18n();
   const instance = await pageInstanceInfo();
   const canRegister = await registrationAllowed(getDb(), await pageRegistrationMode());
@@ -35,6 +45,7 @@ export default async function LoginPage() {
       <h1 className={styles.title}>{t('web.auth.signInTitle')}</h1>
       <p className={styles.lede}>{t('web.auth.signInBody')}</p>
       <LoginForm
+        next={resume}
         strings={{
           emailLabel: t('web.auth.emailLabel'),
           emailPlaceholder: t('web.auth.emailPlaceholder'),
