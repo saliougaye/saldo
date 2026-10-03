@@ -93,6 +93,8 @@ cycle, and am I going faster than I should?*
 | D36 | **The AI provider key is one per instance**, set by the admin in `/admin` (decided 2026-09-26, for 0.5) | One household per instance is the case Saldo serves; the admin pays and every client, phone and web, uses the same key. |
 | D37 | **The user's time zone is a synced setting, not a cookie** (decided 2026-09-26, §17.1.5) | The server computes «today» for the web, and from 0.4 for MCP and AI, which have no browser to send a cookie. A cookie is also missing on the very first request. `settings.timeZone` is filled at onboarding and changed by hand, as Sure does with `families.timezone`; it does not follow a travelling device, so two devices in different zones do not overwrite each other and a period closes where the user lives. Profile shows it and warns only when the phone's zone differs (mockup `docs/superpowers/mockups/2026-09-26-timezone-variants.html`, variant «Viaggio + ora»): travelling is the one moment when the web and the phone can disagree about today. |
 | D38 | **MCP (0.4) and AI insights (0.5) both ship; insights are built on the MCP tool functions** (decided 2026-10-01) | Two audiences on one instance: the technical user already running Claude Code or another MCP client connects their instance and combines it with their other integrations, and never gives Saldo a key; the non-technical member of the same instance wants the insights in the app with nothing to set up, and the admin holds the key anyway (D36). The cost of two paths is two descriptions of the user's finances that can drift; so the insights prompt is fed by the same tool functions MCP exposes, called in-process, and §18 describes what a model is told once, for both. MCP ships first: no key, no consent screen, no prompt to tune, and the tool shapes are tested there before a prompt depends on them. |
+| D39 | **The MCP endpoint is protected by OAuth 2.1 only; no personal access tokens** (decided 2026-10-03, §17.4.1) | One credential surface to describe and defend. OAuth is what the connectors of claude.ai and the Claude apps accept, and Claude Code, Cursor and the CLIs speak it too (directly or through `mcp-remote`); a pasted token would have served only the second group and doubled §18. Saldo is its own authorization server through `@better-auth/oauth-provider` on the Better Auth instance already there: dynamic registration, PKCE, opaque tokens stored hashed and checked on every call, so revoking in Profile stops the next request without waiting for a JWT to expire. |
+| D40 | **MCP ships reads and writes, under two scopes (`read`, `write`)** (decided 2026-10-03, §17.4.2) | An assistant that can only read answers questions; one that can also write saves the typing, which is the point of talking to it. The write perimeter is exactly the web's (§17.1.3) and goes through the same server write functions, rules and `basis` check, so there is nothing new to defend; what is new is the consent, hence the two scopes the user sees and can halve. Reads ship first (0.4a) and writes second (0.4b), on the same catalogue. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -2228,6 +2230,130 @@ settings from `/admin`. The projection is the only way server code reads rows.
   unless the user opts in.
 - `@saldo/core/ai` `InsightsProvider` interface; results cached locally per cycle.
 
+### 17.4 MCP server (milestone 0.4, decided 2026-10-03)
+
+The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint so an assistant the user
+already runs — Claude Code, Claude's connectors, Cursor, any MCP client — reads and writes their data on their own
+instance. The mirror image of 0.5: there the server holds a key and calls a model; here the user's model calls the
+server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the idea; this section is the design.
+
+#### 17.4.1 One authorization server, OAuth 2.1 only (D39)
+
+- **Saldo is the authorization server for its own MCP endpoint.** The `@better-auth/oauth-provider` plugin is
+  mounted on the existing Better Auth instance (§9, §17.1.4), so the OAuth endpoints live under `/auth/oauth2/*`
+  (`register`, `authorize`, `token`, `revoke`, `introspect`) and the two discovery documents MCP clients require
+  are served at the root by a Next rewrite: RFC 8414 `/.well-known/oauth-authorization-server` and RFC 9728
+  `/.well-known/oauth-protected-resource`. The issuer is `PUBLIC_URL`.
+- **No personal access tokens.** The ROADMAP sketched a token pasted into the client; it is dropped. One
+  credential surface is enough to describe and to defend, and OAuth is the only one the connectors of claude.ai
+  and the mobile Claude apps accept. A CLI client that cannot open a browser uses `mcp-remote` or its own
+  device-style flow; the device authorization grant is **not** offered until a client asks for it.
+- **Clients register themselves** (RFC 7591 dynamic client registration, no session required, as MCP expects).
+  Every client is public: PKCE S256 is mandatory, redirect URIs are `https://…` or loopback
+  (`http://127.0.0.1`, `http://localhost`, any port), exact match. Registration is rate-limited per IP (one per
+  minute) and a registration does not grant anything by itself — a token exists only after a user consents.
+- **Tokens are opaque, stored hashed, checked on every call.** `disableJwtPlugin: true`: the plugin issues no
+  JWT, so there is nothing a revocation has to wait for. Access tokens live **1 hour**; refresh tokens are rotated
+  on every use (`refreshTokenReuseInterval` 30 s for clients that retry) and each new one lives **180 days**, so an
+  authorization that is not used for six months lapses on its own — the same bound the phone's session has (§18).
+  Revoking in Profile deletes the consent and every token of that user–client pair; the client's next request is
+  a 401, and it has to be authorized again.
+- **The resource is `{PUBLIC_URL}/mcp`.** Clients send it as the `resource` parameter (RFC 8707) on the
+  authorization and token requests; the endpoint accepts only tokens bound to it. An unauthenticated request is
+  answered `401` with `WWW-Authenticate: Bearer resource_metadata="{PUBLIC_URL}/.well-known/oauth-protected-resource"`;
+  a token in the query string is refused, as OAuth 2.1 requires.
+- **Two scopes: `read` and `write` (D40).** A client asks for one or both; the consent page shows them as two
+  lines and the user can refuse `write`. Tools are filtered by scope when the server is built for a request
+  (§17.4.2), so a `read` token never even lists a write tool; a call that slips through anyway is refused with the
+  JSON-RPC error `insufficient_scope`. Nothing else is granted: no OpenID Connect, no id token, no `userinfo`
+  claims beyond what the plugin needs, no client credentials, no DPoP, no CIMD. Each is added the day a client needs it.
+- **Consent at `/oauth/consent`**, on the auth layout of §17.1.7. The plugin sends the browser there with a signed
+  query (`verifyOAuthQueryParams`); a visitor who is not signed in goes through `/login` first and comes back. The
+  page names the client as it registered itself, shows the redirect host in full, explains the two scopes in one
+  line each, and offers «Autorizza» / «Nega». A refusal redirects with `access_denied`. Consent is remembered: the
+  same client asking for the same or fewer scopes is not asked again.
+- **An admin can switch it off.** `mcp.enabled` in `server_settings` (default on), shown as a panel of
+  `/admin/settings`; `MCP_ENABLED=true|false` in the environment wins and locks the panel, like the other
+  settings (D33). Off: `/mcp` and both `.well-known` documents answer 404, `/oauth/consent` refuses, and
+  `/profile/apps` says so. Tokens already issued stop working while it is off and work again when it is on.
+
+#### 17.4.2 The endpoint and the tools
+
+- **Transport.** `POST {PUBLIC_URL}/mcp`, Streamable HTTP in **stateless** mode with JSON responses (no SSE
+  stream, no session id): every request carries its token, is authenticated, served and forgotten. `GET` and
+  `DELETE` answer 405. The server is built per request from the `@modelcontextprotocol/server` SDK, registering
+  the tools of the catalogue that the token's scopes allow. Body limit 1 MB; rate limit 120 requests per minute
+  per token, per process like the others (§18).
+- **The catalogue lives in `@saldo/core`**, folder `assistant/`: for each tool its name, its description (in
+  English — it speaks to the model, not to the user), the Zod schemas of input and output, the MCP annotations
+  (`readOnlyHint`, `destructiveHint`, `idempotentHint`) and, for the read tools, a pure
+  `run(data: UserData, ctx: { today, timeZone }, input) → output` with unit tests. This is the one description of
+  «what a model is told about the user» that D38 asked for: 0.5 calls the same functions in-process. Next to it,
+  `assistantInstructions`, the text the server sends in `initialize.instructions`: what a period is and how the
+  cycle day moves it, that amounts come as minor units with a decimal rendering, how categories nest, which
+  currency the user keeps, and that «today» is the user's, in the user's time zone (D37).
+- **The route is thin**: authenticate → `loadUserData` and `todayFor` (§17.1.2, §17.1.5) → build the server →
+  answer. A read tool is `run(data, ctx, input)`. A write tool maps its input onto the server's existing write
+  functions (`apps/web/src/server/write/*`, §17.1.3) — the same code the web's forms call, with the rules in core,
+  `writeInTransaction` and the `basis` check — so an assistant can neither write what a form could not nor
+  overwrite an edit the phone made meanwhile. A refused write (rule, conflict, unknown id) comes back as a tool
+  error with a readable message, never as an exception or a 500.
+- **Results.** Every tool returns `structuredContent` and the same JSON as `content[0].text`. An amount is
+  `{ "minor": 12345, "currency": "EUR", "amount": "123.45" }` — the model reads `amount`, which
+  `formatMinorUnits` renders from the integer; arithmetic goes back to `minor`. Dates are `YYYY-MM-DD`. Entities
+  carry their real ids so a write can name them, and the names the user typed for accounts, categories and tags,
+  untranslated. No aggregate is computed here: a tool returns what a page of the app already shows, through the
+  same core functions (`summarizePeriod`, `spendingByCategory`, `budgetViews`, `accountBalances`,
+  `forecastPeriods`, …), and a parity test checks that a tool and the page it mirrors say the same numbers.
+- **Periods.** A tool that takes a period accepts `period`: `"current"`, `"previous"`, or a `YYYY-MM-DD` date
+  inside the period wanted — the web's `?p=` — or an explicit `from`/`to` pair; resolution is `period.ts`'s.
+- **Read tools (scope `read`):** `get_context` (today, time zone, currency, period kind and the current period's
+  bounds, language) · `list_accounts` (balances, pockets; archived on request) · `list_categories` ·
+  `list_tags` · `list_transactions` (filters: period, kind, account, category, tag, text; `limit` ≤ 200 and
+  `offset`) · `get_period_summary` (income, expenses, balance, «Quota impegnata», the previous period beside it)
+  · `spending_by_category` (totals per category, rolled up to parents) · `list_budgets` (with progress) ·
+  `list_goals` · `list_upcoming` (next occurrences of the recurrences) · `get_forecast` (the three periods of 0.2).
+- **Write tools (scope `write`)**, the web's perimeter and no more: `save_transaction` (create, or update by id) ·
+  `delete_transaction` · `save_account` · `archive_account` (and restore) · `save_category` · `archive_category`
+  (and restore, with the move of §6) · `save_tag` · `merge_tags` · `delete_tag` · `save_budget` · `delete_budget`
+  · `save_goal` · `move_goal_money` (set aside / withdraw) · `close_goal`. Recurrences and attachments stay out,
+  as on the web (§17.1.3). The assistant's client is what asks the person to confirm a write; the server does not
+  add a second confirmation.
+- **Not offered:** resources, prompts, sampling, elicitation, notifications.
+
+#### 17.4.3 «App collegate» in Profile, and what the admin sees
+
+- `/profile/apps`, a section of Profilo's sub-navigation after Passkey. At the top a card «Collega un assistente»
+  with the endpoint `{PUBLIC_URL}/mcp` to copy and two lines of instructions (Claude Code; other clients). Below,
+  one row per consent: the client's name, the scopes as chips (Lettura · Scrittura), when it was authorized, when
+  it was last used, and «Revoca» with an inline confirmation, the passkeys' pattern. No consent: the card alone.
+  MCP switched off: the card says so and, to an admin, links to the panel.
+- **«Ultimo uso»** is a table of ours, `mcp_usage (user_id, client_id, last_used_at, calls)`, written on a request
+  to `/mcp` at most once a minute per pair. Istanza (`/admin`) shows how many users have an app connected; the
+  admin sees no client names and no calls.
+- Strings under `web.apps.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
+
+#### 17.4.4 Security, documentation, steps
+
+- §18 gains a paragraph, and `SECURITY.md` a section «Assistenti e app collegate»: what a token is and is not,
+  the audience, the scopes, the immediate revocation, the 180 days, that no token is ever logged or accepted in a
+  URL, that a write goes through the same path as the web's, and that this server never calls a model itself.
+- `docs/self-hosting.md` gains «Collegare un assistente»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
+  to be `https://` — MCP clients refuse to authorize against plain `http` anywhere but on the same machine.
+- **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
+  on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call
+  into a 401, the switch; the consent page; `resolveSettings` with `MCP_ENABLED`; the i18n parity.
+- **Two steps, two plans:** **0.4a** — the OAuth provider, consent, `/profile/apps`, the admin panel, `/mcp` with
+  the read tools, the docs; **0.4b** — the write tools. Branches `phase/0.4a-mcp-read` and `phase/0.4b-mcp-write`.
+
+#### 17.4.5 Done when
+
+A user connects an MCP client to their instance through the browser consent alone, asks about the current period,
+and the answer matches Statistiche to the cent; with `write` granted, a transaction the assistant creates reaches
+the phone on its next sync; revoking the app in Profile turns the assistant's next call into a 401; an admin
+switches the whole thing off from `/admin/settings`.
+
+
 ---
 
 ## 18. Security & privacy checklist
@@ -2268,6 +2394,13 @@ settings from `/admin`. The projection is the only way server code reads rows.
   more than one replica multiplies them. `POST /sign-in/magic-link` writes a `verification` row for any address it
   is given, bounded by the plugin's rate limit and the 15-minute expiry. An admin who does not want recovery leaves
   SMTP unconfigured.
+- **Assistants and connected apps (0.4, §17.4).** An MCP client holds an OAuth 2.1 token the user granted on
+  `/oauth/consent` after signing in with a passkey; nothing is pasted, nothing is shared out of band. Tokens are
+  opaque and stored hashed, bound to `{PUBLIC_URL}/mcp` as audience, scoped `read` and/or `write`, accepted only in
+  the `Authorization` header, never logged. The access token lives 1 hour, the refresh token is rotated on use and
+  lapses after 180 days unused; revoking the app in Profile deletes the pair's tokens and the next call is a 401.
+  A write through a tool is the web's write (§17.1.3): same rules, same `basis` check, same per-user scoping. The
+  server never calls a model on its own in this milestone; an admin can switch the endpoint off (`MCP_ENABLED`).
 - CSV import treats every cell as text. The CSV export prefixes cells starting with `= + - @` with `'` (formula
   injection) **except** the numeric `amount` column.
 - App lock hides content in the app switcher (`expo-screen-capture` / privacy overlay on `AppState` inactive).

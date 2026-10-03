@@ -399,7 +399,7 @@ server code reads rows.
 
 ---
 
-## 0.4 — MCP server: the user's own assistant reads their data
+## 0.4 — MCP server: the user's own assistant reads and writes their data
 
 Idea from 2026-09-22. The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint so
 an assistant the user already runs (Claude, or any MCP client) can ask «quanto ho speso in Spesa questo ciclo?»
@@ -411,21 +411,9 @@ Everything money-related is already a pure function in core (cycle totals, budge
 forecast of 0.2), so the tools are thin wrappers that load rows, call core and return numbers as integer minor
 units plus the currency.
 
-**Shape to aim for:**
+**Decided 2026-10-03** (spec §17.4, D39–D40), after the interview in the session of that day:
 
-- Transport: streamable HTTP on a route in `apps/web` (same process as sync, same Postgres).
-- Auth: a **personal access token** minted in Profile, scoped to one user, revocable, shown once. Passkeys
-  cannot authenticate an MCP client, so this is a new credential surface and `SECURITY.md` §sessions has to
-  describe it.
-- Tools, read-only first: list transactions with filters, accounts and balances, budgets with progress, cycle
-  aggregates per category, the forecast. Writes (create a transaction, add a tag) come second, and only after the
-  read tools have shown the token model holds.
-- Everything the tools return is what the app already shows the signed-in user. No aggregate the phone does not
-  compute.
-
-**To decide before planning:**
-
-- [x] **Sits beside it (decided 2026-10-01, D38).** Two audiences: a technical user runs Claude Code or
+- [x] **Sits beside the AI milestone (decided 2026-10-01, D38).** Two audiences: a technical user runs Claude Code or
       another MCP client, connects the instance and combines it with their other integrations; a
       non-technical member of the same instance wants the insights in the app without a client to set up. On an
       instance the admin holds the key anyway (D36), so the second audience costs them nothing. The price is
@@ -434,12 +422,44 @@ units plus the currency.
       one §18 paragraph for both, and a question asked in Claude and in the app gives the same numbers. MCP
       still ships first: it has no key, no consent screen and no prompt to tune, and it is where the tool
       shapes get tested before a prompt depends on them.
-- [ ] Token model: one token per client, expiry, and what a revoked token does to an in-flight conversation.
-- [ ] Rate limits and the audit trail: a token that reads everything deserves a «last used» column in Profile.
-- [ ] Spec section (`§17.4 MCP server`), then the plan.
+- [x] **OAuth 2.1 only, no personal access token (D39).** The sketch above this decision had a token minted in
+      Profile and pasted into the client; it is dropped. The connectors of claude.ai and the Claude apps accept
+      only OAuth, and the CLIs speak it too, so one credential surface serves everybody. Saldo is its own
+      authorization server through `@better-auth/oauth-provider` on the Better Auth instance already there:
+      dynamic client registration, PKCE S256, redirect URIs `https` or loopback, **opaque tokens stored hashed and
+      checked on every call** — revoking in Profile stops the next request, no JWT to wait out. Access 1 h; refresh
+      rotated on use, 180 days from the last rotation, the phone session's bound. `@better-auth/mcp` was
+      considered and set aside: it issues JWTs, so a revocation would land only when the token expired.
+- [x] **Reads and writes, two scopes (D40).** `read` and `write`, shown as two lines on `/oauth/consent`; the
+      user can refuse `write`. The write perimeter is the web's (transactions, accounts, categories, tags,
+      budgets, goals; no recurrences, no attachments), through the same server write functions, rules and `basis`
+      check. The client is what asks the person to confirm a write.
+- [x] **Transport:** `POST /mcp`, Streamable HTTP, stateless, JSON responses, on the `@modelcontextprotocol/server`
+      SDK (v2). The tool catalogue — names, English descriptions, Zod schemas, annotations, pure `run` functions,
+      the `initialize.instructions` text — lives in `@saldo/core/assistant`, which 0.5 reuses. Amounts come as
+      `{ minor, currency, amount }`; no aggregate is computed outside core, and a parity test checks a tool
+      against the page it mirrors.
+- [x] **Profile → «App collegate»** (`/profile/apps`): the endpoint to copy, one row per consent with the scopes,
+      the dates and «Ultimo uso» (a table of ours, written at most once a minute per pair), «Revoca». The admin
+      has a switch in `/admin/settings` (`mcp.enabled`; `MCP_ENABLED` wins and locks) and sees in Istanza how many
+      users have an app connected.
+- [x] **Limits:** 120 requests per minute per token, 1 MB bodies, one registration per minute per IP; `SECURITY.md`
+      gains «Assistenti e app collegate», `docs/self-hosting.md` «Collegare un assistente» (`PUBLIC_URL` must be
+      `https`).
+- [x] **Out:** device authorization grant, client credentials, OIDC, DPoP, CIMD, resources/prompts/sampling —
+      each the day a client needs it.
 
-**Done when:** a user pastes the instance URL and a token into an MCP client and asks about their month, the
-answer matches Statistics to the cent, and revoking the token in Profile stops the next call.
+**Steps** (each gets its own plan under `docs/superpowers/plans/`):
+
+| Step | Content | Depends on |
+|---|---|---|
+| 0.4a | The OAuth provider and its tables, the discovery documents, `/oauth/consent`, `/profile/apps`, the admin switch, `/mcp` with the **read** tools and the catalogue in core, the docs | 0.3 |
+| 0.4b | The **write** tools on the same catalogue, through `apps/web/src/server/write/*` | a |
+
+**Done when:** a user connects an MCP client to their instance through the browser consent alone, asks about the
+current period, and the answer matches Statistiche to the cent; with `write` granted, a transaction the assistant
+creates reaches the phone on its next sync; revoking the app in Profile turns the assistant's next call into a 401;
+an admin switches the whole thing off from `/admin/settings`.
 
 ---
 
