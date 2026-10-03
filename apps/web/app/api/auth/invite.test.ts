@@ -3,8 +3,9 @@
 // `{ valid: true }`). This file needs `invite` mode instead, set before anything imports `auth`.
 process.env.REGISTRATION = 'invite';
 
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createInvite, revokeInvite } from '../../../src/server/auth/invites';
+import { user } from '../../../src/server/db/schema';
 import { resetEnvCache } from '../../../src/server/env';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
 import { POST } from './[...all]/route';
@@ -16,6 +17,17 @@ beforeAll(async () => {
   // effect if the cache is thrown away first (the mode is read through `env()` at request time).
   resetEnvCache();
   harness = await createTestDatabase();
+});
+
+beforeEach(async () => {
+  // A fresh instance asks for no code, whatever the mode (0.3h): the endpoint only has something
+  // to check once an account exists, so every test here starts with one.
+  await harness.db.insert(user).values({
+    id: crypto.randomUUID(),
+    name: 'Ada',
+    email: 'ada@example.com',
+    emailVerified: false,
+  });
 });
 
 afterEach(async () => {

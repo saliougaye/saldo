@@ -50,7 +50,10 @@ export async function resolveRegistration(
   // bounds that answer is that an instance which is not open refuses before giving it. `closed` is
   // refused by `registrationAllowed` above; `invite` is refused here — so on neither can a caller
   // without a usable code probe the address list.
-  if (registrationRequiresInvite(mode) && !(await inviteIsUsable(db, context.invite ?? '', now))) {
+  if (
+    (await registrationRequiresInvite(db, mode)) &&
+    !(await inviteIsUsable(db, context.invite ?? '', now))
+  ) {
     // One answer for unknown, spent, revoked and expired: the form must not be usable to find out
     // which codes exist.
     throw refuse('FORBIDDEN', 'invalid_invite', 'That invite code is not valid');
@@ -107,7 +110,7 @@ export async function completeRegistration(
    * is refused. The other way round would create both accounts and then refuse one, leaving an orphan.
    */
   let burnedInviteId: string | null = null;
-  if (registrationRequiresInvite(mode)) {
+  if (await registrationRequiresInvite(db, mode)) {
     burnedInviteId = await burnInvite(db, context.invite ?? '', now);
     if (burnedInviteId === null) {
       throw refuse('FORBIDDEN', 'invalid_invite', 'That invite code is not valid');
@@ -134,8 +137,8 @@ export async function completeRegistration(
   }
 
   /**
-   * §9.5: the first account on the instance is the admin, and under `invite` it can only exist
-   * because somebody with shell access minted its code. Every later one is a member. This runs
+   * §9.5: the first account on the instance is the admin, and from 0.3h it is the one the `/setup`
+   * wizard creates, under any mode and with no code. Every later one is a member. This runs
    * **after** the row exists, because the claim is decided by "is the earliest account mine"
    * rather than by the table being empty — see `claimRoleForNewUser`, which takes a lock so two
    * ceremonies finishing together cannot both win, and cannot both lose either.

@@ -19,13 +19,14 @@ export default async function RegisterPage({
   if ((await currentUser()) !== null) redirect('/home');
   const mode = await pageRegistrationMode();
   if (!(await registrationAllowed(getDb(), mode))) redirect('/login');
+  const requiresInvite = await registrationRequiresInvite(getDb(), mode);
   const { t } = await publicI18n();
   const instance = await pageInstanceInfo();
   const { invite } = await searchParams;
   return (
     <div className={styles.column}>
       <RegisterFlow
-        requiresInvite={registrationRequiresInvite(mode)}
+        requiresInvite={requiresInvite}
         initialInvite={invite ?? ''}
         instance={instance}
         strings={{
@@ -66,11 +67,8 @@ export default async function RegisterPage({
           'web.auth.cancelledBody': t('web.auth.cancelledBody'),
         }}
         // «Passo {{step}} di {{total}}», rendered here because the count is known server-side.
-        stepLabels={Array.from({ length: registrationRequiresInvite(mode) ? 3 : 2 }, (_, index) =>
-          t('common.stepOf', {
-            step: index + 1,
-            total: registrationRequiresInvite(mode) ? 3 : 2,
-          }),
+        stepLabels={Array.from({ length: requiresInvite ? 3 : 2 }, (_, index) =>
+          t('common.stepOf', { step: index + 1, total: requiresInvite ? 3 : 2 }),
         )}
       />
     </div>

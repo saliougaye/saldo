@@ -70,7 +70,7 @@ export default async function MobileAuthPage({
 
   const mode = await pageRegistrationMode();
   const canRegister = await registrationAllowed(getDb(), mode);
-  const requiresInvite = registrationRequiresInvite(mode);
+  const requiresInvite = await registrationRequiresInvite(getDb(), mode);
   log('auth', 'serving the sign-in page', {
     registration: mode,
     canRegister,

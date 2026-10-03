@@ -1,7 +1,7 @@
 import type { BetterAuthPlugin } from 'better-auth';
 import { APIError, createAuthEndpoint } from 'better-auth/api';
 import { z } from 'zod';
-import { getDb } from '../db/client';
+import type { ServerDatabase } from '../db/types';
 import type { RegistrationMode } from '../env';
 import { inviteIsUsable } from './invites';
 import { registrationRequiresInvite } from './policy';
@@ -27,7 +27,7 @@ const MAX_CODE_LENGTH = 64;
  * `mode` is a getter, asked on every call: a mode the admin saves is honoured without rebuilding
  * the instance.
  */
-export function invitePlugin(mode: () => Promise<RegistrationMode>) {
+export function invitePlugin(db: ServerDatabase, mode: () => Promise<RegistrationMode>) {
   return {
     id: 'saldo-invite',
     endpoints: {
@@ -36,8 +36,9 @@ export function invitePlugin(mode: () => Promise<RegistrationMode>) {
         { method: 'POST', body: z.object({ invite: z.string().max(MAX_CODE_LENGTH) }) },
         async (ctx) => {
           // Nothing to check on a server that does not ask for a code: the form never shows the step.
-          if (!registrationRequiresInvite(await mode())) return ctx.json({ valid: true });
-          if (!(await inviteIsUsable(getDb(), ctx.body.invite, new Date()))) {
+          if (!(await registrationRequiresInvite(db, await mode())))
+            return ctx.json({ valid: true });
+          if (!(await inviteIsUsable(db, ctx.body.invite, new Date()))) {
             // One answer for unknown, spent, revoked and expired — the same one `resolveUser` gives.
             throw new APIError('FORBIDDEN', {
               code: 'invalid_invite',

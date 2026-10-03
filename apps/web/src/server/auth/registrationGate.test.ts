@@ -1,7 +1,7 @@
 import { APIError } from 'better-auth/api';
 import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { serverSettings } from '../db/schema';
+import { serverSettings, user } from '../db/schema';
 import { resetEnvCache } from '../env';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { auth, resetAuthForTests } from './auth';
@@ -112,7 +112,33 @@ describe('the registration gate, on a server that runs on invitation', () => {
     resetAuthForTests();
   });
 
+  it('starts the ceremony without a code while the instance has no account (0.3h)', async () => {
+    const options = await optionsFor(
+      encodeRegistrationContext({ name: 'Giulia', email: 'giulia@example.com' }),
+    );
+    expect(options.user.name).toBe('Giulia');
+  });
+
+  it('asks for the code again as soon as one account exists', async () => {
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: 'ada@example.com',
+      emailVerified: false,
+    });
+    const refused = await refusal(
+      encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com' }),
+    );
+    expect(refused.message).toBe('That invite code is not valid');
+  });
+
   it('starts the ceremony for a valid code, and does not spend it', async () => {
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: 'ada@example.com',
+      emailVerified: false,
+    });
     const { code } = await createInvite(harness.db, {
       label: 'Marco',
       ttlDays: 7,
@@ -128,6 +154,12 @@ describe('the registration gate, on a server that runs on invitation', () => {
   });
 
   it('refuses every code that is no good, and with the same words each time', async () => {
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: 'ada@example.com',
+      emailVerified: false,
+    });
     const now = new Date();
     const spent = await createInvite(harness.db, {
       label: null,
@@ -168,6 +200,12 @@ describe('the registration gate, on a server that runs on invitation', () => {
   });
 
   it('refuses somebody who brought no code at all', async () => {
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Ada',
+      email: 'ada@example.com',
+      emailVerified: false,
+    });
     await expect(
       refusal(encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com' })),
     ).resolves.toEqual({
@@ -209,6 +247,16 @@ describe('the registration gate, when the mode is stored and not in the environm
     const context = encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' });
     // Builds `auth()` while the table is empty: the default, `first-user`, lets the first in.
     await expect(optionsFor(context)).resolves.toMatchObject({ user: { name: 'Ada' } });
+
+    // A fresh instance lets its first account in under every mode (0.3h), so for `closed` and
+    // `invite` to refuse there has to be an account already — somebody other than Ada, whose
+    // address must still be free for the `open` step below.
+    await harness.db.insert(user).values({
+      id: crypto.randomUUID(),
+      name: 'Grace',
+      email: 'grace@example.com',
+      emailVerified: false,
+    });
 
     await store('closed');
     await expect(refusal(context)).resolves.toEqual({
