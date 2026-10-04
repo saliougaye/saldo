@@ -457,7 +457,7 @@ units plus the currency.
 | 0.4a-1 | Plan `2026-10-03-0.4a-1-mcp-core-catalogue.md`: the tool catalogue in `@saldo/core` — the eleven read tools (`get_preferences`, `list_*`, summaries, forecast), `assistantInstructions`, parity tests against the pages | ui |
 | 0.4a-2 | Plan `2026-10-03-0.4a-2-mcp-oauth-endpoint.md`: `@better-auth/oauth-provider` (better-auth → ^1.7.7), discovery documents, `mcp.enabled`/`MCP_ENABLED`, `mcp_usage`, `POST /mcp` on `@modelcontextprotocol/server` v2, the full OAuth flow test | ui (beside a-1; its server tasks wait for a-1's exports) |
 | 0.4a-3 | Plan `2026-10-03-0.4a-3-mcp-screens-docs.md`: `/profile/connectors` («Connettori»), `/oauth/consent`, `/admin/mcp` on the chosen variants, strings in seven locales, `SECURITY.md` and `docs/self-hosting.md` | a-1, a-2 |
-| 0.4b | Plan `2026-10-03-0.4b-mcp-write-tools.md`: the fourteen **write** tools through `apps/web/src/server/write/*`, with the `updatedAt` version check so an assistant never overwrites a phone edit — and the web's forms adopt the same check (decided 2026-10-03; tasks to add to the plan before it runs) | a |
+| 0.4b | **Done 2026-10-04.** Plan `2026-10-03-0.4b-mcp-write-tools.md`: the fourteen **write** tools through `apps/web/src/server/write/*`; a write names the `updatedAt` it read (`expectedUpdatedAt`), so a phone's edit in between is never overwritten — and the web's edit forms and confirms send the version their page loaded the same way (spec §17.4.2 «As built (0.4b)») | a |
 
 **Done when:** a user connects an MCP client to their instance through the browser consent alone, asks about the
 current period, and the answer matches Statistiche to the cent; with `write` granted, a transaction the assistant

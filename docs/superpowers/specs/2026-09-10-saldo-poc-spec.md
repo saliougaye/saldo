@@ -2369,6 +2369,28 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   `@better-auth/core` peer to a second copy (pulled in through `better-call`'s `@better-auth/utils` 0.5.0) whose
   plugin types do not match Better Auth's.
 
+**As built (0.4b, 2026-10-04):**
+
+- **The specs and their input resolvers live in `@saldo/core` `assistant/write/`**, one file per domain; the
+  handlers in `apps/web/src/server/mcp/write/` read, call a resolver, call the web's write function and answer.
+  The refusal texts a model reads (`refusalMessage`) live in core beside the descriptions, and name the read tool
+  to call next.
+- **The version check.** `basis` only covers the gap between a write function's own read and its row lock. The
+  gap an assistant opens — between its `list_…` and its write, seconds to minutes — is covered by the
+  `updatedAt` the read tools return: every tool that changes or removes a row takes it back (`sourceUpdatedAt`
+  for `merge_tags`), and the write functions check it as `expectedUpdatedAt` inside their transaction
+  (`movedSince`); a row that moved answers «changed after you read it» and nothing is written. The web's edit
+  forms and confirms send the `updatedAt` their page loaded the same way, so a form saved over a phone's later
+  edit answers `conflict` («reload the page») instead of overwriting it; «Nuovo …», restore, «Annulla», reorder
+  and preferences send none.
+- **Partial updates.** An update names `id`, `updatedAt` and only the fields to change; the resolver starts from
+  the stored row through the forms' own `…FormFrom` functions. `saveAccount` accepts `buffer: null` to keep the
+  stored opening balance, so a rename never recomputes it from a balance read earlier.
+- **Amounts are integers in minor units up to 99,999,999** (the keypad's eight digits), turned into the keypad
+  buffer so the server's checks still run. `move_goal_money` is the «Metti da parte» / «Preleva» transfer
+  through `saveTransaction`; `save_tag` creates through `createTag` (an existing name answers that tag). Icons,
+  colours, notes, «Registra la spesa», restoring a closed goal and reordering categories are not offered.
+
 #### 17.4.3 «Connettori» in Profile, consent, and what the admin sees
 
 - **The look was decided before it was built (0.4-ui, 2026-10-03).** As 0.3c did for every web page, the three
