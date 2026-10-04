@@ -155,3 +155,14 @@ export async function writeChanges(
   if (writes.length === 0) return;
   await writeInTransaction(db, userId, now, async () => ({ writes, result: undefined }));
 }
+
+/**
+ * §17.4.2: whether a row moved since the version a caller read it at. An MCP client reads a row
+ * and writes it seconds or minutes later; the write function reads the row again inside its own
+ * transaction, so `basis` only covers the gap after that second read. `expected` covers the one
+ * before it: a phone's edit in between leaves a different stamp, and the write answers `conflict`
+ * instead of building on top of an edit the client never saw. `undefined` checks nothing.
+ */
+export function movedSince(row: { updatedAt: string }, expected: string | undefined): boolean {
+  return expected !== undefined && row.updatedAt !== expected;
+}

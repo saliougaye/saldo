@@ -1,5 +1,7 @@
-import { onboardingSeed } from '@saldo/core';
+import { type EntityName, onboardingSeed } from '@saldo/core';
 import type { ServerDatabase } from '../db/types';
+import { loadRow } from '../userData/row';
+import { unstamped } from './rows';
 import { writeChanges } from './writeChanges';
 
 export const FIXTURE_NOW = new Date('2026-09-29T10:00:00.000Z');
@@ -46,4 +48,38 @@ export async function seedOnboarded(db: ServerDatabase, userId: string): Promise
     ],
     FIXTURE_NOW,
   );
+}
+
+/** The stamp a row carries now: what a read tool hands an MCP client as `updatedAt`. */
+export async function stampOf(
+  db: ServerDatabase,
+  userId: string,
+  entity: EntityName,
+  id: string,
+): Promise<string> {
+  const found = await loadRow(db, userId, entity, id);
+  if (found.status !== 'found') throw new Error(`no ${entity}/${id}`);
+  return found.row.updatedAt;
+}
+
+/**
+ * Another device edits the row — `patch` applied, a newer stamp — as a phone's push leaves it.
+ * Returns the new stamp.
+ */
+export async function bumpRow(
+  db: ServerDatabase,
+  userId: string,
+  entity: EntityName,
+  id: string,
+  patch: Record<string, unknown> = {},
+): Promise<string> {
+  const found = await loadRow(db, userId, entity, id);
+  if (found.status !== 'found') throw new Error(`no ${entity}/${id}`);
+  await writeChanges(
+    db,
+    userId,
+    [{ entity, id, data: { ...unstamped(found.row), ...patch, deletedAt: found.row.deletedAt } }],
+    FIXTURE_NOW,
+  );
+  return stampOf(db, userId, entity, id);
 }
