@@ -10,3 +10,10 @@ export const toolDateSchema = z
 
 /** Both ends inclusive, as every range in Saldo. */
 export const dateRangeSchema = z.object({ start: toolDateSchema, end: toolDateSchema });
+
+/** A listed row's version (§17.4.2): what a write tool takes back as `updatedAt` (0.4b). */
+export const rowVersionSchema = z
+  .string()
+  .describe(
+    "The row's version. To change or remove this row, send it back unchanged as updatedAt.",
+  );

@@ -19,6 +19,7 @@ describe('list_accounts', () => {
         saved: { minor: 50000, currency: 'EUR', amount: '500.00' },
         target: { minor: 120000, currency: 'EUR', amount: '1200.00' },
         ratio: 50000 / 120000,
+        updatedAt: expect.any(String),
       },
     ]);
   });

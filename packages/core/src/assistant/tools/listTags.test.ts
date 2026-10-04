@@ -6,8 +6,8 @@ describe('list_tags', () => {
   it('lists the tags by name', () => {
     expect(listTagsTool.run(fixtureData(), CONTEXT, {})).toEqual({
       tags: [
-        { id: 'g-work', name: 'Lavoro' },
-        { id: 'g-trip', name: 'Viaggio' },
+        { id: 'g-work', name: 'Lavoro', updatedAt: expect.any(String) },
+        { id: 'g-trip', name: 'Viaggio', updatedAt: expect.any(String) },
       ],
     });
   });

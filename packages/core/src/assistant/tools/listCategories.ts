@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { childCategories, topLevelCategories } from '../../categories';
 import { categoryDirectionSchema } from '../../entities';
+import { rowVersionSchema } from '../schemas';
 import { bySortOrder } from '../sort';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 
@@ -16,6 +17,7 @@ const output = z.object({
       direction: categoryDirectionSchema,
       parentId: z.string().nullable(),
       archived: z.boolean(),
+      updatedAt: rowVersionSchema,
     }),
   ),
 });
@@ -54,6 +56,7 @@ export const listCategoriesTool: ReadTool<ListCategoriesInput, ListCategoriesOut
         direction: category.direction,
         parentId: category.parentId,
         archived: category.archivedAt !== null,
+        updatedAt: category.updatedAt,
       })),
     };
   },

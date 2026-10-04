@@ -26,6 +26,7 @@ describe('list_budgets', () => {
       rollover: false,
       daysLeft: 15,
       open: true,
+      updatedAt: expect.any(String),
     });
   });
 

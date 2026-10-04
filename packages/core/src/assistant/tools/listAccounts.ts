@@ -4,6 +4,7 @@ import { accountTypeSchema } from '../../entities';
 import { goalRatio } from '../../goals';
 import { bankBalance, isPocket, pocketsOf } from '../../pockets';
 import { moneySchema } from '../money';
+import { rowVersionSchema } from '../schemas';
 import { bySortOrder } from '../sort';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 import { toolUser } from '../user';
@@ -18,6 +19,7 @@ const pocketOutput = z.object({
   saved: moneySchema,
   target: moneySchema,
   ratio: z.number().describe('Saved over target, 0 to 1.'),
+  updatedAt: rowVersionSchema,
 });
 
 const accountOutput = z.object({
@@ -30,6 +32,7 @@ const accountOutput = z.object({
   balance: moneySchema.describe('What the bank shows: the account and its open pockets together.'),
   free: moneySchema.describe('The account without its pockets.'),
   pockets: z.array(pocketOutput),
+  updatedAt: rowVersionSchema,
 });
 
 const output = z.object({
@@ -74,8 +77,10 @@ export const listAccountsTool: ReadTool<ListAccountsInput, ListAccountsOutput> =
             saved: user.money(saved),
             target: user.money(target),
             ratio: goalRatio(saved, target),
+            updatedAt: pocket.updatedAt,
           };
         }),
+        updatedAt: account.updatedAt,
       }));
     return {
       netWorth: user.money(netWorth(data.accounts, balances)),
