@@ -54,6 +54,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             />
             <NavLink href="/admin/instance" icon="info" label={t('admin.nav.instance')} />
             <NavLink href="/admin/settings" icon="settings" label={t('admin.nav.settings')} />
+            <NavLink href="/admin/mcp" icon="plug" label={t('admin.mcp.title')} />
           </>
         }
       >
