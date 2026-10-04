@@ -166,3 +166,11 @@ export async function writeChanges(
 export function movedSince(row: { updatedAt: string }, expected: string | undefined): boolean {
   return expected !== undefined && row.updatedAt !== expected;
 }
+
+/**
+ * The version a Server Action received (§17.4.2). Its arguments are untrusted: anything but a
+ * non-empty string — a page from an older bundle sends none — checks nothing, as before 0.4b.
+ */
+export function postedVersion(updatedAt: unknown): string | undefined {
+  return typeof updatedAt === 'string' && updatedAt !== '' ? updatedAt : undefined;
+}

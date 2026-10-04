@@ -10,6 +10,7 @@ import {
   renameTag as renameFor,
   type TagResult,
 } from '../../../../src/server/write/tags';
+import { postedVersion } from '../../../../src/server/write/writeChanges';
 
 /** §17.1.3: each action resolves the session itself and hands the rest to `src/server/write`. */
 export async function newTagAction(name: string): Promise<NewTagResult> {
@@ -29,5 +30,5 @@ export async function mergeTagsAction(input: unknown): Promise<TagResult> {
 
 export async function deleteTagAction(id: string, updatedAt: string): Promise<TagResult> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
+  return deleteFor(getDb(), user.id, String(id), new Date(), postedVersion(updatedAt));
 }

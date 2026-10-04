@@ -9,6 +9,7 @@ import { readUserData } from '../userData/read';
 import {
   lockOrder,
   movedSince,
+  postedVersion,
   WriteRefused,
   writeChanges,
   writeInTransaction,
@@ -236,5 +237,16 @@ describe('movedSince (§17.4.2)', () => {
   it('is false for the version read and true for any other', () => {
     expect(movedSince({ updatedAt: 'b' }, 'b')).toBe(false);
     expect(movedSince({ updatedAt: 'b' }, 'a')).toBe(true);
+  });
+});
+
+describe('postedVersion', () => {
+  it('passes a string on and turns anything else into no check', () => {
+    expect(postedVersion('2026-09-29T10:00:00.000Z-0000-web')).toBe(
+      '2026-09-29T10:00:00.000Z-0000-web',
+    );
+    expect(postedVersion(undefined)).toBeUndefined();
+    expect(postedVersion('')).toBeUndefined();
+    expect(postedVersion(42)).toBeUndefined();
   });
 });

@@ -2385,7 +2385,9 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   and preferences send none.
 - **Partial updates.** An update names `id`, `updatedAt` and only the fields to change; the resolver starts from
   the stored row through the forms' own `…FormFrom` functions. `saveAccount` accepts `buffer: null` to keep the
-  stored opening balance, so a rename never recomputes it from a balance read earlier.
+  stored opening balance, so a rename never recomputes it from a balance read earlier; the web's account form
+  sends `null` too when its balance field still holds what the page loaded (`balanceToSend`), because a phone
+  transaction pushed meanwhile does not change the account's own `updatedAt` and would otherwise be cancelled.
 - **Amounts are integers in minor units up to 99,999,999** (the keypad's eight digits), turned into the keypad
   buffer so the server's checks still run. `move_goal_money` is the «Metti da parte» / «Preleva» transfer
   through `saveTransaction`; `save_tag` creates through `createTag` (an existing name answers that tag). Icons,

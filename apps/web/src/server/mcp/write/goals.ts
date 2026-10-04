@@ -1,6 +1,7 @@
 import {
   type CloseGoalInput,
   closeGoalTool,
+  isPocket,
   type MoveGoalMoneyInput,
   type MoveGoalMoneyOutput,
   moveGoalMoneyTool,
@@ -29,7 +30,11 @@ export function goalHandlers(clock: Clock) {
       const data = await readUserData(getDb(), principal.userId);
       const existing =
         input.id === undefined ? null : (data.accounts.find((row) => row.id === input.id) ?? null);
-      if (input.id !== undefined && existing === null) {
+      // An account that is not an open goal is not one save_goal can change (§5.14).
+      if (
+        input.id !== undefined &&
+        (existing === null || !isPocket(existing) || existing.archivedAt !== null)
+      ) {
         return refuse('goal', { error: 'notFound' });
       }
       const resolved = resolveGoalInput(input, existing, minorDigitsOf(data));

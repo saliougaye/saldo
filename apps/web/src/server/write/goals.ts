@@ -237,7 +237,10 @@ export async function closeGoal(
   try {
     return await writeInTransaction<AccountResult>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
-      const pocket = data.accounts.find((row) => row.id === goalId);
+      // Only an open goal's version is compared: any other id is `notFound` below, not `conflict`.
+      const pocket = data.accounts.find(
+        (row) => row.id === goalId && isPocket(row) && row.archivedAt === null,
+      );
       if (pocket !== undefined && movedSince(pocket, expectedUpdatedAt)) {
         return { writes: [], result: { ok: false, error: 'conflict' } };
       }

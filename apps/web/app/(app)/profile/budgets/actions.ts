@@ -8,6 +8,7 @@ import {
   deleteBudget as deleteFor,
   saveBudget as saveFor,
 } from '../../../../src/server/write/budgets';
+import { postedVersion } from '../../../../src/server/write/writeChanges';
 
 export async function saveBudgetAction(input: unknown): Promise<BudgetSaveResult> {
   const user = await requireWebUser();
@@ -16,5 +17,5 @@ export async function saveBudgetAction(input: unknown): Promise<BudgetSaveResult
 
 export async function deleteBudgetAction(id: string, updatedAt: string): Promise<BudgetResult> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
+  return deleteFor(getDb(), user.id, String(id), new Date(), postedVersion(updatedAt));
 }

@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../../test/harness';
 import { createTestSession } from '../../test/session';
 import { readUserData } from '../../userData/read';
-import { bumpRow, seedOnboarded } from '../../write/fixtures';
+import { bumpRow, seedOnboarded, stampOf } from '../../write/fixtures';
 import { goalHandlers } from './goals';
 import { FIXTURE_CTX, fixtureClock, messageOf, run, valueFrom } from './testKit';
 
@@ -147,5 +147,46 @@ describe('close_goal', () => {
         }),
       ),
     ).toMatch(/closed goal cannot be changed/);
+  });
+});
+
+describe('an id that is not an open goal', () => {
+  it('is no live goal for save_goal, move_goal_money and close_goal', async () => {
+    await onboarded();
+    const main = await stampOf(harness.db, userId, 'account', 'acc-main');
+    const messages = [
+      messageOf(
+        await run(saveGoal, userId, { id: 'acc-main', updatedAt: main, targetMinor: 1000 }),
+      ),
+      messageOf(
+        await run(saveGoal, userId, {
+          id: 'acc-main',
+          updatedAt: main,
+          parentAccountId: 'acc-savings',
+        }),
+      ),
+      messageOf(
+        await run(moveGoalMoney, userId, {
+          goalId: 'acc-main',
+          direction: 'set_aside',
+          amountMinor: 100,
+        }),
+      ),
+      messageOf(await run(closeGoal, userId, { id: 'acc-main', updatedAt: 'stale' })),
+    ];
+    for (const message of messages) expect(message).toMatch(/no live goal/);
+  });
+
+  it('is no live goal once closed', async () => {
+    await onboarded();
+    const goal = valueFrom(await run(saveGoal, userId, vacanza));
+    valueFrom(await run(closeGoal, userId, { id: goal.id, updatedAt: goal.updatedAt }));
+    const closed = await stampOf(harness.db, userId, 'account', goal.id);
+    expect(messageOf(await run(closeGoal, userId, { id: goal.id, updatedAt: closed }))).toMatch(
+      /no live goal/,
+    );
+    expect(
+      messageOf(await run(saveGoal, userId, { id: goal.id, updatedAt: closed, name: 'X' })),
+    ).toMatch(/no live goal/);
   });
 });

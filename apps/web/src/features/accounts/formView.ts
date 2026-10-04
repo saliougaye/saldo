@@ -118,3 +118,12 @@ export function goalFormView(input: Input): GoalFormView | null {
     today: input.today,
   };
 }
+
+/**
+ * The balance the account form sends (§6.22, §17.4.2): null when the field still holds the balance
+ * the page loaded, which keeps the stored opening balance. Recomputing it from that figure would
+ * cancel any transaction a phone pushed after the page loaded; a balance the user typed is sent as is.
+ */
+export function balanceToSend(loaded: string, current: string): string | null {
+  return current === loaded ? null : current;
+}
