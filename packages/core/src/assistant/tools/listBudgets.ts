@@ -3,7 +3,7 @@ import { budgetPeriodSchema } from '../../entities';
 import { budgetViews } from '../../views/budgetViews';
 import { moneySchema } from '../money';
 import { resolveToolPeriod, toolPeriodShape } from '../period';
-import { dateRangeSchema } from '../schemas';
+import { dateRangeSchema, rowVersionSchema } from '../schemas';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 import { toolUser } from '../user';
 
@@ -34,6 +34,7 @@ const output = z.object({
       rollover: z.boolean(),
       daysLeft: z.number().int(),
       open: z.boolean().describe('Whether the window still contains today.'),
+      updatedAt: rowVersionSchema,
     }),
   ),
 });
@@ -82,6 +83,7 @@ export const listBudgetsTool: ReadTool<ListBudgetsInput, ListBudgetsOutput> = {
         rollover: view.budget.rollover,
         daysLeft: view.daysLeft,
         open: view.open,
+        updatedAt: view.budget.updatedAt,
       })),
     };
   },

@@ -4,7 +4,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { archiveAccount, saveAccount } from './accounts';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { closeGoal, restoreGoal, saveGoal } from './goals';
 import { saveTransaction } from './transactions';
 import { writeChanges } from './writeChanges';
@@ -339,5 +339,31 @@ describe('closeGoal — parity with the phone’s closeGoalIn', () => {
     expect(
       data.transactions.find((t) => t.toAccountId === created.id && t.amount === 10000),
     ).toMatchObject({ kind: 'transfer', accountId: 'acc-main' });
+  });
+});
+
+describe('goals — expectedUpdatedAt (§17.4.2)', () => {
+  it('edits and closes only the version read', async () => {
+    await onboarded();
+    const created = await saveGoal(harness.db, userId, input, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    const read = await stampOf(harness.db, userId, 'account', created.id);
+    const phone = await bumpRow(harness.db, userId, 'account', created.id, { name: 'Viaggio' });
+
+    expect(
+      await saveGoal(
+        harness.db,
+        userId,
+        { ...input, id: created.id, buffer: '2000', expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(await closeGoal(harness.db, userId, created.id, FIXTURE_NOW, read)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await closeGoal(harness.db, userId, created.id, FIXTURE_NOW, phone)).toEqual({
+      ok: true,
+    });
   });
 });

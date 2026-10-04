@@ -10,6 +10,8 @@ import styles from './tags.module.css';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the tag is gone: `/profile/tags`. */
   afterHref: string;
   strings: {
@@ -30,7 +32,7 @@ interface Props {
  * «Elimina tag» and its question (§5.10): the tag goes, its transactions stay without it. As on the
  * phone it asks first and offers no undo.
  */
-export function DeleteTag({ id, afterHref, strings }: Props) {
+export function DeleteTag({ id, updatedAt, afterHref, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function DeleteTag({ id, afterHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof deleteTagAction>>;
       try {
-        result = await deleteTagAction(id);
+        result = await deleteTagAction(id, updatedAt);
       } catch {
         setError(strings.errors.unexpected);
         return;

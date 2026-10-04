@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { goalViews } from '../../views/goalViews';
 import { moneySchema } from '../money';
-import { toolDateSchema } from '../schemas';
+import { rowVersionSchema, toolDateSchema } from '../schemas';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 import { toolUser } from '../user';
 
@@ -27,6 +27,7 @@ const output = z.object({
         .describe('What to set aside each period to reach the target by the deadline.'),
       periodsLeft: z.number().int().nullable(),
       daysLeft: z.number().int().nullable(),
+      updatedAt: rowVersionSchema,
     }),
   ),
 });
@@ -63,6 +64,7 @@ export const listGoalsTool: ReadTool<ListGoalsInput, ListGoalsOutput> = {
           perPeriod: progress.perPeriod === null ? null : user.money(progress.perPeriod),
           periodsLeft: progress.periodsLeft,
           daysLeft: progress.daysLeft,
+          updatedAt: account.updatedAt,
         }),
       ),
     };

@@ -3,7 +3,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { deleteBudget, saveBudget } from './budgets';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { writeChanges } from './writeChanges';
 
 let harness: TestDatabase;
@@ -197,6 +197,32 @@ describe('deleteBudget', () => {
     expect(await deleteBudget(harness.db, userId, created.id, FIXTURE_NOW)).toEqual({
       ok: false,
       error: 'notFound',
+    });
+  });
+});
+
+describe('budgets — expectedUpdatedAt (§17.4.2)', () => {
+  it('saves and deletes only the version read', async () => {
+    await onboarded();
+    const created = await saveBudget(harness.db, userId, input, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    const read = await stampOf(harness.db, userId, 'budget', created.id);
+    const phone = await bumpRow(harness.db, userId, 'budget', created.id, { amount: 40000 });
+
+    expect(
+      await saveBudget(
+        harness.db,
+        userId,
+        { ...input, id: created.id, buffer: '350', expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(await deleteBudget(harness.db, userId, created.id, FIXTURE_NOW, read)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await deleteBudget(harness.db, userId, created.id, FIXTURE_NOW, phone)).toEqual({
+      ok: true,
     });
   });
 });

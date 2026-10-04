@@ -189,6 +189,7 @@ export function TransactionForm({
       try {
         result = await saveTransactionAction({
           id: view.id,
+          expectedUpdatedAt: view.updatedAt ?? undefined,
           kind: values.kind,
           buffer: values.buffer,
           date: values.date,

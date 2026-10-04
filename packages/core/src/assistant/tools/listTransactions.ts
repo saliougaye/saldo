@@ -6,7 +6,7 @@ import { isUpcoming, splitUpcoming, totalsOf } from '../../ledger';
 import { newestFirst } from '../../order';
 import { moneySchema } from '../money';
 import { checkToolPeriod, resolveToolPeriod, toolPeriodShape } from '../period';
-import { dateRangeSchema, toolDateSchema } from '../schemas';
+import { dateRangeSchema, rowVersionSchema, toolDateSchema } from '../schemas';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 import { toolUser } from '../user';
 
@@ -60,6 +60,7 @@ const transactionOutput = z.object({
   excludeFromTotals: z.boolean(),
   recurring: z.boolean(),
   upcoming: z.boolean().describe('Dated after today: scheduled, not counted yet.'),
+  updatedAt: rowVersionSchema,
 });
 
 const output = z.object({
@@ -142,6 +143,7 @@ export const listTransactionsTool: ReadTool<ListTransactionsInput, ListTransacti
         excludeFromTotals: tx.excludeFromTotals,
         recurring: tx.recurrenceId !== null,
         upcoming: isUpcoming(tx, ctx.today),
+        updatedAt: tx.updatedAt,
       })),
     };
   },

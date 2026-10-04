@@ -146,6 +146,7 @@ export default async function ProfileCategoriesPage({
               archive === null ? undefined : (
                 <ArchiveCategory
                   id={archive.id}
+                  updatedAt={archive.updatedAt}
                   afterHref={PATH}
                   targets={
                     archive.uses === 0

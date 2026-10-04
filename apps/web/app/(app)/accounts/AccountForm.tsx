@@ -13,7 +13,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { AccountFormView } from '../../../src/features/accounts/formView';
+import { type AccountFormView, balanceToSend } from '../../../src/features/accounts/formView';
 import type { AccountMessages } from '../../../src/i18n/accountMessages';
 import { Alert } from '../../../src/ui/Alert';
 import { AmountField } from '../../../src/ui/AmountField';
@@ -88,7 +88,12 @@ export function AccountForm({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveAccountAction>>;
       try {
-        result = await saveAccountAction({ id: view.id, ...values });
+        result = await saveAccountAction({
+          id: view.id,
+          ...values,
+          buffer: balanceToSend(view.initial.buffer, values.buffer),
+          expectedUpdatedAt: view.updatedAt ?? undefined,
+        });
       } catch {
         // A thrown action (the network, the server) keeps the draft and says so.
         setProblem({ error: 'unexpected' });

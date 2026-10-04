@@ -20,6 +20,11 @@ export interface ParentOption {
 export interface CategoryFormView {
   mode: 'new' | 'edit';
   id: string | null;
+  /**
+   * The edited row's version as the page loaded it, sent back as `expectedUpdatedAt`: a phone's edit
+   * after the page loaded answers `conflict` instead of being overwritten (§17.4.2). Null for a new one.
+   */
+  updatedAt: string | null;
   initial: CategoryFormValues;
   /** The parents each direction offers (§4); both are handed over because a new category can switch. */
   parents: Record<Category['direction'], ParentOption[]>;
@@ -61,6 +66,7 @@ export function categoryFormView(input: {
   return {
     mode: input.mode,
     id: editing?.id ?? null,
+    updatedAt: editing?.updatedAt ?? null,
     initial:
       editing === undefined
         ? emptyCategoryForm()

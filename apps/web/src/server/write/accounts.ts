@@ -22,7 +22,7 @@ import { todayFor } from '../userData/today';
 import { signedBufferOk } from './amounts';
 import { unstamped } from './rows';
 import type { WriteError } from './transactions';
-import { WriteRefused, writeInTransaction } from './writeChanges';
+import { movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 export type AccountWriteError = WriteError | 'holdsGoals' | 'parentArchived';
 
@@ -32,17 +32,25 @@ export const accountInputSchema = z.object({
   name: z.string().max(60),
   institution: z.string().max(60),
   type: z.enum(ACCOUNT_TYPES as [Account['type'], ...Account['type'][]]),
-  /** The **current** balance as the field holds it (§6.22): an optional `-`, `.` as the separator. */
+  /**
+   * The **current** balance as the field holds it (§6.22): an optional `-`, `.` as the separator.
+   * `null` (an MCP edit that does not touch the balance, §17.4.2) keeps the stored opening balance,
+   * or opens a new account at zero: recomputing it from a balance read earlier would shift it by
+   * any transaction a phone pushed in between.
+   */
   buffer: z
     .string()
     .max(32)
-    .refine((value) => /^-?(\d{1,13}(\.\d{0,3})?)?$/.test(value), 'Not an amount'),
+    .refine((value) => /^-?(\d{1,13}(\.\d{0,3})?)?$/.test(value), 'Not an amount')
+    .nullable(),
   includeInSpendable: z.boolean(),
   colorIndex: z.number().int().min(0).max(MAX_COLOR_INDEX),
   icon: z.string().min(1).max(40),
   creditCloseDay: z.number().int().min(1).max(28).nullable(),
   creditChargeDay: z.number().int().min(1).max(28).nullable(),
   creditPaymentAccountId: z.string().min(1).nullable(),
+  /** §17.4.2: the version the caller read the row at; a row that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export type AccountInput = z.infer<typeof accountInputSchema>;
@@ -84,6 +92,9 @@ export async function saveAccount(
       ) {
         return fail('notFound');
       }
+      if (existing !== null && movedSince(existing, input.expectedUpdatedAt)) {
+        return fail('conflict');
+      }
       const stored =
         existing === null
           ? undefined
@@ -92,7 +103,9 @@ export async function saveAccount(
               accountBalances(data.accounts, data.transactions, today).get(existing.id) ?? 0,
               minorDigits,
             ).buffer;
-      if (!signedBufferOk(input.buffer, minorDigits, stored)) return fail('invalid');
+      if (input.buffer !== null && !signedBufferOk(input.buffer, minorDigits, stored)) {
+        return fail('invalid');
+      }
       // §5.14: an account that holds goals stays one that can.
       if (!accountTypesFor(data.accounts, input.id).includes(input.type)) return fail('invalid');
 
@@ -109,11 +122,14 @@ export async function saveAccount(
         name: input.name.trim(),
         type: input.type,
         institution: input.institution.trim().length > 0 ? input.institution.trim() : null,
-        openingBalance: openingBalanceFrom(input, minorDigits, {
-          accountId: existing?.id ?? null,
-          txs: data.transactions,
-          today,
-        }),
+        openingBalance:
+          input.buffer === null
+            ? (existing?.openingBalance ?? 0)
+            : openingBalanceFrom({ buffer: input.buffer }, minorDigits, {
+                accountId: existing?.id ?? null,
+                txs: data.transactions,
+                today,
+              }),
         includeInSpendable: input.includeInSpendable,
         colorIndex: input.colorIndex,
         icon: input.icon,
@@ -150,6 +166,7 @@ async function setArchived(
   id: string,
   archive: boolean,
   now: Date,
+  expectedUpdatedAt: string | undefined,
 ): Promise<AccountResult> {
   try {
     return await writeInTransaction<AccountResult>(db, userId, now, async (tx) => {
@@ -157,6 +174,9 @@ async function setArchived(
       const existing = data.accounts.find((row) => row.id === id);
       if (existing === undefined || isPocket(existing)) {
         return { writes: [], result: { ok: false, error: 'notFound' } };
+      }
+      if (movedSince(existing, expectedUpdatedAt)) {
+        return { writes: [], result: { ok: false, error: 'conflict' } };
       }
       // Already in the asked state (another tab got there first): nothing to write.
       if ((existing.archivedAt !== null) === archive) return { writes: [], result: { ok: true } };
@@ -182,8 +202,19 @@ async function setArchived(
 }
 
 /** §5.6: its transactions stay, they still describe money that moved. An account with open goals is refused. */
-export const archiveAccount = (db: ServerDatabase, userId: string, id: string, now: Date) =>
-  setArchived(db, userId, id, true, now);
+export const archiveAccount = (
+  db: ServerDatabase,
+  userId: string,
+  id: string,
+  now: Date,
+  /** §17.4.2: the version the caller read; none checks nothing. */
+  expectedUpdatedAt?: string,
+) => setArchived(db, userId, id, true, now, expectedUpdatedAt);
 
-export const restoreAccount = (db: ServerDatabase, userId: string, id: string, now: Date) =>
-  setArchived(db, userId, id, false, now);
+export const restoreAccount = (
+  db: ServerDatabase,
+  userId: string,
+  id: string,
+  now: Date,
+  expectedUpdatedAt?: string,
+) => setArchived(db, userId, id, false, now, expectedUpdatedAt);

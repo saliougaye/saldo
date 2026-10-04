@@ -1,7 +1,7 @@
 import { ACCOUNT_TYPES, accountSchema, emptyAccountForm, emptyGoalForm } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { ACCOUNT, ACCOUNT_2, account, dataWith, tx } from '../test/fixtures';
-import { accountFormView, goalFormView } from './formView';
+import { accountFormView, balanceToSend, goalFormView } from './formView';
 
 const TODAY = '2026-09-20';
 const base = { today: TODAY, currency: 'EUR' } as const;
@@ -94,5 +94,16 @@ describe('goalFormView', () => {
     for (const id of ['a1', 'p2', 'nope']) {
       expect(goalFormView({ ...base, data: all, mode: 'edit', id })).toBeNull();
     }
+  });
+});
+
+describe('balanceToSend', () => {
+  it('sends null when the balance was left as loaded, so the server keeps the opening balance', () => {
+    // A phone transaction after the page loaded must not be cancelled by a rename (§17.4.2).
+    expect(balanceToSend('990', '990')).toBeNull();
+  });
+  it('sends the typed balance when the user changed it', () => {
+    expect(balanceToSend('990', '1000')).toBe('1000');
+    expect(balanceToSend('', '25.5')).toBe('25.5');
   });
 });

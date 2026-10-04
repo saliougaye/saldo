@@ -6,7 +6,14 @@ import { applyPush } from '../sync/push';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { lockOrder, WriteRefused, writeChanges, writeInTransaction } from './writeChanges';
+import {
+  lockOrder,
+  movedSince,
+  postedVersion,
+  WriteRefused,
+  writeChanges,
+  writeInTransaction,
+} from './writeChanges';
 
 let harness: TestDatabase;
 const NOW = new Date('2026-09-29T10:00:00.000Z');
@@ -220,5 +227,26 @@ describe('lockOrder', () => {
       'tag/t1',
       'tag/t2',
     ]);
+  });
+});
+
+describe('movedSince (§17.4.2)', () => {
+  it('checks nothing without an expected version', () => {
+    expect(movedSince({ updatedAt: 'b' }, undefined)).toBe(false);
+  });
+  it('is false for the version read and true for any other', () => {
+    expect(movedSince({ updatedAt: 'b' }, 'b')).toBe(false);
+    expect(movedSince({ updatedAt: 'b' }, 'a')).toBe(true);
+  });
+});
+
+describe('postedVersion', () => {
+  it('passes a string on and turns anything else into no check', () => {
+    expect(postedVersion('2026-09-29T10:00:00.000Z-0000-web')).toBe(
+      '2026-09-29T10:00:00.000Z-0000-web',
+    );
+    expect(postedVersion(undefined)).toBeUndefined();
+    expect(postedVersion('')).toBeUndefined();
+    expect(postedVersion(42)).toBeUndefined();
   });
 });

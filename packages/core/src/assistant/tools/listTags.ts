@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { rowVersionSchema } from '../schemas';
 import { binary } from '../sort';
 import { READ_ANNOTATIONS, type ReadTool } from '../types';
 
 const input = z.object({});
 
 const output = z.object({
-  tags: z.array(z.object({ id: z.string(), name: z.string() })),
+  tags: z.array(z.object({ id: z.string(), name: z.string(), updatedAt: rowVersionSchema })),
 });
 
 export type ListTagsInput = z.infer<typeof input>;
@@ -24,7 +25,7 @@ export const listTagsTool: ReadTool<ListTagsInput, ListTagsOutput> = {
     return {
       tags: [...data.tags]
         .sort((a, b) => binary(a.name, b.name))
-        .map((tag) => ({ id: tag.id, name: tag.name })),
+        .map((tag) => ({ id: tag.id, name: tag.name, updatedAt: tag.updatedAt })),
     };
   },
 };

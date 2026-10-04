@@ -1604,7 +1604,8 @@ export const it = {
     accounts: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
       error_notFound: 'Questo elemento non esiste più. Aggiorna la pagina.',
-      error_conflict: 'È stato modificato da un altro dispositivo. Riapri e riprova.',
+      error_conflict:
+        'È stato modificato su un altro dispositivo dopo che l’hai aperto. Ricarica la pagina per vedere le modifiche e riprova.',
       error_holdsGoals: 'Ha ancora obiettivi aperti: chiudili prima di archiviare il conto.',
       error_parentArchived: 'Il conto dell’obiettivo è archiviato: ripristinalo prima.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
@@ -1621,7 +1622,8 @@ export const it = {
     budgets: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
       error_notFound: 'Questo budget non esiste più. Aggiorna la pagina.',
-      error_conflict: 'È stato modificato da un altro dispositivo. Riapri e riprova.',
+      error_conflict:
+        'È stato modificato su un altro dispositivo dopo che l’hai aperto. Ricarica la pagina per vedere le modifiche e riprova.',
       error_taken: '«{{name}}» è già in un altro budget.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
       allBudgets: 'Tutti i budget',
@@ -1629,7 +1631,8 @@ export const it = {
     categories: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
       error_notFound: 'Questa categoria non esiste più. Aggiorna la pagina.',
-      error_conflict: 'È stata modificata da un altro dispositivo. Riaprila e riprova.',
+      error_conflict:
+        'È stata modificata su un altro dispositivo dopo che l’hai aperta. Ricarica la pagina per vedere le modifiche e riprova.',
       error_parentInvalid: 'Questa categoria madre non va bene: scegline un’altra.',
       error_moveInvalid:
         'Non si possono spostare le transazioni in quella categoria: scegline un’altra.',
@@ -1639,7 +1642,8 @@ export const it = {
     tags: {
       error_invalid: 'Non riesco a salvare: controlla il nome e riprova.',
       error_notFound: 'Questo tag non esiste più. Aggiorna la pagina.',
-      error_conflict: 'È stato modificato da un altro dispositivo. Riapri e riprova.',
+      error_conflict:
+        'È stato modificato su un altro dispositivo dopo che l’hai aperto. Ricarica la pagina per vedere le modifiche e riprova.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',
     },
     data: {
@@ -1758,7 +1762,8 @@ export const it = {
       error_notFound:
         'Questa transazione non c’è più: forse è stata eliminata da un altro dispositivo.',
       error_closedGoal: 'Tocca un obiettivo chiuso: non si può più modificare.',
-      error_conflict: 'Un altro dispositivo l’ha modificata nello stesso momento. Riprova.',
+      error_conflict:
+        'È stata modificata su un altro dispositivo dopo che l’hai aperta. Ricarica la pagina per vedere le modifiche e riprova.',
       noCategories: 'Nessuna categoria di questo tipo. Aggiungine una dal Profilo.',
       noAccounts: 'Nessun conto. Aggiungine uno da Conti.',
       error_unexpected: 'Qualcosa è andato storto. Riprova.',

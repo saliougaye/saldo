@@ -26,7 +26,7 @@ import { readUserData } from '../userData/read';
 import { todayFor } from '../userData/today';
 import type { AccountResult, AccountWriteError } from './accounts';
 import { tombstoned, unstamped } from './rows';
-import { type EntityWrite, WriteRefused, writeInTransaction } from './writeChanges';
+import { type EntityWrite, movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 export const goalInputSchema = z.object({
   /** Null for «Nuovo obiettivo». */
@@ -46,6 +46,8 @@ export const goalInputSchema = z.object({
     .string()
     .max(32)
     .refine((v) => v === '' || /^\d{1,13}(\.\d{0,3})?$/.test(v), 'Not an amount'),
+  /** §17.4.2: the version the caller read the pocket at; a pocket that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export type GoalInput = z.infer<typeof goalInputSchema>;
@@ -145,6 +147,9 @@ export async function saveGoal(
       ) {
         return fail('notFound');
       }
+      if (existing !== null && movedSince(existing, input.expectedUpdatedAt)) {
+        return fail('conflict');
+      }
       const values = { ...input, icon: input.icon };
       const gap = goalStepMissing(
         existing === null ? 'account' : 'edit',
@@ -226,10 +231,19 @@ export async function closeGoal(
   userId: string,
   goalId: string,
   now: Date,
+  /** §17.4.2: the version the caller read; none checks nothing. */
+  expectedUpdatedAt?: string,
 ): Promise<AccountResult> {
   try {
     return await writeInTransaction<AccountResult>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
+      // Only an open goal's version is compared: any other id is `notFound` below, not `conflict`.
+      const pocket = data.accounts.find(
+        (row) => row.id === goalId && isPocket(row) && row.archivedAt === null,
+      );
+      if (pocket !== undefined && movedSince(pocket, expectedUpdatedAt)) {
+        return { writes: [], result: { ok: false, error: 'conflict' } };
+      }
       const { today } = todayFor(readSettings(data.settings), env().defaultTimeZone, now);
       const writes = closeGoalWrites(data, goalId, today, now);
       if (writes === null) return { writes: [], result: { ok: false, error: 'notFound' } };

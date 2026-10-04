@@ -10,6 +10,8 @@ import { closeGoalAction } from './actions';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the goal is closed: `/accounts`. */
   afterHref: string;
   /** «Registra la spesa»: `goalExpenseHref` for a funded goal; the dialog offers it only then. */
@@ -39,7 +41,7 @@ interface Props {
  * «Registra la spesa» goes to the expense form (saving that closes the goal), «Riporta in {conto}»
  * closes it here and now, the money back in the parent.
  */
-export function CloseGoal({ id, afterHref, expenseHref, strings }: Props) {
+export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function CloseGoal({ id, afterHref, expenseHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof closeGoalAction>>;
       try {
-        result = await closeGoalAction(id);
+        result = await closeGoalAction(id, updatedAt);
       } catch {
         setError(strings.errors.unexpected);
         return;

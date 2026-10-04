@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { createTag, deleteTag, mergeTags, newTag, renameTag } from './tags';
 import { writeChanges } from './writeChanges';
 
@@ -308,5 +308,37 @@ describe('deleteTag', () => {
       error: 'notFound',
     });
     expect(await deleteTag(harness.db, userId, '', later)).toEqual({ ok: false, error: 'invalid' });
+  });
+});
+
+describe('tags — expectedUpdatedAt (§17.4.2)', () => {
+  it('renames, merges and deletes only the version read', async () => {
+    await onboarded();
+    await tag('tag-a', 'Lavoro');
+    await tag('tag-b', 'Ufficio');
+    const read = await stampOf(harness.db, userId, 'tag', 'tag-a');
+    const phone = await bumpRow(harness.db, userId, 'tag', 'tag-a', { name: 'Lavori' });
+
+    expect(
+      await renameTag(
+        harness.db,
+        userId,
+        { id: 'tag-a', name: 'Job', expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(
+      await mergeTags(
+        harness.db,
+        userId,
+        { sourceId: 'tag-a', targetId: 'tag-b', expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(await deleteTag(harness.db, userId, 'tag-a', FIXTURE_NOW, read)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await deleteTag(harness.db, userId, 'tag-a', FIXTURE_NOW, phone)).toEqual({ ok: true });
   });
 });

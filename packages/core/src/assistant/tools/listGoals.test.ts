@@ -22,6 +22,7 @@ describe('list_goals', () => {
           perPeriod: { minor: 17500, currency: 'EUR', amount: '175.00' },
           periodsLeft: 4,
           daysLeft: 108,
+          updatedAt: expect.any(String),
         },
       ],
     });

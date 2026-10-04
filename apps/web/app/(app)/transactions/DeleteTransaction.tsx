@@ -10,6 +10,8 @@ import styles from './transactions.module.css';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the row is a tombstone: the list without `t`, plus `deleted={id}`. */
   deletedHref: string;
   strings: {
@@ -31,7 +33,7 @@ interface Props {
  * tombstones the transaction (decision 9) and moves the page to `?deleted={id}`, where the page
  * renders «Annulla» (decision 8). A refusal keeps the dialog open and says why.
  */
-export function DeleteTransaction({ id, deletedHref, strings }: Props) {
+export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function DeleteTransaction({ id, deletedHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof deleteTransactionAction>>;
       try {
-        result = await deleteTransactionAction(id);
+        result = await deleteTransactionAction(id, updatedAt);
       } catch {
         setError(strings.errors.unexpected);
         return;

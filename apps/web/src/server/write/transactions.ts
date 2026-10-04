@@ -29,7 +29,7 @@ import { loadRow } from '../userData/row';
 import { todayFor } from '../userData/today';
 import { closeGoalWrites } from './goals';
 import { tombstoned, unstamped } from './rows';
-import { type EntityWrite, WriteRefused, writeInTransaction } from './writeChanges';
+import { type EntityWrite, movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 /** What the form sends. Parsed here, because a Server Action's argument is whatever a client posts. */
 export const transactionInputSchema = z.object({
@@ -55,6 +55,8 @@ export const transactionInputSchema = z.object({
   excludeFromTotals: z.boolean(),
   /** «Registra la spesa» (§6.38): the open goal this new expense closes. */
   closeGoalId: z.string().min(1).nullable().optional(),
+  /** §17.4.2: the version the caller read the row at; a row that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
@@ -191,6 +193,9 @@ export async function saveTransaction(
       if (input.id !== null && existing === null) {
         return { writes: [], result: { ok: false, error: 'notFound' } };
       }
+      if (existing !== null && movedSince(existing, input.expectedUpdatedAt)) {
+        return { writes: [], result: { ok: false, error: 'conflict' } };
+      }
       if (existing !== null && touchesClosedGoal(existing, data.accounts)) {
         return { writes: [], result: { ok: false, error: 'closedGoal' } };
       }
@@ -266,12 +271,17 @@ export async function deleteTransaction(
   userId: string,
   id: string,
   now: Date,
+  /** §17.4.2: the version the caller read (an MCP client, a web confirm); none checks nothing. */
+  expectedUpdatedAt?: string,
 ): Promise<Result> {
   try {
     return await writeInTransaction<Result>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
       const existing = data.transactions.find((tx) => tx.id === id);
       if (existing === undefined) return { writes: [], result: { ok: false, error: 'notFound' } };
+      if (movedSince(existing, expectedUpdatedAt)) {
+        return { writes: [], result: { ok: false, error: 'conflict' } };
+      }
       if (touchesClosedGoal(existing, data.accounts)) {
         return { writes: [], result: { ok: false, error: 'closedGoal' } };
       }

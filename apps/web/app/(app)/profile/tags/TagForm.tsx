@@ -26,7 +26,7 @@ import styles from './tags.module.css';
 
 interface Props {
   /** Null for «Nuovo tag». */
-  tag: { id: string; name: string; uses: number } | null;
+  tag: { id: string; name: string; updatedAt: string; uses: number } | null;
   /** Every live tag: the names already taken, and — without this one — what it can merge into. */
   tags: readonly { id: string; name: string }[];
   locale: AppLocale;
@@ -73,7 +73,9 @@ export function TagForm({
       let result: Awaited<ReturnType<typeof renameTagAction>>;
       try {
         result =
-          tag === null ? await newTagAction(name) : await renameTagAction({ id: tag.id, name });
+          tag === null
+            ? await newTagAction(name)
+            : await renameTagAction({ id: tag.id, name, expectedUpdatedAt: tag.updatedAt });
       } catch {
         // A thrown action (the network, the server) keeps the draft and says so.
         setProblem({ field: false, text: errors.unexpected });
@@ -140,6 +142,7 @@ export function TagForm({
           {others.length === 0 ? null : (
             <MergeTag
               id={tag.id}
+              updatedAt={tag.updatedAt}
               targets={others}
               afterHref={afterSave}
               strings={{
@@ -172,6 +175,7 @@ export function TagForm({
           tag === null ? undefined : (
             <DeleteTag
               id={tag.id}
+              updatedAt={tag.updatedAt}
               afterHref={afterSave}
               strings={{
                 action: t('tags.delete'),

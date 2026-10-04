@@ -3,6 +3,8 @@ import { movableTargets, rollUpCategoryUsage, type UserData } from '@saldo/core'
 export interface ArchiveCategoryView {
   id: string;
   name: string;
+  /** The category's version as loaded: archiving a category a phone changed since is a `conflict`. */
+  updatedAt: string;
   /** The count the list shows for it, children folded in — the phone's sheet reads the same. */
   uses: number;
   /** Where the transactions can move (§5.11): live, same direction, not itself nor its children. */
@@ -21,6 +23,7 @@ export function archiveCategoryView(data: UserData, id: string): ArchiveCategory
   return {
     id: category.id,
     name: category.name,
+    updatedAt: category.updatedAt,
     uses: rollUpCategoryUsage(data.categories, direct).get(category.id) ?? 0,
     targets: movableTargets(data.categories, category).map((row) => ({
       id: row.id,

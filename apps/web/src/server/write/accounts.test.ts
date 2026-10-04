@@ -3,7 +3,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { archiveAccount, restoreAccount, saveAccount } from './accounts';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { saveGoal } from './goals';
 import { saveTransaction } from './transactions';
 
@@ -218,6 +218,78 @@ describe('archive and restore', () => {
     expect(await archiveAccount(harness.db, userId, 'nope', FIXTURE_NOW)).toEqual({
       ok: false,
       error: 'notFound',
+    });
+  });
+});
+
+describe('saveAccount — a null buffer keeps the opening balance (§17.4.2)', () => {
+  const groceries = {
+    id: null,
+    kind: 'expense',
+    buffer: '48.2',
+    date: '2026-09-28',
+    accountId: 'acc-main',
+    toAccountId: null,
+    categoryId: 'seed-category-groceries',
+    description: 'Esselunga',
+    tagIds: [],
+    excludeFromTotals: false,
+  };
+
+  it('renames an account without touching its opening balance', async () => {
+    await onboarded();
+    await saveTransaction(harness.db, userId, groceries, FIXTURE_NOW);
+    const result = await saveAccount(
+      harness.db,
+      userId,
+      { ...cash, id: 'acc-main', name: 'Principale', type: 'checking', buffer: null },
+      FIXTURE_NOW,
+    );
+    expect(result).toEqual({ ok: true, id: 'acc-main' });
+    expect((await accounts()).find((row) => row.id === 'acc-main')).toMatchObject({
+      name: 'Principale',
+      openingBalance: 100000,
+    });
+  });
+
+  it('opens a new account at zero', async () => {
+    await onboarded();
+    const result = await saveAccount(harness.db, userId, { ...cash, buffer: null }, FIXTURE_NOW);
+    if (!result.ok) throw new Error('not created');
+    expect((await accounts()).find((row) => row.id === result.id)).toMatchObject({
+      openingBalance: 0,
+    });
+  });
+});
+
+describe('accounts — expectedUpdatedAt (§17.4.2)', () => {
+  it('saves, archives and restores only the version read', async () => {
+    await onboarded();
+    const read = await stampOf(harness.db, userId, 'account', 'acc-savings');
+    const phone = await bumpRow(harness.db, userId, 'account', 'acc-savings', { name: 'Fondo' });
+
+    expect(
+      await saveAccount(
+        harness.db,
+        userId,
+        { ...cash, id: 'acc-savings', type: 'savings', buffer: null, expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(await archiveAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, read)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await archiveAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, phone)).toEqual({
+      ok: true,
+    });
+    const archived = await stampOf(harness.db, userId, 'account', 'acc-savings');
+    expect(await restoreAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, phone)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await restoreAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, archived)).toEqual({
+      ok: true,
     });
   });
 });

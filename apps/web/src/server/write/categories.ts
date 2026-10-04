@@ -17,7 +17,7 @@ import type { ServerDatabase } from '../db/types';
 import { readUserData } from '../userData/read';
 import { tombstoned, unstamped } from './rows';
 import type { WriteError } from './transactions';
-import { type EntityWrite, WriteRefused, writeInTransaction } from './writeChanges';
+import { type EntityWrite, movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 export type CategoryWriteError = WriteError | 'parentInvalid' | 'moveInvalid';
 
@@ -36,12 +36,16 @@ export const categoryInputSchema = z.object({
     .string()
     .max(32)
     .refine((v) => v === '' || /^\d{1,13}(\.\d{0,3})?$/.test(v), 'Not an amount'),
+  /** §17.4.2: the version the caller read the row at; a row that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export const archiveCategoryInputSchema = z.object({
   id: z.string().min(1),
   /** «Sposta le transazioni in»; null archives without moving. */
   moveToId: z.string().min(1).nullable(),
+  /** §17.4.2: the version the caller read the row at; a row that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export const reorderCategoryInputSchema = z.object({
@@ -91,6 +95,9 @@ export async function saveCategory(
       const existing =
         input.id === null ? null : (data.categories.find((row) => row.id === input.id) ?? null);
       if (input.id !== null && existing === null) return fail('notFound');
+      if (existing !== null && movedSince(existing, input.expectedUpdatedAt)) {
+        return fail('conflict');
+      }
       const direction = existing?.direction ?? input.direction;
 
       if (input.parentId !== null && input.parentId !== existing?.parentId) {
@@ -202,12 +209,13 @@ export async function archiveCategory(
 ): Promise<CategoryResult> {
   const parsed = archiveCategoryInputSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: 'invalid' };
-  const { id, moveToId } = parsed.data;
+  const { id, moveToId, expectedUpdatedAt } = parsed.data;
   try {
     return await writeInTransaction<CategoryResult>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
       const existing = data.categories.find((row) => row.id === id);
       if (existing === undefined) return fail('notFound');
+      if (movedSince(existing, expectedUpdatedAt)) return fail('conflict');
       if (existing.archivedAt !== null) return { writes: [], result: { ok: true } };
       if (
         moveToId !== null &&
@@ -285,6 +293,8 @@ export async function restoreCategory(
   userId: string,
   id: string,
   now: Date,
+  /** §17.4.2: the version the caller read; none checks nothing. */
+  expectedUpdatedAt?: string,
 ): Promise<CategoryResult> {
   if (id === '') return { ok: false, error: 'invalid' };
   try {
@@ -292,6 +302,7 @@ export async function restoreCategory(
       const data = await readUserData(tx, userId);
       const existing = data.categories.find((row) => row.id === id);
       if (existing === undefined) return fail('notFound');
+      if (movedSince(existing, expectedUpdatedAt)) return fail('conflict');
       if (existing.archivedAt === null) return { writes: [], result: { ok: true } };
       if (existing.parentId !== null) {
         const parent = data.categories.find((row) => row.id === existing.parentId);

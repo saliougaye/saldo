@@ -3,7 +3,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { archiveCategory, reorderCategory, restoreCategory, saveCategory } from './categories';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { writeChanges } from './writeChanges';
 
 let harness: TestDatabase;
@@ -473,5 +473,46 @@ describe('reorderCategory', () => {
     expect(
       await reorderCategory(harness.db, userId, { id: GROCERIES, direction: 2 }, later),
     ).toEqual({ ok: false, error: 'invalid' });
+  });
+});
+
+describe('categories — expectedUpdatedAt (§17.4.2)', () => {
+  it('saves, archives and restores only the version read', async () => {
+    await onboarded();
+    const read = await stampOf(harness.db, userId, 'category', GROCERIES);
+    const phone = await bumpRow(harness.db, userId, 'category', GROCERIES, { name: 'Alimentari' });
+
+    expect(
+      await saveCategory(
+        harness.db,
+        userId,
+        { ...input, id: GROCERIES, name: 'Spesa', expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(
+      await archiveCategory(
+        harness.db,
+        userId,
+        { id: GROCERIES, moveToId: null, expectedUpdatedAt: read },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: false, error: 'conflict' });
+    expect(
+      await archiveCategory(
+        harness.db,
+        userId,
+        { id: GROCERIES, moveToId: null, expectedUpdatedAt: phone },
+        FIXTURE_NOW,
+      ),
+    ).toEqual({ ok: true });
+    const archived = await stampOf(harness.db, userId, 'category', GROCERIES);
+    expect(await restoreCategory(harness.db, userId, GROCERIES, FIXTURE_NOW, phone)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await restoreCategory(harness.db, userId, GROCERIES, FIXTURE_NOW, archived)).toEqual({
+      ok: true,
+    });
   });
 });

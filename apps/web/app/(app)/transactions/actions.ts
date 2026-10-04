@@ -10,6 +10,7 @@ import {
   type SaveResult,
   saveTransaction as saveFor,
 } from '../../../src/server/write/transactions';
+import { postedVersion } from '../../../src/server/write/writeChanges';
 
 /**
  * §17.1.3: the form's writes. Each resolves the session itself — a Server Action is a public
@@ -20,9 +21,9 @@ export async function saveTransactionAction(input: unknown): Promise<SaveResult>
   return saveFor(getDb(), user.id, input, new Date());
 }
 
-export async function deleteTransactionAction(id: string): Promise<Result> {
+export async function deleteTransactionAction(id: string, updatedAt: string): Promise<Result> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date());
+  return deleteFor(getDb(), user.id, String(id), new Date(), postedVersion(updatedAt));
 }
 
 export async function restoreTransactionAction(id: string): Promise<Result> {

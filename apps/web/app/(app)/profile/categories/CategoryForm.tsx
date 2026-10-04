@@ -88,6 +88,7 @@ export function CategoryForm({
       try {
         result = await saveCategoryAction({
           id: view.id,
+          expectedUpdatedAt: view.updatedAt ?? undefined,
           name: values.name,
           direction: values.direction,
           parentId: values.parentId,

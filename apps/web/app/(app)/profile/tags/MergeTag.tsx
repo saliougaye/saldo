@@ -9,6 +9,8 @@ import { mergeTagsAction } from './actions';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** The other tags, by name. */
   targets: readonly { id: string; name: string }[];
   /** Where the page goes once the tag has been merged away: `/profile/tags`. */
@@ -32,7 +34,7 @@ interface Props {
  * undone, so choosing a target only asks: the dialog says what will happen and «Unisci» does it —
  * the phone's `MergeTagSheet`.
  */
-export function MergeTag({ id, targets, afterHref, strings }: Props) {
+export function MergeTag({ id, updatedAt, targets, afterHref, strings }: Props) {
   const router = useRouter();
   // The last target picked. It outlives «Annulla» so the question keeps its words while it closes;
   // the field itself never holds a pick, which would read as a merge that happened.
@@ -47,7 +49,11 @@ export function MergeTag({ id, targets, afterHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof mergeTagsAction>>;
       try {
-        result = await mergeTagsAction({ sourceId: id, targetId: target.id });
+        result = await mergeTagsAction({
+          sourceId: id,
+          targetId: target.id,
+          expectedUpdatedAt: updatedAt,
+        });
       } catch {
         setError(strings.errors.unexpected);
         return;

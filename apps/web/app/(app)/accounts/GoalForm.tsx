@@ -106,7 +106,11 @@ export function GoalForm({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveGoalAction>>;
       try {
-        result = await saveGoalAction({ id: view.id, ...values });
+        result = await saveGoalAction({
+          id: view.id,
+          ...values,
+          expectedUpdatedAt: view.updatedAt ?? undefined,
+        });
       } catch {
         // A thrown action (the network, the server) keeps the draft and says so.
         setProblem({ error: 'unexpected' });

@@ -6,16 +6,38 @@ describe('list_categories', () => {
   it('lists expenses then income, each parent followed by its children', () => {
     const result = listCategoriesTool.run(fixtureData(), CONTEXT, { includeArchived: false });
     expect(result.categories).toEqual([
-      { id: 'c-food', name: 'Spesa', direction: 'expense', parentId: null, archived: false },
+      {
+        id: 'c-food',
+        name: 'Spesa',
+        direction: 'expense',
+        parentId: null,
+        archived: false,
+        updatedAt: expect.any(String),
+      },
       {
         id: 'c-super',
         name: 'Supermercato',
         direction: 'expense',
         parentId: 'c-food',
         archived: false,
+        updatedAt: expect.any(String),
       },
-      { id: 'c-home', name: 'Casa', direction: 'expense', parentId: null, archived: false },
-      { id: 'c-salary', name: 'Stipendio', direction: 'income', parentId: null, archived: false },
+      {
+        id: 'c-home',
+        name: 'Casa',
+        direction: 'expense',
+        parentId: null,
+        archived: false,
+        updatedAt: expect.any(String),
+      },
+      {
+        id: 'c-salary',
+        name: 'Stipendio',
+        direction: 'income',
+        parentId: null,
+        archived: false,
+        updatedAt: expect.any(String),
+      },
     ]);
   });
 
@@ -27,6 +49,7 @@ describe('list_categories', () => {
       direction: 'expense',
       parentId: null,
       archived: true,
+      updatedAt: expect.any(String),
     });
   });
 

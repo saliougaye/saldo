@@ -521,6 +521,7 @@ export default async function TransactionsPage({
             <span className={styles.spacer} />
             <DeleteTransaction
               id={selected.id}
+              updatedAt={selected.updatedAt}
               deletedHref={href({ [DELETED_PARAM]: selected.id })}
               strings={{
                 action: t('common.delete'),

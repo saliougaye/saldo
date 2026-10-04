@@ -24,9 +24,9 @@ describe('tagsView', () => {
       ),
     );
     expect(rows).toEqual([
-      { id: 'g1', name: 'Vacanza', uses: 2 },
-      { id: 'g2', name: 'Casa', uses: 1 },
-      { id: 'g3', name: 'Mai usato', uses: 0 },
+      { id: 'g1', name: 'Vacanza', updatedAt: TAG.updatedAt, uses: 2 },
+      { id: 'g2', name: 'Casa', updatedAt: TAG.updatedAt, uses: 1 },
+      { id: 'g3', name: 'Mai usato', updatedAt: TAG.updatedAt, uses: 0 },
     ]);
   });
 

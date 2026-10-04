@@ -10,6 +10,8 @@ import styles from './budgets.module.css';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the budget is gone: `/profile/budgets`. */
   afterHref: string;
   strings: {
@@ -30,7 +32,7 @@ interface Props {
  * «Elimina budget» and its question (§5.8). Like the phone, it asks first and offers no undo: the
  * transactions stay, only the budget goes.
  */
-export function DeleteBudget({ id, afterHref, strings }: Props) {
+export function DeleteBudget({ id, updatedAt, afterHref, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function DeleteBudget({ id, afterHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof deleteBudgetAction>>;
       try {
-        result = await deleteBudgetAction(id);
+        result = await deleteBudgetAction(id, updatedAt);
       } catch {
         setError(strings.errors.unexpected);
         return;

@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
 import { saveGoal } from './goals';
 import { deleteTransaction, restoreTransaction, saveTransaction } from './transactions';
 import { writeChanges } from './writeChanges';
@@ -651,5 +651,52 @@ describe('saveTransaction — closeGoalId (§6.38)', () => {
       ),
     ).toEqual({ ok: false, error: 'invalid' });
     expect((await readUserData(harness.db, userId)).transactions).toHaveLength(before);
+  });
+});
+
+describe('expectedUpdatedAt (§17.4.2): the version an MCP client read', () => {
+  it('edits the version read and refuses a row that moved since', async () => {
+    await onboarded();
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    const read = await stampOf(harness.db, userId, 'transaction', created.id);
+
+    const fresh = await saveTransaction(
+      harness.db,
+      userId,
+      { ...expense, id: created.id, buffer: '50', expectedUpdatedAt: read },
+      FIXTURE_NOW,
+    );
+    expect(fresh).toEqual({ ok: true, id: created.id });
+
+    // The first edit moved the row: the same read is now stale.
+    const stale = await saveTransaction(
+      harness.db,
+      userId,
+      { ...expense, id: created.id, buffer: '60', expectedUpdatedAt: read },
+      FIXTURE_NOW,
+    );
+    expect(stale).toEqual({ ok: false, error: 'conflict' });
+    expect((await readUserData(harness.db, userId)).transactions).toEqual([
+      expect.objectContaining({ id: created.id, amount: 5000 }),
+    ]);
+  });
+
+  it('deletes only the version read', async () => {
+    await onboarded();
+    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
+    if (!created.ok) throw new Error('not created');
+    const read = await stampOf(harness.db, userId, 'transaction', created.id);
+    const phone = await bumpRow(harness.db, userId, 'transaction', created.id, {
+      description: 'Dal telefono',
+    });
+
+    expect(await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW, read)).toEqual({
+      ok: false,
+      error: 'conflict',
+    });
+    expect(await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW, phone)).toEqual({
+      ok: true,
+    });
   });
 });

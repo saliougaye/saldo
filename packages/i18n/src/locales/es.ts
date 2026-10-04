@@ -1608,7 +1608,8 @@ export const es: Messages = {
     accounts: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
       error_notFound: 'Este elemento ya no existe. Actualiza la página.',
-      error_conflict: 'Se modificó desde otro dispositivo. Ábrelo de nuevo e inténtalo otra vez.',
+      error_conflict:
+        'Se modificó desde otro dispositivo después de que lo abrieras. Recarga la página para ver los cambios e inténtalo otra vez.',
       error_holdsGoals: 'Aún tiene objetivos abiertos: ciérralos antes de archivar la cuenta.',
       error_parentArchived: 'La cuenta del objetivo está archivada: restáurala primero.',
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
@@ -1625,7 +1626,8 @@ export const es: Messages = {
     budgets: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
       error_notFound: 'Este presupuesto ya no existe. Actualiza la página.',
-      error_conflict: 'Se modificó desde otro dispositivo. Ábrelo de nuevo e inténtalo otra vez.',
+      error_conflict:
+        'Se modificó desde otro dispositivo después de que lo abrieras. Recarga la página para ver los cambios e inténtalo otra vez.',
       error_taken: '«{{name}}» ya está en otro presupuesto.',
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
       allBudgets: 'Todos los presupuestos',
@@ -1633,7 +1635,8 @@ export const es: Messages = {
     categories: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
       error_notFound: 'Esta categoría ya no existe. Actualiza la página.',
-      error_conflict: 'Se modificó desde otro dispositivo. Ábrela de nuevo e inténtalo otra vez.',
+      error_conflict:
+        'Se modificó desde otro dispositivo después de que la abrieras. Recarga la página para ver los cambios e inténtalo otra vez.',
       error_parentInvalid: 'Esa categoría principal no sirve: elige otra.',
       error_moveInvalid: 'Las transacciones no se pueden mover a esa categoría: elige otra.',
       error_parentArchived: 'La categoría principal está archivada: restáurala primero.',
@@ -1642,7 +1645,8 @@ export const es: Messages = {
     tags: {
       error_invalid: 'No se pudo guardar: revisa el nombre e inténtalo de nuevo.',
       error_notFound: 'Esta etiqueta ya no existe. Actualiza la página.',
-      error_conflict: 'Se modificó desde otro dispositivo. Ábrela de nuevo e inténtalo otra vez.',
+      error_conflict:
+        'Se modificó desde otro dispositivo después de que la abrieras. Recarga la página para ver los cambios e inténtalo otra vez.',
       error_unexpected: 'Algo salió mal. Inténtalo de nuevo.',
     },
     data: {
@@ -1761,7 +1765,8 @@ export const es: Messages = {
       error_invalid: 'No hemos podido leer el formulario. Recarga la página y vuelve a intentarlo.',
       error_notFound: 'Esta transacción ya no existe: quizá se eliminó desde otro dispositivo.',
       error_closedGoal: 'Afecta a un objetivo cerrado, que ya no se puede modificar.',
-      error_conflict: 'Otro dispositivo la modificó en el mismo momento. Vuelve a intentarlo.',
+      error_conflict:
+        'Se modificó desde otro dispositivo después de que la abrieras. Recarga la página para ver los cambios e inténtalo otra vez.',
       noCategories: 'No hay categorías de este tipo. Añade una desde el Perfil.',
       noAccounts: 'No hay cuentas. Añade una desde Cuentas.',
       error_unexpected: 'Algo ha ido mal. Vuelve a intentarlo.',
