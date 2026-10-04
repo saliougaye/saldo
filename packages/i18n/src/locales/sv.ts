@@ -243,6 +243,33 @@ export const sv: Messages = {
         failedNoDetail: 'Det gick inte att skicka.',
       },
     },
+    mcp: {
+      title: 'MCP',
+      switchLabel: 'Låt användare ansluta MCP-klienter',
+      switchNote:
+        'Varje användare auktoriserar sina egna klienter i webbläsaren, med sin passnyckel, och väljer om de också får skriva. Av: slutpunkten svarar 404 och auktoriserade kopplingar stannar tills du slår på den igen.',
+      locked: 'Satt av miljön: {{variable}}',
+      offTitle: 'Stänga av MCP?',
+      offBody_one:
+        '{{count}} användare har {{connectors}}: de slutar svara vid nästa anrop. Auktoriseringarna finns kvar och fortsätter när du slår på den igen.',
+      offBody_other:
+        '{{count}} användare har {{connectors}}: de slutar svara vid nästa anrop. Auktoriseringarna finns kvar och fortsätter när du slår på den igen.',
+      connectors_one: '{{count}} auktoriserad koppling',
+      connectors_other: '{{count}} auktoriserade kopplingar',
+      offNone: 'Just nu är ingen koppling auktoriserad: ingenting stannar.',
+      turnOff: 'Stäng av',
+      usersWithConnectors: 'Användare med kopplingar',
+      outOf: 'av {{total}}',
+      connectorsAuthorized: 'Auktoriserade kopplingar',
+      connectorsUsed: 'Använda de senaste 7 dagarna',
+      clientTitle: 'Vad du ger en klient',
+      discovery: 'Resten hittar klienterna själva, via de här två dokumenten på den här värden:',
+      httpsNote:
+        'PUBLIC_URL måste vara HTTPS: MCP-klienter vägrar auktorisera över okrypterad HTTP, utom på samma dator.',
+      httpTitle: 'PUBLIC_URL är inte HTTPS',
+      httpBody:
+        'Den här servern svarar på {{url}}. MCP-klienter vägrar auktorisera över okrypterad HTTP, utom från just den här datorn.',
+    },
     mail: {
       subject: 'Testmejl från {{instance}}',
       body: 'Det här är ett testmejl från ”{{instance}}” ({{host}}). Om du läser det fungerar utgående e-post.',
@@ -1615,6 +1642,101 @@ export const sv: Messages = {
       csvPeriodHint: 'Bara den pågående perioden: {{range}}.',
       phoneNote:
         'Säkerhetskopian innehåller uppgifterna om bilagorna, inte filerna. Säkerhetskopian med foton och PDF:er (ZIP), återställning, CSV-import och ”{{deleteAll}}” görs från telefonen.',
+    },
+    connectors: {
+      title: 'Kopplingar',
+      connectTitle: 'Anslut',
+      connectBody:
+        'Ge den här adressen till din MCP-klient. Det finns ingen nyckel att kopiera: klienten skickar dig tillbaka hit, du loggar in med din passnyckel och väljer vad den får göra.',
+      copy: 'Kopiera',
+      copied: 'Kopierat',
+      clientsLabel: 'Klient',
+      tabClaudeCode: 'Claude Code',
+      tabClaude: 'Claude',
+      tabOther: 'Annan klient',
+      claudeCodeHint:
+        'Vid första anropet öppnar Claude Code webbläsaren på den här instansen för att auktorisera.',
+      claudeStep1:
+        'Öppna Inställningar › Kopplingar › Lägg till anpassad koppling i Claude (webb eller app).',
+      claudeStep2:
+        'Klistra in adressen ovan som serverns URL. Ingen nyckel: du blir ombedd att logga in i Saldo med din passnyckel.',
+      otherBody:
+        'Vilken MCP-klient som helst med HTTP-transport och OAuth: klistra in adressen, resten hittar den själv via det här dokumentet:',
+      otherTerminal: 'Från en terminal utan webbläsare:',
+      authorizedTitle: 'Auktoriserade',
+      emptyTitle: 'Inga kopplingar',
+      emptyBody:
+        'När du auktoriserar en MCP-klient i webbläsaren dyker den upp här med vad den får göra.',
+      revokeNote:
+        'En återkallad koppling får ett fel vid nästa anrop. En auktorisering som inte används på 180 dagar upphör av sig själv.',
+      scopeRead: 'Läsa',
+      scopeWrite: 'Skriva',
+      authorizedOn: 'auktoriserad {{date}}',
+      usedToday: 'använd i dag',
+      usedYesterday: 'använd i går',
+      usedOn: 'använd {{date}}',
+      neverUsed: 'aldrig använd',
+      factScopes: 'Får',
+      factReturnsTo: 'Återvänder till',
+      factAuthorized: 'Auktoriserad',
+      factLastUsed: 'Senast använd',
+      factCalls: 'Anrop',
+      lastUsedToday: 'i dag',
+      lastUsedYesterday: 'i går',
+      lastUsedNever: 'aldrig',
+      calls_one: '{{count}} anrop sedan {{date}}',
+      calls_other: '{{count}} anrop sedan {{date}}',
+      panelNote:
+        'En MCP-klient ser det du ser i Saldo: konton, transaktioner, budgetar, mål. Med ”Skriva” kan den också lägga till och ändra, med samma regler som formulären.',
+      revoke: 'Återkalla åtkomst',
+      revokeTitle: 'Återkalla {{name}}?',
+      revokeBody: 'Den slutar fungera vid nästa anrop. Du kan auktorisera den igen från klienten.',
+      revokeConfirm: 'Återkalla',
+      revokeFailed: 'Det gick inte att återkalla åtkomsten. Försök igen.',
+      offTitle: 'MCP är avstängt på den här instansen',
+      offBody:
+        'Administratören har stängt av MCP-åtkomsten. Kopplingar som redan är auktoriserade finns kvar i listan och fortsätter när den slås på igen.',
+      offAdminBody:
+        'Du stängde av den under Admin › MCP. Kopplingar som redan är auktoriserade finns kvar i listan och fortsätter när du slår på den igen.',
+      offAdminEnvBody:
+        'Den är avstängd av miljövariabeln MCP_ENABLED. Kopplingar som redan är auktoriserade finns kvar i listan och fortsätter när den slås på igen.',
+      offAdminLink: 'Öppna Admin › MCP',
+    },
+    consent: {
+      title: 'En app vill ansluta',
+      returnsTo: 'återvänder till {{host}}',
+      registeredNow: 'registrerad nyss',
+      authorizedBefore: 'redan auktoriserad {{date}}',
+      freshTitle: 'Första gången du ser den här appen',
+      freshBody:
+        'Namnet väljer appen själv. Lita bara på den om du själv startade begäran alldeles nyss.',
+      whatTitle: 'Vad den får göra å dina vägnar:',
+      scopesLabel: 'Behörigheter',
+      readTitle: 'Läsa dina data',
+      readBody:
+        'Konton och saldon, transaktioner, budgetar, mål, statistik och prognoser: det du ser.',
+      required: 'krävs',
+      writeTitle: 'Lägga till och ändra',
+      writeBody:
+        'Transaktioner, konton, kategorier, taggar, budgetar och mål, med samma regler som formulären. Den kan inte röra återkommande transaktioner eller bilagor.',
+      signedInAs: 'Inloggad som {{who}}',
+      notYou: 'Inte du?',
+      authorize: 'Auktorisera',
+      authorizeReadOnly: 'Auktorisera bara läsning',
+      deny: 'Neka',
+      revocationNote:
+        'Du kan återkalla åtkomsten när som helst under Profil › Kopplingar. Klienten får aldrig din passnyckel.',
+      failed: 'Något gick fel. Börja om från MCP-klienten.',
+      deniedTitle: 'Åtkomst nekad',
+      deniedBody:
+        'Du sa nej till {{client}}. Klienten har fått veta det: du kan stänga den här fliken.',
+      disabledTitle: 'MCP är avstängt',
+      disabledBody:
+        'Administratören för den här instansen har stängt av MCP-åtkomsten. Ingen klient kan auktoriseras förrän den slås på igen.',
+      invalidTitle: 'Ogiltig begäran',
+      invalidBody:
+        'Den här auktoriseringslänken har gått ut eller är ofullständig. Börja om anslutningen från MCP-klienten.',
+      backToSaldo: 'Tillbaka till Saldo',
     },
     form: {
       kind: 'Typ',
