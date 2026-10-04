@@ -243,6 +243,34 @@ export const pt: Messages = {
         failedNoDetail: 'O envio falhou.',
       },
     },
+    mcp: {
+      title: 'MCP',
+      switchLabel: 'Permitir que os utilizadores liguem clientes MCP',
+      switchNote:
+        'Cada utilizador autoriza os seus próprios clientes no navegador, com a sua passkey, e escolhe se também podem escrever. Desligado: o endpoint responde 404 e os conectores autorizados param até o voltares a ligar.',
+      locked: 'Definido pelo ambiente: {{variable}}',
+      offTitle: 'Desligar o MCP?',
+      offBody_one:
+        '{{count}} utilizador tem {{connectors}}: deixam de responder na próxima chamada. As autorizações mantêm-se e retomam quando o voltares a ligar.',
+      offBody_other:
+        '{{count}} utilizadores têm {{connectors}}: deixam de responder na próxima chamada. As autorizações mantêm-se e retomam quando o voltares a ligar.',
+      connectors_one: '{{count}} conector autorizado',
+      connectors_other: '{{count}} conectores autorizados',
+      offNone: 'Neste momento nenhum conector está autorizado: nada para.',
+      turnOff: 'Desligar',
+      usersWithConnectors: 'Utilizadores com conectores',
+      outOf: 'de {{total}}',
+      connectorsAuthorized: 'Conectores autorizados',
+      connectorsUsed: 'Usados nos últimos 7 dias',
+      clientTitle: 'O que dar a um cliente',
+      discovery:
+        'Os clientes descobrem o resto sozinhos, a partir destes dois documentos servidos neste host:',
+      httpsNote:
+        'O PUBLIC_URL tem de ser HTTPS: os clientes MCP recusam a autorização sem cifra, exceto na mesma máquina.',
+      httpTitle: 'O PUBLIC_URL não é HTTPS',
+      httpBody:
+        'Este servidor responde em {{url}}. Os clientes MCP recusam a autorização sem cifra, exceto a partir desta mesma máquina.',
+    },
     mail: {
       subject: 'E-mail de teste de {{instance}}',
       body: 'Este é um e-mail de teste de «{{instance}}» ({{host}}). Se estás a lê-lo, o envio de e-mail funciona.',
@@ -1621,6 +1649,101 @@ export const pt: Messages = {
       csvPeriodHint: 'Só o período em curso: {{range}}.',
       phoneNote:
         'A cópia contém os dados dos anexos, não os ficheiros. A cópia com fotos e PDF (ZIP), o restauro, a importação de CSV e «{{deleteAll}}» fazem-se no telemóvel.',
+    },
+    connectors: {
+      title: 'Conectores',
+      connectTitle: 'Ligar',
+      connectBody:
+        'Dá este endereço ao teu cliente MCP. Não há nenhuma chave para copiar: o cliente traz-te de volta aqui, entras com a tua passkey e escolhes o que pode fazer.',
+      copy: 'Copiar',
+      copied: 'Copiado',
+      clientsLabel: 'Cliente',
+      tabClaudeCode: 'Claude Code',
+      tabClaude: 'Claude',
+      tabOther: 'Outro cliente',
+      claudeCodeHint:
+        'Na primeira chamada, o Claude Code abre o navegador nesta instância para o autorizares.',
+      claudeStep1:
+        'No Claude (web ou app), abre Definições › Conectores › Adicionar conector personalizado.',
+      claudeStep2:
+        'Cola o endereço acima como URL do servidor. Sem chave: vai ser-te pedido que entres no Saldo com a tua passkey.',
+      otherBody:
+        'Qualquer cliente MCP com transporte HTTP e OAuth: cola o endereço e o resto descobre-o sozinho a partir deste documento:',
+      otherTerminal: 'A partir de um terminal sem navegador:',
+      authorizedTitle: 'Autorizados',
+      emptyTitle: 'Nenhum conector',
+      emptyBody: 'Quando autorizas um cliente MCP no navegador, aparece aqui com o que pode fazer.',
+      revokeNote:
+        'Um conector revogado recebe um erro na chamada seguinte. Uma autorização que não seja usada durante 180 dias expira sozinha.',
+      scopeRead: 'Leitura',
+      scopeWrite: 'Escrita',
+      authorizedOn: 'autorizado a {{date}}',
+      usedToday: 'usado hoje',
+      usedYesterday: 'usado ontem',
+      usedOn: 'usado a {{date}}',
+      neverUsed: 'nunca usado',
+      factScopes: 'Pode',
+      factReturnsTo: 'Volta a',
+      factAuthorized: 'Autorizado',
+      factLastUsed: 'Último uso',
+      factCalls: 'Chamadas',
+      lastUsedToday: 'hoje',
+      lastUsedYesterday: 'ontem',
+      lastUsedNever: 'nunca',
+      calls_one: '{{count}} chamada desde {{date}}',
+      calls_other: '{{count}} chamadas desde {{date}}',
+      panelNote:
+        'Um cliente MCP vê o que tu vês no Saldo: contas, transações, orçamentos, objetivos. Com «Escrita» também pode adicionar ou alterar, com as mesmas regras dos formulários.',
+      revoke: 'Revogar acesso',
+      revokeTitle: 'Revogar {{name}}?',
+      revokeBody:
+        'Deixa de funcionar na próxima chamada. Podes autorizá-lo de novo a partir do cliente.',
+      revokeConfirm: 'Revogar',
+      revokeFailed: 'Não foi possível revogar o acesso. Tenta novamente.',
+      offTitle: 'O MCP está desligado nesta instância',
+      offBody:
+        'O administrador desligou o acesso MCP. Os conectores já autorizados continuam na lista e retomam quando for religado.',
+      offAdminBody:
+        'Desligaste-o em Admin › MCP. Os conectores já autorizados continuam na lista e retomam quando o voltares a ligar.',
+      offAdminEnvBody:
+        'Está desligado pela variável de ambiente MCP_ENABLED. Os conectores já autorizados continuam na lista e retomam quando for religado.',
+      offAdminLink: 'Abrir Admin › MCP',
+    },
+    consent: {
+      title: 'Uma app pede para se ligar',
+      returnsTo: 'volta a {{host}}',
+      registeredNow: 'registada agora mesmo',
+      authorizedBefore: 'já autorizada a {{date}}',
+      freshTitle: 'É a primeira vez que vês esta app',
+      freshBody:
+        'O nome é escolhido pela própria app. Confia nela só se acabaste de iniciar tu o pedido.',
+      whatTitle: 'O que pode fazer em teu nome:',
+      scopesLabel: 'Permissões',
+      readTitle: 'Ler os teus dados',
+      readBody:
+        'Contas e saldos, transações, orçamentos, objetivos, estatísticas e previsões: o que tu vês.',
+      required: 'obrigatório',
+      writeTitle: 'Adicionar e alterar',
+      writeBody:
+        'Transações, contas, categorias, etiquetas, orçamentos e objetivos, com as mesmas regras dos formulários. Não pode mexer nas recorrências nem nos anexos.',
+      signedInAs: 'Entraste como {{who}}',
+      notYou: 'Não és tu?',
+      authorize: 'Autorizar',
+      authorizeReadOnly: 'Autorizar só a leitura',
+      deny: 'Recusar',
+      revocationNote:
+        'Podes revogar o acesso a qualquer momento em Perfil › Conectores. O cliente nunca recebe a tua passkey.',
+      failed: 'Algo correu mal. Recomeça a partir do cliente MCP.',
+      deniedTitle: 'Acesso recusado',
+      deniedBody:
+        'Disseste que não a {{client}}. O cliente foi avisado: podes fechar este separador.',
+      disabledTitle: 'O MCP está desligado',
+      disabledBody:
+        'O administrador desta instância desligou o acesso MCP. Nenhum cliente pode ser autorizado até ser religado.',
+      invalidTitle: 'Pedido inválido',
+      invalidBody:
+        'Este link de autorização expirou ou está incompleto. Recomeça a ligação a partir do cliente MCP.',
+      backToSaldo: 'Voltar ao Saldo',
     },
     form: {
       kind: 'Tipo',

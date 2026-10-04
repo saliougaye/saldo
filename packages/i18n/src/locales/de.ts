@@ -248,6 +248,33 @@ export const de: Messages = {
         failedNoDetail: 'Senden fehlgeschlagen.',
       },
     },
+    mcp: {
+      title: 'MCP',
+      switchLabel: 'Nutzern erlauben, MCP-Clients zu verbinden',
+      switchNote:
+        'Jeder Nutzer autorisiert seine eigenen Clients im Browser mit seinem Passkey und entscheidet, ob sie auch schreiben dürfen. Aus: Der Endpunkt antwortet mit 404 und autorisierte Konnektoren halten an, bis du ihn wieder einschaltest.',
+      locked: 'Von der Umgebung gesetzt: {{variable}}',
+      offTitle: 'MCP ausschalten?',
+      offBody_one:
+        '{{count}} Nutzer hat {{connectors}}: Ab dem nächsten Aufruf antworten sie nicht mehr. Die Autorisierungen bleiben und laufen weiter, wenn du ihn wieder einschaltest.',
+      offBody_other:
+        '{{count}} Nutzer haben {{connectors}}: Ab dem nächsten Aufruf antworten sie nicht mehr. Die Autorisierungen bleiben und laufen weiter, wenn du ihn wieder einschaltest.',
+      connectors_one: '{{count}} autorisierten Konnektor',
+      connectors_other: '{{count}} autorisierte Konnektoren',
+      offNone: 'Gerade ist kein Konnektor autorisiert: Nichts hält an.',
+      turnOff: 'Ausschalten',
+      usersWithConnectors: 'Nutzer mit Konnektoren',
+      outOf: 'von {{total}}',
+      connectorsAuthorized: 'Autorisierte Konnektoren',
+      connectorsUsed: 'In den letzten 7 Tagen benutzt',
+      clientTitle: 'Was du einem Client gibst',
+      discovery: 'Den Rest finden die Clients selbst, über diese beiden Dokumente auf diesem Host:',
+      httpsNote:
+        'PUBLIC_URL muss HTTPS sein: MCP-Clients verweigern die Autorisierung über unverschlüsseltes HTTP, außer auf demselben Rechner.',
+      httpTitle: 'PUBLIC_URL ist kein HTTPS',
+      httpBody:
+        'Dieser Server antwortet unter {{url}}. MCP-Clients verweigern die Autorisierung über unverschlüsseltes HTTP, außer von diesem Rechner aus.',
+    },
     mail: {
       subject: 'Test-E-Mail von {{instance}}',
       body: 'Dies ist eine Test-E-Mail von „{{instance}}“ ({{host}}). Wenn du sie liest, funktioniert der E-Mail-Versand.',
@@ -1641,6 +1668,102 @@ export const de: Messages = {
       csvPeriodHint: 'Nur der laufende Zeitraum: {{range}}.',
       phoneNote:
         'Das Backup enthält die Angaben zu den Anhängen, nicht die Dateien. Das Backup mit Fotos und PDFs (ZIP), die Wiederherstellung, der CSV-Import und „{{deleteAll}}“ laufen über das Telefon.',
+    },
+    connectors: {
+      title: 'Konnektoren',
+      connectTitle: 'Verbinden',
+      connectBody:
+        'Gib diese Adresse deinem MCP-Client. Es gibt keinen Schlüssel zu kopieren: Der Client bringt dich hierher zurück, du meldest dich mit deinem Passkey an und wählst, was er darf.',
+      copy: 'Kopieren',
+      copied: 'Kopiert',
+      clientsLabel: 'Client',
+      tabClaudeCode: 'Claude Code',
+      tabClaude: 'Claude',
+      tabOther: 'Anderer Client',
+      claudeCodeHint:
+        'Beim ersten Aufruf öffnet Claude Code den Browser auf dieser Instanz, um ihn zu autorisieren.',
+      claudeStep1:
+        'Öffne in Claude (Web oder App) Einstellungen › Konnektoren › Benutzerdefinierten Konnektor hinzufügen.',
+      claudeStep2:
+        'Füge die Adresse oben als Server-URL ein. Kein Schlüssel: Du wirst gebeten, dich mit deinem Passkey bei Saldo anzumelden.',
+      otherBody:
+        'Jeder MCP-Client mit HTTP-Transport und OAuth: Füge die Adresse ein, den Rest findet er selbst über dieses Dokument:',
+      otherTerminal: 'Aus einem Terminal ohne Browser:',
+      authorizedTitle: 'Autorisiert',
+      emptyTitle: 'Keine Konnektoren',
+      emptyBody:
+        'Wenn du einen MCP-Client im Browser autorisierst, erscheint er hier mit dem, was er darf.',
+      revokeNote:
+        'Ein widerrufener Konnektor bekommt beim nächsten Aufruf einen Fehler. Eine Autorisierung, die 180 Tage nicht benutzt wird, läuft von selbst ab.',
+      scopeRead: 'Lesen',
+      scopeWrite: 'Schreiben',
+      authorizedOn: 'autorisiert am {{date}}',
+      usedToday: 'heute benutzt',
+      usedYesterday: 'gestern benutzt',
+      usedOn: 'benutzt am {{date}}',
+      neverUsed: 'nie benutzt',
+      factScopes: 'Darf',
+      factReturnsTo: 'Kehrt zurück zu',
+      factAuthorized: 'Autorisiert',
+      factLastUsed: 'Zuletzt benutzt',
+      factCalls: 'Aufrufe',
+      lastUsedToday: 'heute',
+      lastUsedYesterday: 'gestern',
+      lastUsedNever: 'nie',
+      calls_one: '{{count}} Aufruf seit dem {{date}}',
+      calls_other: '{{count}} Aufrufe seit dem {{date}}',
+      panelNote:
+        'Ein MCP-Client sieht, was du in Saldo siehst: Konten, Transaktionen, Budgets, Ziele. Mit „Schreiben“ kann er auch hinzufügen oder ändern, nach denselben Regeln wie die Formulare.',
+      revoke: 'Zugriff widerrufen',
+      revokeTitle: '{{name}} widerrufen?',
+      revokeBody:
+        'Beim nächsten Aufruf funktioniert er nicht mehr. Du kannst ihn über den Client erneut autorisieren.',
+      revokeConfirm: 'Widerrufen',
+      revokeFailed: 'Der Zugriff konnte nicht widerrufen werden. Versuch es noch einmal.',
+      offTitle: 'MCP ist auf dieser Instanz ausgeschaltet',
+      offBody:
+        'Der Administrator hat den MCP-Zugang ausgeschaltet. Bereits autorisierte Konnektoren bleiben in der Liste und laufen weiter, sobald er wieder eingeschaltet ist.',
+      offAdminBody:
+        'Du hast ihn unter Admin › MCP ausgeschaltet. Bereits autorisierte Konnektoren bleiben in der Liste und laufen weiter, sobald du ihn wieder einschaltest.',
+      offAdminEnvBody:
+        'Er ist durch die Umgebungsvariable MCP_ENABLED ausgeschaltet. Bereits autorisierte Konnektoren bleiben in der Liste und laufen weiter, sobald er wieder eingeschaltet ist.',
+      offAdminLink: 'Admin › MCP öffnen',
+    },
+    consent: {
+      title: 'Eine App möchte sich verbinden',
+      returnsTo: 'kehrt zurück zu {{host}}',
+      registeredNow: 'gerade registriert',
+      authorizedBefore: 'bereits autorisiert am {{date}}',
+      freshTitle: 'Du siehst diese App zum ersten Mal',
+      freshBody:
+        'Den Namen wählt die App selbst. Vertrau ihr nur, wenn du die Anfrage gerade eben selbst gestartet hast.',
+      whatTitle: 'Was sie in deinem Namen tun darf:',
+      scopesLabel: 'Berechtigungen',
+      readTitle: 'Deine Daten lesen',
+      readBody:
+        'Konten und Salden, Transaktionen, Budgets, Ziele, Statistiken und Prognosen: das, was du siehst.',
+      required: 'erforderlich',
+      writeTitle: 'Hinzufügen und ändern',
+      writeBody:
+        'Transaktionen, Konten, Kategorien, Tags, Budgets und Ziele, nach denselben Regeln wie die Formulare. Wiederkehrende Buchungen und Anhänge kann sie nicht anfassen.',
+      signedInAs: 'Angemeldet als {{who}}',
+      notYou: 'Nicht du?',
+      authorize: 'Autorisieren',
+      authorizeReadOnly: 'Nur Lesen autorisieren',
+      deny: 'Ablehnen',
+      revocationNote:
+        'Du kannst den Zugriff jederzeit unter Profil › Konnektoren widerrufen. Der Client erhält nie deinen Passkey.',
+      failed: 'Etwas ist schiefgelaufen. Fang im MCP-Client noch einmal an.',
+      deniedTitle: 'Zugriff abgelehnt',
+      deniedBody:
+        'Du hast {{client}} abgelehnt. Der Client wurde benachrichtigt: Du kannst diesen Tab schließen.',
+      disabledTitle: 'MCP ist ausgeschaltet',
+      disabledBody:
+        'Der Administrator dieser Instanz hat den MCP-Zugang ausgeschaltet. Kein Client kann autorisiert werden, bis er wieder eingeschaltet ist.',
+      invalidTitle: 'Ungültige Anfrage',
+      invalidBody:
+        'Dieser Autorisierungslink ist abgelaufen oder unvollständig. Starte die Verbindung im MCP-Client neu.',
+      backToSaldo: 'Zurück zu Saldo',
     },
     form: {
       kind: 'Art',

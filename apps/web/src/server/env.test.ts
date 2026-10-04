@@ -245,3 +245,21 @@ describe('attachment storage', () => {
     expect(() => readEnv({ ...complete, ATTACHMENT_STORAGE: 'dropbox' })).toThrow();
   });
 });
+
+describe('MCP_ENABLED', () => {
+  it('is null when unset or blank: the admin panel decides', () => {
+    expect(readEnv(complete).mcpEnabled).toBeNull();
+    expect(readEnv({ ...complete, MCP_ENABLED: '' }).mcpEnabled).toBeNull();
+    expect(readEnv({ ...complete, MCP_ENABLED: '  ' }).mcpEnabled).toBeNull();
+  });
+
+  it('reads true and false', () => {
+    expect(readEnv({ ...complete, MCP_ENABLED: 'true' }).mcpEnabled).toBe(true);
+    expect(readEnv({ ...complete, MCP_ENABLED: 'false' }).mcpEnabled).toBe(false);
+  });
+
+  it('refuses anything else, by name', () => {
+    expect(() => readEnv({ ...complete, MCP_ENABLED: 'yes' })).toThrow(/MCP_ENABLED/);
+    expect(() => readEnv({ ...complete, MCP_ENABLED: '1' })).toThrow(/MCP_ENABLED/);
+  });
+});

@@ -7,6 +7,8 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { encryptSecret } from './secret';
 import {
   instanceName,
+  mcpEnabled,
+  mcpSetting,
   readServerSettings,
   registrationMode,
   type SettingsSource,
@@ -37,6 +39,7 @@ const NOW = new Date('2026-09-30T09:00:00.000Z');
 const noEnv: SettingsSource = {
   registration: null,
   instanceName: null,
+  mcpEnabled: null,
   rpName: 'Saldo test',
   smtp: null,
   settingsKey: key,
@@ -236,5 +239,32 @@ describe('registrationMode and instanceName when the settings cannot be read', (
   it('does not ask the table at all when the environment sets the value', async () => {
     expect(await registrationMode(broken, { ...noEnv, registration: 'closed' })).toBe('closed');
     expect(await instanceName(broken, { ...noEnv, instanceName: 'Casa' })).toBe('Casa');
+  });
+});
+
+describe('mcpEnabled', () => {
+  it('is on by default', async () => {
+    expect(await mcpEnabled(harness.db, noEnv)).toBe(true);
+    expect(await mcpSetting(harness.db, noEnv)).toEqual({
+      value: true,
+      source: 'default',
+      envVar: null,
+    });
+  });
+
+  it('follows the stored switch, read again on every call', async () => {
+    await put('mcp.enabled', false);
+    expect(await mcpEnabled(harness.db, noEnv)).toBe(false);
+    expect(await mcpSetting(harness.db, noEnv)).toMatchObject({ value: false, source: 'database' });
+  });
+
+  it('lets MCP_ENABLED win over the row, locked', async () => {
+    await put('mcp.enabled', false);
+    expect(await mcpEnabled(harness.db, { ...noEnv, mcpEnabled: true })).toBe(true);
+    expect(await mcpSetting(harness.db, { ...noEnv, mcpEnabled: true })).toEqual({
+      value: true,
+      source: 'env',
+      envVar: 'MCP_ENABLED',
+    });
   });
 });

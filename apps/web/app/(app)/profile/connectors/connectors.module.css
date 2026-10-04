@@ -1,0 +1,213 @@
+/* Profilo › Connettori (§17.4.3). Rows and panel repeat Passkey's shapes (`passkeys.module.css`). */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  text-wrap: pretty;
+  max-width: 60ch;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-inline-start: 20px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.path,
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.link {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+}
+
+/* ---- Rows: a link that selects the connector, its panel opens beside ---- */
+.rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: var(--layout-min-hit-target);
+  padding: 14px 12px;
+  margin: 0 -12px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  }
+}
+
+.selected,
+.selected:hover {
+  background: var(--color-raised);
+}
+
+/* The client's initial (Decision 3). */
+.tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.selected .tile {
+  background: var(--color-surface);
+}
+
+.tileLarge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-button);
+  font-size: var(--font-size-headline);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.chevron {
+  flex: none;
+  color: var(--color-text-faint);
+}
+
+/* Only the scopes granted: «Lettura», «Scrittura». */
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.selected .chip {
+  background: var(--color-surface);
+}
+
+/* ---- The panel ---- */
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.panelName {
+  min-width: 0;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 8px 0 0;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+}
+
+.factLabel {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.factValue {
+  margin: 0;
+  font-size: var(--font-size-body);
+  text-wrap: pretty;
+}
+
+.panelActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.panelActions button {
+  width: auto;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}

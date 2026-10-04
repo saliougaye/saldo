@@ -39,6 +39,7 @@ const RECIPIENT = 'ada.private@example.com';
 const noEnv: SettingsSource = {
   registration: null,
   instanceName: null,
+  mcpEnabled: null,
   rpName: 'Saldo test',
   smtp: null,
   settingsKey: key,

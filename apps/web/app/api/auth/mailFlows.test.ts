@@ -180,7 +180,10 @@ describe('recovery by magic link', () => {
     const rows = await harness.db.select().from(verification);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.identifier).not.toBe(token);
-    expect(rows[0]?.identifier).toBe(createHash('sha256').update(token).digest('base64url'));
+    // Better Auth ≥ 1.7.7 prefixes the hashed token with the plugin's name.
+    expect(rows[0]?.identifier).toBe(
+      `magic-link:${createHash('sha256').update(token).digest('base64url')}`,
+    );
     const minutes = ((rows[0]?.expiresAt.getTime() ?? 0) - Date.now()) / 60_000;
     expect(minutes).toBeGreaterThan(14);
     expect(minutes).toBeLessThanOrEqual(15);
@@ -200,8 +203,8 @@ describe('recovery by magic link', () => {
     const token = 'a-token-for-somebody-who-has-no-account';
     await harness.db.insert(verification).values({
       id: crypto.randomUUID(),
-      identifier: createHash('sha256').update(token).digest('base64url'),
-      value: JSON.stringify({ email: 'new@example.com', name: 'New' }),
+      identifier: `magic-link:${createHash('sha256').update(token).digest('base64url')}`,
+      value: JSON.stringify({ type: 'magic-link', email: 'new@example.com', name: 'New' }),
       expiresAt: new Date(Date.now() + 60_000),
     });
     const opened = await get(

@@ -1,3 +1,5 @@
+// First, before anything that may count: Hermes on iOS has no `Intl.PluralRules` (see the file).
+import './polyfills';
 import {
   type AppLocale,
   i18nextLanguage,

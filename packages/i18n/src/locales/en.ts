@@ -242,6 +242,34 @@ export const en: Messages = {
         failedNoDetail: 'Sending failed.',
       },
     },
+    mcp: {
+      title: 'MCP',
+      switchLabel: 'Let users connect MCP clients',
+      switchNote:
+        'Each user authorizes their own clients from the browser, with their passkey, and chooses whether they may also write. Off: the endpoint answers 404 and authorized connectors stop until you switch it back on.',
+      locked: 'Set by the environment: {{variable}}',
+      offTitle: 'Switch MCP off?',
+      offBody_one:
+        '{{count}} user has {{connectors}}: they stop answering on the next call. The authorizations stay and resume when you switch it back on.',
+      offBody_other:
+        '{{count}} users have {{connectors}}: they stop answering on the next call. The authorizations stay and resume when you switch it back on.',
+      connectors_one: '{{count}} authorized connector',
+      connectors_other: '{{count}} authorized connectors',
+      offNone: 'No connector is authorized right now: nothing stops.',
+      turnOff: 'Switch off',
+      usersWithConnectors: 'Users with connectors',
+      outOf: 'of {{total}}',
+      connectorsAuthorized: 'Authorized connectors',
+      connectorsUsed: 'Used in the last 7 days',
+      clientTitle: 'What to give a client',
+      discovery:
+        'Clients discover the rest on their own, from these two documents served on this host:',
+      httpsNote:
+        'PUBLIC_URL must be HTTPS: MCP clients refuse to authorize over plain HTTP except on the same machine.',
+      httpTitle: 'PUBLIC_URL is not HTTPS',
+      httpBody:
+        'This server answers at {{url}}. MCP clients refuse to authorize over plain HTTP, except from this same machine.',
+    },
     mail: {
       subject: 'Test email from {{instance}}',
       body: 'This is a test email from “{{instance}}” ({{host}}). If you are reading it, outgoing email works.',
@@ -1614,6 +1642,100 @@ export const en: Messages = {
       csvPeriodHint: 'Only the current period: {{range}}.',
       phoneNote:
         'The backup holds the attachments’ details, not their files. The backup with photos and PDFs (ZIP), restoring, CSV import and “{{deleteAll}}” are done from the phone.',
+    },
+    connectors: {
+      title: 'Connectors',
+      connectTitle: 'Connect',
+      connectBody:
+        'Give this address to your MCP client. There is no key to copy: the client brings you back here, you sign in with your passkey and choose what it may do.',
+      copy: 'Copy',
+      copied: 'Copied',
+      clientsLabel: 'Client',
+      tabClaudeCode: 'Claude Code',
+      tabClaude: 'Claude',
+      tabOther: 'Other client',
+      claudeCodeHint:
+        'On its first call Claude Code opens the browser on this instance to authorize it.',
+      claudeStep1: 'In Claude (web or app) open Settings › Connectors › Add custom connector.',
+      claudeStep2:
+        'Paste the address above as the server URL. No key: you will be asked to sign in to Saldo with your passkey.',
+      otherBody:
+        'Any MCP client with HTTP transport and OAuth: paste the address and it discovers the rest on its own, from this document:',
+      otherTerminal: 'From a terminal without a browser:',
+      authorizedTitle: 'Authorized',
+      emptyTitle: 'No connectors',
+      emptyBody:
+        'When you authorize an MCP client from the browser, it appears here with what it may do.',
+      revokeNote:
+        'A revoked connector gets an error on its next call. An authorization not used for 180 days expires on its own.',
+      scopeRead: 'Read',
+      scopeWrite: 'Write',
+      authorizedOn: 'authorized {{date}}',
+      usedToday: 'used today',
+      usedYesterday: 'used yesterday',
+      usedOn: 'used {{date}}',
+      neverUsed: 'never used',
+      factScopes: 'Can',
+      factReturnsTo: 'Returns to',
+      factAuthorized: 'Authorized',
+      factLastUsed: 'Last used',
+      factCalls: 'Calls',
+      lastUsedToday: 'today',
+      lastUsedYesterday: 'yesterday',
+      lastUsedNever: 'never',
+      calls_one: '{{count}} call since {{date}}',
+      calls_other: '{{count}} calls since {{date}}',
+      panelNote:
+        'An MCP client sees what you see in Saldo: accounts, transactions, budgets, goals. With “Write” it can also add and change things, under the same rules as the forms.',
+      revoke: 'Revoke access',
+      revokeTitle: 'Revoke {{name}}?',
+      revokeBody:
+        'It will stop working on its next call. You can authorize it again from the client.',
+      revokeConfirm: 'Revoke',
+      revokeFailed: 'The access could not be revoked. Try again.',
+      offTitle: 'MCP is switched off on this instance',
+      offBody:
+        'The administrator switched MCP access off. Connectors already authorized stay in the list and resume when it is switched back on.',
+      offAdminBody:
+        'You switched it off in Admin › MCP. Connectors already authorized stay in the list and resume when you switch it back on.',
+      offAdminEnvBody:
+        'It is switched off by the MCP_ENABLED environment variable. Connectors already authorized stay in the list and resume when it is switched back on.',
+      offAdminLink: 'Open Admin › MCP',
+    },
+    consent: {
+      title: 'An app asks to connect',
+      returnsTo: 'returns to {{host}}',
+      registeredNow: 'registered just now',
+      authorizedBefore: 'already authorized on {{date}}',
+      freshTitle: 'The first time you see this app',
+      freshBody:
+        'The app chooses its own name. Trust it only if you started this request a moment ago.',
+      whatTitle: 'What it can do on your behalf:',
+      scopesLabel: 'Permissions',
+      readTitle: 'Read your data',
+      readBody:
+        'Accounts and balances, transactions, budgets, goals, statistics and forecasts: what you see.',
+      required: 'required',
+      writeTitle: 'Add and change',
+      writeBody:
+        'Transactions, accounts, categories, tags, budgets and goals, under the same rules as the forms. It cannot touch recurrences or attachments.',
+      signedInAs: 'Signed in as {{who}}',
+      notYou: 'Not you?',
+      authorize: 'Authorize',
+      authorizeReadOnly: 'Authorize reading only',
+      deny: 'Deny',
+      revocationNote:
+        'You can revoke access at any time from Profile › Connectors. The client never receives your passkey.',
+      failed: 'Something went wrong. Start again from the MCP client.',
+      deniedTitle: 'Access denied',
+      deniedBody: 'You said no to {{client}}. The client has been told: you can close this tab.',
+      disabledTitle: 'MCP is switched off',
+      disabledBody:
+        'The administrator of this instance switched MCP access off. No client can be authorized until it is switched back on.',
+      invalidTitle: 'Invalid request',
+      invalidBody:
+        'This authorization link has expired or is incomplete. Start connecting again from the MCP client.',
+      backToSaldo: 'Back to Saldo',
     },
     form: {
       kind: 'Type',

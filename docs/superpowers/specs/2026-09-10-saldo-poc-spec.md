@@ -2330,6 +2330,45 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   add a second confirmation.
 - **Not offered:** resources, prompts, sampling, elicitation, notifications.
 
+**As built (0.4a-2, 2026-10-03):**
+
+- **The plugin, configured.** `@better-auth/oauth-provider` 1.7.7 on Better Auth 1.7.7: `disableJwtPlugin`, access 1 h,
+  refresh 180 days rotated on use with a 30 s reuse interval, `grantTypes` authorization code and refresh, open
+  registration (one per minute per IP through the plugin's rule on Better Auth's limiter), `resources:
+  ['{PUBLIC_URL}/mcp']`, exact redirect matching, no client or resource CRUD. A Saldo plugin checks a registration
+  first: public clients only (`token_endpoint_auth_method: "none"`, set when absent), redirect URIs `https://` or
+  `http://localhost` / `http://127.0.0.1`, `application_type: "native"` when a loopback URI is present (the plugin
+  refuses loopback for `web`, which is what Claude Code sends). The catch-all route serves only `register`,
+  `authorize`, `token`, `revoke` and `introspect` under `/api/auth/oauth2/`; while MCP is off, `register`,
+  `authorize` and `/api/auth/.well-known/*` answer 404 too (a refresh keeps working: `/mcp` is 404 anyway).
+- **`offline_access`, a third scope nobody sees.** The plugin issues a refresh token only when the scope contains
+  `offline_access`. The protected-resource document lists `read write offline_access`, and the consent grants
+  `offline_access` with `read` whenever it was asked for; the consent page shows only `read` and `write`.
+- **Discovery** is four route handlers (no rewrite): `/.well-known/oauth-protected-resource` (+ `/mcp`) and
+  `/.well-known/oauth-authorization-server` (+ `/api/auth`, the RFC 8414 form for the issuer's path).
+- **`/mcp` verifies tokens itself**: SHA-256 of the bearer (the function is Saldo's, passed to the plugin as
+  `storeTokens.hash`) looked up in `oauth_access_token`, then revocation, expiry, `resources ∋ {PUBLIC_URL}/mcp`,
+  client not disabled, account not revoked, and a consent for the user–client pair still on file (the plugin's code
+  and refresh grants never check it, so a code exchanged after «Revoca accesso» would otherwise mint a token
+  `/profile/connectors` cannot show or revoke). The plugin's own validation also requires the browser session the
+  consent was given in to be alive, and on sign-out the plugin revokes every token tied to that session; Saldo's
+  check ignores the session and a small plugin detaches each token from it as `/oauth2/token` issues it, so
+  signing out of the web does not stop an MCP client.
+- **Consent** is Saldo's: `submitConsent` verifies the signed query, writes the `oauth_consent` row and sends the
+  browser back to `/api/auth/oauth2/authorize`, which issues the code because the consent now covers the request.
+  `/login` reads the same signed query and resumes there after the passkey. A client is «registrata adesso» when it
+  registered less than 10 minutes ago and nobody has consented to it.
+- **`insufficient_scope`** is HTTP 403 with `WWW-Authenticate: Bearer error="insufficient_scope", scope="read write",
+  resource_metadata=…` and a JSON-RPC error `{ code: -32600, message: "insufficient_scope" }`.
+- **Transport:** MCP SDK v2 (`@modelcontextprotocol/server` 2.3.0, spec 2026-07-28). 2025-era clients are served by a
+  stateless transport with JSON responses; 2026-07-28 clients by `createMcpHandler` in `json` mode; one `McpServer`
+  per request, `tools.listChanged` off.
+- **`mcp_usage`** counts in memory per process and writes the first request, then at most once a minute per pair;
+  up to a minute of counts is lost if the process stops (best effort, §17.4.3).
+- **Dependencies.** `apps/web` lists `@better-auth/utils` 0.4.2 directly: without it the provider resolves its
+  `@better-auth/core` peer to a second copy (pulled in through `better-call`'s `@better-auth/utils` 0.5.0) whose
+  plugin types do not match Better Auth's.
+
 #### 17.4.3 «Connettori» in Profile, consent, and what the admin sees
 
 - **The look was decided before it was built (0.4-ui, 2026-10-03).** As 0.3c did for every web page, the three
@@ -2388,8 +2427,19 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
     on this host and that `PUBLIC_URL` has to be `https://`.
 - **«Ultimo uso»** is a table of ours, `mcp_usage (user_id, client_id, last_used_at, calls)`, written on a request
   to `/mcp` at most once a minute per pair (the calls of that minute added in one write). It feeds the rows, the
-  panel and the admin's 7-day count.
+  panel and the admin's 7-day count. Best effort: up to a minute of counts can be lost when the process restarts
+  (decided 2026-10-03).
 - Strings under `web.connectors.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
+- **Built in 0.4a-3.** The Profile section is **«Connettori»** at `/profile/connectors` (renamed from «App
+  collegate» by the user on 2026-10-03: it is Claude's word for a remote MCP server); what that page and `/admin/mcp`
+  count is a *connettore*, while the consent page still says «app» for the application asking. Readings of the
+  mockup: «Connettori» sits after Passkey (the spec; the mockup had it last); the client's tile is its initial
+  everywhere (a self-registered name says nothing reliable about the kind of client); on the phone-width layout the
+  selected connector is the trailing panel full screen, headed by the tile and the client's name; «Ultimo uso» reads
+  «oggi», «ieri» or a date in the user's zone. The switched-off notice has a third body for an admin when
+  `MCP_ENABLED=false` locks it, naming the variable. A visitor who reaches `/oauth/consent` signed out goes to
+  `/login` with the same signed query, which resumes the request (0.4a-2). «Nega» shows «Accesso negato» while the
+  browser goes to the client's redirect with `access_denied`.
 
 #### 17.4.4 Security, documentation, steps
 

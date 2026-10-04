@@ -63,6 +63,11 @@
   outline-offset: 2px;
 }
 
+.switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .switch,
   .switch::after {

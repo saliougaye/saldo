@@ -1,0 +1,51 @@
+/* The mockup's `.code`: the value on the raised fill, «Copia» lifted onto the surface at its end. */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 6px 6px 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.copy:active {
+  scale: 0.97;
+}
+
+.copy:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy:active {
+    scale: 1;
+  }
+}

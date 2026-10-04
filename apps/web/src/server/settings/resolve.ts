@@ -33,10 +33,15 @@ export interface ResolvedSettings {
   registration: Resolved<RegistrationMode>;
   instanceName: Resolved<string>;
   smtp: Resolved<SmtpSetting | null>;
+  /** §17.4.1: whether `/mcp`, its discovery documents and new authorizations are served. */
+  mcpEnabled: Resolved<boolean>;
 }
 
 /** The part of `ServerEnv` the resolver looks at. */
-export type SettingsEnvPart = Pick<ServerEnv, 'registration' | 'instanceName' | 'rpName' | 'smtp'>;
+export type SettingsEnvPart = Pick<
+  ServerEnv,
+  'registration' | 'instanceName' | 'rpName' | 'smtp' | 'mcpEnabled'
+>;
 
 export interface SettingRow {
   key: string;
@@ -54,6 +59,11 @@ export const smtpRowSchema = z.object({
   password: z.string().nullable(),
   from: z.string().min(1),
 });
+
+/** The `server_settings` key of the MCP switch (§17.4.1). Its value is a JSON boolean. */
+export const MCP_ENABLED_KEY = 'mcp.enabled';
+export const DEFAULT_MCP_ENABLED = true;
+export const mcpEnabledRowSchema = z.boolean();
 
 /**
  * A row that no longer parses (somebody edited the value by hand) reads as **not set**, and
@@ -105,5 +115,14 @@ export function resolveSettings(
     return { value: null, source: 'default', envVar: null };
   })();
 
-  return { registration, instanceName, smtp };
+  const mcpEnabled: Resolved<boolean> = (() => {
+    if (envPart.mcpEnabled !== null) {
+      return { value: envPart.mcpEnabled, source: 'env', envVar: 'MCP_ENABLED' };
+    }
+    const stored = parseRow(rows, MCP_ENABLED_KEY, mcpEnabledRowSchema, onUnreadable);
+    if (stored !== null) return { value: stored, source: 'database', envVar: null };
+    return { value: DEFAULT_MCP_ENABLED, source: 'default', envVar: null };
+  })();
+
+  return { registration, instanceName, smtp, mcpEnabled };
 }

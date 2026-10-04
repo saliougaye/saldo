@@ -232,6 +232,10 @@ export const iconMarkup = {
   // the welcome and the server row of §6.29 / §6.30 (2026-09-25 local-first plan).
   server:
     '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
+  // Lucide 1.47.0 `copy` and `lock`: «Copia» beside an MCP address, and a setting the environment
+  // locks (0.4a-3).
+  copy: '<rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
 } as const satisfies Record<string, string>;
 export type IconName = keyof typeof iconMarkup;
 

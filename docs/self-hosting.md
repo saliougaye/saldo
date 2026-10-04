@@ -39,6 +39,7 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
 | `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
 | `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional, default `UTC`. The time zone the web app computes «today» in for a user whose settings carry none yet; every phone fills its own at onboarding, so this matters only for accounts created before that. Not `TZ`, which Vercel reserves. |
+| `MCP_ENABLED` | `false` | Optional, `true` or `false`. Set, it wins and locks the switch in `/admin/mcp`; unset, the admin chooses there (default on). See «Collegare un client MCP» below. |
 
 Two things to know before you start:
 
@@ -267,6 +268,27 @@ there is no recovery by email, so a household instance can use anything its memb
 `{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
 Profile → Server and sync, once.
 
+**Signing in on the web with the phone's passkey.** An account made from the phone has one passkey, and it
+belongs to this server's domain (the phone creates it on the server's own `/auth/mobile` page), so the web app accepts
+it too. Face ID is only how the phone lets you use it. Whether a computer can see it depends on where it lives:
+
+- **A Mac or iPad on the same Apple ID with iCloud Keychain on** has it already: «Accedi con passkey» offers it.
+- **Any other computer** (a different Apple ID, Windows, Linux, iCloud Keychain off) has no passkey for this site,
+  so the browser offers **«Usa un telefono»** with a QR code. Scan it with the phone's camera, confirm with Face ID,
+  and the browser is signed in. The passkey never leaves the phone and nothing has to sync. This is WebAuthn's
+  cross-device flow: Bluetooth must be on at both ends, because the two devices prove they are near each other.
+  Chrome, Edge and Safari support it.
+
+Once in, add that computer's own passkey at `/profile/passkeys` → **«Aggiungi passkey»** (Touch ID, Windows Hello,
+the browser profile), so the next sign-in does not need the phone. Every account should have a second passkey
+anyway: one passkey on one phone means a lost phone is a lost account, unless email recovery is set up (below) or an
+admin steps in.
+
+If the QR flow is not available (Bluetooth off or missing, a browser without cross-device support), what is left is
+recovery by email. It needs SMTP and a **verified** address. An address saved from the phone while the server had no
+SMTP was never sent its link: after configuring SMTP, sign in once and send it from `/profile/account` → **«Invia il
+link di verifica»**. Without either, the way back in is the command line below.
+
 To invite somebody else, mint another code and send it to them. Once you can sign in as an admin, the panel at
 `/admin` does this too (**Inviti**, «Nuovo invito»: the code, a link and a QR, shown once), and so do the accounts
 below (**Account**: promote, revoke, restore, delete). The commands stay the way in when no admin can sign in:
@@ -464,6 +486,37 @@ defaults to 587, `SMTP_USER` and `SMTP_PASSWORD` come together, and the panel's 
 values typed into the panel need no restart and take effect on the next message. For local development, keep using
 Mailpit (above): host `localhost`, port `1025`, no user, any sender — the only case where a plain connection is
 accepted.
+
+## Collegare un client MCP (connecting an MCP client)
+
+The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint, so each user can point their
+own MCP client — Claude Code, Claude's custom connectors, Cursor, any client that speaks Streamable HTTP and OAuth —
+at their data on this instance. There is no key to hand out: the client discovers the rest and sends the user to sign
+in with their passkey.
+
+- **The endpoint is `{PUBLIC_URL}/mcp`**, e.g. `https://saldo.example.com/mcp`. Every user finds it, with the exact
+  line for their client, in Profilo › Connettori. For Claude Code:
+
+  ```bash
+  claude mcp add --transport http saldo https://saldo.example.com/mcp
+  ```
+
+  The first call opens the browser on `/oauth/consent`: the user signs in, chooses read only or read and write, and the
+  client is connected. A terminal with no browser can go through `npx mcp-remote https://saldo.example.com/mcp`.
+- **`PUBLIC_URL` has to be `https://`.** MCP clients refuse to authorize against plain `http` anywhere but on the same
+  machine (`http://localhost`). The documents a client reads to find the rest —
+  `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` (each also at its path-aware
+  form) — are served on this host; the issuer they name is `{PUBLIC_URL}/api/auth`, and the OAuth endpoints are under
+  `/api/auth/oauth2/`. So `PUBLIC_URL` must be the address clients actually reach, and a reverse proxy has to pass
+  `/mcp`, `/.well-known/` and `/api/auth/` through like the rest. `/admin/mcp` shows the two documents and warns when
+  `PUBLIC_URL` is plain `http` on another host.
+- **Switching it off.** It is on by default. An admin switches it off at `/admin/mcp`, which also shows how many users
+  have connectors; `MCP_ENABLED=false` does the same from the environment and locks the switch (`true` locks it
+  on). Off, `/mcp`, the `.well-known` documents, registration and authorization answer 404 and the consent page
+  refuses; refreshing and revoking tokens keep working, so authorized connectors resume when it is back on. Nothing is
+  deleted.
+- **What a client may do** — tokens, scopes, revocation, the 180-day lapse — is in [`SECURITY.md`](../SECURITY.md),
+  «MCP e connettori».
 
 ## Local development
 

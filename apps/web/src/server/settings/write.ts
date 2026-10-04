@@ -7,6 +7,8 @@ import { env } from '../env';
 import { log, shortId } from '../log';
 import {
   instanceNameRowSchema,
+  MCP_ENABLED_KEY,
+  mcpEnabledRowSchema,
   registrationRowSchema,
   resolveSettings,
   smtpRowSchema,
@@ -154,5 +156,21 @@ export async function removeSmtp(
   if (resolveSettings(source, []).smtp.source === 'env') return LOCKED;
   await db.delete(serverSettings).where(eq(serverSettings.key, 'smtp'));
   log('settings', 'smtp removed', { by: shortId(actorId) });
+  return OK;
+}
+
+/** §17.4.1, `/admin/mcp`: the switch. `locked` when `MCP_ENABLED` is set, decided here. */
+export async function saveMcpEnabled(
+  db: ServerDatabase,
+  actorId: string | null,
+  raw: unknown,
+  now: Date,
+  source: SettingsSource = env(),
+): Promise<SettingsWriteResult> {
+  if (resolveSettings(source, []).mcpEnabled.source === 'env') return LOCKED;
+  const enabled = mcpEnabledRowSchema.safeParse(raw);
+  if (!enabled.success) return INVALID;
+  await upsert(db, actorId, MCP_ENABLED_KEY, enabled.data, now);
+  log('settings', 'mcp switch saved', { by: shortId(actorId), enabled: enabled.data });
   return OK;
 }

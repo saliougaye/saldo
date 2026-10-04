@@ -1,0 +1,101 @@
+/* Admin › MCP (§17.4.3, variant C): one open section, the switch first. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+.lock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.confirmBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.confirm button {
+  width: auto;
+}
+
+/* Three aggregates side by side on a wide screen, stacked on a narrow one. */
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 8px 0 0;
+}
+
+.numbers > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.numbers dt {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+}
+
+.numbers dd {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbers small {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 1023px) {
+  .numbers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.subTitle {
+  margin: 8px 0 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-faint);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.paths {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: -12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}

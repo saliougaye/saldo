@@ -3,6 +3,7 @@ import { getDb } from '../db/client';
 import type { RegistrationMode } from '../env';
 import { describeInstance, type InstanceInfo } from '../instance';
 import { mailEnabled } from '../mail/mailer';
+import type { Resolved } from '../settings/resolve';
 import { readServerSettings } from '../settings/serverSettings';
 import { setupNeeded } from '../setup/state';
 
@@ -18,6 +19,11 @@ export async function pageRegistrationMode(): Promise<RegistrationMode> {
 
 export async function pageInstanceInfo(): Promise<InstanceInfo> {
   return describeInstance((await pageSettings()).instanceName.value);
+}
+
+/** §17.4.1: the MCP switch and where it came from, for `/admin/mcp` and `/profile/connectors` (0.4a-3). */
+export async function pageMcpSetting(): Promise<Resolved<boolean>> {
+  return (await pageSettings()).mcpEnabled;
 }
 
 /**

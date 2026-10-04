@@ -1,6 +1,7 @@
 export * from './accountSeries';
 export * from './accounts';
 export * from './amountKeypad';
+export * from './assistant';
 export * from './budgetRanges';
 export * from './budgets';
 export * from './budgetTargets';
