@@ -2430,6 +2430,16 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   panel and the admin's 7-day count. Best effort: up to a minute of counts can be lost when the process restarts
   (decided 2026-10-03).
 - Strings under `web.connectors.*`, `web.consent.*` and `admin.mcp.*`, in all seven locales (the parity test).
+- **Built in 0.4a-3.** The Profile section is **«Connettori»** at `/profile/connectors` (renamed from «App
+  collegate» by the user on 2026-10-03: it is Claude's word for a remote MCP server); what that page and `/admin/mcp`
+  count is a *connettore*, while the consent page still says «app» for the application asking. Readings of the
+  mockup: «Connettori» sits after Passkey (the spec; the mockup had it last); the client's tile is its initial
+  everywhere (a self-registered name says nothing reliable about the kind of client); on the phone-width layout the
+  selected connector is the trailing panel full screen, headed by the tile and the client's name; «Ultimo uso» reads
+  «oggi», «ieri» or a date in the user's zone. The switched-off notice has a third body for an admin when
+  `MCP_ENABLED=false` locks it, naming the variable. A visitor who reaches `/oauth/consent` signed out goes to
+  `/login` with the same signed query, which resumes the request (0.4a-2). «Nega» shows «Accesso negato» while the
+  browser goes to the client's redirect with `access_denied`.
 
 #### 17.4.4 Security, documentation, steps
 

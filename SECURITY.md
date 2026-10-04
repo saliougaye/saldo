@@ -81,6 +81,47 @@ is a stolen account. What bounds it:
 If that trade is not one you want, leave SMTP unconfigured: verification and recovery then do not exist, and nothing
 else changes.
 
+## MCP e connettori (MCP and connectors)
+
+From 0.4 an instance serves a [Model Context Protocol](https://modelcontextprotocol.io) endpoint at
+`{PUBLIC_URL}/mcp`, so an MCP client a user already runs (Claude Code, Claude's custom connectors, any MCP client)
+reads — and, if allowed, changes — that user's data. What bounds it:
+
+- **The only credential is an OAuth 2.1 token the user granted.** Saldo is its own authorization server (endpoints
+  under `/api/auth/oauth2/*`, issuer `{PUBLIC_URL}/api/auth`). The client registers itself (public clients only, PKCE
+  S256, `https://` or loopback redirect URIs, exact match, one registration a minute per IP) and sends the user's
+  browser to sign in with their passkey and to `/oauth/consent`, where they choose what the client may do. Nothing is
+  pasted, nothing is shared out of band, and there are no personal access tokens. A registration on its own grants
+  nothing.
+- **What a token is.** An opaque string, stored hashed and checked against the database on every call — not a JWT, so
+  a revocation has nothing to wait for. It is bound to `{PUBLIC_URL}/mcp` as its audience and refused anywhere else. It
+  is accepted only in the `Authorization` header, never in a URL, and never logged.
+- **What a token is not.** It is not the user's session: it does not open the web app, change a passkey, reach
+  `/admin` or read another user's rows. It carries no identity claims — no OpenID Connect, no id token.
+- **Two scopes.** `read` reads what the user sees in the app; `write` adds and changes transactions, accounts,
+  categories, tags, budgets and goals. The consent page lets the user refuse `write`. A `read` token is never even
+  shown the write tools, and a write call without the scope is refused.
+- **Revocation is immediate.** Profilo › Connettori lists every authorized connector with its scopes and last use;
+  «Revoca accesso» deletes the consent and every token of that user–client pair, and the client's next call is a 401.
+- **Lifetimes.** An access token lives one hour. A refresh token exists only when the client asked for the technical
+  `offline_access` scope (MCP clients do: the server advertises it; the consent page never shows it). It is rotated on
+  every use, and an authorization not refreshed for 180 days lapses on its own — the same bound as the phone's
+  session.
+- **A write is the web's write.** A write tool goes through the same server functions as the web forms: the same rules
+  from `@saldo/core`, the same per-user scoping, the same check against an edit the phone made meanwhile. The client is
+  what asks the person to confirm a write; the server adds no second confirmation.
+- **The server never calls a model.** The model runs in the user's client. In this milestone Saldo holds no AI key and
+  answers only the calls it is sent.
+- **An admin can switch it off** at `/admin/mcp`, or with `MCP_ENABLED=false` in the environment, which locks the
+  switch. Off, `/mcp`, the discovery documents, registration and authorization answer 404 and the consent page
+  refuses, so no client reads or writes anything. Refreshing and revoking a token keep working (a refreshed token is
+  still refused by `/mcp`), so a connector that kept its refresh token works again when MCP is back on.
+- The endpoint is rate limited per token (120 requests a minute) and takes bodies of at most 1 MB; like the other
+  limiters, per server process.
+
+What it cannot protect against: a client the user authorized can do what its scopes allow, so a `write` grant to a
+client that misbehaves is a client that writes. Grant `write` only to a client you would let type into the app.
+
 ## Supported versions
 
 This is a proof of concept before its first release. Only the current `main` is supported: there are
