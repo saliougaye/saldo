@@ -1,0 +1,151 @@
+import { accountBalances } from '@saldo/core';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { createTestDatabase, type TestDatabase } from '../../test/harness';
+import { createTestSession } from '../../test/session';
+import { readUserData } from '../../userData/read';
+import { bumpRow, seedOnboarded } from '../../write/fixtures';
+import { goalHandlers } from './goals';
+import { FIXTURE_CTX, fixtureClock, messageOf, run, valueOf } from './testKit';
+
+let harness: TestDatabase;
+let userId: string;
+const { saveGoal, moveGoalMoney, closeGoal } = goalHandlers(fixtureClock);
+const vacanza = { name: 'Vacanza', targetMinor: 100000, parentAccountId: 'acc-main' };
+
+beforeAll(async () => {
+  harness = await createTestDatabase();
+});
+afterEach(async () => {
+  await harness.reset();
+});
+afterAll(async () => {
+  await harness.close();
+});
+
+async function onboarded() {
+  userId = (await createTestSession(harness.db)).userId;
+  await seedOnboarded(harness.db, userId);
+}
+
+const data = () => readUserData(harness.db, userId);
+
+async function balanceOf(id: string): Promise<number> {
+  const current = await data();
+  return accountBalances(current.accounts, current.transactions, FIXTURE_CTX.today).get(id) ?? 0;
+}
+
+describe('save_goal', () => {
+  it('creates a goal and moves what is already saved into it', async () => {
+    await onboarded();
+    const goal = valueOf(
+      await run(saveGoal, userId, { ...vacanza, alreadySavedMinor: 20000, deadline: '2027-06-30' }),
+    );
+    expect(goal.created).toBe(true);
+    expect((await data()).accounts.find((row) => row.id === goal.id)).toMatchObject({
+      type: 'pocket',
+      parentAccountId: 'acc-main',
+      goalTarget: 100000,
+      goalDeadline: '2027-06-30',
+    });
+    expect(await balanceOf(goal.id)).toBe(20000);
+    expect(await balanceOf('acc-main')).toBe(80000);
+  });
+
+  it('changes the target, and refuses new savings on an edit', async () => {
+    await onboarded();
+    const goal = valueOf(await run(saveGoal, userId, vacanza));
+    const edited = valueOf(
+      await run(saveGoal, userId, { id: goal.id, updatedAt: goal.updatedAt, targetMinor: 150000 }),
+    );
+    expect((await data()).accounts.find((row) => row.id === goal.id)).toMatchObject({
+      goalTarget: 150000,
+    });
+    expect(
+      messageOf(
+        await run(saveGoal, userId, {
+          id: goal.id,
+          updatedAt: edited.updatedAt,
+          alreadySavedMinor: 500,
+        }),
+      ),
+    ).toMatch(/move_goal_money/);
+  });
+});
+
+describe('move_goal_money', () => {
+  it('sets aside and withdraws through transfers named after the goal', async () => {
+    await onboarded();
+    const goal = valueOf(await run(saveGoal, userId, vacanza));
+    const setAside = valueOf(
+      await run(moveGoalMoney, userId, {
+        goalId: goal.id,
+        direction: 'set_aside',
+        amountMinor: 5000,
+      }),
+    );
+    valueOf(
+      await run(moveGoalMoney, userId, {
+        goalId: goal.id,
+        direction: 'withdraw',
+        amountMinor: 3000,
+      }),
+    );
+    expect(await balanceOf(goal.id)).toBe(2000);
+    expect(
+      (await data()).transactions.find((row) => row.id === setAside.transactionId),
+    ).toMatchObject({
+      kind: 'transfer',
+      accountId: 'acc-main',
+      toAccountId: goal.id,
+      amount: 5000,
+      description: 'Vacanza',
+      updatedAt: setAside.updatedAt,
+    });
+  });
+
+  it('refuses to withdraw more than the goal holds', async () => {
+    await onboarded();
+    const goal = valueOf(await run(saveGoal, userId, vacanza));
+    valueOf(
+      await run(moveGoalMoney, userId, {
+        goalId: goal.id,
+        direction: 'set_aside',
+        amountMinor: 1000,
+      }),
+    );
+    expect(
+      messageOf(
+        await run(moveGoalMoney, userId, {
+          goalId: goal.id,
+          direction: 'withdraw',
+          amountMinor: 5000,
+        }),
+      ),
+    ).toMatch(/below zero/);
+  });
+});
+
+describe('close_goal', () => {
+  it('closes the version read: the money goes back and the goal is archived', async () => {
+    await onboarded();
+    const goal = valueOf(await run(saveGoal, userId, { ...vacanza, alreadySavedMinor: 20000 }));
+    const phone = await bumpRow(harness.db, userId, 'account', goal.id, { name: 'Viaggio' });
+    expect(
+      messageOf(await run(closeGoal, userId, { id: goal.id, updatedAt: goal.updatedAt })),
+    ).toMatch(/changed after you read it/);
+    expect(valueOf(await run(closeGoal, userId, { id: goal.id, updatedAt: phone }))).toEqual({
+      id: goal.id,
+    });
+    expect(await balanceOf(goal.id)).toBe(0);
+    expect((await data()).accounts.find((row) => row.id === goal.id)?.archivedAt).not.toBeNull();
+    expect(
+      messageOf(
+        await run(moveGoalMoney, userId, {
+          goalId: goal.id,
+          direction: 'set_aside',
+          amountMinor: 100,
+        }),
+      ),
+    ).toMatch(/closed goal cannot be changed/);
+  });
+});
