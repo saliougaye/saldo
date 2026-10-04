@@ -40,7 +40,7 @@ describe('saveBudgetInput', () => {
 });
 
 describe('resolveBudgetInput', () => {
-  it('creates from the form defaults, with its first category\'s icon', () => {
+  it("creates from the form defaults, with its first category's icon", () => {
     expect(
       resolveBudgetInput(
         { name: 'Spesa', categoryIds: ['cat-food'], amountMinor: 30000 },
@@ -65,9 +65,9 @@ describe('resolveBudgetInput', () => {
   });
 
   it('needs a name to create', () => {
-    expect(resolveBudgetInput({ categoryIds: ['cat-food'], amountMinor: 1 }, null, [food], 2).ok).toBe(
-      false,
-    );
+    expect(
+      resolveBudgetInput({ categoryIds: ['cat-food'], amountMinor: 1 }, null, [food], 2).ok,
+    ).toBe(false);
   });
 
   it('changes only the given fields', () => {

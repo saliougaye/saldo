@@ -82,7 +82,11 @@ export function resolveCategoryInput(
   if (existing === null && input.name === undefined) {
     return { ok: false, message: 'To create a category, pass name.' };
   }
-  if (existing !== null && input.direction !== undefined && input.direction !== existing.direction) {
+  if (
+    existing !== null &&
+    input.direction !== undefined &&
+    input.direction !== existing.direction
+  ) {
     return {
       ok: false,
       message: "A category's direction never changes. Create a new category instead.",
@@ -123,7 +127,7 @@ export const saveCategoryTool: WriteToolSpec<SaveCategoryInput, SavedOutput> = {
   name: 'save_category',
   title: 'Save a category',
   description:
-    'Create a category, or change one. To create: omit id and updatedAt and pass name; direction is expense (the default) or income, and never changes later. parentId nests it under a live top-level category of the same direction from list_categories; null makes it top-level; there is one level of nesting only. To change one: pass its id and updatedAt exactly as list_categories returned them, plus only the fields to change. monthlyBudgetMinor (expense categories only) gives the category its own budget for each of the user\'s periods, an integer in minor units of the user\'s currency: a positive amount creates or updates it, null or 0 removes it, leaving it out keeps it. Returns the id and the new updatedAt.',
+    "Create a category, or change one. To create: omit id and updatedAt and pass name; direction is expense (the default) or income, and never changes later. parentId nests it under a live top-level category of the same direction from list_categories; null makes it top-level; there is one level of nesting only. To change one: pass its id and updatedAt exactly as list_categories returned them, plus only the fields to change. monthlyBudgetMinor (expense categories only) gives the category its own budget for each of the user's periods, an integer in minor units of the user's currency: a positive amount creates or updates it, null or 0 removes it, leaving it out keeps it. Returns the id and the new updatedAt.",
   scope: 'write',
   input: saveCategoryInput,
   output: savedOutput,
@@ -155,7 +159,8 @@ export function categoryArchiveRequest(
       ? { ok: true, value: { action: 'restore' } }
       : {
           ok: false,
-          message: 'moveToId only goes with action "archive": restoring a category moves nothing back.',
+          message:
+            'moveToId only goes with action "archive": restoring a category moves nothing back.',
         };
   }
   return { ok: true, value: { action: 'archive', moveToId: input.moveToId ?? null } };

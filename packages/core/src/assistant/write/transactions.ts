@@ -34,10 +34,10 @@ export const saveTransactionInput = z.object({
     .describe('expense, income or transfer. Required to create.'),
   amountMinor: positiveMinorField
     .optional()
-    .describe('Positive integer in minor units of the user\'s currency: 4820 is 48.20 EUR.'),
+    .describe("Positive integer in minor units of the user's currency: 4820 is 48.20 EUR."),
   date: localDateField
     .optional()
-    .describe('YYYY-MM-DD. Defaults to the user\'s today when creating.'),
+    .describe("YYYY-MM-DD. Defaults to the user's today when creating."),
   accountId: idField
     .optional()
     .describe(

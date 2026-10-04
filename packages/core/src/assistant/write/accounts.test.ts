@@ -63,7 +63,11 @@ describe('resolveAccountInput', () => {
   });
 
   it('keeps the stored balance (null buffer) and every field not given', () => {
-    const result = resolveAccountInput({ id: 'acc-card', updatedAt: 'hlc-card', name: 'Amex' }, card, 2);
+    const result = resolveAccountInput(
+      { id: 'acc-card', updatedAt: 'hlc-card', name: 'Amex' },
+      card,
+      2,
+    );
     expect(result).toEqual({
       ok: true,
       value: {

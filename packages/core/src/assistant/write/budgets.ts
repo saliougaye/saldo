@@ -29,7 +29,7 @@ export const saveBudgetInput = z.object({
     .describe('Expense category ids from list_categories. Required to create.'),
   amountMinor: positiveMinorField
     .optional()
-    .describe('The limit, in minor units of the user\'s currency. Required to create.'),
+    .describe("The limit, in minor units of the user's currency. Required to create."),
   period: budgetPeriodSchema
     .optional()
     .describe('"period" (the user\'s own period, the default), "week", "month" or "year".'),

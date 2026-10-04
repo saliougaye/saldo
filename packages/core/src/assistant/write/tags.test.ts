@@ -28,7 +28,13 @@ describe('the tag specs', () => {
   });
   it('save_tag is idempotent and not destructive; merge and delete are both', () => {
     expect(saveTagTool.annotations).toMatchObject({ destructiveHint: false, idempotentHint: true });
-    expect(mergeTagsTool.annotations).toMatchObject({ destructiveHint: true, idempotentHint: true });
-    expect(deleteTagTool.annotations).toMatchObject({ destructiveHint: true, idempotentHint: true });
+    expect(mergeTagsTool.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: true,
+    });
+    expect(deleteTagTool.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: true,
+    });
   });
 });

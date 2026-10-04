@@ -85,7 +85,11 @@ describe('resolveGoalInput', () => {
   });
 
   it('removes the deadline with null', () => {
-    const result = resolveGoalInput({ id: 'goal-1', updatedAt: 'hlc-goal', deadline: null }, goal, 2);
+    const result = resolveGoalInput(
+      { id: 'goal-1', updatedAt: 'hlc-goal', deadline: null },
+      goal,
+      2,
+    );
     expect(result.ok && result.value.deadline).toBeNull();
   });
 
@@ -103,7 +107,12 @@ describe('resolveGoalInput', () => {
 describe('resolveGoalTransfer', () => {
   it('sets aside from the parent into the goal, named after the goal', () => {
     expect(
-      resolveGoalTransfer(goal, { goalId: 'goal-1', direction: 'set_aside', amountMinor: 5000 }, TODAY, 2),
+      resolveGoalTransfer(
+        goal,
+        { goalId: 'goal-1', direction: 'set_aside', amountMinor: 5000 },
+        TODAY,
+        2,
+      ),
     ).toEqual({
       ok: true,
       value: {
@@ -153,11 +162,17 @@ describe('resolveGoalTransfer', () => {
 
 describe('the goal specs', () => {
   it('have the agreed annotations', () => {
-    expect(saveGoalTool.annotations).toMatchObject({ destructiveHint: false, idempotentHint: false });
+    expect(saveGoalTool.annotations).toMatchObject({
+      destructiveHint: false,
+      idempotentHint: false,
+    });
     expect(moveGoalMoneyTool.annotations).toMatchObject({
       destructiveHint: false,
       idempotentHint: false,
     });
-    expect(closeGoalTool.annotations).toMatchObject({ destructiveHint: true, idempotentHint: true });
+    expect(closeGoalTool.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: true,
+    });
   });
 });

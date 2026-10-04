@@ -59,7 +59,9 @@ describe('readTools', () => {
 });
 
 describe('writeTools', () => {
-  it('is empty until 0.4b', () => {
-    expect(writeTools).toEqual([]);
+  it('holds the fourteen write tools of 0.4b, none sharing a name with a read tool', () => {
+    expect(writeTools).toHaveLength(14);
+    const readNames = new Set(readTools.map((tool) => tool.name));
+    for (const spec of writeTools) expect(readNames.has(spec.name)).toBe(false);
   });
 });

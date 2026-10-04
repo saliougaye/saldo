@@ -29,7 +29,7 @@ export const saveGoalInput = z.object({
   name: z.string().trim().min(1).max(60).optional().describe('Required to create.'),
   targetMinor: positiveMinorField
     .optional()
-    .describe('The target, in minor units of the user\'s currency. Required to create.'),
+    .describe("The target, in minor units of the user's currency. Required to create."),
   deadline: localDateField
     .nullable()
     .optional()
@@ -117,10 +117,10 @@ export const moveGoalMoneyInput = z.object({
   goalId: idField.describe('An open goal from list_goals.'),
   direction: z
     .enum(['set_aside', 'withdraw'])
-    .describe('set_aside: from the goal\'s account into the goal. withdraw: back to the account.'),
-  amountMinor: positiveMinorField.describe('In minor units of the user\'s currency.'),
-  date: localDateField.optional().describe('YYYY-MM-DD. Defaults to the user\'s today.'),
-  description: z.string().max(120).optional().describe('Defaults to the goal\'s name.'),
+    .describe("set_aside: from the goal's account into the goal. withdraw: back to the account."),
+  amountMinor: positiveMinorField.describe("In minor units of the user's currency."),
+  date: localDateField.optional().describe("YYYY-MM-DD. Defaults to the user's today."),
+  description: z.string().max(120).optional().describe("Defaults to the goal's name."),
 });
 export type MoveGoalMoneyInput = z.infer<typeof moveGoalMoneyInput>;
 

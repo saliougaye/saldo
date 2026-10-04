@@ -95,12 +95,20 @@ describe('resolveCategoryInput', () => {
 
   it('never changes the direction, and gives income no budget', () => {
     expect(
-      resolveCategoryInput({ id: 'cat-food', updatedAt: 'hlc-food', direction: 'income' }, food, [], 2)
-        .ok,
+      resolveCategoryInput(
+        { id: 'cat-food', updatedAt: 'hlc-food', direction: 'income' },
+        food,
+        [],
+        2,
+      ).ok,
     ).toBe(false);
     expect(
-      resolveCategoryInput({ name: 'Stipendio', direction: 'income', monthlyBudgetMinor: 100 }, null, [], 2)
-        .ok,
+      resolveCategoryInput(
+        { name: 'Stipendio', direction: 'income', monthlyBudgetMinor: 100 },
+        null,
+        [],
+        2,
+      ).ok,
     ).toBe(false);
   });
 

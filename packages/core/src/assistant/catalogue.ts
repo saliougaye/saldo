@@ -10,6 +10,7 @@ import { listTransactionsTool } from './tools/listTransactions';
 import { listUpcomingTool } from './tools/listUpcoming';
 import { spendingByCategoryTool } from './tools/spendingByCategory';
 import { type AnyReadTool, type AnyWriteToolSpec, defineReadTool } from './types';
+import { writeToolSpecs } from './write';
 
 /** The read tools of §17.4.2, in the order a client lists them. Scope `read`. */
 export const readTools: readonly AnyReadTool[] = [
@@ -26,5 +27,5 @@ export const readTools: readonly AnyReadTool[] = [
   defineReadTool(getForecastTool),
 ];
 
-/** The write tools of §17.4.2, scope `write`. Empty until 0.4b fills it. */
-export const writeTools: readonly AnyWriteToolSpec[] = [];
+/** The write tools of §17.4.2 (0.4b), listed only to a token with scope `write`. */
+export const writeTools: readonly AnyWriteToolSpec[] = writeToolSpecs;
