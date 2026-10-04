@@ -6,10 +6,25 @@ import type { UserData } from '../userData';
 export type ToolScope = 'read' | 'write';
 
 /**
- * What a tool is told besides the data: the user's «today», in the user's own zone (§17.1.5, D37).
- * The server derives it with `todayFor`; core never reads a clock.
+ * Where the user's web app shows each kind of row: its base URL and, per kind, a link with `{id}`
+ * to replace by the row's id. The server builds it from `PUBLIC_URL`; the routes are the web's.
  */
-export type ToolContext = { today: LocalDate; timeZone: string };
+export type WebAppLinks = {
+  url: string;
+  transaction: string;
+  account: string;
+  goal: string;
+  budget: string;
+  category: string;
+  tag: string;
+};
+
+/**
+ * What a tool is told besides the data: the user's «today», in the user's own zone (§17.1.5, D37).
+ * The server derives it with `todayFor`; core never reads a clock. `webApp` is there when the
+ * caller knows the web app (the MCP endpoint), so a model can link the user to a row.
+ */
+export type ToolContext = { today: LocalDate; timeZone: string; webApp?: WebAppLinks };
 
 /** The MCP tool annotations (§17.4.2). Saldo never reaches outside the user's own data. */
 export type ToolAnnotations = {

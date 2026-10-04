@@ -199,6 +199,12 @@ describe('/mcp, the tools', () => {
     expect(JSON.parse(body.result.content[0]?.text ?? 'null')).toEqual(
       body.result.structuredContent,
     );
+    expect(body.result.structuredContent).toMatchObject({
+      webApp: {
+        url: 'http://localhost:3000',
+        transaction: 'http://localhost:3000/transactions?t={id}',
+      },
+    });
 
     await settleBackground();
     expect(await harness.db.select().from(mcpUsage)).toMatchObject([

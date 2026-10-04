@@ -34,4 +34,21 @@ describe('assistantInstructions', () => {
     expect(text).toContain('has not finished setting up Saldo');
     expect(assistantInstructions(fixtureData(), CONTEXT)).not.toContain('has not finished');
   });
+
+  it('points at the web app links only when the server knows the web app', () => {
+    const webApp = {
+      url: 'https://saldo.example',
+      transaction: 'https://saldo.example/transactions?t={id}',
+      account: 'https://saldo.example/accounts?a={id}',
+      goal: 'https://saldo.example/accounts?g={id}',
+      budget: 'https://saldo.example/profile/budgets?b={id}',
+      category: 'https://saldo.example/profile/categories?c={id}',
+      tag: 'https://saldo.example/profile/tags?tag={id}',
+    };
+    const text = assistantInstructions(fixtureData(), { ...CONTEXT, webApp });
+    expect(text).toContain('https://saldo.example');
+    expect(text).toContain('get_preferences');
+    expect(text).toContain('{id}');
+    expect(assistantInstructions(fixtureData(), CONTEXT)).not.toContain('Links.');
+  });
 });

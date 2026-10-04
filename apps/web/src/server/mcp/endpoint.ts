@@ -12,7 +12,7 @@ import { buildMcpServer } from './server';
 import { bearerChallenge, verifyMcpRequest } from './token';
 import { MCP_MAX_BODY_BYTES, serveMcpExchange } from './transport';
 import type { AnyWriteToolHandler } from './types';
-import { mcpResourceUrl } from './urls';
+import { mcpResourceUrl, webAppLinks } from './urls';
 import { recordMcpUsage } from './usage';
 import { writeToolHandlers } from './writeTools';
 
@@ -131,7 +131,7 @@ export async function serveMcp(
 
     recordMcpUsage(principal.userId, principal.clientId, now);
     const data = await loadUserData(principal.userId);
-    const ctx = todayFor(data.settings, env().defaultTimeZone, now);
+    const ctx = { ...todayFor(data.settings, env().defaultTimeZone, now), webApp: webAppLinks() };
     const server = buildMcpServer({ data, ctx, principal, writeHandlers: deps.writeHandlers });
     const response = await serveMcpExchange(server, request, parsed.value, {
       token: tokenHash,
