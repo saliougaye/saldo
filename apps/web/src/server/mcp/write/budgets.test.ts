@@ -4,7 +4,7 @@ import { createTestSession } from '../../test/session';
 import { readUserData } from '../../userData/read';
 import { bumpRow, seedOnboarded } from '../../write/fixtures';
 import { budgetHandlers } from './budgets';
-import { fixtureClock, messageOf, run, valueOf } from './testKit';
+import { fixtureClock, messageOf, run, valueFrom } from './testKit';
 
 let harness: TestDatabase;
 let userId: string;
@@ -32,7 +32,7 @@ const data = () => readUserData(harness.db, userId);
 describe('save_budget', () => {
   it("creates a budget with the form's defaults and its first category's icon", async () => {
     await onboarded();
-    const saved = valueOf(await run(saveBudget, userId, spesa));
+    const saved = valueFrom(await run(saveBudget, userId, spesa));
     const after = await data();
     const icon = after.categories.find((row) => row.id === GROCERIES)?.icon;
     expect(after.budgets).toEqual([
@@ -49,8 +49,8 @@ describe('save_budget', () => {
 
   it('changes the amount only', async () => {
     await onboarded();
-    const saved = valueOf(await run(saveBudget, userId, spesa));
-    valueOf(
+    const saved = valueFrom(await run(saveBudget, userId, spesa));
+    valueFrom(
       await run(saveBudget, userId, {
         id: saved.id,
         updatedAt: saved.updatedAt,
@@ -64,7 +64,7 @@ describe('save_budget', () => {
 
   it('refuses a category already in a budget, and a create without a name', async () => {
     await onboarded();
-    valueOf(await run(saveBudget, userId, spesa));
+    valueFrom(await run(saveBudget, userId, spesa));
     expect(messageOf(await run(saveBudget, userId, { ...spesa, name: 'Altro' }))).toMatch(
       /another budget/,
     );
@@ -77,12 +77,12 @@ describe('save_budget', () => {
 describe('delete_budget', () => {
   it('deletes the version read only', async () => {
     await onboarded();
-    const saved = valueOf(await run(saveBudget, userId, spesa));
+    const saved = valueFrom(await run(saveBudget, userId, spesa));
     const phone = await bumpRow(harness.db, userId, 'budget', saved.id, { amount: 40000 });
     expect(
       messageOf(await run(deleteBudget, userId, { id: saved.id, updatedAt: saved.updatedAt })),
     ).toMatch(/changed after you read it/);
-    expect(valueOf(await run(deleteBudget, userId, { id: saved.id, updatedAt: phone }))).toEqual({
+    expect(valueFrom(await run(deleteBudget, userId, { id: saved.id, updatedAt: phone }))).toEqual({
       id: saved.id,
     });
     expect((await data()).budgets).toEqual([]);

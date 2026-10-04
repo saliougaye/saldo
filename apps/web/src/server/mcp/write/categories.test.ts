@@ -4,7 +4,7 @@ import { createTestSession } from '../../test/session';
 import { readUserData } from '../../userData/read';
 import { bumpRow, seedOnboarded, stampOf } from '../../write/fixtures';
 import { categoryHandlers } from './categories';
-import { fixtureClock, messageOf, run, valueOf } from './testKit';
+import { fixtureClock, messageOf, run, valueFrom } from './testKit';
 import { transactionHandlers } from './transactions';
 
 let harness: TestDatabase;
@@ -33,14 +33,14 @@ const data = () => readUserData(harness.db, userId);
 describe('save_category', () => {
   it('creates a category with its own budget, keeps it on a rename, removes it with null', async () => {
     await onboarded();
-    const created = valueOf(
+    const created = valueFrom(
       await run(saveCategory, userId, { name: 'Casa', monthlyBudgetMinor: 30000 }),
     );
     expect((await data()).budgets).toEqual([
       expect.objectContaining({ categoryIds: [created.id], amount: 30000, period: 'period' }),
     ]);
 
-    const renamed = valueOf(
+    const renamed = valueFrom(
       await run(saveCategory, userId, {
         id: created.id,
         updatedAt: created.updatedAt,
@@ -53,7 +53,7 @@ describe('save_category', () => {
     });
     expect(after.budgets).toEqual([expect.objectContaining({ amount: 30000 })]);
 
-    valueOf(
+    valueFrom(
       await run(saveCategory, userId, {
         id: created.id,
         updatedAt: renamed.updatedAt,
@@ -65,7 +65,9 @@ describe('save_category', () => {
 
   it('refuses a parent that is a subcategory, and a change of direction', async () => {
     await onboarded();
-    const child = valueOf(await run(saveCategory, userId, { name: 'Frutta', parentId: GROCERIES }));
+    const child = valueFrom(
+      await run(saveCategory, userId, { name: 'Frutta', parentId: GROCERIES }),
+    );
     expect(
       messageOf(await run(saveCategory, userId, { name: 'Mele', parentId: child.id })),
     ).toMatch(/top-level/);
@@ -81,7 +83,7 @@ describe('save_category', () => {
 describe('archive_category', () => {
   it('archives with a move of its transactions, then restores', async () => {
     await onboarded();
-    const tx = valueOf(
+    const tx = valueFrom(
       await run(saveTransaction, userId, {
         kind: 'expense',
         amountMinor: 1500,
@@ -89,9 +91,9 @@ describe('archive_category', () => {
         categoryId: GROCERIES,
       }),
     );
-    const target = valueOf(await run(saveCategory, userId, { name: 'Supermercato' }));
+    const target = valueFrom(await run(saveCategory, userId, { name: 'Supermercato' }));
     const read = await stampOf(harness.db, userId, 'category', GROCERIES);
-    const archived = valueOf(
+    const archived = valueFrom(
       await run(archiveCategory, userId, {
         id: GROCERIES,
         updatedAt: read,
@@ -103,7 +105,7 @@ describe('archive_category', () => {
     expect((await data()).transactions.find((row) => row.id === tx.id)).toMatchObject({
       categoryId: target.id,
     });
-    const restored = valueOf(
+    const restored = valueFrom(
       await run(archiveCategory, userId, {
         id: GROCERIES,
         updatedAt: archived.updatedAt,

@@ -288,8 +288,8 @@ describe('accounts — expectedUpdatedAt (§17.4.2)', () => {
       ok: false,
       error: 'conflict',
     });
-    expect(
-      await restoreAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, archived),
-    ).toEqual({ ok: true });
+    expect(await restoreAccount(harness.db, userId, 'acc-savings', FIXTURE_NOW, archived)).toEqual({
+      ok: true,
+    });
   });
 });

@@ -5,7 +5,7 @@ import { createTestSession } from '../../test/session';
 import { readUserData } from '../../userData/read';
 import { bumpRow, seedOnboarded } from '../../write/fixtures';
 import { goalHandlers } from './goals';
-import { FIXTURE_CTX, fixtureClock, messageOf, run, valueOf } from './testKit';
+import { FIXTURE_CTX, fixtureClock, messageOf, run, valueFrom } from './testKit';
 
 let harness: TestDatabase;
 let userId: string;
@@ -37,7 +37,7 @@ async function balanceOf(id: string): Promise<number> {
 describe('save_goal', () => {
   it('creates a goal and moves what is already saved into it', async () => {
     await onboarded();
-    const goal = valueOf(
+    const goal = valueFrom(
       await run(saveGoal, userId, { ...vacanza, alreadySavedMinor: 20000, deadline: '2027-06-30' }),
     );
     expect(goal.created).toBe(true);
@@ -53,8 +53,8 @@ describe('save_goal', () => {
 
   it('changes the target, and refuses new savings on an edit', async () => {
     await onboarded();
-    const goal = valueOf(await run(saveGoal, userId, vacanza));
-    const edited = valueOf(
+    const goal = valueFrom(await run(saveGoal, userId, vacanza));
+    const edited = valueFrom(
       await run(saveGoal, userId, { id: goal.id, updatedAt: goal.updatedAt, targetMinor: 150000 }),
     );
     expect((await data()).accounts.find((row) => row.id === goal.id)).toMatchObject({
@@ -75,15 +75,15 @@ describe('save_goal', () => {
 describe('move_goal_money', () => {
   it('sets aside and withdraws through transfers named after the goal', async () => {
     await onboarded();
-    const goal = valueOf(await run(saveGoal, userId, vacanza));
-    const setAside = valueOf(
+    const goal = valueFrom(await run(saveGoal, userId, vacanza));
+    const setAside = valueFrom(
       await run(moveGoalMoney, userId, {
         goalId: goal.id,
         direction: 'set_aside',
         amountMinor: 5000,
       }),
     );
-    valueOf(
+    valueFrom(
       await run(moveGoalMoney, userId, {
         goalId: goal.id,
         direction: 'withdraw',
@@ -105,8 +105,8 @@ describe('move_goal_money', () => {
 
   it('refuses to withdraw more than the goal holds', async () => {
     await onboarded();
-    const goal = valueOf(await run(saveGoal, userId, vacanza));
-    valueOf(
+    const goal = valueFrom(await run(saveGoal, userId, vacanza));
+    valueFrom(
       await run(moveGoalMoney, userId, {
         goalId: goal.id,
         direction: 'set_aside',
@@ -128,12 +128,12 @@ describe('move_goal_money', () => {
 describe('close_goal', () => {
   it('closes the version read: the money goes back and the goal is archived', async () => {
     await onboarded();
-    const goal = valueOf(await run(saveGoal, userId, { ...vacanza, alreadySavedMinor: 20000 }));
+    const goal = valueFrom(await run(saveGoal, userId, { ...vacanza, alreadySavedMinor: 20000 }));
     const phone = await bumpRow(harness.db, userId, 'account', goal.id, { name: 'Viaggio' });
     expect(
       messageOf(await run(closeGoal, userId, { id: goal.id, updatedAt: goal.updatedAt })),
     ).toMatch(/changed after you read it/);
-    expect(valueOf(await run(closeGoal, userId, { id: goal.id, updatedAt: phone }))).toEqual({
+    expect(valueFrom(await run(closeGoal, userId, { id: goal.id, updatedAt: phone }))).toEqual({
       id: goal.id,
     });
     expect(await balanceOf(goal.id)).toBe(0);

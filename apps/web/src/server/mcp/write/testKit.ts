@@ -21,7 +21,7 @@ export function run<I, O>(
   return handler.handle(writer(userId), handler.spec.input.parse(raw), FIXTURE_CTX);
 }
 
-export function valueOf<O>(result: ToolResult<O>): O {
+export function valueFrom<O>(result: ToolResult<O>): O {
   if (!result.ok) throw new Error(`refused: ${result.message}`);
   return result.value;
 }

@@ -6,7 +6,7 @@ import { readUserData } from '../../userData/read';
 import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from '../../write/fixtures';
 import { saveGoal as saveGoalWrite } from '../../write/goals';
 import { accountHandlers } from './accounts';
-import { FIXTURE_CTX, fixtureClock, messageOf, run, valueOf } from './testKit';
+import { FIXTURE_CTX, fixtureClock, messageOf, run, valueFrom } from './testKit';
 import { transactionHandlers } from './transactions';
 
 let harness: TestDatabase;
@@ -33,7 +33,7 @@ const account = async (id: string) =>
   (await readUserData(harness.db, userId)).accounts.find((row) => row.id === id);
 
 async function spend(amountMinor: number) {
-  valueOf(
+  valueFrom(
     await run(saveTransaction, userId, {
       kind: 'expense',
       amountMinor,
@@ -66,7 +66,7 @@ async function createGoal(): Promise<string> {
 describe('save_account', () => {
   it('creates a credit card in debt', async () => {
     await onboarded();
-    const saved = valueOf(
+    const saved = valueFrom(
       await run(saveAccount, userId, {
         name: 'Visa',
         type: 'credit_card',
@@ -90,7 +90,7 @@ describe('save_account', () => {
     await onboarded();
     await spend(4820);
     const read = await stampOf(harness.db, userId, 'account', 'acc-main');
-    valueOf(
+    valueFrom(
       await run(saveAccount, userId, { id: 'acc-main', updatedAt: read, name: 'Principale' }),
     );
     expect(await account('acc-main')).toMatchObject({ name: 'Principale', openingBalance: 100000 });
@@ -100,7 +100,7 @@ describe('save_account', () => {
     await onboarded();
     await spend(4820);
     const read = await stampOf(harness.db, userId, 'account', 'acc-main');
-    valueOf(
+    valueFrom(
       await run(saveAccount, userId, { id: 'acc-main', updatedAt: read, balanceMinor: 90000 }),
     );
     const data = await readUserData(harness.db, userId);
@@ -128,11 +128,11 @@ describe('archive_account', () => {
   it('archives and restores, answering the new state and version', async () => {
     await onboarded();
     const read = await stampOf(harness.db, userId, 'account', 'acc-savings');
-    const archived = valueOf(
+    const archived = valueFrom(
       await run(archiveAccount, userId, { id: 'acc-savings', updatedAt: read, action: 'archive' }),
     );
     expect(archived).toMatchObject({ id: 'acc-savings', archived: true });
-    const restored = valueOf(
+    const restored = valueFrom(
       await run(archiveAccount, userId, {
         id: 'acc-savings',
         updatedAt: archived.updatedAt,
