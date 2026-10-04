@@ -223,6 +223,28 @@ describe('/mcp, the tools', () => {
     });
   });
 
+  it('refuses each of the catalogue write tools to a read token, before any write', async () => {
+    const { bearer } = await connected();
+    const response = await serveMcp(
+      rpcRequest(
+        bearer,
+        'tools/call',
+        {
+          name: 'save_transaction',
+          arguments: { kind: 'expense', amountMinor: 100, accountId: 'a', categoryId: 'c' },
+        },
+        8,
+      ),
+      deps(),
+    );
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      jsonrpc: '2.0',
+      id: 8,
+      error: { code: -32600, message: 'insufficient_scope', data: { required: 'write' } },
+    });
+  });
+
   it('runs a write tool for a write token, and answers its refusal as a tool error', async () => {
     const { bearer } = await connected(['read', 'write', 'offline_access']);
     const ok = await serveMcp(

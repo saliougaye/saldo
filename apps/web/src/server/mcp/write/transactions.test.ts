@@ -105,9 +105,9 @@ describe('save_transaction', () => {
       messageOf(await run(saveTransaction, userId, { id: 'nope', updatedAt: 'x', amountMinor: 1 })),
     ).toMatch(/no live transaction/);
     const created = valueOf(await run(saveTransaction, userId, groceries));
-    expect(messageOf(await run(saveTransaction, userId, { id: created.id, amountMinor: 1 }))).toMatch(
-      /updatedAt/,
-    );
+    expect(
+      messageOf(await run(saveTransaction, userId, { id: created.id, amountMinor: 1 })),
+    ).toMatch(/updatedAt/);
   });
 });
 
