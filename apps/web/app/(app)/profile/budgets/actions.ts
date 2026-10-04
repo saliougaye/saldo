@@ -14,7 +14,7 @@ export async function saveBudgetAction(input: unknown): Promise<BudgetSaveResult
   return saveFor(getDb(), user.id, input, new Date());
 }
 
-export async function deleteBudgetAction(id: string): Promise<BudgetResult> {
+export async function deleteBudgetAction(id: string, updatedAt: string): Promise<BudgetResult> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date());
+  return deleteFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
 }

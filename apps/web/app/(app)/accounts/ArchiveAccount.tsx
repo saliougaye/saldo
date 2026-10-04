@@ -10,6 +10,8 @@ import { archiveAccountAction } from './actions';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the account is archived: `/accounts`. */
   afterHref: string;
   strings: {
@@ -30,7 +32,7 @@ interface Props {
  * The account panel's «Archivia» and its question (§5.6). The page already hides the button when
  * the account holds open goals; `holdsGoals` still reads here for a goal a phone added a second ago.
  */
-export function ArchiveAccount({ id, afterHref, strings }: Props) {
+export function ArchiveAccount({ id, updatedAt, afterHref, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function ArchiveAccount({ id, afterHref, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof archiveAccountAction>>;
       try {
-        result = await archiveAccountAction(id);
+        result = await archiveAccountAction(id, updatedAt);
       } catch {
         setError(strings.errors.unexpected);
         return;

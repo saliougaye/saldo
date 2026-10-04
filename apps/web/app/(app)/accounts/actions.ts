@@ -20,9 +20,9 @@ export async function saveAccountAction(input: unknown): Promise<AccountSaveResu
   const user = await requireWebUser();
   return saveFor(getDb(), user.id, input, new Date());
 }
-export async function archiveAccountAction(id: string): Promise<AccountResult> {
+export async function archiveAccountAction(id: string, updatedAt: string): Promise<AccountResult> {
   const user = await requireWebUser();
-  return archiveFor(getDb(), user.id, String(id), new Date());
+  return archiveFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
 }
 export async function restoreAccountAction(id: string): Promise<AccountResult> {
   const user = await requireWebUser();
@@ -32,9 +32,9 @@ export async function saveGoalAction(input: unknown): Promise<GoalSaveResult> {
   const user = await requireWebUser();
   return saveGoalFor(getDb(), user.id, input, new Date());
 }
-export async function closeGoalAction(id: string): Promise<AccountResult> {
+export async function closeGoalAction(id: string, updatedAt: string): Promise<AccountResult> {
   const user = await requireWebUser();
-  return closeFor(getDb(), user.id, String(id), new Date());
+  return closeFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
 }
 export async function restoreGoalAction(id: string): Promise<AccountResult> {
   const user = await requireWebUser();

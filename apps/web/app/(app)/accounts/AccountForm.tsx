@@ -88,7 +88,11 @@ export function AccountForm({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveAccountAction>>;
       try {
-        result = await saveAccountAction({ id: view.id, ...values });
+        result = await saveAccountAction({
+          id: view.id,
+          ...values,
+          expectedUpdatedAt: view.updatedAt ?? undefined,
+        });
       } catch {
         // A thrown action (the network, the server) keeps the draft and says so.
         setProblem({ error: 'unexpected' });

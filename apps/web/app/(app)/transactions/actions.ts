@@ -20,9 +20,9 @@ export async function saveTransactionAction(input: unknown): Promise<SaveResult>
   return saveFor(getDb(), user.id, input, new Date());
 }
 
-export async function deleteTransactionAction(id: string): Promise<Result> {
+export async function deleteTransactionAction(id: string, updatedAt: string): Promise<Result> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date());
+  return deleteFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
 }
 
 export async function restoreTransactionAction(id: string): Promise<Result> {

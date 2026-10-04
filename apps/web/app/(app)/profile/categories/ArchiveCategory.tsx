@@ -11,6 +11,8 @@ import styles from './categories.module.css';
 
 interface Props {
   id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
   /** Where the page goes once the category is archived: `/profile/categories`. */
   afterHref: string;
   /** Targets for «Sposta le transazioni in»; offered only when something uses the category. */
@@ -36,7 +38,7 @@ interface Props {
  * «Archivia» and its question (§5.11, §6.20). A category is never deleted; the transactions that
  * use it can move to another category of the same direction in the same write.
  */
-export function ArchiveCategory({ id, afterHref, targets, strings }: Props) {
+export function ArchiveCategory({ id, updatedAt, afterHref, targets, strings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState('');
@@ -48,7 +50,11 @@ export function ArchiveCategory({ id, afterHref, targets, strings }: Props) {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof archiveCategoryAction>>;
       try {
-        result = await archiveCategoryAction({ id, moveToId: target === '' ? null : target });
+        result = await archiveCategoryAction({
+          id,
+          moveToId: target === '' ? null : target,
+          expectedUpdatedAt: updatedAt,
+        });
       } catch {
         setError(strings.errors.unexpected);
         return;

@@ -148,6 +148,7 @@ export function BudgetForm({
         // The phone's `onSubmit(name)`: the typed name, or the one built from the categories.
         result = await saveBudgetAction({
           id: view.id,
+          expectedUpdatedAt: view.updatedAt ?? undefined,
           name: resolveBudgetName(values.name, autoName),
           categoryIds: values.categoryIds,
           buffer: values.buffer,
@@ -353,9 +354,10 @@ export function BudgetForm({
         busyLabel={t('common.loading')}
         pending={pending}
         leading={
-          view.id === null ? undefined : (
+          view.id === null || view.updatedAt === null ? undefined : (
             <DeleteBudget
               id={view.id}
+              updatedAt={view.updatedAt}
               afterHref={afterSave}
               strings={{
                 action: t('budgets.deleteBudget'),

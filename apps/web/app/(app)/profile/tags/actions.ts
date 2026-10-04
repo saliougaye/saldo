@@ -27,7 +27,7 @@ export async function mergeTagsAction(input: unknown): Promise<TagResult> {
   return mergeFor(getDb(), user.id, input, new Date());
 }
 
-export async function deleteTagAction(id: string): Promise<TagResult> {
+export async function deleteTagAction(id: string, updatedAt: string): Promise<TagResult> {
   const user = await requireWebUser();
-  return deleteFor(getDb(), user.id, String(id), new Date());
+  return deleteFor(getDb(), user.id, String(id), new Date(), String(updatedAt));
 }

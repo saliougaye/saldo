@@ -458,6 +458,7 @@ export default async function AccountsPage({
             {canArchive ? (
               <ArchiveAccount
                 id={selected.account.id}
+                updatedAt={selected.account.updatedAt}
                 afterHref={PATH}
                 strings={{
                   action: t('accounts.archive'),
@@ -632,6 +633,7 @@ export default async function AccountsPage({
                   </Link>
                   <CloseGoal
                     id={selected.account.id}
+                    updatedAt={selected.account.updatedAt}
                     afterHref={PATH}
                     expenseHref={
                       goal.saved > 0
