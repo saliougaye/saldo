@@ -19,6 +19,8 @@ interface Props extends Omit<ComponentPropsWithRef<'button'>, 'children'> {
   variant?: 'button' | 'row';
   /** Leads the label of the `row` variant. */
   icon?: IconName;
+  /** Where the browser goes once the session is gone; `/login` unless a flow wants its visitor back. */
+  redirectTo?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function SignOutButton({
   working,
   variant = 'button',
   icon,
+  redirectTo = '/login',
   className,
   onClick,
   ...rest
@@ -42,7 +45,7 @@ export function SignOutButton({
   const signOut = (event: MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
     setBusy(true);
-    void authClient.signOut().finally(() => router.replace('/login'));
+    void authClient.signOut().finally(() => router.replace(redirectTo));
   };
   if (variant === 'row') {
     return (

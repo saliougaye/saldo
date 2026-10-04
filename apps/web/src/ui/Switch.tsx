@@ -8,10 +8,12 @@ interface Props {
   note?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** The environment sets it, or a save is in flight: shown, not offered. */
+  disabled?: boolean;
 }
 
 /** The mockup's `.toggle-row`: the label and its note are the switch's name and description. */
-export function Switch({ label, note, checked, onChange }: Props) {
+export function Switch({ label, note, checked, onChange, disabled = false }: Props) {
   const id = useId();
   return (
     <div className={styles.row}>
@@ -30,6 +32,7 @@ export function Switch({ label, note, checked, onChange }: Props) {
         aria-labelledby={`${id}-label`}
         aria-describedby={note === undefined ? undefined : `${id}-note`}
         className={styles.switch}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
       />
     </div>
