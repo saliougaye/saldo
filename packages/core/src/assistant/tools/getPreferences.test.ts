@@ -18,7 +18,23 @@ describe('get_preferences', () => {
         current: { start: '2026-09-01', end: '2026-09-30' },
         previous: { start: '2026-08-01', end: '2026-08-31' },
       },
+      webApp: null,
     });
+  });
+
+  it('passes on the web app links the server knows, so a model can link a row', () => {
+    const webApp = {
+      url: 'https://saldo.example',
+      transaction: 'https://saldo.example/transactions?t={id}',
+      account: 'https://saldo.example/accounts?a={id}',
+      goal: 'https://saldo.example/accounts?g={id}',
+      budget: 'https://saldo.example/profile/budgets?b={id}',
+      category: 'https://saldo.example/profile/categories?c={id}',
+      tag: 'https://saldo.example/profile/tags?tag={id}',
+    };
+    const result = getPreferencesTool.run(fixtureData(), { ...CONTEXT, webApp }, {});
+    expect(result.webApp).toEqual(webApp);
+    expect(getPreferencesTool.output.parse(result).webApp).toEqual(webApp);
   });
 
   it('names the cycle day only for a pay cycle', () => {

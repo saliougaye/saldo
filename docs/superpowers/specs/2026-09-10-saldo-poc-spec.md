@@ -2393,6 +2393,14 @@ server, and no key ever touches Saldo. ROADMAP «0.4» holds the history of the 
   through `saveTransaction`; `save_tag` creates through `createTag` (an existing name answers that tag). Icons,
   colours, notes, «Registra la spesa», restoring a closed goal and reordering categories are not offered.
 
+**Links to the web app (2026-10-05):** `get_preferences` answers `webApp` — the web app's url (`PUBLIC_URL`) and,
+per kind of row (transaction, account, goal, budget, category, tag), a link with `{id}` to replace by the row's
+id: the page and parameter that open it (`/transactions?t=`, `/accounts?a=` / `?g=`, `/profile/budgets?b=`,
+`/profile/categories?c=`, `/profile/tags?tag=`). The routes are the web's (`webAppLinks` in
+`apps/web/src/server/mcp/urls.ts`); core only passes them on through `ToolContext.webApp`, and the
+instructions name the url and tell the model to give the link after a write. `webApp` is `null` when the
+caller does not know the web app.
+
 #### 17.4.3 «Connettori» in Profile, consent, and what the admin sees
 
 - **The look was decided before it was built (0.4-ui, 2026-10-03).** As 0.3c did for every web page, the three

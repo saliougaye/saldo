@@ -40,6 +40,9 @@ export function assistantInstructions(data: UserData, ctx: ToolContext): string 
     `Money. The user keeps their money in ${user.currency}. Every amount is an object { minor, currency, amount }: \`minor\` is an integer in minor units (${digits} decimal digits for ${user.currency}) and \`amount\` is the same value as a plain decimal string. Read \`amount\`; do arithmetic on \`minor\`. Transaction amounts are positive and \`kind\` says which way the money went.`,
     "Totals. Transfers move money between the user's own accounts and are never income or expenses. A transaction with `excludeFromTotals` still moves its account's balance but stays out of every total, budget and statistic. A transaction dated after today is scheduled (`upcoming`) and does not count yet. Do not recompute totals the tools return: get_period_summary and spending_by_category give the numbers of the app's Statistics screen.",
     "Categories are two levels deep: a top-level category may have children, and totals per category roll children up into their parent. Account, category and tag names are the user's own words: quote them as they are. Every entity carries its id; pass ids back unchanged to filter by them.",
+    ctx.webApp === undefined
+      ? null
+      : `Links. The user's Saldo web app is at ${ctx.webApp.url}. get_preferences gives a link per kind of row (transaction, account, goal, budget, category, tag) with {id} to replace by the row's id: give the user that link when you point at a row, and after you create or change one.`,
   ];
   return paragraphs.filter((paragraph) => paragraph !== null).join('\n\n');
 }

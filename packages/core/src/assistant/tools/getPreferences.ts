@@ -21,6 +21,17 @@ const output = z.object({
     current: dateRangeSchema,
     previous: dateRangeSchema,
   }),
+  webApp: z
+    .object({
+      url: z.string(),
+      transaction: z.string(),
+      account: z.string(),
+      goal: z.string(),
+      budget: z.string(),
+      category: z.string(),
+      tag: z.string(),
+    })
+    .nullable(),
 });
 
 export type GetPreferencesInput = z.infer<typeof input>;
@@ -30,7 +41,7 @@ export const getPreferencesTool: ReadTool<GetPreferencesInput, GetPreferencesOut
   name: 'get_preferences',
   title: 'Preferences',
   description:
-    "The user's preferences, as set in Saldo's Profile › Preferences, plus where today falls: their today and time zone, their currency, how they track periods (calendar month, ISO week, calendar year, or a pay cycle starting on a given day) with the current and previous period's bounds, and their language. Call it first when a question depends on dates.",
+    "The user's preferences, as set in Saldo's Profile › Preferences, plus where today falls: their today and time zone, their currency, how they track periods (calendar month, ISO week, calendar year, or a pay cycle starting on a given day) with the current and previous period's bounds, their language, and their Saldo web app: its url and, per kind of row, a link with {id} to replace by the row's id — give the user that link to open a row you read or wrote. Call it first when a question depends on dates.",
   scope: 'read',
   input,
   output,
@@ -51,6 +62,7 @@ export const getPreferencesTool: ReadTool<GetPreferencesInput, GetPreferencesOut
         current,
         previous: shiftPeriod(user.def, current, -1),
       },
+      webApp: ctx.webApp ?? null,
     };
   },
 };
