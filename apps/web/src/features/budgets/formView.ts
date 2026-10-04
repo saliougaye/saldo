@@ -20,6 +20,11 @@ export const HISTORY_CYCLES = 6;
 export interface BudgetFormView {
   mode: 'new' | 'edit';
   id: string | null;
+  /**
+   * The edited row's version as the page loaded it, sent back as `expectedUpdatedAt`: a phone's edit
+   * after the page loaded answers `conflict` instead of being overwritten (§17.4.2). Null for a new one.
+   */
+  updatedAt: string | null;
   initial: BudgetFormValues;
   /**
    * Top-level live expense categories; `taken` when another budget already covers one. An edited
@@ -65,6 +70,7 @@ export function budgetFormView(input: {
   return {
     mode: input.mode,
     id: editing?.id ?? null,
+    updatedAt: editing?.updatedAt ?? null,
     initial: editing === undefined ? emptyBudgetForm() : budgetFormFrom(editing, minorDigits),
     categories: data.categories
       .filter(

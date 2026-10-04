@@ -21,6 +21,11 @@ import {
 export interface AccountFormView {
   mode: 'new' | 'edit';
   id: string | null;
+  /**
+   * The edited row's version as the page loaded it, sent back as `expectedUpdatedAt`: a phone's edit
+   * after the page loaded answers `conflict` instead of being overwritten (§17.4.2). Null for a new one.
+   */
+  updatedAt: string | null;
   initial: AccountFormValues;
   /** Every type, or the ones a parent of goals may keep (§5.14, D24). */
   types: Account['type'][];
@@ -34,6 +39,11 @@ export interface AccountFormView {
 export interface GoalFormView {
   mode: 'new' | 'edit';
   id: string | null;
+  /**
+   * The edited row's version as the page loaded it, sent back as `expectedUpdatedAt`: a phone's edit
+   * after the page loaded answers `conflict` instead of being overwritten (§17.4.2). Null for a new one.
+   */
+  updatedAt: string | null;
   initial: GoalFormValues;
   parents: { id: string; name: string; icon: string; colorIndex: number }[];
   minorDigits: MinorDigits;
@@ -67,6 +77,7 @@ export function accountFormView(input: Input): AccountFormView | null {
   return {
     mode: input.mode,
     id: editing?.id ?? null,
+    updatedAt: editing?.updatedAt ?? null,
     initial:
       editing === undefined
         ? emptyAccountForm()
@@ -95,6 +106,7 @@ export function goalFormView(input: Input): GoalFormView | null {
   return {
     mode: input.mode,
     id: editing?.id ?? null,
+    updatedAt: editing?.updatedAt ?? null,
     initial: editing === undefined ? emptyGoalForm() : goalFormFrom(editing, minorDigits),
     parents: pocketParentCandidates(data.accounts).map((account) => ({
       id: account.id,

@@ -26,6 +26,8 @@ export interface DetailFact {
 
 export interface DetailView extends TransactionRow {
   id: string;
+  /** The row's version, for «Elimina»: a phone's edit after the page loaded is a `conflict`. */
+  updatedAt: string;
   kind: TransactionKind;
   date: LocalDate;
   /**
@@ -106,6 +108,7 @@ export function detailView({ data, id, kindLabel }: DetailViewInput): DetailView
   return {
     ...transactionRow(tx, deps),
     id: tx.id,
+    updatedAt: tx.updatedAt,
     kind: tx.kind,
     date: tx.date,
     // The phone's detail screen: `income ? amount : -amount`, signed `always` / `negative`.

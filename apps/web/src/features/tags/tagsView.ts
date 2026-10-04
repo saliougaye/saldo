@@ -3,6 +3,8 @@ import { canCreateTag, type UserData } from '@saldo/core';
 export interface TagRowView {
   id: string;
   name: string;
+  /** The tag's version as loaded, for rename, merge and delete (§17.4.2). */
+  updatedAt: string;
   /** Live transactions that carry it, over every date: a tag spans the periods (§5.10). */
   uses: number;
 }
@@ -18,7 +20,12 @@ export function tagsView(data: UserData): TagRowView[] {
     for (const id of row.tagIds) usage.set(id, (usage.get(id) ?? 0) + 1);
   }
   return data.tags
-    .map((tag) => ({ id: tag.id, name: tag.name, uses: usage.get(tag.id) ?? 0 }))
+    .map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      updatedAt: tag.updatedAt,
+      uses: usage.get(tag.id) ?? 0,
+    }))
     .sort((a, b) => b.uses - a.uses || binary(a.name, b.name));
 }
 

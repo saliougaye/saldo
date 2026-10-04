@@ -52,6 +52,11 @@ export interface FormCategory {
 export interface FormView {
   mode: 'new' | 'edit';
   id: string | null;
+  /**
+   * The edited row's version as the page loaded it, sent back as `expectedUpdatedAt`: a phone's edit
+   * after the page loaded answers `conflict` instead of being overwritten (§17.4.2). Null for a new one.
+   */
+  updatedAt: string | null;
   initial: TransactionFormValues;
   recurring: boolean;
   today: LocalDate;
@@ -156,6 +161,7 @@ export function formView(input: {
   return {
     mode: input.mode,
     id: editing?.id ?? null,
+    updatedAt: editing?.updatedAt ?? null,
     initial,
     recurring: editing !== undefined && editing.recurrenceId !== null,
     today,
