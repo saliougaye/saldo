@@ -8,7 +8,14 @@ shared finances, AI, web app, going public, releases — live in [`ROADMAP.md`](
 
 Something that works wrong today.
 
-None open.
+### Web app: a UI pass — navigation feels slow, motion is missing
+
+Reported 2026-10-04 after using the web app on a real instance. Moving between pages feels slow, and the suspect is
+how `next/link` is used: every page is a dynamic server render, so a click waits for the server with nothing on
+screen to say so. Prefetch, `loading.tsx` boundaries, and keeping the shell mounted while the panel changes are the
+first things to check, measured before and after. The animations the phone has (sheets, swaps, list changes, the
+design's transitions) are mostly absent on the web too. Needs a full check of the web UI against the design and the
+phone, then a plan for both.
 
 ## Features
 
