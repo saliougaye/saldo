@@ -8,10 +8,11 @@
  * `@react-native/jest-preset/jest/setup.js` untransformed and Jest then fails on its ESM syntax.
  * `@saldo/*` needs no entry: pnpm links workspace packages to `packages/*`, outside node_modules.
  * `standard-navigation` is expo-router's own ESM dependency: without it `expo-router` cannot be
- * imported for real, only mocked, and `renderRouter` is out of reach.
+ * imported for real, only mocked, and `renderRouter` is out of reach. `@formatjs` ships the `Intl`
+ * polyfills Hermes on iOS needs (src/i18n/polyfills.ts), as ESM only.
  */
 const RN_PACKAGES =
-  '(?:@react-native|react-native|expo|@expo|@gorhom|react-navigation|@react-navigation|standard-navigation)';
+  '(?:@react-native|react-native|expo|@expo|@gorhom|react-navigation|@react-navigation|standard-navigation|@formatjs)';
 
 const transformIgnorePatterns = [
   `/node_modules/\\.pnpm/(?!${RN_PACKAGES}[^/]*/)`,

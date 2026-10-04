@@ -20,6 +20,8 @@
     "@better-auth/expo": "^1.7.7",
     "@better-auth/passkey": "^1.7.7",
     "@expo-google-fonts/geist": "^0.4.2",
+    "@formatjs/intl-locale": "^5.3.12",
+    "@formatjs/intl-pluralrules": "^6.3.15",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@saldo/core": "workspace:*",
     "@saldo/i18n": "workspace:*",
