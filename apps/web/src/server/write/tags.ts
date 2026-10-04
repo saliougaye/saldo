@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { ServerDatabase } from '../db/types';
 import { readUserData } from '../userData/read';
 import { tombstoned, unstamped } from './rows';
-import { type EntityWrite, WriteRefused, writeInTransaction } from './writeChanges';
+import { type EntityWrite, movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 /**
  * Tag maintenance (§5.10), as the phone's `adminService`. `taken` is a name another tag already
@@ -19,11 +19,15 @@ const MAX_NAME = 40;
 export const renameTagInputSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1).max(MAX_NAME),
+  /** §17.4.2: the version the caller read the tag at; a tag that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export const mergeTagsInputSchema = z.object({
   sourceId: z.string().min(1),
   targetId: z.string().min(1),
+  /** §17.4.2: the version the caller read the **source** at. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 const fail = (error: TagWriteError) => ({ writes: [], result: { ok: false, error } }) as const;
@@ -126,12 +130,13 @@ export async function renameTag(
 ): Promise<TagResult> {
   const parsed = renameTagInputSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: 'invalid' };
-  const { id, name } = parsed.data;
+  const { id, name, expectedUpdatedAt } = parsed.data;
   try {
     return await writeInTransaction<TagResult>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
       const existing = data.tags.find((tag) => tag.id === id);
       if (existing === undefined) return fail('notFound');
+      if (movedSince(existing, expectedUpdatedAt)) return fail('conflict');
       if (existing.name === name) return { writes: [], result: { ok: true } };
       const others = data.tags.filter((tag) => tag.id !== id);
       if (!canCreateTag(others, name)) return fail('taken');
@@ -192,7 +197,7 @@ export async function mergeTags(
 ): Promise<TagResult> {
   const parsed = mergeTagsInputSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: 'invalid' };
-  const { sourceId, targetId } = parsed.data;
+  const { sourceId, targetId, expectedUpdatedAt } = parsed.data;
   if (sourceId === targetId) return { ok: false, error: 'invalid' };
   try {
     return await writeInTransaction<TagResult>(db, userId, now, async (tx) => {
@@ -201,6 +206,7 @@ export async function mergeTags(
       if (source === undefined || !data.tags.some((tag) => tag.id === targetId)) {
         return fail('notFound');
       }
+      if (movedSince(source, expectedUpdatedAt)) return fail('conflict');
       return {
         writes: [
           ...retagged(data, sourceId, (tagIds) => [
@@ -227,6 +233,8 @@ export async function deleteTag(
   userId: string,
   id: string,
   now: Date,
+  /** §17.4.2: the version the caller read; none checks nothing. */
+  expectedUpdatedAt?: string,
 ): Promise<TagResult> {
   if (id === '') return { ok: false, error: 'invalid' };
   try {
@@ -234,6 +242,7 @@ export async function deleteTag(
       const data = await readUserData(tx, userId);
       const existing = data.tags.find((tag) => tag.id === id);
       if (existing === undefined) return fail('notFound');
+      if (movedSince(existing, expectedUpdatedAt)) return fail('conflict');
       return {
         writes: [
           ...retagged(data, id, (tagIds) => tagIds.filter((each) => each !== id)),

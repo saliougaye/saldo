@@ -14,7 +14,7 @@ import type { ServerDatabase } from '../db/types';
 import { readUserData } from '../userData/read';
 import { tombstoned, unstamped } from './rows';
 import type { WriteError } from './transactions';
-import { WriteRefused, writeInTransaction } from './writeChanges';
+import { movedSince, WriteRefused, writeInTransaction } from './writeChanges';
 
 export type BudgetWriteError = WriteError | 'taken';
 
@@ -35,6 +35,8 @@ export const budgetInputSchema = z.object({
     .nullable(),
   rollover: z.boolean(),
   icon: z.string().min(1).max(40),
+  /** §17.4.2: the version the caller read the row at; a row that moved since is a `conflict`. */
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 export type BudgetInput = z.infer<typeof budgetInputSchema>;
@@ -73,6 +75,9 @@ export async function saveBudget(
       const existing =
         input.id === null ? null : (data.budgets.find((row) => row.id === input.id) ?? null);
       if (input.id !== null && existing === null) return fail('notFound');
+      if (existing !== null && movedSince(existing, input.expectedUpdatedAt)) {
+        return fail('conflict');
+      }
 
       const gap = budgetStepMissing('details', input, minorDigits);
       if (gap !== null) return { writes: [], result: { ok: false, missing: gap } };
@@ -130,12 +135,17 @@ export async function deleteBudget(
   userId: string,
   id: string,
   now: Date,
+  /** §17.4.2: the version the caller read; none checks nothing. */
+  expectedUpdatedAt?: string,
 ): Promise<BudgetResult> {
   try {
     return await writeInTransaction<BudgetResult>(db, userId, now, async (tx) => {
       const data = await readUserData(tx, userId);
       const existing = data.budgets.find((row) => row.id === id);
       if (existing === undefined) return { writes: [], result: { ok: false, error: 'notFound' } };
+      if (movedSince(existing, expectedUpdatedAt)) {
+        return { writes: [], result: { ok: false, error: 'conflict' } };
+      }
       return {
         writes: [
           {
