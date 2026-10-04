@@ -1620,7 +1620,7 @@ export const de: Messages = {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
       error_notFound: 'Dieser Eintrag existiert nicht mehr. Aktualisiere die Seite.',
       error_conflict:
-        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+        'Er wurde auf einem anderen Gerät geändert, nachdem du ihn geöffnet hast. Lade die Seite neu, um die Änderungen zu sehen, und versuche es noch einmal.',
       error_holdsGoals: 'Es gibt noch offene Ziele: Schließe sie, bevor du das Konto archivierst.',
       error_parentArchived: 'Das Konto des Ziels ist archiviert: Stelle es zuerst wieder her.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
@@ -1638,7 +1638,7 @@ export const de: Messages = {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
       error_notFound: 'Dieses Budget existiert nicht mehr. Aktualisiere die Seite.',
       error_conflict:
-        'Es wurde auf einem anderen Gerät geändert. Öffne es erneut und versuche es noch einmal.',
+        'Es wurde auf einem anderen Gerät geändert, nachdem du es geöffnet hast. Lade die Seite neu, um die Änderungen zu sehen, und versuche es noch einmal.',
       error_taken: '„{{name}}“ ist bereits in einem anderen Budget.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
       allBudgets: 'Alle Budgets',
@@ -1647,7 +1647,7 @@ export const de: Messages = {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
       error_notFound: 'Diese Kategorie existiert nicht mehr. Aktualisiere die Seite.',
       error_conflict:
-        'Sie wurde auf einem anderen Gerät geändert. Öffne sie erneut und versuche es noch einmal.',
+        'Sie wurde auf einem anderen Gerät geändert, nachdem du sie geöffnet hast. Lade die Seite neu, um die Änderungen zu sehen, und versuche es noch einmal.',
       error_parentInvalid: 'Diese übergeordnete Kategorie passt nicht: Wähle eine andere.',
       error_moveInvalid:
         'Die Transaktionen lassen sich nicht in diese Kategorie verschieben: Wähle eine andere.',
@@ -1659,7 +1659,7 @@ export const de: Messages = {
       error_invalid: 'Speichern nicht möglich: Prüfe den Namen und versuche es erneut.',
       error_notFound: 'Diesen Tag gibt es nicht mehr. Aktualisiere die Seite.',
       error_conflict:
-        'Er wurde auf einem anderen Gerät geändert. Öffne ihn erneut und versuche es noch einmal.',
+        'Er wurde auf einem anderen Gerät geändert, nachdem du ihn geöffnet hast. Lade die Seite neu, um die Änderungen zu sehen, und versuche es noch einmal.',
       error_unexpected: 'Etwas ist schiefgelaufen. Versuche es erneut.',
     },
     data: {
@@ -1781,7 +1781,7 @@ export const de: Messages = {
         'Diese Buchung gibt es nicht mehr: Vielleicht wurde sie auf einem anderen Gerät gelöscht.',
       error_closedGoal: 'Sie betrifft ein abgeschlossenes Ziel, das sich nicht mehr ändern lässt.',
       error_conflict:
-        'Ein anderes Gerät hat sie im selben Moment geändert. Versuche es noch einmal.',
+        'Sie wurde auf einem anderen Gerät geändert, nachdem du sie geöffnet hast. Lade die Seite neu, um die Änderungen zu sehen, und versuche es noch einmal.',
       noCategories: 'Keine Kategorien dieser Art. Lege eine im Profil an.',
       noAccounts: 'Keine Konten. Lege eines unter Konten an.',
       error_unexpected: 'Etwas ist schiefgegangen. Versuch es noch einmal.',

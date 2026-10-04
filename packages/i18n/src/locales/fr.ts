@@ -1621,7 +1621,8 @@ export const fr: Messages = {
     accounts: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',
       error_notFound: 'Cet élément n’existe plus. Actualisez la page.',
-      error_conflict: 'Il a été modifié depuis un autre appareil. Rouvrez-le et réessayez.',
+      error_conflict:
+        'Il a été modifié depuis un autre appareil après son ouverture. Rechargez la page pour voir les modifications, puis réessayez.',
       error_holdsGoals:
         'Il a encore des objectifs ouverts : fermez-les avant d’archiver le compte.',
       error_parentArchived: 'Le compte de l’objectif est archivé : restaurez-le d’abord.',
@@ -1639,7 +1640,8 @@ export const fr: Messages = {
     budgets: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',
       error_notFound: 'Ce budget n’existe plus. Actualisez la page.',
-      error_conflict: 'Il a été modifié depuis un autre appareil. Rouvrez-le et réessayez.',
+      error_conflict:
+        'Il a été modifié depuis un autre appareil après son ouverture. Rechargez la page pour voir les modifications, puis réessayez.',
       error_taken: '« {{name}} » est déjà dans un autre budget.',
       error_unexpected: 'Un problème est survenu. Réessayez.',
       allBudgets: 'Tous les budgets',
@@ -1647,7 +1649,8 @@ export const fr: Messages = {
     categories: {
       error_invalid: 'Enregistrement impossible : vérifiez les champs et réessayez.',
       error_notFound: 'Cette catégorie n’existe plus. Actualisez la page.',
-      error_conflict: 'Elle a été modifiée depuis un autre appareil. Rouvrez-la et réessayez.',
+      error_conflict:
+        'Elle a été modifiée depuis un autre appareil après son ouverture. Rechargez la page pour voir les modifications, puis réessayez.',
       error_parentInvalid: 'Cette catégorie parente ne convient pas : choisissez-en une autre.',
       error_moveInvalid:
         'Les transactions ne peuvent pas passer dans cette catégorie : choisissez-en une autre.',
@@ -1657,7 +1660,8 @@ export const fr: Messages = {
     tags: {
       error_invalid: 'Enregistrement impossible : vérifiez le nom et réessayez.',
       error_notFound: 'Ce tag n’existe plus. Actualisez la page.',
-      error_conflict: 'Il a été modifié depuis un autre appareil. Rouvrez-le et réessayez.',
+      error_conflict:
+        'Il a été modifié depuis un autre appareil après son ouverture. Rechargez la page pour voir les modifications, puis réessayez.',
       error_unexpected: 'Une erreur s’est produite. Réessayez.',
     },
     data: {
@@ -1777,7 +1781,8 @@ export const fr: Messages = {
       error_notFound:
         'Cette transaction n’existe plus : un autre appareil l’a peut-être supprimée.',
       error_closedGoal: 'Elle touche un objectif clôturé, qui ne peut plus être modifié.',
-      error_conflict: 'Un autre appareil l’a modifiée au même moment. Réessayez.',
+      error_conflict:
+        'Elle a été modifiée depuis un autre appareil après son ouverture. Rechargez la page pour voir les modifications, puis réessayez.',
       noCategories: 'Aucune catégorie de ce type. Ajoutez-en une depuis le Profil.',
       noAccounts: 'Aucun compte. Ajoutez-en un depuis Comptes.',
       error_unexpected: 'Quelque chose s’est mal passé. Réessaie.',

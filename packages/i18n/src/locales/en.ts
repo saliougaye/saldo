@@ -1599,7 +1599,8 @@ export const en: Messages = {
     accounts: {
       error_invalid: 'Couldn’t save: check the fields and try again.',
       error_notFound: 'This item no longer exists. Refresh the page.',
-      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_conflict:
+        'It was changed on another device after you opened it. Reload the page to see the changes, then try again.',
       error_holdsGoals: 'It still has open goals: close them before archiving the account.',
       error_parentArchived: 'The goal’s account is archived: restore it first.',
       error_unexpected: 'Something went wrong. Try again.',
@@ -1616,7 +1617,8 @@ export const en: Messages = {
     budgets: {
       error_invalid: 'Couldn’t save: check the fields and try again.',
       error_notFound: 'This budget no longer exists. Refresh the page.',
-      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_conflict:
+        'It was changed on another device after you opened it. Reload the page to see the changes, then try again.',
       error_taken: '“{{name}}” is already in another budget.',
       error_unexpected: 'Something went wrong. Try again.',
       allBudgets: 'All budgets',
@@ -1624,7 +1626,8 @@ export const en: Messages = {
     categories: {
       error_invalid: 'Couldn’t save: check the fields and try again.',
       error_notFound: 'This category no longer exists. Refresh the page.',
-      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_conflict:
+        'It was changed on another device after you opened it. Reload the page to see the changes, then try again.',
       error_parentInvalid: 'That parent doesn’t work: pick another one.',
       error_moveInvalid: 'The transactions can’t move to that category: pick another one.',
       error_parentArchived: 'The parent category is archived: restore it first.',
@@ -1633,7 +1636,8 @@ export const en: Messages = {
     tags: {
       error_invalid: 'Couldn’t save: check the name and try again.',
       error_notFound: 'This tag no longer exists. Refresh the page.',
-      error_conflict: 'It was changed on another device. Reopen it and try again.',
+      error_conflict:
+        'It was changed on another device after you opened it. Reload the page to see the changes, then try again.',
       error_unexpected: 'Something went wrong. Try again.',
     },
     data: {
@@ -1750,7 +1754,8 @@ export const en: Messages = {
       error_invalid: 'We couldn’t read the form. Reload the page and try again.',
       error_notFound: 'This transaction is gone: another device may have deleted it.',
       error_closedGoal: 'It touches a closed goal, which can no longer be changed.',
-      error_conflict: 'Another device changed it at the same moment. Try again.',
+      error_conflict:
+        'It was changed on another device after you opened it. Reload the page to see the changes, then try again.',
       noCategories: 'No categories of this kind. Add one from Profile.',
       noAccounts: 'No accounts. Add one from Accounts.',
       error_unexpected: 'Something went wrong. Try again.',

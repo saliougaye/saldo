@@ -1599,7 +1599,8 @@ export const sv: Messages = {
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
       error_notFound: 'Det här finns inte längre. Uppdatera sidan.',
-      error_conflict: 'Det ändrades på en annan enhet. Öppna det igen och försök på nytt.',
+      error_conflict:
+        'Det ändrades på en annan enhet efter att du öppnade det. Ladda om sidan för att se ändringarna och försök igen.',
       error_holdsGoals: 'Det har fortfarande öppna mål: stäng dem innan du arkiverar kontot.',
       error_parentArchived: 'Målets konto är arkiverat: återställ det först.',
       error_unexpected: 'Något gick fel. Försök igen.',
@@ -1616,7 +1617,8 @@ export const sv: Messages = {
     budgets: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
       error_notFound: 'Den här budgeten finns inte längre. Uppdatera sidan.',
-      error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
+      error_conflict:
+        'Den ändrades på en annan enhet efter att du öppnade den. Ladda om sidan för att se ändringarna och försök igen.',
       error_taken: '”{{name}}” ingår redan i en annan budget.',
       error_unexpected: 'Något gick fel. Försök igen.',
       allBudgets: 'Alla budgetar',
@@ -1624,7 +1626,8 @@ export const sv: Messages = {
     categories: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
       error_notFound: 'Den här kategorin finns inte längre. Uppdatera sidan.',
-      error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
+      error_conflict:
+        'Den ändrades på en annan enhet efter att du öppnade den. Ladda om sidan för att se ändringarna och försök igen.',
       error_parentInvalid: 'Den överordnade kategorin fungerar inte: välj en annan.',
       error_moveInvalid: 'Transaktionerna kan inte flyttas till den kategorin: välj en annan.',
       error_parentArchived: 'Den överordnade kategorin är arkiverad: återställ den först.',
@@ -1633,7 +1636,8 @@ export const sv: Messages = {
     tags: {
       error_invalid: 'Det gick inte att spara: kontrollera namnet och försök igen.',
       error_notFound: 'Den här taggen finns inte längre. Uppdatera sidan.',
-      error_conflict: 'Den ändrades på en annan enhet. Öppna den igen och försök på nytt.',
+      error_conflict:
+        'Den ändrades på en annan enhet efter att du öppnade den. Ladda om sidan för att se ändringarna och försök igen.',
       error_unexpected: 'Något gick fel. Försök igen.',
     },
     data: {
@@ -1751,7 +1755,8 @@ export const sv: Messages = {
       error_invalid: 'Vi kunde inte läsa formuläret. Ladda om sidan och försök igen.',
       error_notFound: 'Transaktionen finns inte längre: kanske raderades den på en annan enhet.',
       error_closedGoal: 'Den rör ett avslutat mål, som inte längre kan ändras.',
-      error_conflict: 'En annan enhet ändrade den i samma stund. Försök igen.',
+      error_conflict:
+        'Den ändrades på en annan enhet efter att du öppnade den. Ladda om sidan för att se ändringarna och försök igen.',
       noCategories: 'Inga kategorier av den här typen. Lägg till en under Profil.',
       noAccounts: 'Inga konton. Lägg till ett under Konton.',
       error_unexpected: 'Något gick fel. Försök igen.',

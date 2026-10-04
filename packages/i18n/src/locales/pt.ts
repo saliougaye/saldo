@@ -1606,7 +1606,8 @@ export const pt: Messages = {
     accounts: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',
       error_notFound: 'Este item já não existe. Atualiza a página.',
-      error_conflict: 'Foi alterado noutro dispositivo. Abre-o de novo e tenta outra vez.',
+      error_conflict:
+        'Foi alterado noutro dispositivo depois de o abrires. Recarrega a página para veres as alterações e tenta outra vez.',
       error_holdsGoals: 'Ainda tem objetivos abertos: fecha-os antes de arquivar a conta.',
       error_parentArchived: 'A conta do objetivo está arquivada: restaura-a primeiro.',
       error_unexpected: 'Algo correu mal. Tenta novamente.',
@@ -1623,7 +1624,8 @@ export const pt: Messages = {
     budgets: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',
       error_notFound: 'Este orçamento já não existe. Atualiza a página.',
-      error_conflict: 'Foi alterado noutro dispositivo. Abre-o de novo e tenta outra vez.',
+      error_conflict:
+        'Foi alterado noutro dispositivo depois de o abrires. Recarrega a página para veres as alterações e tenta outra vez.',
       error_taken: '«{{name}}» já está noutro orçamento.',
       error_unexpected: 'Algo correu mal. Tenta novamente.',
       allBudgets: 'Todos os orçamentos',
@@ -1631,7 +1633,8 @@ export const pt: Messages = {
     categories: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta de novo.',
       error_notFound: 'Esta categoria já não existe. Atualiza a página.',
-      error_conflict: 'Foi alterada noutro dispositivo. Abre-a de novo e tenta outra vez.',
+      error_conflict:
+        'Foi alterada noutro dispositivo depois de a abrires. Recarrega a página para veres as alterações e tenta outra vez.',
       error_parentInvalid: 'Essa categoria principal não serve: escolhe outra.',
       error_moveInvalid: 'As transações não podem passar para essa categoria: escolhe outra.',
       error_parentArchived: 'A categoria principal está arquivada: restaura-a primeiro.',
@@ -1640,7 +1643,8 @@ export const pt: Messages = {
     tags: {
       error_invalid: 'Não foi possível guardar: verifica o nome e tenta de novo.',
       error_notFound: 'Esta etiqueta já não existe. Atualiza a página.',
-      error_conflict: 'Foi alterada noutro dispositivo. Abre-a de novo e tenta outra vez.',
+      error_conflict:
+        'Foi alterada noutro dispositivo depois de a abrires. Recarrega a página para veres as alterações e tenta outra vez.',
       error_unexpected: 'Algo correu mal. Tenta de novo.',
     },
     data: {
@@ -1759,7 +1763,8 @@ export const pt: Messages = {
       error_notFound:
         'Esta transação já não existe: talvez tenha sido eliminada noutro dispositivo.',
       error_closedGoal: 'Afeta um objetivo fechado, que já não pode ser alterado.',
-      error_conflict: 'Outro dispositivo alterou-a no mesmo momento. Tente de novo.',
+      error_conflict:
+        'Foi alterada noutro dispositivo depois de a abrir. Recarregue a página para ver as alterações e tente de novo.',
       noCategories: 'Não há categorias deste tipo. Adicione uma a partir do Perfil.',
       noAccounts: 'Não há contas. Adicione uma a partir de Contas.',
       error_unexpected: 'Algo correu mal. Tenta outra vez.',
