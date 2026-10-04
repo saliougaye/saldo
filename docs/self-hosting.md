@@ -268,6 +268,27 @@ there is no recovery by email, so a household instance can use anything its memb
 `{id}@passkey.saldo.invalid` instead; the phone offers to replace it at onboarding and from
 Profile → Server and sync, once.
 
+**Signing in on the web with the phone's passkey.** An account made from the phone has one passkey, and it
+belongs to this server's domain (the phone creates it on the server's own `/auth/mobile` page), so the web app accepts
+it too. Face ID is only how the phone lets you use it. Whether a computer can see it depends on where it lives:
+
+- **A Mac or iPad on the same Apple ID with iCloud Keychain on** has it already: «Accedi con passkey» offers it.
+- **Any other computer** (a different Apple ID, Windows, Linux, iCloud Keychain off) has no passkey for this site,
+  so the browser offers **«Usa un telefono»** with a QR code. Scan it with the phone's camera, confirm with Face ID,
+  and the browser is signed in. The passkey never leaves the phone and nothing has to sync. This is WebAuthn's
+  cross-device flow: Bluetooth must be on at both ends, because the two devices prove they are near each other.
+  Chrome, Edge and Safari support it.
+
+Once in, add that computer's own passkey at `/profile/passkeys` → **«Aggiungi passkey»** (Touch ID, Windows Hello,
+the browser profile), so the next sign-in does not need the phone. Every account should have a second passkey
+anyway: one passkey on one phone means a lost phone is a lost account, unless email recovery is set up (below) or an
+admin steps in.
+
+If the QR flow is not available (Bluetooth off or missing, a browser without cross-device support), what is left is
+recovery by email. It needs SMTP and a **verified** address. An address saved from the phone while the server had no
+SMTP was never sent its link: after configuring SMTP, sign in once and send it from `/profile/account` → **«Invia il
+link di verifica»**. Without either, the way back in is the command line below.
+
 To invite somebody else, mint another code and send it to them. Once you can sign in as an admin, the panel at
 `/admin` does this too (**Inviti**, «Nuovo invito»: the code, a link and a QR, shown once), and so do the accounts
 below (**Account**: promote, revoke, restore, delete). The commands stay the way in when no admin can sign in:
