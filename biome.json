@@ -11,6 +11,8 @@
       "**",
       "!docs/design",
       "!docs/superpowers/mockups",
+      "!docs/superpowers/templates",
+      "!docs/superpowers/specs/**/*.html",
       "!apps/mobile/drizzle",
       "!apps/mobile/assets/mascot",
       "!apps/mobile/.seed-db.cjs",

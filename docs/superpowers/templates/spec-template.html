@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The MCP feature</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#what"><span>01</span>What it is</a></li>
+    <li><a href="#parts"><span>02</span>The parts</a></li>
+    <li><a href="#connect"><span>03</span>Connect a client</a></li>
+    <li><a href="#flow"><span>04</span>The sign-in flow</a></li>
+    <li><a href="#scopes"><span>05</span>Permissions</a></li>
+    <li><a href="#tools"><span>06</span>The tools</a></li>
+    <li><a href="#request"><span>07</span>One request</a></li>
+    <li><a href="#safe"><span>08</span>Safe changes</a></li>
+    <li><a href="#tokens"><span>09</span>Tokens</a></li>
+    <li><a href="#admin"><span>10</span>Admin switch</a></li>
+    <li><a href="#limits"><span>11</span>Limits</a></li>
+    <li><a href="#words"><span>12</span>Words</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo 0.4 · MCP · Explainer</span>
+    <h1>The MCP feature of Saldo</h1>
+    <p>Your AI assistant can read and change your Saldo data. The data stays on your server. Saldo does not keep an AI key and does not call an AI model.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> Spec §17.4</span>
+    <span><b>Date</b> 2026-10-05</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="what" aria-labelledby="h-what">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-what">What it is</h2>
+      <p class="lead">MCP is the Model Context Protocol. It is a standard. An AI client uses it to find and use the tools of a server.</p>
+    </div>
+    <div class="prose">
+      <p>Saldo is an MCP server. Your AI client is the MCP client. The AI model runs in the client, not in Saldo.</p>
+      <p>The client sends a tool call to Saldo. Saldo sends back the result. Saldo never starts the conversation.</p>
+      <div class="callout"><span class="meta">Example</span><p>You ask Claude: “How much did I spend on food this month?” Claude calls <code>spending_by_category</code>. The totals are the same as the totals on the Statistics page, to the cent.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 400" role="img" aria-labelledby="f1t">
+        <title id="f1t">The AI client sends a tool call to the Saldo server over HTTPS. The server reads your data and sends a result. The phone app syncs with the same data.</title>
+        <rect class="bx-dash" x="10" y="60" width="280" height="260" rx="22"/>
+        <text x="150" y="104" text-anchor="middle" class="b" font-size="24">Your AI client</text>
+        <text x="150" y="146" text-anchor="middle" font-size="18" class="tm">Claude Code</text>
+        <text x="150" y="174" text-anchor="middle" font-size="18" class="tm">Claude (Connectors)</text>
+        <text x="150" y="202" text-anchor="middle" font-size="18" class="tm">Cursor</text>
+        <text x="150" y="230" text-anchor="middle" font-size="18" class="tm">Other MCP clients</text>
+        <rect class="bx-r" x="50" y="256" width="200" height="40" rx="20"/>
+        <text x="150" y="282" text-anchor="middle" font-size="16">The AI model is here</text>
+        <line class="ln-ink" x1="300" y1="160" x2="434" y2="160" marker-end="url(#ah-ink)"/>
+        <line class="ln dash" x1="434" y1="218" x2="300" y2="218" marker-end="url(#ah)"/>
+        <text x="367" y="146" text-anchor="middle" font-size="16" class="b">tool call</text>
+        <text x="367" y="246" text-anchor="middle" font-size="16" class="tm">result</text>
+        <text x="367" y="194" text-anchor="middle" font-size="13" class="tf mono">HTTPS + token</text>
+        <rect class="bx" x="444" y="30" width="310" height="320" rx="22"/>
+        <path class="bx-ink" d="M466 30 H732 A22 22 0 0 1 754 52 V92 H444 V52 A22 22 0 0 1 466 30 Z"/>
+        <text x="599" y="70" text-anchor="middle" class="ti b" font-size="22">Your Saldo server</text>
+        <g font-size="17">
+          <rect class="bx-r" x="470" y="112" width="258" height="46" rx="12"/><text x="599" y="141" text-anchor="middle" class="mono">POST /mcp</text>
+          <rect class="bx-r" x="470" y="170" width="258" height="46" rx="12"/><text x="599" y="199" text-anchor="middle">OAuth sign-in + consent</text>
+          <rect class="bx-r" x="470" y="228" width="258" height="46" rx="12"/><text x="599" y="257" text-anchor="middle">25 tools</text>
+          <rect class="bx-ok" x="470" y="286" width="258" height="46" rx="12"/><text x="599" y="315" text-anchor="middle" class="tok b">Your data</text>
+        </g>
+        <line class="ln-ok" x1="768" y1="300" x2="870" y2="300" marker-start="url(#ah-ok)" marker-end="url(#ah-ok)"/>
+        <text x="818" y="286" text-anchor="middle" font-size="16" class="tok b">sync</text>
+        <rect class="bx" x="884" y="176" width="146" height="214" rx="28"/>
+        <rect class="bx-r" x="902" y="206" width="110" height="136" rx="12"/>
+        <text x="957" y="280" text-anchor="middle" class="b" font-size="18">Saldo</text>
+        <text x="957" y="372" text-anchor="middle" class="tm" font-size="15">Phone app</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> The AI client calls Saldo. Saldo does not call the AI client, and it does not send your data to an AI company.</figcaption>
+    </figure>
+    <div class="cards">
+      <div class="card rv"><div class="stat">0</div><h4>AI keys in Saldo</h4><p>The model runs in your client. You pay your AI company, not Saldo.</p></div>
+      <div class="card rv"><div class="stat">1</div><h4>Address to give</h4><p>You give the client one URL: <code>https://your-host/mcp</code>. There is no key to copy.</p></div>
+      <div class="card rv"><div class="stat">2</div><h4>Permission levels</h4><p><b>Read</b> and <b>Write</b>. You select them on the consent page.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="parts" aria-labelledby="h-parts">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-parts">The parts</h2>
+      <p class="lead">The feature has five parts. Each part has one job.</p>
+    </div>
+    <div class="prose">
+      <p>The business rules stay in <code>@saldo/core</code>. The route only loads the data, calls core, and sends the result.</p>
+      <p>A write tool uses the same write functions as the web forms. Thus, an AI client cannot write data that a form cannot write.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 470" role="img" aria-labelledby="f2t">
+        <title id="f2t">Inside the web server: the OAuth server, the screens, the MCP endpoint and the write functions. The endpoint uses the tool catalogue in core. The write functions use PostgreSQL.</title>
+        <rect class="bx-dash" x="6" y="6" width="1028" height="304" rx="22"/>
+        <text x="30" y="40" font-size="15" class="tm mono">apps/web · Next.js server</text>
+        <rect class="bx" x="30" y="62" width="306" height="108" rx="16"/>
+        <text x="52" y="96" font-size="20" class="b">A · OAuth server</text>
+        <text x="52" y="124" font-size="16" class="tm">Better Auth + oauth-provider</text>
+        <text x="52" y="150" font-size="14" class="tf mono">/api/auth/oauth2/*</text>
+        <rect class="bx" x="366" y="62" width="306" height="108" rx="16"/>
+        <text x="388" y="96" font-size="20" class="b">B · Screens</text>
+        <text x="388" y="124" font-size="16" class="tm">Consent, Connectors, Admin</text>
+        <text x="388" y="150" font-size="14" class="tf mono">/oauth/consent …</text>
+        <rect class="bx-ink" x="702" y="62" width="306" height="108" rx="16"/>
+        <text x="724" y="96" font-size="20" class="b ti">C · MCP endpoint</text>
+        <text x="724" y="124" font-size="16" class="ti" opacity=".75">Checks the token, runs a tool</text>
+        <text x="724" y="150" font-size="14" class="ti mono" opacity=".6">POST /mcp</text>
+        <rect class="bx" x="702" y="198" width="306" height="96" rx="16"/>
+        <text x="724" y="232" font-size="20" class="b">D · Write functions</text>
+        <text x="724" y="258" font-size="16" class="tm">Same code as the web forms</text>
+        <text x="724" y="282" font-size="14" class="tf mono">src/server/write/*</text>
+        <line class="ln" x1="855" y1="170" x2="855" y2="194" marker-end="url(#ah)"/>
+        <path class="ln" d="M702 140 C 600 170, 520 250, 470 334" marker-end="url(#ah)"/>
+        <text x="580" y="240" font-size="15" class="tm">read tools</text>
+        <line class="ln" x1="855" y1="294" x2="855" y2="336" marker-end="url(#ah)"/>
+        <rect class="bx-ok" x="30" y="340" width="642" height="112" rx="18"/>
+        <text x="54" y="376" font-size="20" class="b tok">E · Tool catalogue in @saldo/core</text>
+        <text x="54" y="404" font-size="16">Name, description, input and output schemas, hints, read logic.</text>
+        <text x="54" y="430" font-size="16" class="tm">Pure functions with unit tests. No React, no Node, no database.</text>
+        <rect class="bx" x="702" y="340" width="306" height="112" rx="18"/>
+        <text x="724" y="376" font-size="20" class="b">PostgreSQL</text>
+        <text x="724" y="404" font-size="16" class="tm">Your data, hashed tokens,</text>
+        <text x="724" y="428" font-size="16" class="tm">consents, mcp_usage</text>
+      </svg>
+      <figcaption><b>Figure 2.</b> Black is the entry point. Green is the shared rules in core.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Part</th><th scope="col">Job</th><th scope="col">Where</th></tr></thead>
+        <tbody>
+          <tr><td>A · OAuth server</td><td>Registers clients. Gives, refreshes and revokes tokens.</td><td><code>/api/auth/oauth2/*</code></td></tr>
+          <tr><td>B · Screens</td><td>You approve a client. You see and revoke clients. The admin turns MCP on or off.</td><td><code>/oauth/consent</code> <code>/profile/connectors</code> <code>/admin/mcp</code></td></tr>
+          <tr><td>C · MCP endpoint</td><td>Checks the token. Lists the tools for the scope. Runs one tool.</td><td><code>apps/web/app/mcp</code></td></tr>
+          <tr><td>D · Write functions</td><td>Applies the rules of the web forms. Checks the row version.</td><td><code>src/server/write/*</code></td></tr>
+          <tr><td>E · Catalogue</td><td>Tells the model what each tool does. Calculates the read results.</td><td><code>packages/core/src/assistant/</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="connect" aria-labelledby="h-connect">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-connect">Connect a client</h2>
+      <p class="lead">Do this procedure one time for each client. You need a passkey for your Saldo account. The server must use <code>https://</code>.</p>
+    </div>
+    <div class="prose">
+      <h3 style="font-size:17px;margin:0 0 6px">Claude Code</h3>
+      <ol class="steps">
+        <li>In Saldo, go to <b>Profile › Connectors</b>.</li>
+        <li>Copy the endpoint address.</li>
+        <li>In a terminal, type the command below.</li>
+        <li>Send a request, for example “List my accounts”.</li>
+        <li>The browser opens. Sign in with your passkey.</li>
+        <li>Select the permissions. Click <b>Authorize</b>.</li>
+      </ol>
+      <div class="code">
+        <pre><code>claude mcp add --transport http saldo https://your-host/mcp</code></pre>
+        <button class="copy" type="button" aria-label="Copy command" data-copy="claude mcp add --transport http saldo https://your-host/mcp">
+          <svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect class="ico" x="9" y="9" width="11" height="11" rx="2"/><path class="ico" d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+          <svg class="i-check" viewBox="0 0 24 24" aria-hidden="true"><path class="ico" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </button>
+      </div>
+      <h3 style="font-size:17px;margin:20px 0 6px">Claude (app or web)</h3>
+      <ol class="steps">
+        <li>Go to <b>Settings › Connectors › Add custom connector</b>.</li>
+        <li>Paste the endpoint address. Then do steps 5 and 6 above.</li>
+      </ol>
+      <div class="callout"><span class="meta">Other clients</span><p>A client with HTTP and OAuth finds all other data at <code>/.well-known/oauth-protected-resource</code>. For a terminal with no browser, use <code>npx mcp-remote</code>.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage rv">
+      <div>
+        <div class="screen" role="img" aria-label="Illustration of the Connectors page: the endpoint address with a Copy button, client tabs, and two authorized connectors.">
+          <div class="brandline"><i></i>Profile</div>
+          <h5>Connectors</h5>
+          <div class="lbl">Connect</div>
+          <div class="sub">Give this address to your MCP client. There is no key to copy: the client brings you back here, you sign in with your passkey and choose what it may do.</div>
+          <div class="field"><span>https://saldo.example.com/mcp</span><b>Copy</b></div>
+          <div class="seg"><span class="on">Claude Code</span><span>Claude</span><span>Other client</span></div>
+          <div class="field" style="font-size:11px"><span>claude mcp add --transport http saldo …/mcp</span></div>
+          <div class="lbl">Authorized <span>2</span></div>
+          <div class="row"><div class="tile">C</div><div class="grow"><b>Claude Code</b><br><span class="pill">Read</span><span class="pill">Write</span><div class="muted">authorized 3 Oct · used today</div></div><span class="muted">›</span></div>
+          <div class="row"><div class="tile">C</div><div class="grow"><b>Claude</b><br><span class="pill">Read</span><div class="muted">authorized 4 Oct · used yesterday</div></div><span class="muted">›</span></div>
+        </div>
+        <p class="stage-cap">Illustration · Profile › Connectors</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="flow" aria-labelledby="h-flow">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-flow">The sign-in flow</h2>
+      <p class="lead">The client does most steps automatically. You do only two steps: you sign in, and you click <b>Authorize</b>.</p>
+    </div>
+    <div class="prose">
+      <p>The flow is OAuth 2.1 with PKCE. The client registers itself. A registration alone gives no access. A token exists only after your consent.</p>
+      <p>The consent page shows the client name. The client selects this name itself. Thus, the page shows a warning for a new client.</p>
+      <div class="callout caution"><span class="meta">Caution</span><p>Click <b>Authorize</b> only if you started the request a short time before. If you did not start it, click <b>Deny</b>.</p></div>
+      <p>Saldo keeps your consent. The same client does not ask again for the same or fewer permissions. If you clear “Add and change”, the button changes to <b>Authorize reading only</b>.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 900" role="img" aria-labelledby="f3t">
+        <title id="f3t">Sequence of nine steps between you, the AI client, the browser and Saldo, from the first 401 answer to the first tool result.</title>
+        <g font-size="19" text-anchor="middle" class="b">
+          <rect class="bx-ink" x="40" y="10" width="180" height="50" rx="25"/><text x="130" y="42" class="ti">You</text>
+          <rect class="bx" x="290" y="10" width="180" height="50" rx="25"/><text x="380" y="42">AI client</text>
+          <rect class="bx" x="560" y="10" width="180" height="50" rx="25"/><text x="650" y="42">Browser</text>
+          <rect class="bx" x="820" y="10" width="180" height="50" rx="25"/><text x="910" y="42">Saldo</text>
+        </g>
+        <line class="lane" x1="130" y1="60" x2="130" y2="890"/><line class="lane" x1="380" y1="60" x2="380" y2="890"/>
+        <line class="lane" x1="650" y1="60" x2="650" y2="890"/><line class="lane" x1="910" y1="60" x2="910" y2="890"/>
+        <g font-size="16">
+          <circle class="bx" cx="22" cy="100" r="15"/><text x="22" y="106" text-anchor="middle" class="b">1</text>
+          <line class="ln-ink" x1="380" y1="100" x2="904" y2="100" marker-end="url(#ah-ink)"/>
+          <text x="645" y="89" text-anchor="middle">POST /mcp, no token</text>
+          <line class="ln-bad dash" x1="910" y1="138" x2="386" y2="138" marker-end="url(#ah-bad)"/>
+          <text x="645" y="128" text-anchor="middle" class="tbad b">401 · WWW-Authenticate: resource_metadata</text>
+
+          <circle class="bx" cx="22" cy="190" r="15"/><text x="22" y="196" text-anchor="middle" class="b">2</text>
+          <line class="ln-ink" x1="380" y1="190" x2="904" y2="190" marker-end="url(#ah-ink)"/>
+          <text x="645" y="179" text-anchor="middle" class="mono" font-size="14">GET /.well-known/oauth-protected-resource</text>
+          <line class="ln dash" x1="910" y1="226" x2="386" y2="226" marker-end="url(#ah)"/>
+          <text x="645" y="216" text-anchor="middle" class="tm">the OAuth server and the scopes</text>
+
+          <circle class="bx" cx="22" cy="278" r="15"/><text x="22" y="284" text-anchor="middle" class="b">3</text>
+          <line class="ln-ink" x1="380" y1="278" x2="904" y2="278" marker-end="url(#ah-ink)"/>
+          <text x="645" y="267" text-anchor="middle" class="mono" font-size="14">POST /api/auth/oauth2/register</text>
+          <line class="ln dash" x1="910" y1="314" x2="386" y2="314" marker-end="url(#ah)"/>
+          <text x="645" y="304" text-anchor="middle" class="tm">client_id</text>
+
+          <circle class="bx" cx="22" cy="372" r="15"/><text x="22" y="378" text-anchor="middle" class="b">4</text>
+          <line class="ln-ink" x1="380" y1="372" x2="644" y2="372" marker-end="url(#ah-ink)"/>
+          <text x="512" y="361" text-anchor="middle">opens the authorize URL</text>
+          <line class="ln-ink" x1="650" y1="402" x2="904" y2="402" marker-end="url(#ah-ink)"/>
+          <text x="780" y="392" text-anchor="middle" class="tm" font-size="14">PKCE S256 · resource = /mcp</text>
+
+          <circle class="bx-ink" cx="22" cy="466" r="15"/><text x="22" y="472" text-anchor="middle" class="b ti">5</text>
+          <rect class="bx-ink" x="50" y="442" width="160" height="48" rx="24"/>
+          <text x="130" y="472" text-anchor="middle" class="ti b">Sign in · passkey</text>
+          <line class="ln-ink" x1="210" y1="466" x2="644" y2="466" marker-end="url(#ah-ink)"/>
+          <line class="ln-ink" x1="650" y1="466" x2="904" y2="466" marker-end="url(#ah-ink)"/>
+          <text x="780" y="455" text-anchor="middle" class="mono" font-size="14">/login</text>
+
+          <circle class="bx-ink" cx="22" cy="546" r="15"/><text x="22" y="552" text-anchor="middle" class="b ti">6</text>
+          <rect class="bx-ink" x="50" y="522" width="160" height="48" rx="24"/>
+          <text x="130" y="552" text-anchor="middle" class="ti b">Click Authorize</text>
+          <line class="ln-ink" x1="210" y1="546" x2="644" y2="546" marker-end="url(#ah-ink)"/>
+          <line class="ln-ink" x1="650" y1="546" x2="904" y2="546" marker-end="url(#ah-ink)"/>
+          <text x="780" y="535" text-anchor="middle" class="mono" font-size="14">/oauth/consent</text>
+
+          <circle class="bx" cx="22" cy="626" r="15"/><text x="22" y="632" text-anchor="middle" class="b">7</text>
+          <line class="ln dash" x1="910" y1="626" x2="656" y2="626" marker-end="url(#ah)"/>
+          <line class="ln dash" x1="650" y1="626" x2="386" y2="626" marker-end="url(#ah)"/>
+          <text x="645" y="615" text-anchor="middle" class="tm">redirect with a one-time code</text>
+
+          <circle class="bx" cx="22" cy="706" r="15"/><text x="22" y="712" text-anchor="middle" class="b">8</text>
+          <line class="ln-ink" x1="380" y1="706" x2="904" y2="706" marker-end="url(#ah-ink)"/>
+          <text x="645" y="695" text-anchor="middle" class="mono" font-size="14">POST /api/auth/oauth2/token · code + verifier</text>
+          <line class="ln-ok dash" x1="910" y1="742" x2="386" y2="742" marker-end="url(#ah-ok)"/>
+          <text x="645" y="732" text-anchor="middle" class="tok b">access token (1 h) + refresh token (180 days)</text>
+
+          <circle class="bx-ok" cx="22" cy="808" r="15"/><text x="22" y="814" text-anchor="middle" class="b tok">9</text>
+          <line class="ln-ok" x1="380" y1="808" x2="904" y2="808" marker-end="url(#ah-ok)"/>
+          <text x="645" y="797" text-anchor="middle">POST /mcp · Authorization: Bearer …</text>
+          <line class="ln-ok dash" x1="910" y1="846" x2="386" y2="846" marker-end="url(#ah-ok)"/>
+          <text x="645" y="836" text-anchor="middle" class="tok b">tool result</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 3.</b> Outlined number: automatic step. Black number: your step. Green: normal use after the flow.</figcaption>
+    </figure>
+    <div class="stage rv">
+      <div>
+        <div class="screen" role="img" aria-label="Illustration of the consent page: a client card, a warning for a new client, two permissions, and the Authorize and Deny buttons.">
+          <div class="brandline"><i></i>Saldo</div>
+          <h5>An app asks to connect</h5>
+          <div class="clientcard"><div class="tile">C</div><div><b>Claude Code</b><div class="muted">returns to 127.0.0.1 · registered just now</div></div></div>
+          <div class="fresh"><b>The first time you see this app</b>The app chooses its own name. Trust it only if you started this request a moment ago.</div>
+          <div class="lbl">What it can do on your behalf:</div>
+          <div class="scope"><div class="bx">✓</div><div><b>Read your data</b> <span class="muted">required</span><small>Accounts and balances, transactions, budgets, goals, statistics and forecasts.</small></div></div>
+          <div class="scope"><div class="bx">✓</div><div><b>Add and change</b><small>Under the same rules as the forms. It cannot touch recurrences or attachments.</small></div></div>
+          <div class="muted" style="margin-top:6px">Signed in as mario@example.com · Not you?</div>
+          <span class="btn p">Authorize</span><span class="btn">Deny</span>
+        </div>
+        <p class="stage-cap">Illustration · /oauth/consent</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="scopes" aria-labelledby="h-scopes">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-scopes">Permissions</h2>
+      <p class="lead">A token has one or two scopes. The scope controls the tools that the client can see.</p>
+    </div>
+    <div class="prose">
+      <p>With only <code>read</code>, the client does not see the write tools in the tool list.</p>
+      <p>If a client calls a write tool with a read-only token, Saldo sends HTTP 403 and the error <code>insufficient_scope</code>.</p>
+      <div class="callout"><span class="meta">Note</span><p>A third scope, <code>offline_access</code>, is hidden. The consent page does not show it. It is necessary for the refresh token.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 320" role="img" aria-labelledby="f4t">
+        <title id="f4t">Two scopes. Read: always on, 11 tools that do not change data. Write: optional, 14 tools that add, change or delete.</title>
+        <rect class="bx" x="10" y="10" width="500" height="300" rx="22"/>
+        <g transform="translate(46 40)" style="color:var(--text)"><circle cx="28" cy="28" r="28" class="bx-r"/><g transform="translate(14 14)"><path class="ico" d="M2 14s4.5-8 12-8 12 8 12 8-4.5 8-12 8S2 14 2 14z"/><circle class="ico" cx="14" cy="14" r="3.5"/></g></g>
+        <text x="46" y="146" font-size="34" class="b mono">read</text>
+        <text x="46" y="180" font-size="18" class="tm">“Read your data” · always on</text>
+        <text x="46" y="240" font-size="44" class="b">11</text><text x="106" y="240" font-size="18">tools. They do not change data.</text>
+        <text x="46" y="276" font-size="16" class="tm">Accounts, transactions, budgets, goals, statistics.</text>
+
+        <rect class="bx-ink" x="530" y="10" width="500" height="300" rx="22"/>
+        <g transform="translate(566 40)" style="color:var(--bg)"><circle cx="28" cy="28" r="28" fill="currentColor" opacity=".14"/><g transform="translate(15 15)"><path class="ico" d="M4 22l1-5L18 4l4 4L9 21l-5 1z"/><path class="ico" d="M15 7l4 4"/></g></g>
+        <text x="566" y="146" font-size="34" class="b mono ti">write</text>
+        <text x="566" y="180" font-size="18" class="ti" opacity=".7">“Add and change” · optional</text>
+        <text x="566" y="240" font-size="44" class="b ti">14</text><text x="628" y="240" font-size="18" class="ti">tools. They add, change or delete.</text>
+        <text x="566" y="276" font-size="16" class="ti" opacity=".7">Your client asks you before each change.</text>
+      </svg>
+      <figcaption><b>Figure 4.</b> You can refuse <code>write</code> on the consent page. You cannot refuse <code>read</code>.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="tools" aria-labelledby="h-tools">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-tools">The tools</h2>
+      <p class="lead">Each tool has a name, a description for the model, and an input and output schema.</p>
+    </div>
+    <div class="prose">
+      <p><b>Amounts.</b> Saldo keeps money as integers in minor units. A tool sends three fields. The model reads <code>amount</code>. For calculations, the model uses <code>minor</code>.</p>
+      <p><b>Dates.</b> All dates are <code>YYYY-MM-DD</code>. “Today” is the date in your time zone.</p>
+      <p><b>Periods.</b> Use <code>"current"</code>, <code>"previous"</code>, a date in the period, or <code>from</code> and <code>to</code>. Your cycle day sets the start of a period.</p>
+      <p><b>Links.</b> <code>get_preferences</code> gives the links of the web app. After a change, the model can give you a link to the row.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="split2">
+      <div class="card rv">
+        <span class="meta">Read · 11</span>
+        <div class="chips">
+          <span class="chip">get_preferences</span><span class="chip">list_accounts</span><span class="chip">list_categories</span><span class="chip">list_tags</span>
+          <span class="chip">list_transactions</span><span class="chip">get_period_summary</span><span class="chip">spending_by_category</span>
+          <span class="chip">list_budgets</span><span class="chip">list_goals</span><span class="chip">list_upcoming</span><span class="chip">get_forecast</span>
+        </div>
+        <p>Each read tool gives the same numbers as a page of the app. A parity test makes sure of this.</p>
+      </div>
+      <div class="card rv">
+        <span class="meta">Write · 14</span>
+        <div class="chips">
+          <span class="chip">save_transaction</span><span class="chip">delete_transaction</span><span class="chip">save_account</span><span class="chip">archive_account</span>
+          <span class="chip">save_category</span><span class="chip">archive_category</span><span class="chip">save_tag</span><span class="chip">merge_tags</span>
+          <span class="chip">delete_tag</span><span class="chip">save_budget</span><span class="chip">delete_budget</span><span class="chip">save_goal</span>
+          <span class="chip">move_goal_money</span><span class="chip">close_goal</span>
+        </div>
+        <p>The write tools do only what the web forms do. Recurrences and attachments are not available.</p>
+      </div>
+    </div>
+    <figure class="rv">
+<pre class="json"><span class="k">{</span>
+  <span class="k">"id":</span> <span class="s">"tx_8f2c…"</span>,
+  <span class="k">"date":</span> <span class="s">"2026-10-04"</span>,
+  <span class="k">"kind":</span> <span class="s">"expense"</span>,
+  <span class="k">"amount": {</span>
+    <span class="k">"minor":</span> 12345,
+    <span class="k">"currency":</span> <span class="s">"EUR"</span>,
+    <span class="k">"amount":</span> <span class="s">"123.45"</span>
+  <span class="k">},</span>
+  <span class="k">"category":</span> <span class="s">"Groceries"</span>,
+  <span class="k">"updatedAt":</span> <span class="s">"2026-10-04T09:12:44Z"</span>
+<span class="k">}</span></pre>
+      <figcaption><b>Figure 5.</b> One transaction, as a read tool sends it. The <code>updatedAt</code> field is necessary for a later change (see section 08).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="request" aria-labelledby="h-request">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-request">One request</h2>
+      <p class="lead">Each request is independent. Saldo does not keep a session. It checks the token, does the work, and forgets the request.</p>
+    </div>
+    <div class="prose">
+      <p>Saldo builds a new MCP server for each request. It registers only the tools that the scope of the token permits.</p>
+      <p>A tool always sends <code>structuredContent</code> and the same JSON as text. A refused change is a tool error with a clear message. It is never a crash or an HTTP 500.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 430" role="img" aria-labelledby="f6t">
+        <title id="f6t">Pipeline of one request: check the token, load the data, build the server, then run a read tool or a write tool, then send the answer.</title>
+        <g font-size="17" text-anchor="middle">
+          <rect class="bx-ink" x="6" y="44" width="170" height="116" rx="18"/>
+          <text x="91" y="94" class="b ti mono" font-size="18">POST /mcp</text>
+          <text x="91" y="122" class="ti" opacity=".7">Bearer token</text>
+          <line class="ln-ink" x1="180" y1="102" x2="214" y2="102" marker-end="url(#ah-ink)"/>
+          <rect class="bx" x="218" y="18" width="240" height="168" rx="18"/>
+          <text x="338" y="52" class="b" font-size="19">1 · Check token</text>
+          <g text-anchor="start" font-size="15">
+            <text x="238" y="82">✓ hash found, not expired</text>
+            <text x="238" y="104">✓ not revoked</text>
+            <text x="238" y="126">✓ audience is /mcp</text>
+            <text x="238" y="148">✓ consent still on file</text>
+            <text x="238" y="170">✓ MCP switch is on</text>
+          </g>
+          <line class="ln-ink" x1="462" y1="102" x2="492" y2="102" marker-end="url(#ah-ink)"/>
+          <rect class="bx" x="496" y="44" width="226" height="116" rx="18"/>
+          <text x="609" y="82" class="b" font-size="19">2 · Load data</text>
+          <text x="609" y="110" class="tm mono" font-size="14">loadUserData</text>
+          <text x="609" y="134" class="tm mono" font-size="14">todayFor(timeZone)</text>
+          <line class="ln-ink" x1="726" y1="102" x2="756" y2="102" marker-end="url(#ah-ink)"/>
+          <rect class="bx" x="760" y="44" width="274" height="116" rx="18"/>
+          <text x="897" y="82" class="b" font-size="19">3 · Build server</text>
+          <text x="897" y="110" class="tm">Register the tools</text>
+          <text x="897" y="134" class="tm">that the scope permits</text>
+          <path class="ln-ink" d="M897 164 V210 H300 V238" marker-end="url(#ah-ink)"/>
+          <path class="ln-ink" d="M760 210 V238" marker-end="url(#ah-ink)"/>
+          <rect class="bx-ok" x="110" y="244" width="380" height="110" rx="18"/>
+          <text x="300" y="280" class="b tok" font-size="19">4a · Read tool</text>
+          <text x="300" y="308" class="mono" font-size="14">run(data, { today, timeZone }, input)</text>
+          <text x="300" y="332" class="tm" font-size="15">a pure function in @saldo/core</text>
+          <rect class="bx" x="550" y="244" width="420" height="110" rx="18"/>
+          <text x="760" y="280" class="b" font-size="19">4b · Write tool</text>
+          <text x="760" y="308" font-size="15">resolver in core → web write function</text>
+          <text x="760" y="332" class="tm" font-size="15">one transaction + version check</text>
+          <rect class="bx-r" x="110" y="376" width="860" height="44" rx="22"/>
+          <text x="540" y="404" font-size="16">5 · Answer: <tspan class="mono" font-size="14">structuredContent</tspan> + the same JSON as text</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 6.</b> The route is thin. The rules are in core and in the write functions.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="safe" aria-labelledby="h-safe">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-safe">Safe changes</h2>
+      <p class="lead">An AI client reads a row. Some minutes later, it changes the row. In this time, your phone can change the same row.</p>
+    </div>
+    <div class="prose">
+      <p>Saldo must not lose the change from the phone. Thus, each change sends back the <code>updatedAt</code> that the client read.</p>
+      <p>If the row changed after the read, Saldo refuses the change. The message is “changed after you read it”. Saldo writes nothing. The client must read the row again.</p>
+      <p><b>Partial updates.</b> An update sends the id, the <code>updatedAt</code> and only the changed fields. Saldo keeps all other fields.</p>
+      <p><b>Web forms too.</b> The web forms use the same check. A form does not overwrite a newer change from the phone. It tells you to reload the page.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 400" role="img" aria-labelledby="f7t">
+        <title id="f7t">Timeline. 10:00 the AI reads a row. 10:02 the phone changes it. 10:05 the AI write with the old version is refused. Then the AI reads again and writes.</title>
+        <line class="ln" x1="30" y1="200" x2="1020" y2="200" marker-end="url(#ah)"/>
+        <text x="1020" y="230" text-anchor="end" font-size="15" class="tf">time</text>
+        <g font-size="16" text-anchor="middle">
+          <circle class="bx-ink" cx="150" cy="200" r="11"/>
+          <line class="ln" x1="150" y1="160" x2="150" y2="189"/>
+          <rect class="bx" x="40" y="44" width="220" height="116" rx="16"/>
+          <text x="150" y="76" class="b">10:00 · AI reads</text>
+          <text x="150" y="104" class="mono tm" font-size="14">list_transactions</text>
+          <text x="150" y="132" class="mono" font-size="14">updatedAt 10:00</text>
+
+          <circle class="bx-ink" cx="400" cy="200" r="11"/>
+          <line class="ln" x1="400" y1="211" x2="400" y2="240"/>
+          <rect class="bx" x="290" y="240" width="220" height="116" rx="16"/>
+          <text x="400" y="272" class="b">10:02 · Phone edits</text>
+          <text x="400" y="300" class="tm">€12.00 → €15.00</text>
+          <text x="400" y="328" class="mono" font-size="14">updatedAt 10:02</text>
+
+          <circle cx="650" cy="200" r="11" style="fill:var(--bad)"/>
+          <line class="ln-bad" x1="650" y1="160" x2="650" y2="189"/>
+          <rect class="bx-bad" x="530" y="30" width="240" height="130" rx="16"/>
+          <text x="650" y="62" class="b tbad">10:05 · AI writes</text>
+          <text x="650" y="88" class="mono" font-size="14">save_transaction</text>
+          <text x="650" y="112" class="mono" font-size="14">updatedAt 10:00</text>
+          <text x="650" y="142" class="b tbad">✗ refused · nothing written</text>
+
+          <circle cx="893" cy="200" r="11" style="fill:var(--ok)"/>
+          <line class="ln-ok" x1="893" y1="211" x2="893" y2="240"/>
+          <rect class="bx-ok" x="780" y="240" width="226" height="116" rx="16"/>
+          <text x="893" y="272" class="b tok">10:06 · AI reads again</text>
+          <text x="893" y="300">sees €15.00, 10:02</text>
+          <text x="893" y="328" class="b tok">✓ then writes</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 7.</b> The version check protects the change from the phone.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="tokens" aria-labelledby="h-tokens">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-tokens">Tokens</h2>
+      <p class="lead">Tokens are opaque strings. Saldo keeps only a SHA-256 hash of each token and checks the token on each call.</p>
+    </div>
+    <div class="prose">
+      <p>An access token is valid for 1 hour. The client uses the refresh token to get a new one. Each refresh gives a new refresh token. If the client does not use it for 180 days, the authorization ends.</p>
+      <p>There is no JWT. Thus, a revocation is immediate. There is no wait for expiry.</p>
+      <div class="callout caution"><span class="meta">Security</span><p>Saldo does not accept a token in the URL. Saldo does not write tokens to the logs. If you sign out of the web app, your MCP clients continue to work. To stop a client, use <b>Revoke access</b>.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 380" role="img" aria-labelledby="f8t">
+        <title id="f8t">Access tokens last one hour each. The refresh token lasts 180 days and rotates on each use. Revoke access deletes the consent and all tokens; the next call is a 401.</title>
+        <text x="10" y="52" font-size="17" class="b">Access token</text>
+        <g font-size="14" text-anchor="middle">
+          <rect class="bx-ink" x="190" y="30" width="120" height="34" rx="17"/><text x="250" y="52" class="ti">1 hour</text>
+          <rect class="bx-ink" x="316" y="30" width="120" height="34" rx="17"/><text x="376" y="52" class="ti">1 hour</text>
+          <rect class="bx-ink" x="442" y="30" width="120" height="34" rx="17"/><text x="502" y="52" class="ti">1 hour</text>
+          <rect class="bx-r" x="568" y="30" width="120" height="34" rx="17"/><text x="628" y="52" class="tm">…</text>
+        </g>
+        <text x="10" y="122" font-size="17" class="b">Refresh token</text>
+        <rect class="bx-ok" x="190" y="100" width="840" height="34" rx="17"/>
+        <text x="610" y="123" text-anchor="middle" font-size="14" class="tok">180 days · rotated on each use · ends if not used</text>
+        <g><circle class="bx-ink" cx="313" cy="152" r="5"/><circle class="bx-ink" cx="439" cy="152" r="5"/><circle class="bx-ink" cx="565" cy="152" r="5"/></g>
+        <text x="190" y="180" font-size="13" class="tm">● refresh: a new access token and a new refresh token</text>
+        <rect class="bx-bad" x="10" y="206" width="1020" height="164" rx="20"/>
+        <text x="34" y="242" font-size="20" class="b tbad">Revoke access · Profile › Connectors</text>
+        <g font-size="16" text-anchor="middle">
+          <rect class="bx" x="34" y="262" width="288" height="84" rx="14"/><text x="178" y="298">You click Revoke access</text><text x="178" y="322" class="tm">and confirm</text>
+          <line class="ln-bad" x1="330" y1="304" x2="368" y2="304" marker-end="url(#ah-bad)"/>
+          <rect class="bx" x="376" y="262" width="288" height="84" rx="14"/><text x="520" y="298">Saldo deletes the consent</text><text x="520" y="322" class="tm">and all tokens of the pair</text>
+          <line class="ln-bad" x1="672" y1="304" x2="710" y2="304" marker-end="url(#ah-bad)"/>
+          <rect class="bx" x="718" y="262" width="288" height="84" rx="14"/><text x="862" y="298" class="b tbad">Next call: 401</text><text x="862" y="322" class="tm">the client must sign in again</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 8.</b> The life of the tokens, and the effect of a revocation.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="admin" aria-labelledby="h-admin">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">10</span>
+      <h2 id="h-admin">Admin switch</h2>
+      <p class="lead">An admin can turn MCP off for all users of the instance. Go to <b>Admin › MCP</b>.</p>
+    </div>
+    <div class="prose">
+      <p>Before “off”, the page asks for confirmation. It shows how many connectors will stop.</p>
+      <p><b>Environment variable.</b> <code>MCP_ENABLED=true|false</code> has priority over the switch. When it is set, the page shows a lock and the switch is disabled.</p>
+      <p><b>Numbers.</b> The page shows: users with connectors, authorized connectors, and connectors used in the last 7 days. It shows totals only, not client names or user details.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f9t">
+        <title id="f9t">On: the endpoint answers and users can authorize clients. Off: the endpoint answers 404, the consent page refuses, old tokens stop at /mcp, refresh and revoke still work.</title>
+        <rect class="bx" x="10" y="10" width="500" height="310" rx="22"/>
+        <rect class="bx-ink" x="40" y="40" width="88" height="48" rx="24"/><circle cx="104" cy="64" r="18" style="fill:var(--bg)"/>
+        <text x="148" y="74" font-size="26" class="b">On · default</text>
+        <g font-size="18">
+          <text x="44" y="138">✓  /mcp answers</text>
+          <text x="44" y="174">✓  the discovery documents answer</text>
+          <text x="44" y="210">✓  users can authorize new clients</text>
+          <text x="44" y="246">✓  Connectors shows “Connect”</text>
+        </g>
+        <rect class="bx-r" x="530" y="10" width="500" height="310" rx="22"/>
+        <rect class="bx" x="560" y="40" width="88" height="48" rx="24"/><circle cx="584" cy="64" r="18" style="fill:var(--text-faint)"/>
+        <text x="668" y="74" font-size="26" class="b">Off</text>
+        <g font-size="18">
+          <text x="564" y="138"><tspan class="tbad b">✗</tspan>  /mcp and discovery answer 404</text>
+          <text x="564" y="174"><tspan class="tbad b">✗</tspan>  the consent page refuses</text>
+          <text x="564" y="210"><tspan class="tbad b">✗</tspan>  old tokens stop at /mcp</text>
+          <text x="564" y="246">✓  refresh and revoke still work</text>
+          <text x="564" y="282" class="tm">↺  on again: old tokens work again</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 9.</b> The switch “Let users connect MCP clients” on <code>/admin/mcp</code>.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 11 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="limits" aria-labelledby="h-limits">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">11</span>
+      <h2 id="h-limits">Limits</h2>
+      <p class="lead">These limits apply to each instance. Some features are not available yet.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Item</th><th scope="col">Limit</th></tr></thead>
+        <tbody>
+          <tr><td>Requests</td><td><span class="num">120</span> each minute, for each token</td></tr>
+          <tr><td>Request body</td><td><span class="num">1</span> MB</td></tr>
+          <tr><td>Registration</td><td><span class="num">1</span> each minute, for each IP address. A registration alone gives no access.</td></tr>
+          <tr><td>Redirect URIs</td><td><code>https://…</code> or loopback (<code>127.0.0.1</code>, <code>localhost</code>). Exact match.</td></tr>
+          <tr><td>List size</td><td><code>limit</code> <span class="num">200</span> maximum, with <code>offset</code></td></tr>
+          <tr><td>One amount</td><td><span class="num">99,999,999</span> minor units maximum (8 digits, as the keypad)</td></tr>
+          <tr><td>HTTP methods</td><td>Only <code>POST</code>. <code>GET</code> and <code>DELETE</code> answer 405.</td></tr>
+          <tr><td>Not available</td><td>MCP resources, prompts, sampling, elicitation, notifications. Recurrences, attachments, icons, colours, notes.</td></tr>
+          <tr><td>“Last used”</td><td>Saldo writes it one time each minute at most. A restart can lose up to one minute of counts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 12 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="words" aria-labelledby="h-words">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">12</span>
+      <h2 id="h-words">Words</h2>
+      <p class="lead">The meaning of the special words in this document.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Word</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>MCP</td><td>Model Context Protocol. A standard for AI clients to use the tools of a server.</td></tr>
+          <tr><td>Client</td><td>The program that contains the AI model, for example Claude Code.</td></tr>
+          <tr><td>Connector</td><td>One authorized client in Saldo. Claude uses the same word.</td></tr>
+          <tr><td>Tool</td><td>One operation that the client can call, for example <code>list_accounts</code>.</td></tr>
+          <tr><td>Scope</td><td>A permission level: <code>read</code> or <code>write</code>.</td></tr>
+          <tr><td>Consent</td><td>Your approval of one client, with its scopes.</td></tr>
+          <tr><td>Access token</td><td>A secret string. It gives access for 1 hour.</td></tr>
+          <tr><td>Refresh token</td><td>A secret string. The client uses it to get a new access token.</td></tr>
+          <tr><td>PKCE</td><td>A check. It makes sure that the client that starts the flow is the client that gets the token.</td></tr>
+          <tr><td>Minor units</td><td>The smallest unit of a currency. €123.45 is 12345.</td></tr>
+          <tr><td><code>updatedAt</code></td><td>The time of the last change to a row. The version check uses it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · spec template · the content is the MCP explainer (spec §17.4) as a worked example · copy this file for a new spec</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>
