@@ -6,6 +6,8 @@ Spendee's paid features. You are implementing the POC.
 ## Read in this order
 
 1. `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md` — **the** source of truth for behaviour and architecture.
+   Specs written after 2026-10-05 are HTML files in the same folder (see «Writing docs»). An HTML spec covers the
+   topic it names, and on that topic it wins over the POC spec.
 2. `docs/superpowers/plans/README.md` — phases, dependencies, acceptance criteria.
 3. The plan for the phase you are working on (`docs/superpowers/plans/YYYY-MM-DD-NN-*.md`).
 4. `docs/design/README.md`, then the relevant line ranges of `docs/design/Spese.dc.html` for any screen you build.
@@ -37,6 +39,43 @@ Spendee's paid features. You are implementing the POC.
   follow the library's docs and fix the plan in the same commit.
 - `apps/mobile/android` and `apps/mobile/ios` are generated. Never commit them; native config goes in config plugins.
 - Never commit secrets, keystores or `.env` files (only `.env.example`).
+
+## Writing docs
+
+These rules apply to all docs: specs, plans, READMEs, `docs/*.md`, `SECURITY.md`. They do not apply to code comments or
+to i18n strings (user-visible copy has its own voice).
+
+**Use Simplified Technical English (ASD-STE100).**
+
+- Write in English.
+- Keep sentences short: 20 words maximum in a procedure, 25 words maximum in a description.
+- Write one instruction in each sentence. Use the imperative for instructions: «Run `pnpm test`.»
+- Use the active voice. Write «The route checks the token», not «The token is checked».
+- Use one word for one meaning. Do not use synonyms for variety.
+- Use simple verbs: «use», «start», «stop», «make sure». Do not use «utilize», «leverage», «facilitate».
+- Keep technical names, code identifiers, paths and UI labels unchanged.
+- Write warnings and cautions before the step that they apply to.
+
+**Write new specs as HTML, not markdown.**
+
+1. Copy `docs/superpowers/templates/spec-template.html` to
+   `docs/superpowers/specs/YYYY-MM-DD-<topic>.html`.
+2. Keep the structure of the template:
+   - a sidebar with the contents, and one reading column;
+   - numbered sections, and a lead sentence under each title;
+   - numbered figures, each with a caption.
+3. Explain each flow, architecture or state change with a large inline SVG diagram. Give each diagram
+   `role="img"` and a `<title>`.
+4. Show screens as HTML illustrations. Use the real strings from `packages/i18n/src/locales/en.ts`.
+5. Use the colours of `@saldo/ui` (light and dark), the Geist font, and the SVG classes of the template. Do not
+   add a colour that is not in the palette.
+6. Keep the file self-contained. Do not add external scripts or images. The Geist font is the only external file.
+7. Open the file in a browser at 1440px and at 500px, in the light and the dark theme. Make sure that no text clips
+   and that the console shows no errors.
+
+The markdown files that already exist stay in markdown. Plans also stay in markdown, because the plan skills tick
+their checkboxes. When you change an existing doc, write the new text in STE. Do not rewrite old text only to
+convert it.
 
 ## Commands
 
