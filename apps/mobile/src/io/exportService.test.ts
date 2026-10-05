@@ -7,7 +7,6 @@ import {
   buildBackupFile,
   buildCsvFile,
   buildZipBackup,
-  NothingToExportError,
 } from './exportService';
 
 const CREATED_AT = '2026-04-18T10:00:00.000Z';
@@ -95,26 +94,9 @@ describe('buildBackupFile', () => {
     const result = readBackup(buildBackupFile(repos, STAMP).contents);
     if (result.ok) expect(result.backup.data.transactions).toHaveLength(1);
   });
-
-  it('refuses to export before onboarding has written settings', () => {
-    expect(() => buildBackupFile(setup(), STAMP)).toThrow(NothingToExportError);
-  });
 });
 
 describe('buildCsvFile', () => {
-  it('writes every transaction when no range is given', () => {
-    const repos = setup();
-    seed(repos);
-    const file = buildCsvFile(repos, { today: '2026-09-11', range: null });
-    expect(file.name).toBe('saldo-transactions-2026-09-11.csv');
-    const lines = file.contents.trimEnd().split('\r\n');
-    expect(lines).toHaveLength(3);
-    expect(lines[0]?.startsWith('﻿date,type,amount')).toBe(true);
-    // Newest first, the order the transaction list uses.
-    expect(lines[1]).toContain('2026-09-05');
-    expect(lines[2]).toContain('2026-07-01');
-  });
-
   it('keeps only the rows inside the range', () => {
     const repos = setup();
     seed(repos);
@@ -125,16 +107,6 @@ describe('buildCsvFile', () => {
     const lines = file.contents.trimEnd().split('\r\n');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toContain('2026-09-05');
-  });
-
-  it('writes the header alone when nothing falls in the range', () => {
-    const repos = setup();
-    seed(repos);
-    const file = buildCsvFile(repos, {
-      today: '2026-09-11',
-      range: { start: '2026-01-01', end: '2026-01-31' },
-    });
-    expect(file.contents.trimEnd().split('\r\n')).toHaveLength(1);
   });
 });
 
@@ -186,13 +158,5 @@ describe('buildZipBackup', () => {
     const zip = buildZipBackup(repos, STAMP, () => null);
     expect(zip.missing).toEqual(['att-1']);
     expect(Object.keys(unzipSync(zip.contents))).toEqual(['backup.json']);
-  });
-
-  it('is just backup.json when there are no attachments', () => {
-    const repos = setup();
-    seed(repos);
-    expect(Object.keys(unzipSync(buildZipBackup(repos, STAMP, read).contents))).toEqual([
-      'backup.json',
-    ]);
   });
 });

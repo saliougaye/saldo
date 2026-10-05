@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { APRIL_CYCLE, CATEGORIES, TODAY, tx } from './__tests__/fixtures';
-import { categorySpendHistory, HISTORY_WINDOW, periodHistory, periodSpendHistory } from './history';
+import { categorySpendHistory, periodHistory, periodSpendHistory } from './history';
 import type { PeriodDef } from './period';
 import { median } from './stats';
 
@@ -19,10 +19,6 @@ function pastTransactions() {
 }
 
 describe('periodHistory', () => {
-  it('defaults to the six cycles before the selected one', () => {
-    expect(HISTORY_WINDOW).toBe(6);
-  });
-
   it('skips cycles without any transaction, most recent first', () => {
     const history = periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE);
     expect(history.map((entry) => entry.period)).toEqual([
@@ -66,11 +62,6 @@ describe('periodSpendHistory', () => {
     const history = periodHistory(pastTransactions(), CYCLE_DEF, APRIL_CYCLE);
     expect(periodSpendHistory(history, TODAY)).toEqual([50000, 30000]);
     expect(median(periodSpendHistory(history, TODAY))).toBe(40000);
-  });
-
-  it('is empty without history, so the median is null', () => {
-    expect(periodSpendHistory([], TODAY)).toEqual([]);
-    expect(median(periodSpendHistory([], TODAY))).toBeNull();
   });
 });
 

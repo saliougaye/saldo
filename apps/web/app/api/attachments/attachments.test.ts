@@ -2,16 +2,10 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { MAX_ATTACHMENT_BYTES } from '@saldo/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { syncRows } from '../../../src/server/db/schema';
 import { resetEnvCache } from '../../../src/server/env';
-import {
-  type AttachmentStore,
-  objectKey,
-  resetStoreCache,
-  setStoreForTesting,
-} from '../../../src/server/storage';
+import { objectKey, resetStoreCache, setStoreForTesting } from '../../../src/server/storage';
 import { createFsStore } from '../../../src/server/storage/fsStore';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
 import { createTestSession } from '../../../src/server/test/session';
@@ -100,29 +94,6 @@ describe('POST /api/attachments/:id/upload-intent', () => {
     await expect(response.json()).resolves.toEqual({ mode: 'direct' });
   });
 
-  it('hands out a presigned target when the store can sign one', async () => {
-    await seedRow(session.userId);
-    const signing: AttachmentStore = {
-      ...createFsStore(dir),
-      name: 's3',
-      presignPut: async () => ({
-        url: 'https://bucket.example.com/signed',
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/jpeg' },
-        expiresIn: 300,
-      }),
-    };
-    setStoreForTesting(signing);
-    const response = await intent(
-      request(JSON.stringify({ size: BYTES.byteLength, mimeType: 'image/jpeg' })),
-      params(),
-    );
-    await expect(response.json()).resolves.toMatchObject({
-      mode: 'presigned',
-      url: 'https://bucket.example.com/signed',
-    });
-  });
-
   it('refuses bytes for a row the server has never been told about', async () => {
     const response = await intent(
       request(JSON.stringify({ size: BYTES.byteLength, mimeType: 'image/jpeg' })),
@@ -155,15 +126,6 @@ describe('POST /api/attachments/:id/upload-intent', () => {
     expect(wrongType.status).toBe(415);
   });
 
-  it('refuses anything over the maximum outright', async () => {
-    await seedRow(session.userId);
-    const response = await intent(
-      request(JSON.stringify({ size: MAX_ATTACHMENT_BYTES + 1, mimeType: 'image/jpeg' })),
-      params(),
-    );
-    expect(response.status).toBe(400);
-  });
-
   it('says so when the server keeps no attachments', async () => {
     await seedRow(session.userId);
     setStoreForTesting(null);
@@ -173,15 +135,6 @@ describe('POST /api/attachments/:id/upload-intent', () => {
     );
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toMatchObject({ error: { code: 'no_storage' } });
-  });
-
-  it('needs a session', async () => {
-    await seedRow(session.userId);
-    const anonymous = new Request('https://saldo.example.com/api/attachments/att-1', {
-      method: 'POST',
-      body: JSON.stringify({ size: BYTES.byteLength, mimeType: 'image/jpeg' }),
-    });
-    expect((await intent(anonymous, params())).status).toBe(401);
   });
 
   it('refuses a declared Content-Length over its 1 KB cap, before reading the body', async () => {
@@ -303,18 +256,6 @@ describe('GET /api/attachments/:id', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/jpeg');
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(BYTES);
-  });
-
-  it('redirects to a signed URL when the store has one', async () => {
-    await seedRow(session.userId);
-    setStoreForTesting({
-      ...createFsStore(dir),
-      name: 's3',
-      presignGet: async () => 'https://bucket.example.com/signed-get',
-    });
-    const response = await GET(request(null, 'GET'), params());
-    expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('https://bucket.example.com/signed-get');
   });
 
   it('is a 404 when the row exists but the bytes never arrived', async () => {

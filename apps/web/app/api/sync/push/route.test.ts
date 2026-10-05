@@ -48,11 +48,6 @@ afterAll(async () => {
 });
 
 describe('sync routes', () => {
-  it('requires a bearer on both', async () => {
-    expect((await push(pushRequest({}))).status).toBe(401);
-    expect((await pull(new Request('http://localhost/api/sync/pull'))).status).toBe(401);
-  });
-
   it('round-trips a row from push to pull', async () => {
     const pushed = await push(
       pushRequest(

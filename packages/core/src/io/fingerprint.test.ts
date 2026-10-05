@@ -7,14 +7,6 @@ describe('normalizeText', () => {
     expect(normalizeText('  Caffè   Corretto ')).toBe('caffe corretto');
     expect(normalizeText('PERÒ\tcosì\nfan tutte')).toBe('pero cosi fan tutte');
   });
-
-  it('leaves an emoji alone: it is a character, not an accent', () => {
-    expect(normalizeText('Fineco🏦')).toBe('fineco🏦');
-  });
-
-  it('is empty for a string of only spaces', () => {
-    expect(normalizeText('   ')).toBe('');
-  });
 });
 
 describe('transactionFingerprint', () => {

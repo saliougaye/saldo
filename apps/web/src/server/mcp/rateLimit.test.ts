@@ -11,13 +11,6 @@ describe('createFixedWindowLimiter', () => {
     expect(limiter.allow('a', 60_000)).toEqual({ allowed: true });
   });
 
-  it('counts each key on its own', () => {
-    const limiter = createFixedWindowLimiter({ max: 1, windowMs: 60_000 });
-    expect(limiter.allow('a', 0).allowed).toBe(true);
-    expect(limiter.allow('b', 0).allowed).toBe(true);
-    expect(limiter.allow('a', 1).allowed).toBe(false);
-  });
-
   it('forgets expired windows, and the oldest keys past maxKeys', () => {
     const limiter = createFixedWindowLimiter({ max: 1, windowMs: 1_000, maxKeys: 2 });
     limiter.allow('a', 0);

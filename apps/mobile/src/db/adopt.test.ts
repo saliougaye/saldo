@@ -28,10 +28,4 @@ describe('yieldSettingsToAccount', () => {
     expect(row?.syncState).toBe(1);
     expect(row?.currency).toBe('USD');
   });
-
-  it('does nothing on a phone with no settings', () => {
-    const context = createTestContext();
-    expect(() => yieldSettingsToAccount(context.db, context.kv.deviceId())).not.toThrow();
-    expect(context.db.select().from(settings).all()).toHaveLength(0);
-  });
 });

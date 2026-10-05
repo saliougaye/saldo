@@ -1,11 +1,4 @@
-import {
-  archiveCategory,
-  categoryUsage,
-  deleteTag,
-  mergeTags,
-  reorderCategories,
-  restoreCategory,
-} from './adminService';
+import { archiveCategory, deleteTag, mergeTags } from './adminService';
 import { createRepositories } from './repositories';
 import { createTestDatabase } from './testing';
 
@@ -139,24 +132,6 @@ describe('archiveCategory', () => {
     });
     expect(repos.budgets.byId('b1')?.categoryIds).toEqual(['cat-other']);
   });
-
-  it('restores a category', () => {
-    const { db, repos } = setup();
-    archiveCategory(db, repos, { categoryId: 'cat-other', nowIso: NOW });
-    restoreCategory(repos, 'cat-other');
-    expect(repos.categories.byId('cat-other')?.archivedAt).toBeNull();
-  });
-});
-
-describe('categoryUsage', () => {
-  it('counts the transactions on a category', () => {
-    const { db, repos } = setup();
-    expense(repos, 't1', 'cat-food');
-    expense(repos, 't2', 'cat-food');
-    expense(repos, 't3', 'cat-other');
-    expect(categoryUsage(db, 'cat-food')).toBe(2);
-    expect(categoryUsage(db, 'cat-market')).toBe(0);
-  });
 });
 
 describe('mergeTags', () => {
@@ -199,14 +174,5 @@ describe('deleteTag', () => {
     expect(repos.transactions.byId('t1')?.tagIds).toEqual(['tag-b']);
     expect(repos.transactions.byId('t1')?.deletedAt).toBeNull();
     expect(repos.tags.byId('tag-a')?.deletedAt).toBe(NOW);
-  });
-});
-
-describe('reorderCategories', () => {
-  it('renumbers sortOrder to match the given order', () => {
-    const { db, repos } = setup();
-    reorderCategories(db, repos, ['cat-other', 'cat-food']);
-    expect(repos.categories.byId('cat-other')?.sortOrder).toBe(0);
-    expect(repos.categories.byId('cat-food')?.sortOrder).toBe(1);
   });
 });

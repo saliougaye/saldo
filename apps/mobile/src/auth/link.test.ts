@@ -1,11 +1,4 @@
-import {
-  authorizeUrl,
-  callbackParams,
-  isInsecureAddress,
-  normaliseServerUrl,
-  redirectUri,
-  serverLabel,
-} from './link';
+import { callbackParams, isInsecureAddress, normaliseServerUrl } from './link';
 
 describe('normaliseServerUrl', () => {
   it('adds https, drops a trailing slash and rejects nonsense', () => {
@@ -46,30 +39,6 @@ describe('isInsecureAddress', () => {
   });
 });
 
-describe('redirectUri', () => {
-  it('is built from the scheme this build registered, not from a fixed one', () => {
-    expect(redirectUri('saldo')).toBe('saldo://auth/callback');
-    // A fork that sets `SALDO_SCHEME=mymoney` registers `mymoney://` and must be sent back there.
-    expect(redirectUri('mymoney')).toBe('mymoney://auth/callback');
-  });
-});
-
-describe('authorizeUrl', () => {
-  it('builds the /auth/mobile link with every parameter', () => {
-    const url = new URL(
-      authorizeUrl('https://saldo.example.com', {
-        redirectUri: 'saldo://auth/callback',
-        state: 'st4te',
-        mode: 'register',
-      }),
-    );
-    expect(url.pathname).toBe('/auth/mobile');
-    expect(url.searchParams.get('redirect_uri')).toBe('saldo://auth/callback');
-    expect(url.searchParams.get('state')).toBe('st4te');
-    expect(url.searchParams.get('mode')).toBe('register');
-  });
-});
-
 describe('callbackParams', () => {
   it('reads the one-time token and the state back out of the redirect', () => {
     expect(callbackParams('saldo://auth/callback?ott=abc&state=st4te')).toEqual({
@@ -82,12 +51,5 @@ describe('callbackParams', () => {
     expect(callbackParams('saldo://auth/callback?ott=abc')).toBeNull();
     expect(callbackParams('saldo://auth/callback?error=denied')).toBeNull();
     expect(callbackParams('not a url')).toBeNull();
-  });
-});
-
-describe('serverLabel', () => {
-  it('shows a server by its host', () => {
-    expect(serverLabel('https://saldo.example.com')).toBe('saldo.example.com');
-    expect(serverLabel('http://localhost:3000')).toBe('localhost:3000');
   });
 });

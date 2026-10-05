@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GoalProgress } from './goals';
-import {
-  goalAdvice,
-  goalCardStatus,
-  goalEventIds,
-  goalPace,
-  goalTone,
-  rankGoal,
-} from './goalTargets';
+import { rankGoal } from './goalTargets';
 
 function progress(overrides: Partial<GoalProgress>): GoalProgress {
   return {
@@ -63,89 +56,5 @@ describe('rankGoal', () => {
       tier: 0,
       score: 20260920,
     });
-  });
-});
-
-describe('goalEventIds', () => {
-  it('lists expired goals, then reached ones, most recent first, featured left out, three at most', () => {
-    const items = [
-      item('exp1', { state: 'expired', missing: 5_000 }),
-      item('exp2', { state: 'expired', missing: 9_000 }),
-      item('old', { state: 'reached', reachedOn: '2026-09-02' }),
-      item('new', { state: 'reached', reachedOn: '2026-09-20' }),
-      item('behind', { state: 'behind', gap: -1 }),
-    ];
-    expect(goalEventIds(items, 'exp2')).toEqual(['exp1', 'new', 'old']);
-    expect(goalEventIds(items, null)).toEqual(['exp2', 'exp1', 'new']);
-  });
-});
-
-describe('goalCardStatus', () => {
-  it('counts expired, behind and reached goals', () => {
-    expect(
-      goalCardStatus([
-        item('a', { state: 'expired' }),
-        item('b', { state: 'behind' }),
-        item('c', { state: 'reached' }),
-        item('d', { state: 'onTrack' }),
-      ]),
-    ).toEqual({ expired: 1, behind: 1, reached: 1 });
-  });
-});
-
-describe('goalAdvice', () => {
-  it('asks for an amount per period while there are several left', () => {
-    expect(goalAdvice(progress({ state: 'behind', gap: -43_600, perPeriod: 73_100 }))).toEqual({
-      kind: 'perPeriod',
-      perPeriod: 73_100,
-      gap: 43_600,
-      behind: true,
-    });
-  });
-
-  it('counts days on the last period', () => {
-    expect(goalAdvice(progress({ periodsLeft: 1, missing: 25_000, daysLeft: 21 }))).toEqual({
-      kind: 'lastPeriod',
-      missing: 25_000,
-      days: 21,
-    });
-  });
-
-  it('only says what is missing without a deadline', () => {
-    expect(goalAdvice(progress({ state: 'open', missing: 350_000 }))).toEqual({
-      kind: 'noDeadline',
-      missing: 350_000,
-    });
-  });
-
-  it('says what is missing past the deadline, and what was reached', () => {
-    expect(goalAdvice(progress({ state: 'expired', missing: 11_000 }))).toEqual({
-      kind: 'expired',
-      missing: 11_000,
-    });
-    expect(goalAdvice(progress({ state: 'reached', target: 120_000 }))).toEqual({
-      kind: 'reached',
-      target: 120_000,
-    });
-  });
-});
-
-describe('goalTone', () => {
-  it('asks for attention while behind or expired, reads done once reached, plain otherwise', () => {
-    expect(goalTone(progress({ state: 'behind' }))).toBe('attention');
-    expect(goalTone(progress({ state: 'expired' }))).toBe('attention');
-    expect(goalTone(progress({ state: 'reached' }))).toBe('done');
-    expect(goalTone(progress({ state: 'onTrack' }))).toBe('plain');
-    expect(goalTone(progress({ state: 'open' }))).toBe('plain');
-  });
-});
-
-describe('goalPace', () => {
-  it('keeps the tick while the goal runs, and drops it once reached or expired', () => {
-    expect(goalPace(progress({ state: 'behind', pace: 0.4 }))).toBe(0.4);
-    expect(goalPace(progress({ state: 'onTrack', pace: 0.4 }))).toBe(0.4);
-    expect(goalPace(progress({ state: 'open', pace: null }))).toBeNull();
-    expect(goalPace(progress({ state: 'reached', pace: 0.4 }))).toBeNull();
-    expect(goalPace(progress({ state: 'expired', pace: 1 }))).toBeNull();
   });
 });

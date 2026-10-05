@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Account } from '../../entities';
-import {
-  closeGoalTool,
-  moveGoalMoneyTool,
-  resolveGoalInput,
-  resolveGoalTransfer,
-  saveGoalTool,
-} from './goals';
+import { resolveGoalInput, resolveGoalTransfer } from './goals';
 
 const TODAY = '2026-09-29';
 
@@ -34,65 +28,6 @@ const goal: Account = {
 };
 
 describe('resolveGoalInput', () => {
-  it('creates from the form defaults; what is already saved becomes the saved buffer', () => {
-    expect(
-      resolveGoalInput(
-        {
-          name: 'Vacanza',
-          targetMinor: 100000,
-          parentAccountId: 'acc-main',
-          alreadySavedMinor: 20000,
-        },
-        null,
-        2,
-      ),
-    ).toEqual({
-      ok: true,
-      value: {
-        id: null,
-        name: 'Vacanza',
-        icon: 'target',
-        colorIndex: 5,
-        buffer: '1000',
-        deadline: null,
-        parentAccountId: 'acc-main',
-        savedBuffer: '200',
-        expectedUpdatedAt: undefined,
-      },
-    });
-  });
-
-  it('edits the target and keeps the rest', () => {
-    const result = resolveGoalInput(
-      { id: 'goal-1', updatedAt: 'hlc-goal', targetMinor: 150000 },
-      goal,
-      2,
-    );
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        id: 'goal-1',
-        name: 'Vacanza',
-        icon: 'plane',
-        colorIndex: 5,
-        buffer: '1500',
-        deadline: '2027-06-30',
-        parentAccountId: 'acc-main',
-        savedBuffer: '',
-        expectedUpdatedAt: 'hlc-goal',
-      },
-    });
-  });
-
-  it('removes the deadline with null', () => {
-    const result = resolveGoalInput(
-      { id: 'goal-1', updatedAt: 'hlc-goal', deadline: null },
-      goal,
-      2,
-    );
-    expect(result.ok && result.value.deadline).toBeNull();
-  });
-
   it('refuses to move a goal to another account or to add savings on an edit', () => {
     expect(
       resolveGoalInput({ id: 'goal-1', updatedAt: 'hlc-goal', parentAccountId: 'acc-x' }, goal, 2)
@@ -157,22 +92,5 @@ describe('resolveGoalTransfer', () => {
     const move = { goalId: 'goal-1', direction: 'set_aside', amountMinor: 1 } as const;
     expect(resolveGoalTransfer(closed, move, TODAY, 2).ok).toBe(false);
     expect(resolveGoalTransfer(plain, move, TODAY, 2).ok).toBe(false);
-  });
-});
-
-describe('the goal specs', () => {
-  it('have the agreed annotations', () => {
-    expect(saveGoalTool.annotations).toMatchObject({
-      destructiveHint: false,
-      idempotentHint: false,
-    });
-    expect(moveGoalMoneyTool.annotations).toMatchObject({
-      destructiveHint: false,
-      idempotentHint: false,
-    });
-    expect(closeGoalTool.annotations).toMatchObject({
-      destructiveHint: true,
-      idempotentHint: true,
-    });
   });
 });

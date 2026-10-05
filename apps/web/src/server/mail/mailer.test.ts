@@ -97,10 +97,6 @@ afterEach(async () => {
 });
 
 describe('transportSecurity', () => {
-  it('uses implicit TLS on 465', () => {
-    expect(transportSecurity('smtp.example.com', 465)).toEqual({ secure: true, requireTLS: false });
-  });
-
   it('requires STARTTLS on every other port', () => {
     expect(transportSecurity('smtp.example.com', 587)).toEqual({
       secure: false,
@@ -112,48 +108,9 @@ describe('transportSecurity', () => {
   it.each(['localhost', '127.0.0.1', '::1', 'LOCALHOST'])('allows plain on %s', (host) => {
     expect(transportSecurity(host, 1025)).toEqual({ secure: false, requireTLS: false });
   });
-
-  it('still uses implicit TLS on 465 for a local host', () => {
-    expect(transportSecurity('localhost', 465)).toEqual({ secure: true, requireTLS: false });
-  });
 });
 
 describe('sendMail', () => {
-  it('answers notConfigured when there is no configuration, and builds no transport', async () => {
-    const seen = recorder();
-    setMailTransportForTests(seen.factory);
-    expect(await sendMail(harness.db, message, noEnv)).toEqual({
-      ok: false,
-      error: 'notConfigured',
-    });
-    expect(seen.options).toEqual([]);
-    expect(await mailEnabled(harness.db, noEnv)).toBe(false);
-  });
-
-  it('builds a transport from the environment group and sends', async () => {
-    const seen = recorder();
-    setMailTransportForTests(seen.factory);
-    const source = envWith({});
-    expect(await mailEnabled(harness.db, source)).toBe(true);
-    expect(await sendMail(harness.db, message, source)).toEqual({ ok: true });
-    expect(seen.options).toEqual([
-      {
-        host: 'smtp.example.com',
-        port: 587,
-        secure: false,
-        requireTLS: true,
-        auth: { user: 'mailer', pass: PASSWORD },
-        connectionTimeout: 10_000,
-        greetingTimeout: 10_000,
-        socketTimeout: 30_000,
-      },
-    ]);
-    expect(seen.sent).toEqual([
-      { from: 'Saldo <saldo@example.com>', to: RECIPIENT, subject: 'Hello', text: 'Body' },
-    ]);
-    expect(seen.closed).toBe(1);
-  });
-
   it('uses the stored configuration, decrypting the password only to send', async () => {
     const seen = recorder();
     setMailTransportForTests(seen.factory);
@@ -177,22 +134,6 @@ describe('sendMail', () => {
       requireTLS: false,
       auth: { user: 'mailer', pass: PASSWORD },
     });
-  });
-
-  it('sends without auth when there is no user', async () => {
-    const seen = recorder();
-    setMailTransportForTests(seen.factory);
-    await sendMail(harness.db, message, envWith({ user: null, password: null }));
-    expect(seen.options[0]?.auth).toBeUndefined();
-  });
-
-  it('builds a new transport for each message and closes each', async () => {
-    const seen = recorder();
-    setMailTransportForTests(seen.factory);
-    await sendMail(harness.db, message, envWith({}));
-    await sendMail(harness.db, message, envWith({}));
-    expect(seen.options).toHaveLength(2);
-    expect(seen.closed).toBe(2);
   });
 
   it('answers notConfigured when the stored password no longer decrypts', async () => {

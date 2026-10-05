@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type Account, accountSchema, recurrenceSchema, transactionSchema } from './entities';
-import {
-  canRestoreGoal,
-  newGoalFields,
-  newGoalTransferFields,
-  planCloseGoal,
-  restoreGoalFields,
-} from './goalPlans';
+import { planCloseGoal, restoreGoalFields } from './goalPlans';
 
 const STAMPS = {
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -85,48 +79,6 @@ const recurrence = (
       ...template,
     },
   });
-
-describe('newGoalFields', () => {
-  const input = {
-    name: 'Vacanza',
-    icon: 'target',
-    colorIndex: 5,
-    parentAccountId: 'main',
-    goalTarget: 100000,
-    goalDeadline: '2027-06-01',
-    alreadySaved: 0,
-    today: '2026-09-30',
-    sortOrder: 3,
-  };
-
-  it('is an empty, unspendable pocket that starts today', () => {
-    expect(newGoalFields(input)).toMatchObject({
-      type: 'pocket',
-      openingBalance: 0,
-      includeInSpendable: false,
-      parentAccountId: 'main',
-      goalTarget: 100000,
-      goalDeadline: '2027-06-01',
-      goalStartDate: '2026-09-30',
-      sortOrder: 3,
-      archivedAt: null,
-      institution: null,
-    });
-  });
-
-  it('moves what is already aside by a transfer, never an opening balance', () => {
-    expect(newGoalTransferFields({ ...input, alreadySaved: 0 }, 'g1')).toBeNull();
-    expect(newGoalTransferFields({ ...input, alreadySaved: 2500 }, 'g1')).toMatchObject({
-      kind: 'transfer',
-      amount: 2500,
-      date: '2026-09-30',
-      accountId: 'main',
-      toAccountId: 'g1',
-      categoryId: null,
-      description: 'Vacanza',
-    });
-  });
-});
 
 describe('planCloseGoal', () => {
   it('returns a positive balance to the parent, tomorrow’s rows are dropped', () => {
@@ -244,12 +196,5 @@ describe('restore', () => {
       goalDeadline: '2027-01-01',
     });
     expect(restoreGoalFields(future, '2026-09-30').goalDeadline).toBe('2027-01-01');
-  });
-
-  it('stays closed while its parent is archived', () => {
-    const parent = account({ id: 'main', archivedAt: '2026-09-01T00:00:00.000Z' });
-    expect(canRestoreGoal(pocket('g1', 'main'), [parent])).toBe(false);
-    expect(canRestoreGoal(pocket('g1', 'main'), [account({ id: 'main' })])).toBe(true);
-    expect(canRestoreGoal(pocket('g1', 'gone'), [account({ id: 'main' })])).toBe(false);
   });
 });

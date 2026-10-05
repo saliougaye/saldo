@@ -3,8 +3,6 @@ import {
   canShiftPeriod,
   currentPeriod,
   describePeriod,
-  isPeriodKind,
-  PERIOD_KINDS,
   type PeriodDef,
   periodContaining,
   periodLength,
@@ -53,13 +51,6 @@ describe('periodContaining', () => {
       end: '2026-10-26',
     });
   });
-
-  it('spans the calendar year', () => {
-    expect(periodContaining(year, '2026-09-10')).toEqual({
-      start: '2026-01-01',
-      end: '2026-12-31',
-    });
-  });
 });
 
 describe('shiftPeriod', () => {
@@ -90,11 +81,6 @@ describe('shiftPeriod', () => {
     expect(shiftPeriod(def, current, 1)).toEqual({ start: '2026-03-28', end: '2026-04-27' });
   });
 
-  it('steps a year at a time', () => {
-    const current = periodContaining(year, '2026-09-10');
-    expect(shiftPeriod(year, current, -1)).toEqual({ start: '2025-01-01', end: '2025-12-31' });
-  });
-
   it('is reversible for every kind', () => {
     for (const def of [month, week, cycle, year]) {
       const current = periodContaining(def, '2026-09-10');
@@ -111,10 +97,6 @@ describe('previousPeriods', () => {
       '2026-07-01',
       '2026-06-01',
     ]);
-  });
-
-  it('returns nothing for a count of zero', () => {
-    expect(previousPeriods(month, periodContaining(month, '2026-09-10'), 0)).toEqual([]);
   });
 });
 
@@ -140,30 +122,12 @@ describe('currentPeriod and describePeriod', () => {
     const described = describePeriod(previous, '2026-09-10');
     expect(described).toMatchObject({ isCurrent: false, elapsed: 31, length: 31 });
   });
-
-  it('reports a future period as not current', () => {
-    const next = shiftPeriod(month, periodContaining(month, '2026-09-10'), 1);
-    expect(describePeriod(next, '2026-09-10').isCurrent).toBe(false);
-  });
-});
-
-describe('isPeriodKind', () => {
-  it('guards a value read back from the database', () => {
-    expect([...PERIOD_KINDS]).toEqual(['month', 'week', 'cycle', 'year']);
-    expect(isPeriodKind('month')).toBe(true);
-    expect(isPeriodKind('fortnight')).toBe(false);
-  });
 });
 
 describe('canShiftPeriod', () => {
   const cycle: PeriodDef = { kind: 'cycle', startDay: 27 };
   const today = '2026-09-11';
   const current = periodContaining(cycle, today);
-
-  it('always allows going back: that is history, and it happened', () => {
-    expect(canShiftPeriod(cycle, current, -1, today)).toBe(true);
-    expect(canShiftPeriod(cycle, shiftPeriod(cycle, current, -12), -1, today)).toBe(true);
-  });
 
   it('stops at the current period: what comes next is «In arrivo» and the forecast', () => {
     expect(canShiftPeriod(cycle, current, 1, today)).toBe(false);

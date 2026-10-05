@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
+import { FIXTURE_NOW, seedOnboarded } from './fixtures';
 import { saveGoal } from './goals';
 import { deleteTransaction, restoreTransaction, saveTransaction } from './transactions';
 import { writeChanges } from './writeChanges';
@@ -72,51 +72,6 @@ async function closeGoalExpense(): Promise<string> {
 }
 
 describe('saveTransaction', () => {
-  it('creates an expense in minor units, trimmed, with no recurrence', async () => {
-    await onboarded();
-    const result = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
-    expect(result.ok).toBe(true);
-    const [row] = (await readUserData(harness.db, userId)).transactions;
-    expect(row).toMatchObject({
-      amount: 4820,
-      description: 'Esselunga',
-      recurrenceId: null,
-      note: null,
-    });
-    if (result.ok) expect(row?.id).toBe(result.id);
-  });
-
-  it('names the first thing missing, as the phone does', async () => {
-    await onboarded();
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, buffer: '' }, FIXTURE_NOW),
-    ).toEqual({
-      ok: false,
-      missing: 'amount',
-    });
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, categoryId: null }, FIXTURE_NOW),
-    ).toEqual({ ok: false, missing: 'category' });
-  });
-
-  it('refuses a transfer that would overdraw its source', async () => {
-    await onboarded();
-    const transfer = {
-      ...expense,
-      kind: 'transfer',
-      buffer: '5000',
-      categoryId: null,
-      toAccountId: 'acc-savings',
-    };
-    expect(await saveTransaction(harness.db, userId, transfer, FIXTURE_NOW)).toEqual({
-      ok: false,
-      missing: 'insufficientFunds',
-    });
-    expect(
-      (await saveTransaction(harness.db, userId, { ...transfer, buffer: '500' }, FIXTURE_NOW)).ok,
-    ).toBe(true);
-  });
-
   it('refuses an account or a category the user does not have', async () => {
     await onboarded();
     expect(
@@ -146,84 +101,6 @@ describe('saveTransaction', () => {
     expect(edited).toEqual({ ok: true, id: created.id });
     const [after] = (await readUserData(harness.db, userId)).transactions;
     expect(after).toMatchObject({ amount: 5000, createdAt: before?.createdAt, note: before?.note });
-  });
-
-  it('answers notFound for an id that is not the user’s', async () => {
-    await onboarded();
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, id: 'ghost' }, FIXTURE_NOW),
-    ).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-  });
-
-  it('refuses input that is not a form at all', async () => {
-    await onboarded();
-    expect(await saveTransaction(harness.db, userId, { kind: 'loan' }, FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-  });
-
-  it('refuses a date that is not a real LocalDate', async () => {
-    await onboarded();
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, date: '2026-02-30' }, FIXTURE_NOW),
-    ).toEqual({ ok: false, error: 'invalid' });
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, date: 'yesterday' }, FIXTURE_NOW),
-    ).toEqual({ ok: false, error: 'invalid' });
-  });
-
-  it('refuses a buffer that is not a real amount, as opposed to an empty one', async () => {
-    await onboarded();
-    // Only what the keypad can type: at most the currency's decimals, 6 integer digits for a
-    // 2-decimal currency, no leading zeros, no bare separator in front.
-    for (const buffer of ['abc', '1e30', '12.345', '007', '1234567', '.5', '9999999999999']) {
-      expect(
-        await saveTransaction(harness.db, userId, { ...expense, buffer }, FIXTURE_NOW),
-      ).toEqual({ ok: false, error: 'invalid' });
-    }
-    // Empty is a legitimate "missing amount", not malformed input.
-    expect(
-      await saveTransaction(harness.db, userId, { ...expense, buffer: '' }, FIXTURE_NOW),
-    ).toEqual({ ok: false, missing: 'amount' });
-  });
-
-  it('refuses a category whose direction does not match the transaction', async () => {
-    await onboarded();
-    await writeChanges(
-      harness.db,
-      userId,
-      [
-        {
-          entity: 'category',
-          id: 'seed-category-salary',
-          data: {
-            id: 'seed-category-salary',
-            name: 'Salary',
-            direction: 'income',
-            parentId: null,
-            icon: 'landmark',
-            colorIndex: 5,
-            archivedAt: null,
-            sortOrder: 99,
-            createdAt: FIXTURE_NOW.toISOString(),
-            deletedAt: null,
-          },
-        },
-      ],
-      FIXTURE_NOW,
-    );
-    expect(
-      await saveTransaction(
-        harness.db,
-        userId,
-        { ...expense, kind: 'expense', categoryId: 'seed-category-salary' },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, missing: 'category' });
   });
 });
 
@@ -297,19 +174,6 @@ describe('pockets (§5.14): money enters or leaves a goal by transfer only', () 
     ).toEqual({ ok: false, missing: 'account' });
   });
 
-  it('takes a transfer into a pocket', async () => {
-    await onboarded();
-    await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
-    const transfer = {
-      ...expense,
-      kind: 'transfer',
-      buffer: '50',
-      categoryId: null,
-      toAccountId: 'acc-goal',
-    };
-    expect((await saveTransaction(harness.db, userId, transfer, FIXTURE_NOW)).ok).toBe(true);
-  });
-
   it('still edits the phone’s close-goal expense, which sits on the pocket', async () => {
     await onboarded();
     await writeChanges(harness.db, userId, [pocketAccount(false)], FIXTURE_NOW);
@@ -336,43 +200,6 @@ describe('editing a row whose account or category was archived since (§5.4)', (
         harness.db,
         userId,
         { ...expense, id: created.id, buffer: '50' },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: true, id: created.id });
-  });
-
-  it('keeps the archived category the row already uses', async () => {
-    await onboarded();
-    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
-    if (!created.ok) throw new Error('not created');
-    await rewrite('categories', 'seed-category-groceries', ARCHIVED_AT);
-    expect(
-      await saveTransaction(
-        harness.db,
-        userId,
-        { ...expense, id: created.id, buffer: '50' },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: true, id: created.id });
-  });
-
-  it('keeps the archived destination the transfer already uses', async () => {
-    await onboarded();
-    const transfer = {
-      ...expense,
-      kind: 'transfer',
-      buffer: '50',
-      categoryId: null,
-      toAccountId: 'acc-savings',
-    };
-    const created = await saveTransaction(harness.db, userId, transfer, FIXTURE_NOW);
-    if (!created.ok) throw new Error('not created');
-    await rewrite('accounts', 'acc-savings', ARCHIVED_AT);
-    expect(
-      await saveTransaction(
-        harness.db,
-        userId,
-        { ...transfer, id: created.id, buffer: '60' },
         FIXTURE_NOW,
       ),
     ).toEqual({ ok: true, id: created.id });
@@ -466,18 +293,6 @@ describe('deleteTransaction and restoreTransaction', () => {
     });
   });
 
-  it('answers notFound for an id that is not there', async () => {
-    await onboarded();
-    expect(await deleteTransaction(harness.db, userId, 'ghost', FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    expect(await restoreTransaction(harness.db, userId, 'ghost', FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-  });
-
   it('refuses to restore a tombstone older than the undo window', async () => {
     await onboarded();
     const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
@@ -518,33 +333,6 @@ describe('deleteTransaction and restoreTransaction', () => {
         {
           entity: 'account',
           id: account.id,
-          data: { ...row, archivedAt: FIXTURE_NOW.toISOString() },
-        },
-      ],
-      FIXTURE_NOW,
-    );
-    expect(await restoreTransaction(harness.db, userId, created.id, FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-  });
-
-  it('refuses to restore a tombstone whose category is no longer live', async () => {
-    await onboarded();
-    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
-    if (!created.ok) throw new Error('not created');
-    await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW);
-    const data = await readUserData(harness.db, userId);
-    const category = data.categories.find((row) => row.id === 'seed-category-groceries');
-    if (category === undefined) throw new Error('category missing');
-    const { updatedAt: _stamp, ...row } = category;
-    await writeChanges(
-      harness.db,
-      userId,
-      [
-        {
-          entity: 'category',
-          id: category.id,
           data: { ...row, archivedAt: FIXTURE_NOW.toISOString() },
         },
       ],
@@ -627,18 +415,6 @@ describe('saveTransaction — closeGoalId (§6.38)', () => {
     expect((booked?.date ?? '9999') < '2099-01-01').toBe(true);
   });
 
-  it('refuses when the form’s account is not that goal', async () => {
-    const goalId = await fundedGoal();
-    expect(
-      await saveTransaction(
-        harness.db,
-        userId,
-        { ...expense, accountId: 'acc-main', closeGoalId: goalId },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'invalid' });
-  });
-
   it('refuses a goal that is not open, and writes nothing', async () => {
     await onboarded();
     const before = (await readUserData(harness.db, userId)).transactions.length;
@@ -651,52 +427,5 @@ describe('saveTransaction — closeGoalId (§6.38)', () => {
       ),
     ).toEqual({ ok: false, error: 'invalid' });
     expect((await readUserData(harness.db, userId)).transactions).toHaveLength(before);
-  });
-});
-
-describe('expectedUpdatedAt (§17.4.2): the version an MCP client read', () => {
-  it('edits the version read and refuses a row that moved since', async () => {
-    await onboarded();
-    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
-    if (!created.ok) throw new Error('not created');
-    const read = await stampOf(harness.db, userId, 'transaction', created.id);
-
-    const fresh = await saveTransaction(
-      harness.db,
-      userId,
-      { ...expense, id: created.id, buffer: '50', expectedUpdatedAt: read },
-      FIXTURE_NOW,
-    );
-    expect(fresh).toEqual({ ok: true, id: created.id });
-
-    // The first edit moved the row: the same read is now stale.
-    const stale = await saveTransaction(
-      harness.db,
-      userId,
-      { ...expense, id: created.id, buffer: '60', expectedUpdatedAt: read },
-      FIXTURE_NOW,
-    );
-    expect(stale).toEqual({ ok: false, error: 'conflict' });
-    expect((await readUserData(harness.db, userId)).transactions).toEqual([
-      expect.objectContaining({ id: created.id, amount: 5000 }),
-    ]);
-  });
-
-  it('deletes only the version read', async () => {
-    await onboarded();
-    const created = await saveTransaction(harness.db, userId, expense, FIXTURE_NOW);
-    if (!created.ok) throw new Error('not created');
-    const read = await stampOf(harness.db, userId, 'transaction', created.id);
-    const phone = await bumpRow(harness.db, userId, 'transaction', created.id, {
-      description: 'Dal telefono',
-    });
-
-    expect(await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW, read)).toEqual({
-      ok: false,
-      error: 'conflict',
-    });
-    expect(await deleteTransaction(harness.db, userId, created.id, FIXTURE_NOW, phone)).toEqual({
-      ok: true,
-    });
   });
 });

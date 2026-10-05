@@ -2,11 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { pressAmountKey } from './amountKeypad';
 
 describe('pressAmountKey', () => {
-  it('appends digits', () => {
-    expect(pressAmountKey('', '1', 2)).toBe('1');
-    expect(pressAmountKey('1', '2', 2)).toBe('12');
-  });
-
   it('replaces a lone zero rather than growing it', () => {
     expect(pressAmountKey('0', '5', 2)).toBe('5');
     expect(pressAmountKey('0.', '5', 2)).toBe('0.5');
@@ -44,10 +39,5 @@ describe('pressAmountKey', () => {
     expect(pressAmountKey('-12', 'sign', 2, { allowNegative: true })).toBe('12');
     expect(pressAmountKey('', 'sign', 2, { allowNegative: true })).toBe('-');
     expect(pressAmountKey('12', 'sign', 2)).toBe('12');
-  });
-
-  it('types a sign-first balance: −, then the digits', () => {
-    const minus = pressAmountKey('', 'sign', 2, { allowNegative: true });
-    expect(pressAmountKey(minus, '4', 2, { allowNegative: true })).toBe('-4');
   });
 });

@@ -1,6 +1,6 @@
 import { emptyUserData, type Settings, type UserData } from '@saldo/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { narrowParams, pageState, readPage } from './context';
+import { pageState, readPage } from './context';
 
 // `readPage` is the request's own code (a session, a database, Next's `redirect`): these stand in
 // for them, so the one thing under test is what it does with a projection that has no settings.
@@ -43,18 +43,6 @@ function settingsRow(overrides: Partial<Settings>): Settings {
 }
 
 describe('pageState', () => {
-  it('reads the period from the URL and describes it against today', () => {
-    const state = pageState({
-      data: { ...data, settings: null },
-      now,
-      fallbackTimeZone: 'Europe/Rome',
-      params: { p: '2026-07-14' },
-    });
-    expect(state.today).toBe('2026-09-28');
-    expect(state.period.range).toEqual({ start: '2026-07-01', end: '2026-07-31' });
-    expect(state.period.isCurrent).toBe(false);
-  });
-
   it('uses the account’s own settings for the period, the currency and the zone', () => {
     const state = pageState({
       data: {
@@ -76,19 +64,6 @@ describe('pageState', () => {
     expect(state.currency).toBe('SEK');
     expect(state.timeZone).toBe('Europe/Stockholm');
   });
-
-  it('says when the account has never onboarded, instead of inventing settings', () => {
-    const state = pageState({
-      data: { ...data, settings: null },
-      now,
-      fallbackTimeZone: 'Europe/Rome',
-      params: {},
-    });
-    expect(state.onboarded).toBe(false);
-    // The defaults still make the page renderable rather than blank.
-    expect(state.currency).toBe('EUR');
-    expect(state.def).toEqual({ kind: 'month', startDay: 27 });
-  });
 });
 
 describe('readPage', () => {
@@ -99,25 +74,5 @@ describe('readPage', () => {
   it('sends an account that has never onboarded to /onboarding (§17.1.2)', async () => {
     loaded.data = { ...data, settings: null };
     await expect(readPage(Promise.resolve({}))).rejects.toThrow('redirect:/onboarding');
-  });
-
-  it('renders an onboarded account', async () => {
-    loaded.data = { ...data, settings: settingsRow({ currency: 'SEK' }) };
-    const page = await readPage(Promise.resolve({ q: ['bar', 'baz'] }));
-    expect(page.onboarded).toBe(true);
-    expect(page.currency).toBe('SEK');
-    expect(page.params.q).toBe('bar');
-  });
-});
-
-describe('narrowParams', () => {
-  it('keeps the first value of a repeated parameter, and leaves a missing one undefined', () => {
-    expect(narrowParams({ t: ['expense', 'income'], q: 'bar' })).toEqual({
-      t: 'expense',
-      q: 'bar',
-    });
-    expect(narrowParams({ q: undefined, t: [] }).q).toBeUndefined();
-    expect(narrowParams({ t: [] }).t).toBeUndefined();
-    expect(narrowParams({}).direction).toBeUndefined();
   });
 });

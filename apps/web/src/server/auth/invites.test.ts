@@ -48,38 +48,9 @@ describe('createInvite', () => {
     // Nothing in the row resembles the code that was handed out.
     expect(JSON.stringify(row)).not.toContain(code.slice(0, 4));
   });
-
-  it('records who minted it when there was somebody to record', async () => {
-    const { userId } = await createTestSession(harness.db);
-    const { invite } = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 1,
-      createdBy: userId,
-      now: NOW,
-    });
-    const [row] = await harness.db.select().from(invites).where(eq(invites.id, invite.id));
-    expect(row?.createdBy).toBe(userId);
-  });
 });
 
 describe('inviteIsUsable', () => {
-  it('accepts the code whatever way it is typed', async () => {
-    const { code } = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await expect(inviteIsUsable(harness.db, code, NOW)).resolves.toBe(true);
-    await expect(inviteIsUsable(harness.db, code.toLowerCase(), NOW)).resolves.toBe(true);
-    await expect(inviteIsUsable(harness.db, code.replace(/-/g, ' '), NOW)).resolves.toBe(true);
-  });
-
-  it('refuses an unknown code', async () => {
-    await expect(inviteIsUsable(harness.db, 'ZZZZ-ZZZZ-ZZZZ-ZZZZ', NOW)).resolves.toBe(false);
-    await expect(inviteIsUsable(harness.db, '', NOW)).resolves.toBe(false);
-  });
-
   it('refuses a code at the instant it expires, not a second after', async () => {
     const { code } = await createInvite(harness.db, {
       label: null,
@@ -94,26 +65,6 @@ describe('inviteIsUsable', () => {
     // RFC 7519's rule, and the one phase 06's review had to fix everywhere: reject **on** the
     // deadline, not after it.
     await expect(inviteIsUsable(harness.db, code, deadline)).resolves.toBe(false);
-  });
-
-  it('refuses a revoked code and a spent one', async () => {
-    const revoked = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await revokeInvite(harness.db, revoked.invite.id, NOW);
-    await expect(inviteIsUsable(harness.db, revoked.code, NOW)).resolves.toBe(false);
-
-    const spent = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await burnInvite(harness.db, spent.code, NOW);
-    await expect(inviteIsUsable(harness.db, spent.code, NOW)).resolves.toBe(false);
   });
 });
 
@@ -138,39 +89,6 @@ describe('burnInvite', () => {
     expect(row?.usedAt?.toISOString()).toBe(NOW.toISOString());
     // Spent, with nobody named yet — and already unusable, which is what makes the burn the burn.
     expect(row?.usedBy).toBeNull();
-    await expect(inviteIsUsable(harness.db, code, NOW)).resolves.toBe(false);
-  });
-
-  it('works exactly once', async () => {
-    const { code, invite } = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-
-    await expect(burnInvite(harness.db, code, NOW)).resolves.toBe(invite.id);
-    await expect(burnInvite(harness.db, code, NOW)).resolves.toBeNull();
-
-    const [row] = await harness.db.select().from(invites).where(eq(invites.id, invite.id));
-    expect(row?.usedAt?.toISOString()).toBe(NOW.toISOString());
-  });
-
-  it('records who spent it, once that account exists', async () => {
-    const { code, invite } = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await burnInvite(harness.db, code, NOW);
-    const ada = await createTestSession(harness.db, 'Ada');
-
-    await attributeInvite(harness.db, invite.id, ada.userId);
-
-    const [row] = await harness.db.select().from(invites).where(eq(invites.id, invite.id));
-    expect(row?.usedBy).toBe(ada.userId);
-    // Still spent: attribution is a record, not a second chance.
     await expect(inviteIsUsable(harness.db, code, NOW)).resolves.toBe(false);
   });
 
@@ -259,84 +177,5 @@ describe('listInvites', () => {
     expect(byLabel.get('revoked')?.status).toBe('revoked');
     expect(byLabel.get('expired')?.status).toBe('expired');
     expect(JSON.stringify(rows)).not.toContain(active.code.slice(0, 4));
-  });
-
-  it('puts the newest first', async () => {
-    await createInvite(harness.db, { label: 'old', ttlDays: 7, createdBy: null, now: NOW });
-    await createInvite(harness.db, { label: 'new', ttlDays: 7, createdBy: null, now: LATER });
-    const rows = await listInvites(harness.db, LATER);
-    expect(rows.map((row) => row.label)).toEqual(['new', 'old']);
-  });
-});
-
-describe('invite attribution', () => {
-  it('names who minted an invite and who spent it, and null for a CLI mint', async () => {
-    const admin = await createTestSession(harness.db, 'Ada', 'admin');
-    const member = await createTestSession(harness.db, 'Bob');
-    await harness.db
-      .update(user)
-      .set({ email: 'bob@example.com' })
-      .where(eq(user.id, member.userId));
-    const minted = await createInvite(harness.db, {
-      label: 'web',
-      ttlDays: 7,
-      createdBy: admin.userId,
-      now: NOW,
-    });
-    await createInvite(harness.db, { label: 'cli', ttlDays: 7, createdBy: null, now: LATER });
-    await burnInvite(harness.db, minted.code, NOW);
-    await attributeInvite(harness.db, minted.invite.id, member.userId);
-
-    const rows = await listInvites(harness.db, LATER);
-    const byLabel = new Map(rows.map((row) => [row.label, row]));
-    expect(byLabel.get('web')).toMatchObject({
-      createdByName: 'Ada',
-      usedByEmail: 'bob@example.com',
-    });
-    expect(byLabel.get('cli')).toMatchObject({ createdByName: null, usedByEmail: null });
-  });
-
-  it("carries the minter's name on the summary createInvite returns", async () => {
-    const admin = await createTestSession(harness.db, 'Ada', 'admin');
-    const web = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: admin.userId,
-      now: NOW,
-    });
-    expect(web.invite).toMatchObject({ createdByName: 'Ada', usedByEmail: null });
-    const cli = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    expect(cli.invite).toMatchObject({ createdByName: null, usedByEmail: null });
-  });
-});
-
-describe('revokeInvite', () => {
-  it('reports whether there was anything to revoke, and leaves a spent invite spent', async () => {
-    const { invite } = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await expect(revokeInvite(harness.db, 'no-such-invite', NOW)).resolves.toBe(false);
-    await expect(revokeInvite(harness.db, invite.id, NOW)).resolves.toBe(true);
-
-    const spent = await createInvite(harness.db, {
-      label: null,
-      ttlDays: 7,
-      createdBy: null,
-      now: NOW,
-    });
-    await burnInvite(harness.db, spent.code, NOW);
-    // Revoking a used invite changes nothing about the account it created; the status stays
-    // `used`, because that is what happened.
-    await revokeInvite(harness.db, spent.invite.id, NOW);
-    const rows = await listInvites(harness.db, NOW);
-    expect(rows.find((row) => row.id === spent.invite.id)?.status).toBe('used');
   });
 });

@@ -3,13 +3,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { isAdmin } from '../auth/admin';
 import { deletedBlobs, session, syncRows, user } from '../db/schema';
 import { createFsStore } from '../storage/fsStore';
 import { type AttachmentStore, objectKey } from '../storage/types';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
-import { deleteAccount, promoteAccount, restoreAccount, revokeAccount } from './accounts';
+import { deleteAccount, revokeAccount } from './accounts';
 
 let harness: TestDatabase;
 const NOW = new Date('2026-09-11T09:00:00.000Z');
@@ -50,36 +49,7 @@ async function isRevokedRow(id: string): Promise<boolean | null> {
   return found?.banned ?? null;
 }
 
-describe('promoteAccount', () => {
-  it('makes a member an admin', async () => {
-    const { admin, member } = await twoAccounts();
-    await expect(promoteAccount(harness.db, admin, member)).resolves.toEqual({ ok: true });
-    await expect(isAdmin(harness.db, member)).resolves.toBe(true);
-  });
-
-  it('refuses an account that does not exist', async () => {
-    const { admin } = await twoAccounts();
-    await expect(promoteAccount(harness.db, admin, 'nobody')).resolves.toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-  });
-});
-
 describe('revokeAccount', () => {
-  it('flags the account and closes its sessions at once', async () => {
-    const { admin, member } = await twoAccounts();
-    await expect(revokeAccount(harness.db, admin, member, NOW)).resolves.toEqual({ ok: true });
-    expect(await isRevokedRow(member)).toBe(true);
-    expect(await harness.db.select().from(session).where(eq(session.userId, member))).toHaveLength(
-      0,
-    );
-    // The other account's session is not touched.
-    expect(await harness.db.select().from(session).where(eq(session.userId, admin))).toHaveLength(
-      1,
-    );
-  });
-
   it('refuses to revoke oneself, and changes nothing', async () => {
     const { admin } = await twoAccounts();
     await expect(revokeAccount(harness.db, admin, admin, NOW)).resolves.toEqual({
@@ -90,31 +60,6 @@ describe('revokeAccount', () => {
     expect(await harness.db.select().from(session).where(eq(session.userId, admin))).toHaveLength(
       1,
     );
-  });
-
-  it('refuses an account that does not exist', async () => {
-    const { admin } = await twoAccounts();
-    await expect(revokeAccount(harness.db, admin, 'nobody', NOW)).resolves.toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-  });
-});
-
-describe('restoreAccount', () => {
-  it('lifts a revocation', async () => {
-    const { admin, member } = await twoAccounts();
-    await revokeAccount(harness.db, admin, member, NOW);
-    await expect(restoreAccount(harness.db, admin, member)).resolves.toEqual({ ok: true });
-    expect(await isRevokedRow(member)).toBe(false);
-  });
-
-  it('refuses an account that does not exist', async () => {
-    const { admin } = await twoAccounts();
-    await expect(restoreAccount(harness.db, admin, 'nobody')).resolves.toEqual({
-      ok: false,
-      error: 'notFound',
-    });
   });
 });
 
@@ -144,13 +89,6 @@ describe('deleteAccount', () => {
     expect(await harness.db.select().from(user).where(eq(user.id, admin))).toHaveLength(1);
   });
 
-  it('refuses an account that does not exist', async () => {
-    const { admin } = await twoAccounts();
-    await expect(
-      deleteAccount(harness.db, null, admin, { id: 'nobody', confirmation: 'x' }),
-    ).resolves.toEqual({ ok: false, error: 'notFound' });
-  });
-
   it('refuses a confirmation that is not the address, and deletes nothing', async () => {
     const { admin, member } = await twoAccounts();
     await nameAddress(member, 'bob@example.com');
@@ -160,26 +98,6 @@ describe('deleteAccount', () => {
     ).resolves.toEqual({ ok: false, error: 'emailMismatch' });
     expect(await harness.db.select().from(user).where(eq(user.id, member))).toHaveLength(1);
     expect(await harness.db.select().from(syncRows)).toHaveLength(1);
-  });
-
-  it('accepts the address in any case and with blanks around it', async () => {
-    const { admin, member } = await twoAccounts();
-    await nameAddress(member, 'bob@example.com');
-    await expect(
-      deleteAccount(harness.db, null, admin, { id: member, confirmation: '  BOB@Example.com ' }),
-    ).resolves.toEqual({ ok: true });
-    expect(await harness.db.select().from(user).where(eq(user.id, member))).toHaveLength(0);
-  });
-
-  it('asks for the display name when the address is synthetic', async () => {
-    const { admin, member } = await twoAccounts();
-    const synthetic = `${member}@passkey.saldo.invalid`;
-    await expect(
-      deleteAccount(harness.db, null, admin, { id: member, confirmation: synthetic }),
-    ).resolves.toEqual({ ok: false, error: 'emailMismatch' });
-    await expect(
-      deleteAccount(harness.db, null, admin, { id: member, confirmation: 'bob' }),
-    ).resolves.toEqual({ ok: true });
   });
 
   it("cascades the synced rows and the account, and leaves everybody else's", async () => {

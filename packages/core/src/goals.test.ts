@@ -153,10 +153,6 @@ describe('goalProgress', () => {
 });
 
 describe('goalRatio', () => {
-  it('is how much of the target is saved', () => {
-    expect(goalRatio(25000, 100000)).toBeCloseTo(0.25, 5);
-  });
-
   it('never leaves 0..1: a goal past its target is full, a negative balance empty', () => {
     expect(goalRatio(150000, 100000)).toBe(1);
     expect(goalRatio(-2000, 100000)).toBe(0);

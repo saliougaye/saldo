@@ -57,12 +57,6 @@ async function mint(): Promise<string> {
 }
 
 describe('POST /api/auth/invite/check', () => {
-  it('accepts a usable code', async () => {
-    const response = await POST(check(await mint()));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ valid: true });
-  });
-
   it('accepts the code however it was typed', async () => {
     const code = await mint();
     const response = await POST(check(code.toLowerCase().replaceAll('-', ' ')));

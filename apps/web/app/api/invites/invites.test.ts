@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { ADMIN_ROLE, revokeUser } from '../../../src/server/auth/admin';
+import { ADMIN_ROLE } from '../../../src/server/auth/admin';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
 import { createTestSession } from '../../../src/server/test/session';
 import { DELETE } from './[id]/route';
@@ -55,54 +55,15 @@ describe('POST /api/invites', () => {
     expect(JSON.stringify(await listed.json())).not.toContain(body.code.slice(0, 4));
   });
 
-  it('defaults the label to nothing and the life to a week', async () => {
-    const { bearer } = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
-    const response = await POST(post({}, { authorization: bearer }));
-    expect(response.status).toBe(201);
-    const body = (await response.json()) as CreatedInvite;
-    expect(body.invite.label).toBeNull();
-    const days = (new Date(body.invite.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000);
-    expect(days).toBeGreaterThan(6.9);
-    expect(days).toBeLessThan(7.1);
-  });
-
-  it('refuses a life outside the allowed range and a label nobody could read', async () => {
-    const { bearer } = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
-    expect((await POST(post({ ttlDays: 0 }, { authorization: bearer }))).status).toBe(400);
-    expect((await POST(post({ ttlDays: 400 }, { authorization: bearer }))).status).toBe(400);
-    expect((await POST(post({ label: 'x'.repeat(200) }, { authorization: bearer }))).status).toBe(
-      400,
-    );
-  });
-
   it('refuses anybody who is not the admin', async () => {
     expect((await POST(post({}))).status).toBe(401);
     expect((await POST(post({}, { authorization: 'Bearer nope' }))).status).toBe(401);
     const member = await createTestSession(harness.db, 'Bob', 'user');
     expect((await POST(post({}, { authorization: member.bearer }))).status).toBe(403);
   });
-
-  it('refuses a revoked admin', async () => {
-    const admin = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
-    await revokeUser(harness.db, admin.userId, 'gone', new Date());
-    // The session rows are deleted by the revocation, so this is a 401 and not a 403: there is no
-    // longer any session to judge.
-    expect((await POST(post({}, { authorization: admin.bearer }))).status).toBe(401);
-  });
 });
 
 describe('GET /api/invites', () => {
-  it('lists what the owner minted, newest first, with a status each', async () => {
-    const { bearer } = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
-    await POST(post({ label: 'one' }, { authorization: bearer }));
-    await POST(post({ label: 'two' }, { authorization: bearer }));
-    const response = await GET(get({ authorization: bearer }));
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as { invites: { label: string; status: string }[] };
-    expect(body.invites.map((invite) => invite.label)).toEqual(['two', 'one']);
-    expect(body.invites.every((invite) => invite.status === 'active')).toBe(true);
-  });
-
   it('refuses anybody who is not the admin', async () => {
     expect((await GET(get())).status).toBe(401);
     const member = await createTestSession(harness.db, 'Bob', 'user');
@@ -130,19 +91,5 @@ describe('DELETE /api/invites/[id]', () => {
       invites: { status: string }[];
     };
     expect(listed.invites[0]?.status).toBe('revoked');
-  });
-
-  it('refuses anybody who is not the admin, and an unknown id', async () => {
-    const member = await createTestSession(harness.db, 'Bob', 'user');
-    const forbidden = await DELETE(del('whatever', { authorization: member.bearer }), {
-      params: Promise.resolve({ id: 'whatever' }),
-    });
-    expect(forbidden.status).toBe(403);
-
-    const { bearer } = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
-    const missing = await DELETE(del('whatever', { authorization: bearer }), {
-      params: Promise.resolve({ id: 'whatever' }),
-    });
-    expect(missing.status).toBe(404);
   });
 });

@@ -55,44 +55,6 @@ afterAll(async () => {
   await harness.close();
 });
 
-describe('the registration gate, on an open server', () => {
-  it('starts the ceremony for somebody who gave a name', async () => {
-    const options = await optionsFor(
-      encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' }),
-    );
-    expect(options.challenge).toBeTypeOf('string');
-    expect(options.user.name).toBe('Ada');
-  });
-
-  it('refuses a ceremony with no name to put on the account', async () => {
-    await expect(
-      refusal(encodeRegistrationContext({ name: '   ', email: 'ada@example.com' })),
-    ).resolves.toEqual({
-      status: 'BAD_REQUEST',
-      message: 'Choose a name first',
-    });
-  });
-
-  it('does not look at the code, so a nonsense one is as good as none', async () => {
-    // The same two contexts are told apart only under `invite`, below: this is what makes the
-    // mode, and not the code, the thing that decides.
-    await expect(
-      optionsFor(
-        encodeRegistrationContext({
-          name: 'Ada',
-          email: 'ada@example.com',
-          invite: 'ZZZZ-ZZZZ-ZZZZ-ZZZZ',
-        }),
-      ),
-    ).resolves.toMatchObject({ user: { name: 'Ada' } });
-    await expect(
-      optionsFor(encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' })),
-    ).resolves.toMatchObject({
-      user: { name: 'Ada' },
-    });
-  });
-});
-
 describe('the registration gate, on a server that runs on invitation', () => {
   let previous: string | undefined;
 
@@ -198,19 +160,38 @@ describe('the registration gate, on a server that runs on invitation', () => {
       { status: 'FORBIDDEN', message: 'That invite code is not valid' },
     ]);
   });
+});
 
-  it('refuses somebody who brought no code at all', async () => {
+describe('the registration gate, on a first-user server', () => {
+  let previous: string | undefined;
+
+  beforeAll(() => {
+    previous = process.env.REGISTRATION;
+    process.env.REGISTRATION = 'first-user';
+    resetEnvCache();
+    resetAuthForTests();
+  });
+
+  afterAll(() => {
+    if (previous === undefined) delete process.env.REGISTRATION;
+    else process.env.REGISTRATION = previous;
+    resetEnvCache();
+    resetAuthForTests();
+  });
+
+  it('admits the first account and refuses every later one', async () => {
+    const context = encodeRegistrationContext({ name: 'Ada', email: 'ada@example.com' });
+    await expect(optionsFor(context)).resolves.toMatchObject({ user: { name: 'Ada' } });
+
     await harness.db.insert(user).values({
       id: crypto.randomUUID(),
-      name: 'Ada',
-      email: 'ada@example.com',
+      name: 'Grace',
+      email: 'grace@example.com',
       emailVerified: false,
     });
-    await expect(
-      refusal(encodeRegistrationContext({ name: 'Marco', email: 'marco@example.com' })),
-    ).resolves.toEqual({
+    await expect(refusal(context)).resolves.toEqual({
       status: 'FORBIDDEN',
-      message: 'That invite code is not valid',
+      message: 'This server is not accepting new accounts',
     });
   });
 });

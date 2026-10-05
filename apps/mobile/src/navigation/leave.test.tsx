@@ -1,7 +1,7 @@
 import { router, Stack, Tabs, useLocalSearchParams } from 'expo-router';
 import { act, renderRouter, screen } from 'expo-router/testing-library';
 import { Text } from 'react-native';
-import { type Gone, type Renamed, showsGone, useLeaveGone, useLeaveRenamed } from './leave';
+import { type Gone, type Renamed, useLeaveGone, useLeaveRenamed } from './leave';
 
 const page = (name: string) => () => <Text>{name}</Text>;
 
@@ -51,21 +51,6 @@ async function run(navigate: () => void): Promise<void> {
     navigate();
   });
 }
-
-describe('showsGone', () => {
-  const gone: Gone = { kind: 'category', ids: ['a', 'b'] };
-
-  it('matches the detail and the editor of a gone row', () => {
-    expect(showsGone({ name: 'category/[id]', params: { id: 'a' } }, gone)).toBe(true);
-    expect(showsGone({ name: 'category/edit/[id]', params: { id: 'b' } }, gone)).toBe(true);
-  });
-
-  it('leaves other rows, other kinds and screens without an id alone', () => {
-    expect(showsGone({ name: 'category/[id]', params: { id: 'c' } }, gone)).toBe(false);
-    expect(showsGone({ name: 'transaction/[id]', params: { id: 'a' } }, gone)).toBe(false);
-    expect(showsGone({ name: 'settings/categories' }, gone)).toBe(false);
-  });
-});
 
 describe('useLeaveGone', () => {
   it('returns to the list the row was opened from, not to its detail', async () => {

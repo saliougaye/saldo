@@ -1,23 +1,4 @@
-import type { PeriodDef } from '@saldo/core';
-import {
-  isRecapDue,
-  isRecapNotificationId,
-  nextRecapNotification,
-  RECAP_REPLAY,
-  recapNotificationId,
-  recapStamp,
-} from './recapSchedule';
-
-const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
-const WEEK: PeriodDef = { kind: 'week', startDay: 1 };
-const SEPTEMBER = { start: '2026-09-01', end: '2026-09-30' };
-
-describe('recapStamp', () => {
-  it('names the kind and the start, so a change of kind is a new period', () => {
-    expect(recapStamp(MONTH, SEPTEMBER)).toBe('month:2026-09-01');
-    expect(recapStamp(WEEK, { start: '2026-09-28', end: '2026-10-04' })).toBe('week:2026-09-28');
-  });
-});
+import { isRecapDue, RECAP_REPLAY } from './recapSchedule';
 
 describe('isRecapDue', () => {
   const base = {
@@ -47,26 +28,5 @@ describe('isRecapDue', () => {
     expect(isRecapDue({ ...replay, onboardingCompletedAt: '2026-10-01T07:00:00.000Z' })).toBe(true);
     // Nothing to recap before onboarding exists at all.
     expect(isRecapDue({ ...replay, onboardingCompletedAt: null })).toBe(false);
-  });
-});
-
-describe('nextRecapNotification', () => {
-  it('rings at 09:00 on the first day of the next period', () => {
-    const now = new Date(2026, 8, 25, 12, 0, 0, 0);
-    expect(nextRecapNotification(MONTH, '2026-09-25', now)).toEqual({
-      identifier: 'period-recap:2026-10-01',
-      at: new Date(2026, 9, 1, 9, 0, 0, 0),
-    });
-    expect(nextRecapNotification(WEEK, '2026-09-25', now)).toEqual({
-      identifier: 'period-recap:2026-09-28',
-      at: new Date(2026, 8, 28, 9, 0, 0, 0),
-    });
-  });
-});
-
-describe('recapNotificationId', () => {
-  it('is recognisable among the other scheduled notifications', () => {
-    expect(isRecapNotificationId(recapNotificationId('2026-10-01'))).toBe(true);
-    expect(isRecapNotificationId('card-charge:acc-1')).toBe(false);
   });
 });

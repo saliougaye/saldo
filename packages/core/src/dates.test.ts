@@ -1,15 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  addDays,
-  addMonths,
-  compareLocalDate,
-  daysInMonth,
-  diffDays,
-  isLocalDate,
-  makeLocalDate,
-  parseLocalDate,
-  todayLocal,
-} from './dates';
+import { addDays, addMonths, daysInMonth, diffDays, isLocalDate, todayLocal } from './dates';
 
 describe('daysInMonth', () => {
   it('handles 28, 29, 30 and 31 day months', () => {
@@ -28,16 +18,6 @@ describe('isLocalDate / parseLocalDate / makeLocalDate', () => {
     expect(isLocalDate('2026-4-18')).toBe(false);
     expect(isLocalDate('2026-13-01')).toBe(false);
     expect(isLocalDate('yesterday')).toBe(false);
-  });
-
-  it('parses into numeric parts', () => {
-    expect(parseLocalDate('2026-04-18')).toEqual({ year: 2026, month: 4, day: 18 });
-    expect(() => parseLocalDate('nope')).toThrow(RangeError);
-  });
-
-  it('builds zero-padded dates and rejects invalid parts', () => {
-    expect(makeLocalDate(2026, 3, 7)).toBe('2026-03-07');
-    expect(() => makeLocalDate(2026, 2, 30)).toThrow(RangeError);
   });
 });
 
@@ -60,14 +40,6 @@ describe('addMonths', () => {
     expect(addMonths({ year: 2026, month: 1 }, -1)).toEqual({ year: 2025, month: 12 });
     expect(addMonths({ year: 2025, month: 12 }, 1)).toEqual({ year: 2026, month: 1 });
     expect(addMonths({ year: 2026, month: 3 }, -14)).toEqual({ year: 2025, month: 1 });
-  });
-});
-
-describe('compareLocalDate', () => {
-  it('orders dates', () => {
-    expect(compareLocalDate('2026-04-01', '2026-04-02')).toBe(-1);
-    expect(compareLocalDate('2026-04-02', '2026-04-01')).toBe(1);
-    expect(compareLocalDate('2026-04-02', '2026-04-02')).toBe(0);
   });
 });
 

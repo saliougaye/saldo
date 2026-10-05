@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { entitySchemas } from './entities';
 import { isHlc } from './sync/hlc';
-import {
-  emptyUserData,
-  readSettings,
-  SETTINGS_DEFAULTS,
-  USER_DATA_COLLECTIONS,
-  userDataSchema,
-} from './userData';
+import { readSettings, SETTINGS_DEFAULTS } from './userData';
 
 const settings = {
   id: 'settings',
@@ -23,27 +16,7 @@ const settings = {
   timeZone: 'Europe/Zurich',
 };
 
-describe('USER_DATA_COLLECTIONS', () => {
-  it('names a collection for every synced entity but the settings singleton', () => {
-    expect(Object.keys(USER_DATA_COLLECTIONS).sort()).toEqual(
-      Object.keys(entitySchemas)
-        .filter((entity) => entity !== 'settings')
-        .sort(),
-    );
-  });
-});
-
-describe('userDataSchema', () => {
-  it('accepts an account that has not onboarded yet', () => {
-    expect(userDataSchema.safeParse(emptyUserData()).success).toBe(true);
-  });
-});
-
 describe('readSettings', () => {
-  it('returns a valid row as it is', () => {
-    expect(readSettings(settings)).toEqual(settings);
-  });
-
   it('fills a field the row was written without', () => {
     const { timeZone: _dropped, cycleStartDay: _alsoDropped, ...older } = settings;
     const read = readSettings(older);

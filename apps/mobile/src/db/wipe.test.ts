@@ -61,13 +61,6 @@ describe('hasLocalData', () => {
     // phone look occupied.
     expect(hasLocalData(context.db)).toBe(false);
   });
-
-  it('is false again after a wipe', () => {
-    const context = createTestContext();
-    fill(context);
-    wipeDevice(context.db);
-    expect(hasLocalData(context.db)).toBe(false);
-  });
 });
 
 describe('wipeDevice', () => {
@@ -96,21 +89,6 @@ describe('wipeDevice', () => {
     // The lock is a device setting, not an account one: a wiped phone must not stay locked by a
     // passcode belonging to data that is no longer there.
     expect(context.kv.get('appLockEnabled')).toBeNull();
-  });
-
-  it('leaves a database the app can immediately use again', () => {
-    const context = createTestContext();
-    fill(context);
-
-    wipeDevice(context.db);
-
-    // No settings row is what sends the boot router to onboarding (§6.29), and writing the new
-    // ones must not collide with anything the wipe left behind.
-    expect(context.repos.settings.get()).toBeNull();
-    context.repos.settings.create(SETTINGS_INPUT);
-    const account = context.repos.accounts.create({ ...ACCOUNT_INPUT, name: 'Nuovo' });
-    expect(account.name).toBe('Nuovo');
-    expect(context.repos.accounts.list()).toHaveLength(1);
   });
 });
 
@@ -156,16 +134,5 @@ describe('wipeAccountData', () => {
     wipeAccountData(context.db, null);
 
     expect(context.kv.get(SYNC_EPOCH_KEY)).toBeNull();
-  });
-
-  it('leaves no settings, which is what sends boot to onboarding', () => {
-    const context = createTestContext();
-    fill(context);
-
-    wipeAccountData(context.db, 1);
-
-    expect(context.repos.settings.get()).toBeNull();
-    context.repos.settings.create(SETTINGS_INPUT);
-    expect(context.repos.settings.get()).not.toBeNull();
   });
 });

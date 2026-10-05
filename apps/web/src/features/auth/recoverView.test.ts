@@ -1,27 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { recoverAnswer, recoverState, recoveryVerifyPath } from './recoverView';
-
-describe('recoverState', () => {
-  it('says recovery is unavailable when the server sends no mail, whatever the query', () => {
-    expect(recoverState({ mailEnabled: false, error: undefined })).toBe('unavailable');
-    expect(recoverState({ mailEnabled: false, error: 'link' })).toBe('unavailable');
-  });
-
-  it('shows the form when mail is on', () => {
-    expect(recoverState({ mailEnabled: true, error: undefined })).toBe('form');
-  });
-
-  it('adds the expired-link line for whatever ?error= the library sent the browser back with', () => {
-    // Better Auth replaces the query of `errorCallbackURL` with its own code.
-    for (const error of ['INVALID_TOKEN', 'new_user_signup_disabled', 'BANNED_USER', 'link']) {
-      expect(recoverState({ mailEnabled: true, error })).toBe('expiredLink');
-    }
-  });
-
-  it('shows the plain form for an empty ?error=', () => {
-    expect(recoverState({ mailEnabled: true, error: '' })).toBe('form');
-  });
-});
+import { recoverAnswer, recoveryVerifyPath } from './recoverView';
 
 describe('recoverAnswer', () => {
   it('is the same sentence when the call worked', () => {

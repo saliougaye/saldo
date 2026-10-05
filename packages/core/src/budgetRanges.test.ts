@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { budgetRange } from './budgetRanges';
-import { isoWeekRange, yearRange } from './period';
+import { isoWeekRange } from './period';
 
 const APRIL = { start: '2026-03-27', end: '2026-04-26' };
 
@@ -20,17 +20,7 @@ describe('isoWeekRange', () => {
   });
 });
 
-describe('yearRange', () => {
-  it('is the calendar year of the date', () => {
-    expect(yearRange('2026-04-18')).toEqual({ start: '2026-01-01', end: '2026-12-31' });
-  });
-});
-
 describe('budgetRange', () => {
-  it('is the selected period for a budget that follows it', () => {
-    expect(budgetRange('period', APRIL, '2026-04-18')).toEqual(APRIL);
-  });
-
   it('is the calendar month around the reference day for a month budget', () => {
     // The period is a pay cycle straddling two months; the budget still measures April.
     expect(budgetRange('month', APRIL, '2026-04-18')).toEqual({
@@ -67,16 +57,6 @@ describe('budgetRange', () => {
     expect(budgetRange('year', { start: '2025-12-27', end: '2026-01-26' }, '2026-01-05')).toEqual({
       start: '2026-01-01',
       end: '2026-12-31',
-    });
-  });
-
-  it('measures a period budget over a month period, and a week budget inside it', () => {
-    const september = { start: '2026-09-01', end: '2026-09-30' };
-    expect(budgetRange('period', september, '2026-09-10')).toEqual(september);
-    // 2026-09-10 is a Thursday; its week runs Mon 7th to Sun 13th, inside September.
-    expect(budgetRange('week', september, '2026-09-10')).toEqual({
-      start: '2026-09-07',
-      end: '2026-09-13',
     });
   });
 

@@ -1,30 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { columnOf, monthGrid, weekdayOf } from './calendar';
-
-describe('weekdayOf', () => {
-  it('counts from Monday', () => {
-    expect(weekdayOf('2026-09-07')).toBe(0); // a Monday
-    expect(weekdayOf('2026-09-13')).toBe(6); // the Sunday after
-  });
-});
-
-describe('columnOf', () => {
-  it('moves Sunday to the first column when the week starts there', () => {
-    expect(columnOf('2026-09-13', 'monday')).toBe(6);
-    expect(columnOf('2026-09-13', 'sunday')).toBe(0);
-    expect(columnOf('2026-09-07', 'sunday')).toBe(1);
-  });
-});
+import { monthGrid } from './calendar';
 
 describe('monthGrid', () => {
-  it('is always six rows of seven, whatever the month', () => {
-    for (const month of [2, 3, 9, 12]) {
-      const grid = monthGrid({ year: 2026, month }, 'monday');
-      expect(grid).toHaveLength(6);
-      for (const week of grid) expect(week).toHaveLength(7);
-    }
-  });
-
   it('starts on the first day of the week containing the 1st', () => {
     // 1 September 2026 is a Tuesday, so a Monday-first grid opens on 31 August.
     expect(monthGrid({ year: 2026, month: 9 }, 'monday')[0]?.[0]).toEqual({

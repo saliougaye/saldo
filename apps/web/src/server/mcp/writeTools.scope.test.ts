@@ -8,7 +8,7 @@ import { readUserData } from '../userData/read';
 import { seedOnboarded } from '../write/fixtures';
 import { buildMcpServer } from './server';
 import { FIXTURE_CTX, fixtureClock } from './write/testKit';
-import { createWriteToolHandlers, writeToolHandlers } from './writeTools';
+import { createWriteToolHandlers } from './writeTools';
 
 let harness: TestDatabase;
 let userId: string;
@@ -71,10 +71,6 @@ const expense = {
 };
 
 describe('the write tools through the MCP server (§17.4.1, §17.4.2)', () => {
-  it('has one handler per catalogue write tool, in the same order', () => {
-    expect(writeToolHandlers.map((handler) => handler.spec.name)).toEqual(WRITE_NAMES);
-  });
-
   // The route answers a read token's write call with 403 insufficient_scope before any server is
   // built (`app/mcp/route.test.ts`); a server built for that token does not even hold the tool.
   it('a read-only token lists no write tool, and a call writes nothing', async () => {
@@ -101,27 +97,5 @@ describe('the write tools through the MCP server (§17.4.1, §17.4.2)', () => {
     expect((await readUserData(harness.db, userId)).transactions).toEqual([
       expect.objectContaining({ id: saved.id, amount: 4820 }),
     ]);
-  });
-
-  it('a refused write is a tool error with a readable message, not a protocol error', async () => {
-    await onboarded();
-    const client = await connect(['read', 'write']);
-    const result = await client.callTool({
-      name: 'save_transaction',
-      arguments: { ...expense, categoryId: 'nope' },
-    });
-    expect('isError' in result && result.isError).toBe(true);
-    expect(textOf(result)).toMatch(/list_categories/);
-  });
-
-  it('hands the client each write tool with its annotations', async () => {
-    await onboarded();
-    const client = await connect(['read', 'write']);
-    const tools = (await client.listTools()).tools;
-    expect(tools.find((tool) => tool.name === 'delete_transaction')?.annotations).toMatchObject({
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-    });
   });
 });

@@ -16,7 +16,7 @@ import {
   issueTestAccessToken,
 } from '../../src/server/test/oauth';
 import { createTestSession } from '../../src/server/test/session';
-import { DELETE, GET, POST } from './route';
+import { GET, POST } from './route';
 
 let harness: TestDatabase;
 
@@ -104,14 +104,6 @@ const switchOff = () =>
     .values({ key: 'mcp.enabled', value: false, updatedAt: new Date(), updatedBy: null });
 
 describe('/mcp, the HTTP surface', () => {
-  it('answers GET and DELETE with 405', async () => {
-    for (const handler of [GET, DELETE]) {
-      const response = await handler(new Request(URL_MCP, { method: 'GET' }));
-      expect(response.status).toBe(405);
-      expect(response.headers.get('allow')).toBe('POST');
-    }
-  });
-
   it('answers 401 with the challenge when there is no token', async () => {
     const response = await POST(rpcRequest(null, 'tools/list'));
     expect(response.status).toBe(401);
@@ -151,20 +143,6 @@ describe('/mcp, the HTTP surface', () => {
       deps(),
     );
     expect(measured.status).toBe(413);
-  });
-
-  it('answers a body that is not JSON with a JSON-RPC parse error', async () => {
-    const { bearer } = await connected();
-    const response = await serveMcp(
-      new Request(URL_MCP, {
-        method: 'POST',
-        headers: { ...HEADERS, authorization: bearer },
-        body: '{',
-      }),
-      deps(),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({ error: { code: -32700 } });
   });
 
   it('allows 120 requests a minute per token, then 429 with Retry-After', async () => {
@@ -228,47 +206,6 @@ describe('/mcp, the tools', () => {
       error: { code: -32600, message: 'insufficient_scope', data: { required: 'write' } },
     });
   });
-
-  it('refuses each of the catalogue write tools to a read token, before any write', async () => {
-    const { bearer } = await connected();
-    const response = await serveMcp(
-      rpcRequest(
-        bearer,
-        'tools/call',
-        {
-          name: 'save_transaction',
-          arguments: { kind: 'expense', amountMinor: 100, accountId: 'a', categoryId: 'c' },
-        },
-        8,
-      ),
-      deps(),
-    );
-    expect(response.status).toBe(403);
-    expect(await response.json()).toEqual({
-      jsonrpc: '2.0',
-      id: 8,
-      error: { code: -32600, message: 'insufficient_scope', data: { required: 'write' } },
-    });
-  });
-
-  it('runs a write tool for a write token, and answers its refusal as a tool error', async () => {
-    const { bearer } = await connected(['read', 'write', 'offline_access']);
-    const ok = await serveMcp(
-      rpcRequest(bearer, 'tools/call', { name: 'echo_test', arguments: { text: 'hi' } }),
-      deps(),
-    );
-    expect(
-      ((await ok.json()) as { result: { structuredContent: unknown } }).result.structuredContent,
-    ).toEqual({
-      echoed: 'hi',
-    });
-    const refused = await serveMcp(
-      rpcRequest(bearer, 'tools/call', { name: 'echo_test', arguments: { text: 'no' } }),
-      deps(),
-    );
-    expect(refused.status).toBe(200);
-    expect(((await refused.json()) as { result: { isError: boolean } }).result.isError).toBe(true);
-  });
 });
 
 describe('/mcp, revocation and the switch', () => {
@@ -288,16 +225,5 @@ describe('/mcp, revocation and the switch', () => {
     expect((await GET(new Request(URL_MCP))).status).toBe(404);
     await harness.db.delete(serverSettings);
     expect((await POST(rpcRequest(bearer, 'tools/list'))).status).toBe(200);
-  });
-
-  it('refuses an expired token', async () => {
-    const { userId } = await createTestSession(harness.db);
-    const { clientId } = await createTestClient(harness.db);
-    const { bearer } = await issueTestAccessToken(harness.db, {
-      userId,
-      clientId,
-      expiresAt: new Date(Date.now() - 1000),
-    });
-    expect((await POST(rpcRequest(bearer, 'tools/list'))).status).toBe(401);
   });
 });

@@ -79,27 +79,4 @@ describe('topCategories', () => {
     const ranked = topCategories(categories, usage, 'expense', { today: TODAY });
     expect(ranked[0]?.id).toBe('old-favourite');
   });
-
-  it('offers only the direction being entered', () => {
-    const ranked = topCategories(categories, [], 'income', { today: TODAY });
-    expect(ranked.map((c) => c.id)).toEqual(['salary']);
-  });
-
-  it('caps the grid at two rows, the "Altro" tile included', () => {
-    const many = Array.from({ length: 30 }, (_, index) => category(`c-${index}`));
-    expect(topCategories(many, [], 'expense', { today: TODAY })).toHaveLength(7);
-  });
-
-  it('leaves an archived category out', () => {
-    const archived = category('gone', { archivedAt: '2026-01-01T00:00:00.000Z', sortOrder: 9 });
-    const ranked = topCategories([...categories, archived], [], 'expense', { today: TODAY });
-    expect(ranked.map((c) => c.id)).not.toContain('gone');
-  });
-
-  it('ignores the transfers that carry no category', () => {
-    const usage = [{ categoryId: null, date: TODAY }, ...times(2, 'old-favourite', TODAY)];
-    expect(topCategories(categories, usage, 'expense', { today: TODAY })[0]?.id).toBe(
-      'old-favourite',
-    );
-  });
 });

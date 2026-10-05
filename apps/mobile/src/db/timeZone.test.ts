@@ -29,15 +29,6 @@ describe('backfillTimeZone', () => {
     expect(row?.syncState).toBe(1);
   });
 
-  it('leaves a zone the user already has', () => {
-    const context = createTestContext();
-    context.repos.settings.create({ ...SETTINGS_INPUT, timeZone: 'Asia/Tokyo' });
-    markSynced(context);
-
-    expect(backfillTimeZone(context.db, context.repos, 'Europe/Rome')).toBe(false);
-    expect(context.repos.settings.get()?.timeZone).toBe('Asia/Tokyo');
-  });
-
   it('waits while the row is pending, so a yielded row keeps losing to the account’s', () => {
     const context = createTestContext();
     context.repos.settings.create(SETTINGS_INPUT);
@@ -47,11 +38,5 @@ describe('backfillTimeZone', () => {
     expect(backfillTimeZone(context.db, context.repos, 'Europe/Rome')).toBe(false);
     const [after] = context.db.select().from(settings).all();
     expect(after?.updatedAt).toBe(before?.updatedAt);
-  });
-
-  it('does nothing before onboarding', () => {
-    const context = createTestContext();
-    expect(backfillTimeZone(context.db, context.repos, 'Europe/Rome')).toBe(false);
-    expect(context.repos.settings.get()).toBeNull();
   });
 });

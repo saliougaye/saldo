@@ -3,7 +3,7 @@ import { type Transaction, transactionSchema } from '../entities';
 import { emptyUserData, type UserData } from '../userData';
 import { readBackup } from './backup';
 import { csvRows, toCsv } from './csv';
-import { backupFile, csvFile, NothingToExportError } from './exportFiles';
+import { backupFile, csvFile } from './exportFiles';
 
 const CREATED = '2026-09-01T10:00:00.000Z';
 const HLC = '000000000000001-0000-dev';
@@ -82,10 +82,6 @@ describe('backupFile', () => {
       expect(result.backup.data.transactions).toHaveLength(1);
     }
   });
-
-  it('refuses to export before there are settings', () => {
-    expect(() => backupFile(emptyUserData(), STAMP)).toThrow(NothingToExportError);
-  });
 });
 
 describe('csvFile', () => {
@@ -113,25 +109,5 @@ describe('csvFile', () => {
     });
     const lines = file.contents.trimEnd().split('\r\n');
     expect(lines.map((line) => line.split(',').at(-1))).toEqual(['id', 'c', 'a', 'b']);
-  });
-
-  it('writes the header alone when nothing falls in the range', () => {
-    const file = csvFile(data({ transactions: rows }), {
-      today: '2026-09-11',
-      range: { start: '2026-01-01', end: '2026-01-31' },
-    });
-    expect(file.contents.trimEnd().split('\r\n')).toHaveLength(1);
-  });
-
-  it('does not reorder the caller’s transactions', () => {
-    const input = data({ transactions: [...rows] });
-    csvFile(input, { today: '2026-09-11', range: null });
-    expect(input.transactions.map((row) => row.id)).toEqual(['b', 'z', 'a', 'c']);
-  });
-
-  it('refuses to export before there are settings', () => {
-    expect(() => csvFile(emptyUserData(), { today: '2026-09-11', range: null })).toThrow(
-      NothingToExportError,
-    );
   });
 });

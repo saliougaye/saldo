@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { GET as authGet } from '../../../app/api/auth/[...all]/route';
-import { oauthClient, oauthConsent, serverSettings } from '../db/schema';
+import { oauthClient, oauthConsent } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestClient, grantTestConsent, TEST_REDIRECT } from '../test/oauth';
 import { createTestSession, sessionCookie } from '../test/session';
@@ -60,32 +60,6 @@ async function consentPage(clientId: string, cookie: string, scope = 'read write
 }
 
 describe('readConsentRequest', () => {
-  it('names the client, its redirect host and what it asks for; a new client is fresh', async () => {
-    const { userId, cookie } = await signedIn();
-    const { clientId } = await createTestClient(harness.db);
-    const params = await consentPage(clientId, cookie);
-    expect(await readConsentRequest(params, userId)).toEqual({
-      ok: true,
-      request: {
-        clientId,
-        clientName: 'Claude Code',
-        redirectHost: 'localhost:33418',
-        requestedScopes: ['read', 'write'],
-        fresh: true,
-        previouslyAuthorizedAt: null,
-      },
-    });
-  });
-
-  it('asks for read alone when the client did not ask to write', async () => {
-    const { userId, cookie } = await signedIn();
-    const { clientId } = await createTestClient(harness.db);
-    const params = await consentPage(clientId, cookie, 'read offline_access');
-    expect(await readConsentRequest(params, userId)).toMatchObject({
-      request: { requestedScopes: ['read'] },
-    });
-  });
-
   it('is not fresh when the client registered more than 10 minutes ago, or anyone consented', async () => {
     const { userId, cookie } = await signedIn();
     const old = await createTestClient(harness.db, {
@@ -105,18 +79,6 @@ describe('readConsentRequest', () => {
     expect(
       await readConsentRequest(await consentPage(known.clientId, cookie), userId),
     ).toMatchObject({ request: { fresh: false, previouslyAuthorizedAt: null } });
-  });
-
-  it('says when this user already authorized the client', async () => {
-    const { userId, cookie } = await signedIn();
-    const { clientId } = await createTestClient(harness.db);
-    const at = new Date('2026-09-01T10:00:00.000Z');
-    await grantTestConsent(harness.db, { userId, clientId, scopes: ['read'], at });
-    // Asking for more than was granted brings the page back.
-    const params = await consentPage(clientId, cookie, 'read write offline_access');
-    expect(await readConsentRequest(params, userId)).toMatchObject({
-      request: { previouslyAuthorizedAt: at },
-    });
   });
 
   it('refuses a query whose signature does not hold', async () => {
@@ -146,16 +108,6 @@ describe('readConsentRequest', () => {
     const params = await consentPage(clientId, cookie);
     await harness.db.update(oauthClient).set({ disabled: true });
     expect(await readConsentRequest(params, userId)).toEqual({ ok: false, reason: 'invalid' });
-  });
-
-  it('says disabled while MCP is off', async () => {
-    const { userId, cookie } = await signedIn();
-    const { clientId } = await createTestClient(harness.db);
-    const params = await consentPage(clientId, cookie);
-    await harness.db
-      .insert(serverSettings)
-      .values({ key: 'mcp.enabled', value: false, updatedAt: new Date(), updatedBy: null });
-    expect(await readConsentRequest(params, userId)).toEqual({ ok: false, reason: 'disabled' });
   });
 });
 

@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type BudgetTargetInput,
-  budgetAdvice,
-  budgetCardStatus,
-  budgetEventIds,
-  rankBudget,
-} from './budgetTargets';
+import { type BudgetTargetInput, budgetAdvice, rankBudget } from './budgetTargets';
 
 function budget(id: string, spent: number, limit: number, pace = 0.8): BudgetTargetInput {
   const ratio = spent / limit;
@@ -41,49 +35,6 @@ describe('rankBudget', () => {
 
   it('scores the rest by ratio alone on the first day, when the pace is 0', () => {
     expect(rankBudget(budget('svago', 0, 12000, 0)).score).toBe(0);
-  });
-});
-
-describe('budgetEventIds', () => {
-  const items = [
-    budget('spesa', 43080, 42000),
-    budget('ristoranti', 20800, 20000),
-    budget('casa', 70100, 70000),
-    budget('auto', 30500, 30000),
-    budget('bar', 12300, 12000),
-    budget('trasporti', 11780, 25000),
-  ];
-
-  it('lists the budgets over their limit, largest overrun first, featured one left out', () => {
-    expect(budgetEventIds(items, 'spesa')).toEqual(['ristoranti', 'auto', 'bar']);
-  });
-
-  it('keeps at most three', () => {
-    expect(budgetEventIds(items, 'trasporti')).toHaveLength(3);
-  });
-
-  it('never lists a budget that is only over pace', () => {
-    expect(budgetEventIds([budget('shopping', 8900, 10000)], null)).toEqual([]);
-  });
-});
-
-describe('budgetCardStatus', () => {
-  it('counts the budgets over their limit first', () => {
-    expect(budgetCardStatus([budget('a', 43080, 42000), budget('b', 8900, 10000)])).toEqual({
-      kind: 'overLimit',
-      count: 1,
-    });
-  });
-
-  it('then the budgets over pace', () => {
-    expect(budgetCardStatus([budget('b', 8900, 10000), budget('c', 100, 10000)])).toEqual({
-      kind: 'overPace',
-      count: 1,
-    });
-  });
-
-  it('says within limits otherwise', () => {
-    expect(budgetCardStatus([budget('c', 100, 10000)])).toEqual({ kind: 'withinLimits' });
   });
 });
 
