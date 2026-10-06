@@ -23,9 +23,4 @@ describe('newestFirst', () => {
     const sorted = ids.map((id) => row(id, '2026-09-01', at)).sort(newestFirst);
     expect(sorted.map((r) => r.id)).toEqual(['b', 'ab', 'a-b', '_x', 'B']);
   });
-
-  it('answers 0 for the same row', () => {
-    const one = row('a', '2026-09-01', '2026-09-01T10:00:00.000Z');
-    expect(newestFirst(one, { ...one })).toBe(0);
-  });
 });

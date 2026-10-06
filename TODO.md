@@ -21,6 +21,41 @@ phone, then a plan for both.
 
 Asked for and shaped enough to plan, or one decision away from it.
 
+### End-to-end tests: Playwright for the web app, Maestro for the phone
+
+Decided 2026-10-05. The test suite keeps unit tests only for complex logic, security guards and real bug regressions.
+Integration and end-to-end tests cover the rest. The prune removed the component, view-model and copy tests, so the
+flows below are now covered by nobody. Write them before the next UI change on each screen.
+
+The web app has no end-to-end tests. Add Playwright, and use its virtual WebAuthn authenticator for passkeys:
+
+1. Auth and onboarding: the setup wizard, register with an invite (errors on the right step), passkey sign-in,
+   recovery, the passkey list (the last passkey cannot be deleted).
+2. Shell and PWA: the nav tabs (Admin only for an admin), the `/budgets` redirect keeps its query, the manifest and
+   its icons, the offline page, the language from the browser.
+3. Transactions: day groups and totals, «In arrivo», filter chips, detail panel, create, edit and delete, the
+   stale-version conflict.
+4. Home and Statistiche: the summary, the featured budget and goal, the split by category and tag, period stepping.
+5. Accounts and goals: groups, pockets, archive and restore, the card statement, a goal from creation to close.
+6. Budgets, categories and tags: budget states, category archive with a move, reorder, tag merge and delete.
+7. Profile: the preference panels, currency change, time zone, email states.
+8. Admin, MCP and OAuth: accounts, invites, settings locked by the environment, connectors, the consent page.
+
+The phone has two Maestro flows (`apps/mobile/maestro/`). Add:
+
+1. Hidden amounts on Home, Statistiche, the forecast and the recap; the setting survives a relaunch.
+2. The amount keypad and a negative opening balance on a credit card.
+3. A transfer between accounts and a credit card settlement.
+4. A goal: create, top up, close with an expense.
+5. A budget from the Home card, then overspend it.
+6. Tags: create (empty and duplicate names refused), rename, merge, delete.
+7. Categories: create with icon and colour, archive with a move.
+8. Period navigation: the header stops at the current period, a custom range, the sheets still take taps.
+9. The guide: the intro shows once, the info buttons, an unknown deep link.
+10. Settings: time zone search, permissions, pull to refresh offline, add an email.
+
+Run the flows in Italian and in English, because the copy tests are gone too.
+
 ### Profile: the period row shows the period, not only the cycle day
 
 Found by the in-app guide analysis (2026-09-26). Profile's first row is «Inizio del ciclo · dal 27» whatever the

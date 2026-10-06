@@ -2,8 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
-import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
-import { createTag, deleteTag, mergeTags, newTag, renameTag } from './tags';
+import { FIXTURE_NOW, seedOnboarded } from './fixtures';
+import { createTag, deleteTag, mergeTags, renameTag } from './tags';
 import { writeChanges } from './writeChanges';
 
 let harness: TestDatabase;
@@ -96,50 +96,9 @@ describe('createTag', () => {
     expect(second).toEqual({ ...first, created: false });
     expect((await data()).tags).toHaveLength(1);
   });
-
-  it('refuses an empty name', async () => {
-    await onboarded();
-    expect(await createTag(harness.db, userId, '  ', FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-  });
-});
-
-describe('newTag', () => {
-  it('creates a tag with the trimmed name', async () => {
-    await onboarded();
-    const result = await newTag(harness.db, userId, ' Viaggio ', FIXTURE_NOW);
-    if (!result.ok) throw new Error('not created');
-    expect((await tagRow(result.id))?.name).toBe('Viaggio');
-  });
-
-  it('refuses a name another tag holds in any case, an empty one and a long one', async () => {
-    await onboarded();
-    await tag('t-casa', 'Casa');
-    expect(await newTag(harness.db, userId, ' cASA', later)).toEqual({ ok: false, error: 'taken' });
-    expect(await newTag(harness.db, userId, ' ', later)).toEqual({ ok: false, error: 'invalid' });
-    expect(await newTag(harness.db, userId, 'x'.repeat(41), later)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-    expect((await data()).tags).toHaveLength(1);
-  });
 });
 
 describe('renameTag', () => {
-  it('renames and keeps the id', async () => {
-    await onboarded();
-    await tag('t1', 'Casa');
-    await transaction('x1', ['t1']);
-    expect(await renameTag(harness.db, userId, { id: 't1', name: ' Casa nuova ' }, later)).toEqual({
-      ok: true,
-    });
-    expect((await tagRow('t1'))?.name).toBe('Casa nuova');
-    expect((await txRow('x1'))?.tagIds).toEqual(['t1']);
-    expect((await data()).tags).toHaveLength(1);
-  });
-
   it('refuses a name another tag holds, in any case', async () => {
     await onboarded();
     await tag('t1', 'Casa');
@@ -158,35 +117,6 @@ describe('renameTag', () => {
       ok: true,
     });
     expect((await tagRow('t1'))?.name).toBe('Casa');
-  });
-
-  it('writes nothing when the name is the one it has', async () => {
-    await onboarded();
-    await tag('t1', 'Casa');
-    const stamp = (await tagRow('t1'))?.updatedAt;
-    expect(await renameTag(harness.db, userId, { id: 't1', name: ' Casa ' }, later)).toEqual({
-      ok: true,
-    });
-    expect((await tagRow('t1'))?.updatedAt).toBe(stamp);
-  });
-
-  it('refuses an empty or too long name, and an unknown tag', async () => {
-    await onboarded();
-    await tag('t1', 'Casa');
-    for (const name of ['', '   ', 'x'.repeat(41)]) {
-      expect(await renameTag(harness.db, userId, { id: 't1', name }, later)).toEqual({
-        ok: false,
-        error: 'invalid',
-      });
-    }
-    expect(await renameTag(harness.db, userId, { id: 'nope', name: 'Altro' }, later)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    expect(await renameTag(harness.db, userId, { id: 7 }, later)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
   });
 
   it('cannot rename another user’s tag', async () => {
@@ -249,28 +179,6 @@ describe('mergeTags', () => {
     // The target and the rows that never carried the source keep their stamp.
     expect(await restamped(before)).toEqual(['r1', 'x1', 'x2']);
   });
-
-  it('refuses the same tag twice, an unknown source or target, and a malformed input', async () => {
-    await onboarded();
-    await tag('src');
-    await tag('dst');
-    await transaction('x1', ['src']);
-    expect(
-      await mergeTags(harness.db, userId, { sourceId: 'src', targetId: 'src' }, later),
-    ).toEqual({ ok: false, error: 'invalid' });
-    expect(
-      await mergeTags(harness.db, userId, { sourceId: 'nope', targetId: 'dst' }, later),
-    ).toEqual({ ok: false, error: 'notFound' });
-    expect(
-      await mergeTags(harness.db, userId, { sourceId: 'src', targetId: 'nope' }, later),
-    ).toEqual({ ok: false, error: 'notFound' });
-    expect(await mergeTags(harness.db, userId, { sourceId: 'src' }, later)).toEqual({
-      ok: false,
-      error: 'invalid',
-    });
-    expect((await txRow('x1'))?.tagIds).toEqual(['src']);
-    expect(await tagRow('src')).toBeDefined();
-  });
 });
 
 describe('deleteTag', () => {
@@ -293,52 +201,5 @@ describe('deleteTag', () => {
     expect(d.recurrences[0]?.template.tagIds).toEqual(['kept']);
     expect(d.tags.map((row) => row.id)).toEqual(['kept']);
     expect(await restamped(before)).toEqual(['r1', 'x1', 'x2']);
-  });
-
-  it('answers notFound for an unknown tag and for one already deleted', async () => {
-    await onboarded();
-    await tag('gone');
-    expect(await deleteTag(harness.db, userId, 'nope', later)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    await deleteTag(harness.db, userId, 'gone', later);
-    expect(await deleteTag(harness.db, userId, 'gone', later)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    expect(await deleteTag(harness.db, userId, '', later)).toEqual({ ok: false, error: 'invalid' });
-  });
-});
-
-describe('tags — expectedUpdatedAt (§17.4.2)', () => {
-  it('renames, merges and deletes only the version read', async () => {
-    await onboarded();
-    await tag('tag-a', 'Lavoro');
-    await tag('tag-b', 'Ufficio');
-    const read = await stampOf(harness.db, userId, 'tag', 'tag-a');
-    const phone = await bumpRow(harness.db, userId, 'tag', 'tag-a', { name: 'Lavori' });
-
-    expect(
-      await renameTag(
-        harness.db,
-        userId,
-        { id: 'tag-a', name: 'Job', expectedUpdatedAt: read },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'conflict' });
-    expect(
-      await mergeTags(
-        harness.db,
-        userId,
-        { sourceId: 'tag-a', targetId: 'tag-b', expectedUpdatedAt: read },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'conflict' });
-    expect(await deleteTag(harness.db, userId, 'tag-a', FIXTURE_NOW, read)).toEqual({
-      ok: false,
-      error: 'conflict',
-    });
-    expect(await deleteTag(harness.db, userId, 'tag-a', FIXTURE_NOW, phone)).toEqual({ ok: true });
   });
 });

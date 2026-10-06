@@ -3,11 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { ACCOUNT, attachment, CATEGORY, TAG, tx } from '../../../src/features/test/fixtures';
 import { syncRows } from '../../../src/server/db/schema';
 import { createTestDatabase, type TestDatabase } from '../../../src/server/test/harness';
-import {
-  createTestSession,
-  sessionCookie,
-  type TestSession,
-} from '../../../src/server/test/session';
+import { createTestSession, type TestSession } from '../../../src/server/test/session';
 import { readUserData } from '../../../src/server/userData/read';
 import { GET as backup } from './backup/route';
 import { GET as csv } from './csv/route';
@@ -106,13 +102,6 @@ describe('the export routes', () => {
     }
   });
 
-  it('accept the browser’s cookie session', async () => {
-    await seedBook(ada.userId);
-    const cookie = await sessionCookie(ada.token);
-    expect((await backup(request('backup', { cookie }))).status).toBe(200);
-    expect((await csv(request('csv', { cookie }))).status).toBe(200);
-  });
-
   it('answer 409 for an account with no settings: there is nothing to restore into', async () => {
     await seedRow(ada.userId, 'account', ACCOUNT);
     for (const response of [await backup(asAda('backup')), await csv(asAda('csv'))]) {
@@ -178,35 +167,10 @@ describe('GET /api/export/csv', () => {
     expect(await sent(await csv(asAda('csv?range=all')))).toBe(expected);
   });
 
-  it('keeps the BOM in the bytes it sends', async () => {
-    await seedBook(ada.userId);
-    const bytes = new Uint8Array(await (await csv(asAda('csv'))).arrayBuffer());
-    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
-  });
-
   it('range=period keeps the period containing the user’s today', async () => {
     await seedBook(ada.userId);
     const response = await csv(asAda('csv?range=period'));
     expect(response.status).toBe(200);
     expect(await sent(response)).toBe(toCsv(csvRows([IN_A, IN_B], CONTEXT)));
-  });
-
-  it('range=period&p= keeps the period containing that date', async () => {
-    await seedBook(ada.userId);
-    const response = await csv(asAda('csv?range=period&p=2026-08-10'));
-    expect(await sent(response)).toBe(toCsv(csvRows([BEFORE], CONTEXT)));
-    // The file is still named after today: it says when it was taken, not what it covers.
-    expect(response.headers.get('content-disposition')).toBe(
-      'attachment; filename="saldo-transactions-2026-09-11.csv"',
-    );
-  });
-
-  it('refuses parameters it cannot read with 400', async () => {
-    await seedBook(ada.userId);
-    for (const query of ['range=week', 'range=', 'range=period&p=yesterday', 'p=2026-13-40']) {
-      const response = await csv(asAda(`csv?${query}`));
-      expect(response.status, query).toBe(400);
-      expect(await response.json()).toMatchObject({ error: { code: 'invalid_query' } });
-    }
   });
 });

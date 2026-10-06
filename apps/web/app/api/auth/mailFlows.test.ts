@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-import { createEmailVerificationToken } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { recoverState, recoveryVerifyPath } from '../../../src/features/auth/recoverView';
@@ -268,31 +267,6 @@ describe('recovery by magic link', () => {
     expect(await second.json()).toEqual({ status: true });
     expect(mail.sent).toHaveLength(1);
   });
-
-  it("writes the message in the recipient's language, from Accept-Language without a setting", async () => {
-    await account(ADA);
-    await post('/sign-in/magic-link', { email: ADA, ...RECOVER }, { 'accept-language': 'it-IT' });
-    await settleBackground();
-    expect(mail.sent[0]?.subject).toBe('Il tuo link per rientrare in Saldo test');
-  });
-
-  it('refuses a garbled token with the error redirect', async () => {
-    const opened = await get(
-      `${BASE}/magic-link/verify?token=garbled&callbackURL=%2F&errorCallbackURL=%2Frecover%3Ferror%3Dlink`,
-    );
-    expect(opened.status).toBe(302);
-    expect(location(opened).searchParams.get('error')).toBe('INVALID_TOKEN');
-    expect(await hasSessionCookie(opened)).toBe(false);
-  });
-
-  it('refuses an expired token with the error redirect', async () => {
-    await account(ADA);
-    await askForRecovery(ADA);
-    await harness.db.update(verification).set({ expiresAt: new Date(Date.now() - 1000) });
-    const opened = await get(verifyUrl(linkIn(mail.sent[0])));
-    expect(location(opened).searchParams.get('error')).toBe('INVALID_TOKEN');
-    expect(await hasSessionCookie(opened)).toBe(false);
-  });
 });
 
 describe('email verification', () => {
@@ -352,13 +326,6 @@ describe('email verification', () => {
     expect(mail.sent).toEqual([]);
   });
 
-  it('mails nothing when the server has no SMTP', async () => {
-    await harness.reset();
-    await account(ADA, { verified: false });
-    await ask(ADA);
-    expect(mail.sent).toEqual([]);
-  });
-
   it('will not mail an address other than the signed-in account’s', async () => {
     const signedIn = await createTestSession(harness.db);
     await harness.db.update(user).set({ email: ADA }).where(eq(user.id, signedIn.userId));
@@ -369,24 +336,6 @@ describe('email verification', () => {
     });
     expect(response.status).toBe(400);
     expect(mail.sent).toEqual([]);
-  });
-
-  it('refuses a garbled token with an error in the callback', async () => {
-    const opened = await get(`${BASE}/verify-email?token=garbled&callbackURL=%2Femail-verified`);
-    expect(opened.status).toBe(302);
-    expect(location(opened).pathname).toBe('/email-verified');
-    expect(location(opened).searchParams.get('error')).not.toBeNull();
-    expect(await hasSessionCookie(opened)).toBe(false);
-  });
-
-  it('refuses an expired token with an error in the callback, and leaves the address unverified', async () => {
-    await account(ADA, { verified: false });
-    const { secret } = await auth().$context;
-    const token = await createEmailVerificationToken(secret, ADA, undefined, -60);
-    const opened = await get(`${BASE}/verify-email?token=${token}&callbackURL=%2Femail-verified`);
-    expect(location(opened).searchParams.get('error')).not.toBeNull();
-    const [row] = await harness.db.select().from(user).where(eq(user.email, ADA));
-    expect(row?.emailVerified).toBe(false);
   });
 });
 

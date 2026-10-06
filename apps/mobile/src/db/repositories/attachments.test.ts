@@ -1,10 +1,7 @@
 import { MAX_ATTACHMENTS_PER_TRANSACTION } from '@saldo/core';
-import { eq } from 'drizzle-orm';
-import { attachments } from '../schema';
 import { createTestDatabase } from '../testing';
 import { TooManyAttachmentsError } from './attachments';
 import { createRepositories } from './index';
-import { PENDING } from './support';
 
 const CREATED_AT = '2026-04-18T10:00:00.000Z';
 
@@ -25,23 +22,6 @@ const input = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('attachments repository', () => {
-  it('creates a row that is pending and local-only', () => {
-    const { db, repos } = setup();
-    const created = repos.attachments.create(input());
-    expect(created.blobState).toBe('local_only');
-    expect(created.localUri).toBe('file:///attachments/att-1.jpg');
-    const [row] = db.select().from(attachments).where(eq(attachments.id, created.id)).all();
-    expect(row?.syncState).toBe(PENDING);
-  });
-
-  it('lists the attachments of one transaction, oldest first', () => {
-    const { repos } = setup();
-    const first = repos.attachments.create(input({ id: 'att-1' }));
-    const second = repos.attachments.create(input({ id: 'att-2' }));
-    repos.attachments.create(input({ id: 'att-3', transactionId: 'tx-2' }));
-    expect(repos.attachments.listFor('tx-1').map((row) => row.id)).toEqual([first.id, second.id]);
-  });
-
   it('refuses the sixth attachment on a transaction', () => {
     const { repos } = setup();
     for (let index = 0; index < MAX_ATTACHMENTS_PER_TRANSACTION; index += 1) {
@@ -59,24 +39,6 @@ describe('attachments repository', () => {
     }
     repos.attachments.remove('att-0');
     expect(() => repos.attachments.create(input({ id: 'att-new' }))).not.toThrow();
-  });
-
-  it('tombstones rather than deletes, so other devices converge', () => {
-    const { db, repos } = setup();
-    const created = repos.attachments.create(input());
-    repos.attachments.remove(created.id);
-    expect(repos.attachments.listFor('tx-1')).toEqual([]);
-    const [row] = db.select().from(attachments).where(eq(attachments.id, created.id)).all();
-    expect(row?.deletedAt).not.toBeNull();
-    expect(row?.syncState).toBe(PENDING);
-  });
-
-  it('tombstones every attachment of a transaction at once', () => {
-    const { repos } = setup();
-    repos.attachments.create(input({ id: 'att-1' }));
-    repos.attachments.create(input({ id: 'att-2' }));
-    repos.attachments.removeFor('tx-1');
-    expect(repos.attachments.listFor('tx-1')).toEqual([]);
   });
 
   it('changes no HLC when only the local path or the blob state moves', () => {

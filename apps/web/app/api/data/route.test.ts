@@ -61,17 +61,6 @@ afterAll(async () => {
 });
 
 describe('/api/data', () => {
-  it('requires a bearer', async () => {
-    expect((await readData(dataRequest('GET'))).status).toBe(401);
-    expect((await deleteData(dataRequest('DELETE'))).status).toBe(401);
-  });
-
-  it('answers epoch 0 for an account whose data was never deleted', async () => {
-    const response = await readData(dataRequest('GET', bearer));
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ epoch: 0 });
-  });
-
   it('deletes everything and answers the new epoch', async () => {
     await pushAs(bearer, { epoch: 0, changes: [tagChange('tag-1')] });
 

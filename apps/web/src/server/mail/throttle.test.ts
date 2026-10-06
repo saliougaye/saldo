@@ -13,18 +13,6 @@ describe('mail throttle', () => {
     expect(throttle.allow('recovery', 'ada@example.com', T0 + MINUTE)).toBe(true);
   });
 
-  it('counts each kind on its own for the minute', () => {
-    const throttle = createMailThrottle();
-    expect(throttle.allow('recovery', 'ada@example.com', T0)).toBe(true);
-    expect(throttle.allow('verification', 'ada@example.com', T0 + 1)).toBe(true);
-  });
-
-  it('counts each address on its own', () => {
-    const throttle = createMailThrottle();
-    expect(throttle.allow('recovery', 'ada@example.com', T0)).toBe(true);
-    expect(throttle.allow('recovery', 'bob@example.com', T0)).toBe(true);
-  });
-
   it('reads the same address however it was typed', () => {
     const throttle = createMailThrottle();
     expect(throttle.allow('recovery', 'ada@example.com', T0)).toBe(true);
@@ -52,28 +40,11 @@ describe('mail throttle', () => {
     expect(throttle.allow('recovery', 'ada@example.com', T0 + MINUTE)).toBe(true);
   });
 
-  it('forgets addresses whose last message is more than an hour old', () => {
-    const throttle = createMailThrottle();
-    for (let i = 0; i < 100; i += 1) throttle.allow('recovery', `u${i}@example.com`, T0);
-    expect(throttle.size()).toBe(100);
-    // Any later call sweeps, at most once a minute.
-    throttle.allow('recovery', 'late@example.com', T0 + HOUR + MINUTE);
-    expect(throttle.size()).toBe(1);
-  });
-
   it('keeps a bounded number of addresses however many ask', () => {
     const throttle = createMailThrottle({ maxAddresses: 50 });
     for (let i = 0; i < 500; i += 1) throttle.allow('recovery', `u${i}@example.com`, T0 + i);
     expect(throttle.size()).toBeLessThanOrEqual(50);
     // The newest are the ones still held.
     expect(throttle.allow('recovery', 'u499@example.com', T0 + 500)).toBe(false);
-  });
-
-  it('can be emptied', () => {
-    const throttle = createMailThrottle();
-    throttle.allow('recovery', 'ada@example.com', T0);
-    throttle.reset();
-    expect(throttle.size()).toBe(0);
-    expect(throttle.allow('recovery', 'ada@example.com', T0 + 1)).toBe(true);
   });
 });

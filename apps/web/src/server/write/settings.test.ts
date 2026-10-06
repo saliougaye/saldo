@@ -50,18 +50,6 @@ describe('saveSetting', () => {
     expect(after.updatedAt).not.toBe(before.updatedAt);
   });
 
-  it('changes the one field and keeps every other', async () => {
-    await onboarded();
-    const before = await settings();
-    await saveSetting(harness.db, userId, { key: 'currency', value: 'SEK' }, LATER);
-    const { updatedAt: _after, ...after } = await settings();
-    const { updatedAt: _before, ...rest } = before;
-    expect(after).toEqual({ ...rest, currency: 'SEK' });
-    expect(after.onboardingCompletedAt).toBe(FIXTURE_NOW.toISOString());
-    expect(after.periodKind).toBe('month');
-    expect(after.createdAt).toBe(FIXTURE_NOW.toISOString());
-  });
-
   it('stores the time zone under the id the list holds', async () => {
     await onboarded();
     expect(
@@ -92,15 +80,6 @@ describe('saveSetting', () => {
       error: 'invalid',
     });
     expect(await settings()).toEqual(before);
-  });
-
-  it('answers notFound for an account that never onboarded, and writes nothing', async () => {
-    userId = (await createTestSession(harness.db)).userId;
-    expect(await saveSetting(harness.db, userId, { key: 'theme', value: 'dark' }, LATER)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    expect((await readUserData(harness.db, userId)).settings).toBeNull();
   });
 
   it.each([

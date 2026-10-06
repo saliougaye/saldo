@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tx } from './__tests__/fixtures';
-import {
-  EMPTY_FILTERS,
-  type FilterLookup,
-  filtersFromParams,
-  filterTransactions,
-  groupByDay,
-  hasActiveFilters,
-  normalizeText,
-} from './filters';
+import { EMPTY_FILTERS, type FilterLookup, filterTransactions, groupByDay } from './filters';
 
 const lookup: FilterLookup = {
   accountName: (id) => ({ 'acc-card': 'Carta', 'acc-checking': 'Conto corrente' })[id] ?? '',
@@ -64,25 +56,7 @@ function ids(filters: Partial<typeof EMPTY_FILTERS>): string[] {
   return filterTransactions(all, { ...EMPTY_FILTERS, ...filters }, lookup).map((t) => t.id);
 }
 
-describe('normalizeText', () => {
-  it('strips accents, case and extra spaces', () => {
-    expect(normalizeText('  Caffè   E Bar ')).toBe('caffe e bar');
-  });
-});
-
-describe('hasActiveFilters', () => {
-  it('detects any active filter', () => {
-    expect(hasActiveFilters(EMPTY_FILTERS)).toBe(false);
-    expect(hasActiveFilters({ ...EMPTY_FILTERS, query: '  ' })).toBe(false);
-    expect(hasActiveFilters({ ...EMPTY_FILTERS, onlyExcluded: true })).toBe(true);
-  });
-});
-
 describe('filterTransactions', () => {
-  it('returns everything without filters', () => {
-    expect(ids({})).toEqual(['coffee', 'market', 'salary', 'transfer', 'excluded']);
-  });
-
   it('searches description, category and account names ignoring accents', () => {
     expect(ids({ query: 'caffe' })).toEqual(['coffee']);
     expect(ids({ query: 'SUPERMERCATO' })).toEqual(['market']);
@@ -100,21 +74,12 @@ describe('filterTransactions', () => {
     expect(ids({ direction: 'expense' })).toEqual(['coffee', 'market', 'excluded']);
   });
 
-  it('lists only transfers when the direction says so', () => {
-    expect(ids({ direction: 'transfer' })).toEqual(['transfer']);
-  });
-
   it('filters by account on either side of a transfer', () => {
     expect(ids({ accountId: 'acc-checking' })).toEqual(['salary', 'transfer']);
   });
 
   it('matches a parent category through its children', () => {
     expect(ids({ categoryId: 'cat-groceries' })).toEqual(['market', 'excluded']);
-  });
-
-  it('filters by tags and excluded flag', () => {
-    expect(ids({ tagIds: ['tag-work', 'tag-other'] })).toEqual(['coffee']);
-    expect(ids({ onlyExcluded: true })).toEqual(['excluded']);
   });
 });
 
@@ -126,37 +91,5 @@ describe('groupByDay', () => {
       ['2026-04-17', ['salary', 'transfer'], 0],
       ['2026-04-16', ['excluded'], 0],
     ]);
-  });
-});
-
-describe('filtersFromParams', () => {
-  it('opens the whole list when nothing was asked for', () => {
-    expect(filtersFromParams({})).toEqual(EMPTY_FILTERS);
-  });
-
-  it('seeds the account, the direction and the excluded flag', () => {
-    expect(
-      filtersFromParams({ accountId: 'acc-1', direction: 'expense', onlyExcluded: '1' }),
-    ).toEqual({ ...EMPTY_FILTERS, accountId: 'acc-1', direction: 'expense', onlyExcluded: true });
-  });
-
-  it('reads transfer out of a link, like the other two directions', () => {
-    expect(filtersFromParams({ direction: 'transfer' }).direction).toBe('transfer');
-  });
-
-  it('drops a direction it does not recognise rather than guessing one', () => {
-    expect(filtersFromParams({ direction: 'refund' }).direction).toBe('all');
-    expect(filtersFromParams({ direction: '' }).direction).toBe('all');
-  });
-
-  it('reads a blank param as absent, which is how a spent one comes back', () => {
-    expect(filtersFromParams({ accountId: '', direction: '', onlyExcluded: '' })).toEqual(
-      EMPTY_FILTERS,
-    );
-  });
-
-  it('treats any value other than the flag itself as not excluded', () => {
-    expect(filtersFromParams({ onlyExcluded: '0' }).onlyExcluded).toBe(false);
-    expect(filtersFromParams({}).onlyExcluded).toBe(false);
   });
 });

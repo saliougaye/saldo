@@ -34,13 +34,6 @@ async function rows() {
 }
 
 describe('recordMcpUsage', () => {
-  it('writes the first call of a pair at once', async () => {
-    const { userId } = await createTestSession(harness.db);
-    const { clientId } = await createTestClient(harness.db);
-    recordMcpUsage(userId, clientId, T0);
-    expect(await rows()).toEqual([{ userId, clientId, lastUsedAt: T0, calls: 1 }]);
-  });
-
   it('counts the calls of the next minute and writes them with the first call after it', async () => {
     const { userId } = await createTestSession(harness.db);
     const { clientId } = await createTestClient(harness.db);
@@ -50,17 +43,6 @@ describe('recordMcpUsage', () => {
     expect(await rows()).toEqual([{ userId, clientId, lastUsedAt: T0, calls: 1 }]);
     recordMcpUsage(userId, clientId, at(61));
     expect(await rows()).toEqual([{ userId, clientId, lastUsedAt: at(61), calls: 4 }]);
-  });
-
-  it('keeps each (user, client) pair apart', async () => {
-    const ada = await createTestSession(harness.db, 'Ada');
-    const bob = await createTestSession(harness.db, 'Bob');
-    const { clientId } = await createTestClient(harness.db);
-    recordMcpUsage(ada.userId, clientId, T0);
-    recordMcpUsage(bob.userId, clientId, at(1));
-    const stored = await rows();
-    expect(stored).toHaveLength(2);
-    expect(stored.every((row) => row.calls === 1)).toBe(true);
   });
 
   it('forgets what was counted for a revoked pair', async () => {

@@ -25,39 +25,6 @@ beforeEach(() => {
 });
 
 describe('inBackground', () => {
-  it('does not make the caller wait for the task', async () => {
-    let finished = false;
-    let release: () => void = () => {};
-    inBackground(() =>
-      new Promise<void>((resolve) => {
-        release = resolve;
-      }).then(() => {
-        finished = true;
-      }),
-    );
-    expect(finished).toBe(false);
-    release();
-    await settleBackground();
-    expect(finished).toBe(true);
-  });
-
-  it('runs a task with no request scope as a detached promise', async () => {
-    const ran = vi.fn(async () => {});
-    inBackground(ran);
-    await settleBackground();
-    expect(ran).toHaveBeenCalledTimes(1);
-    expect(afterCalls.handed).toHaveLength(0);
-  });
-
-  it('hands the work to after() when there is a request scope', async () => {
-    afterCalls.scope = true;
-    const ran = vi.fn(async () => {});
-    inBackground(ran);
-    await settleBackground();
-    expect(ran).toHaveBeenCalledTimes(1);
-    expect(afterCalls.handed).toHaveLength(1);
-  });
-
   it('logs a failure and never throws it, with or without a scope', async () => {
     for (const scope of [false, true]) {
       afterCalls.scope = scope;
@@ -72,27 +39,5 @@ describe('inBackground', () => {
     // The error text can carry an address; the line says only that it failed.
     expect(JSON.stringify(logged)).not.toContain('ada@example.com');
     expect(JSON.stringify(logged)).not.toContain('boom');
-  });
-
-  it('logs a task that throws before its first await the same way', async () => {
-    expect(() =>
-      inBackground(() => {
-        throw new Error('sync');
-      }),
-    ).not.toThrow();
-    await settleBackground();
-    expect(logged).toHaveLength(1);
-  });
-
-  it('settles tasks that start further tasks', async () => {
-    const order: string[] = [];
-    inBackground(async () => {
-      inBackground(async () => {
-        order.push('inner');
-      });
-      order.push('outer');
-    });
-    await settleBackground();
-    expect([...order].sort()).toEqual(['inner', 'outer']);
   });
 });

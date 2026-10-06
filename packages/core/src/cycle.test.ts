@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  assertCycleStartDay,
-  cycleContaining,
-  cycleLength,
-  elapsedDays,
-  isWithin,
-  previousCycles,
-  shiftCycle,
-} from './cycle';
+import { cycleContaining, cycleLength, elapsedDays, previousCycles, shiftCycle } from './cycle';
 
 const APRIL = { start: '2026-03-27', end: '2026-04-26' };
 
@@ -32,12 +24,6 @@ describe('cycleContaining', () => {
     expect(cycleContaining('2026-03-30', 31)).toEqual({ start: '2026-02-28', end: '2026-03-30' });
     expect(cycleContaining('2026-03-31', 31)).toEqual({ start: '2026-03-31', end: '2026-04-29' });
     expect(cycleContaining('2026-04-30', 31)).toEqual({ start: '2026-04-30', end: '2026-05-30' });
-  });
-
-  it('rejects invalid start days', () => {
-    expect(() => cycleContaining('2026-04-18', 0)).toThrow(RangeError);
-    expect(() => assertCycleStartDay(32)).toThrow(RangeError);
-    expect(() => assertCycleStartDay(2.5)).toThrow(RangeError);
   });
 });
 
@@ -69,11 +55,5 @@ describe('cycleLength / elapsedDays / isWithin', () => {
     expect(elapsedDays(APRIL, '2026-03-27')).toBe(1);
     expect(elapsedDays(APRIL, '2026-03-20')).toBe(0);
     expect(elapsedDays(APRIL, '2026-05-01')).toBe(31);
-  });
-
-  it('checks inclusive bounds', () => {
-    expect(isWithin(APRIL, '2026-03-27')).toBe(true);
-    expect(isWithin(APRIL, '2026-04-26')).toBe(true);
-    expect(isWithin(APRIL, '2026-04-27')).toBe(false);
   });
 });

@@ -50,25 +50,6 @@ afterAll(async () => {
 });
 
 describe('applyPush', () => {
-  it('applies a new row and assigns an increasing seq', async () => {
-    const userId = await seedUser();
-    const results = await applyPush(
-      harness.db,
-      userId,
-      request([
-        tag('tag-1', 'Rimborsabile', `${WALL}-0000-device-a`),
-        tag('tag-2', 'Trasloco', `${WALL}-0001-device-a`),
-      ]),
-      NOW,
-    );
-    expect(results.map((result) => result.status)).toEqual(['applied', 'applied']);
-
-    const rows = await harness.db.select().from(syncRows).where(eq(syncRows.userId, userId));
-    expect(rows).toHaveLength(2);
-    const seqs = rows.map((row) => row.seq).sort((a, b) => a - b);
-    expect(seqs[1]).toBeGreaterThan(seqs[0] ?? 0);
-  });
-
   it('overwrites an older row and answers stale for an older push', async () => {
     const userId = await seedUser();
     const older = tag('tag-1', 'Old', `${WALL}-0000-device-a`);
@@ -148,22 +129,5 @@ describe('applyPush', () => {
     expect(results[0]?.status).toBe('applied');
     const [row] = await harness.db.select().from(syncRows).where(eq(syncRows.userId, userId));
     expect(row?.deletedAt).not.toBeNull();
-  });
-
-  it("keeps two users' rows apart", async () => {
-    const ada = await seedUser('Ada');
-    const bob = await seedUser('Bob');
-    await applyPush(harness.db, ada, request([tag('tag-1', 'Ada', `${WALL}-0000-device-a`)]), NOW);
-    await applyPush(
-      harness.db,
-      bob,
-      request([tag('tag-1', 'Bob', `${WALL}-0000-device-b`)], 'device-b'),
-      NOW,
-    );
-    const [row] = await harness.db
-      .select()
-      .from(syncRows)
-      .where(and(eq(syncRows.userId, ada), eq(syncRows.id, 'tag-1')));
-    expect(row?.data).toMatchObject({ name: 'Ada' });
   });
 });

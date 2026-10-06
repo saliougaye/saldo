@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Budget, Category } from '../../entities';
-import { deleteBudgetTool, resolveBudgetInput, saveBudgetInput } from './budgets';
+import { resolveBudgetInput } from './budgets';
 
 const food: Category = {
   id: 'cat-food',
@@ -31,45 +31,7 @@ const stored: Budget = {
   sortOrder: 0,
 };
 
-describe('saveBudgetInput', () => {
-  it('takes only the alert thresholds the form offers', () => {
-    expect(saveBudgetInput.safeParse({ alertThreshold: 90 }).success).toBe(true);
-    expect(saveBudgetInput.safeParse({ alertThreshold: null }).success).toBe(true);
-    expect(saveBudgetInput.safeParse({ alertThreshold: 80 }).success).toBe(false);
-  });
-});
-
 describe('resolveBudgetInput', () => {
-  it("creates from the form defaults, with its first category's icon", () => {
-    expect(
-      resolveBudgetInput(
-        { name: 'Spesa', categoryIds: ['cat-food'], amountMinor: 30000 },
-        null,
-        [food],
-        2,
-      ),
-    ).toEqual({
-      ok: true,
-      value: {
-        id: null,
-        name: 'Spesa',
-        categoryIds: ['cat-food'],
-        buffer: '300',
-        period: 'period',
-        alertThreshold: 90,
-        rollover: false,
-        icon: 'cart',
-        expectedUpdatedAt: undefined,
-      },
-    });
-  });
-
-  it('needs a name to create', () => {
-    expect(
-      resolveBudgetInput({ categoryIds: ['cat-food'], amountMinor: 1 }, null, [food], 2).ok,
-    ).toBe(false);
-  });
-
   it('changes only the given fields', () => {
     const result = resolveBudgetInput(
       { id: 'bud-1', updatedAt: 'hlc-bud', amountMinor: 35000 },
@@ -91,9 +53,5 @@ describe('resolveBudgetInput', () => {
         expectedUpdatedAt: 'hlc-bud',
       },
     });
-  });
-
-  it('marks delete_budget destructive', () => {
-    expect(deleteBudgetTool.annotations.destructiveHint).toBe(true);
   });
 });

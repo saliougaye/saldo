@@ -22,13 +22,6 @@ afterAll(async () => {
 });
 
 describe('GET /api/me', () => {
-  it('returns the bearer user', async () => {
-    const { userId, bearer } = await createTestSession(harness.db, 'Ada');
-    const response = await GET(get({ authorization: bearer }));
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ id: userId, displayName: 'Ada' });
-  });
-
   it('rejects a missing, malformed or unknown bearer', async () => {
     expect((await GET(get())).status).toBe(401);
     expect((await GET(get({ authorization: 'Basic abc' }))).status).toBe(401);

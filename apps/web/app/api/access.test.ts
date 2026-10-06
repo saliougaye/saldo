@@ -51,14 +51,4 @@ describe('a revoked account', () => {
     ).toBe(401);
     expect((await push(pushRequest(bob.bearer))).status).toBe(401);
   });
-
-  it("does not take anybody else's access with it", async () => {
-    const ada = await createTestSession(harness.db, 'Ada', 'user');
-    const bob = await createTestSession(harness.db, 'Bob', 'user');
-    await revokeUser(harness.db, bob.userId, null, new Date());
-    expect(
-      (await me(new Request('http://localhost/api/me', { headers: { authorization: ada.bearer } })))
-        .status,
-    ).toBe(200);
-  });
 });

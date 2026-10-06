@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { Account, Category, Tag } from '../entities';
+import type { Account, Category } from '../entities';
 // The anonymised Spendee export of §11.3, as bytes. `?raw` is Vite's, so the fixture stays a real
 // .csv file — one that can also be dropped into the simulator — without `@saldo/core` ever
 // reaching for a Node API.
 import FIXTURE from './__fixtures__/spendee.csv?raw';
 import { parseCsv } from './csvParse';
 import { transactionFingerprint } from './fingerprint';
-import { detectPreset, type ImportMapping, mappingFor, SALDO_HEADERS } from './importMapping';
+import { type ImportMapping, mappingFor } from './importMapping';
 import { type ImportContext, type ImportPlan, importedBalances, planImport } from './importPlan';
 
 const { rows } = parseCsv(FIXTURE);
@@ -61,10 +61,6 @@ function category(name: string, direction: 'expense' | 'income'): Category {
   };
 }
 
-function tag(name: string): Tag {
-  return { ...meta, id: `tag-${name}`, name };
-}
-
 const spendee = (): ImportMapping => mappingFor(headers, 'spendee');
 
 /** The mapping the user reaches by pointing "account" at the labels column instead (§11.3). */
@@ -76,13 +72,6 @@ function labelsAsAccounts(): ImportMapping {
     defaultAccountName: 'Contanti',
   };
 }
-
-describe('the fixture itself', () => {
-  it('is a Spendee export of eleven rows', () => {
-    expect(detectPreset(headers)).toBe('spendee');
-    expect(body).toHaveLength(11);
-  });
-});
 
 describe('planImport, Spendee preset', () => {
   it('plans every row with no errors', () => {
@@ -158,11 +147,6 @@ describe('planImport, Spendee preset', () => {
     );
     // The file's "Money Back" rows are income, so the expense category of that name is not it.
     expect(plan.newCategories).toContainEqual({ name: 'Money Back', direction: 'income' });
-  });
-
-  it('reuses an existing tag', () => {
-    const plan = planImport(body, spendee(), context({ tags: [tag('Banca🏦')] }));
-    expect(plan.newTags).not.toContain('Banca🏦');
   });
 });
 
@@ -349,38 +333,6 @@ describe('planImport, other shapes', () => {
       context(),
     );
     expect(plan.transactions.map((tx) => tx.excluded)).toEqual([true, false, false]);
-  });
-});
-
-describe('planImport, Saldo export', () => {
-  const saldoRow = (excluded: string, description: string): string[] => [
-    '2026-04-18',
-    'expense',
-    '45.00',
-    'EUR',
-    'Carta',
-    '',
-    'Carburante',
-    'Trasporti',
-    description,
-    '',
-    'Vacanza|Auto',
-    excluded,
-    'false',
-    `id-${description}`,
-  ];
-
-  it('keeps the excluded flag of a round trip (§11.2)', () => {
-    const plan = planImport(
-      [saldoRow('true', 'Benzina'), saldoRow('false', 'Pedaggio')],
-      mappingFor(SALDO_HEADERS, 'saldo'),
-      context(),
-    );
-    expect(plan.errors).toEqual([]);
-    expect(plan.transactions.map((tx) => [tx.description, tx.excluded])).toEqual([
-      ['Benzina', true],
-      ['Pedaggio', false],
-    ]);
   });
 });
 

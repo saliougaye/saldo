@@ -1,7 +1,7 @@
 import { accountBalances, emptyUserData, forecastPeriods, netWorth } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { dataWith, RECURRENCE, tx } from '../test/fixtures';
-import { navigatorView, WEB_CLOSED_COLUMNS } from './navigatorView';
+import { navigatorView } from './navigatorView';
 
 const DEF = { kind: 'month', startDay: 1 } as const;
 const TODAY = '2026-09-15';
@@ -19,45 +19,6 @@ const HISTORY = [
 ];
 
 describe('navigatorView', () => {
-  it('shows six closed periods, the running one and the three forecast ones', () => {
-    const view = navigatorView({
-      data: dataWith(HISTORY),
-      def: DEF,
-      today: TODAY,
-      selected: SEPTEMBER,
-    });
-    expect(WEB_CLOSED_COLUMNS).toBe(6);
-    expect(view.columns).toHaveLength(10);
-    expect(view.columns.filter((column) => column.kind === 'closed')).toHaveLength(6);
-    expect(view.columns.filter((column) => column.kind === 'current')).toHaveLength(1);
-    expect(view.columns.filter((column) => column.kind === 'forecast')).toHaveLength(3);
-  });
-
-  it('ends the closed run at the period before the current one, in order', () => {
-    const view = navigatorView({
-      data: dataWith(HISTORY),
-      def: DEF,
-      today: TODAY,
-      selected: SEPTEMBER,
-    });
-    expect(view.columns[0]?.range.start).toBe('2026-03-01');
-    expect(view.columns[5]?.range.start).toBe('2026-08-01');
-    expect(view.columns[6]?.range.start).toBe('2026-09-01');
-    expect(view.columns[7]?.range.start).toBe('2026-10-01');
-    expect(view.columns[9]?.range.start).toBe('2026-12-01');
-  });
-
-  it('marks the selected column, and only it', () => {
-    const view = navigatorView({
-      data: emptyUserData(),
-      def: DEF,
-      today: TODAY,
-      selected: { start: '2026-07-01', end: '2026-07-31' },
-    });
-    expect(view.columns.filter((column) => column.selected)).toHaveLength(1);
-    expect(view.selected?.range.start).toBe('2026-07-01');
-  });
-
   it('selects nothing when the period is further back than the columns reach', () => {
     const view = navigatorView({
       data: emptyUserData(),
@@ -67,17 +28,6 @@ describe('navigatorView', () => {
     });
     expect(view.selected).toBeNull();
     expect(view.columns.some((column) => column.selected)).toBe(false);
-  });
-
-  it('gives each real column the income and spend of `summarizePeriod`', () => {
-    const view = navigatorView({
-      data: dataWith(HISTORY),
-      def: DEF,
-      today: TODAY,
-      selected: SEPTEMBER,
-    });
-    expect(view.columns[3]?.values).toEqual({ income: 200000, expenses: 40000 });
-    expect(view.columns[6]?.values).toEqual({ income: 0, expenses: 12000 });
   });
 
   it('drops the forecast columns when there is not enough history to forecast', () => {
@@ -128,31 +78,5 @@ describe('navigatorView', () => {
         forecast: { min: expected?.[0]?.expensesMin, max: expected?.[0]?.expensesMax },
       });
     }
-  });
-
-  it('nets every column once, real and forecast alike', () => {
-    const view = navigatorView({
-      data: dataWith(HISTORY),
-      def: DEF,
-      today: TODAY,
-      selected: SEPTEMBER,
-    });
-    expect(view.columns[3]?.net).toBe(160000);
-    expect(view.columns[6]?.net).toBe(-12000);
-    for (const column of view.columns) {
-      expect(column.net).toBe(column.values.income - column.values.expenses);
-    }
-  });
-
-  it('hatches only the running period, which is always the current column', () => {
-    const view = navigatorView({
-      data: emptyUserData(),
-      def: DEF,
-      today: TODAY,
-      selected: { start: '2026-07-01', end: '2026-07-31' },
-    });
-    expect(
-      view.columns.filter((column) => column.running).map((column) => column.range.start),
-    ).toEqual(['2026-09-01']);
   });
 });

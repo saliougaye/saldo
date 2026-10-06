@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { accountSchema } from '../entities';
-import {
-  ACCOUNT_TYPES,
-  accountFormFrom,
-  accountMissingForSave,
-  accountTypesFor,
-  emptyAccountForm,
-  openingBalanceFrom,
-} from './accountForm';
+import { accountFormFrom, emptyAccountForm, openingBalanceFrom } from './accountForm';
 
 const account = (patch: Record<string, unknown> = {}) =>
   accountSchema.parse({
@@ -46,37 +39,6 @@ describe('a negative balance', () => {
 });
 
 describe('account form', () => {
-  it('needs a name and nothing else', () => {
-    expect(accountMissingForSave(emptyAccountForm())).toBe('name');
-    expect(accountMissingForSave({ ...emptyAccountForm(), name: '  ' })).toBe('name');
-    expect(accountMissingForSave({ ...emptyAccountForm(), name: 'Cassa' })).toBeNull();
-  });
-
-  it('offers every type but the pocket', () => {
-    expect(ACCOUNT_TYPES).not.toContain('pocket');
-    expect(ACCOUNT_TYPES).toContain('credit_card');
-  });
-
-  it('narrows the types of an account that holds a goal (§5.14)', () => {
-    const parent = account({ id: 'p' });
-    const pocket = account({
-      id: 'g',
-      type: 'pocket',
-      includeInSpendable: false,
-      parentAccountId: 'p',
-      goalTarget: 5000,
-      goalStartDate: '2026-01-01',
-    });
-    expect(accountTypesFor([parent, pocket], 'p')).toEqual([
-      'cash',
-      'checking',
-      'debit_card',
-      'savings',
-    ]);
-    expect(accountTypesFor([parent, pocket], null)).toEqual(ACCOUNT_TYPES);
-    expect(accountTypesFor([parent], 'p')).toEqual(ACCOUNT_TYPES);
-  });
-
   it('shows the current balance and stores the opening one', () => {
     const values = accountFormFrom(account(), 4200, 2);
     expect(values.buffer).toBe('42');

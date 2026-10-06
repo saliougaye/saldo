@@ -22,9 +22,4 @@ describe('todayFor', () => {
     });
     expect(todayFor({ timeZone: 'America/New_York' }, 'UTC', now).today).toBe('2026-09-30');
   });
-
-  it('falls back for a user with no settings or no zone', () => {
-    expect(todayFor(null, 'UTC', now)).toEqual({ today: '2026-09-30', timeZone: 'UTC' });
-    expect(todayFor({ timeZone: null }, 'Europe/Rome', now).today).toBe('2026-10-01');
-  });
 });

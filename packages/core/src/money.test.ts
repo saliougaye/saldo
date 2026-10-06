@@ -1,61 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   amountBufferToMinor,
-  COMMON_CURRENCY_CODES,
-  CURRENCY_CODES,
-  CURRENCY_TABLE,
   formatMinorUnits,
-  getCurrency,
-  maxIntegerDigits,
   minorToAmountBuffer,
   parseDecimalAmount,
   sanitizeAmountInput,
-  toggleAmountBufferSign,
 } from './money';
 
-describe('currencies', () => {
-  it('covers every currency CLDR can format', () => {
-    expect(CURRENCY_CODES.length).toBeGreaterThan(150);
-    expect(new Set(CURRENCY_CODES).size).toBe(CURRENCY_CODES.length);
-    expect([...CURRENCY_CODES]).toEqual([...CURRENCY_CODES].sort());
-    expect(Object.keys(CURRENCY_TABLE)).toEqual([...CURRENCY_CODES]);
-  });
-
-  it('exposes symbol and minor digits per currency', () => {
-    expect(getCurrency('EUR')).toEqual({ code: 'EUR', symbol: '€', minorDigits: 2 });
-    expect(getCurrency('CHF').symbol).toBe('CHF');
-    expect(getCurrency('JPY')).toEqual({ code: 'JPY', symbol: '¥', minorDigits: 0 });
-    expect(getCurrency('KWD').minorDigits).toBe(3);
-  });
-
-  it('only uses minor digits the money maths supports', () => {
-    for (const code of CURRENCY_CODES) {
-      expect([0, 2, 3]).toContain(getCurrency(code).minorDigits);
-      expect(getCurrency(code).symbol.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('lists the currencies shown first in the picker', () => {
-    expect(COMMON_CURRENCY_CODES).toEqual(['EUR', 'USD', 'GBP', 'CHF']);
-    for (const code of COMMON_CURRENCY_CODES) expect(CURRENCY_CODES).toContain(code);
-  });
-});
-
-describe('maxIntegerDigits', () => {
-  it('keeps eight significant digits whatever the minor unit', () => {
-    expect(maxIntegerDigits(2)).toBe(6);
-    expect(maxIntegerDigits(0)).toBe(8);
-    expect(maxIntegerDigits(3)).toBe(5);
-  });
-});
-
 describe('sanitizeAmountInput', () => {
-  it('keeps digits and a single decimal separator', () => {
-    expect(sanitizeAmountInput('12.5', 2)).toBe('12.5');
-    expect(sanitizeAmountInput('12', 2)).toBe('12');
-    expect(sanitizeAmountInput('12.', 2)).toBe('12.');
-  });
-
   it('accepts the comma the system keypad emits in a comma locale', () => {
     expect(sanitizeAmountInput('12,5', 2)).toBe('12.5');
     expect(sanitizeAmountInput('1.842,60', 2)).toBe('1.84');
@@ -111,15 +63,6 @@ describe('sanitizeAmountInput with allowNegative', () => {
 
   it('still drops the minus by default', () => {
     expect(sanitizeAmountInput('−12', 2)).toBe('12');
-  });
-});
-
-describe('toggleAmountBufferSign', () => {
-  it('flips the leading minus, even on an empty buffer', () => {
-    expect(toggleAmountBufferSign('')).toBe('-');
-    expect(toggleAmountBufferSign('-')).toBe('');
-    expect(toggleAmountBufferSign('12.5')).toBe('-12.5');
-    expect(toggleAmountBufferSign('-12.5')).toBe('12.5');
   });
 });
 

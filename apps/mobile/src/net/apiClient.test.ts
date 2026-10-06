@@ -11,53 +11,6 @@ const json = (body: unknown, status = 200) =>
   });
 
 describe('createApiClient', () => {
-  it('sends the session header and parses the body', async () => {
-    const seen: Request[] = [];
-    const client = createApiClient({
-      serverUrl: SERVER,
-      getAuthHeaders: async () => ({ cookie: 'better-auth.session_token=session-1' }),
-      fetchImpl: async (request) => {
-        seen.push(request);
-        return json({ ok: true });
-      },
-    });
-
-    await expect(client.get('/api/me', schema)).resolves.toEqual({ ok: true });
-    expect(seen[0]?.headers.get('cookie')).toBe('better-auth.session_token=session-1');
-    expect(seen[0]?.url).toBe(`${SERVER}/api/me`);
-  });
-
-  it('sends a DELETE with the session and parses the answer', async () => {
-    const seen: Request[] = [];
-    const client = createApiClient({
-      serverUrl: SERVER,
-      getAuthHeaders: async () => ({ cookie: 'better-auth.session_token=session-1' }),
-      fetchImpl: async (request) => {
-        seen.push(request);
-        return json({ ok: true });
-      },
-    });
-
-    await expect(client.delete('/api/data', schema)).resolves.toEqual({ ok: true });
-    expect(seen[0]?.method).toBe('DELETE');
-    expect(seen[0]?.url).toBe(`${SERVER}/api/data`);
-    expect(seen[0]?.headers.get('cookie')).toBe('better-auth.session_token=session-1');
-  });
-
-  it('posts a json body', async () => {
-    let body: string | null = null;
-    const client = createApiClient({
-      serverUrl: SERVER,
-      getAuthHeaders: async () => ({ cookie: 'better-auth.session_token=session-1' }),
-      fetchImpl: async (request) => {
-        body = await request.text();
-        return json({ ok: true });
-      },
-    });
-    await client.post('/api/sync/push', { changes: [] }, schema);
-    expect(body).toBe('{"changes":[]}');
-  });
-
   it('reports a 401 as an expired session', async () => {
     let expired = 0;
     const client = createApiClient({
@@ -72,18 +25,6 @@ describe('createApiClient', () => {
     // some second credential needs rotating.
     await expect(client.get('/api/me', schema)).rejects.toMatchObject({ code: 'session_expired' });
     expect(expired).toBe(1);
-  });
-
-  it('surfaces the server error code', async () => {
-    const client = createApiClient({
-      serverUrl: SERVER,
-      getAuthHeaders: async () => ({ cookie: 'better-auth.session_token=session-1' }),
-      fetchImpl: async () => json({ error: { code: 'schema_too_old', message: 'update' } }, 409),
-    });
-    await expect(client.get('/api/me', schema)).rejects.toMatchObject({
-      code: 'schema_too_old',
-      status: 409,
-    });
   });
 
   it('fails closed when there is no session', async () => {

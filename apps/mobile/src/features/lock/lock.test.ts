@@ -16,8 +16,4 @@ describe('shouldRelock', () => {
     expect(shouldRelock(true, now - LOCK_AFTER_BACKGROUND_MS, now)).toBe(true);
     expect(shouldRelock(true, now - LOCK_AFTER_BACKGROUND_MS * 10, now)).toBe(true);
   });
-
-  it('uses a minute by default', () => {
-    expect(LOCK_AFTER_BACKGROUND_MS).toBe(60_000);
-  });
 });

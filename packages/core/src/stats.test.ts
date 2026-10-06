@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { APRIL_CYCLE, aprilTransactions, TODAY } from './__tests__/fixtures';
 import {
-  averageSeries,
   committedSpend,
   dailyCumulative,
   deltaPercent,
-  mean,
   median,
   projectEndOfCycle,
   resampleSeries,
-  sharePercent,
   upcomingExpenses,
 } from './stats';
 
@@ -18,14 +15,6 @@ describe('median', () => {
     expect(median([3, 1, 2])).toBe(2);
     expect(median([4, 1, 3, 2])).toBe(2.5);
     expect(median([])).toBeNull();
-  });
-});
-
-describe('mean', () => {
-  it('rounds the arithmetic mean and rejects an empty series', () => {
-    expect(mean([100, 200, 301])).toBe(200);
-    expect(mean([1, 2])).toBe(2);
-    expect(mean([])).toBeNull();
   });
 });
 
@@ -66,19 +55,6 @@ describe('resampleSeries / averageSeries', () => {
     expect(resampleSeries([], 2)).toEqual([0, 0]);
     expect(resampleSeries([1], 0)).toEqual([]);
   });
-
-  it('averages resampled series', () => {
-    expect(
-      averageSeries(
-        [
-          [0, 10, 20],
-          [0, 20, 40],
-        ],
-        3,
-      ),
-    ).toEqual([0, 15, 30]);
-    expect(averageSeries([], 2)).toEqual([0, 0]);
-  });
 });
 
 describe('committedSpend / upcomingExpenses / projectEndOfCycle', () => {
@@ -103,21 +79,5 @@ describe('committedSpend / upcomingExpenses / projectEndOfCycle', () => {
     expect(
       projectEndOfCycle({ spent: 0, committed: 0, elapsed: 0, length: 31, upcoming: 500 }),
     ).toBe(500);
-  });
-});
-
-describe('sharePercent', () => {
-  it('is the rounded percentage of the whole', () => {
-    expect(sharePercent(2500, 10000)).toBe(25);
-    expect(sharePercent(1, 3)).toBe(33);
-  });
-
-  it('is 0 when there is no whole to be a share of', () => {
-    expect(sharePercent(0, 0)).toBe(0);
-    expect(sharePercent(500, 0)).toBe(0);
-  });
-
-  it('does not cap a part larger than the whole', () => {
-    expect(sharePercent(15000, 10000)).toBe(150);
   });
 });

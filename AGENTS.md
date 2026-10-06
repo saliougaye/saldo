@@ -29,8 +29,8 @@ Spendee's paid features. You are implementing the POC.
 - **TypeScript strict** everywhere (`noUncheckedIndexedAccess` on). No `any`; no non-null assertions (`!`).
 - **Money = integer minor units.** Never floats in storage or calculations; format only at the edge with `@saldo/i18n`.
 - **Transaction dates = `LocalDate` (`YYYY-MM-DD`)**. Never `new Date(localDate)`; use `@saldo/core` date helpers.
-- **Business rules live in `@saldo/core`**, as pure functions with injected `today`/clock and unit tests first (TDD).
-  Screens and route handlers only load data, call core, and render or return results.
+- **Business rules live in `@saldo/core`**, as pure functions with injected `today`/clock. Write unit tests first (TDD)
+  for complex rules (see «Tests»). Screens and route handlers only load data, call core, and render or return results.
 - **No hard-coded UI strings.** Every user-visible string goes through i18n keys in `packages/i18n/src/locales/it.ts`
   **and** `en.ts` (the parity test enforces this).
 - **No hard-coded colours, radii or font sizes** in apps. Use `@saldo/ui` tokens. New screens reuse existing primitives.
@@ -39,6 +39,28 @@ Spendee's paid features. You are implementing the POC.
   follow the library's docs and fix the plan in the same commit.
 - `apps/mobile/android` and `apps/mobile/ios` are generated. Never commit them; native config goes in config plugins.
 - Never commit secrets, keystores or `.env` files (only `.env.example`).
+
+## Tests
+
+Prefer integration and end-to-end tests. Write a unit test only when it gives one of these:
+
+1. Complex logic: dates, money, recurrence, forecast, sync (HLC and last-writer-wins), CSV parsing, concurrency, state
+   machines.
+2. Integration: a real database (SQLite in `apps/mobile/src/db/testing.ts`, PGlite in
+   `apps/web/src/server/test/harness.ts`), real routes, a full flow.
+3. A security guard: auth, redirects, origin checks, rate limits, access to another person's data.
+4. A regression for a real bug. Name the bug in the test.
+
+Do not write tests for these:
+
+- constants, mappings, id templates, seed lists, design tokens;
+- copy and translations (the key checks in `@saldo/i18n` and the parity test are enough);
+- components or view models with mocked data;
+- the behaviour of a library;
+- a rule that another test already covers.
+
+End-to-end tests cover the screens: Playwright for the web app, Maestro for the phone (`apps/mobile/maestro/`). See
+`TODO.md` for the flows that do not have a test yet.
 
 ## Writing docs
 

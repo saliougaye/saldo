@@ -119,15 +119,4 @@ describe('openingBalanceForCurrent', () => {
     });
     expect(opening).toBe(100000);
   });
-
-  it('is the balance itself when nothing has happened', () => {
-    expect(
-      openingBalanceForCurrent({
-        accountId: 'acc-1',
-        currentBalance: 42000,
-        txs: [],
-        today: '2026-04-18',
-      }),
-    ).toBe(42000);
-  });
 });

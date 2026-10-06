@@ -69,11 +69,6 @@ describe('enqueueDeletedBlobs', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.tombstonedAt).toEqual(daysAgo(3));
   });
-
-  it('writes nothing when a push tombstoned no attachment', async () => {
-    await enqueueDeletedBlobs(harness.db, userId, [live('att-1')], NOW);
-    expect(await harness.db.select().from(deletedBlobs)).toEqual([]);
-  });
 });
 
 describe('drainDeletedBlobs', () => {

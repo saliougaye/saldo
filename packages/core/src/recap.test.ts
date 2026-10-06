@@ -133,13 +133,6 @@ describe('periodRecap: categories', () => {
     ).toHaveLength(1);
   });
 
-  it('never tags a category without history', () => {
-    const onlySeptember = ledger().filter((row) => row.date.startsWith('2026-09'));
-    expect(
-      recap({ transactions: onlySeptember }).categories.every((row) => row.aboveUsual === null),
-    ).toBe(true);
-  });
-
   it('keeps the top five and folds the rest', () => {
     const spend = (categoryId: string, amount: number) =>
       tx({ date: '2026-09-12', amount, categoryId });
@@ -231,15 +224,6 @@ describe('periodRecap: budgets', () => {
 });
 
 describe('periodRecap: biggest expense and net worth', () => {
-  it('names the single largest counted expense', () => {
-    expect(recap().biggestExpense).toMatchObject({
-      amount: 72000,
-      date: '2026-09-01',
-      categoryId: 'cat-rent',
-      description: '',
-    });
-  });
-
   it('skips excluded rows and transfers, and breaks a tie by the earlier date', () => {
     const rows = [
       tx({ date: '2026-09-05', amount: 9000, excludeFromTotals: true }),

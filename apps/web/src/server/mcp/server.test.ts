@@ -1,15 +1,9 @@
-import {
-  assistantInstructions,
-  emptyUserData,
-  readTools,
-  type ToolContext,
-  type WriteToolSpec,
-} from '@saldo/core';
+import { emptyUserData, type ToolContext, type WriteToolSpec } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildMcpServer } from './server';
 import type { McpPrincipal } from './token';
-import { MCP_MAX_BODY_BYTES, serveMcpExchange } from './transport';
+import { serveMcpExchange } from './transport';
 import { defineWriteToolHandler } from './types';
 
 const data = emptyUserData();
@@ -72,46 +66,7 @@ async function rpc(principal: McpPrincipal, method: string, params: unknown = {}
   };
 }
 
-const INIT = {
-  protocolVersion: '2025-11-25',
-  capabilities: {},
-  clientInfo: { name: 'test', version: '1.0.0' },
-};
-
 describe('buildMcpServer', () => {
-  it('sends the core instructions in initialize, as «saldo»', async () => {
-    const { result } = await rpc(reader, 'initialize', INIT);
-    expect(result?.instructions).toBe(assistantInstructions(data, ctx));
-    expect(result?.serverInfo).toMatchObject({ name: 'saldo' });
-  });
-
-  it('lists the read tools to a read token, and no write tool', async () => {
-    const { result } = await rpc(reader, 'tools/list');
-    const tools = (result?.tools ?? []) as Array<{
-      name: string;
-      annotations?: Record<string, unknown>;
-    }>;
-    expect(tools.map((tool) => tool.name).sort()).toEqual(
-      readTools.map((tool) => tool.name).sort(),
-    );
-    expect(tools.every((tool) => tool.annotations?.openWorldHint === false)).toBe(true);
-  });
-
-  it('adds the write tools for a write token', async () => {
-    const { result } = await rpc(writer, 'tools/list');
-    const names = ((result?.tools ?? []) as Array<{ name: string }>).map((tool) => tool.name);
-    expect(names).toContain('echo_test');
-    expect(names).toContain('throw_test');
-  });
-
-  it('answers a read tool with structuredContent and the same JSON as text', async () => {
-    const { result } = await rpc(reader, 'tools/call', { name: 'get_preferences', arguments: {} });
-    expect(result?.isError).not.toBe(true);
-    const content = result?.content as Array<{ type: string; text: string }>;
-    expect(content[0]?.type).toBe('text');
-    expect(JSON.parse(content[0]?.text ?? 'null')).toEqual(result?.structuredContent);
-  });
-
   it('turns invalid input into a tool error, not a protocol error', async () => {
     const { result, error } = await rpc(reader, 'tools/call', {
       name: 'list_transactions',
@@ -137,9 +92,5 @@ describe('buildMcpServer', () => {
       arguments: { text: 'x' },
     });
     expect(thrown.result?.isError).toBe(true);
-  });
-
-  it('keeps the body limit at 1 MB', () => {
-    expect(MCP_MAX_BODY_BYTES).toBe(1_048_576);
   });
 });

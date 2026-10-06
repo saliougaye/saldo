@@ -3,7 +3,7 @@ import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
 import { readUserData } from '../userData/read';
 import { archiveCategory, reorderCategory, restoreCategory, saveCategory } from './categories';
-import { bumpRow, FIXTURE_NOW, seedOnboarded, stampOf } from './fixtures';
+import { FIXTURE_NOW, seedOnboarded } from './fixtures';
 import { writeChanges } from './writeChanges';
 
 let harness: TestDatabase;
@@ -103,34 +103,6 @@ const budget = (id: string, categoryIds: string[]) =>
   });
 
 describe('saveCategory', () => {
-  it('creates a top-level category at the end', async () => {
-    await onboarded();
-    const before = (await data()).categories.length;
-    const result = await saveCategory(harness.db, userId, input, FIXTURE_NOW);
-    if (!result.ok) throw new Error('not created');
-    expect(await find(result.id)).toMatchObject({
-      name: 'Ristoranti',
-      direction: 'expense',
-      parentId: null,
-      icon: 'utensils',
-      colorIndex: 3,
-      archivedAt: null,
-      sortOrder: before,
-    });
-  });
-
-  it('trims the name and creates a child under a top-level category', async () => {
-    await onboarded();
-    const result = await saveCategory(
-      harness.db,
-      userId,
-      { ...input, name: '  Bar  ', parentId: GROCERIES },
-      FIXTURE_NOW,
-    );
-    if (!result.ok) throw new Error('not created');
-    expect(await find(result.id)).toMatchObject({ name: 'Bar', parentId: GROCERIES });
-  });
-
   it('edits name, icon, colour and parent, keeping the direction', async () => {
     await onboarded();
     await category('home');
@@ -168,30 +140,6 @@ describe('saveCategory', () => {
     ).toEqual({ ok: false, error: 'parentInvalid' });
   });
 
-  it('refuses a parent of the other direction, an archived one, a missing one', async () => {
-    await onboarded();
-    await category('pay', { direction: 'income' });
-    await category('old', { archivedAt: FIXTURE_NOW.toISOString() });
-    for (const parentId of ['pay', 'old', 'nope']) {
-      expect(await saveCategory(harness.db, userId, { ...input, parentId }, FIXTURE_NOW)).toEqual({
-        ok: false,
-        error: 'parentInvalid',
-      });
-    }
-  });
-
-  it('refuses itself as its parent', async () => {
-    await onboarded();
-    expect(
-      await saveCategory(
-        harness.db,
-        userId,
-        { ...input, id: GROCERIES, parentId: GROCERIES },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'parentInvalid' });
-  });
-
   it('refuses a parent for a category that has children', async () => {
     await onboarded();
     await category('home');
@@ -206,52 +154,7 @@ describe('saveCategory', () => {
     ).toEqual({ ok: false, error: 'parentInvalid' });
   });
 
-  it('refuses an unknown id and out-of-bounds input', async () => {
-    await onboarded();
-    expect(await saveCategory(harness.db, userId, { ...input, id: 'nope' }, FIXTURE_NOW)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
-    for (const bad of [
-      { ...input, name: '   ' },
-      { ...input, name: 'x'.repeat(41) },
-      { ...input, colorIndex: 99 },
-      { ...input, colorIndex: -1 },
-      { ...input, icon: '' },
-      { ...input, direction: 'transfer' },
-      { ...input, budgetBuffer: 'abc' },
-    ]) {
-      expect(await saveCategory(harness.db, userId, bad, FIXTURE_NOW)).toEqual({
-        ok: false,
-        error: 'invalid',
-      });
-    }
-  });
-
   describe('Budget mensile', () => {
-    it('creates a single-category period budget named after the category', async () => {
-      await onboarded();
-      await budget('existing', ['other']);
-      const result = await saveCategory(
-        harness.db,
-        userId,
-        { ...input, budgetEnabled: true, budgetBuffer: '200' },
-        FIXTURE_NOW,
-      );
-      if (!result.ok) throw new Error('not created');
-      const created = (await data()).budgets.find((b) => b.categoryIds[0] === result.id);
-      expect(created).toMatchObject({
-        name: 'Ristoranti',
-        categoryIds: [result.id],
-        amount: 20000,
-        period: 'period',
-        alertThreshold: 90,
-        rollover: false,
-        icon: 'utensils',
-        sortOrder: 1,
-      });
-    });
-
     it('updates the amount of the budget the category already has', async () => {
       await onboarded();
       await budget('mine', [GROCERIES]);
@@ -277,23 +180,6 @@ describe('saveCategory', () => {
       );
       expect((await data()).budgets).toHaveLength(0);
     });
-
-    it('creates no budget for a zero amount or an income category', async () => {
-      await onboarded();
-      await saveCategory(
-        harness.db,
-        userId,
-        { ...input, budgetEnabled: true, budgetBuffer: '0' },
-        FIXTURE_NOW,
-      );
-      await saveCategory(
-        harness.db,
-        userId,
-        { ...input, name: 'Bonus', direction: 'income', budgetEnabled: true, budgetBuffer: '9' },
-        FIXTURE_NOW,
-      );
-      expect((await data()).budgets).toHaveLength(0);
-    });
   });
 });
 
@@ -308,16 +194,6 @@ describe('archiveCategory', () => {
     expect((await find(GROCERIES))?.archivedAt).toBe(later.toISOString());
     expect((await find('kid'))?.archivedAt).toBe(later.toISOString());
     expect((await find('other'))?.archivedAt).toBeNull();
-  });
-
-  it('leaves transactions, recurrences and budgets alone without a move', async () => {
-    await onboarded();
-    await transaction('t1', GROCERIES);
-    await budget('b1', [GROCERIES]);
-    await archiveCategory(harness.db, userId, { id: GROCERIES, moveToId: null }, later);
-    const d = await data();
-    expect(d.transactions[0]?.categoryId).toBe(GROCERIES);
-    expect(d.budgets[0]?.categoryIds).toEqual([GROCERIES]);
   });
 
   it('moves transactions, recurrence templates and budgets in one batch', async () => {
@@ -362,34 +238,9 @@ describe('archiveCategory', () => {
     expect((await find(GROCERIES))?.archivedAt).toBeNull();
     expect((await data()).transactions[0]?.categoryId).toBe(GROCERIES);
   });
-
-  it('is ok and writes nothing when already archived; notFound for an unknown id', async () => {
-    await onboarded();
-    await archiveCategory(harness.db, userId, { id: GROCERIES, moveToId: null }, later);
-    const stamp = (await find(GROCERIES))?.updatedAt;
-    expect(
-      await archiveCategory(
-        harness.db,
-        userId,
-        { id: GROCERIES, moveToId: null },
-        new Date('2026-10-01T09:00:00.000Z'),
-      ),
-    ).toEqual({ ok: true });
-    expect((await find(GROCERIES))?.updatedAt).toBe(stamp);
-    expect(
-      await archiveCategory(harness.db, userId, { id: 'nope', moveToId: null }, later),
-    ).toEqual({ ok: false, error: 'notFound' });
-  });
 });
 
 describe('restoreCategory', () => {
-  it('restores a category', async () => {
-    await onboarded();
-    await archiveCategory(harness.db, userId, { id: GROCERIES, moveToId: null }, later);
-    expect(await restoreCategory(harness.db, userId, GROCERIES, later)).toEqual({ ok: true });
-    expect((await find(GROCERIES))?.archivedAt).toBeNull();
-  });
-
   it('refuses a child whose parent is still archived', async () => {
     await onboarded();
     await category('kid', { parentId: GROCERIES });
@@ -399,17 +250,6 @@ describe('restoreCategory', () => {
       error: 'parentInvalid',
     });
     expect((await find('kid'))?.archivedAt).not.toBeNull();
-  });
-
-  it('is ok and writes nothing for a live category; notFound for an unknown id', async () => {
-    await onboarded();
-    const stamp = (await find(GROCERIES))?.updatedAt;
-    expect(await restoreCategory(harness.db, userId, GROCERIES, later)).toEqual({ ok: true });
-    expect((await find(GROCERIES))?.updatedAt).toBe(stamp);
-    expect(await restoreCategory(harness.db, userId, 'nope', later)).toEqual({
-      ok: false,
-      error: 'notFound',
-    });
   });
 });
 
@@ -436,83 +276,5 @@ describe('reorderCategory', () => {
     const now = await order(null);
     expect(now[0]).toBe(second);
     expect(now[1]).toBe(first);
-  });
-
-  it('reorders children among their own siblings', async () => {
-    await onboarded();
-    await category('k1', { parentId: GROCERIES, sortOrder: 0 });
-    await category('k2', { parentId: GROCERIES, sortOrder: 1 });
-    const before = await order(GROCERIES);
-    expect(before.indexOf('k1')).toBeLessThan(before.indexOf('k2'));
-    await reorderCategory(harness.db, userId, { id: 'k2', direction: -1 }, later);
-    const after = await order(GROCERIES);
-    expect(after.indexOf('k2')).toBeLessThan(after.indexOf('k1'));
-    expect(after).toHaveLength(before.length);
-  });
-
-  it('writes nothing at an end', async () => {
-    await onboarded();
-    await category('k1', { parentId: GROCERIES, sortOrder: 0 });
-    await category('k2', { parentId: GROCERIES, sortOrder: 1 });
-    const stamp = (await find('k1'))?.updatedAt;
-    expect(await reorderCategory(harness.db, userId, { id: 'k1', direction: -1 }, later)).toEqual({
-      ok: true,
-    });
-    expect((await find('k1'))?.updatedAt).toBe(stamp);
-  });
-
-  it('refuses an unknown or archived category and a bad direction', async () => {
-    await onboarded();
-    await archiveCategory(harness.db, userId, { id: GROCERIES, moveToId: null }, later);
-    for (const id of ['nope', GROCERIES]) {
-      expect(await reorderCategory(harness.db, userId, { id, direction: 1 }, later)).toEqual({
-        ok: false,
-        error: 'notFound',
-      });
-    }
-    expect(
-      await reorderCategory(harness.db, userId, { id: GROCERIES, direction: 2 }, later),
-    ).toEqual({ ok: false, error: 'invalid' });
-  });
-});
-
-describe('categories — expectedUpdatedAt (§17.4.2)', () => {
-  it('saves, archives and restores only the version read', async () => {
-    await onboarded();
-    const read = await stampOf(harness.db, userId, 'category', GROCERIES);
-    const phone = await bumpRow(harness.db, userId, 'category', GROCERIES, { name: 'Alimentari' });
-
-    expect(
-      await saveCategory(
-        harness.db,
-        userId,
-        { ...input, id: GROCERIES, name: 'Spesa', expectedUpdatedAt: read },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'conflict' });
-    expect(
-      await archiveCategory(
-        harness.db,
-        userId,
-        { id: GROCERIES, moveToId: null, expectedUpdatedAt: read },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: false, error: 'conflict' });
-    expect(
-      await archiveCategory(
-        harness.db,
-        userId,
-        { id: GROCERIES, moveToId: null, expectedUpdatedAt: phone },
-        FIXTURE_NOW,
-      ),
-    ).toEqual({ ok: true });
-    const archived = await stampOf(harness.db, userId, 'category', GROCERIES);
-    expect(await restoreCategory(harness.db, userId, GROCERIES, FIXTURE_NOW, phone)).toEqual({
-      ok: false,
-      error: 'conflict',
-    });
-    expect(await restoreCategory(harness.db, userId, GROCERIES, FIXTURE_NOW, archived)).toEqual({
-      ok: true,
-    });
   });
 });

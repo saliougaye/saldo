@@ -9,10 +9,6 @@ const item = (id: string, tier: number, score: number, margin = 0.05): RankedTar
 });
 
 describe('featuredTarget', () => {
-  it('features nothing when there is nothing', () => {
-    expect(featuredTarget([], null)).toBeNull();
-  });
-
   it('lets a higher tier win whatever the scores', () => {
     expect(featuredTarget([item('a', 0, 9), item('b', 1, 0.01)], null)).toBe('b');
   });

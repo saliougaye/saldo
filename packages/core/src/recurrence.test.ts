@@ -45,12 +45,6 @@ const MONTHLY = {
 } as const;
 
 describe('nthOccurrence', () => {
-  it('counts from the start date', () => {
-    expect(nthOccurrence(MONTHLY, 0)).toBe('2026-01-27');
-    expect(nthOccurrence(MONTHLY, 2)).toBe('2026-03-27');
-    expect(nthOccurrence({ ...MONTHLY, interval: 3 }, 2)).toBe('2026-07-27');
-  });
-
   it('steps days and weeks by the interval', () => {
     expect(nthOccurrence({ ...MONTHLY, frequency: 'daily', interval: 2 }, 3)).toBe('2026-02-02');
     expect(nthOccurrence({ ...MONTHLY, frequency: 'weekly', interval: 2 }, 1)).toBe('2026-02-10');
@@ -89,10 +83,6 @@ describe('occurrenceDates', () => {
     expect(
       occurrenceDates({ ...MONTHLY, startDate: '2026-01-15', endDate: '2026-03-14' }, '2026-12-31'),
     ).toEqual(['2026-01-15', '2026-02-15']);
-  });
-
-  it('returns nothing when the start is past the horizon', () => {
-    expect(occurrenceDates({ ...MONTHLY, startDate: '2027-01-01' }, '2026-12-31')).toEqual([]);
   });
 
   it('fires every second week on the same weekday', () => {
@@ -176,11 +166,6 @@ describe('materializeOccurrences', () => {
     const existing = new Set(['rec-rent:2026-02-27']);
     const created = materializeOccurrences(RECURRENCE, existing, '2026-03-31');
     expect(created.map((tx) => tx.date)).toEqual(['2026-01-27', '2026-03-27']);
-  });
-
-  it('creates nothing for a tombstoned recurrence', () => {
-    const deleted = { ...RECURRENCE, deletedAt: '2026-02-01T00:00:00.000Z' };
-    expect(materializeOccurrences(deleted, new Set(), '2026-12-31')).toEqual([]);
   });
 
   it('is idempotent: running it twice adds nothing', () => {
@@ -280,10 +265,6 @@ describe('endDateAfterCount', () => {
     expect(endDateAfterCount({ ...MONTHLY, frequency: 'weekly', interval: 2 }, 3)).toBe(
       '2026-02-24',
     );
-  });
-
-  it('treats anything below one as one', () => {
-    expect(endDateAfterCount(MONTHLY, 0)).toBe('2026-01-27');
   });
 });
 

@@ -2,12 +2,11 @@ import {
   averageSeries,
   dailyCumulative,
   describePeriod,
-  emptyUserData,
   periodHistory,
   projectEndOfCycle,
 } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
-import { CATEGORY, CATEGORY_2, CATEGORY_CHILD, dataWith, TAG, tx } from '../test/fixtures';
+import { CATEGORY, CATEGORY_2, dataWith, tx } from '../test/fixtures';
 import { statsView } from './statsView';
 
 const DEF = { kind: 'month', startDay: 1 } as const;
@@ -94,40 +93,6 @@ describe('statsView', () => {
     expect(view.committed).toEqual({ amount: 300, discretionary: 900, share: 25 });
   });
 
-  it('gives a zero committed share when nothing was spent', () => {
-    const view = statsView({
-      data: dataWith([]),
-      def: DEF,
-      today: TODAY,
-      period: JULY,
-      direction: 'expense',
-    });
-    expect(view.committed).toEqual({ amount: 0, discretionary: 0, share: 0 });
-  });
-
-  it('splits the period by category, rolled up to the parents, sorted by amount', () => {
-    const view = statsView({
-      data: dataWith(
-        [
-          tx({ id: 'a', amount: 100, date: '2026-09-02', categoryId: CATEGORY.id }),
-          tx({ id: 'c', amount: 200, date: '2026-09-02', categoryId: CATEGORY_CHILD.id }),
-          tx({ id: 'b', amount: 900, date: '2026-09-03', categoryId: CATEGORY_2.id }),
-        ],
-        { categories: [CATEGORY, CATEGORY_2, CATEGORY_CHILD] },
-      ),
-      def: DEF,
-      today: TODAY,
-      period: SEPTEMBER,
-      direction: 'expense',
-    });
-    expect(view.split.total).toBe(1200);
-    expect(view.split.rows.map((row) => [row.categoryId, row.amount, row.share])).toEqual([
-      [CATEGORY_2.id, 900, 75],
-      [CATEGORY.id, 300, 25],
-    ]);
-    expect(view.split.rows[0]?.category?.name).toBe(CATEGORY_2.name);
-  });
-
   it('reads each delta against the median of the periods the category was spent in', () => {
     // July was used, but not for c1: the phone drops that zero before the median, so the
     // baseline is (60000 + 40000) / 2, not the 40000 a zero would drag it to.
@@ -139,55 +104,6 @@ describe('statsView', () => {
       direction: 'expense',
     });
     expect(view.split.rows[0]?.delta).toBe(-40);
-  });
-
-  it('splits the income when asked for it', () => {
-    const view = statsView({
-      data: dataWith([
-        tx({ id: 'a', amount: 2000, date: '2026-09-02', kind: 'income' }),
-        tx({ id: 'b', amount: 600, date: '2026-09-03' }),
-      ]),
-      def: DEF,
-      today: TODAY,
-      period: SEPTEMBER,
-      direction: 'income',
-    });
-    expect(view.split.total).toBe(2000);
-  });
-
-  it('counts the excluded transactions of the direction that already happened', () => {
-    const view = statsView({
-      data: dataWith([
-        tx({ id: 'a', amount: 300, date: '2026-09-02', excludeFromTotals: true }),
-        tx({ id: 'b', amount: 200, date: '2026-09-03', excludeFromTotals: true }),
-        tx({ id: 'c', amount: 900, date: '2026-09-20', excludeFromTotals: true }),
-        tx({ id: 'd', amount: 700, date: '2026-09-04', excludeFromTotals: true, kind: 'income' }),
-        tx({ id: 'e', amount: 400, date: '2026-08-04', excludeFromTotals: true }),
-      ]),
-      def: DEF,
-      today: TODAY,
-      period: SEPTEMBER,
-      direction: 'expense',
-    });
-    expect(view.split.excluded).toEqual({ count: 2, amount: 500 });
-  });
-
-  it('totals the tags, and says what is untagged', () => {
-    const view = statsView({
-      data: dataWith(
-        [
-          tx({ id: 'a', amount: 300, date: '2026-09-02', tagIds: [TAG.id] }),
-          tx({ id: 'b', amount: 100, date: '2026-09-04' }),
-        ],
-        { tags: [TAG] },
-      ),
-      def: DEF,
-      today: TODAY,
-      period: SEPTEMBER,
-      direction: 'expense',
-    });
-    expect(view.tags.tags[0]?.expense).toBe(300);
-    expect(view.tags.untagged).toBe(100);
   });
 
   it('gives the two series of the trend, «il solito» over three periods and not six', () => {
@@ -215,23 +131,5 @@ describe('statsView', () => {
     );
     // April is five periods back: inside the medians' window, outside «il solito».
     expect(view.trend.usual.at(-1)).toBe(3000);
-  });
-
-  it('is every figure at zero for an account with nothing in it', () => {
-    const view = statsView({
-      data: emptyUserData(),
-      def: DEF,
-      today: TODAY,
-      period: SEPTEMBER,
-      direction: 'expense',
-    });
-    expect(view.figures).toMatchObject({ income: 0, spent: 0, net: 0, median: null });
-    expect(view.committed).toEqual({ amount: 0, discretionary: 0, share: 0 });
-    expect(view.split.total).toBe(0);
-    expect(view.split.rows).toEqual([]);
-    expect(view.tags.tags).toEqual([]);
-    // The trend still has a point per elapsed day, all of them zero: an empty chart, not a missing one.
-    expect(view.trend.current).toHaveLength(SEPTEMBER.elapsed);
-    expect(view.trend.current.every((value) => value === 0)).toBe(true);
   });
 });

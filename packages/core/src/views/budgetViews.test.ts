@@ -87,11 +87,6 @@ describe('budgetViews', () => {
     expect(result.ratio).toBeCloseTo(0.5, 10);
   });
 
-  it('ignores rows outside the range', () => {
-    const result = view({}, [tx('2026-03-26', 50000), tx('2026-04-27', 50000)]);
-    expect(result.spent).toBe(0);
-  });
-
   it('reports the days left, the pace and whether the range is still open', () => {
     const result = view({}, []);
     // Cycle is 31 days and today is day 23.
@@ -116,12 +111,6 @@ describe('budgetViews', () => {
     // 19 Apr is inside the week but still in the future, and §5.3 counts nothing after today.
     const result = view({ period: 'week' }, [tx('2026-04-13', 1000), tx('2026-04-19', 2000)]);
     expect(result.spent).toBe(1000);
-  });
-
-  it('measures a year budget against the calendar year', () => {
-    const result = view({ period: 'year' }, [tx('2026-01-15', 5000), tx('2025-12-31', 9000)]);
-    expect(result.range).toEqual({ start: '2026-01-01', end: '2026-12-31' });
-    expect(result.spent).toBe(5000);
   });
 
   it('adds the rollover carry to the limit, but only for a cycle budget', () => {

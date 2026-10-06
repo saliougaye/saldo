@@ -19,17 +19,6 @@ describe('secret cipher', () => {
     expect(encryptSecret(PLAIN, key, SLOT)).not.toBe(encryptSecret(PLAIN, key, SLOT));
   });
 
-  it('stores v1:{iv}:{tag}:{ciphertext}, each part base64, with no plaintext in it', () => {
-    const stored = encryptSecret(PLAIN, key, SLOT);
-    const parts = stored.split(':');
-    expect(parts).toHaveLength(4);
-    expect(parts[0]).toBe('v1');
-    expect(Buffer.from(parts[1] ?? '', 'base64')).toHaveLength(12);
-    expect(Buffer.from(parts[2] ?? '', 'base64')).toHaveLength(16);
-    expect(stored).not.toContain(PLAIN);
-    expect(Buffer.from(parts[3] ?? '', 'base64').toString('utf8')).not.toContain(PLAIN);
-  });
-
   it('answers null, never a throw, for a wrong key', () => {
     expect(decryptSecret(encryptSecret(PLAIN, key, SLOT), otherKey, SLOT)).toBeNull();
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACCOUNTS, APRIL_CYCLE, aprilTransactions, TODAY, tx } from './__tests__/fixtures';
+import { ACCOUNTS, aprilTransactions, TODAY, tx } from './__tests__/fixtures';
 import {
   type AccountRef,
   accountBalances,
@@ -9,11 +9,8 @@ import {
   creditStatementAccrued,
   creditStatementDue,
   fillsFromBalances,
-  netWorth,
   nextCreditChargeDate,
-  paymentAccountCandidates,
   previewFromBalances,
-  spendableTotal,
   transferBalancePreview,
   transferFillAmounts,
   transferOverdrawsSource,
@@ -40,37 +37,6 @@ describe('accountBalances', () => {
       TODAY,
     );
     expect(withFuture.get('acc-checking')).toBe(500000);
-  });
-
-  it('starts every account from its opening balance', () => {
-    expect(accountBalances(ACCOUNTS, [], TODAY).get('acc-old')).toBe(20000);
-    expect([...accountBalances(ACCOUNTS, [], TODAY).keys()].sort()).toEqual([
-      'acc-card',
-      'acc-checking',
-      'acc-old',
-      'acc-savings',
-    ]);
-  });
-
-  it('ignores transactions on unknown accounts', () => {
-    const balances = accountBalances(
-      ACCOUNTS,
-      [tx({ date: TODAY, amount: 5000, accountId: 'acc-ghost' })],
-      TODAY,
-    );
-    expect(balances.has('acc-ghost')).toBe(false);
-  });
-});
-
-describe('spendableTotal / netWorth', () => {
-  const balances = accountBalances(ACCOUNTS, aprilTransactions(), TODAY);
-
-  it('sums only spendable, non archived accounts', () => {
-    expect(spendableTotal(ACCOUNTS, balances)).toBe(603000);
-  });
-
-  it('sums every non archived account for net worth', () => {
-    expect(netWorth(ACCOUNTS, balances)).toBe(-18240 + 603000 + 1050000);
   });
 });
 
@@ -102,12 +68,6 @@ describe('credit card', () => {
   });
 });
 
-describe('APRIL_CYCLE fixture', () => {
-  it('is the design prototype cycle', () => {
-    expect(APRIL_CYCLE).toEqual({ start: '2026-03-27', end: '2026-04-26' });
-  });
-});
-
 describe('transferBalancePreview', () => {
   const draft = {
     id: 'draft',
@@ -116,31 +76,6 @@ describe('transferBalancePreview', () => {
     fromAccountId: 'acc-checking',
     toAccountId: 'acc-savings',
   };
-
-  it('takes the amount off the source and puts it on the destination', () => {
-    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, draft);
-    expect(preview.from).toEqual({ now: 603000, after: 553000 });
-    expect(preview.to).toEqual({ now: 1050000, after: 1100000 });
-  });
-
-  it('has nothing to say about an account that is not chosen yet', () => {
-    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
-      ...draft,
-      toAccountId: null,
-    });
-    // The pair is incomplete, so no money moves: the source still shows what it holds.
-    expect(preview.from).toEqual({ now: 603000, after: 603000 });
-    expect(preview.to).toBeNull();
-  });
-
-  it('moves nothing while the amount is still empty', () => {
-    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
-      ...draft,
-      amount: 0,
-    });
-    expect(preview.from).toEqual({ now: 603000, after: 603000 });
-    expect(preview.to).toEqual({ now: 1050000, after: 1050000 });
-  });
 
   it('does not count the row being edited twice', () => {
     const rows = aprilTransactions();
@@ -165,56 +100,9 @@ describe('transferBalancePreview', () => {
     expect(preview.from).toEqual({ now: 603000, after: 603000 });
     expect(preview.to).toEqual({ now: 1050000, after: 1050000 });
   });
-
-  it('reports nothing for an account it does not know', () => {
-    const preview = transferBalancePreview(ACCOUNTS, aprilTransactions(), TODAY, {
-      ...draft,
-      fromAccountId: 'acc-ghost',
-    });
-    expect(preview.from).toBeNull();
-  });
 });
 
 describe('previewFromBalances', () => {
-  const balances = new Map([
-    ['a', 10000],
-    ['b', 500],
-  ]);
-  const draft = {
-    id: 'new',
-    amount: 2500,
-    date: '2026-04-18',
-    fromAccountId: 'a',
-    toAccountId: 'b',
-  };
-
-  it('moves the amount out of the source and into the destination', () => {
-    expect(previewFromBalances(balances, balances, draft, '2026-04-18')).toEqual({
-      from: { now: 10000, after: 7500 },
-      to: { now: 500, after: 3000 },
-    });
-  });
-
-  it('moves nothing for a future date, a zero amount or an incomplete pair', () => {
-    const still = { from: { now: 10000, after: 10000 }, to: { now: 500, after: 500 } };
-    expect(
-      previewFromBalances(balances, balances, { ...draft, date: '2026-04-19' }, '2026-04-18'),
-    ).toEqual(still);
-    expect(previewFromBalances(balances, balances, { ...draft, amount: 0 }, '2026-04-18')).toEqual(
-      still,
-    );
-    expect(
-      previewFromBalances(balances, balances, { ...draft, toAccountId: null }, '2026-04-18'),
-    ).toEqual({ from: { now: 10000, after: 10000 }, to: null });
-  });
-
-  it('answers null for an account it has no balance for', () => {
-    expect(
-      previewFromBalances(balances, balances, { ...draft, fromAccountId: 'gone' }, '2026-04-18')
-        .from,
-    ).toBeNull();
-  });
-
   it('agrees with transferBalancePreview', () => {
     const A = ACCOUNTS;
     const T = aprilTransactions();
@@ -281,19 +169,6 @@ describe('fillsFromBalances', () => {
       ],
     );
   });
-
-  it('offers nothing towards a credit card or from an empty source', () => {
-    const accounts = [
-      { id: 'a', type: 'checking' as const, archivedAt: null, goalTarget: null },
-      { id: 'c', type: 'credit_card' as const, archivedAt: null, goalTarget: null },
-    ];
-    expect(
-      fillsFromBalances(accounts, new Map([['a', 100]]), { fromAccountId: 'a', toAccountId: 'c' }),
-    ).toEqual([]);
-    expect(
-      fillsFromBalances(accounts, new Map([['a', 0]]), { fromAccountId: 'a', toAccountId: null }),
-    ).toEqual([]);
-  });
 });
 
 describe('transferOverdrawsSource', () => {
@@ -312,21 +187,6 @@ describe('transferOverdrawsSource', () => {
     expect(transferOverdrawsSource({ type: 'credit_card' }, { now: -5000, after: -6000 })).toBe(
       false,
     );
-  });
-
-  it('catches a debit card going below zero, as it would a current account', () => {
-    expect(transferOverdrawsSource({ type: 'debit_card' }, { now: 5000, after: -1000 })).toBe(true);
-  });
-
-  it('does not block a transfer that moves nothing yet', () => {
-    // A future-dated transfer out of an account that is already in the red: `after === now`, so
-    // this transfer is not what put it there.
-    expect(transferOverdrawsSource(checking, { now: -5000, after: -5000 })).toBe(false);
-  });
-
-  it('has no opinion without a source account or a preview', () => {
-    expect(transferOverdrawsSource(undefined, { now: 5000, after: -1000 })).toBe(false);
-    expect(transferOverdrawsSource(checking, null)).toBe(false);
   });
 });
 
@@ -402,42 +262,12 @@ describe('creditStatementDue', () => {
     expect(creditStatementDue(CARD, txs, TODAY)?.due).toBe(0);
   });
 
-  it('has no statement without a close day, and no charge date without a charge day', () => {
-    expect(creditStatementDue({ ...CARD, creditCloseDay: null }, [], TODAY)).toBeNull();
-    expect(
-      creditStatementDue({ ...CARD, creditChargeDay: null }, [], TODAY)?.chargeDate,
-    ).toBeNull();
-  });
-
-  it('is only about credit cards', () => {
-    expect(creditStatementDue({ ...CARD, type: 'checking' }, [], TODAY)).toBeNull();
-  });
-
   it('closes today on the close day', () => {
     expect(creditStatementDue(CARD, [spend('2026-04-20', 1000)], '2026-04-20')).toMatchObject({
       closeDate: '2026-04-20',
       chargeDate: '2026-05-05',
       statement: 1000,
     });
-  });
-});
-
-describe('paymentAccountCandidates', () => {
-  it('never charges a card to a pocket', () => {
-    const checking = ACCOUNTS.find((account) => account.id === 'acc-checking');
-    if (checking === undefined) throw new Error('fixture without acc-checking');
-    const pocket = { ...checking, id: 'acc-pocket', type: 'pocket' as const };
-    expect(
-      paymentAccountCandidates([...ACCOUNTS, pocket], 'acc-card').map((account) => account.id),
-    ).not.toContain('acc-pocket');
-  });
-
-  it('offers live accounts that are not cards and not the card itself', () => {
-    const list = [...ACCOUNTS, { ...CARD, id: 'acc-card-2' }];
-    expect(paymentAccountCandidates(list, 'acc-card').map((account) => account.id)).toEqual([
-      'acc-checking',
-      'acc-savings',
-    ]);
   });
 });
 
@@ -474,29 +304,9 @@ describe('creditSettlementDraft', () => {
       date: TODAY,
     });
   });
-
-  it('falls back to the whole balance without a close day', () => {
-    const txs = [spend('2026-04-01', 5000)];
-    expect(
-      creditSettlementDraft({ ...card, creditCloseDay: null }, ACCOUNTS, txs, TODAY),
-    ).toMatchObject({ statementAmount: null, amount: 5000, date: TODAY, statementDate: TODAY });
-  });
-
-  it('leaves the source empty when the payment account is gone or archived', () => {
-    const archived = { ...card, creditPaymentAccountId: 'acc-old' };
-    expect(creditSettlementDraft(archived, ACCOUNTS, [], TODAY).fromAccountId).toBeNull();
-    const none = { ...card, creditPaymentAccountId: null };
-    expect(creditSettlementDraft(none, ACCOUNTS, [], TODAY).fromAccountId).toBeNull();
-  });
 });
 
 describe('creditChargeReminders', () => {
-  it('reminds on the charge day of a statement still due', () => {
-    expect(creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-04-25')).toEqual([
-      { accountId: 'acc-card', date: '2026-05-05', amount: 30000 },
-    ]);
-  });
-
   it('includes the charge day itself', () => {
     expect(
       creditChargeReminders(ACCOUNTS, [spend('2026-04-10', 30000)], '2026-05-05'),
@@ -508,37 +318,14 @@ describe('creditChargeReminders', () => {
     expect(creditChargeReminders(ACCOUNTS, paid, '2026-04-25')).toEqual([]);
     expect(creditChargeReminders(ACCOUNTS, [spend('2026-03-10', 30000)], TODAY)).toEqual([]);
   });
-
-  it('skips a card with no charge day, and an archived card', () => {
-    const txs = [spend('2026-04-10', 30000)];
-    const noCharge = ACCOUNTS.map((account) =>
-      account.id === 'acc-card' ? { ...account, creditChargeDay: null } : account,
-    );
-    expect(creditChargeReminders(noCharge, txs, '2026-04-25')).toEqual([]);
-    const archived = ACCOUNTS.map((account) =>
-      account.id === 'acc-card' ? { ...account, archivedAt: '2026-04-01T00:00:00.000Z' } : account,
-    );
-    expect(creditChargeReminders(archived, txs, '2026-04-25')).toEqual([]);
-  });
 });
 
 describe('transferOverpaysCard', () => {
   const card = { type: 'credit_card' } as const;
 
-  it('flags a transfer that takes a card into credit', () => {
-    expect(transferOverpaysCard(card, { now: -5000, after: 1000 })).toBe(true);
-  });
-
   it('lets a card be paid off exactly, or stay in debt', () => {
     expect(transferOverpaysCard(card, { now: -5000, after: 0 })).toBe(false);
     expect(transferOverpaysCard(card, { now: -5000, after: -1000 })).toBe(false);
-  });
-
-  it('is quiet when the transfer moves nothing, for other accounts, or without a preview', () => {
-    expect(transferOverpaysCard(card, { now: 1000, after: 1000 })).toBe(false);
-    expect(transferOverpaysCard({ type: 'checking' }, { now: -5000, after: 1000 })).toBe(false);
-    expect(transferOverpaysCard(undefined, { now: -5000, after: 1000 })).toBe(false);
-    expect(transferOverpaysCard(card, null)).toBe(false);
   });
 });
 
@@ -555,31 +342,6 @@ describe('transferFillAmounts', () => {
     goalTarget: 300000,
   };
 
-  it('offers what the source holds today', () => {
-    expect(transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, draft)).toEqual([
-      { key: 'balance', minor: 603000 },
-    ]);
-  });
-
-  it('offers nothing without a source', () => {
-    expect(
-      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, { ...draft, fromAccountId: null }),
-    ).toEqual([]);
-    expect(
-      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, {
-        ...draft,
-        fromAccountId: 'gone',
-      }),
-    ).toEqual([]);
-  });
-
-  it('offers nothing when the source holds nothing, or less', () => {
-    const txs = [tx({ date: TODAY, amount: 500000, accountId: 'acc-checking' })];
-    expect(transferFillAmounts(ACCOUNTS, txs, TODAY, draft)).toEqual([]);
-    const overdrawn = [tx({ date: TODAY, amount: 600000, accountId: 'acc-checking' })];
-    expect(transferFillAmounts(ACCOUNTS, overdrawn, TODAY, draft)).toEqual([]);
-  });
-
   it('offers a card only the credit it holds', () => {
     const fromCard = { ...draft, fromAccountId: 'acc-card', toAccountId: 'acc-checking' };
     // In debt (-18240): nothing to move.
@@ -588,15 +350,6 @@ describe('transferFillAmounts', () => {
     expect(transferFillAmounts(ACCOUNTS, refund, TODAY, fromCard)).toEqual([
       { key: 'balance', minor: 4000 },
     ]);
-  });
-
-  it('offers nothing towards a card: paying it, what counts is its debt, which «Salda carta» offers', () => {
-    expect(
-      transferFillAmounts(ACCOUNTS, aprilTransactions(), TODAY, {
-        ...draft,
-        toAccountId: 'acc-card',
-      }),
-    ).toEqual([]);
   });
 
   it('leaves the transfer being edited out, so re-editing offers the same total', () => {
@@ -652,22 +405,6 @@ describe('transferFillAmounts', () => {
       expect(
         transferFillAmounts([poor, goal], [], TODAY, { ...toGoal, fromAccountId: 'acc-poor' }),
       ).toEqual([{ key: 'balance', minor: 150000 }]);
-    });
-
-    it('offers no gap for a reached or archived goal', () => {
-      const reached = [...ACCOUNTS, { ...goal, openingBalance: 300000 }];
-      expect(transferFillAmounts(reached, [], TODAY, toGoal)).toEqual([
-        { key: 'balance', minor: 500000 },
-      ]);
-      const archived = [...ACCOUNTS, { ...goal, archivedAt: '2026-04-01T00:00:00.000Z' }];
-      expect(transferFillAmounts(archived, [], TODAY, toGoal)).toEqual([
-        { key: 'balance', minor: 500000 },
-      ]);
-    });
-
-    it('offers no gap when the source is empty', () => {
-      const txs = [tx({ date: TODAY, amount: 500000, accountId: 'acc-checking' })];
-      expect(transferFillAmounts(accounts, txs, TODAY, toGoal)).toEqual([]);
     });
   });
 });

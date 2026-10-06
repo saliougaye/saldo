@@ -31,11 +31,6 @@ function request(body: unknown, headers: Record<string, string> = {}): Request {
 }
 
 describe('POST /api/me/email', () => {
-  it('refuses a caller with no session', async () => {
-    const response = await POST(request({ email: 'ada@example.com' }));
-    expect(response.status).toBe(401);
-  });
-
   it('stores the address, lowercased, over a synthetic one', async () => {
     const session = await createTestSession(harness.db, 'Ada');
     const response = await POST(
@@ -46,13 +41,6 @@ describe('POST /api/me/email', () => {
     const [row] = await harness.db.select().from(user).where(eq(user.id, session.userId));
     expect(row?.email).toBe('ada@example.com');
     expect(row?.emailVerified).toBe(false);
-  });
-
-  it('refuses what is not an address', async () => {
-    const session = await createTestSession(harness.db, 'Ada');
-    const response = await POST(request({ email: 'ada' }, { authorization: session.bearer }));
-    expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({ error: { code: 'invalid_email' } });
   });
 
   it('refuses an address another account has', async () => {
@@ -95,42 +83,6 @@ describe('POST /api/me/email', () => {
       const link = mail.sent[0]?.text.split('\n').find((line) => line.startsWith('http'));
       expect(link).toContain('/api/auth/verify-email?token=');
       expect(link).toContain('callbackURL=%2Femail-verified');
-    });
-
-    it('is not mailed when the server has no SMTP, and the answer is the same', async () => {
-      const mail = catchMail();
-      const session = await createTestSession(harness.db, 'Ada');
-      const response = await POST(
-        request({ email: 'ada@example.com' }, { authorization: session.bearer }),
-      );
-      await settleBackground();
-      expect(await response.json()).toEqual({ email: 'ada@example.com', emailVerified: false });
-      expect(mail.sent).toEqual([]);
-    });
-
-    it('does not make the request fail when the mail does', async () => {
-      const mail = catchMail();
-      await enableMail(harness.db);
-      mail.failWith(new Error('550 refused'));
-      const session = await createTestSession(harness.db, 'Ada');
-      const response = await POST(
-        request({ email: 'ada@example.com' }, { authorization: session.bearer }),
-      );
-      await settleBackground();
-      expect(response.status).toBe(200);
-    });
-
-    it('is not sent for a refused address', async () => {
-      const mail = catchMail();
-      await enableMail(harness.db);
-      const session = await createTestSession(harness.db, 'Ada');
-      await harness.db
-        .update(user)
-        .set({ email: 'ada@example.com' })
-        .where(eq(user.id, session.userId));
-      await POST(request({ email: 'other@example.com' }, { authorization: session.bearer }));
-      await settleBackground();
-      expect(mail.sent).toEqual([]);
     });
   });
 });

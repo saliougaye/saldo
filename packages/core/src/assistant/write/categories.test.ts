@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Budget, Category } from '../../entities';
-import {
-  archiveCategoryTool,
-  categoryArchiveRequest,
-  resolveCategoryInput,
-  saveCategoryTool,
-  singleCategoryBudget,
-} from './categories';
+import { categoryArchiveRequest, resolveCategoryInput } from './categories';
 
 const food: Category = {
   id: 'cat-food',
@@ -37,33 +31,7 @@ const own: Budget = {
   sortOrder: 0,
 };
 
-const shared: Budget = { ...own, id: 'bud-shared', categoryIds: ['cat-food', 'cat-home'] };
-
-describe('singleCategoryBudget', () => {
-  it('finds the budget that covers exactly that category', () => {
-    expect(singleCategoryBudget([shared, own], 'cat-food')).toBe(own);
-    expect(singleCategoryBudget([shared], 'cat-food')).toBeNull();
-  });
-});
-
 describe('resolveCategoryInput', () => {
-  it('creates an expense category with its own budget', () => {
-    expect(resolveCategoryInput({ name: 'Casa', monthlyBudgetMinor: 25000 }, null, [], 2)).toEqual({
-      ok: true,
-      value: {
-        id: null,
-        name: 'Casa',
-        direction: 'expense',
-        parentId: null,
-        icon: 'tag',
-        colorIndex: 0,
-        budgetEnabled: true,
-        budgetBuffer: '250',
-        expectedUpdatedAt: undefined,
-      },
-    });
-  });
-
   it('keeps the budget it has when monthlyBudgetMinor is left out', () => {
     const result = resolveCategoryInput(
       { id: 'cat-food', updatedAt: 'hlc-food', name: 'Alimentari' },
@@ -111,10 +79,6 @@ describe('resolveCategoryInput', () => {
       ).ok,
     ).toBe(false);
   });
-
-  it('needs a name to create', () => {
-    expect(resolveCategoryInput({}, null, [], 2).ok).toBe(false);
-  });
 });
 
 describe('categoryArchiveRequest', () => {
@@ -133,9 +97,5 @@ describe('categoryArchiveRequest', () => {
     expect(
       categoryArchiveRequest({ id: 'c', updatedAt: 'h', action: 'restore', moveToId: 'd' }).ok,
     ).toBe(false);
-  });
-  it('marks archive_category destructive and save_category not', () => {
-    expect(archiveCategoryTool.annotations.destructiveHint).toBe(true);
-    expect(saveCategoryTool.annotations.destructiveHint).toBe(false);
   });
 });

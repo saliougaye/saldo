@@ -39,16 +39,6 @@ function setup() {
 }
 
 describe('finishOnboarding', () => {
-  it('writes the fresh path: settings, the account and the kept categories', () => {
-    const { db, repos, kv, input } = setup();
-    finishOnboarding(db, repos, kv, { ...input, draft: DRAFT });
-    expect(repos.settings.get()?.onboardingCompletedAt).toBe(COMPLETED_AT);
-    expect(repos.accounts.list().map((account) => [account.name, account.openingBalance])).toEqual([
-      ['Banca', 1000],
-    ]);
-    expect(kv.set).not.toHaveBeenCalled();
-  });
-
   it('writes the import path with the balances step 4 left in the draft', () => {
     const { db, repos, kv, input } = setup();
     const { rows } = parseCsv(CSV);

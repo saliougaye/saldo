@@ -50,12 +50,6 @@ describe.skipIf(!available)('createS3Store against a local S3 emulator', () => {
     expect(await store.head(key)).toBeNull();
   });
 
-  it('answers null for a key that is not there, rather than throwing', async () => {
-    const key = objectKey('user-int', 'never-written');
-    expect(await store.head(key)).toBeNull();
-    expect(await store.get(key)).toBeNull();
-  });
-
   it('signs an upload URL that accepts exactly the bytes it was signed for', async () => {
     const key = objectKey('user-int', `presigned-${Date.now()}`);
     const target = await store.presignPut?.(key, meta);
@@ -92,9 +86,5 @@ describe.skipIf(!available)('createS3Store against a local S3 emulator', () => {
     expect(response.ok).toBe(true);
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes);
     await store.delete(key);
-  });
-
-  it('deleting something that is not there is not an error', async () => {
-    await expect(store.delete(objectKey('user-int', 'ghost'))).resolves.toBeUndefined();
   });
 });

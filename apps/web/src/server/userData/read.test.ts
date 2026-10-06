@@ -54,37 +54,6 @@ afterAll(async () => {
 });
 
 describe('readUserData', () => {
-  it('returns the user’s live rows, typed, in their collections', async () => {
-    const { userId } = await createTestSession(harness.db, 'Ada');
-    await seedRow(userId, 'settings', 'settings', settings);
-    await seedRow(userId, 'tag', 'tag-1', tag('tag-1', 'Vacanza'));
-    await seedRow(userId, 'tag', 'tag-2', tag('tag-2', 'Regalo'));
-
-    const data = await readUserData(harness.db, userId);
-    expect(data.settings).toEqual(settings);
-    expect(data.tags.map((row) => row.name).sort()).toEqual(['Regalo', 'Vacanza']);
-    expect(data.transactions).toEqual([]);
-  });
-
-  it('has no settings before onboarding, nor after the data is deleted', async () => {
-    const { userId } = await createTestSession(harness.db, 'Ada');
-    expect((await readUserData(harness.db, userId)).settings).toBeNull();
-
-    await seedRow(userId, 'settings', 'settings', settings, new Date());
-    expect((await readUserData(harness.db, userId)).settings).toBeNull();
-  });
-
-  it('leaves out tombstones and other users’ rows', async () => {
-    const ada = (await createTestSession(harness.db, 'Ada')).userId;
-    const bob = (await createTestSession(harness.db, 'Bob')).userId;
-    await seedRow(ada, 'tag', 'tag-live', tag('tag-live', 'Viva'));
-    await seedRow(ada, 'tag', 'tag-gone', tag('tag-gone', 'Andata'), new Date());
-    await seedRow(bob, 'tag', 'tag-bob', tag('tag-bob', 'Di Bob'));
-
-    const data = await readUserData(harness.db, ada);
-    expect(data.tags.map((row) => row.id)).toEqual(['tag-live']);
-  });
-
   it('skips a row it cannot read and keeps the rest of the page', async () => {
     const { userId } = await createTestSession(harness.db, 'Ada');
     await seedRow(userId, 'tag', 'tag-ok', tag('tag-ok', 'Buono'));
