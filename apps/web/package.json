@@ -14,7 +14,9 @@
     "user": "tsx --env-file-if-exists=.env scripts/user.ts",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "measure:panel": "tsx --env-file-if-exists=.env scripts/measure-panel.ts",
-    "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error"
+    "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1130.0",
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
     "@modelcontextprotocol/client": "^2.3.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.2",
