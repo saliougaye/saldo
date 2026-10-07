@@ -967,7 +967,7 @@ rtk git commit -m "feat(web): a Panel whose page owns its state"
 **Files:**
 - Modify: `apps/web/src/ui/ListKeys.tsx`
 
-- [ ] **Step 1: Add `onSelect`**
+- [x] **Step 1: Add `onSelect`**
 
 Add to `interface Props`, after `editHref: string;`:
 
@@ -998,7 +998,7 @@ and add `onSelect` to the dependency list of that `useEffect`. In the component'
 selection is the URL, so a move is `router.replace`» to «The selection is the URL, so a move replaces it — in
 place when the page owns the panel (`onSelect`), else with `router.replace`».
 
-- [ ] **Step 2: Typecheck and commit**
+- [x] **Step 2: Typecheck and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck` — expected: no errors.
 

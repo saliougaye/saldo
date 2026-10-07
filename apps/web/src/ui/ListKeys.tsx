@@ -19,11 +19,17 @@ interface Props {
   href: string;
   /** The row's edit form, with `__ID__` for its id. */
   editHref: string;
+  /**
+   * The page moves the selection itself (Transazioni, whose panel is client state). It answers
+   * false when the move has to be a navigation; the selection then moves through `href`.
+   */
+  onSelect?: (id: string) => boolean;
 }
 
 /**
  * Transazioni's keys (§17.1.7): ↑ ↓ move the selection through the rows as they are on screen, `E`
- * edits the selected one. The selection is the URL, so a move is `router.replace` — Back leaves the
+ * edits the selected one. The selection is the URL, so a move replaces it — in
+ * place when the page owns the panel (`onSelect`), else with `router.replace` — Back leaves the
  * page rather than walking back through every row it passed. At either end of the list an arrow does
  * nothing; with nothing selected ↓ takes the first row and ↑ the last.
  */
@@ -34,6 +40,7 @@ export function ListKeys({
   selectedId,
   href,
   editHref,
+  onSelect,
 }: Props) {
   const router = useRouter();
   const moved = useRef(false);
@@ -77,10 +84,11 @@ export function ListKeys({
       if (next === undefined) return;
       event.preventDefault();
       moved.current = true;
+      if (onSelect?.(next) === true) return;
       router.replace(href.replace(ID, encodeURIComponent(next)), { scroll: false });
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router, upcomingIds, ids, upcomingDisclosureId, selectedId, href, editHref]);
+  }, [router, upcomingIds, ids, upcomingDisclosureId, selectedId, href, editHref, onSelect]);
   return null;
 }
