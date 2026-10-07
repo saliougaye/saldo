@@ -507,7 +507,7 @@ rtk git commit -m "chore(web): measure how the Transazioni panel opens"
 - Create: `apps/web/src/features/transactions/panelState.ts`
 - Test: `apps/web/src/features/transactions/panelState.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/web/src/features/transactions/panelState.test.ts`:
 
@@ -583,12 +583,12 @@ describe('samePanel', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `rtk proxy pnpm --filter web test panelState`
 Expected: FAIL — `Failed to resolve import "./panelState"`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `apps/web/src/features/transactions/panelState.ts`:
 
@@ -662,12 +662,12 @@ export function panelHref(base: string, panel: PanelState): string {
 }
 ```
 
-- [ ] **Step 4: Run the tests and make sure they pass**
+- [x] **Step 4: Run the tests and make sure they pass**
 
 Run: `rtk proxy pnpm --filter web test panelState`
-Expected: PASS, 6 tests.
+Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 pnpm exec biome check --write apps/web/src/features/transactions/panelState.ts apps/web/src/features/transactions/panelState.test.ts
