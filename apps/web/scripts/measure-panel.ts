@@ -137,7 +137,11 @@ function arm(): void {
     let last = start;
     let worst = 0;
     const listWidth = () =>
-      Math.round(document.querySelector('main section')?.getBoundingClientRect().width ?? 0);
+      Math.round(
+        [...document.querySelectorAll('main section')]
+          .map((section) => section.getBoundingClientRect().width)
+          .find((width) => width > 0) ?? 0,
+      );
     const from = listWidth();
     let width = from;
     let firstChange: number | null = null;

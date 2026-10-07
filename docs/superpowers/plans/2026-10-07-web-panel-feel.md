@@ -285,7 +285,11 @@ function arm(): void {
     let last = start;
     let worst = 0;
     const listWidth = () =>
-      Math.round(document.querySelector('main section')?.getBoundingClientRect().width ?? 0);
+      Math.round(
+        [...document.querySelectorAll('main section')]
+          .map((section) => section.getBoundingClientRect().width)
+          .find((width) => width > 0) ?? 0,
+      );
     const from = listWidth();
     let width = from;
     let firstChange: number | null = null;
@@ -1807,61 +1811,58 @@ Output of `pnpm measure:panel http://localhost:3100` on 2026-10-07 (production b
 ```text
 == «New transaction», wide, CPU 1×
       0 ms  input
-    111 ms  list starts to change (1096px)
-    111 ms  list settles (676px)
-    134 ms  panel in the DOM
-   1000 ms  longest frame 44 ms
+    102 ms  list starts to change (1096px)
+    102 ms  list settles (676px)
+    127 ms  panel in the DOM
+   1000 ms  longest frame 35 ms
   server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
 
 == «New transaction», wide, CPU 4×
       0 ms  input
-    266 ms  list starts to change (1096px)
-    266 ms  list settles (676px)
-    344 ms  panel in the DOM
+    248 ms  list starts to change (1096px)
+    248 ms  list settles (676px)
+    336 ms  panel in the DOM
    1000 ms  longest frame 117 ms
   server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
 
 == N, wide, CPU 4×
       0 ms  input
-    243 ms  list starts to change (1096px)
-    243 ms  list settles (676px)
-    324 ms  panel in the DOM
-   1000 ms  longest frame 150 ms
+    217 ms  list starts to change (1096px)
+    217 ms  list settles (676px)
+    296 ms  panel in the DOM
+   1000 ms  longest frame 133 ms
   server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
 
 == «New transaction» from Home, wide, CPU 4×
       0 ms  input
-    318 ms  list starts to change (1120px)
-    318 ms  list settles (676px)
-    402 ms  panel in the DOM
-   1000 ms  longest frame 117 ms
+    319 ms  list starts to change (1120px)
+    319 ms  list settles (676px)
+    413 ms  panel in the DOM
+   1000 ms  longest frame 100 ms
   server requests: 1 (/transactions?new&_rsc=_THLMR_XtjiYRnEr)
 
 == Click on a row, wide, CPU 4×
-     -2 ms  list starts to change (0px)
-      1 ms  input
-     98 ms  list settles (676px)
-    118 ms  panel in the DOM
+      0 ms  input
+     83 ms  list starts to change (1096px)
+     83 ms  list settles (676px)
+    104 ms  panel in the DOM
    1000 ms  longest frame 33 ms
   server requests: 1 (/transactions?t=01a108fd-3ace-7f36-bd3b-1ee163a3d9f9&_rsc=HovGXzaOsaz0CWt6)
 
 == ✕ on the detail, wide, CPU 4×
-     -1 ms  list starts to change (0px)
       0 ms  input
-    182 ms  list settles (1096px)
+    187 ms  list starts to change (676px)
+    187 ms  list settles (1096px)
     192 ms  panel out of the DOM
    1000 ms  longest frame 17 ms
   server requests: 1 (/transactions?_rsc=HovGXzaOsaz0CWt6)
 
 == FAB, phone, CPU 4×
       0 ms  input
-    262 ms  panel in the DOM
+    278 ms  panel in the DOM
    1000 ms  longest frame 117 ms
   server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
 ```
-
-The «Click on a row» and «✕» scenarios report `0px` for the list's start width, because the list is not
-measured yet at the first input. Read their «list settles» line only.
 
 ## After
 
