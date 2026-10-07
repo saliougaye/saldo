@@ -76,9 +76,10 @@ const FACT_LABELS: Record<DetailFactKind, string> = {
 
 /**
  * Transazioni on the web (§17.1.7): the period, the search and the chips of §5.12, «In arrivo» as
- * a disclosure, then one section per day — and the selected row's detail in a trailing panel that
- * `TransactionsPanels` opens in place, with the URL as its state. Every figure comes from `listView` and `detailView`, which
- * are the same `@saldo/core` the phone calls: nothing is added up here.
+ * a disclosure, then one section per day. The selected row's detail is a trailing panel.
+ * `TransactionsPanels` opens it in place, with the URL as its state. Every figure comes from
+ * `listView` and `detailView`, which are the same `@saldo/core` the phone calls: nothing is added
+ * up here.
  */
 export default async function TransactionsPage({
   searchParams,

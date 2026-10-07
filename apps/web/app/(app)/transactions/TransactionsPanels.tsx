@@ -1,7 +1,16 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   type PanelState,
   panelFromSearch,
@@ -62,6 +71,16 @@ function searchOf(href: string): string {
   return new URL(href, 'http://panel.invalid').searchParams.toString();
 }
 
+/** The query of the address bar, written the same way. */
+function locationQuery(): string {
+  return new URLSearchParams(window.location.search).toString();
+}
+
+/** What the person sees: a panel that plays its exit is already closed. */
+function shownOf(view: View): PanelState {
+  return view.closing ? NONE : view.panel;
+}
+
 /**
  * The trailing panel of Transazioni (§17.1.7), in client state. The URL still says what is open, so
  * a reload, a link from Home and Back work, and without JavaScript every link is a page. A click
@@ -73,43 +92,85 @@ export function TransactionsPanels(props: Props) {
   const { baseHref, details, edit, newForm } = props;
   const pathname = usePathname();
   const search = useSearchParams().toString();
-  // The last query read from `useSearchParams`, and the ones `go` pushed that it has not shown yet.
-  // Next applies a pushed URL in a transition, after the render of the click that pushed it: until
-  // then the hook still reads the old query, which is not a navigation.
-  const [seen, setSeen] = useState(search);
-  const [pushed, setPushed] = useState<readonly string[]>([]);
+  // The first state is the server's: the same query, read the same way, so hydration matches.
   const [view, setView] = useState<View>(() => ({
     panel: panelFromSearch(new URLSearchParams(search)),
     closing: false,
     instant: false,
     opened: 0,
   }));
+  // The handlers below read the committed view; they are not new functions on every render.
+  const viewRef = useRef(view);
+  useLayoutEffect(() => {
+    viewRef.current = view;
+  });
+  // The last query read from `useSearchParams`.
+  const seen = useRef(search);
+  // Where the focus was when the panel opened, and where it goes back to when the panel has left.
+  const opener = useRef<Element | null>(null);
+  const returnTo = useRef<Element | null>(null);
 
-  if (search !== seen) {
-    setSeen(search);
-    const mine = pushed.indexOf(search);
-    if (mine !== -1) {
-      // A URL `go` pushed: the panel is already the one it says.
-      setPushed(pushed.slice(mine + 1));
-    } else {
-      // A URL this component did not write (a navigation, Back): the panel follows it in this render.
-      setPushed([]);
-      const next = panelFromSearch(new URLSearchParams(search));
-      if (!samePanel(next, view.panel)) {
-        setView((current) => ({ ...current, panel: next, closing: false, instant: true }));
-      }
+  /** Before the panel opens or closes: keep the focus's way back. */
+  const track = useCallback((next: PanelState) => {
+    const shown = shownOf(viewRef.current);
+    if (shown.kind === 'none' && next.kind !== 'none') {
+      const active = document.activeElement;
+      opener.current = active === document.body ? null : active;
+      returnTo.current = null;
+    } else if (shown.kind !== 'none' && next.kind === 'none') {
+      returnTo.current =
+        opener.current?.isConnected === true
+          ? opener.current
+          : document.querySelector('#content a[aria-current="true"]');
+      opener.current = null;
     }
-  }
+  }, []);
+
+  /** A URL this component did not write (a navigation, Back): the panel follows it, with no motion. */
+  const follow = useCallback(
+    (query: string) => {
+      const next = panelFromSearch(new URLSearchParams(query));
+      if (samePanel(next, shownOf(viewRef.current))) return;
+      track(next);
+      setView((current) =>
+        samePanel(next, shownOf(current))
+          ? current
+          : { ...current, panel: next, closing: false, instant: true },
+      );
+    },
+    [track],
+  );
+
+  // A new query in `useSearchParams`. Next writes a navigation's URL to the address bar before this
+  // effect runs, and applies a URL that `go` pushed in a transition after the click. So a query
+  // that is not the address bar's is one that `go` has already replaced: it is old, not a change.
+  useLayoutEffect(() => {
+    if (search === seen.current) return;
+    seen.current = search;
+    if (search !== locationQuery()) return;
+    follow(search);
+  }, [search, follow]);
+
+  // Back before Next has synced a pushed URL: `useSearchParams` may never change, the address bar does.
+  useEffect(() => {
+    const onPopState = () => {
+      if (window.location.pathname !== pathname) return;
+      const query = locationQuery();
+      seen.current = query;
+      follow(query);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [follow, pathname]);
 
   const go = useCallback(
     (href: string, options: { replace?: boolean; instant?: boolean } = {}) => {
-      const next = panelOnlyChange(
-        { pathname, search: new URLSearchParams(window.location.search) },
-        href,
-      );
+      const here = locationQuery();
+      const next = panelOnlyChange({ pathname, search: new URLSearchParams(here) }, href);
       // The edit form is not on the page until the server renders it: that one stays a navigation.
       if (next === null || next.kind === 'edit') return false;
       const instant = options.instant === true;
+      track(next);
       setView((current) => {
         if (next.kind === 'none') {
           return current.panel.kind === 'none' ? current : { ...current, closing: true, instant };
@@ -119,14 +180,13 @@ export function TransactionsPanels(props: Props) {
           next.kind === 'new' && current.panel.kind !== 'new' ? current.opened + 1 : current.opened;
         return { panel: next, closing: false, instant, opened };
       });
-      const target = searchOf(href);
-      if (target !== new URLSearchParams(window.location.search).toString()) {
-        setPushed((current) => [...current, target]);
+      // The selected row clicked again: the same URL is not a second history entry.
+      if (searchOf(href) !== here) {
+        window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
       }
-      window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
       return true;
     },
-    [pathname],
+    [pathname, track],
   );
 
   // The exit has played: the panel leaves the DOM, unless something opened again meanwhile.
@@ -145,9 +205,27 @@ export function TransactionsPanels(props: Props) {
     return () => clearTimeout(timer);
   }, [view.closing, view.panel, view.instant]);
 
+  // The panel has left: the focus, which was in it, goes back where it came from. Not when the
+  // person has put it somewhere else meanwhile.
+  useEffect(() => {
+    if (view.panel.kind !== 'none') return;
+    const target = returnTo.current;
+    returnTo.current = null;
+    const active = document.activeElement;
+    if (!(target instanceof HTMLElement) || !target.isConnected) return;
+    if (active !== null && active !== document.body) return;
+    target.focus();
+  }, [view.panel]);
+
   // The top bar's button, the FAB and N: on this page they open the form here.
   useEffect(() => {
     const onNew = (event: Event) => {
+      const current = viewRef.current;
+      // Already open: N must not replace it, nor its prefill, with a navigation.
+      if (current.panel.kind === 'new' && !current.closing) {
+        event.preventDefault();
+        return;
+      }
       const href = panelHref(baseHref, { kind: 'new' });
       if (go(href, { instant: wantsInstant(event) })) event.preventDefault();
     };
@@ -156,9 +234,11 @@ export function TransactionsPanels(props: Props) {
   }, [go, baseHref]);
 
   const { panel } = view;
-  const selectedId = panel.kind === 'detail' || panel.kind === 'edit' ? panel.id : null;
+  // The row whose panel is in the DOM, and the selected row: none while the exit plays.
+  const panelId = panel.kind === 'detail' || panel.kind === 'edit' ? panel.id : null;
+  const selectedId = view.closing ? null : panelId;
   const nav = useMemo<PanelNav>(() => ({ selectedId, go }), [selectedId, go]);
-  const detail = selectedId === null ? undefined : details[selectedId];
+  const detail = panelId === null ? undefined : details[panelId];
   const editing = panel.kind === 'edit' && edit?.id === panel.id ? edit : null;
   const motion = { closing: view.closing, instant: view.instant };
 
