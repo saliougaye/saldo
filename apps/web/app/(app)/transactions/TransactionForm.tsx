@@ -20,7 +20,6 @@ import {
 import { type AppLocale, formatMoney } from '@saldo/i18n/format';
 import { makeTranslator } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
@@ -37,6 +36,7 @@ import { AmountField } from '../../../src/ui/AmountField';
 import { Button } from '../../../src/ui/Button';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
+import { PanelLink } from '../../../src/ui/PanelNav';
 import { Segmented } from '../../../src/ui/Segmented';
 import { Select, type SelectOption } from '../../../src/ui/Select';
 import { Switch } from '../../../src/ui/Switch';
@@ -608,9 +608,9 @@ export function TransactionForm({
 
       <div className={styles.foot}>
         <span className={styles.hint}>{t('web.form.keyboardHint')}</span>
-        <Link className={styles.cancel} href={closeHref}>
+        <PanelLink className={styles.cancel} href={closeHref}>
           {t('common.cancel')}
-        </Link>
+        </PanelLink>
         <div>
           <Button type="submit" busy={pending} busyLabel={t('common.loading')}>
             {t(view.mode === 'new' ? 'txForm.create' : 'txForm.save')}

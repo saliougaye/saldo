@@ -1162,7 +1162,7 @@ rtk git commit -m "feat(web): «Nuova transazione» asks the page before navigat
 - Modify: `apps/web/app/(app)/transactions/page.tsx`
 - Modify: `apps/web/app/(app)/transactions/TransactionForm.tsx`
 
-- [ ] **Step 1: Create the client component**
+- [x] **Step 1: Create the client component**
 
 Create `apps/web/app/(app)/transactions/TransactionsPanels.tsx`:
 
@@ -1242,7 +1242,11 @@ export function TransactionsPanels(props: Props) {
   const { baseHref, details, edit, newForm } = props;
   const pathname = usePathname();
   const search = useSearchParams().toString();
-  const [synced, setSynced] = useState(search);
+  // The last query read from `useSearchParams`, and the ones `go` pushed that it has not shown yet.
+  // Next applies a pushed URL in a transition, after the render of the click that pushed it: until
+  // then the hook still reads the old query, which is not a navigation.
+  const [seen, setSeen] = useState(search);
+  const [pushed, setPushed] = useState<readonly string[]>([]);
   const [view, setView] = useState<View>(() => ({
     panel: panelFromSearch(new URLSearchParams(search)),
     closing: false,
@@ -1250,12 +1254,19 @@ export function TransactionsPanels(props: Props) {
     opened: 0,
   }));
 
-  // A URL this component did not write (a navigation, Back): the panel follows it in this render.
-  if (search !== synced) {
-    setSynced(search);
-    const next = panelFromSearch(new URLSearchParams(search));
-    if (!samePanel(next, view.panel)) {
-      setView((current) => ({ ...current, panel: next, closing: false, instant: true }));
+  if (search !== seen) {
+    setSeen(search);
+    const mine = pushed.indexOf(search);
+    if (mine !== -1) {
+      // A URL `go` pushed: the panel is already the one it says.
+      setPushed(pushed.slice(mine + 1));
+    } else {
+      // A URL this component did not write (a navigation, Back): the panel follows it in this render.
+      setPushed([]);
+      const next = panelFromSearch(new URLSearchParams(search));
+      if (!samePanel(next, view.panel)) {
+        setView((current) => ({ ...current, panel: next, closing: false, instant: true }));
+      }
     }
   }
 
@@ -1277,7 +1288,10 @@ export function TransactionsPanels(props: Props) {
           next.kind === 'new' && current.panel.kind !== 'new' ? current.opened + 1 : current.opened;
         return { panel: next, closing: false, instant, opened };
       });
-      setSynced(searchOf(href));
+      const target = searchOf(href);
+      if (target !== new URLSearchParams(window.location.search).toString()) {
+        setPushed((current) => [...current, target]);
+      }
       window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
       return true;
     },
@@ -1317,6 +1331,17 @@ export function TransactionsPanels(props: Props) {
   const editing = panel.kind === 'edit' && edit?.id === panel.id ? edit : null;
   const motion = { closing: view.closing, instant: view.instant };
 
+  // Stable across renders: `Panel` and `ListKeys` subscribe their keys through these.
+  const closeToList = useCallback(() => go(baseHref), [go, baseHref]);
+  const editCloseHref =
+    editing === null ? baseHref : panelHref(baseHref, { kind: 'detail', id: editing.id });
+  const closeToDetail = useCallback(() => go(editCloseHref), [go, editCloseHref]);
+  const onSelect = useCallback(
+    (id: string) =>
+      go(panelHref(baseHref, { kind: 'detail', id }), { replace: true, instant: true }),
+    [go, baseHref],
+  );
+
   let content: ReactNode = null;
   if (panel.kind === 'new' && newForm !== null) {
     content = (
@@ -1327,23 +1352,22 @@ export function TransactionsPanels(props: Props) {
         title={props.newTitle}
         closeHref={baseHref}
         closeLabel={props.closeLabel}
-        onClose={() => go(baseHref)}
+        onClose={closeToList}
         {...motion}
       >
         <Fragment key={view.opened}>{newForm}</Fragment>
       </Panel>
     );
   } else if (editing !== null) {
-    const closeHref = panelHref(baseHref, { kind: 'detail', id: editing.id });
     content = (
       <Panel
         key="form"
         sheet
         bare
         title={props.editTitle}
-        closeHref={closeHref}
+        closeHref={editCloseHref}
         closeLabel={props.closeLabel}
-        onClose={() => go(closeHref)}
+        onClose={closeToDetail}
         {...motion}
       >
         {editing.form}
@@ -1356,7 +1380,7 @@ export function TransactionsPanels(props: Props) {
         title={detail.title}
         closeHref={baseHref}
         closeLabel={props.closeLabel}
-        onClose={() => go(baseHref)}
+        onClose={closeToList}
         {...motion}
       >
         {detail.body}
@@ -1384,9 +1408,7 @@ export function TransactionsPanels(props: Props) {
           selectedId={selectedId}
           href={panelHref(baseHref, { kind: 'detail', id: '__ID__' })}
           editHref={panelHref(baseHref, { kind: 'edit', id: '__ID__' })}
-          onSelect={(id) =>
-            go(panelHref(baseHref, { kind: 'detail', id }), { replace: true, instant: true })
-          }
+          onSelect={onSelect}
         />
       )}
     </PanelNavContext>
@@ -1396,7 +1418,17 @@ export function TransactionsPanels(props: Props) {
 
 `<PanelNavContext value={…}>` is React 19's context provider syntax.
 
-- [ ] **Step 2: Rewrite the page's imports and constants**
+Two changes from the first draft of this step, found on a production build:
+
+- **The URL that `go` pushes is not a navigation.** Next applies a `pushState` URL to `useSearchParams` in a
+  transition, after the render of the click. The first draft compared the hook with the URL that `go` wrote, so
+  that render read the old query as a navigation. A click then opened the panel with no entrance, and ✕ removed it
+  with no exit. The component now keeps the queries that `go` pushed (`pushed`), and ignores them when the hook
+  reaches them.
+- **The handlers are stable.** `Panel` and `ListKeys` put `onClose` and `onSelect` in their effects' dependencies,
+  so `closeToList`, `closeToDetail` and `onSelect` are `useCallback`s, not new functions on every render.
+
+- [x] **Step 2: Rewrite the page's imports and constants**
 
 In `apps/web/app/(app)/transactions/page.tsx`:
 
@@ -1415,7 +1447,7 @@ import { type DetailPanel, TransactionsPanels } from './TransactionsPanels';
 3. Remove the local constants `SELECTION_PARAM`, `NEW_PARAM` and `EDIT_PARAM` and their comments (they now come
    from `panelState`). Keep `DELETED_PARAM`, `UPCOMING_ID`, `MISSING` and `FACT_LABELS`.
 
-- [ ] **Step 3: Replace the panel computations**
+- [x] **Step 3: Replace the panel computations**
 
 Replace the block from `const selectedId = params[SELECTION_PARAM];` down to and including the closing `: null;` of
 `const form = …` with:
@@ -1459,7 +1491,7 @@ selectedRecurring = …;` statement) and replace it with:
   );
 ```
 
-- [ ] **Step 4: Make the detail a function of its row**
+- [x] **Step 4: Make the detail a function of its row**
 
 Remove `const panelOpen = form !== null || selected !== null;`. After the `noteText` function and the
 `hasRows`/`moneyParts` lines, add the detail body. It is the old detail `Panel`'s children with `selected`
@@ -1594,7 +1626,7 @@ renamed to `detail`:
 
 `fact` and `noteText` stay as they are; `detailBody` must come after them, and after `writeErrors` and `href`.
 
-- [ ] **Step 5: Replace the page's JSX**
+- [x] **Step 5: Replace the page's JSX**
 
 Replace the whole `return (…);` of `TransactionsPage` with the block below. The list's markup (the head, the empty
 states, «In arrivo» and the days) is unchanged: it moves inside `<TransactionsPanels>` without its `<div
@@ -1667,11 +1699,11 @@ existing `<div className={styles.head}>…</div>` and the `{!hasRows ? (…) : (
 `<div className={styles.list}>`, and paste them there. Delete the old `ListKeys`, the old two `Panel`s and the old
 outer `<div className={styles.layout} …>`.
 
-- [ ] **Step 6: Rows take their selection from the panel**
+- [x] **Step 6: Rows take their selection from the panel**
 
 In `daySection`, replace `selected={selected?.id === row.id}` with `selectId={row.id}`.
 
-- [ ] **Step 7: «Annulla» in the form**
+- [x] **Step 7: «Annulla» in the form**
 
 In `apps/web/app/(app)/transactions/TransactionForm.tsx`, add `import { PanelLink } from '../../../src/ui/PanelNav';`
 and replace:
@@ -1692,13 +1724,13 @@ with:
 
 If `Link` has no other use in the file, remove its import (Biome reports it).
 
-- [ ] **Step 8: Typecheck, lint, test**
+- [x] **Step 8: Typecheck, lint, test**
 
 Run: `rtk proxy pnpm --filter web typecheck`, then `rtk proxy pnpm lint`, then `rtk proxy pnpm --filter web test`.
 Expected: no type errors; no `lint/…` lines; all tests pass. A type error that names `selected` or `form` means a
 use of the old variables remains in the page: replace it with `detail` inside `detailBody`, or remove it.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 pnpm exec biome check --write "apps/web/app/(app)/transactions"

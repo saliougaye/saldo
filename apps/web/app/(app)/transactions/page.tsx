@@ -26,6 +26,11 @@ import {
   toggleHref,
 } from '../../../src/features/transactions/listParams';
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
+import {
+  EDIT_PARAM,
+  NEW_PARAM,
+  SELECTION_PARAM,
+} from '../../../src/features/transactions/panelState';
 import { formMessages } from '../../../src/i18n/formMessages';
 import { getDb } from '../../../src/server/db/client';
 import { readPage } from '../../../src/server/page/context';
@@ -35,15 +40,14 @@ import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
-import { ListKeys } from '../../../src/ui/ListKeys';
 import { ListRow } from '../../../src/ui/ListRow';
-import { Panel } from '../../../src/ui/Panel';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import { DeleteTransaction } from './DeleteTransaction';
 import { TransactionForm } from './TransactionForm';
+import { type DetailPanel, TransactionsPanels } from './TransactionsPanels';
 import styles from './transactions.module.css';
 import { UndoToast } from './UndoToast';
 
@@ -51,13 +55,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PATH = '/transactions';
-
-/** The parameter that carries the selected row, and the only state the panel has. */
-const SELECTION_PARAM = 't';
-
-/** `?new` opens «Nuova transazione»; `?t={id}&edit` turns the detail into the form (decision 8). */
-const NEW_PARAM = 'new';
-const EDIT_PARAM = 'edit';
 
 /** After a delete the page is `?deleted={id}`, which renders «Annulla» (decision 8). */
 const DELETED_PARAM = 'deleted';
@@ -80,7 +77,7 @@ const FACT_LABELS: Record<DetailFactKind, string> = {
 /**
  * Transazioni on the web (§17.1.7): the period, the search and the chips of §5.12, «In arrivo» as
  * a disclosure, then one section per day — and the selected row's detail in a trailing panel that
- * the URL, not client state, decides. Every figure comes from `listView` and `detailView`, which
+ * `TransactionsPanels` opens in place, with the URL as its state. Every figure comes from `listView` and `detailView`, which
  * are the same `@saldo/core` the phone calls: nothing is added up here.
  */
 export default async function TransactionsPage({
@@ -94,31 +91,31 @@ export default async function TransactionsPage({
   const kindLabel = (kind: string) => t(`kinds.${kind}`);
   const view = listView({ data: page.data, filters, today, def, period, kindLabel });
   const choices = filterChoices(page.data);
+  // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
+  // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.
   const selectedId = params[SELECTION_PARAM];
-  const selected =
-    selectedId === undefined ? null : detailView({ data: page.data, id: selectedId, kindLabel });
-  // `new URLSearchParams({ edit: '' })` writes `edit=`: presence is what counts, so `?edit` works too.
   const creating = params[NEW_PARAM] !== undefined;
-  const editing = selected !== null && params[EDIT_PARAM] !== undefined;
-  const form =
-    creating || editing
-      ? formView({
-          data: page.data,
-          today,
-          currency,
-          mode: creating ? 'new' : 'edit',
-          id: creating ? null : (selected?.id ?? null),
-          // «Metti da parte», «Preleva» and «Registra la spesa» fill a new form from the URL.
-          prefill: creating
-            ? {
-                from: params.from,
-                to: params.to,
-                description: params.description,
-                closeGoal: params.closeGoal,
-                amount: params.amount,
-              }
-            : undefined,
-        })
+  // «Metti da parte», «Preleva» and «Registra la spesa» fill a new form from the URL.
+  const newForm = formView({
+    data: page.data,
+    today,
+    currency,
+    mode: 'new',
+    id: null,
+    prefill: creating
+      ? {
+          from: params.from,
+          to: params.to,
+          description: params.description,
+          closeGoal: params.closeGoal,
+          amount: params.amount,
+        }
+      : undefined,
+  });
+  // `new URLSearchParams({ edit: '' })` writes `edit=`: presence is what counts, so `?edit` works too.
+  const editForm =
+    selectedId !== undefined && params[EDIT_PARAM] !== undefined
+      ? formView({ data: page.data, today, currency, mode: 'edit', id: selectedId })
       : null;
 
   // «Annulla» only for a tombstone of this user: a stale or forged `?deleted=` shows nothing.
@@ -142,9 +139,9 @@ export default async function TransactionsPage({
     unexpected: t('web.form.error_unexpected'),
   };
   // Decision 10: deleting an occurrence of a recurrence says so, as the phone does.
-  const selectedRecurring =
-    selected !== null &&
-    page.data.transactions.some((row) => row.id === selected.id && row.recurrenceId !== null);
+  const recurringIds = new Set(
+    page.data.transactions.filter((row) => row.recurrenceId !== null).map((row) => row.id),
+  );
 
   // What every link on this page carries: the filters, and the period, which is not one of them.
   const periodOnly: Record<string, string> = {};
@@ -211,7 +208,7 @@ export default async function TransactionsPage({
           key={row.id}
           open
           href={href({ [SELECTION_PARAM]: row.id })}
-          selected={selected?.id === row.id}
+          selectId={row.id}
           icon={row.icon as IconName}
           colorIndex={row.colorIndex}
           badge={row.recurring ? 'repeat' : undefined}
@@ -263,11 +260,170 @@ export default async function TransactionsPage({
 
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
-  const panelOpen = form !== null || selected !== null;
+
+  /** The detail of one row: what the phone's detail screen shows (§6.6). */
+  const detailBody = (detail: DetailView) => (
+    <>
+      {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
+          `-amount` / `negative` while its list row leaves it unsigned, and the web matches
+          the phone screen for screen (see `DetailView.hero`). */}
+      <AmountText
+        minor={detail.hero.minor}
+        currency={currency}
+        locale={locale}
+        sign={detail.hero.signDisplay}
+        size="hero"
+      />
+
+      <dl className={styles.facts}>
+        {detail.facts.map((item) =>
+          fact(
+            item.kind,
+            t(FACT_LABELS[item.kind]),
+            item.value === null ? (
+              MISSING
+            ) : item.kind === 'date' ? (
+              formatLongDate(item.value, locale)
+            ) : item.href === null ? (
+              item.value
+            ) : (
+              <Link className={styles.factLink} href={item.href}>
+                {item.value}
+              </Link>
+            ),
+          ),
+        )}
+        {fact('note', t('transactions.detailNote'), noteText(detail))}
+        {detail.recurrence === null
+          ? null
+          : fact(
+              'recurrence',
+              t('recurrence.recurringRow'),
+              endLabel(detail.recurrence.endDate, t, locale),
+            )}
+        {detail.excluded
+          ? fact(
+              'excluded',
+              t('transactions.excludedFromTotals'),
+              // The tick is the whole value, and `Icon` is always `aria-hidden`: without the
+              // word beside it a screen reader reads the label and then silence.
+              <>
+                <Icon name="check" size={16} />
+                <VisuallyHidden>{t('common.yes')}</VisuallyHidden>
+              </>,
+            )
+          : null}
+        {detail.tagNames.length === 0
+          ? null
+          : fact('tags', t('transactions.tags'), detail.tagNames.join(' · '))}
+        {detail.attachmentCount === 0
+          ? null
+          : fact(
+              'attachments',
+              t('transactions.detailAttachments'),
+              plural(t, locale, 'attachments.summary', detail.attachmentCount),
+            )}
+      </dl>
+
+      <div className={styles.actions}>
+        {/* Still a navigation: the edit form is rendered by the server (2026-10-07 plan, decision 4). */}
+        <Link
+          className={styles.action}
+          href={href({ [SELECTION_PARAM]: detail.id, [EDIT_PARAM]: '' })}
+          aria-keyshortcuts="e"
+        >
+          <Icon name="pencil" size={14} />
+          {t('common.edit')}
+          <span aria-hidden="true">
+            <kbd className={styles.kbd}>E</kbd>
+          </span>
+        </Link>
+        <span className={styles.spacer} />
+        <DeleteTransaction
+          id={detail.id}
+          updatedAt={detail.updatedAt}
+          deletedHref={href({ [DELETED_PARAM]: detail.id })}
+          strings={{
+            action: t('common.delete'),
+            title: t('transactions.deleteTitle', { name: detail.title }),
+            body: t(
+              recurringIds.has(detail.id)
+                ? 'transactions.deleteRecurringBody'
+                : 'transactions.deleteBody',
+            ),
+            confirm: t('common.delete'),
+            cancel: t('common.cancel'),
+            busy: t('common.loading'),
+            errors: writeErrors,
+          }}
+        />
+      </div>
+    </>
+  );
+
+  // Every row of the list, and the one the URL selected when the list does not hold it (a link
+  // from Home to a row of another period).
+  const upcomingIds = view.upcomingDays.flatMap((day) => day.rows.map((row) => row.id));
+  const ids = view.days.flatMap((day) => day.rows.map((row) => row.id));
+  const listed = [...upcomingIds, ...ids];
+  const detailIds =
+    selectedId === undefined || listed.includes(selectedId) ? listed : [...listed, selectedId];
+  const details: Record<string, DetailPanel> = {};
+  for (const id of detailIds) {
+    const detail = detailView({ data: page.data, id, kindLabel });
+    if (detail !== null) details[id] = { title: detail.title, body: detailBody(detail) };
+  }
+
+  const formProps = {
+    locale,
+    currency,
+    decimalSeparator: moneyParts.decimalSeparator,
+    symbol: moneyParts.symbol,
+    symbolPosition: moneyParts.symbolPosition,
+    messages: formMessages(catalogs[locale]),
+  };
+  // A closing expense ends on Conti, where the goal has just left the list.
+  const afterSave = (form: { closeGoalId: string | null }) =>
+    form.closeGoalId === null ? href({ [SELECTION_PARAM]: '__ID__' }) : '/accounts';
 
   return (
-    <div className={styles.layout} data-panel={panelOpen ? '' : undefined}>
-      <div className={styles.list}>
+    <>
+      <TransactionsPanels
+        baseHref={href()}
+        newTitle={t('txForm.newTitle')}
+        editTitle={t('txForm.editTitle')}
+        closeLabel={t('common.close')}
+        newForm={
+          newForm === null ? null : (
+            <TransactionForm
+              view={newForm}
+              {...formProps}
+              closeHref={href()}
+              afterSave={afterSave(newForm)}
+            />
+          )
+        }
+        edit={
+          editForm === null || editForm.id === null
+            ? null
+            : {
+                id: editForm.id,
+                form: (
+                  <TransactionForm
+                    key={`edit:${editForm.id}`}
+                    view={editForm}
+                    {...formProps}
+                    closeHref={href({ [SELECTION_PARAM]: editForm.id })}
+                    afterSave={afterSave(editForm)}
+                  />
+                ),
+              }
+        }
+        details={details}
+        upcomingIds={upcomingIds}
+        ids={ids}
+        upcomingDisclosureId={UPCOMING_ID}
+      >
         <div className={styles.head}>
           <PeriodHeader
             period={period}
@@ -397,149 +553,7 @@ export default async function TransactionsPage({
             {view.days.map((day) => daySection(day, false))}
           </>
         )}
-      </div>
-
-      {/* ↑ ↓ and E belong to the list; while the form is open the keys are the form's. */}
-      {form !== null ? null : (
-        <ListKeys
-          upcomingIds={view.upcomingDays.flatMap((day) => day.rows.map((row) => row.id))}
-          ids={view.days.flatMap((day) => day.rows.map((row) => row.id))}
-          upcomingDisclosureId={UPCOMING_ID}
-          selectedId={selected?.id ?? null}
-          href={href({ [SELECTION_PARAM]: '__ID__' })}
-          editHref={href({ [SELECTION_PARAM]: '__ID__', [EDIT_PARAM]: '' })}
-        />
-      )}
-
-      {form !== null ? (
-        <Panel
-          // Not the detail's panel: closing the form mounts the detail fresh, not one still leaving.
-          key="form"
-          sheet
-          bare
-          title={t(form.mode === 'new' ? 'txForm.newTitle' : 'txForm.editTitle')}
-          closeHref={form.id === null ? href() : href({ [SELECTION_PARAM]: form.id })}
-          closeLabel={t('common.close')}
-        >
-          <TransactionForm
-            // A new `?t=` or a switch between «Nuova» and «Modifica» is a new form, not an edit of this one.
-            key={`${form.mode}:${form.id ?? ''}`}
-            view={form}
-            locale={locale}
-            currency={currency}
-            decimalSeparator={moneyParts.decimalSeparator}
-            symbol={moneyParts.symbol}
-            symbolPosition={moneyParts.symbolPosition}
-            messages={formMessages(catalogs[locale])}
-            closeHref={form.id === null ? href() : href({ [SELECTION_PARAM]: form.id })}
-            // A closing expense ends on Conti, where the goal has just left the list.
-            afterSave={
-              form.closeGoalId === null ? href({ [SELECTION_PARAM]: '__ID__' }) : '/accounts'
-            }
-          />
-        </Panel>
-      ) : selected === null ? null : (
-        <Panel
-          key="detail"
-          title={selected.title}
-          closeHref={href()}
-          closeLabel={t('common.close')}
-        >
-          {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
-              `-amount` / `negative` while its list row leaves it unsigned, and the web matches
-              the phone screen for screen (see `DetailView.hero`). */}
-          <AmountText
-            minor={selected.hero.minor}
-            currency={currency}
-            locale={locale}
-            sign={selected.hero.signDisplay}
-            size="hero"
-          />
-
-          <dl className={styles.facts}>
-            {selected.facts.map((item) =>
-              fact(
-                item.kind,
-                t(FACT_LABELS[item.kind]),
-                item.value === null ? (
-                  MISSING
-                ) : item.kind === 'date' ? (
-                  formatLongDate(item.value, locale)
-                ) : item.href === null ? (
-                  item.value
-                ) : (
-                  <Link className={styles.factLink} href={item.href}>
-                    {item.value}
-                  </Link>
-                ),
-              ),
-            )}
-            {fact('note', t('transactions.detailNote'), noteText(selected))}
-            {selected.recurrence === null
-              ? null
-              : fact(
-                  'recurrence',
-                  t('recurrence.recurringRow'),
-                  endLabel(selected.recurrence.endDate, t, locale),
-                )}
-            {selected.excluded
-              ? fact(
-                  'excluded',
-                  t('transactions.excludedFromTotals'),
-                  // The tick is the whole value, and `Icon` is always `aria-hidden`: without the
-                  // word beside it a screen reader reads the label and then silence.
-                  <>
-                    <Icon name="check" size={16} />
-                    <VisuallyHidden>{t('common.yes')}</VisuallyHidden>
-                  </>,
-                )
-              : null}
-            {selected.tagNames.length === 0
-              ? null
-              : fact('tags', t('transactions.tags'), selected.tagNames.join(' · '))}
-            {selected.attachmentCount === 0
-              ? null
-              : fact(
-                  'attachments',
-                  t('transactions.detailAttachments'),
-                  plural(t, locale, 'attachments.summary', selected.attachmentCount),
-                )}
-          </dl>
-
-          <div className={styles.actions}>
-            <Link
-              className={styles.action}
-              href={href({ [SELECTION_PARAM]: selected.id, [EDIT_PARAM]: '' })}
-              aria-keyshortcuts="e"
-            >
-              <Icon name="pencil" size={14} />
-              {t('common.edit')}
-              <span aria-hidden="true">
-                <kbd className={styles.kbd}>E</kbd>
-              </span>
-            </Link>
-            <span className={styles.spacer} />
-            <DeleteTransaction
-              id={selected.id}
-              updatedAt={selected.updatedAt}
-              deletedHref={href({ [DELETED_PARAM]: selected.id })}
-              strings={{
-                action: t('common.delete'),
-                title: t('transactions.deleteTitle', { name: selected.title }),
-                body: t(
-                  selectedRecurring
-                    ? 'transactions.deleteRecurringBody'
-                    : 'transactions.deleteBody',
-                ),
-                confirm: t('common.delete'),
-                cancel: t('common.cancel'),
-                busy: t('common.loading'),
-                errors: writeErrors,
-              }}
-            />
-          </div>
-        </Panel>
-      )}
+      </TransactionsPanels>
 
       {deletedId === undefined || undoTitle === null ? null : (
         <UndoToast
@@ -555,6 +569,6 @@ export default async function TransactionsPage({
           }}
         />
       )}
-    </div>
+    </>
   );
 }
