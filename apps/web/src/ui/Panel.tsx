@@ -16,6 +16,16 @@ interface Props {
   bare?: boolean;
   /** Below the breakpoint, a bottom sheet over a scrim instead of the whole screen: the form's shape. */
   sheet?: boolean;
+  /**
+   * The page keeps the panel in client state (Transazioni): the ✕, the scrim and Esc ask it to close,
+   * and it closes at once. It answers false when closing has to be a navigation after all; the panel
+   * then closes as a panel without this prop does.
+   */
+  onClose?: () => boolean;
+  /** The page is playing the exit (with `onClose`); it takes the panel out when the exit has played. */
+  closing?: boolean;
+  /** Opened or closed from the keyboard: no entrance and no exit. */
+  instant?: boolean;
   children: ReactNode;
 }
 
@@ -32,7 +42,8 @@ const EXIT_MS = 150;
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
  * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
- * and still closes; only the key does nothing.
+ * and still closes; only the key does nothing. A page can keep the panel in client state instead
+ * (`onClose`, Transazioni): the URL then follows the panel, and nothing waits for the server.
  */
 export function Panel({
   title,
@@ -40,6 +51,9 @@ export function Panel({
   closeLabel,
   bare = false,
   sheet = false,
+  onClose,
+  closing: closingProp = false,
+  instant = false,
   children,
 }: Props) {
   const router = useRouter();
@@ -48,15 +62,17 @@ export function Panel({
   // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (the form
   // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
   const [closingFor, setClosingFor] = useState<string | null>(null);
-  const closing = closingFor === closeHref;
+  const closing = closingProp || closingFor === closeHref;
 
-  // Closing is a navigation, which unmounts the panel at once: play the exit first, then go.
+  // A page that owns the panel closes it at once. Otherwise closing is a navigation, which unmounts
+  // the panel at once: play the exit first, then go.
   const close = useCallback(() => {
+    if (onClose?.() === true) return;
     if (closingFor === closeHref) return;
     clearTimeout(timer.current);
     setClosingFor(closeHref);
     timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
-  }, [router, closeHref, closingFor]);
+  }, [router, closeHref, closingFor, onClose]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -79,7 +95,7 @@ export function Panel({
   }, [close]);
 
   // A modified click (new tab) keeps the link's own behaviour.
-  const onClose = (event: MouseEvent<HTMLAnchorElement>) => {
+  const onLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
       return;
     event.preventDefault();
@@ -95,14 +111,16 @@ export function Panel({
           href={closeHref}
           aria-hidden="true"
           tabIndex={-1}
-          onClick={onClose}
+          onClick={onLinkClick}
           data-closing={closing ? '' : undefined}
+          data-instant={instant ? '' : undefined}
         />
       ) : null}
       <aside
         className={styles.panel}
         aria-label={title}
         data-closing={closing ? '' : undefined}
+        data-instant={instant ? '' : undefined}
         data-sheet={sheet ? '' : undefined}
       >
         {sheet ? <span className={styles.handle} aria-hidden="true" /> : null}
@@ -114,7 +132,12 @@ export function Panel({
           >
             {title}
           </h2>
-          <Link className={styles.close} href={closeHref} aria-label={closeLabel} onClick={onClose}>
+          <Link
+            className={styles.close}
+            href={closeHref}
+            aria-label={closeLabel}
+            onClick={onLinkClick}
+          >
             <Icon name="x" size={16} />
           </Link>
         </div>

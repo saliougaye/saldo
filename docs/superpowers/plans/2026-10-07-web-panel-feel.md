@@ -850,7 +850,7 @@ rtk git commit -m "feat(web): links that change a client-side panel in place"
 - Modify: `apps/web/src/ui/Panel.tsx`
 - Modify: `apps/web/src/ui/Panel.module.css`
 
-- [ ] **Step 1: Add the props**
+- [x] **Step 1: Add the props**
 
 In `apps/web/src/ui/Panel.tsx`, add to `interface Props`, after `sheet?: boolean;`:
 
@@ -875,7 +875,7 @@ Destructure them after `sheet = false,`:
   instant = false,
 ```
 
-- [ ] **Step 2: Close through the page first**
+- [x] **Step 2: Close through the page first**
 
 Replace:
 
@@ -902,7 +902,9 @@ with:
 and change that callback's dependency list from `[router, closeHref, closingFor]` to
 `[router, closeHref, closingFor, onClose]`.
 
-- [ ] **Step 3: Mark an instant panel**
+- [x] **Step 3: Mark an instant panel**
+
+Rename the local click handler `onClose` to `onLinkClick`: the new prop takes that name.
 
 Add `data-instant={instant ? '' : undefined}` to the scrim `<Link className={styles.scrim} …>` and to the
 `<aside className={styles.panel} …>`, after their `data-closing` attribute.
@@ -917,7 +919,7 @@ with:
  * (`onClose`, Transazioni): the URL then follows the panel, and nothing waits for the server.
 ```
 
-- [ ] **Step 4: Add the CSS**
+- [x] **Step 4: Add the CSS**
 
 At the end of `apps/web/src/ui/Panel.module.css`, add:
 
@@ -932,7 +934,7 @@ At the end of `apps/web/src/ui/Panel.module.css`, add:
 
 It must stay the last rule of the file: it overrides `.panel[data-sheet]` and the media queries by source order.
 
-- [ ] **Step 5: Typecheck and commit**
+- [x] **Step 5: Typecheck and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck` — expected: no errors. Conti and Profilo pass none of the new props,
 so they behave as before.

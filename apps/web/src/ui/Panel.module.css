@@ -222,3 +222,10 @@
     translate: none;
   }
 }
+
+/* Opened or closed from the keyboard: the panel is there, or gone, on the next frame. */
+.panel[data-instant],
+.scrim[data-instant] {
+  animation: none;
+  transition: none;
+}
