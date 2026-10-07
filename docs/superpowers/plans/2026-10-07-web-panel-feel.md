@@ -714,7 +714,7 @@ rtk git commit -m "feat(web): tell a panel-only change from a navigation"
 - Create: `apps/web/src/ui/PanelNav.tsx`
 - Modify: `apps/web/src/ui/ListRow.tsx`
 
-- [ ] **Step 1: Create the context and the link**
+- [x] **Step 1: Create the context and the link**
 
 Create `apps/web/src/ui/PanelNav.tsx`:
 
@@ -787,7 +787,7 @@ export function PanelLink({ href, className, selectedClassName, selectId, childr
 `next/link` skips its own navigation when `onClick` called `preventDefault()`
 (`node_modules/next/dist/client/app-dir/link.js`: `if (e.defaultPrevented) return;`).
 
-- [ ] **Step 2: Let `ListRow` take its selection from the page**
+- [x] **Step 2: Let `ListRow` take its selection from the page**
 
 In `apps/web/src/ui/ListRow.tsx`, add the import:
 
@@ -829,12 +829,12 @@ function:
   );
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 pnpm exec biome check --write apps/web/src/ui/PanelNav.tsx apps/web/src/ui/ListRow.tsx
