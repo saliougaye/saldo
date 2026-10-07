@@ -3,11 +3,15 @@
  * the panel in the DOM, the server requests on the way, when the list's width starts and stops
  * changing, and the longest gap between two frames in the second after the input.
  *
+ *   pnpm --filter web exec playwright install chromium   (once)
  *   pnpm --filter web measure:panel http://localhost:3100 [userId]
  *
  * Development only. It signs a person in by writing a session row and its signed cookie, so it
- * refuses anything but a local server, and it deletes the session when it ends. Run it against
- * `next build && next start`: a dev server measures the compiler, not the app.
+ * refuses anything but a local server AND a local database (the host of `DATABASE_URL` must be
+ * localhost or 127.0.0.1). It deletes the session when it ends, on an error and on Ctrl-C too.
+ * Run it against `next build && next start`: a dev server measures the compiler, not the app.
+ * «server requests» counts RSC requests that are not prefetches. A hover can start a prefetch
+ * (`next-router-prefetch: 1`), so those are counted on their own line.
  */
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { type Browser, chromium, type Page } from '@playwright/test';
@@ -91,6 +95,7 @@ const SCENARIOS: Scenario[] = [
     viewport: PHONE,
     cpu: 4,
     from: '/transactions',
+    // A click, not a tap, on purpose: the same input as the wide scenarios.
     act: (p) => p.locator(NEW_BUTTON).first().click(),
   },
 ];
@@ -123,16 +128,16 @@ async function signIn(userId: string): Promise<{ id: string; cookie: string }> {
   return { id, cookie: encodeURIComponent(`${token}.${signature}`) };
 }
 
-/** Runs in the page: the clock starts at the first pointerdown or keydown after this call. */
+/** Runs in the page: the clock starts at the timeStamp of the first pointerdown or keydown after this call. */
 function arm(): void {
   const marks: { t: number; what: string }[] = [];
   Object.assign(window, { __marks: marks });
   let start: number | null = null;
   const mark = (what: string) =>
     marks.push({ t: Math.round(performance.now() - (start ?? performance.now())), what });
-  const begin = () => {
+  const begin = (event: Event) => {
     if (start !== null) return;
-    start = performance.now();
+    start = event.timeStamp;
     mark('input');
     let last = start;
     let worst = 0;
@@ -199,10 +204,12 @@ async function measure(
   const cdp = await context.newCDPSession(page);
   if (scenario.cpu > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: scenario.cpu });
   const requests: string[] = [];
+  const prefetches: string[] = [];
   page.on('request', (request) => {
     const url = request.url();
-    if (url.includes('_rsc=') || request.headers().rsc === '1')
-      requests.push(url.replace(base, ''));
+    const headers = request.headers();
+    if (!url.includes('_rsc=') && headers.rsc !== '1') return;
+    (headers['next-router-prefetch'] === '1' ? prefetches : requests).push(url.replace(base, ''));
   });
   // tsx compiles with keepNames: `arm` calls a `__name` helper that does not exist in the page.
   await page.evaluate('globalThis.__name = (fn) => fn');
@@ -210,37 +217,66 @@ async function measure(
   await scenario.act(page);
   await page.waitForTimeout(1500);
   const marks = await page.evaluate(
-    () => (window as unknown as { __marks: { t: number; what: string }[] }).__marks,
+    () => (window as unknown as { __marks?: { t: number; what: string }[] }).__marks,
   );
   console.log(`\n== ${scenario.label}, CPU ${scenario.cpu}×`);
-  for (const item of [...marks].sort((a: Mark, b: Mark) => a.t - b.t)) {
-    console.log(`  ${String(item.t).padStart(5)} ms  ${item.what}`);
+  if (marks === undefined) {
+    console.log('  page reloaded: marks lost');
+  } else {
+    for (const item of [...marks].sort((a: Mark, b: Mark) => a.t - b.t)) {
+      console.log(`  ${String(item.t).padStart(5)} ms  ${item.what}`);
+    }
   }
-  console.log(
-    `  server requests: ${requests.length}${requests.length > 0 ? ` (${requests.join(', ')})` : ''}`,
-  );
+  const list = (urls: string[]) => (urls.length > 0 ? ` (${urls.join(', ')})` : '');
+  console.log(`  server requests: ${requests.length}${list(requests)}`);
+  console.log(`  prefetches: ${prefetches.length}${list(prefetches)}`);
   await context.close();
 }
 
 async function main(): Promise<void> {
-  const base = (process.argv[2] ?? '').replace(/\/$/, '');
+  const argument = process.argv[2];
+  if (argument === undefined) {
+    console.error('Usage: pnpm --filter web measure:panel http://localhost:3100 [userId]');
+    process.exitCode = 1;
+    return;
+  }
+  const base = argument.replace(/\/$/, '');
   if (
     !LOCAL_HOSTS.has(new URL(base).hostname) ||
-    !LOCAL_HOSTS.has(new URL(env().publicUrl).hostname)
+    !LOCAL_HOSTS.has(new URL(env().publicUrl).hostname) ||
+    !LOCAL_HOSTS.has(new URL(env().databaseUrl).hostname)
   ) {
     throw new Error(
-      'Refused: this script signs a person in, so it runs against a local server only.',
+      'Refused: this script signs a person in, so it runs against a local server and a local database only.',
     );
   }
-  const userId = await onlyUser(process.argv[3]);
-  const signed = await signIn(userId);
-  const browser = await chromium.launch();
+  let browser: Browser | undefined;
+  let sessionId: string | undefined;
+  let cleaning: Promise<void> | undefined;
+  const cleanup = (): Promise<void> => {
+    cleaning ??= (async () => {
+      await browser?.close().catch(() => undefined);
+      if (sessionId !== undefined) {
+        await getDb()
+          .delete(session)
+          .where(eq(session.id, sessionId))
+          .catch((error: unknown) => console.error('Could not delete the session', error));
+      }
+      await closeDb();
+    })();
+    return cleaning;
+  };
+  process.once('SIGINT', () => {
+    void cleanup().finally(() => process.exit(130));
+  });
   try {
+    const userId = await onlyUser(process.argv[3]);
+    const signed = await signIn(userId);
+    sessionId = signed.id;
+    browser = await chromium.launch();
     for (const scenario of SCENARIOS) await measure(browser, base, signed.cookie, scenario);
   } finally {
-    await browser.close();
-    await getDb().delete(session).where(eq(session.id, signed.id));
-    await closeDb();
+    await cleanup();
   }
 }
 
