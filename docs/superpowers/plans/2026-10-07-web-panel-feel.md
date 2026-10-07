@@ -856,14 +856,17 @@ In `apps/web/src/ui/Panel.tsx`, add to `interface Props`, after `sheet?: boolean
 
 ```tsx
   /**
-   * The page keeps the panel in client state (Transazioni): the ✕, the scrim and Esc ask it to close,
+   * A page that keeps the panel in client state: the ✕, the scrim and Esc ask it to close,
    * and it closes at once. It answers false when closing has to be a navigation after all; the panel
    * then closes as a panel without this prop does.
    */
   onClose?: () => boolean;
   /** The page is playing the exit (with `onClose`); it takes the panel out when the exit has played. */
   closing?: boolean;
-  /** Opened or closed from the keyboard: no entrance and no exit. */
+  /**
+   * Opened or closed from the keyboard: no entrance and no exit. The entrance reads it once, at mount
+   * (an open panel never plays it again); the exit reads it live.
+   */
   instant?: boolean;
 ```
 
@@ -891,23 +894,27 @@ with:
 
 ```tsx
   const closing = closingProp || closingFor === closeHref;
+  // The entrance plays once, when the panel mounts: a later change of `instant` must not replay it.
+  const [enteredInstantly] = useState(instant);
 
   // A page that owns the panel closes it at once. Otherwise closing is a navigation, which unmounts
   // the panel at once: play the exit first, then go.
   const close = useCallback(() => {
+    if (closingProp) return;
     if (onClose?.() === true) return;
     if (closingFor === closeHref) return;
 ```
 
 and change that callback's dependency list from `[router, closeHref, closingFor]` to
-`[router, closeHref, closingFor, onClose]`.
+`[router, closeHref, closingFor, onClose, closingProp]`.
 
 - [x] **Step 3: Mark an instant panel**
 
 Rename the local click handler `onClose` to `onLinkClick`: the new prop takes that name.
 
-Add `data-instant={instant ? '' : undefined}` to the scrim `<Link className={styles.scrim} …>` and to the
-`<aside className={styles.panel} …>`, after their `data-closing` attribute.
+Add `data-instant={instant ? '' : undefined}` and `data-still={enteredInstantly ? '' : undefined}` to the scrim
+`<Link className={styles.scrim} …>` and to the `<aside className={styles.panel} …>`, after their `data-closing`
+attribute. `data-still` plays no entrance; `data-instant` plays no exit.
 
 Update the component's doc comment: replace the paragraph that starts «A client component for Esc and for focus.»
 with:
@@ -916,7 +923,7 @@ with:
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
  * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
  * and still closes; only the key does nothing. A page can keep the panel in client state instead
- * (`onClose`, Transazioni): the URL then follows the panel, and nothing waits for the server.
+ * (`onClose`): the URL then follows the panel, and nothing waits for the server.
 ```
 
 - [x] **Step 4: Add the CSS**
@@ -924,15 +931,23 @@ with:
 At the end of `apps/web/src/ui/Panel.module.css`, add:
 
 ```css
-/* Opened or closed from the keyboard: the panel is there, or gone, on the next frame. */
+/* Opened from the keyboard: the panel is there on the next frame. Latched at mount, so it never replays. */
+.panel[data-still],
+.scrim[data-still] {
+  animation: none;
+}
+
+/* Closed from the keyboard: the panel is gone on the next frame. */
 .panel[data-instant],
 .scrim[data-instant] {
-  animation: none;
   transition: none;
 }
 ```
 
-It must stay the last rule of the file: it overrides `.panel[data-sheet]` and the media queries by source order.
+Also add `pointer-events: none;` to the existing `.scrim[data-closing]` rule: a scrim that is leaving must not
+swallow a click.
+
+Both new rules must stay the last rules of the file: they override `.panel[data-sheet]` and the media queries by source order.
 
 - [x] **Step 5: Typecheck and commit**
 

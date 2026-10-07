@@ -180,6 +180,7 @@
 
 .scrim[data-closing] {
   opacity: 0;
+  pointer-events: none;
 }
 
 @keyframes scrim-in {
@@ -223,9 +224,14 @@
   }
 }
 
-/* Opened or closed from the keyboard: the panel is there, or gone, on the next frame. */
+/* Opened from the keyboard: the panel is there on the next frame. Latched at mount, so it never replays. */
+.panel[data-still],
+.scrim[data-still] {
+  animation: none;
+}
+
+/* Closed from the keyboard: the panel is gone on the next frame. */
 .panel[data-instant],
 .scrim[data-instant] {
-  animation: none;
   transition: none;
 }
