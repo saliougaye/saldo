@@ -50,7 +50,25 @@ describe('panelOnlyChange', () => {
   });
 });
 
+describe('panelOnlyChange, links that leave the page', () => {
+  it('is a navigation for another origin', () => {
+    expect(panelOnlyChange(at(''), 'https://evil.example/transactions?t=x')).toBeNull();
+    expect(panelOnlyChange(at(''), '//evil.example/transactions?t=x')).toBeNull();
+  });
+
+  it('is a navigation for a link with a fragment', () => {
+    expect(panelOnlyChange(at(''), '/transactions?t=x#top')).toBeNull();
+  });
+});
+
 describe('panelHref', () => {
+  it('replaces the panel that the base already has', () => {
+    expect(panelHref('/transactions?t=old&edit=&q=1', { kind: 'detail', id: 'a' })).toBe(
+      '/transactions?q=1&t=a',
+    );
+    expect(panelHref('/transactions?new=&q=1', { kind: 'none' })).toBe('/transactions?q=1');
+  });
+
   it('adds the panel after the list parameters', () => {
     expect(panelHref('/transactions?direction=expense', { kind: 'detail', id: 'a' })).toBe(
       '/transactions?direction=expense&t=a',

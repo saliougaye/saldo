@@ -530,13 +530,17 @@ describe('panelFromSearch', () => {
 
 describe('panelOnlyChange', () => {
   it('opens and closes a panel over the same list', () => {
-    expect(panelOnlyChange(at('direction=expense'), '/transactions?direction=expense&t=a')).toEqual({
-      kind: 'detail',
-      id: 'a',
-    });
-    expect(panelOnlyChange(at('direction=expense&t=a'), '/transactions?direction=expense')).toEqual({
-      kind: 'none',
-    });
+    expect(panelOnlyChange(at('direction=expense'), '/transactions?direction=expense&t=a')).toEqual(
+      {
+        kind: 'detail',
+        id: 'a',
+      },
+    );
+    expect(panelOnlyChange(at('direction=expense&t=a'), '/transactions?direction=expense')).toEqual(
+      {
+        kind: 'none',
+      },
+    );
     expect(panelOnlyChange(at('t=a'), '/transactions?new=')).toEqual({ kind: 'new' });
   });
 
@@ -560,7 +564,25 @@ describe('panelOnlyChange', () => {
   });
 });
 
+describe('panelOnlyChange, links that leave the page', () => {
+  it('is a navigation for another origin', () => {
+    expect(panelOnlyChange(at(''), 'https://evil.example/transactions?t=x')).toBeNull();
+    expect(panelOnlyChange(at(''), '//evil.example/transactions?t=x')).toBeNull();
+  });
+
+  it('is a navigation for a link with a fragment', () => {
+    expect(panelOnlyChange(at(''), '/transactions?t=x#top')).toBeNull();
+  });
+});
+
 describe('panelHref', () => {
+  it('replaces the panel that the base already has', () => {
+    expect(panelHref('/transactions?t=old&edit=&q=1', { kind: 'detail', id: 'a' })).toBe(
+      '/transactions?q=1&t=a',
+    );
+    expect(panelHref('/transactions?new=&q=1', { kind: 'none' })).toBe('/transactions?q=1');
+  });
+
   it('adds the panel after the list parameters', () => {
     expect(panelHref('/transactions?direction=expense', { kind: 'detail', id: 'a' })).toBe(
       '/transactions?direction=expense&t=a',
@@ -626,7 +648,10 @@ export function samePanel(a: PanelState, b: PanelState): boolean {
   return a.kind === b.kind && rowOf(a) === rowOf(b);
 }
 
-/** Every parameter that is not the panel's, in an order that does not depend on the URL's. */
+/**
+ * Every parameter that is not the panel's, in an order that does not depend on the URL's. A key that
+ * repeats compares as a set of pairs; Transazioni reads no repeated key.
+ */
 function listKey(search: URLSearchParams): string {
   return [...search]
     .filter(([key]) => !PANEL_PARAMS.has(key))
@@ -639,23 +664,29 @@ function listKey(search: URLSearchParams): string {
  * The panel `href` opens when going there changes nothing but the panel — the same path, the same
  * filters, the same period, no toast and no prefill left behind. Then the page already holds what
  * it needs, and the panel can change in the frame of the click. `null` for anything else, which is
- * a navigation.
+ * a navigation. So is a link to another origin, or with a fragment: nothing pushes a URL that the
+ * panel would ignore.
  */
 export function panelOnlyChange(
   current: { pathname: string; search: URLSearchParams },
   href: string,
 ): PanelState | null {
   const target = new URL(href, ORIGIN);
+  if (target.origin !== ORIGIN) return null;
+  if (target.hash !== '') return null;
   if (target.pathname !== current.pathname) return null;
   if (listKey(target.searchParams) !== listKey(current.search)) return null;
   return panelFromSearch(target.searchParams);
 }
 
-/** The list's URL with `panel` open: the panel's parameters after the list's own. */
+/** The list's URL with `panel` open: the panel's parameters after the list's own. Drops the base's panel. */
 export function panelHref(base: string, panel: PanelState): string {
   const url = new URL(base, ORIGIN);
+  for (const key of PANEL_PARAMS) url.searchParams.delete(key);
   if (panel.kind === 'new') url.searchParams.set(NEW_PARAM, '');
-  if (panel.kind === 'detail' || panel.kind === 'edit') url.searchParams.set(SELECTION_PARAM, panel.id);
+  if (panel.kind === 'detail' || panel.kind === 'edit') {
+    url.searchParams.set(SELECTION_PARAM, panel.id);
+  }
   if (panel.kind === 'edit') url.searchParams.set(EDIT_PARAM, '');
   const query = url.searchParams.toString();
   return query === '' ? url.pathname : `${url.pathname}?${query}`;
@@ -665,7 +696,7 @@ export function panelHref(base: string, panel: PanelState): string {
 - [x] **Step 4: Run the tests and make sure they pass**
 
 Run: `rtk proxy pnpm --filter web test panelState`
-Expected: PASS, 7 tests.
+Expected: PASS, 10 tests.
 
 - [x] **Step 5: Commit**
 
