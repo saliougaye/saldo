@@ -1016,7 +1016,7 @@ rtk git commit -m "feat(web): list keys can move a client-side selection"
 - Create: `apps/web/src/ui/NewTransactionLink.tsx`
 - Modify: `apps/web/src/ui/Shortcuts.tsx`, `apps/web/src/ui/TopBar.tsx`, `apps/web/src/ui/TabBar.tsx`
 
-- [ ] **Step 1: Create the event and its link**
+- [x] **Step 1: Create the event and its link**
 
 Create `apps/web/src/ui/NewTransactionLink.tsx`:
 
@@ -1050,9 +1050,9 @@ export function wantsInstant(event: Event): boolean {
 }
 
 interface Props {
-  className: string;
-  'aria-label'?: string;
-  'aria-keyshortcuts'?: string;
+  className: string | undefined;
+  'aria-label'?: string | undefined;
+  'aria-keyshortcuts'?: string | undefined;
   children: ReactNode;
 }
 
@@ -1069,7 +1069,7 @@ export function NewTransactionLink({ className, children, ...rest }: Props) {
 }
 ```
 
-- [ ] **Step 2: `N` asks the page first**
+- [x] **Step 2: `N` asks the page first**
 
 Replace `apps/web/src/ui/Shortcuts.tsx` with:
 
@@ -1103,7 +1103,7 @@ export function Shortcuts() {
 }
 ```
 
-- [ ] **Step 3: The top bar's button**
+- [x] **Step 3: The top bar's button**
 
 In `apps/web/src/ui/TopBar.tsx`, add `import { NewTransactionLink } from './NewTransactionLink';` and replace:
 
@@ -1120,7 +1120,7 @@ with:
 and its closing `</Link>` (the one after `</span>` with the `kbd`) with `</NewTransactionLink>`. `Link` stays
 imported: the brand uses it.
 
-- [ ] **Step 4: The FAB**
+- [x] **Step 4: The FAB**
 
 In `apps/web/src/ui/TabBar.tsx`, replace the import `import Link from 'next/link';` with
 `import { NewTransactionLink } from './NewTransactionLink';` and replace:
@@ -1139,7 +1139,7 @@ with:
       </NewTransactionLink>
 ```
 
-- [ ] **Step 5: Typecheck and commit**
+- [x] **Step 5: Typecheck and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck` — expected: no errors. Nothing listens to the event yet, so every
 page still navigates to `/transactions?new`.
