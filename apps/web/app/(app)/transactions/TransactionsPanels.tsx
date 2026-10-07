@@ -104,8 +104,11 @@ export function TransactionsPanels(props: Props) {
   useLayoutEffect(() => {
     viewRef.current = view;
   });
-  // The last query read from `useSearchParams`.
+  // The last query read from `useSearchParams`, and the queries `go` wrote that it has not shown yet.
+  // Next applies a URL that `go` pushed in a transition, after the click: when two pushes are
+  // quicker than that, the first one shows up after the second one has already moved the panel.
   const seen = useRef(search);
+  const written = useRef<string[]>([]);
   // Where the focus was when the panel opened, and where it goes back to when the panel has left.
   const opener = useRef<Element | null>(null);
   const returnTo = useRef<Element | null>(null);
@@ -141,14 +144,20 @@ export function TransactionsPanels(props: Props) {
     [track],
   );
 
-  // A new query in `useSearchParams`. Next writes a navigation's URL to the address bar before this
-  // effect runs, and applies a URL that `go` pushed in a transition after the click. So a query
-  // that is not the address bar's is one that `go` has already replaced: it is old, not a change.
+  // A new query in `useSearchParams`. One that `go` wrote and has since replaced is old: the panel
+  // is already past it. The last one `go` wrote is the panel on screen. Any other is a navigation.
   useLayoutEffect(() => {
     if (search === seen.current) return;
     seen.current = search;
-    if (search !== locationQuery()) return;
-    follow(search);
+    const mine = written.current.lastIndexOf(search);
+    if (mine === -1) {
+      written.current = [];
+      follow(search);
+    } else if (mine === written.current.length - 1) {
+      written.current = [];
+    } else {
+      written.current = written.current.slice(mine + 1);
+    }
   }, [search, follow]);
 
   // Back before Next has synced a pushed URL: `useSearchParams` may never change, the address bar does.
@@ -157,6 +166,7 @@ export function TransactionsPanels(props: Props) {
       if (window.location.pathname !== pathname) return;
       const query = locationQuery();
       seen.current = query;
+      written.current = [];
       follow(query);
     };
     window.addEventListener('popstate', onPopState);
@@ -181,7 +191,10 @@ export function TransactionsPanels(props: Props) {
         return { panel: next, closing: false, instant, opened };
       });
       // The selected row clicked again: the same URL is not a second history entry.
-      if (searchOf(href) !== here) {
+      const target = searchOf(href);
+      if (target !== here) {
+        // Back where `useSearchParams` already is: Next may never report the round trip.
+        written.current = target === seen.current ? [] : [...written.current, target];
         window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
       }
       return true;

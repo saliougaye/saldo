@@ -1273,8 +1273,11 @@ export function TransactionsPanels(props: Props) {
   useLayoutEffect(() => {
     viewRef.current = view;
   });
-  // The last query read from `useSearchParams`.
+  // The last query read from `useSearchParams`, and the queries `go` wrote that it has not shown yet.
+  // Next applies a URL that `go` pushed in a transition, after the click: when two pushes are
+  // quicker than that, the first one shows up after the second one has already moved the panel.
   const seen = useRef(search);
+  const written = useRef<string[]>([]);
   // Where the focus was when the panel opened, and where it goes back to when the panel has left.
   const opener = useRef<Element | null>(null);
   const returnTo = useRef<Element | null>(null);
@@ -1310,14 +1313,20 @@ export function TransactionsPanels(props: Props) {
     [track],
   );
 
-  // A new query in `useSearchParams`. Next writes a navigation's URL to the address bar before this
-  // effect runs, and applies a URL that `go` pushed in a transition after the click. So a query
-  // that is not the address bar's is one that `go` has already replaced: it is old, not a change.
+  // A new query in `useSearchParams`. One that `go` wrote and has since replaced is old: the panel
+  // is already past it. The last one `go` wrote is the panel on screen. Any other is a navigation.
   useLayoutEffect(() => {
     if (search === seen.current) return;
     seen.current = search;
-    if (search !== locationQuery()) return;
-    follow(search);
+    const mine = written.current.lastIndexOf(search);
+    if (mine === -1) {
+      written.current = [];
+      follow(search);
+    } else if (mine === written.current.length - 1) {
+      written.current = [];
+    } else {
+      written.current = written.current.slice(mine + 1);
+    }
   }, [search, follow]);
 
   // Back before Next has synced a pushed URL: `useSearchParams` may never change, the address bar does.
@@ -1326,6 +1335,7 @@ export function TransactionsPanels(props: Props) {
       if (window.location.pathname !== pathname) return;
       const query = locationQuery();
       seen.current = query;
+      written.current = [];
       follow(query);
     };
     window.addEventListener('popstate', onPopState);
@@ -1350,7 +1360,10 @@ export function TransactionsPanels(props: Props) {
         return { panel: next, closing: false, instant, opened };
       });
       // The selected row clicked again: the same URL is not a second history entry.
-      if (searchOf(href) !== here) {
+      const target = searchOf(href);
+      if (target !== here) {
+        // Back where `useSearchParams` already is: Next may never report the round trip.
+        written.current = target === seen.current ? [] : [...written.current, target];
         window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
       }
       return true;
@@ -1500,14 +1513,16 @@ export function TransactionsPanels(props: Props) {
 
 Changes from the first draft of this step, found on a production build and in review:
 
-- **The address bar is the truth, not the URLs that `go` pushed.** Next applies a `pushState` URL to
-  `useSearchParams` in a transition, after the render of the click. The first draft read that old query as a
-  navigation. A click then opened the panel with no entrance, and ✕ removed it with no exit. A list of pushed
-  URLs fixed that, but it could get stuck when Next merged two pushes.
-- **The panel follows a new query in a layout effect, not during the render.** Next writes a navigation's URL to
-  the address bar in an insertion effect, after the render. During the render the address bar still has the old
-  URL. In the layout effect it has the new one. A query that is not the address bar's is an old sync, and the
-  effect ignores it. A `popstate` listener covers Back before Next syncs a pushed URL.
+- **A query that `go` wrote is not a navigation.** Next applies a `pushState` URL to `useSearchParams` in a
+  transition, after the render of the click. The first draft read that old query as a navigation. A click then
+  opened the panel with no entrance, and ✕ removed it with no exit.
+- **The panel follows a new query in a layout effect.** The component keeps the queries that `go` wrote and
+  `useSearchParams` has not shown yet (`written`). A query in that list before the last one is an old sync, and
+  the effect ignores it. The last one is the panel on screen. Any other query is a navigation, and the panel
+  follows it. A `go` back to the query that the hook already shows empties the list, because Next may never
+  report that round trip. A `popstate` listener covers Back before Next syncs a pushed URL, and empties the list.
+  The address bar cannot tell an old sync: Next's `HistoryUpdater` writes it on every commit, before layout
+  effects.
 - **The rule compares with what the person sees.** A closing panel counts as closed. A new URL that names the
   closing panel opens it again, with no motion. The exit of a closed panel is not stopped.
 - **The focus goes back.** When a panel has left, the focus goes back to where it was when the panel opened. If
