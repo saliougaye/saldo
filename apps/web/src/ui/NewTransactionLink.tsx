@@ -28,8 +28,8 @@ export function wantsInstant(event: Event): boolean {
 
 interface Props {
   className: string | undefined;
-  'aria-label'?: string | undefined;
-  'aria-keyshortcuts'?: string | undefined;
+  'aria-label'?: string;
+  'aria-keyshortcuts'?: string;
   children: ReactNode;
 }
 
