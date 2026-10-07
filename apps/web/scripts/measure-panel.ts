@@ -111,10 +111,9 @@ async function onlyUser(requested: string | undefined): Promise<string> {
 }
 
 /** A session row and the cookie Better Auth signs for it: `token.base64(HMAC-SHA256(secret, token))`. */
-async function signIn(userId: string): Promise<{ id: string; cookie: string }> {
+async function signIn(userId: string, id: string): Promise<string> {
   const token = randomBytes(24).toString('base64url');
   const signature = createHmac('sha256', env().secret).update(token).digest('base64');
-  const id = randomUUID();
   await getDb()
     .insert(session)
     .values({
@@ -125,7 +124,7 @@ async function signIn(userId: string): Promise<{ id: string; cookie: string }> {
       updatedAt: new Date(),
       userAgent: 'measure-panel',
     });
-  return { id, cookie: encodeURIComponent(`${token}.${signature}`) };
+  return encodeURIComponent(`${token}.${signature}`);
 }
 
 /** Runs in the page: the clock starts at the timeStamp of the first pointerdown or keydown after this call. */
@@ -241,10 +240,13 @@ async function main(): Promise<void> {
     return;
   }
   const base = argument.replace(/\/$/, '');
+  const database = new URL(env().databaseUrl);
   if (
     !LOCAL_HOSTS.has(new URL(base).hostname) ||
     !LOCAL_HOSTS.has(new URL(env().publicUrl).hostname) ||
-    !LOCAL_HOSTS.has(new URL(env().databaseUrl).hostname)
+    !LOCAL_HOSTS.has(database.hostname) ||
+    // `pg` lets `?host=` override the host of the URL.
+    database.searchParams.has('host')
   ) {
     throw new Error(
       'Refused: this script signs a person in, so it runs against a local server and a local database only.',
@@ -271,10 +273,12 @@ async function main(): Promise<void> {
   });
   try {
     const userId = await onlyUser(process.argv[3]);
-    const signed = await signIn(userId);
-    sessionId = signed.id;
-    browser = await chromium.launch();
-    for (const scenario of SCENARIOS) await measure(browser, base, signed.cookie, scenario);
+    // The id is known before the insert: a Ctrl-C during the insert still deletes the row.
+    sessionId = randomUUID();
+    const cookie = await signIn(userId, sessionId);
+    // Our `cleanup` closes the browser. Playwright's own handler would exit before the delete.
+    browser = await chromium.launch({ handleSIGINT: false });
+    for (const scenario of SCENARIOS) await measure(browser, base, cookie, scenario);
   } finally {
     await cleanup();
   }
