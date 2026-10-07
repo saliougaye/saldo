@@ -13,6 +13,7 @@
     "invite": "tsx --env-file-if-exists=.env scripts/invite.ts",
     "user": "tsx --env-file-if-exists=.env scripts/user.ts",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "measure:panel": "tsx --env-file-if-exists=.env scripts/measure-panel.ts",
     "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error"
   },
   "dependencies": {
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@modelcontextprotocol/client": "^2.3.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.2",
     "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",

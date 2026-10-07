@@ -158,7 +158,7 @@ Task 9 compares the same thing.
 - Create: `apps/web/scripts/measure-panel.ts`
 - Modify: `apps/web/package.json`
 
-- [ ] **Step 1: Add Playwright as a dev dependency**
+- [x] **Step 1: Add Playwright as a dev dependency**
 
 `@playwright/test` 1.63.0 is already in the lockfile (a peer of `next`). Add it to the web package:
 
@@ -169,7 +169,7 @@ cd apps/web && pnpm add -D @playwright/test@^1.63.0 && pnpm exec playwright inst
 Expected: `package.json` gets `"@playwright/test": "^1.63.0"` under `devDependencies`; Chromium installs or is
 already in `~/Library/Caches/ms-playwright`.
 
-- [ ] **Step 2: Add the script entry**
+- [x] **Step 2: Add the script entry**
 
 In `apps/web/package.json`, after `"seed": …`, add:
 
@@ -177,7 +177,7 @@ In `apps/web/package.json`, after `"seed": …`, add:
     "measure:panel": "tsx --env-file-if-exists=.env scripts/measure-panel.ts",
 ```
 
-- [ ] **Step 3: Write the script**
+- [x] **Step 3: Write the script**
 
 Create `apps/web/scripts/measure-panel.ts`:
 
@@ -342,6 +342,8 @@ async function measure(browser: Browser, base: string, cookie: string, scenario:
     const url = request.url();
     if (url.includes('_rsc=') || request.headers().rsc === '1') requests.push(url.replace(base, ''));
   });
+  // tsx compiles with keepNames: `arm` calls a `__name` helper that does not exist in the page.
+  await page.evaluate('globalThis.__name = (fn) => fn');
   await page.evaluate(arm);
   await scenario.act(page);
   await page.waitForTimeout(1500);
@@ -379,13 +381,13 @@ main().catch((error: unknown) => {
 });
 ```
 
-- [ ] **Step 4: Typecheck and lint the script**
+- [x] **Step 4: Typecheck and lint the script**
 
 Run: `pnpm exec biome check --write apps/web/scripts/measure-panel.ts && rtk proxy pnpm --filter web typecheck`
 (with `apps/web/e2e/` moved out, see «Execution context»).
 Expected: no errors. If `new URL('')` throws for a missing argument, that is the intended refusal.
 
-- [ ] **Step 5: Record the baseline**
+- [x] **Step 5: Record the baseline**
 
 Build and start on 3100 (see «Execution context»), then run:
 
@@ -397,7 +399,7 @@ Expected: about the numbers of the table in «Why this plan exists»: «panel in
 `server requests: 1` on every scenario, the list changing within a single frame. Paste the output into this plan,
 under «Baseline» at the end, and stop the server.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/web/scripts/measure-panel.ts apps/web/package.json pnpm-lock.yaml docs/superpowers/plans/2026-10-07-web-panel-feel.md
@@ -1800,7 +1802,66 @@ Use **requesting-code-review** on the branch, then merge to `main` when the user
 
 ## Baseline
 
-Paste the output of Task 1 Step 5 here.
+Output of `pnpm measure:panel http://localhost:3100` on 2026-10-07 (production build, local Postgres):
+
+```text
+== «New transaction», wide, CPU 1×
+      0 ms  input
+    111 ms  list starts to change (1096px)
+    111 ms  list settles (676px)
+    134 ms  panel in the DOM
+   1000 ms  longest frame 44 ms
+  server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
+
+== «New transaction», wide, CPU 4×
+      0 ms  input
+    266 ms  list starts to change (1096px)
+    266 ms  list settles (676px)
+    344 ms  panel in the DOM
+   1000 ms  longest frame 117 ms
+  server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
+
+== N, wide, CPU 4×
+      0 ms  input
+    243 ms  list starts to change (1096px)
+    243 ms  list settles (676px)
+    324 ms  panel in the DOM
+   1000 ms  longest frame 150 ms
+  server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
+
+== «New transaction» from Home, wide, CPU 4×
+      0 ms  input
+    318 ms  list starts to change (1120px)
+    318 ms  list settles (676px)
+    402 ms  panel in the DOM
+   1000 ms  longest frame 117 ms
+  server requests: 1 (/transactions?new&_rsc=_THLMR_XtjiYRnEr)
+
+== Click on a row, wide, CPU 4×
+     -2 ms  list starts to change (0px)
+      1 ms  input
+     98 ms  list settles (676px)
+    118 ms  panel in the DOM
+   1000 ms  longest frame 33 ms
+  server requests: 1 (/transactions?t=01a108fd-3ace-7f36-bd3b-1ee163a3d9f9&_rsc=HovGXzaOsaz0CWt6)
+
+== ✕ on the detail, wide, CPU 4×
+     -1 ms  list starts to change (0px)
+      0 ms  input
+    182 ms  list settles (1096px)
+    192 ms  panel out of the DOM
+   1000 ms  longest frame 17 ms
+  server requests: 1 (/transactions?_rsc=HovGXzaOsaz0CWt6)
+
+== FAB, phone, CPU 4×
+      0 ms  input
+    262 ms  panel in the DOM
+   1000 ms  longest frame 117 ms
+  server requests: 1 (/transactions?new&_rsc=HovGXzaOsaz0CWt6)
+```
+
+The «Click on a row» and «✕» scenarios report `0px` for the list's start width, because the list is not
+measured yet at the first input. Read their «list settles» line only.
 
 ## After
 
