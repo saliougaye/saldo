@@ -13,6 +13,10 @@ click that only changes the panel sets the state and calls `history.pushState`, 
 the URL that comes back. On a wide screen the list and the panel share a grid whose second track goes from `0` to
 the panel width with a CSS transition, so the movement is continuous and can be reversed halfway.
 
+**Spec:** `docs/superpowers/specs/2026-10-07-web-panel-feel.html`. On the Transazioni panel it wins over §17.1.7 of
+the POC spec. Read it first: it has the state diagram, the rule for «in place or navigation», the layout and the
+motion rules.
+
 **Tech Stack:** Next.js 16.3.4 App Router, React 19.2 (canary channel bundled by Next), CSS Modules, Vitest,
 Playwright (`@playwright/test` 1.63) for the measurement script.
 
@@ -63,7 +67,8 @@ click can reverse, and no motion for a key that a person presses many times a da
   `docker compose -f apps/web/docker/docker-compose.dev.yml up -d postgres` (colima must be running).
 - Single-package loop: `rtk proxy pnpm --filter web test <pattern>`. Fix import order and formatting with
   `pnpm exec biome check --write <files>` before each commit.
-- Spec: §17.1.7 (the trailing panel, the URL as its state, decision 8). Earlier work on the same screen:
+- Spec: `docs/superpowers/specs/2026-10-07-web-panel-feel.html` (this topic), and §17.1.7 of the POC spec (the
+  trailing panel, the URL as its state, decision 8). Earlier work on the same screen:
   `2026-09-29-0.3e-1-write-path.md` (the form in the panel).
 
 ## Decisions taken in this plan
@@ -129,16 +134,17 @@ click can reverse, and no motion for a key that a person presses many times a da
 
 ---
 
-### Task 0: Commit the plan
+### Task 0: Commit the spec and the plan
 
 **Files:**
+- Create: `docs/superpowers/specs/2026-10-07-web-panel-feel.html`
 - Create: `docs/superpowers/plans/2026-10-07-web-panel-feel.md` (this file)
 
-- [ ] **Step 1: Commit**
+- [x] **Step 1: Commit**
 
 ```bash
-rtk git add docs/superpowers/plans/2026-10-07-web-panel-feel.md
-rtk git commit -m "docs(plans): web panel opens in the frame of the click"
+rtk git add docs/superpowers/specs/2026-10-07-web-panel-feel.html docs/superpowers/plans/2026-10-07-web-panel-feel.md
+rtk git commit -m "docs(specs): the web panel opens in the frame of the click"
 ```
 
 ---
@@ -1770,7 +1776,7 @@ In `docs/superpowers/plans/README.md`, before `## Future (not POC)`, add:
 ```markdown
 ### Picked up from `TODO.md` on 2026-10-07
 
-**Plan:** `2026-10-07-web-panel-feel.md` · **Spec:** §17.1.7
+**Plan:** `2026-10-07-web-panel-feel.md` · **Spec:** `specs/2026-10-07-web-panel-feel.html`, §17.1.7
 
 - **Web: the Transazioni panel opens in the frame of the click.** The panel is client state and the URL follows
   it with `history.pushState`; the server renders every row's detail and the new form. The list makes room with
