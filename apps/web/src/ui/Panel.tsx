@@ -14,6 +14,7 @@ import {
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
 import styles from './Panel.module.css';
+import { isPlainClick } from './PanelNav';
 
 /** How a close came: Esc is the keyboard; the ✕ and the scrim are the pointer. */
 export type CloseFrom = 'key' | 'pointer';
@@ -75,8 +76,8 @@ export function Panel({
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (the form
-  // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
+  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (on Conti,
+  // the form closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
   const [closingFor, setClosingFor] = useState<string | null>(null);
   const closing = closingProp || closingFor === closeHref;
   // The entrance plays once, when the panel shows: a later change of `instant` must not replay it.
@@ -100,6 +101,11 @@ export function Panel({
       if (onClose?.(from) === true) return;
       if (closingFor === closeHref) return;
       clearTimeout(timer.current);
+      // The keyboard closes on the next frame: no exit (spec §06).
+      if (from === 'key') {
+        router.push(closeHref);
+        return;
+      }
       setClosingFor(closeHref);
       timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
     },
@@ -136,8 +142,7 @@ export function Panel({
 
   // A modified click (new tab) keeps the link's own behaviour.
   const onLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
-      return;
+    if (!isPlainClick(event)) return;
     event.preventDefault();
     close('pointer');
   };

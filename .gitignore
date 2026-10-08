@@ -61,3 +61,6 @@ transactions_export_*.csv
 skills-lock.json
 # Local git worktrees
 .worktrees/
+
+# Playwright output
+apps/web/test-results/

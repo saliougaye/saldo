@@ -16,7 +16,7 @@ export interface PanelNav {
 
 export const PanelNavContext = createContext<PanelNav | null>(null);
 
-export function usePanelNav(): PanelNav | null {
+function usePanelNav(): PanelNav | null {
   return useContext(PanelNavContext);
 }
 
@@ -32,7 +32,6 @@ interface Props {
   selectedClassName?: string;
   /** The row this link opens: `aria-current` follows the page's selection. */
   selectId?: string;
-  'aria-keyshortcuts'?: string;
   children: ReactNode;
 }
 
@@ -41,14 +40,7 @@ interface Props {
  * changes the panel changes it in the frame of the click, and the URL follows; anything else is the
  * link it always was — outside such a page too, and with JavaScript off.
  */
-export function PanelLink({
-  href,
-  className,
-  selectedClassName,
-  selectId,
-  children,
-  ...rest
-}: Props) {
+export function PanelLink({ href, className, selectedClassName, selectId, children }: Props) {
   const nav = usePanelNav();
   const selected = selectId !== undefined && nav?.selectedId === selectId;
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -62,7 +54,6 @@ export function PanelLink({
       className={classes}
       aria-current={selected ? 'true' : undefined}
       onClick={onClick}
-      {...rest}
     >
       {children}
     </Link>
