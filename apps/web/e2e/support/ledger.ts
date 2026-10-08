@@ -67,11 +67,7 @@ export async function addTransaction(
 }
 
 /** The fields of the form, for a form a link has already opened (a goal's «Accantona»). */
-export async function fillTransaction(
-  page: Page,
-  t: Translate,
-  tx: NewTransaction,
-): Promise<void> {
+export async function fillTransaction(page: Page, t: Translate, tx: NewTransaction): Promise<void> {
   const amount = page.getByRole('textbox', { name: t('txForm.amount') });
   await expect(amount).toBeVisible();
   const kind = tx.kind ?? 'expense';

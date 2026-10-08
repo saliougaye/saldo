@@ -106,7 +106,6 @@ export async function readLedger(member: Member): Promise<Ledger> {
   };
 }
 
-
 export interface Range {
   start: string;
   end: string;

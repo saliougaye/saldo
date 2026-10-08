@@ -1,8 +1,9 @@
-import { formatMonthLong, plural } from '@saldo/i18n';
+import { formatDayMonth, formatMonthLong, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
-  counted,
   categoryFamily,
+  counted,
+  inRange,
   type Ledger,
   type LedgerTransaction,
   monthOf,
@@ -11,7 +12,6 @@ import {
   readLedger,
   sum,
   summary,
-  inRange,
 } from './support/ledgerRows';
 import { createMember } from './support/members';
 import {
@@ -33,7 +33,9 @@ function saved(ledger: Ledger, pocketId: string): number {
     .filter((tx) => tx.kind === 'transfer' && tx.date <= ledger.today)
     .reduce(
       (total, tx) =>
-        total + (tx.toAccountId === pocketId ? tx.amount : 0) - (tx.accountId === pocketId ? tx.amount : 0),
+        total +
+        (tx.toAccountId === pocketId ? tx.amount : 0) -
+        (tx.accountId === pocketId ? tx.amount : 0),
       0,
     );
 }
@@ -62,7 +64,9 @@ test.describe('Home', () => {
     const horizon = nextMonth(month).end;
 
     await page.goto('/home');
-    await expect(page.getByText(upperFirst(formatMonthLong(month.end, lang)), { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(upperFirst(formatMonthLong(month.end, lang)), { exact: true }),
+    ).toBeVisible();
     await expect(homeFigure(page, t('home.income'))).toContainText(money(income));
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(spent));
     await expect(homeFigure(page, t('home.remaining'))).toContainText(money(income - spent));
@@ -89,9 +93,11 @@ test.describe('Home', () => {
     await expect(recent.locator('a[href^="/transactions?t="]')).toHaveCount(
       Math.min(5, settled.length),
     );
-    const newest = [...settled].sort((a, b) => b.date.localeCompare(a.date))[0] as LedgerTransaction;
+    const newest = [...settled].sort((a, b) =>
+      b.date.localeCompare(a.date),
+    )[0] as LedgerTransaction;
     await expect(recent.locator('a[href^="/transactions?t="]').first()).toContainText(
-      formatDay(newest.date, lang),
+      formatDayMonth(newest.date, lang),
     );
 
     await recent.getByRole('link', { name: t('home.allTransactions') }).click();
@@ -116,7 +122,10 @@ test.describe('Home', () => {
     const month = monthOf(ledger.today);
     const percent = (value: number) => t('targets.percent', { value });
     const ofLine = (limit: number, spentSoFar: number) =>
-      t('targets.ofLimit', { amount: money(limit), percent: percent(percentOf(spentSoFar, limit)) });
+      t('targets.ofLimit', {
+        amount: money(limit),
+        percent: percent(percentOf(spentSoFar, limit)),
+      });
 
     await page.goto('/home');
 
@@ -139,7 +148,9 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      featuredBudgets += await page.getByText(ofLine(budget.amount, spentSoFar), { exact: true }).count();
+      featuredBudgets += await page
+        .getByText(ofLine(budget.amount, spentSoFar), { exact: true })
+        .count();
     }
     // The card lifts one budget into view, with its bar and its advice; the others are rows.
     expect(featuredBudgets).toBe(1);
@@ -261,14 +272,16 @@ test.describe('Statistiche', () => {
     expect(expenses.ranked.length).toBeGreaterThan(5);
     const income = split('income');
     // The figures above the split agree with it.
-    await expect(page.getByText(t('stats.expenses'), { exact: true }).first().locator('..')).toContainText(
-      money(expenses.total),
-    );
+    await expect(
+      page.getByText(t('stats.expenses'), { exact: true }).first().locator('..'),
+    ).toContainText(money(expenses.total));
     await expect(section).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
       const row = rowOf(section, name);
       await expect(row).toContainText(money(amount));
-      await expect(row).toContainText(t('stats.ofTotal', { pct: percentOf(amount, expenses.total) }));
+      await expect(row).toContainText(
+        t('stats.ofTotal', { pct: percentOf(amount, expenses.total) }),
+      );
     }
     // Biggest first.
     const first = expenses.ranked[0];
@@ -303,7 +316,7 @@ test.describe('Statistiche', () => {
       await expect(row).toContainText(plural(t, lang, 'tags.uses', entry.count));
       if (entry.expense > 0) await expect(row).toContainText(money(entry.expense));
       if (entry.income > 0) {
-        await expect(row).toContainText(formatMoneyAlways(entry.income, ledger));
+        await expect(row).toContainText(money(entry.income, 'always'));
       }
     }
     const untagged = rows.filter((tx) => tx.kind === 'expense' && tx.tagIds.length === 0);
@@ -356,9 +369,7 @@ test.describe('Statistiche', () => {
     await expect(page.getByText(t('period.closed'))).toBeVisible();
     await expect(figure(t('stats.income'))).toContainText(money(last.income));
     await expect(figure(t('stats.expenses'))).toContainText(money(last.spent));
-    await expect(figure(t('stats.net'))).toContainText(
-      formatMoneyAlways(last.income - last.spent, ledger),
-    );
+    await expect(figure(t('stats.net'))).toContainText(money(last.income - last.spent, 'always'));
     await member.context.close();
   });
 });

@@ -54,7 +54,9 @@ export interface MailSink {
 function decodeQuotedPrintable(body: string): string {
   return body
     .replace(/=\r?\n/g, '')
-    .replace(/=([0-9A-F]{2})/g, (_whole, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
+    .replace(/=([0-9A-F]{2})/g, (_whole, hex: string) =>
+      String.fromCharCode(Number.parseInt(hex, 16)),
+    );
 }
 
 function parseMail(raw: string, to: string): SinkMail {
@@ -197,7 +199,10 @@ export async function configureSmtp(browser: Browser, t: Translate, port: number
     await page.getByLabel(t('admin.settings.smtp.port')).fill(String(port));
     await page.getByLabel(t('admin.settings.smtp.from')).fill('saldo@e2e.test');
     await page.getByRole('button', { name: t('common.save') }).click();
-    await page.getByRole('status').filter({ hasText: t('admin.settings.saved') }).waitFor();
+    await page
+      .getByRole('status')
+      .filter({ hasText: t('admin.settings.saved') })
+      .waitFor();
   } finally {
     await page.context().close();
   }

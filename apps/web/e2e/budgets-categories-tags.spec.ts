@@ -113,7 +113,9 @@ test('archiving a category moves its transactions to another one, and the archiv
   await expect(dialog).toContainText(plural(t, 'it', 'categories.archiveBody', 1));
 
   // With a target chosen the confirm button says that the transactions move too.
-  await expect(dialog.getByRole('button', { name: t('categories.archive'), exact: true })).toBeVisible();
+  await expect(
+    dialog.getByRole('button', { name: t('categories.archive'), exact: true }),
+  ).toBeVisible();
   await pickOption(page, t('categories.moveTo'), 'Salute');
   await dialog.getByRole('button', { name: t('categories.moveAndArchive') }).click();
 
@@ -190,7 +192,9 @@ test('a new category is listed under its parent and the arrows reorder it within
   ]);
 
   // The first row of a group cannot go up, the last cannot go down.
-  await expect(page.getByRole('button', { name: t('categories.moveUp', { name: 'Spesa' }) })).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: t('categories.moveUp', { name: 'Spesa' }) }),
+  ).toBeDisabled();
   await expect(
     page.getByRole('button', { name: t('categories.moveDown', { name: 'Animali' }) }),
   ).toBeDisabled();
@@ -200,7 +204,9 @@ test('a new category is listed under its parent and the arrows reorder it within
   await expect
     .poll(async () => (await categoryOrder(page)).slice(0, 7))
     .toEqual(['Casa', 'Affitto', 'Manutenzione', 'Animali', 'Spesa', 'Supermercato', 'Panetteria']);
-  await expect(page.getByRole('button', { name: t('categories.moveUp', { name: 'Casa' }) })).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: t('categories.moveUp', { name: 'Casa' }) }),
+  ).toBeDisabled();
 
   // A child moves among its siblings only.
   await page.getByRole('button', { name: t('categories.moveUp', { name: 'Animali' }) }).click();
@@ -297,7 +303,10 @@ test('merging a tag moves its transactions into the other tag, which then carrie
   await expect(edit).toBeVisible();
 
   await pickOption(page, t('tags.mergeInto'), 'Vacanze');
-  await page.getByRole('alertdialog').getByRole('button', { name: t('tags.merge'), exact: true }).click();
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: t('tags.merge'), exact: true })
+    .click();
   await expect(page).toHaveURL(/\/profile\/tags$/);
   await expect(listRow(page, 'Famiglia')).toHaveCount(0);
   await expect(listRow(page, 'Vacanze')).toContainText(

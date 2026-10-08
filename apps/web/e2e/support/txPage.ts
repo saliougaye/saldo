@@ -1,8 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import type { CurrencyCode } from '@saldo/core';
+import type { SignDisplay, Translate } from '@saldo/i18n';
 import { type AppLocale, formatDayMonth, formatMoney, formatWeekday } from '@saldo/i18n';
-import type { SignDisplay } from '@saldo/i18n';
-import type { Translate } from '@saldo/i18n';
 import { type Ledger, shiftDate } from './ledgerRows';
 
 /** The locale the project runs in (`it-IT` → `it`), as the app's own formatters take it. */
@@ -85,11 +84,7 @@ export function literal(text: string): RegExp {
  * The start of a screen-reader label with its last field left out: «Spesa, 117,35 € di 450,00 €, »
  * from the catalog's own template, so a changed sentence in the catalog changes the test with it.
  */
-export function labelStart(
-  t: Translate,
-  key: string,
-  vars: Record<string, string>,
-): RegExp {
+export function labelStart(t: Translate, key: string, vars: Record<string, string>): RegExp {
   const marker = '\u0000';
   const [start = ''] = t(key, { ...vars, status: marker }).split(marker);
   return new RegExp(`^${literal(start).source}`);

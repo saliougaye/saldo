@@ -40,8 +40,8 @@ test('accounts sit in their group, a goal sits under its account, and an account
   await expect(savings.getByRole('link', { name: /^Risparmi/ })).toBeVisible();
 
   // The two goals are pockets of «Risparmi»: a ring row each, then what is left free in the account.
-  const giappone = savings.getByRole('link', { name: new RegExp('^Viaggio in Giappone') });
-  const emergenza = savings.getByRole('link', { name: new RegExp('^Fondo emergenza') });
+  const giappone = savings.getByRole('link', { name: /^Viaggio in Giappone/ });
+  const emergenza = savings.getByRole('link', { name: /^Fondo emergenza/ });
   await expect(giappone).toContainText(money(90000));
   await expect(emergenza).toContainText(money(180000));
   await expect(savings.getByText(t('goals.free'))).toBeVisible();
@@ -125,7 +125,12 @@ test('a credit card shows what it owes, its next charge and the statement once i
   await expect(detail.getByText(t('accounts.statementShort'))).toBeVisible();
 
   // A 50 expense on the card is accrued in the open cycle and adds to what the card owes.
-  await addTransaction(page, t, { amount: '50', description: 'Cena', category: 'Ristoranti', account: 'Visa' });
+  await addTransaction(page, t, {
+    amount: '50',
+    description: 'Cena',
+    category: 'Ristoranti',
+    account: 'Visa',
+  });
   await page.goto('/accounts');
   await listRow(page, 'Visa').click();
   const owing = page.getByRole('complementary', { name: 'Visa' });

@@ -1,5 +1,4 @@
 import { expect, test } from './fixtures';
-import { addVirtualAuthenticator } from './support/authenticator';
 import {
   alertWith,
   clearSmtp,
@@ -11,6 +10,7 @@ import {
   startMailSink,
   withAnotherDevice,
 } from './support/auth';
+import { addVirtualAuthenticator } from './support/authenticator';
 import { createMember, mintInvite } from './support/members';
 
 test.describe('register with an invite', () => {
@@ -247,7 +247,9 @@ test.describe('recovery', () => {
       const link = linkIn(recovery);
       // Opening the link spends nothing: a person presses the button.
       await page.goto(link);
-      await expect(page.getByRole('heading', { name: t('web.auth.recoverConfirmTitle') })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: t('web.auth.recoverConfirmTitle') }),
+      ).toBeVisible();
       await page.getByRole('button', { name: t('web.auth.recoverConfirmButton') }).click();
       await expect(page).toHaveURL(/\/profile\/passkeys\?recovered/);
       await expect(alertWith(page, t('web.passkeys.recoveredTitle', { email }))).toBeVisible();

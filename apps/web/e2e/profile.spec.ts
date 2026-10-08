@@ -1,6 +1,6 @@
+import type { Page } from '@playwright/test';
 import { getCurrency } from '@saldo/core';
 import { catalogs, formatMoney, LANGUAGE_NAMES, makeTranslator, timeZoneCity } from '@saldo/i18n';
-import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { createMember } from './support/members';
 
@@ -20,12 +20,18 @@ test('the preferences list shows the five rows, and a row opens its panel and cl
   browser,
   t,
 }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Righe', email: 'prefs-rows@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Righe',
+    email: 'prefs-rows@e2e.test',
+  });
   const { page } = member;
   await page.goto('/profile');
   await expect(page).toHaveURL(/\/profile\/account$/);
 
-  await page.getByRole('link', { name: t('settings.preferences'), exact: true }).first().click();
+  await page
+    .getByRole('link', { name: t('settings.preferences'), exact: true })
+    .first()
+    .click();
   await expect(page).toHaveURL(new RegExp(`${PREFERENCES}$`));
   for (const label of [
     'profile.cycleStart',
@@ -52,7 +58,10 @@ test('the theme is saved as chosen, sets the document and survives a reload', as
   browser,
   t,
 }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Tema', email: 'prefs-theme@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Tema',
+    email: 'prefs-theme@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'theme');
   const list = page.getByRole('radiogroup', { name: t('profile.theme') });
@@ -77,7 +86,10 @@ test('the language re-renders the whole shell in the chosen language and survive
   t,
 }) => {
   const en = makeTranslator(catalogs.en);
-  const member = await createMember(browser, t, { name: 'Prefs Lingua', email: 'prefs-lang@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Lingua',
+    email: 'prefs-lang@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'language');
   const list = page.getByRole('radiogroup', { name: t('profile.language') });
@@ -86,9 +98,7 @@ test('the language re-renders the whole shell in the chosen language and survive
 
   await list.getByRole('radio', { name: LANGUAGE_NAMES.en }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(row(page, en('profile.language'))).toContainText(
-    LANGUAGE_NAMES.en,
-  );
+  await expect(row(page, en('profile.language'))).toContainText(LANGUAGE_NAMES.en);
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -111,23 +121,34 @@ test('the cycle start day previews the cycle, is saved as chosen and survives a 
   browser,
   t,
 }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Ciclo', email: 'prefs-cycle@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Ciclo',
+    email: 'prefs-cycle@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'cycle');
   const days = page.getByRole('radiogroup', { name: t('profile.cycleStart') });
-  await expect(days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true })).not.toBeChecked();
+  await expect(
+    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
+  ).not.toBeChecked();
 
-  const preview = page.getByText(t('profile.cyclePreview')).locator('xpath=following-sibling::*[1]');
+  const preview = page
+    .getByText(t('profile.cyclePreview'))
+    .locator('xpath=following-sibling::*[1]');
   const before = await preview.textContent();
   await days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }).click();
-  await expect(days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true })).toBeChecked();
+  await expect(
+    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
+  ).toBeChecked();
   await expect(preview).not.toHaveText(before ?? '');
   await expect(row(page, t('profile.cycleStart'))).toContainText(
     t('settings.cycleValue', { day: 15 }),
   );
 
   await page.reload();
-  await expect(days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true })).toBeChecked();
+  await expect(
+    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
+  ).toBeChecked();
   await expect(row(page, t('profile.cycleStart'))).toContainText(
     t('settings.cycleValue', { day: 15 }),
   );
@@ -138,7 +159,10 @@ test('the currency asks first: cancel keeps it, confirm saves it and survives a 
   browser,
   t,
 }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Valuta', email: 'prefs-currency@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Valuta',
+    email: 'prefs-currency@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'currency');
   const list = page.getByRole('radiogroup', { name: t('profile.currency') });
@@ -167,9 +191,7 @@ test('the currency asks first: cancel keeps it, confirm saves it and survives a 
   await list.getByRole('radio', { name: /^USD/ }).click();
   await dialog.getByRole('button', { name: t('common.save') }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(row(page, t('profile.currency'))).toContainText(
-    `${getCurrency('USD').symbol} USD`,
-  );
+  await expect(row(page, t('profile.currency'))).toContainText(`${getCurrency('USD').symbol} USD`);
 
   await page.reload();
   await expect(list.getByRole('radio', { name: /^USD/ })).toBeChecked();
@@ -177,8 +199,14 @@ test('the currency asks first: cancel keeps it, confirm saves it and survives a 
   await member.context.close();
 });
 
-test('the currency search narrows the list and says when nothing matches', async ({ browser, t }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Cerca', email: 'prefs-search@e2e.test' });
+test('the currency search narrows the list and says when nothing matches', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Prefs Cerca',
+    email: 'prefs-search@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'currency');
   const list = page.getByRole('radiogroup', { name: t('profile.currency') });
@@ -199,7 +227,10 @@ test('the time zone is searched by city, saved as chosen and survives a reload',
   browser,
   t,
 }) => {
-  const member = await createMember(browser, t, { name: 'Prefs Fuso', email: 'prefs-zone@e2e.test' });
+  const member = await createMember(browser, t, {
+    name: 'Prefs Fuso',
+    email: 'prefs-zone@e2e.test',
+  });
   const { page } = member;
   await openEditor(page, 'timeZone');
   const list = page.getByRole('radiogroup', { name: t('profile.timeZone') });

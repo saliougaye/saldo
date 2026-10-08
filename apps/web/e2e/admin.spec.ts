@@ -2,12 +2,12 @@ import type { Page } from '@playwright/test';
 import { E2E_ORIGIN } from './env';
 import { expect, test } from './fixtures';
 import {
+  type AuthorizationRequest,
   captureCallback,
   openAdmin,
-  type AuthorizationRequest,
   startAuthorization,
 } from './support/admin';
-import { type Member, createMember, mintInvite } from './support/members';
+import { createMember, type Member, mintInvite } from './support/members';
 import { ADMIN } from './support/state';
 
 /** An account's row in Admin → Account: its link names the name, the address and the role. */
@@ -25,7 +25,10 @@ test.describe('accounts', () => {
     browser,
     t,
   }) => {
-    const member = await createMember(browser, t, { name: 'Elena Elenco', email: 'elena@e2e.test' });
+    const member = await createMember(browser, t, {
+      name: 'Elena Elenco',
+      email: 'elena@e2e.test',
+    });
     const admin = await openAdmin(browser);
     const { page } = admin;
     await page.goto('/admin/accounts');
@@ -42,7 +45,10 @@ test.describe('accounts', () => {
     await expect(panel).toContainText(member.email);
     // The member registered with an invite the admin minted, labelled with the member's name.
     await expect(panel).toContainText(
-      t('admin.accounts.createdWithInvite', { date: '', invite: member.name }).replace(/^[,\s]+/, ''),
+      t('admin.accounts.createdWithInvite', { date: '', invite: member.name }).replace(
+        /^[,\s]+/,
+        '',
+      ),
     );
     await expect(panel.getByRole('button', { name: t('admin.accounts.revoke') })).toBeVisible();
     await expect(panel.getByRole('button', { name: t('admin.accounts.delete') })).toBeVisible();
@@ -90,7 +96,9 @@ test.describe('accounts', () => {
     await expect(panel).toContainText(t('admin.accounts.statusActive'));
 
     await panel.getByRole('button', { name: t('admin.accounts.revoke') }).click();
-    await dialog.getByRole('button', { name: t('admin.accounts.revokeConfirm'), exact: true }).click();
+    await dialog
+      .getByRole('button', { name: t('admin.accounts.revokeConfirm'), exact: true })
+      .click();
     await expect(dialog).toHaveCount(0);
     await expect(panel).toContainText(t('admin.accounts.statusRevoked'));
     await expect(accountRow(page, member.name)).toContainText(t('admin.accounts.revoked'));
@@ -123,7 +131,10 @@ test.describe('accounts', () => {
     browser,
     t,
   }) => {
-    const member = await createMember(browser, t, { name: 'Dario Delete', email: 'dario@e2e.test' });
+    const member = await createMember(browser, t, {
+      name: 'Dario Delete',
+      email: 'dario@e2e.test',
+    });
     const admin = await openAdmin(browser);
     const { page } = admin;
     await page.goto('/admin/accounts');
@@ -159,7 +170,10 @@ test.describe('invites', () => {
     const admin = await openAdmin(browser);
     const { page } = admin;
     await page.goto('/admin/invites');
-    await page.getByRole('link', { name: t('admin.invites.new') }).first().click();
+    await page
+      .getByRole('link', { name: t('admin.invites.new') })
+      .first()
+      .click();
 
     const form = page.getByRole('complementary', { name: t('admin.invites.new') });
     await form.getByLabel(t('admin.invites.label')).fill(label);
@@ -167,7 +181,11 @@ test.describe('invites', () => {
 
     // The code shows once, here and nowhere else.
     await expect(form.getByText(t('admin.invites.copyNow'))).toBeVisible();
-    const code = (await form.locator('p', { hasText: /^[A-Z0-9-]{16,}$/ }).first().textContent()) ?? '';
+    const code =
+      (await form
+        .locator('p', { hasText: /^[A-Z0-9-]{16,}$/ })
+        .first()
+        .textContent()) ?? '';
     expect(code).not.toBe('');
     await expect(form.getByRole('img', { name: t('admin.invites.qrLabel') })).toBeVisible();
     await form.getByRole('button', { name: t('admin.invites.done') }).click();
@@ -264,7 +282,9 @@ test.describe('instance and settings', () => {
     await page.goto('/admin/settings');
     await expect(page.getByRole('link', { name: new RegExp(ADMIN.instance) })).toBeVisible();
 
-    await page.getByRole('link', { name: new RegExp(`^${t('admin.settings.name.title')}`) }).click();
+    await page
+      .getByRole('link', { name: new RegExp(`^${t('admin.settings.name.title')}`) })
+      .click();
     const name = page.getByRole('complementary', { name: t('admin.settings.name.title') });
     await expect(name.getByLabel(t('admin.settings.name.field'))).toHaveValue(ADMIN.instance);
     await expect(name.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
@@ -278,7 +298,9 @@ test.describe('instance and settings', () => {
     await expect(registration.getByRole('radio', { name: /./ })).toHaveCount(4);
     await expect(registration.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
 
-    await page.getByRole('link', { name: new RegExp(`^${t('admin.settings.smtp.title')}`) }).click();
+    await page
+      .getByRole('link', { name: new RegExp(`^${t('admin.settings.smtp.title')}`) })
+      .click();
     const smtp = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
     await expect(smtp.getByLabel(t('admin.settings.smtp.host'))).toBeVisible();
     await admin.context.close();
@@ -375,7 +397,10 @@ test.describe('MCP and OAuth', () => {
     browser,
     t,
   }) => {
-    const member = await createMember(browser, t, { name: 'Carla Client', email: 'carla@e2e.test' });
+    const member = await createMember(browser, t, {
+      name: 'Carla Client',
+      email: 'carla@e2e.test',
+    });
     const clientName = 'Claude Code (e2e)';
     const request = await startAuthorization(clientName);
     const callback = await captureCallback(member.page);
@@ -388,13 +413,17 @@ test.describe('MCP and OAuth', () => {
     await expect(page.getByText(t('web.consent.signedInAs', { who: member.email }))).toBeVisible();
     await expect(page.getByText(t('web.consent.readTitle'))).toBeVisible();
     // «Leggere» is required and cannot be unticked.
-    await expect(page.getByRole('checkbox', { name: new RegExp(t('web.consent.readTitle')) })).toBeDisabled();
+    await expect(
+      page.getByRole('checkbox', { name: new RegExp(t('web.consent.readTitle')) }),
+    ).toBeDisabled();
 
     const write = page.getByRole('checkbox', { name: new RegExp(t('web.consent.writeTitle')) });
     await expect(write).toBeChecked();
     await expect(page.getByRole('button', { name: t('web.consent.authorize') })).toBeVisible();
     await write.uncheck();
-    await expect(page.getByRole('button', { name: t('web.consent.authorizeReadOnly') })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: t('web.consent.authorizeReadOnly') }),
+    ).toBeVisible();
     await page.getByRole('button', { name: t('web.consent.authorizeReadOnly') }).click();
 
     const arrived = await callback();
@@ -467,7 +496,9 @@ test.describe('MCP and OAuth', () => {
     const { page } = member;
 
     // Asked for `read` only: there is no write row to untick.
-    await expect(page.getByRole('checkbox', { name: new RegExp(t('web.consent.writeTitle')) })).toHaveCount(0);
+    await expect(
+      page.getByRole('checkbox', { name: new RegExp(t('web.consent.writeTitle')) }),
+    ).toHaveCount(0);
     await page.getByRole('button', { name: t('web.consent.deny') }).click();
 
     const arrived = await callback();
@@ -480,7 +511,10 @@ test.describe('MCP and OAuth', () => {
     browser,
     t,
   }) => {
-    const member = await createMember(browser, t, { name: 'Sara Sessione', email: 'sara@e2e.test' });
+    const member = await createMember(browser, t, {
+      name: 'Sara Sessione',
+      email: 'sara@e2e.test',
+    });
     const { page } = member;
     const request = await startAuthorization('Client Con Accesso', 'read');
     // Sign out: the cookie goes, the passkey stays on the virtual device.
@@ -499,8 +533,12 @@ test.describe('MCP and OAuth', () => {
   }) => {
     const member = await createMember(browser, t, { name: 'Ivo Invalido', email: 'ivo@e2e.test' });
     await member.page.goto('/oauth/consent?client_id=nessuno&scope=read');
-    await expect(member.page.getByRole('heading', { name: t('web.consent.invalidTitle') })).toBeVisible();
-    await expect(member.page.getByRole('link', { name: t('web.consent.backToSaldo') })).toBeVisible();
+    await expect(
+      member.page.getByRole('heading', { name: t('web.consent.invalidTitle') }),
+    ).toBeVisible();
+    await expect(
+      member.page.getByRole('link', { name: t('web.consent.backToSaldo') }),
+    ).toBeVisible();
     await member.context.close();
   });
 

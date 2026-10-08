@@ -61,7 +61,9 @@ test.describe('seeded account', () => {
     }
 
     // The header counts the rows of the period, transfers included.
-    await expect(page.getByText(plural(t, appLocale(locale), 'transactions.periodCount', rows.length))).toBeVisible();
+    await expect(
+      page.getByText(plural(t, appLocale(locale), 'transactions.periodCount', rows.length)),
+    ).toBeVisible();
     await member.context.close();
   });
 
@@ -141,7 +143,9 @@ test.describe('seeded account', () => {
     await expect(list).toHaveCount(rows.length);
 
     // A category covers its children: «Spesa» holds the supermarket and the bakery.
-    const groceries = ledger.categories.find((category) => category.id === 'seed-category-groceries');
+    const groceries = ledger.categories.find(
+      (category) => category.id === 'seed-category-groceries',
+    );
     const family = new Set(
       ledger.categories
         .filter((category) => category.parentId === groceries?.id || category.id === groceries?.id)
