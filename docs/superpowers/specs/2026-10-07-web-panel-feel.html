@@ -371,6 +371,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
       <p>A client component, <code>TransactionsPanels</code>, keeps the state. When the user changes only the panel, the component sets the state and then calls <code>history.pushState</code>. Next.js syncs that URL into <code>useSearchParams</code> and does not ask the server.</p>
       <p>When the URL changes for another reason (a navigation, Back, a save), the component reads the new URL in the same render and shows that panel.</p>
       <p>The server renders the new form and the detail of every row in the list, in one response. Thus the client has the content of each panel before the click.</p>
+      <p>The client renders the new form in advance and keeps it hidden. «New transaction» only shows it. Each opening still starts a new draft: after a close, the client renders the next empty form in the background.</p>
       <div class="callout"><span class="meta">Exception</span><p>«Edit» stays a navigation. The edit form needs the balances without the edited row. One form for each row would repeat the accounts, categories and tags for each row. The detail stays on the screen while the edit form loads.</p></div>
     </div>
   </div>
@@ -407,7 +408,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <path class="ln-ink" d="M170 334 C 170 450, 600 450, 772 338" marker-end="url(#ah-ink)"/>
         <text x="250" y="470" font-size="15">Save: server, then the saved row's Detail</text>
       </svg>
-      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close, which plays the exit first.</figcaption>
+      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play the exit first. Esc closes on the next frame.</figcaption>
     </figure>
   </div>
 </section>
@@ -549,7 +550,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     <div class="prose">
       <p>A person presses <kbd>N</kbd> and the arrow keys many times a day. Motion on those keys makes the app feel slower each time. Thus the keyboard opens and closes the panel on the next frame, with no transition.</p>
       <p>The pointer gets a short entrance and a shorter exit. The values are those that <code>Panel</code> already uses.</p>
-      <p>Each opening of «New transaction» mounts a new form: the draft of the last form does not come back. An opening during the exit of the same form reverses the exit and keeps the draft.</p>
+      <p>Each opening of «New transaction» starts a new draft: the draft of the last form does not come back. An opening during the exit of the same form reverses the exit and keeps the draft.</p>
     </div>
   </div>
   <div class="visual">
@@ -558,7 +559,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <thead><tr><th scope="col">Input</th><th scope="col">Panel</th><th scope="col">List (1024px and wider)</th></tr></thead>
         <tbody>
           <tr><td>Click, tap</td><td>In: 200 ms, slide 16px and fade. Out: 150 ms.</td><td>Track to 420px in 200 ms (<code>--motion-fade</code>, <code>--motion-swap-easing</code>). Back to 0 in 150 ms.</td></tr>
-          <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd> after a key</td><td>On the next frame</td><td>On the next frame</td></tr>
+          <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd></td><td>On the next frame</td><td>On the next frame</td></tr>
           <tr><td>Another row, panel open</td><td>Stays. Only its content changes.</td><td>Does not move</td></tr>
           <tr><td>Back, a filter, a save</td><td>Follows the new URL on the next frame</td><td>On the next frame</td></tr>
           <tr><td>Reduce motion on</td><td colspan="2">The global rule of <code>globals.css</code> applies: the panel appears and goes, with no slide.</td></tr>

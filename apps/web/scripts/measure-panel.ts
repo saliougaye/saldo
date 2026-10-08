@@ -11,7 +11,8 @@
  * localhost or 127.0.0.1). It deletes the session when it ends, on an error and on Ctrl-C too.
  * Run it against `next build && next start`: a dev server measures the compiler, not the app.
  * «server requests» counts RSC requests that are not prefetches. A hover can start a prefetch
- * (`next-router-prefetch: 1`), so those are counted on their own line.
+ * (`next-router-prefetch: 1`), so those are counted on their own line. «panel in the DOM» means a
+ * visible `aside`: Transazioni keeps its new form in the DOM, hidden by `<Activity>`.
  */
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { type Browser, chromium, type Page } from '@playwright/test';
@@ -86,9 +87,9 @@ const SCENARIOS: Scenario[] = [
     from: '/transactions',
     setup: async (p) => {
       await p.locator(ROW).first().click();
-      await p.waitForSelector('aside');
+      await p.waitForSelector('aside:visible');
     },
-    act: (p) => p.locator('aside a[aria-label]').first().click(),
+    act: (p) => p.locator('aside:visible a[aria-label]').first().click(),
   },
   {
     label: 'FAB, phone',
@@ -174,13 +175,24 @@ function arm(): void {
   };
   document.addEventListener('pointerdown', begin, { capture: true });
   document.addEventListener('keydown', begin, { capture: true });
-  let panel = document.querySelector('aside') !== null;
+  // `<Activity>` hides a panel with `display: none` on the `aside`: a hidden one does not count.
+  // The time is read before `getClientRects`, whose layout must not count either.
+  const visiblePanel = () =>
+    [...document.querySelectorAll('aside')].some((aside) => aside.getClientRects().length > 0);
+  let panel = visiblePanel();
   new MutationObserver(() => {
-    const now = document.querySelector('aside') !== null;
-    if (now === panel || start === null) return;
+    if (start === null) return;
+    const at = Math.round(performance.now() - start);
+    const now = visiblePanel();
+    if (now === panel) return;
     panel = now;
-    mark(now ? 'panel in the DOM' : 'panel out of the DOM');
-  }).observe(document.body, { subtree: true, childList: true });
+    marks.push({ t: at, what: now ? 'panel in the DOM' : 'panel out of the DOM' });
+  }).observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['style'],
+  });
 }
 
 async function measure(

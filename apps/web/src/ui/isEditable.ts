@@ -22,12 +22,16 @@ const OWNS_PAGE = '[role="dialog"], [role="alertdialog"], form[data-owns-keys]';
 /**
  * Whether a single-key shortcut (N, E, ↑ ↓) must leave this key alone: a modifier (⌘N is the
  * browser's), a key someone already handled, a field, anything that owns its own keys — or
- * something open on the page that owns them all (`OWNS_PAGE`).
+ * something open on the page that owns them all (`OWNS_PAGE`). Open means on screen: Transazioni
+ * keeps its new form in the DOM, hidden, until «Nuova» shows it.
  */
 export function ignoresShortcut(event: KeyboardEvent): boolean {
   if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true;
   if (event.repeat && event.key.length === 1) return true;
   if (isEditable(event.target)) return true;
   if (event.target instanceof Element && event.target.closest(OWNS_KEYS) !== null) return true;
-  return document.querySelector(OWNS_PAGE) !== null;
+  for (const owner of document.querySelectorAll(OWNS_PAGE)) {
+    if (owner.getClientRects().length > 0) return true;
+  }
+  return false;
 }

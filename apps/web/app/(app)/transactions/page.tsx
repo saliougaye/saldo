@@ -397,6 +397,9 @@ export default async function TransactionsPage({
         newForm={
           newForm === null ? null : (
             <TransactionForm
+              // The form waits hidden between openings: other initial values (a prefill, a new
+              // day) are a new form, not the old draft.
+              key={JSON.stringify([newForm.initial, newForm.closeGoalId])}
               view={newForm}
               {...formProps}
               closeHref={href()}

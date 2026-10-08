@@ -95,11 +95,16 @@ click can reverse, and no motion for a key that a person presses many times a da
 6. **The keyboard opens and closes without motion.** `N` and ↑ ↓ open a panel that is there on the next frame.
    The pointer gets the motion: 200 ms in (`--motion-fade`, `--motion-swap-easing`), 150 ms out, the values that
    `Panel` already uses.
-7. **Every opening of «Nuova» is a new draft.** The form mounts again with a new `key`. An opening while the exit
-   of the same form plays reverses the exit and keeps the draft.
+7. **Every opening of «Nuova» is a new draft.** The form gets a new `key` when it leaves the screen (Task 8b). An
+   opening while the exit of the same form plays reverses the exit and keeps the draft.
 8. **The top bar, the FAB and `N` ask the page first.** They dispatch a cancelable `saldo:new-transaction` event
    on `window`. Transazioni cancels it and opens the panel in place. On every other page nobody cancels it, and the
    link (or `router.push`) goes to `/transactions?new` as today.
+9. **The new form waits hidden in `<Activity>`** (Task 8b). Mounting the form on the click cost 224 ms at CPU 4×:
+   its modules, its render and its focus. React renders the hidden form in the background, keeps it out of the
+   layout with `display: none`, and runs its effects only while it shows. «Nuova» only shows it. After the form
+   leaves the screen, its new `key` renders the next draft in the background. Thus decision 7 stays true. A form
+   with other initial values (a prefill, a new day) is a new form. The edit form and the details do not change.
 
 ## Out of scope (recorded for the next plans)
 
@@ -121,13 +126,14 @@ click can reverse, and no motion for a key that a person presses many times a da
 | `apps/web/src/features/transactions/panelState.test.ts` | Create | The rules above. |
 | `apps/web/src/ui/PanelNav.tsx` | Create | The context a page gives its links (`selectedId`, `go`), `PanelLink`, `isPlainClick`. |
 | `apps/web/src/ui/NewTransactionLink.tsx` | Create | The `saldo:new-transaction` event, its link, `openNewTransaction`, `wantsInstant`. |
-| `apps/web/src/ui/Panel.tsx`, `Panel.module.css` | Modify | `onClose`, `closing`, `instant`: a panel whose page owns its state. |
+| `apps/web/src/ui/Panel.tsx`, `Panel.module.css` | Modify | `onClose`, `closing`, `instant`: a panel whose page owns its state. `onClose` gets `'key'` or `'pointer'`. |
+| `apps/web/src/ui/isEditable.ts` | Modify | A form or a dialog owns the keys only when it is on screen. |
 | `apps/web/src/ui/ListRow.tsx` | Modify | `selectId`: a row whose selection comes from `PanelNav`. |
 | `apps/web/src/ui/ListKeys.tsx` | Modify | `onSelect`: ↑ ↓ through the page's state. |
 | `apps/web/src/ui/Shortcuts.tsx`, `TopBar.tsx`, `TabBar.tsx` | Modify | Ask the page before going to `/transactions?new`. |
 | `apps/web/app/(app)/transactions/TransactionsPanels.tsx` | Create | The panel's client state, the layout, the event listener. |
 | `apps/web/app/(app)/transactions/page.tsx` | Modify | Render every detail and the new form; hand them to `TransactionsPanels`. |
-| `apps/web/app/(app)/transactions/TransactionForm.tsx` | Modify | «Annulla» through `PanelLink`. |
+| `apps/web/app/(app)/transactions/TransactionForm.tsx` | Modify | «Annulla» through `PanelLink`. The amount takes the focus from an effect. |
 | `apps/web/app/(app)/transactions/transactions.module.css` | Modify | The grid transition and the panel's column. |
 | `apps/web/scripts/measure-panel.ts`, `apps/web/package.json` | Create, modify | The measurement, before and after. |
 | `TODO.md`, `docs/superpowers/plans/README.md` | Modify | Record what this plan closes and what stays open. |
@@ -1947,6 +1953,372 @@ rule gives `.side` a height.
 ```bash
 rtk git add "apps/web/app/(app)/transactions/transactions.module.css"
 rtk git commit -m "feat(web): the list makes room for the panel in one movement"
+```
+
+---
+
+### Task 8b: The new form waits hidden; Esc closes at once
+
+The Task 8 check found two gaps. «New transaction» took 136 ms at CPU 1× and 224 ms at CPU 4× from the input to
+the panel in the DOM. The target is ≤ 20 ms and ≤ 50 ms. Also, Esc played the exit, but decision 6 says that the
+keyboard closes with no motion.
+
+A CPU profile of a click on «New transaction» (production build, CPU 4×) found the cause in the mount of the form:
+
+| Cost in the click | «New transaction» | Click on a row |
+| --- | --- | --- |
+| Instantiation of the form's modules (Turbopack's module factory) | 88 ms | 2.5 ms |
+| `focus()` from `autoFocus`, which forces style and layout | 69 ms | — |
+| Other JavaScript (React's render and commit) | 66 ms | 33 ms |
+
+**Files:**
+- Modify: `apps/web/src/ui/Panel.tsx`
+- Modify: `apps/web/app/(app)/transactions/TransactionsPanels.tsx`
+- Modify: `apps/web/app/(app)/transactions/TransactionForm.tsx`
+- Modify: `apps/web/app/(app)/transactions/page.tsx`
+- Modify: `apps/web/src/ui/isEditable.ts`
+- Modify: `apps/web/scripts/measure-panel.ts`
+
+- [x] **Step 1: `Panel` says how a close came, and latches the entrance each time it shows**
+
+In `apps/web/src/ui/Panel.tsx`, add `useLayoutEffect` to the React import. Before `interface Props`, add:
+
+```tsx
+/** How a close came: Esc is the keyboard; the ✕ and the scrim are the pointer. */
+export type CloseFrom = 'key' | 'pointer';
+```
+
+Change the type of `onClose` to `onClose?: (from: CloseFrom) => boolean;`. Replace the latch, `close` and the
+timer's cleanup with:
+
+```tsx
+  // The entrance plays once, when the panel shows: a later change of `instant` must not replay it.
+  // A page can keep a panel mounted and hidden in `<Activity>` (the new transaction form): the
+  // panel mounts once, while hidden, and shows many times. Layout effects run again each time it
+  // shows, before the paint, so the latch takes the `instant` of that showing.
+  const [enteredInstantly, setEnteredInstantly] = useState(instant);
+  const instantNow = useRef(instant);
+  useLayoutEffect(() => {
+    instantNow.current = instant;
+  });
+  useLayoutEffect(() => {
+    setEnteredInstantly(instantNow.current);
+  }, []);
+
+  // A page that owns the panel closes it at once. Otherwise closing is a navigation, which unmounts
+  // the panel at once: play the exit first, then go.
+  const close = useCallback(
+    (from: CloseFrom) => {
+      if (closingProp) return;
+      if (onClose?.(from) === true) return;
+      if (closingFor === closeHref) return;
+      clearTimeout(timer.current);
+      setClosingFor(closeHref);
+      timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
+    },
+    [router, closeHref, closingFor, onClose, closingProp],
+  );
+
+  // Unmounted, or hidden in `<Activity>`: a panel that shows again starts open.
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+      setClosingFor(null);
+    },
+    [],
+  );
+```
+
+The Esc listener calls `close('key')`. `onLinkClick` (the ✕ and the scrim) calls `close('pointer')`. Conti and
+Profilo pass no `onClose`, so they do not change.
+
+- [x] **Step 2: `TransactionsPanels` keeps the new form in `<Activity>`**
+
+In `apps/web/app/(app)/transactions/TransactionsPanels.tsx`:
+
+1. Import `Activity` from `react` and `type CloseFrom` from `Panel`.
+2. Rename `View.opened` to `draft`, and add this function before `shownOf`:
+
+```tsx
+/** The new form's key once `to` takes the place of the current panel: a form that leaves is spent. */
+function draftAfter(current: View, to: PanelState): number {
+  return current.panel.kind === 'new' && to.kind !== 'new' ? current.draft + 1 : current.draft;
+}
+```
+
+3. The key changes when the form leaves the screen, not when it opens. In `follow`, `go` and the exit's timer, the
+   new state is:
+
+```tsx
+// follow
+{ panel: next, closing: false, instant: true, draft: draftAfter(current, next) }
+// go, a panel that opens
+{ panel: next, closing: false, instant, draft: draftAfter(current, next) }
+// the exit's timer
+{ ...current, panel: NONE, closing: false, draft: draftAfter(current, NONE) }
+```
+
+`go` to `none` only sets `closing`, and the panel stays `new`. Thus «Nuova» during the exit reverses the exit and
+keeps the draft.
+
+4. Add `const side = useRef<HTMLDivElement>(null);` and give it to `<div className={styles.side}>`. In the effect that
+   gives the focus back, a focus left in the side counts as lost. The browser can keep the focus on a hidden input
+   until its next style update:
+
+```tsx
+    if (active !== null && active !== document.body && side.current?.contains(active) !== true)
+      return;
+```
+
+5. Esc closes with no motion:
+
+```tsx
+  const closeToList = useCallback(
+    (from: CloseFrom) => go(baseHref, { instant: from === 'key' }),
+    [go, baseHref],
+  );
+  const closeToDetail = useCallback(
+    (from: CloseFrom) => go(editCloseHref, { instant: from === 'key' }),
+    [go, editCloseHref],
+  );
+```
+
+6. Replace the `panel.kind === 'new'` branch of `content` with a panel that is always there:
+
+```tsx
+  // Decision 9: the new form waits hidden, so «Nuova» only shows it. `<Activity>` renders it in the
+  // background, keeps it out of the layout with `display: none`, and runs its effects (Esc, the
+  // focus) only while it shows. Shown again, the panel plays its entrance from the start.
+  const creating = panel.kind === 'new';
+  const newPanel =
+    newForm === null ? null : (
+      <Activity mode={creating ? 'visible' : 'hidden'}>
+        <Panel
+          sheet
+          bare
+          title={props.newTitle}
+          closeHref={baseHref}
+          closeLabel={props.closeLabel}
+          onClose={closeToList}
+          closing={creating && view.closing}
+          instant={view.instant}
+        >
+          <Fragment key={view.draft}>{newForm}</Fragment>
+        </Panel>
+      </Activity>
+    );
+```
+
+`content` keeps only the edit form and the detail. The layout becomes:
+
+```tsx
+  const formOpen = creating || editing !== null;
+  const open = (creating && newPanel !== null) || content !== null;
+  // …
+      <div
+        className={styles.layout}
+        data-panel={open && !view.closing ? '' : undefined}
+        data-instant={view.instant ? '' : undefined}
+      >
+        <div className={styles.list}>{props.children}</div>
+        <div className={styles.side} ref={side}>
+          {newPanel}
+          {content}
+        </div>
+      </div>
+```
+
+- [x] **Step 3: The form focuses the amount from an effect, and its ids are unique**
+
+React applies `autoFocus` only when an element mounts. A hidden form mounts once, so `autoFocus` does not apply when
+it shows. In `apps/web/app/(app)/transactions/TransactionForm.tsx`, remove `autoFocus={view.mode === 'new'}` from
+`AmountField`, and add after `focusField`:
+
+```tsx
+  // The new form opens on the amount, as the phone's keypad does. An effect, not `autoFocus`: the
+  // page keeps this form hidden in `<Activity>` and shows it many times, and an effect runs again
+  // each time it shows. The panel is on screen already, so the browser needs no scroll.
+  useEffect(() => {
+    if (view.mode !== 'new') return;
+    form.current
+      ?.querySelector<HTMLElement>('[data-field="amount"] input')
+      ?.focus({ preventScroll: true });
+  }, [view.mode]);
+```
+
+The hidden new form and the edit form can be in the DOM together. Replace the fixed ids `tx-date` and `tx-tags`
+with `useId()`:
+
+```tsx
+  // A hidden new form and an edit form can be in the DOM together: their ids must differ.
+  const dateId = useId();
+  const tagsId = useId();
+```
+
+- [x] **Step 4: Other initial values are a new form**
+
+The hidden form keeps its state when the server sends a new `newForm` (a prefill from Conti, a new day). In
+`apps/web/app/(app)/transactions/page.tsx`, give the new `TransactionForm` a key:
+
+```tsx
+            <TransactionForm
+              // The form waits hidden between openings: other initial values (a prefill, a new
+              // day) are a new form, not the old draft.
+              key={JSON.stringify([newForm.initial, newForm.closeGoalId])}
+              view={newForm}
+```
+
+- [x] **Step 5: A hidden form does not own the keys**
+
+`ignoresShortcut` looked for `form[data-owns-keys]` in the DOM. The hidden form is in the DOM, so N and ↑ ↓ did
+nothing on Transazioni. In `apps/web/src/ui/isEditable.ts`, replace its last line with:
+
+```ts
+  for (const owner of document.querySelectorAll(OWNS_PAGE)) {
+    if (owner.getClientRects().length > 0) return true;
+  }
+  return false;
+```
+
+- [x] **Step 6: The measurement counts a visible panel**
+
+In `apps/web/scripts/measure-panel.ts`, «panel in the DOM» and «panel out of the DOM» look for a visible `aside`.
+The observer also watches `style`, because `<Activity>` shows and hides with `display`. It reads the time before
+`getClientRects`, so the layout that the call forces does not count:
+
+```ts
+  // `<Activity>` hides a panel with `display: none` on the `aside`: a hidden one does not count.
+  // The time is read before `getClientRects`, whose layout must not count either.
+  const visiblePanel = () =>
+    [...document.querySelectorAll('aside')].some((aside) => aside.getClientRects().length > 0);
+  let panel = visiblePanel();
+  new MutationObserver(() => {
+    if (start === null) return;
+    const at = Math.round(performance.now() - start);
+    const now = visiblePanel();
+    if (now === panel) return;
+    panel = now;
+    marks.push({ t: at, what: now ? 'panel in the DOM' : 'panel out of the DOM' });
+  }).observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['style'],
+  });
+```
+
+The «✕ on the detail» scenario waits for `aside:visible` and clicks `aside:visible a[aria-label]`.
+
+- [x] **Step 7: Check in the browser**
+
+Build and start on 3100. At 1440px:
+
+1. «Nuova», type an amount, «Annulla», «Nuova» again: the draft is empty.
+2. «Nuova», ✕, «Nuova» during the exit: the exit reverses and the draft stays.
+3. `N`, Esc, `N`: no animation on the panel and no transition on the list.
+4. A click on «Nuova» plays the entrance, also after a keyboard opening.
+5. The focus goes to the amount on open, and back to «Nuova» on close.
+6. With the form hidden, ↓ opens the first row and ↓ again moves the selection.
+7. A save lands on the detail of the saved row. «Nuova» after it is empty.
+8. «Metti da parte» from a goal in Conti opens a prefilled form. After its close, `N` opens an empty form.
+9. Esc on the edit form goes back to the detail with no motion. No two elements share an id.
+
+At 390px, the FAB raises the sheet with `sheet-in` and `scrim-in`, the second time too.
+
+Result on 2026-10-08: every line passes, with no console errors.
+
+- [x] **Step 8: Measure**
+
+```bash
+cd apps/web && pnpm measure:panel http://localhost:3100
+```
+
+Output on 2026-10-08 (production build, local Postgres):
+
+```text
+== «New transaction», wide, CPU 1×
+      8 ms  input
+     29 ms  panel in the DOM
+     76 ms  list starts to change (1120px)
+    259 ms  list settles (676px)
+   1000 ms  longest frame 33 ms
+  server requests: 0
+  prefetches: 0
+
+== «New transaction», wide, CPU 4×
+      8 ms  input
+     75 ms  panel in the DOM
+    126 ms  list starts to change (1120px)
+    309 ms  list settles (676px)
+   1000 ms  longest frame 76 ms
+  server requests: 0
+  prefetches: 0
+
+== N, wide, CPU 4×
+      3 ms  input
+     73 ms  list starts to change (1120px)
+     73 ms  list settles (676px)
+     85 ms  panel in the DOM
+   1000 ms  longest frame 73 ms
+  server requests: 0
+  prefetches: 0
+
+== «New transaction» from Home, wide, CPU 4×
+      6 ms  input
+    277 ms  list starts to change (1120px)
+    277 ms  list settles (676px)
+    323 ms  panel in the DOM
+   1000 ms  longest frame 100 ms
+  server requests: 1 (/transactions?new&_rsc=_THLMR_XtjiYRnEr)
+  prefetches: 0
+
+== Click on a row, wide, CPU 4×
+      8 ms  input
+     30 ms  panel in the DOM
+     94 ms  list starts to change (1120px)
+    277 ms  list settles (676px)
+   1000 ms  longest frame 77 ms
+  server requests: 0
+  prefetches: 0
+
+== ✕ on the detail, wide, CPU 4×
+      5 ms  input
+     27 ms  list starts to change (676px)
+    143 ms  list settles (1120px)
+    169 ms  panel out of the DOM
+   1000 ms  longest frame 17 ms
+  server requests: 0
+  prefetches: 0
+
+== FAB, phone, CPU 4×
+      7 ms  input
+     44 ms  panel in the DOM
+   1000 ms  longest frame 43 ms
+  server requests: 0
+  prefetches: 0
+```
+
+Over five runs, «panel in the DOM» for «New transaction» was 21–33 ms at CPU 1× and 65–88 ms at CPU 4×. The FAB
+was 44–68 ms. «input» is at 7–8 ms in each run. Before this task the numbers were 136 ms, 224 ms and 189 ms.
+
+The CPU 4× target (≤ 50 ms after «input») is not met. The CPU 1× target (≤ 20 ms after «input») is met in three
+runs of five. The JavaScript of the click is now about 10 ms at CPU 4×. The rest is the style and layout of the form
+that shows: `focus()` must have a layout, so it does that work in the click. With `focus()` replaced by a no-op,
+«New transaction» measured 24–25 ms at CPU 4×. The first frame must do the same layout before it paints, so a later
+`focus()` only moves the mark, not the paint. Task 9 decides about this target.
+
+- [x] **Step 9: Typecheck, lint, test**
+
+Run: `rtk proxy pnpm --filter web typecheck`, then `rtk proxy pnpm lint`, then `rtk proxy pnpm --filter web test`.
+Expected: no type errors; no `lint/…` lines; all tests pass.
+
+- [x] **Step 10: Commit**
+
+```bash
+pnpm exec biome check --write "apps/web/app/(app)/transactions" apps/web/src/ui apps/web/scripts/measure-panel.ts
+rtk git add "apps/web/app/(app)/transactions" apps/web/src/ui apps/web/scripts/measure-panel.ts \
+  docs/superpowers/plans/2026-10-07-web-panel-feel.md docs/superpowers/specs/2026-10-07-web-panel-feel.html
+rtk git commit -m "perf(web): the new form waits hidden; Esc closes at once"
 ```
 
 ---

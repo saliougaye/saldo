@@ -2,10 +2,21 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type MouseEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
 import styles from './Panel.module.css';
+
+/** How a close came: Esc is the keyboard; the ✕ and the scrim are the pointer. */
+export type CloseFrom = 'key' | 'pointer';
 
 interface Props {
   title: string;
@@ -18,15 +29,16 @@ interface Props {
   sheet?: boolean;
   /**
    * A page that keeps the panel in client state: the ✕, the scrim and Esc ask it to close,
-   * and it closes at once. It answers false when closing has to be a navigation after all; the panel
-   * then closes as a panel without this prop does.
+   * and it closes at once. `from` says which: the keyboard closes with no motion. It answers false
+   * when closing has to be a navigation after all; the panel then closes as a panel without this
+   * prop does.
    */
-  onClose?: () => boolean;
+  onClose?: (from: CloseFrom) => boolean;
   /** The page is playing the exit (with `onClose`); it takes the panel out when the exit has played. */
   closing?: boolean;
   /**
-   * Opened or closed from the keyboard: no entrance and no exit. The entrance reads it once, at mount
-   * (an open panel never plays it again); the exit reads it live.
+   * Opened or closed from the keyboard: no entrance and no exit. The entrance reads it once, when
+   * the panel shows (an open panel never plays it again); the exit reads it live.
    */
   instant?: boolean;
   children: ReactNode;
@@ -66,21 +78,41 @@ export function Panel({
   // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
   const [closingFor, setClosingFor] = useState<string | null>(null);
   const closing = closingProp || closingFor === closeHref;
-  // The entrance plays once, when the panel mounts: a later change of `instant` must not replay it.
-  const [enteredInstantly] = useState(instant);
+  // The entrance plays once, when the panel shows: a later change of `instant` must not replay it.
+  // A page can keep a panel mounted and hidden in `<Activity>` (the new transaction form): the
+  // panel mounts once, while hidden, and shows many times. Layout effects run again each time it
+  // shows, before the paint, so the latch takes the `instant` of that showing.
+  const [enteredInstantly, setEnteredInstantly] = useState(instant);
+  const instantNow = useRef(instant);
+  useLayoutEffect(() => {
+    instantNow.current = instant;
+  });
+  useLayoutEffect(() => {
+    setEnteredInstantly(instantNow.current);
+  }, []);
 
   // A page that owns the panel closes it at once. Otherwise closing is a navigation, which unmounts
   // the panel at once: play the exit first, then go.
-  const close = useCallback(() => {
-    if (closingProp) return;
-    if (onClose?.() === true) return;
-    if (closingFor === closeHref) return;
-    clearTimeout(timer.current);
-    setClosingFor(closeHref);
-    timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
-  }, [router, closeHref, closingFor, onClose, closingProp]);
+  const close = useCallback(
+    (from: CloseFrom) => {
+      if (closingProp) return;
+      if (onClose?.(from) === true) return;
+      if (closingFor === closeHref) return;
+      clearTimeout(timer.current);
+      setClosingFor(closeHref);
+      timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
+    },
+    [router, closeHref, closingFor, onClose, closingProp],
+  );
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  // Unmounted, or hidden in `<Activity>`: a panel that shows again starts open.
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+      setClosingFor(null);
+    },
+    [],
+  );
 
   // Full-screen, the panel covers the list the focus was left on: move it into the panel. Beside
   // the list it stays where it was, so the next row is one Tab away.
@@ -94,7 +126,7 @@ export function Panel({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented || isEditable(event.target)) return;
-      close();
+      close('key');
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -105,7 +137,7 @@ export function Panel({
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
       return;
     event.preventDefault();
-    close();
+    close('pointer');
   };
 
   return (
