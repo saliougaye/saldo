@@ -17,6 +17,13 @@ test('the first-run wizard creates the admin with a passkey', async ({
 
   // The server step saves before the next one shows: wait for it, or the fills below land on step 1.
   await expect(page.getByRole('heading', { name: t('setup.accountTitle') })).toBeVisible();
+  // An empty name is refused before the ceremony: no passkey is asked for.
+  await page.getByRole('button', { name: t('setup.createButton') }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: t('web.auth.nameRequiredTitle') }),
+  ).toBeVisible();
+  expect(await authenticator.credentials()).toHaveLength(0);
+
   await page.getByLabel(t('setup.yourNameLabel'), { exact: true }).fill(ADMIN.name);
   await page.getByLabel(t('web.auth.emailLabel')).fill(ADMIN.email);
   await page.getByRole('button', { name: t('setup.createButton') }).click();

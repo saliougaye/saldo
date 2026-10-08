@@ -28,31 +28,26 @@ in one movement. Still open:
 - the same pattern on Conti and Profilo;
 - the motion the phone has that the web lacks.
 
+### Web sign-in: closing the passkey prompt shows the generic error
+
+Found by the Playwright suite (`auth.spec.ts`, kept as `test.fixme`). When a person closes the browser's passkey prompt,
+the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it as a `WebAuthnError` with the code
+`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`, and Better Auth's client passes that code on. The `CANCELLED` set in
+`describeAuthError` holds `NotAllowedError` and not that code. The person sees the generic alert and never
+`sync.cancelled`. Confirm it in the browser, add the code to the set, and turn the `fixme` into a test.
+
 ## Features
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### End-to-end tests: Playwright for the web app, Maestro for the phone
+### End-to-end tests: Maestro for the phone
 
 Decided 2026-10-05. The test suite keeps unit tests only for complex logic, security guards and real bug regressions.
 Integration and end-to-end tests cover the rest. The prune removed the component, view-model and copy tests, so the
 flows below are now covered by nobody. Write them before the next UI change on each screen.
 
-The web app has no end-to-end tests. Add Playwright, and use its virtual WebAuthn authenticator for passkeys:
-
-1. Auth and onboarding: the setup wizard, register with an invite (errors on the right step), passkey sign-in,
-   recovery, the passkey list (the last passkey cannot be deleted).
-2. Shell and PWA: the nav tabs (Admin only for an admin), the `/budgets` redirect keeps its query, the manifest and
-   its icons, the offline page, the language from the browser.
-3. Transactions: day groups and totals, «In arrivo», filter chips, detail panel, create, edit and delete, the
-   stale-version conflict, and the panel flows of the 2026-10-07 plan: the panel
-   opens and closes with no server request; Back and Forward through panels; `N`, Esc and ↑ ↓ with no motion;
-   a new draft on each opening; a reversal during the exit; the hidden form does not block `N` and ↑ ↓.
-4. Home and Statistiche: the summary, the featured budget and goal, the split by category and tag, period stepping.
-5. Accounts and goals: groups, pockets, archive and restore, the card statement, a goal from creation to close.
-6. Budgets, categories and tags: budget states, category archive with a move, reorder, tag merge and delete.
-7. Profile: the preference panels, currency change, time zone, email states.
-8. Admin, MCP and OAuth: accounts, invites, settings locked by the environment, connectors, the consent page.
+The web app has its Playwright suite (`apps/web/e2e`, plan `docs/superpowers/plans/2026-10-06-e2e-tests.md`). One web
+flow is still open: a setting locked by the environment. It needs a second server with its own environment.
 
 The phone has two Maestro flows (`apps/mobile/maestro/`). Add:
 
