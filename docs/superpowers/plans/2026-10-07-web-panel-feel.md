@@ -1419,6 +1419,8 @@ export function TransactionsPanels(props: Props) {
   // The top bar's button, the FAB and N: on this page they open the form here.
   useEffect(() => {
     const onNew = (event: Event) => {
+      // No form to show here (the URL holds a deletion notice or a prefill): the link navigates.
+      if (newForm === null) return;
       const current = viewRef.current;
       // Already open: N must not replace it, nor its prefill, with a navigation.
       if (current.panel.kind === 'new' && !current.closing) {
@@ -1430,7 +1432,7 @@ export function TransactionsPanels(props: Props) {
     };
     window.addEventListener(NEW_TRANSACTION_EVENT, onNew);
     return () => window.removeEventListener(NEW_TRANSACTION_EVENT, onNew);
-  }, [go, baseHref]);
+  }, [go, baseHref, newForm]);
 
   const { panel } = view;
   // The row whose panel is in the DOM, and the selected row: none while the exit plays.
@@ -2024,6 +2026,11 @@ timer's cleanup with:
       if (onClose?.(from) === true) return;
       if (closingFor === closeHref) return;
       clearTimeout(timer.current);
+      // The keyboard closes on the next frame: no exit (spec §06).
+      if (from === 'key') {
+        router.push(closeHref);
+        return;
+      }
       setClosingFor(closeHref);
       timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
     },
@@ -2041,7 +2048,8 @@ timer's cleanup with:
 ```
 
 The Esc listener calls `close('key')`. `onLinkClick` (the ✕ and the scrim) calls `close('pointer')`. Conti and
-Profilo pass no `onClose`, so they do not change.
+Profilo pass no `onClose`: Esc now navigates at once there, and the ✕ keeps the exit. `onLinkClick` uses
+`isPlainClick` from `./PanelNav` for the modifier check.
 
 - [x] **Step 2: `TransactionsPanels` keeps the new form in `<Activity>`**
 

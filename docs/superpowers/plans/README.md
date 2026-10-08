@@ -674,8 +674,10 @@ on the simulator with Maestro (see the plan's status section). Changing the cade
   it with `history.pushState`; the server renders every row's detail and the new form. The list makes room with
   a transition on its grid track. `N` and ↑ ↓ open without motion. «Modifica» is still a navigation.
 
-**Status:** met. At CPU 4× the panel shows 59 ms after the input for «New transaction» (was 327 ms), 17 ms for a row
-(was 116 ms) and 38 ms for the FAB (was 290 ms), with 0 server requests. The ✕ takes 166 ms (was 199 ms). The
+**Status:** met. The targets come from the measurements during the work: «New transaction» 40 ms at CPU 1× and
+100 ms at 4×, and a row's longest frame 70 ms (one run of six was 76 ms). At CPU 4× the panel shows 59 ms after the
+input for «New transaction» (before: 294 ms from the click), 17 ms for a row (before: 187 ms) and 38 ms for the FAB
+(before: 228 ms), with 0 server requests. The ✕ takes 166 ms. The
 `/transactions` document grows from 99.7 KB to 156.7 KB (14.7 KB to 19.8 KB gzip). Lint, typecheck and tests are green.
 
 ## Future (not POC)

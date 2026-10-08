@@ -19,10 +19,14 @@ phone, then a plan for both.
 
 Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-feel.md`): on Transazioni,
 «Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
-in one movement. Still open: the production region (`fra1::iad1` — the function runs in Washington, Neon in
-Frankfurt), the four queries in a chain on every page, `loading.tsx` and `useLinkStatus` for the top-level
-pages, the edit form (still a navigation), the same pattern on Conti and Profilo, and the motion the phone has
-that the web lacks.
+in one movement. Still open:
+
+- the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
+- the four queries in a chain on every page;
+- `loading.tsx` and `useLinkStatus` for the top-level pages;
+- the edit form (still a navigation);
+- the same pattern on Conti and Profilo;
+- the motion the phone has that the web lacks.
 
 ## Features
 

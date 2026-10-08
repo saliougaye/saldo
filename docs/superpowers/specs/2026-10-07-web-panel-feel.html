@@ -290,7 +290,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
       <ol class="steps">
         <li>The panel opens and closes in the frame of the click. The browser sends no request.</li>
         <li>At 1024px and wider, the list narrows in one movement while the panel enters. The amounts slide. They do not jump.</li>
-        <li>The close removes the panel from the layout at once. No empty column stays on the screen.</li>
+        <li>On close, the list widens again over 150 ms while the panel plays its exit. Then the panel leaves the layout. No empty column stays on the screen.</li>
       </ol>
       <p>Below 1024px the panel is a full screen or a sheet over the list. The list does not change width there, so only items 1 and 3 apply.</p>
     </div>
@@ -356,7 +356,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         </tbody>
       </table>
     </div>
-    <div class="callout"><span class="meta">Targets</span><p>The targets for «New transaction» and the FAB are 40 ms and 100 ms, because the time left is the browser's style and layout of the form that appears, which <code>focus()</code> forces in the click. The targets for a row allow the first frame to lay out the panel and the list once; the track transition then reflows the list on each frame, and that keeps the movement reversible. The «After» column is the median of three to six runs on 2026-10-08 (production build, 161 rows). The «Before» numbers are measured from the click; the «After» numbers are measured from the input.</p></div>
+    <div class="callout"><span class="meta">Targets</span><p>The targets for «New transaction» and the FAB are 40 ms and 100 ms. The time left is the browser's style and layout of the form that appears. <code>focus()</code> forces that work in the click. The targets for a row allow the first frame to lay out the panel and the list once. The track transition then reflows the list on each frame. That keeps the movement reversible. The «After» column is the median of three to six runs on 2026-10-08 (production build, 161 rows). The «Before» numbers are measured from the click; the «After» numbers are measured from the input.</p></div>
   </div>
 </section>
 
@@ -370,7 +370,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     </div>
     <div class="prose">
       <p>A client component, <code>TransactionsPanels</code>, keeps the state. When the user changes only the panel, the component sets the state and then calls <code>history.pushState</code>. Next.js syncs that URL into <code>useSearchParams</code> and does not ask the server.</p>
-      <p>When the URL changes for another reason (a navigation, Back, a save), the component reads the new URL in the same render and shows that panel.</p>
+      <p>When the URL changes for another reason (a navigation, Back, a save), the component reads the new URL before the next paint and shows that panel.</p>
       <p>The server renders the new form and the detail of every row in the list, in one response. Thus the client has the content of each panel before the click.</p>
       <p>The client renders the new form in advance and keeps it hidden. «New transaction» only shows it. Each opening still starts a new draft: after a close, the client renders the next empty form in the background.</p>
       <div class="callout"><span class="meta">Exception</span><p>«Edit» stays a navigation. The edit form needs the balances without the edited row. One form for each row would repeat the accounts, categories and tags for each row. The detail stays on the screen while the edit form loads.</p></div>
@@ -409,7 +409,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <path class="ln-ink" d="M170 334 C 170 450, 600 450, 772 338" marker-end="url(#ah-ink)"/>
         <text x="250" y="470" font-size="15">Save: server, then the saved row's Detail</text>
       </svg>
-      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play the exit first. Esc closes on the next frame.</figcaption>
+      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play the exit first. Esc closes on the next frame in every case.</figcaption>
     </figure>
   </div>
 </section>
@@ -425,7 +425,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     <div class="prose">
       <p>The rule compares the current URL and the target URL. It ignores the three panel parameters: <code>t</code>, <code>new</code> and <code>edit</code>. If the path and all other parameters are equal, the change is in place. Otherwise it is a navigation, as today.</p>
       <p>Thus a filter, a period, a delete toast (<code>?deleted=</code>) or the prefill of «Set aside» always go to the server. The toast and the prefill belong to the page that the server rendered. An in-place change must not leave them on the screen.</p>
-      <p>The top bar's «New transaction», the FAB and <kbd>N</kbd> work on every page. They first send a cancelable event, <code>saldo:new-transaction</code>, on <code>window</code>. Transazioni cancels the event and opens the form in place. On the other pages nobody cancels it, and the link goes to <code>/transactions?new</code>.</p>
+      <p>The top bar's «New transaction», the FAB and <kbd>N</kbd> work on every page. They first send a cancelable event, <code>saldo:new-transaction</code>, on <code>window</code>. Transazioni cancels the event and opens the form in place. On the other pages nobody cancels it, and the link goes to <code>/transactions?new</code>. Transazioni also does not cancel the event when the URL holds <code>?deleted=</code> or a prefill. The link then navigates.</p>
     </div>
   </div>
   <div class="visual">
@@ -483,8 +483,8 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     <div class="prose">
       <p>The list reflows on each frame of the transition. Thus the amounts slide to their new position. A click during the movement reverses it from the current position, because a CSS transition starts from the current value.</p>
       <p>The panel's column clips its content while it grows. The panel stays at the trailing edge of the column. Thus the panel appears from the side where it stays.</p>
-      <p>On close, the track goes back to 0 at once, while the panel plays its exit. The panel leaves the DOM after its exit. No empty column stays.</p>
-      <div class="callout"><span class="meta">Why not a View Transition</span><p>A View Transition animates snapshots. The text of the list stretches while its box changes size, and the page ignores input until the animation ends. The track transition has neither problem. Its cost is a layout on each frame. The plan measures the longest frame, and adds <code>content-visibility: auto</code> to the day sections if that frame is longer than 50 ms at CPU 4×.</p></div>
+      <p>On close, the track goes back to 0 over 150 ms, while the panel plays its exit. The list settles at 141 ms (measured). The panel leaves the DOM after its exit. No empty column stays.</p>
+      <div class="callout"><span class="meta">Why not a View Transition</span><p>A View Transition animates snapshots. The text of the list stretches while its box changes size, and the page ignores input until the animation ends. The track transition has neither problem. Its cost is a layout on each frame. The plan tried <code>content-visibility: auto</code> on the day sections. It did not help. The target for the longest frame is now 70 ms at CPU 4×.</p></div>
     </div>
   </div>
   <div class="visual">
@@ -560,7 +560,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <thead><tr><th scope="col">Input</th><th scope="col">Panel</th><th scope="col">List (1024px and wider)</th></tr></thead>
         <tbody>
           <tr><td>Click, tap</td><td>In: 200 ms, slide 16px and fade. Out: 150 ms.</td><td>Track to 420px in 200 ms (<code>--motion-fade</code>, <code>--motion-swap-easing</code>). Back to 0 in 150 ms.</td></tr>
-          <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd></td><td>On the next frame</td><td>On the next frame</td></tr>
+          <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd></td><td>On the next frame. <kbd>Esc</kbd> is always instant. <kbd>N</kbd> and <kbd>↑</kbd> <kbd>↓</kbd> navigate when the URL holds <code>?deleted=</code> or a prefill.</td><td>On the next frame</td></tr>
           <tr><td>Another row, panel open</td><td>Stays. Only its content changes.</td><td>Does not move</td></tr>
           <tr><td>Back, a filter, a save</td><td>Follows the new URL on the next frame</td><td>On the next frame</td></tr>
           <tr><td>Reduce motion on</td><td colspan="2">The global rule of <code>globals.css</code> applies: the panel appears and goes, with no slide.</td></tr>
@@ -627,7 +627,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
           <tr><td>Save</td><td>A navigation. Then the detail of the saved row is open.</td></tr>
           <tr><td>Delete</td><td>A navigation. The toast with «Undo» shows. While it shows, a click on a row is a navigation.</td></tr>
           <tr><td>Version check</td><td>The edit form and «Delete» send the <code>updatedAt</code> that the page loaded, as today.</td></tr>
-          <tr><td>Conti, Profilo</td><td>No change. They use <code>Panel</code> without the new props.</td></tr>
+          <tr><td>Conti, Profilo</td><td>They use <code>Panel</code> without the new props, with three changes. The leaving scrim no longer takes clicks. <kbd>Esc</kbd> closes at once. A hidden dialog or form no longer blocks shortcuts.</td></tr>
         </tbody>
       </table>
     </div>
