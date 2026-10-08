@@ -92,6 +92,13 @@ click can reverse, and no motion for a key that a person presses many times a da
    input until the animation ends. A track transition reflows the list on every frame, but the amounts slide to
    their new place, and a click during the movement reverses it from where it is. Task 9 checks the longest frame
    at CPU 4×. Task 9 Step 5 adds `content-visibility: auto` to the day sections if that frame is too long.
+
+   **Tried and reverted on 2026-10-08.** At CPU 4× a row click gave a 62 ms first frame (target 50), and
+   `content-visibility` did not help. So a View Transition was built (commit `07d5daf`). It adds a frame before
+   the panel shows, because the browser first captures the old page: a row took 76 ms instead of 15 ms, and
+   «Nuova transazione» took 137 ms instead of 59 ms. The user compared both builds by hand and kept the track
+   transition. Commit `ac440cc` reverts the View Transition. Task 9 sets the targets for the track transition
+   from the measurements.
 6. **The keyboard opens and closes without motion.** `N` and ↑ ↓ open a panel that is there on the next frame.
    The pointer gets the motion: 200 ms in (`--motion-fade`, `--motion-swap-easing`), 150 ms out, the values that
    `Panel` already uses.
