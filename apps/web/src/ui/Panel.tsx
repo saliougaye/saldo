@@ -53,7 +53,8 @@ const EXIT_MS = 150;
 /**
  * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — 420px beside the list on a wide
  * screen, the whole screen on a narrow one. Rendered only when something is selected, so it mounts —
- * and slides in — when the panel opens, and stays put while the selection moves between rows.
+ * and slides in — when the panel opens, and stays put while the selection moves between rows. A page
+ * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
  * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
@@ -116,7 +117,8 @@ export function Panel({
 
   // Full-screen, the panel covers the list the focus was left on: move it into the panel. Beside
   // the list it stays where it was, so the next row is one Tab away.
-  // Unless something inside already took it: a form that opens on its first field (`autoFocus`).
+  // Unless something inside already took it: a form that opens on its first field (the form's focus
+  // effect, which runs first: child effects precede the parent's).
   useEffect(() => {
     const panel = heading.current?.closest('aside');
     if (panel?.contains(document.activeElement) === true) return;

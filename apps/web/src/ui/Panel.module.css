@@ -224,7 +224,7 @@
   }
 }
 
-/* Opened from the keyboard: the panel is there on the next frame. Latched at mount, so it never replays. */
+/* Opened from the keyboard: the panel is there on the next frame. Latched each time the panel shows, so it never replays. */
 .panel[data-still],
 .scrim[data-still] {
   animation: none;

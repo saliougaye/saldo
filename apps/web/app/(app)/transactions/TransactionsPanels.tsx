@@ -25,7 +25,7 @@ import { type CloseFrom, Panel } from '../../../src/ui/Panel';
 import { type PanelNav, PanelNavContext } from '../../../src/ui/PanelNav';
 import styles from './transactions.module.css';
 
-/** `Panel`'s own exit: the panel leaves the DOM once it has played. */
+/** `Panel`'s own exit: the panel leaves the screen once it has played. */
 const EXIT_MS = 150;
 
 const NONE: PanelState = { kind: 'none' };
@@ -231,13 +231,17 @@ export function TransactionsPanels(props: Props) {
   }, [view.closing, view.panel, view.instant]);
 
   // The panel has left: the focus, which was in it, goes back where it came from. Not when the
-  // person has put it somewhere else meanwhile. A hidden form is still in the DOM, and the browser
-  // may not have moved the focus out of it yet.
+  // person has put it somewhere else meanwhile. A focus still in the side counts as lost: React
+  // hides the new form in a deferred (Offscreen) render, so in this commit the old form, with its
+  // focused input, is still in the DOM. The browser may also not have moved the focus out of a
+  // `display: none` input yet.
   useEffect(() => {
     if (view.panel.kind !== 'none') return;
     const target = returnTo.current;
     returnTo.current = null;
     const active = document.activeElement;
+    // Never leave the focus on a hidden input, even with nowhere to send it back.
+    if (active instanceof HTMLElement && side.current?.contains(active) === true) active.blur();
     if (!(target instanceof HTMLElement) || !target.isConnected) return;
     if (active !== null && active !== document.body && side.current?.contains(active) !== true)
       return;
@@ -261,7 +265,7 @@ export function TransactionsPanels(props: Props) {
   }, [go, baseHref]);
 
   const { panel } = view;
-  // The row whose panel is in the DOM, and the selected row: none while the exit plays.
+  // The row whose panel is on screen, and the selected row: none while the exit plays.
   const panelId = panel.kind === 'detail' || panel.kind === 'edit' ? panel.id : null;
   const selectedId = view.closing ? null : panelId;
   const nav = useMemo<PanelNav>(() => ({ selectedId, go }), [selectedId, go]);

@@ -2062,12 +2062,18 @@ function draftAfter(current: View, to: PanelState): number {
 keeps the draft.
 
 4. Add `const side = useRef<HTMLDivElement>(null);` and give it to `<div className={styles.side}>`. In the effect that
-   gives the focus back, a focus left in the side counts as lost. The browser can keep the focus on a hidden input
-   until its next style update:
+   gives the focus back, a focus left in the side counts as lost. React hides the new form in a deferred (Offscreen)
+   render, so in that commit the old form, with its focused input, is still in the DOM. Also, the browser can keep
+   the focus on a `display: none` input until its next style update. The effect removes that focus first:
 
 ```tsx
+    const active = document.activeElement;
+    // Never leave the focus on a hidden input, even with nowhere to send it back.
+    if (active instanceof HTMLElement && side.current?.contains(active) === true) active.blur();
+    if (!(target instanceof HTMLElement) || !target.isConnected) return;
     if (active !== null && active !== document.body && side.current?.contains(active) !== true)
       return;
+    target.focus();
 ```
 
 5. Esc closes with no motion:
