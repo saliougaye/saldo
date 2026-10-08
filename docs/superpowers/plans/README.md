@@ -666,6 +666,20 @@ its cadence from the detail; stop it and see only the future go; `SYNC_SCHEMA_VE
 on the simulator with Maestro (see the plan's status section). Changing the cadence from the detail is covered by
 `recurrenceService.test.ts` and was not tapped through on the device. Android unverified, as for every phase.
 
+### Picked up from `TODO.md` on 2026-10-07 ✅ done
+
+**Plan:** `2026-10-07-web-panel-feel.md` · **Spec:** `specs/2026-10-07-web-panel-feel.html`, §17.1.7
+
+- **Web: the Transazioni panel opens in the frame of the click.** The panel is client state and the URL follows
+  it with `history.pushState`; the server renders every row's detail and the new form. The list makes room with
+  a transition on its grid track. `N` and ↑ ↓ open without motion. «Modifica» is still a navigation.
+
+**Status:** met. The targets come from the measurements during the work: «New transaction» 40 ms at CPU 1× and
+100 ms at 4×, and a row's longest frame 70 ms (one run of six was 76 ms). At CPU 4× the panel shows 59 ms after the
+input for «New transaction» (before: 294 ms from the click), 17 ms for a row (before: 187 ms) and 38 ms for the FAB
+(before: 228 ms), with 0 server requests. The ✕ takes 166 ms. The
+`/transactions` document grows from 99.7 KB to 156.7 KB (14.7 KB to 19.8 KB gzip). Lint, typecheck and tests are green.
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

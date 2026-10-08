@@ -20,11 +20,12 @@ import {
 import { type AppLocale, formatMoney } from '@saldo/i18n/format';
 import { makeTranslator } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
   type KeyboardEvent,
+  useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,7 @@ import { AmountField } from '../../../src/ui/AmountField';
 import { Button } from '../../../src/ui/Button';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
+import { PanelLink } from '../../../src/ui/PanelNav';
 import { Segmented } from '../../../src/ui/Segmented';
 import { Select, type SelectOption } from '../../../src/ui/Select';
 import { Switch } from '../../../src/ui/Switch';
@@ -102,6 +104,9 @@ export function TransactionForm({
   const [tagsOpen, setTagsOpen] = useState(false);
   const [allCategories, setAllCategories] = useState(false);
   const { minorDigits, today } = view;
+  // A hidden new form and an edit form can be in the DOM together: their ids must differ.
+  const dateId = useId();
+  const tagsId = useId();
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
   const set = (patch: Partial<TransactionFormValues>) => {
@@ -175,6 +180,16 @@ export function TransactionForm({
     );
     target?.focus();
   };
+
+  // The new form opens on the amount, as the phone's keypad does. An effect, not `autoFocus`: the
+  // page keeps this form hidden in `<Activity>` and shows it many times, and an effect runs again
+  // each time it shows. The panel is on screen already, so the browser needs no scroll.
+  useEffect(() => {
+    if (view.mode !== 'new') return;
+    form.current
+      ?.querySelector<HTMLElement>('[data-field="amount"] input')
+      ?.focus({ preventScroll: true });
+  }, [view.mode]);
 
   const save = () => {
     if (pending) return;
@@ -330,7 +345,6 @@ export function TransactionForm({
           symbol={symbol}
           symbolPosition={symbolPosition}
           placeholder={placeholder}
-          autoFocus={view.mode === 'new'}
           invalid={invalid('amount')}
         />
       </div>
@@ -496,11 +510,11 @@ export function TransactionForm({
           </div>
         )}
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="tx-date">
+          <label className={styles.label} htmlFor={dateId}>
             {t('txForm.date')}
           </label>
           <input
-            id="tx-date"
+            id={dateId}
             className={styles.input}
             type="date"
             value={values.date}
@@ -529,7 +543,7 @@ export function TransactionForm({
       <p className={styles.separator}>{t('txForm.details')}</p>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="tx-tags">
+        <label className={styles.label} htmlFor={tagsId}>
           {t('transactions.tags')}
         </label>
         <div className={styles.tagBox}>
@@ -547,7 +561,7 @@ export function TransactionForm({
             </span>
           ))}
           <input
-            id="tx-tags"
+            id={tagsId}
             className={styles.tagInput}
             value={tagQuery}
             placeholder={t('txForm.tagsPlaceholder')}
@@ -608,9 +622,9 @@ export function TransactionForm({
 
       <div className={styles.foot}>
         <span className={styles.hint}>{t('web.form.keyboardHint')}</span>
-        <Link className={styles.cancel} href={closeHref}>
+        <PanelLink className={styles.cancel} href={closeHref}>
           {t('common.cancel')}
-        </Link>
+        </PanelLink>
         <div>
           <Button type="submit" busy={pending} busyLabel={t('common.loading')}>
             {t(view.mode === 'new' ? 'txForm.create' : 'txForm.save')}

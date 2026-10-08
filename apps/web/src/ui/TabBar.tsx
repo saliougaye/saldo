@@ -1,8 +1,8 @@
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import type { NavItem } from '../features/shell/nav';
 import { Icon } from './Icon';
 import { NavLink } from './NavLink';
+import { NewTransactionLink } from './NewTransactionLink';
 import styles from './TabBar.module.css';
 
 /**
@@ -22,9 +22,9 @@ export function TabBar({
 }) {
   return (
     <>
-      <Link className={styles.fab} href="/transactions?new" aria-label={newTransaction}>
+      <NewTransactionLink className={styles.fab} aria-label={newTransaction}>
         <Icon name="plus" size={26} />
-      </Link>
+      </NewTransactionLink>
       <nav className={styles.bar} aria-label={label}>
         {items.map((item) => (
           <NavLink

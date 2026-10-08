@@ -17,6 +17,17 @@ first things to check, measured before and after. The animations the phone has (
 design's transitions) are mostly absent on the web too. Needs a full check of the web UI against the design and the
 phone, then a plan for both.
 
+Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-feel.md`): on Transazioni,
+«Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
+in one movement. Still open:
+
+- the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
+- the four queries in a chain on every page;
+- `loading.tsx` and `useLinkStatus` for the top-level pages;
+- the edit form (still a navigation);
+- the same pattern on Conti and Profilo;
+- the motion the phone has that the web lacks.
+
 ## Features
 
 Asked for and shaped enough to plan, or one decision away from it.
@@ -34,7 +45,9 @@ The web app has no end-to-end tests. Add Playwright, and use its virtual WebAuth
 2. Shell and PWA: the nav tabs (Admin only for an admin), the `/budgets` redirect keeps its query, the manifest and
    its icons, the offline page, the language from the browser.
 3. Transactions: day groups and totals, «In arrivo», filter chips, detail panel, create, edit and delete, the
-   stale-version conflict.
+   stale-version conflict, and the panel flows of the 2026-10-07 plan: the panel
+   opens and closes with no server request; Back and Forward through panels; `N`, Esc and ↑ ↓ with no motion;
+   a new draft on each opening; a reversal during the exit; the hidden form does not block `N` and ↑ ↓.
 4. Home and Statistiche: the summary, the featured budget and goal, the split by category and tag, period stepping.
 5. Accounts and goals: groups, pockets, archive and restore, the card statement, a goal from creation to close.
 6. Budgets, categories and tags: budget states, category archive with a move, reorder, tag merge and delete.

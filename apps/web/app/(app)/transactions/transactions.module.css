@@ -4,11 +4,31 @@
   align-items: start;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+/*
+ * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The panel's track
+ * grows from nothing as the panel opens, so the list makes room in one movement — the amounts slide
+ * to their new place instead of jumping — and a click during the movement reverses it from where it
+ * is. Closing is quicker than opening, as the panel's own exit.
+ */
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 0;
+    column-gap: 0;
+    transition-property: grid-template-columns, column-gap;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .layout[data-panel] {
+    grid-template-columns: minmax(0, 1fr) var(--layout-panel-width);
     column-gap: 24px;
+    transition-duration: var(--motion-fade);
+    transition-timing-function: var(--motion-swap-easing);
+  }
+
+  /* Opened or closed from the keyboard: the list takes its new width on the next frame. */
+  .layout[data-instant] {
+    transition: none;
   }
 }
 
@@ -17,6 +37,31 @@
   flex-direction: column;
   gap: var(--layout-section-gap-web);
   min-width: 0;
+}
+
+/* Below the breakpoint the panel is fixed over the screen: its wrapper takes no place in the list. */
+.side {
+  display: contents;
+}
+
+/*
+ * The panel's column at and above the breakpoint. It clips what does not fit yet while it grows;
+ * the panel sits at its trailing edge, so it is uncovered from the side it will sit on. It spans the
+ * list's height, so the panel stays sticky beside a long list.
+ */
+@media (min-width: 1024px) {
+  .side {
+    display: flex;
+    justify-content: flex-end;
+    align-self: stretch;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .side > aside {
+    flex: none;
+    align-self: flex-start;
+  }
 }
 
 .head {

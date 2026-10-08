@@ -2,10 +2,22 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type MouseEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
 import styles from './Panel.module.css';
+import { isPlainClick } from './PanelNav';
+
+/** How a close came: Esc is the keyboard; the ✕ and the scrim are the pointer. */
+export type CloseFrom = 'key' | 'pointer';
 
 interface Props {
   title: string;
@@ -16,6 +28,20 @@ interface Props {
   bare?: boolean;
   /** Below the breakpoint, a bottom sheet over a scrim instead of the whole screen: the form's shape. */
   sheet?: boolean;
+  /**
+   * A page that keeps the panel in client state: the ✕, the scrim and Esc ask it to close,
+   * and it closes at once. `from` says which: the keyboard closes with no motion. It answers false
+   * when closing has to be a navigation after all; the panel then closes as a panel without this
+   * prop does.
+   */
+  onClose?: (from: CloseFrom) => boolean;
+  /** The page is playing the exit (with `onClose`); it takes the panel out when the exit has played. */
+  closing?: boolean;
+  /**
+   * Opened or closed from the keyboard: no entrance and no exit. The entrance reads it once, when
+   * the panel shows (an open panel never plays it again); the exit reads it live.
+   */
+  instant?: boolean;
   children: ReactNode;
 }
 
@@ -28,11 +54,13 @@ const EXIT_MS = 150;
 /**
  * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — 420px beside the list on a wide
  * screen, the whole screen on a narrow one. Rendered only when something is selected, so it mounts —
- * and slides in — when the panel opens, and stays put while the selection moves between rows.
+ * and slides in — when the panel opens, and stays put while the selection moves between rows. A page
+ * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
  * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
- * and still closes; only the key does nothing.
+ * and still closes; only the key does nothing. A page can keep the panel in client state instead
+ * (`onClose`): the URL then follows the panel, and nothing waits for the server.
  */
 export function Panel({
   title,
@@ -40,29 +68,63 @@ export function Panel({
   closeLabel,
   bare = false,
   sheet = false,
+  onClose,
+  closing: closingProp = false,
+  instant = false,
   children,
 }: Props) {
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (the form
-  // closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
+  // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (on Conti,
+  // the form closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
   const [closingFor, setClosingFor] = useState<string | null>(null);
-  const closing = closingFor === closeHref;
+  const closing = closingProp || closingFor === closeHref;
+  // The entrance plays once, when the panel shows: a later change of `instant` must not replay it.
+  // A page can keep a panel mounted and hidden in `<Activity>` (the new transaction form): the
+  // panel mounts once, while hidden, and shows many times. Layout effects run again each time it
+  // shows, before the paint, so the latch takes the `instant` of that showing.
+  const [enteredInstantly, setEnteredInstantly] = useState(instant);
+  const instantNow = useRef(instant);
+  useLayoutEffect(() => {
+    instantNow.current = instant;
+  });
+  useLayoutEffect(() => {
+    setEnteredInstantly(instantNow.current);
+  }, []);
 
-  // Closing is a navigation, which unmounts the panel at once: play the exit first, then go.
-  const close = useCallback(() => {
-    if (closingFor === closeHref) return;
-    clearTimeout(timer.current);
-    setClosingFor(closeHref);
-    timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
-  }, [router, closeHref, closingFor]);
+  // A page that owns the panel closes it at once. Otherwise closing is a navigation, which unmounts
+  // the panel at once: play the exit first, then go.
+  const close = useCallback(
+    (from: CloseFrom) => {
+      if (closingProp) return;
+      if (onClose?.(from) === true) return;
+      if (closingFor === closeHref) return;
+      clearTimeout(timer.current);
+      // The keyboard closes on the next frame: no exit (spec §06).
+      if (from === 'key') {
+        router.push(closeHref);
+        return;
+      }
+      setClosingFor(closeHref);
+      timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
+    },
+    [router, closeHref, closingFor, onClose, closingProp],
+  );
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  // Unmounted, or hidden in `<Activity>`: a panel that shows again starts open.
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+      setClosingFor(null);
+    },
+    [],
+  );
 
   // Full-screen, the panel covers the list the focus was left on: move it into the panel. Beside
   // the list it stays where it was, so the next row is one Tab away.
-  // Unless something inside already took it: a form that opens on its first field (`autoFocus`).
+  // Unless something inside already took it: a form that opens on its first field (the form's focus
+  // effect, which runs first: child effects precede the parent's).
   useEffect(() => {
     const panel = heading.current?.closest('aside');
     if (panel?.contains(document.activeElement) === true) return;
@@ -72,18 +134,17 @@ export function Panel({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented || isEditable(event.target)) return;
-      close();
+      close('key');
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [close]);
 
   // A modified click (new tab) keeps the link's own behaviour.
-  const onClose = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
-      return;
+  const onLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isPlainClick(event)) return;
     event.preventDefault();
-    close();
+    close('pointer');
   };
 
   return (
@@ -95,14 +156,18 @@ export function Panel({
           href={closeHref}
           aria-hidden="true"
           tabIndex={-1}
-          onClick={onClose}
+          onClick={onLinkClick}
           data-closing={closing ? '' : undefined}
+          data-instant={instant ? '' : undefined}
+          data-still={enteredInstantly ? '' : undefined}
         />
       ) : null}
       <aside
         className={styles.panel}
         aria-label={title}
         data-closing={closing ? '' : undefined}
+        data-instant={instant ? '' : undefined}
+        data-still={enteredInstantly ? '' : undefined}
         data-sheet={sheet ? '' : undefined}
       >
         {sheet ? <span className={styles.handle} aria-hidden="true" /> : null}
@@ -114,7 +179,12 @@ export function Panel({
           >
             {title}
           </h2>
-          <Link className={styles.close} href={closeHref} aria-label={closeLabel} onClick={onClose}>
+          <Link
+            className={styles.close}
+            href={closeHref}
+            aria-label={closeLabel}
+            onClick={onLinkClick}
+          >
             <Icon name="x" size={16} />
           </Link>
         </div>

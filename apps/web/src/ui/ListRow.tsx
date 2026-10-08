@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { IconBox } from './IconBox';
 import styles from './ListRow.module.css';
+import { PanelLink } from './PanelNav';
 import { VisuallyHidden } from './VisuallyHidden';
 
 interface Props {
@@ -27,6 +28,11 @@ interface Props {
   open?: boolean;
   selected?: boolean;
   /**
+   * The row of a list whose panel lives in client state (`PanelNav`): the page says which row is
+   * selected, and a click opens it in the same frame. `selected` is not read then.
+   */
+  selectId?: string;
+  /**
    * The whole row as one sentence for a screen reader — the phone's `accessibilityLabel`. The
    * visible text is then hidden from it, so the row is not read twice.
    */
@@ -46,6 +52,7 @@ export function ListRow({
   upcoming = false,
   open = false,
   selected = false,
+  selectId,
   label,
 }: Props) {
   const hidden = label === undefined ? undefined : true;
@@ -72,6 +79,18 @@ export function ListRow({
     selected ? styles.selected : ''
   }`;
   if (href === undefined) return <div className={className}>{body}</div>;
+  if (selectId !== undefined) {
+    return (
+      <PanelLink
+        className={className}
+        selectedClassName={styles.selected}
+        selectId={selectId}
+        href={href}
+      >
+        {body}
+      </PanelLink>
+    );
+  }
   return (
     <Link className={className} href={href} aria-current={selected ? 'true' : undefined}>
       {body}

@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The panel opens in the frame of the click</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── This spec: Transazioni at a wide size, and the sheet ─────────────────── */
+kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0 5px; }
+.screen.wide { width: 100%; max-width: 760px; border-radius: 18px; padding: 0; overflow: hidden; }
+.screen .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 13px; white-space: nowrap; overflow: hidden; }
+.screen .topbar .nav { color: var(--text-muted); }
+.screen .topbar .nav b { color: var(--text); font-weight: 500; background: var(--raised); padding: 4px 8px; border-radius: 8px; }
+.screen .topbar .new { margin-left: auto; background: var(--text); color: var(--bg); border-radius: 10px; padding: 5px 10px; font-weight: 500; }
+.screen .cols { display: grid; grid-template-columns: minmax(0, 1fr) 0; column-gap: 0; padding: 18px; transition-property: grid-template-columns, column-gap; transition-duration: 150ms; transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+.screen .cols.open { grid-template-columns: minmax(0, 1fr) 240px; column-gap: 16px; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.screen .list { min-width: 0; }
+.screen .side { display: flex; justify-content: flex-end; min-width: 0; overflow-x: clip; }
+.screen .panelbox { flex: none; width: 240px; border-left: 1px solid var(--border); padding-left: 14px; opacity: 0; translate: 12px 0; transition-property: opacity, translate; transition-duration: 150ms; transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+.screen .cols.open .panelbox { opacity: 1; translate: 0 0; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.screen .phead { display: flex; justify-content: space-between; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.screen .amt { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.screen .tm { color: var(--text-muted); }
+.screen .hero-amt { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; margin: 8px 0 10px; font-variant-numeric: tabular-nums; }
+.screen .fact { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 12px; }
+.screen .fact span:first-child { color: var(--text-muted); }
+.screen .day { display: flex; justify-content: space-between; font-size: 12px; margin: 12px 0 2px; }
+.screen .day:first-child { margin-top: 0; }
+.screen .cols.open .demo-sel { background: var(--raised); border-radius: 8px; }
+.screen .grow { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.screen .sheetbox { background: var(--surface); border-radius: var(--r-sheet); box-shadow: 0 0 0 1px var(--border); padding: 10px 16px 16px; }
+.screen .handle { width: 36px; height: 5px; border-radius: var(--r-pill); background: var(--border-strong); margin: 0 auto 12px; }
+.demo-btn { font: 500 13px/1 var(--sans); color: var(--bg); background: var(--text); border: 0; border-radius: 10px; padding: 9px 12px; margin-right: 8px; cursor: pointer; transition: scale 120ms ease-out; }
+.demo-btn:active { scale: 0.97; }
+@media (max-width: 640px) {
+  .screen .topbar .nav:not(:has(b)) { display: none; }
+  .screen .cols.open { grid-template-columns: minmax(0, 1fr) 180px; }
+  .screen .panelbox { width: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen .cols, .screen .panelbox { transition-property: opacity; }
+}
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#what"><span>01</span>What changes</a></li>
+    <li><a href="#measure"><span>02</span>The measurements</a></li>
+    <li><a href="#state"><span>03</span>The panel state</a></li>
+    <li><a href="#rule"><span>04</span>In place or navigation</a></li>
+    <li><a href="#room"><span>05</span>The list makes room</a></li>
+    <li><a href="#motion"><span>06</span>Motion rules</a></li>
+    <li><a href="#screens"><span>07</span>The screens</a></li>
+    <li><a href="#same"><span>08</span>What stays the same</a></li>
+    <li><a href="#out"><span>09</span>Out of scope</a></li>
+    <li><a href="#words"><span>10</span>Words</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo web · Transazioni · Spec</span>
+    <h1>The panel opens in the frame of the click</h1>
+    <p>On the web Transazioni page, «New transaction» and the detail of a row open and close without a request to the server. The list makes room for the panel with one movement.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> Spec §17.1.7 · TODO «Web app: a UI pass»</span>
+    <span><b>Plan</b> <code>2026-10-07-web-panel-feel.md</code></span>
+    <span><b>Date</b> 2026-10-07</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="what" aria-labelledby="h-what">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-what">What changes</h2>
+      <p class="lead">Today each panel on Transazioni is a navigation. The screen does not change until the server answers. This spec makes the panel a client state.</p>
+    </div>
+    <div class="prose">
+      <p>The user reported that the web UI feels slow, for example when the panel opens to add a transaction. The cause is not the loading of the page. The cause is the time between the click and the first change on the screen.</p>
+      <p>This spec changes three things on Transazioni at 1024px and wider, and two things below 1024px:</p>
+      <ol class="steps">
+        <li>The panel opens and closes in the frame of the click. The browser sends no request.</li>
+        <li>At 1024px and wider, the list narrows in one movement while the panel enters. The amounts slide. They do not jump.</li>
+        <li>On close, the list widens again over 150 ms while the panel plays its exit. Then the panel leaves the layout. No empty column stays on the screen.</li>
+      </ol>
+      <p>Below 1024px the panel is a full screen or a sheet over the list. The list does not change width there, so only items 1 and 3 apply.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 360" role="img" aria-labelledby="f1t">
+        <title id="f1t">Two timelines from the click to the end of the entrance. Today: a wait for the server of 106 to 383 milliseconds, then a 200 millisecond entrance. New: the entrance starts at the click and ends at 200 milliseconds.</title>
+        <g font-size="15" class="tf" text-anchor="middle">
+          <line class="lane" x1="200" y1="40" x2="200" y2="330"/><text x="200" y="350">0 ms</text>
+          <line class="lane" x1="400" y1="40" x2="400" y2="330"/><text x="400" y="350">200</text>
+          <line class="lane" x1="600" y1="40" x2="600" y2="330"/><text x="600" y="350">400</text>
+          <line class="lane" x1="800" y1="40" x2="800" y2="330"/><text x="800" y="350">600</text>
+          <line class="lane" x1="1000" y1="40" x2="1000" y2="330"/><text x="1000" y="350">800</text>
+        </g>
+        <text x="10" y="92" font-size="19" class="b">Today</text>
+        <text x="10" y="116" font-size="14" class="tm">CPU 4×, local</text>
+        <rect class="bx-r" x="200" y="70" width="294" height="44" rx="10"/>
+        <text x="347" y="98" text-anchor="middle" font-size="15">waits for the server</text>
+        <rect class="bx" x="494" y="70" width="200" height="44" rx="10"/>
+        <text x="594" y="98" text-anchor="middle" font-size="15">entrance</text>
+        <text x="200" y="146" font-size="14" class="tm">from Home the wait is 383 ms, and in production about 500 ms more</text>
+        <text x="10" y="222" font-size="19" class="b tok">New</text>
+        <text x="10" y="246" font-size="14" class="tm">CPU 4×, local</text>
+        <rect class="bx-ok" x="200" y="200" width="200" height="44" rx="10"/>
+        <text x="300" y="228" text-anchor="middle" font-size="15" class="tok b">entrance</text>
+        <line class="ln-ink" x1="200" y1="270" x2="200" y2="300"/>
+        <text x="212" y="296" font-size="14">the panel is on the screen in the frame of the click</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> «New transaction» on Transazioni. The grey bar is the time with no change on the screen. The new behaviour has no grey bar.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="measure" aria-labelledby="h-measure">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-measure">The measurements</h2>
+      <p class="lead">The numbers come from a production build with a local database and no network latency. Each production click also crosses the Atlantic.</p>
+    </div>
+    <div class="prose">
+      <p>The measurement used Playwright on <code>next build</code> and <code>next start</code>, with 161 rows in the account. Chrome ran with no CPU throttle (1×) and with the CPU four times slower (4×). The plan adds the same measurement as <code>pnpm --filter web measure:panel</code>.</p>
+      <div class="callout"><span class="meta">Production</span><p><code>x-vercel-id</code> shows <code>fra1::iad1</code>: the function runs in Washington and the database in Frankfurt. Each page makes five queries, four of them in a chain. That problem has its own fix (section 09).</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="cards">
+      <div class="card rv"><div class="stat">294<span style="font-size:20px"> ms</span></div><h4>Click to panel</h4><p>«New transaction», 1440px, CPU 4×. Nothing on the screen changes before this time.</p></div>
+      <div class="card rv"><div class="stat">420<span style="font-size:20px"> px</span></div><h4>Jump of the list</h4><p>The list goes from 1096px to 676px in one frame. Every amount moves 420px.</p></div>
+      <div class="card rv"><div class="stat">1</div><h4>Request per panel</h4><p>Each open and each close renders the whole page on the server again (47 KB).</p></div>
+    </div>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Action</th><th scope="col">Panel in the DOM, before</th><th scope="col">Entrance done, before</th><th scope="col">Target</th><th scope="col">After (median)</th></tr></thead>
+        <tbody>
+          <tr><td>«New transaction», 1440px, CPU 1×</td><td class="num">106 ms</td><td class="num">311 ms</td><td>≤ 40 ms, 0 requests</td><td class="num">23 ms, 0 requests</td></tr>
+          <tr><td>«New transaction», 1440px, CPU 4×</td><td class="num">294 ms</td><td class="num">506 ms</td><td>≤ 100 ms, 0 requests</td><td class="num">59 ms, 0 requests</td></tr>
+          <tr><td>Click on a row, 1440px, CPU 4×</td><td class="num">187 ms</td><td class="num">about 390 ms</td><td>≤ 50 ms, longest frame ≤ 70 ms, list settles ≤ 300 ms, 0 requests</td><td class="num">17 ms, frame 62 ms, settles 262 ms, 0 requests</td></tr>
+          <tr><td>FAB, 390px, CPU 4×</td><td class="num">228 ms</td><td class="num">555 ms</td><td>≤ 100 ms, 0 requests</td><td class="num">38 ms, 0 requests</td></tr>
+          <tr><td>✕ on the detail, 1440px</td><td colspan="2">exit 150 ms, then a wait for the server with an empty column</td><td>panel out ≤ 200 ms, list settles ≤ 200 ms, 0 requests</td><td class="num">out 166 ms, settles 141 ms, 0 requests</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Targets</span><p>The targets for «New transaction» and the FAB are 40 ms and 100 ms. The time left is the browser's style and layout of the form that appears. <code>focus()</code> forces that work in the click. The targets for a row allow the first frame to lay out the panel and the list once. The track transition then reflows the list on each frame. That keeps the movement reversible. The «After» column is the median of three to six runs on 2026-10-08 (production build, 161 rows). The «Before» numbers are measured from the click; the «After» numbers are measured from the input.</p></div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="state" aria-labelledby="h-state">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-state">The panel state</h2>
+      <p class="lead">The panel has four states. The URL still tells which state is open, so a reload, a shared link and Back work.</p>
+    </div>
+    <div class="prose">
+      <p>A client component, <code>TransactionsPanels</code>, keeps the state. When the user changes only the panel, the component sets the state and then calls <code>history.pushState</code>. Next.js syncs that URL into <code>useSearchParams</code> and does not ask the server.</p>
+      <p>When the URL changes for another reason (a navigation, Back, a save), the component reads the new URL before the next paint and shows that panel.</p>
+      <p>The server renders the new form and the detail of every row in the list, in one response. Thus the client has the content of each panel before the click.</p>
+      <p>The client renders the new form in advance and keeps it hidden. «New transaction» only shows it. Each opening still starts a new draft: after a close, the client renders the next empty form in the background.</p>
+      <div class="callout"><span class="meta">Exception</span><p>«Edit» stays a navigation. The edit form needs the balances without the edited row. One form for each row would repeat the accounts, categories and tags for each row. The detail stays on the screen while the edit form loads.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 520" role="img" aria-labelledby="f2t">
+        <title id="f2t">State diagram. From None, a click on a row opens Detail in place, and New transaction or N opens New in place. Close, Esc or Cancel return to None in place. From Detail, E or Edit opens Edit through the server. A save goes through the server to the Detail of the saved row.</title>
+        <rect class="bx-ink" x="400" y="20" width="240" height="70" rx="35"/>
+        <text x="520" y="52" text-anchor="middle" class="ti b" font-size="22">None</text>
+        <text x="520" y="76" text-anchor="middle" class="ti mono" font-size="14" opacity=".7">/transactions</text>
+        <rect class="bx" x="40" y="250" width="260" height="80" rx="18"/>
+        <text x="170" y="284" text-anchor="middle" class="b" font-size="22">New</text>
+        <text x="170" y="310" text-anchor="middle" class="tm mono" font-size="14">?new</text>
+        <rect class="bx" x="740" y="250" width="260" height="80" rx="18"/>
+        <text x="870" y="284" text-anchor="middle" class="b" font-size="22">Detail</text>
+        <text x="870" y="310" text-anchor="middle" class="tm mono" font-size="14">?t=id</text>
+        <rect class="bx-dash" x="740" y="420" width="260" height="80" rx="18"/>
+        <text x="870" y="454" text-anchor="middle" class="b" font-size="22">Edit</text>
+        <text x="870" y="480" text-anchor="middle" class="tm mono" font-size="14">?t=id&amp;edit</text>
+        <path class="ln-ok" d="M400 70 C 260 90, 190 150, 176 244" marker-end="url(#ah-ok)"/>
+        <text x="150" y="140" font-size="15" class="tok b">«New transaction», FAB, N</text>
+        <path class="ln dash" d="M214 248 C 260 170, 330 110, 396 84" marker-end="url(#ah)"/>
+        <text x="306" y="214" font-size="14" class="tm">✕ · Esc · Cancel</text>
+        <path class="ln-ok" d="M640 70 C 780 90, 850 150, 864 244" marker-end="url(#ah-ok)"/>
+        <text x="760" y="140" font-size="15" class="tok b">click on a row, ↓</text>
+        <path class="ln dash" d="M826 248 C 780 170, 710 110, 644 84" marker-end="url(#ah)"/>
+        <text x="592" y="214" font-size="14" class="tm">✕ · Esc</text>
+        <path class="ln-ok" d="M1000 278 C 1036 300, 1036 228, 1000 262"/>
+        <text x="1030" y="236" font-size="14" class="tok" text-anchor="end">another row, ↑ ↓</text>
+        <path class="ln-ink" d="M850 334 V414" marker-end="url(#ah-ink)"/>
+        <text x="836" y="384" font-size="15" text-anchor="end">E, «Edit»: server</text>
+        <path class="ln-ink" d="M890 414 V338" marker-end="url(#ah-ink)"/>
+        <text x="904" y="384" font-size="15">Save, Cancel</text>
+        <path class="ln-ink" d="M170 334 C 170 450, 600 450, 772 338" marker-end="url(#ah-ink)"/>
+        <text x="250" y="470" font-size="15">Save: server, then the saved row's Detail</text>
+      </svg>
+      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play the exit first. Esc closes on the next frame in every case.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="rule" aria-labelledby="h-rule">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-rule">In place or navigation</h2>
+      <p class="lead">A link changes the panel in place only when the page already has what the link shows.</p>
+    </div>
+    <div class="prose">
+      <p>The rule compares the current URL and the target URL. It ignores the three panel parameters: <code>t</code>, <code>new</code> and <code>edit</code>. If the path and all other parameters are equal, the change is in place. Otherwise it is a navigation, as today.</p>
+      <p>Thus a filter, a period, a delete toast (<code>?deleted=</code>) or the prefill of «Set aside» always go to the server. The toast and the prefill belong to the page that the server rendered. An in-place change must not leave them on the screen.</p>
+      <p>The top bar's «New transaction», the FAB and <kbd>N</kbd> work on every page. They first send a cancelable event, <code>saldo:new-transaction</code>, on <code>window</code>. Transazioni cancels the event and opens the form in place. On the other pages nobody cancels it, and the link goes to <code>/transactions?new</code>. Transazioni also does not cancel the event when the URL holds <code>?deleted=</code> or a prefill. The link then navigates.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f3t">
+        <title id="f3t">Decision: a plain click on a link. If the path is the same and every parameter other than t, new and edit is the same, and the target is not Edit, the panel changes in place and the URL follows with pushState. Otherwise the link navigates as before.</title>
+        <rect class="bx-ink" x="10" y="120" width="190" height="80" rx="16"/>
+        <text x="105" y="156" text-anchor="middle" class="ti b" font-size="19">Plain click</text>
+        <text x="105" y="180" text-anchor="middle" class="ti" font-size="14" opacity=".7">no ⌘, Ctrl, Shift</text>
+        <line class="ln-ink" x1="204" y1="160" x2="244" y2="160" marker-end="url(#ah-ink)"/>
+        <rect class="bx" x="250" y="96" width="330" height="128" rx="16"/>
+        <text x="415" y="130" text-anchor="middle" class="b" font-size="18">Same path?</text>
+        <text x="415" y="160" text-anchor="middle" font-size="16">Same parameters, apart from</text>
+        <text x="415" y="184" text-anchor="middle" font-size="16" class="mono">t · new · edit ?</text>
+        <text x="415" y="208" text-anchor="middle" font-size="15" class="tm">Not Edit?</text>
+        <path class="ln-ok" d="M584 130 H640 V70 H684" marker-end="url(#ah-ok)"/>
+        <text x="612" y="58" font-size="15" class="tok b">yes</text>
+        <path class="ln-ink" d="M584 190 H640 V250 H684" marker-end="url(#ah-ink)"/>
+        <text x="612" y="282" font-size="15" class="b">no</text>
+        <rect class="bx-ok" x="690" y="20" width="340" height="110" rx="16"/>
+        <text x="860" y="54" text-anchor="middle" class="b tok" font-size="19">In place</text>
+        <text x="860" y="82" text-anchor="middle" font-size="15">set the state, then <tspan class="mono" font-size="14">pushState</tspan></text>
+        <text x="860" y="108" text-anchor="middle" font-size="15" class="tm">no request</text>
+        <rect class="bx" x="690" y="196" width="340" height="110" rx="16"/>
+        <text x="860" y="230" text-anchor="middle" class="b" font-size="19">Navigation</text>
+        <text x="860" y="258" text-anchor="middle" font-size="15">the link, as today</text>
+        <text x="860" y="284" text-anchor="middle" font-size="15" class="tm">the panel follows the new URL</text>
+      </svg>
+      <figcaption><b>Figure 3.</b> A modified click (new tab) keeps the link's own behaviour. With JavaScript off, every link is a page, as today.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          <tr><td><code>?direction=expense</code></td><td><code>?direction=expense&amp;t=a</code></td><td>In place: Detail of row a</td></tr>
+          <tr><td><code>?t=a</code></td><td><code>?t=b</code></td><td>In place: the panel stays, its content changes</td></tr>
+          <tr><td><code>?direction=expense</code></td><td><code>?t=a</code></td><td>Navigation: the filter changes</td></tr>
+          <tr><td><code>?deleted=a</code></td><td><code>?t=b</code></td><td>Navigation: the toast belongs to the old page</td></tr>
+          <tr><td><code>?new&amp;from=x</code></td><td><code>/transactions</code></td><td>Navigation: the prefill belongs to the old page</td></tr>
+          <tr><td><code>?t=a</code></td><td><code>?t=a&amp;edit</code></td><td>Navigation: the server renders the edit form</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="room" aria-labelledby="h-room">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-room">The list makes room</h2>
+      <p class="lead">At 1024px and wider, the list and the panel share a grid. The second track grows from 0 to the panel width with a CSS transition.</p>
+    </div>
+    <div class="prose">
+      <p>The list reflows on each frame of the transition. Thus the amounts slide to their new position. A click during the movement reverses it from the current position, because a CSS transition starts from the current value.</p>
+      <p>The panel's column clips its content while it grows. The panel stays at the trailing edge of the column. Thus the panel appears from the side where it stays.</p>
+      <p>On close, the track goes back to 0 over 150 ms, while the panel plays its exit. The list settles at 141 ms (measured). The panel leaves the DOM after its exit. No empty column stays.</p>
+      <div class="callout"><span class="meta">Why not a View Transition</span><p>A View Transition animates snapshots. The text of the list stretches while its box changes size, and the page ignores input until the animation ends. The track transition has neither problem. Its cost is a layout on each frame. The plan tried <code>content-visibility: auto</code> on the day sections. It did not help. The target for the longest frame is now 70 ms at CPU 4×.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 420" role="img" aria-labelledby="f4t">
+        <title id="f4t">The layout at 1440 pixels. Closed: the list is 1096 pixels and the panel track is 0. Open: the list is 676 pixels, a 24 pixel gap, and the panel track is 420 pixels. The panel is anchored at the trailing edge of its track.</title>
+        <text x="10" y="34" font-size="18" class="b">Closed</text>
+        <rect class="bx" x="10" y="50" width="1020" height="120" rx="14"/>
+        <text x="520" y="102" text-anchor="middle" font-size="19" class="b">List · 1096 px</text>
+        <text x="520" y="132" text-anchor="middle" font-size="15" class="tm mono">grid-template-columns: minmax(0, 1fr) 0</text>
+        <line class="ln-ink" x1="1030" y1="40" x2="1030" y2="180"/>
+        <text x="1022" y="196" text-anchor="end" font-size="14" class="tm">panel track: 0</text>
+        <text x="10" y="250" font-size="18" class="b">Open</text>
+        <rect class="bx" x="10" y="266" width="610" height="120" rx="14"/>
+        <text x="315" y="318" text-anchor="middle" font-size="19" class="b">List · 676 px</text>
+        <text x="315" y="348" text-anchor="middle" font-size="14" class="tm">the amounts slide left, they do not jump</text>
+        <rect class="bx-r" x="620" y="266" width="22" height="120"/>
+        <text x="631" y="404" text-anchor="middle" font-size="13" class="tm">24</text>
+        <rect class="bx-ok" x="642" y="266" width="388" height="120" rx="14"/>
+        <text x="836" y="318" text-anchor="middle" font-size="19" class="b tok">Panel · 420 px</text>
+        <text x="836" y="348" text-anchor="middle" font-size="14" class="tm mono">--layout-panel-width</text>
+        <path class="ln-ok" d="M1010 226 H760" marker-end="url(#ah-ok)"/>
+        <text x="1010" y="216" text-anchor="end" font-size="14" class="tok">the panel appears from the trailing edge</text>
+      </svg>
+      <figcaption><b>Figure 4.</b> Both states at 1440px. Below 1024px the panel is fixed over the list, and the list does not change.</figcaption>
+    </figure>
+    <div class="stage rv">
+      <div style="width:100%">
+        <div class="screen wide" role="img" aria-label="Interactive illustration of Transazioni at a wide size. A button opens and closes the panel with the real transition.">
+          <div class="topbar"><span class="brandline" style="margin:0"><i></i>Saldo</span><span class="nav">Home</span><span class="nav"><b>Transactions</b></span><span class="nav">Statistics</span><span class="nav">Accounts</span><span class="new">New transaction</span></div>
+          <div class="cols" id="demo">
+            <div class="list">
+              <div class="day"><b>Today</b><span class="num tm">€66.89</span></div>
+              <div class="row"><div class="tile">G</div><div class="grow">Groceries<div class="muted">Supermarket</div></div><span class="amt">−€56.89</span></div>
+              <div class="row demo-sel"><div class="tile">P</div><div class="grow">Phone<div class="muted">Utilities</div></div><span class="amt">−€10.00</span></div>
+              <div class="day"><b>Yesterday</b><span class="num tm">€99.30</span></div>
+              <div class="row"><div class="tile">R</div><div class="grow">Dinner<div class="muted">Restaurants</div></div><span class="amt">−€64.30</span></div>
+              <div class="row"><div class="tile">T</div><div class="grow">Travel card<div class="muted">Public transport</div></div><span class="amt">−€35.00</span></div>
+            </div>
+            <div class="side"><div class="panelbox">
+              <div class="phead"><b>Phone</b><span class="muted">✕</span></div>
+              <div class="hero-amt">−€10<span class="tm">.00</span></div>
+              <div class="fact"><span>Category</span><span>Utilities</span></div>
+              <div class="fact"><span>Account</span><span>Main account</span></div>
+              <div class="fact"><span>Date</span><span>October 4, 2026</span></div>
+              <div class="fact"><span>Note</span><span>Added manually</span></div>
+            </div></div>
+          </div>
+        </div>
+        <p class="stage-cap"><button class="demo-btn" type="button" aria-controls="demo" aria-pressed="false">Open the panel</button> Illustration · the real transition: 200 ms in, 150 ms out. Click during the movement to reverse it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="motion" aria-labelledby="h-motion">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-motion">Motion rules</h2>
+      <p class="lead">The pointer gets motion. The keyboard does not. Every movement starts at the input, never after a wait.</p>
+    </div>
+    <div class="prose">
+      <p>A person presses <kbd>N</kbd> and the arrow keys many times a day. Motion on those keys makes the app feel slower each time. Thus the keyboard opens and closes the panel on the next frame, with no transition.</p>
+      <p>The pointer gets a short entrance and a shorter exit. The values are those that <code>Panel</code> already uses.</p>
+      <p>Each opening of «New transaction» starts a new draft: the draft of the last form does not come back. An opening during the exit of the same form reverses the exit and keeps the draft.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Input</th><th scope="col">Panel</th><th scope="col">List (1024px and wider)</th></tr></thead>
+        <tbody>
+          <tr><td>Click, tap</td><td>In: 200 ms, slide 16px and fade. Out: 150 ms.</td><td>Track to 420px in 200 ms (<code>--motion-fade</code>, <code>--motion-swap-easing</code>). Back to 0 in 150 ms.</td></tr>
+          <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd></td><td>On the next frame. <kbd>Esc</kbd> is always instant. <kbd>N</kbd> and <kbd>↑</kbd> <kbd>↓</kbd> navigate when the URL holds <code>?deleted=</code> or a prefill.</td><td>On the next frame</td></tr>
+          <tr><td>Another row, panel open</td><td>Stays. Only its content changes.</td><td>Does not move</td></tr>
+          <tr><td>Back, a filter, a save</td><td>Follows the new URL on the next frame</td><td>On the next frame</td></tr>
+          <tr><td>Reduce motion on</td><td colspan="2">The global rule of <code>globals.css</code> applies: the panel appears and goes, with no slide.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="screens" aria-labelledby="h-screens">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-screens">The screens</h2>
+      <p class="lead">The screens do not change. Only the time between the input and the screen changes.</p>
+    </div>
+    <div class="prose">
+      <p>Below 1024px the FAB opens «New transaction» as a sheet over the list. The sheet rises in the frame of the tap. The scrim and the sheet leave together on close.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage rv">
+      <div>
+        <div class="screen" role="img" aria-label="Illustration of the New transaction sheet at 390 pixels: the kind selector, the amount, the account, the category, the date, and the Cancel and Add buttons.">
+          <div class="brandline"><i></i>Transactions</div>
+          <div class="sheetbox">
+            <div class="handle"></div>
+            <h5>New transaction</h5>
+            <div class="seg"><span class="on">Expense</span><span>Income</span><span>Transfer</span></div>
+            <div class="lbl">Amount</div>
+            <div class="hero-amt">€0<span class="tm">.00</span></div>
+            <div class="fact"><span>Account</span><span>Main account</span></div>
+            <div class="fact"><span>Category</span><span>Groceries</span></div>
+            <div class="fact"><span>Date</span><span>Today</span></div>
+            <div class="muted" style="margin-top:10px">Esc to close · ⌘↵ to save</div>
+            <span class="btn">Cancel</span><span class="btn p">Add</span>
+          </div>
+        </div>
+        <p class="stage-cap">Illustration · Transactions at 390px, after a tap on the FAB</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="same" aria-labelledby="h-same">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-same">What stays the same</h2>
+      <p class="lead">The URL is still the state that a person can share. These behaviours must not change.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Case</th><th scope="col">Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Reload</td><td><code>?t=id</code> opens the detail, <code>?new</code> opens the form, on the first render of the server.</td></tr>
+          <tr><td>A link from Home</td><td><code>/transactions?t=id</code> opens the detail, also for a row of another period.</td></tr>
+          <tr><td>Back and Forward</td><td>Back closes a panel that a click opened. Forward opens it again.</td></tr>
+          <tr><td>JavaScript off</td><td>Each row, ✕ and «Cancel» is a link to a page.</td></tr>
+          <tr><td>Save</td><td>A navigation. Then the detail of the saved row is open.</td></tr>
+          <tr><td>Delete</td><td>A navigation. The toast with «Undo» shows. While it shows, a click on a row is a navigation.</td></tr>
+          <tr><td>Version check</td><td>The edit form and «Delete» send the <code>updatedAt</code> that the page loaded, as today.</td></tr>
+          <tr><td>Conti, Profilo</td><td>They use <code>Panel</code> without the new props, with three changes. The leaving scrim no longer takes clicks. <kbd>Esc</kbd> closes at once. A hidden dialog or form no longer blocks shortcuts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="out" aria-labelledby="h-out">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-out">Out of scope</h2>
+      <p class="lead">The measurements found more problems. Each one has its own fix and its own decision.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Problem</th><th scope="col">Possible fix</th></tr></thead>
+        <tbody>
+          <tr><td>Production region</td><td><code>"regions": ["fra1"]</code> in <code>vercel.json</code>. The user decides, because it changes production.</td></tr>
+          <tr><td>Four queries in a chain</td><td>Better Auth <code>session.cookieCache</code>, and one query for <code>role</code> and <code>banned</code>.</td></tr>
+          <tr><td>No feedback on the top-level pages</td><td><code>loading.tsx</code> for each segment, <code>useLinkStatus</code> on the tabs.</td></tr>
+          <tr><td>«Edit» is a navigation</td><td>Split <code>FormView</code> into a shared part and a part for each row.</td></tr>
+          <tr><td>Conti and Profilo</td><td>The same pattern, after this spec is accepted on Transazioni.</td></tr>
+          <tr><td>Motion of the phone</td><td>Progress bars, the toast's exit, the confirmation dialog.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 10 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="words" aria-labelledby="h-words">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">10</span>
+      <h2 id="h-words">Words</h2>
+      <p class="lead">The meaning of the special words in this document.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Word</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Panel</td><td>The area at the trailing side of Transazioni. It shows the detail of a row or the transaction form.</td></tr>
+          <tr><td>In place</td><td>The panel changes in the browser, with no request to the server.</td></tr>
+          <tr><td>Navigation</td><td>The browser asks the server for the page with the new URL.</td></tr>
+          <tr><td>Track</td><td>One column of a CSS grid.</td></tr>
+          <tr><td>Frame</td><td>One image on the screen. At 60 Hz a frame is 16.7 ms.</td></tr>
+          <tr><td>RSC</td><td>React Server Components payload: what the server sends for a navigation.</td></tr>
+          <tr><td>CPU 4×</td><td>Chrome makes the CPU four times slower, to show a slower computer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · web · Transazioni panel · spec 2026-10-07</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  var demo = document.getElementById('demo'), demoBtn = document.querySelector('.demo-btn');
+  if (demo && demoBtn) demoBtn.addEventListener('click', function () {
+    var open = demo.classList.toggle('open');
+    demoBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    demoBtn.textContent = open ? 'Close the panel' : 'Open the panel';
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>
