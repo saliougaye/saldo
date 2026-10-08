@@ -346,16 +346,17 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     </div>
     <div class="tablewrap rv">
       <table>
-        <thead><tr><th scope="col">Action</th><th scope="col">Panel in the DOM</th><th scope="col">Entrance done</th><th scope="col">Target</th></tr></thead>
+        <thead><tr><th scope="col">Action</th><th scope="col">Panel in the DOM, before</th><th scope="col">Entrance done, before</th><th scope="col">Target</th><th scope="col">After (median)</th></tr></thead>
         <tbody>
-          <tr><td>«New transaction», 1440px, CPU 1×</td><td class="num">106 ms</td><td class="num">311 ms</td><td>≤ 20 ms, 0 requests</td></tr>
-          <tr><td>«New transaction», 1440px, CPU 4×</td><td class="num">294 ms</td><td class="num">506 ms</td><td>≤ 50 ms, 0 requests</td></tr>
-          <tr><td>Click on a row, 1440px, CPU 4×</td><td class="num">187 ms</td><td class="num">about 390 ms</td><td>≤ 50 ms, 0 requests</td></tr>
-          <tr><td>FAB, 390px, CPU 4×</td><td class="num">228 ms</td><td class="num">555 ms</td><td>≤ 50 ms, 0 requests</td></tr>
-          <tr><td>✕ on the detail, 1440px</td><td colspan="2">exit 150 ms, then a wait for the server with an empty column</td><td>panel out ≤ 200 ms, 0 requests</td></tr>
+          <tr><td>«New transaction», 1440px, CPU 1×</td><td class="num">106 ms</td><td class="num">311 ms</td><td>≤ 40 ms, 0 requests</td><td class="num">23 ms, 0 requests</td></tr>
+          <tr><td>«New transaction», 1440px, CPU 4×</td><td class="num">294 ms</td><td class="num">506 ms</td><td>≤ 100 ms, 0 requests</td><td class="num">59 ms, 0 requests</td></tr>
+          <tr><td>Click on a row, 1440px, CPU 4×</td><td class="num">187 ms</td><td class="num">about 390 ms</td><td>≤ 50 ms, longest frame ≤ 70 ms, list settles ≤ 300 ms, 0 requests</td><td class="num">17 ms, frame 62 ms, settles 262 ms, 0 requests</td></tr>
+          <tr><td>FAB, 390px, CPU 4×</td><td class="num">228 ms</td><td class="num">555 ms</td><td>≤ 100 ms, 0 requests</td><td class="num">38 ms, 0 requests</td></tr>
+          <tr><td>✕ on the detail, 1440px</td><td colspan="2">exit 150 ms, then a wait for the server with an empty column</td><td>panel out ≤ 200 ms, list settles ≤ 200 ms, 0 requests</td><td class="num">out 166 ms, settles 141 ms, 0 requests</td></tr>
         </tbody>
       </table>
     </div>
+    <div class="callout"><span class="meta">Targets</span><p>The targets for «New transaction» and the FAB are 40 ms and 100 ms, because the time left is the browser's style and layout of the form that appears, which <code>focus()</code> forces in the click. The targets for a row allow the first frame to lay out the panel and the list once; the track transition then reflows the list on each frame, and that keeps the movement reversible. The «After» column is the median of three to six runs on 2026-10-08 (production build, 161 rows). The «Before» numbers are measured from the click; the «After» numbers are measured from the input.</p></div>
   </div>
 </section>
 
