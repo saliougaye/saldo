@@ -1849,7 +1849,7 @@ rtk git commit -m "feat(web): Transazioni opens its panel in the frame of the cl
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Replace the wide layout**
+- [x] **Step 1: Replace the wide layout**
 
 In `transactions.module.css`, replace:
 
@@ -1895,7 +1895,7 @@ with:
 }
 ```
 
-- [ ] **Step 2: Add the panel's column**
+- [x] **Step 2: Add the panel's column**
 
 After the `.list { … }` rule, add:
 
@@ -1926,7 +1926,7 @@ After the `.list { … }` rule, add:
 }
 ```
 
-- [ ] **Step 3: Look at it**
+- [x] **Step 3: Look at it**
 
 Build and start on 3100 (see «Execution context»). Open `http://localhost:3100/transactions` at 1440px wide.
 Check each line:
@@ -1942,7 +1942,7 @@ Check each line:
 If line 6 fails (the panel scrolls away), the cause is `align-self: stretch` on `.side` not applying: check that no
 rule gives `.side` a height.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/transactions/transactions.module.css"
