@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { E2E_ORIGIN } from './env';
+import { clientHeaders, E2E_ORIGIN } from './env';
 import { expect, test } from './fixtures';
 import {
   type AuthorizationRequest,
@@ -9,6 +9,12 @@ import {
 } from './support/admin';
 import { createMember, type Member, mintInvite } from './support/members';
 import { ADMIN } from './support/state';
+import { literal } from './support/txPage';
+
+/** Matches a name that starts with `text`, taken literally: «Email (SMTP)» has parentheses. */
+function startsWith(text: string): RegExp {
+  return new RegExp(`^${literal(text).source}`);
+}
 
 /** An account's row in Admin → Account: its link names the name, the address and the role. */
 function accountRow(page: Page, name: string) {
@@ -118,8 +124,8 @@ test.describe('accounts', () => {
     await expect(panel).toContainText(t('admin.accounts.statusActive'));
     await expect(accountRow(page, member.name)).not.toContainText(t('admin.accounts.revoked'));
 
+    // The login page arms the passkey autofill as it loads, and the authenticator answers at once.
     await member.page.reload();
-    await member.page.getByRole('button', { name: t('sync.signIn') }).click();
     await expect(member.page).toHaveURL(/\/home$/);
     expect((await member.context.request.get('/api/me')).status()).toBe(200);
 
@@ -133,7 +139,7 @@ test.describe('accounts', () => {
   }) => {
     const member = await createMember(browser, t, {
       name: 'Dario Delete',
-      email: 'dario@e2e.test',
+      email: 'dario.admin@e2e.test',
     });
     const admin = await openAdmin(browser);
     const { page } = admin;
@@ -207,7 +213,11 @@ test.describe('invites', () => {
     await expect(panel.getByRole('button', { name: t('admin.invites.revoke') })).toHaveCount(0);
 
     // A revoked code is refused on the invite step of the registration.
-    const visitor = await browser.newContext({ locale: 'it-IT', baseURL: E2E_ORIGIN });
+    const visitor = await browser.newContext({
+      locale: 'it-IT',
+      baseURL: E2E_ORIGIN,
+      extraHTTPHeaders: clientHeaders(),
+    });
     const register = await visitor.newPage();
     await register.goto('/register');
     await register.getByLabel(t('web.auth.nameLabel')).fill('Zio');
@@ -215,8 +225,10 @@ test.describe('invites', () => {
     await register.getByRole('button', { name: t('common.continue') }).click();
     await register.getByLabel(t('web.auth.inviteLabel')).fill(code);
     await register.getByRole('button', { name: t('common.continue') }).click();
-    await register.getByRole('button', { name: t('web.auth.passkeyButton') }).click();
-    await expect(register.getByText(t('web.auth.invalidInviteTitle'))).toBeVisible();
+    // The invite step turns it down: the passkey step is never reached.
+    await expect(
+      register.getByRole('alert').filter({ hasText: t('web.auth.invalidInviteTitle') }),
+    ).toBeVisible();
 
     await visitor.close();
     await admin.context.close();
@@ -282,15 +294,13 @@ test.describe('instance and settings', () => {
     await page.goto('/admin/settings');
     await expect(page.getByRole('link', { name: new RegExp(ADMIN.instance) })).toBeVisible();
 
-    await page
-      .getByRole('link', { name: new RegExp(`^${t('admin.settings.name.title')}`) })
-      .click();
+    await page.getByRole('link', { name: startsWith(t('admin.settings.name.title')) }).click();
     const name = page.getByRole('complementary', { name: t('admin.settings.name.title') });
     await expect(name.getByLabel(t('admin.settings.name.field'))).toHaveValue(ADMIN.instance);
     await expect(name.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
 
     await page
-      .getByRole('link', { name: new RegExp(`^${t('admin.settings.registration.title')}`) })
+      .getByRole('link', { name: startsWith(t('admin.settings.registration.title')) })
       .click();
     const registration = page.getByRole('complementary', {
       name: t('admin.settings.registration.title'),
@@ -298,9 +308,7 @@ test.describe('instance and settings', () => {
     await expect(registration.getByRole('radio', { name: /./ })).toHaveCount(4);
     await expect(registration.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
 
-    await page
-      .getByRole('link', { name: new RegExp(`^${t('admin.settings.smtp.title')}`) })
-      .click();
+    await page.getByRole('link', { name: startsWith(t('admin.settings.smtp.title')) }).click();
     const smtp = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
     await expect(smtp.getByLabel(t('admin.settings.smtp.host'))).toBeVisible();
     await admin.context.close();
@@ -338,14 +346,14 @@ test.describe('instance and settings', () => {
       const panel = page.getByRole('complementary', {
         name: t('admin.settings.registration.title'),
       });
-      await panel.getByRole('radio', { name: new RegExp(`^${label}`) }).click();
+      await panel.getByRole('radio', { name: startsWith(label) }).click();
       if (save) {
         await panel.getByRole('button', { name: t('common.save') }).click();
         await expect(page).toHaveURL(/\/admin\/settings$/);
       }
     };
     const row = () =>
-      page.getByRole('link', { name: new RegExp(`^${t('admin.settings.registration.title')}`) });
+      page.getByRole('link', { name: startsWith(t('admin.settings.registration.title')) });
     await page.goto('/admin/settings');
     const before = await row().textContent();
 
@@ -358,7 +366,8 @@ test.describe('instance and settings', () => {
       await choose(t('admin.settings.registration.closed'), true);
       await expect(row()).toContainText(t('admin.settings.registration.closed'));
     } finally {
-      await choose(t('admin.settings.registration.firstUser'), true);
+      // The setup wizard leaves the instance on «Solo con invito»: put it back, or later specs cannot join.
+      await choose(t('admin.settings.registration.invite'), true);
     }
     await expect(row()).toHaveText(before ?? '');
     await admin.context.close();
@@ -520,8 +529,7 @@ test.describe('MCP and OAuth', () => {
     // Sign out: the cookie goes, the passkey stays on the virtual device.
     await member.context.clearCookies();
     await page.goto(request.authorizeUrl);
-    await expect(page).toHaveURL(/\/login\?/);
-    await page.getByRole('button', { name: t('sync.signIn') }).click();
+    // The login page arms the passkey autofill as it loads, and the authenticator answers at once.
     await expect(page).toHaveURL(/\/oauth\/consent\?/);
     await expect(page.getByRole('heading', { name: t('web.consent.title') })).toBeVisible();
     await member.context.close();
@@ -564,7 +572,9 @@ test.describe('MCP and OAuth', () => {
       await admin.page.getByRole('button', { name: t('admin.mcp.turnOff') }).click();
       await expect(mcpSwitch).not.toBeChecked();
 
-      await member.page.goto(request.authorizeUrl);
+      // The authorize endpoint answers «not_found» while MCP is off, so the consent page is opened
+      // directly, the way a link that was issued before the switch would.
+      await member.page.goto(`/oauth/consent?client_id=${request.clientId}&scope=read`);
       await expect(
         member.page.getByRole('heading', { name: t('web.consent.disabledTitle') }),
       ).toBeVisible();

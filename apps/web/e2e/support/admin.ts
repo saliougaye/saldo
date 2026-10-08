@@ -5,7 +5,7 @@ import {
   type Page,
   request as playwrightRequest,
 } from '@playwright/test';
-import { E2E_ORIGIN } from '../env';
+import { clientHeaders, E2E_ORIGIN } from '../env';
 import { ADMIN_STORAGE } from './state';
 
 /** The setup admin in a browser of its own. Never revoke or demote it: every other spec uses its session. */
@@ -16,6 +16,7 @@ export async function openAdmin(
     storageState: ADMIN_STORAGE,
     locale: 'it-IT',
     baseURL: E2E_ORIGIN,
+    extraHTTPHeaders: clientHeaders(),
   });
   return { context, page: await context.newPage() };
 }
@@ -41,7 +42,7 @@ export async function startAuthorization(
 ): Promise<AuthorizationRequest> {
   const api = await playwrightRequest.newContext({
     baseURL: E2E_ORIGIN,
-    extraHTTPHeaders: { Origin: E2E_ORIGIN },
+    extraHTTPHeaders: { Origin: E2E_ORIGIN, ...clientHeaders() },
   });
   try {
     const registered = await api.post('/api/auth/oauth2/register', {

@@ -15,9 +15,12 @@ export function moneyFormatter(ledger: Pick<Ledger, 'currency'>, locale: AppLoca
     formatMoney(minor, ledger.currency as CurrencyCode, locale, sign);
 }
 
-/** A key figure of Statistiche (label, then the amount in the next element), not the chart's legend. */
+/** A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the words. */
 export function statFigure(page: Page, label: string): Locator {
-  return page.locator(`div:has(> span:text-is("${label}") + span)`).first();
+  return page
+    .locator('[class*="figures"] > div')
+    .filter({ has: page.getByText(label, { exact: true }) })
+    .first();
 }
 
 /** «Oggi · 6 ott», «Ieri · 5 ott», then «Domenica · 4 ott»: the title of a day's section. */

@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
 import { catalogs, makeTranslator, type Translate } from '@saldo/i18n';
+import { clientHeaders } from './env';
 import { addVirtualAuthenticator, type VirtualAuthenticator } from './support/authenticator';
 
 interface Fixtures {
@@ -10,6 +11,11 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // A caller address for each test, so the auth rate limit never counts one test against another.
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright reads the fixtures from the pattern.
+  extraHTTPHeaders: async ({}, use) => {
+    await use(clientHeaders());
+  },
   t: async ({ locale }, use) => {
     const language = (locale ?? 'it').slice(0, 2);
     await use(makeTranslator(catalogs[language as keyof typeof catalogs] ?? catalogs.it));

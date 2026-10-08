@@ -1,3 +1,4 @@
+import { clientHeaders } from './env';
 import { expect, test } from './fixtures';
 import {
   alertWith,
@@ -39,7 +40,7 @@ test.describe('register with an invite', () => {
   test('an invite works once: a used code is refused', async ({ browser, page, t }) => {
     const code = await mintInvite('Una volta');
 
-    const first = await browser.newContext({ locale: 'it-IT' });
+    const first = await browser.newContext({ locale: 'it-IT', extraHTTPHeaders: clientHeaders() });
     const firstPage = await first.newPage();
     await addVirtualAuthenticator(firstPage);
     await firstPage.goto('/register');
@@ -62,11 +63,11 @@ test.describe('register with an invite', () => {
     t,
     authenticator,
   }) => {
-    const member = await createMember(browser, t, { name: 'Elena', email: 'elena@e2e.test' });
+    const member = await createMember(browser, t, { name: 'Elena', email: 'elena.auth@e2e.test' });
     await member.context.close();
 
     await page.goto('/register');
-    await fillIdentity(page, t, { name: 'Elena bis', email: 'elena@e2e.test' });
+    await fillIdentity(page, t, { name: 'Elena bis', email: 'elena.auth@e2e.test' });
     await fillInvite(page, t, await mintInvite('Elena bis'));
     await page.getByRole('button', { name: t('web.auth.passkeyButton') }).click();
 

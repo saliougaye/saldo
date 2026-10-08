@@ -40,17 +40,10 @@ test('a budget reads on track, over pace and over its limit as the spending grow
   await expect(row).toContainText(t('targets.inLine'));
   await expect(row).toContainText(t('targets.left', { amount: money(10000) }));
 
-  // A category belongs to one budget: a second budget cannot take it.
+  // A category belongs to one budget: its tile is off in a second one.
   await page.getByRole('link', { name: t('budgets.newBudget') }).click();
   const second = page.getByRole('complementary', { name: t('budgets.newBudget') });
-  await second.getByRole('button', { name: SHOPPING, exact: true }).click();
-  await expect(second.getByRole('alert')).toContainText(
-    t('web.budgets.error_taken', { name: SHOPPING }),
-  );
-  await expect(second.getByRole('button', { name: SHOPPING, exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'false',
-  );
+  await expect(second.getByRole('button', { name: SHOPPING, exact: true })).toBeDisabled();
 
   // The whole limit spent, early in the year: the ratio is ahead of the pace, still under the limit.
   await addTransaction(page, t, {

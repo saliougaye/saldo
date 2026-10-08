@@ -7,7 +7,7 @@ import {
   request as playwrightRequest,
 } from '@playwright/test';
 import type { Translate } from '@saldo/i18n';
-import { E2E_ORIGIN, serverEnv } from '../env';
+import { clientHeaders, E2E_ORIGIN, serverEnv } from '../env';
 import { addVirtualAuthenticator, type VirtualAuthenticator } from './authenticator';
 import { finishOnboarding } from './onboarding';
 import { ADMIN_STORAGE } from './state';
@@ -28,7 +28,7 @@ export async function mintInvite(label?: string): Promise<string> {
   const api = await playwrightRequest.newContext({
     baseURL: E2E_ORIGIN,
     storageState: ADMIN_STORAGE,
-    extraHTTPHeaders: { Origin: E2E_ORIGIN },
+    extraHTTPHeaders: { Origin: E2E_ORIGIN, ...clientHeaders() },
   });
   try {
     const response = await api.post('/api/invites', { data: label === undefined ? {} : { label } });
@@ -70,7 +70,11 @@ export async function createMember(
   options: NewMember,
 ): Promise<Member> {
   const code = await mintInvite(options.name);
-  const context = await browser.newContext({ locale: 'it-IT', baseURL: E2E_ORIGIN });
+  const context = await browser.newContext({
+    locale: 'it-IT',
+    baseURL: E2E_ORIGIN,
+    extraHTTPHeaders: clientHeaders(),
+  });
   const page = await context.newPage();
   const authenticator = await addVirtualAuthenticator(page);
 

@@ -21,6 +21,7 @@ import {
   moneyFormatter,
   rowOf,
   sectionOf,
+  statFigure,
 } from './support/txPage';
 
 function upperFirst(text: string): string {
@@ -207,7 +208,7 @@ test.describe('Home', () => {
     const lastMonth = summary(ledger, closed);
     await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`[?&]p=${closed.start}`));
-    await expect(page.getByText(t('home.closedCycle'))).toBeVisible();
+    await expect(page.getByText(t('home.closedCycle')).first()).toBeVisible();
     await expect(homeFigure(page, t('home.income'))).toContainText(money(lastMonth.income));
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(lastMonth.spent));
     await expect(homeFigure(page, t('home.leftover'))).toContainText(
@@ -265,16 +266,12 @@ test.describe('Statistiche', () => {
 
     await page.goto(`/stats?p=${closed.start}`);
     const section = sectionOf(page, t('stats.split'));
-    const titles = section.locator('a, div').filter({ hasText: /./ });
-    void titles;
 
     const expenses = split('expense');
     expect(expenses.ranked.length).toBeGreaterThan(5);
     const income = split('income');
     // The figures above the split agree with it.
-    await expect(
-      page.getByText(t('stats.expenses'), { exact: true }).first().locator('..'),
-    ).toContainText(money(expenses.total));
+    await expect(statFigure(page, t('stats.expenses'))).toContainText(money(expenses.total));
     await expect(section).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
       const row = rowOf(section, name);
@@ -286,7 +283,9 @@ test.describe('Statistiche', () => {
     // Biggest first.
     const first = expenses.ranked[0];
     await expect(rowOf(section, first?.name ?? '')).toBeVisible();
-    const order = await section.locator('[class*="ListRow"][class*="title"]').allTextContents();
+    const order = await section
+      .locator('[class*="ListRow"][class*="title"]:not([class*="subtitle"])')
+      .allTextContents();
     expect(order).toEqual(expenses.ranked.map((row) => row.name));
 
     // The same month read as income.
@@ -355,7 +354,7 @@ test.describe('Statistiche', () => {
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
     const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
-    const figure = (label: string) => page.getByText(label, { exact: true }).first().locator('..');
+    const figure = (label: string) => statFigure(page, label);
 
     await page.goto('/stats');
     const now = summary(ledger, current);
@@ -366,7 +365,7 @@ test.describe('Statistiche', () => {
     await page.getByRole('link', { name: t('web.shell.previousPeriod') }).click();
     const last = summary(ledger, closed);
     await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
-    await expect(page.getByText(t('period.closed'))).toBeVisible();
+    await expect(page.getByText(t('period.closed')).first()).toBeVisible();
     await expect(figure(t('stats.income'))).toContainText(money(last.income));
     await expect(figure(t('stats.expenses'))).toContainText(money(last.spent));
     await expect(figure(t('stats.net'))).toContainText(money(last.income - last.spent, 'always'));
