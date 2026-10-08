@@ -12,7 +12,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { flushSync } from 'react-dom';
 import {
   type PanelState,
   panelFromSearch,
@@ -24,14 +23,10 @@ import { ListKeys } from '../../../src/ui/ListKeys';
 import { NEW_TRANSACTION_EVENT, wantsInstant } from '../../../src/ui/NewTransactionLink';
 import { type CloseFrom, Panel } from '../../../src/ui/Panel';
 import { type PanelNav, PanelNavContext } from '../../../src/ui/PanelNav';
-import { viewTransitionsWork, withViewTransition } from '../../../src/ui/viewTransition';
 import styles from './transactions.module.css';
 
 /** `Panel`'s own exit: the panel leaves the screen once it has played. */
 const EXIT_MS = 150;
-
-/** `--layout-wide-breakpoint` (1024): the list and the panel share the screen. */
-const WIDE = '(min-width: 1024px)';
 
 const NONE: PanelState = { kind: 'none' };
 
@@ -69,10 +64,7 @@ interface View {
   panel: PanelState;
   /** The exit is playing: the panel is still in the DOM, and the list already takes its room back. */
   closing: boolean;
-  /**
-   * No motion of its own: opened or closed from the keyboard, or a View Transition draws the
-   * movement from its snapshots.
-   */
+  /** Opened or closed from the keyboard: no motion. */
   instant: boolean;
   /**
    * The new form's key. It changes when the form leaves the screen, so the next opening is a new
@@ -99,19 +91,6 @@ function draftAfter(current: View, to: PanelState): number {
 /** What the person sees: a panel that plays its exit is already closed. */
 function shownOf(view: View): PanelState {
   return view.closing ? NONE : view.panel;
-}
-
-/**
- * Decision 5: the list makes room with a View Transition. Only beside the list (below the
- * breakpoint the panel covers it, and the list does not move), only when the browser draws one,
- * and not when the person asked the system to reduce motion.
- */
-function listCanMove(): boolean {
-  return (
-    window.matchMedia(WIDE).matches &&
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    viewTransitionsWork()
-  );
 }
 
 /**
@@ -170,15 +149,10 @@ export function TransactionsPanels(props: Props) {
       const next = panelFromSearch(new URLSearchParams(query));
       if (samePanel(next, shownOf(viewRef.current))) return;
       track(next);
-      // No View Transition. A URL that arrives while an update waits for its snapshot comes after it.
-      withViewTransition(
-        () =>
-          setView((current) =>
-            samePanel(next, shownOf(current))
-              ? current
-              : { panel: next, closing: false, instant: true, draft: draftAfter(current, next) },
-          ),
-        null,
+      setView((current) =>
+        samePanel(next, shownOf(current))
+          ? current
+          : { panel: next, closing: false, instant: true, draft: draftAfter(current, next) },
       );
     },
     [track],
@@ -220,42 +194,14 @@ export function TransactionsPanels(props: Props) {
       // The edit form is not on the page until the server renders it: that one stays a navigation.
       if (next === null || next.kind === 'edit') return false;
       const instant = options.instant === true;
-      // A pointer that opens the panel from nothing, or closes it to nothing: the list moves, in a
-      // View Transition. A switch between panels, a key or a URL keeps the list where it is.
-      const opens = shownOf(viewRef.current).kind === 'none';
-      const moves = !instant && opens !== (next.kind === 'none') && listCanMove();
       track(next);
-      const update = () =>
-        setView((current) => {
-          if (next.kind === 'none') {
-            if (current.panel.kind === 'none') return current;
-            // The old snapshot plays the exit: the panel leaves the DOM at once, and the form
-            // that leaves is spent.
-            if (moves) {
-              return {
-                panel: NONE,
-                closing: false,
-                instant: true,
-                draft: draftAfter(current, NONE),
-              };
-            }
-            return { ...current, closing: true, instant };
-          }
-          // «Nuova» again while its own exit plays takes the same draft back: the close is reversed.
-          // In a View Transition the new snapshot plays the entrance, not `Panel`.
-          return {
-            panel: next,
-            closing: false,
-            instant: instant || moves,
-            draft: draftAfter(current, next),
-          };
-        });
-      // The browser takes the old snapshot, then calls the update, which must reach the DOM before
-      // it returns. The URL changes now, in the click.
-      withViewTransition(
-        moves ? () => flushSync(update) : update,
-        moves ? ((opens ? styles.opening : styles.closing) ?? null) : null,
-      );
+      setView((current) => {
+        if (next.kind === 'none') {
+          return current.panel.kind === 'none' ? current : { ...current, closing: true, instant };
+        }
+        // «Nuova» again while its own exit plays takes the same draft back: the close is reversed.
+        return { panel: next, closing: false, instant, draft: draftAfter(current, next) };
+      });
       // The selected row clicked again: the same URL is not a second history entry.
       const target = searchOf(href);
       if (target !== here) {
@@ -402,7 +348,11 @@ export function TransactionsPanels(props: Props) {
   const open = (creating && newPanel !== null) || content !== null;
   return (
     <PanelNavContext value={nav}>
-      <div className={styles.layout} data-panel={open && !view.closing ? '' : undefined}>
+      <div
+        className={styles.layout}
+        data-panel={open && !view.closing ? '' : undefined}
+        data-instant={view.instant ? '' : undefined}
+      >
         <div className={styles.list}>{props.children}</div>
         <div className={styles.side} ref={side}>
           {newPanel}

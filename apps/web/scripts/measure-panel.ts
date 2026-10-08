@@ -1,9 +1,7 @@
 /**
  * How the Transazioni panel opens and closes in a real browser (2026-10-07 plan): from the input to
  * the panel in the DOM, the server requests on the way, when the list's width starts and stops
- * changing, and the longest gap between two frames in the second after the input. A View
- * Transition shows as «view transition starts» and «view transition done»: during it the list's
- * width changes in one frame, and the browser draws the movement from snapshots.
+ * changing, and the longest gap between two frames in the second after the input.
  *
  *   pnpm --filter web exec playwright install chromium   (once)
  *   pnpm --filter web measure:panel http://localhost:3100 [userId]
@@ -175,22 +173,6 @@ function arm(): void {
     };
     requestAnimationFrame(frame);
   };
-  // A View Transition (decision 5): when it starts, and when its animation is done and the page
-  // takes input again.
-  if ('startViewTransition' in document) {
-    const native = document.startViewTransition.bind(document);
-    document.startViewTransition = (
-      options?: ViewTransitionUpdateCallback | StartViewTransitionOptions,
-    ) => {
-      const transition = native(options);
-      if (start !== null) {
-        mark('view transition starts');
-        const done = () => mark('view transition done');
-        transition.finished.then(done, done);
-      }
-      return transition;
-    };
-  }
   document.addEventListener('pointerdown', begin, { capture: true });
   document.addEventListener('keydown', begin, { capture: true });
   // `<Activity>` hides a panel with `display: none` on the `aside`: a hidden one does not count.

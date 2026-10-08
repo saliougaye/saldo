@@ -11,8 +11,7 @@ client component, `TransactionsPanels`, keeps the open panel in React state. The
 click that only changes the panel sets the state and calls `history.pushState`, which Next.js syncs into
 `useSearchParams`. Every other change (a filter, the period, a save, Back) is a navigation, and the panel follows
 the URL that comes back. On a wide screen the list and the panel share a grid whose second track goes from `0` to
-the panel width in one frame. A pointer that opens or closes the panel runs a View Transition, which draws the
-movement from two snapshots (decision 5, Task 8c).
+the panel width with a CSS transition, so the movement is continuous and can be reversed halfway.
 
 **Spec:** `docs/superpowers/specs/2026-10-07-web-panel-feel.html`. On the Transazioni panel it wins over §17.1.7 of
 the POC spec. Read it first: it has the state diagram, the rule for «in place or navigation», the layout and the
@@ -88,23 +87,16 @@ click can reverse, and no motion for a key that a person presses many times a da
 4. **«Modifica» stays a navigation.** The edit form needs the balances without the edited row (`formView`, mode
    `edit`). One per row would repeat accounts, categories and tags for every row. The detail stays on screen while
    the edit form loads. A later plan can split `FormView` into shared and per-row parts.
-5. **The list makes room with a View Transition.** The user chose it on 2026-10-08, after the measurements of
-   Task 8 and Task 8b. Task 8 animated `grid-template-columns`, and the list reflowed on every frame. At CPU 4×
-   a click on a row gave a first frame of 62 ms (target 50), and the list settled at about 262 ms (target 250).
-   `content-visibility: auto` on the day sections did not help. A View Transition animates snapshots, so the
-   list is laid out once. It runs only for a pointer that opens the panel from nothing or closes it to nothing,
-   at 1024px and wider, when the browser has `document.startViewTransition`, and when reduced motion is off. The
-   user accepted its two costs:
-   - the page ignores the pointer until the animation ends (200 ms in, 150 ms out);
-   - the text of the list can not slide: the two snapshots of the list cross-fade while the box changes width.
-   Task 8c keeps each snapshot at its own size and clips it to the box, so the text does not stretch.
+5. **The list makes room with a transition on `grid-template-columns`, not with a View Transition.** A View
+   Transition animates snapshots: the text of the list stretches while its box changes size, and the page ignores
+   input until the animation ends. A track transition reflows the list on every frame, but the amounts slide to
+   their new place, and a click during the movement reverses it from where it is. Task 9 checks the longest frame
+   at CPU 4×. Task 9 Step 5 adds `content-visibility: auto` to the day sections if that frame is too long.
 6. **The keyboard opens and closes without motion.** `N` and ↑ ↓ open a panel that is there on the next frame.
    The pointer gets the motion: 200 ms in (`--motion-fade`, `--motion-swap-easing`), 150 ms out, the values that
    `Panel` already uses.
 7. **Every opening of «Nuova» is a new draft.** The form gets a new `key` when it leaves the screen (Task 8b). An
-   opening while the exit of the same form plays reverses the exit and keeps the draft. This applies only to an
-   exit that `Panel` plays (below 1024px, reduced motion, no View Transitions). In a View Transition the form
-   leaves the DOM at once, and the page ignores the pointer during the exit (Task 8c).
+   opening while the exit of the same form plays reverses the exit and keeps the draft.
 8. **The top bar, the FAB and `N` ask the page first.** They dispatch a cancelable `saldo:new-transaction` event
    on `window`. Transazioni cancels it and opens the panel in place. On every other page nobody cancels it, and the
    link (or `router.push`) goes to `/transactions?new` as today.
@@ -142,9 +134,8 @@ click can reverse, and no motion for a key that a person presses many times a da
 | `apps/web/app/(app)/transactions/TransactionsPanels.tsx` | Create | The panel's client state, the layout, the event listener. |
 | `apps/web/app/(app)/transactions/page.tsx` | Modify | Render every detail and the new form; hand them to `TransactionsPanels`. |
 | `apps/web/app/(app)/transactions/TransactionForm.tsx` | Modify | «Annulla» through `PanelLink`. The amount takes the focus from an effect. |
-| `apps/web/app/(app)/transactions/transactions.module.css` | Modify | The grid, the panel's column, and the View Transition's names and animations. |
-| `apps/web/src/ui/viewTransition.ts` | Create | `withViewTransition`: runs a state change inside a View Transition, in the order of the inputs. |
-| `apps/web/scripts/measure-panel.ts`, `apps/web/package.json` | Create, modify | The measurement, before and after, with the View Transition. |
+| `apps/web/app/(app)/transactions/transactions.module.css` | Modify | The grid transition and the panel's column. |
+| `apps/web/scripts/measure-panel.ts`, `apps/web/package.json` | Create, modify | The measurement, before and after. |
 | `TODO.md`, `docs/superpowers/plans/README.md` | Modify | Record what this plan closes and what stays open. |
 
 ---
@@ -1861,9 +1852,6 @@ rtk git commit -m "feat(web): Transazioni opens its panel in the frame of the cl
 
 ### Task 8: The list makes room with one movement
 
-> Task 8c replaces the transition of this task with a View Transition (decision 5). The steps below record what
-> Task 8 did.
-
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`
 
@@ -2341,401 +2329,6 @@ rtk git commit -m "perf(web): the new form waits hidden; Esc closes at once"
 
 ---
 
-### Task 8c: The list makes room with a View Transition
-
-The Task 8 transition on `grid-template-columns` reflowed the list on every frame. At CPU 4×, a click on a row gave
-a first frame of 62 ms (target 50), and the list settled at about 262 ms (target 250). `content-visibility: auto`
-did not help. On 2026-10-08 the user chose the fallback of decision 5: a View Transition. The browser lays the list
-out once and animates two snapshots. The user accepted that the page ignores the pointer during the animation.
-
-**Files:**
-- Create: `apps/web/src/ui/viewTransition.ts`
-- Modify: `apps/web/app/(app)/transactions/TransactionsPanels.tsx`
-- Modify: `apps/web/app/(app)/transactions/transactions.module.css`
-- Modify: `apps/web/scripts/measure-panel.ts`
-
-- [x] **Step 1: The helper**
-
-Create `apps/web/src/ui/viewTransition.ts`:
-
-```ts
-/**
- * The page's View Transitions (2026-10-07 plan, decision 5). The browser draws the movement from
- * two snapshots, so the page lays itself out once, not on every frame. While it plays, the
- * transition's overlay takes the pointer: a click waits for the end.
- *
- * `<html>` carries the caller's class while the transition runs. The caller's CSS Module names the
- * parts and styles the pseudo-elements under that class: CSS Modules scope a
- * `view-transition-name` and the pseudo-elements' names together, and a module's selector needs
- * a class of its own.
- */
-
-/** The transition that plays, its class, and its update while the browser has not called it yet. */
-let running: { transition: ViewTransition; className: string } | null = null;
-let pending: (() => void) | null = null;
-
-/** Whether this browser draws View Transitions. */
-export function viewTransitionsWork(): boolean {
-  return 'startViewTransition' in document;
-}
-
-/**
- * Runs `update` inside a View Transition, with `className` on `<html>` until it ends. With no
- * class, or in a browser with no View Transitions, it runs `update` at once. The browser calls
- * `update` a frame later, after the old snapshot: `update` must change the DOM before it returns
- * (`flushSync` for React state).
- *
- * A later call finishes an earlier one first. An update that has not run yet runs at once, so the
- * states follow the order of the inputs. A transition that plays stops, so a change without
- * motion (a key) shows on the next frame and not after the animation.
- */
-export function withViewTransition(update: () => void, className: string | null): void {
-  const root = document.documentElement;
-  const earlier = pending;
-  pending = null;
-  earlier?.();
-  if (running !== null) {
-    running.transition.skipTransition();
-    root.classList.remove(running.className);
-    running = null;
-  }
-  if (className === null || !viewTransitionsWork()) {
-    update();
-    return;
-  }
-  let done = false;
-  const once = () => {
-    if (done) return;
-    done = true;
-    if (pending === once) pending = null;
-    update();
-  };
-  pending = once;
-  root.classList.add(className);
-  const transition = document.startViewTransition(once);
-  const current = { transition, className };
-  running = current;
-  const end = () => {
-    if (running !== current) return;
-    running = null;
-    root.classList.remove(className);
-  };
-  transition.finished.then(end, end);
-}
-```
-
-The class goes on `<html>`, not a `data-` attribute or the `types` of `startViewTransition`. The reason is CSS
-Modules (Lightning CSS): a module scopes `view-transition-name: tx-list` and `::view-transition-group(tx-list)` to
-the same hashed name, and a module rejects a selector with no class of its own. A module class on `<html>` keeps all
-the rules in `transactions.module.css`. A global sheet cannot name the parts, because it does not know the hash.
-
-- [x] **Step 2: `go` runs the change inside the transition**
-
-In `apps/web/app/(app)/transactions/TransactionsPanels.tsx`, import `flushSync` from `react-dom` and
-`viewTransitionsWork`, `withViewTransition` from `../../../src/ui/viewTransition`. Add after `shownOf`:
-
-```tsx
-/** `--layout-wide-breakpoint` (1024): the list and the panel share the screen. */
-const WIDE = '(min-width: 1024px)';
-
-/**
- * Decision 5: the list makes room with a View Transition. Only beside the list (below the
- * breakpoint the panel covers it, and the list does not move), only when the browser draws one,
- * and not when the person asked the system to reduce motion.
- */
-function listCanMove(): boolean {
-  return (
-    window.matchMedia(WIDE).matches &&
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    viewTransitionsWork()
-  );
-}
-```
-
-In `go`, replace the `setView` call with:
-
-```tsx
-      // A pointer that opens the panel from nothing, or closes it to nothing: the list moves, in a
-      // View Transition. A switch between panels, a key or a URL keeps the list where it is.
-      const opens = shownOf(viewRef.current).kind === 'none';
-      const moves = !instant && opens !== (next.kind === 'none') && listCanMove();
-      track(next);
-      const update = () =>
-        setView((current) => {
-          if (next.kind === 'none') {
-            if (current.panel.kind === 'none') return current;
-            // The old snapshot plays the exit: the panel leaves the DOM at once, and the form
-            // that leaves is spent.
-            if (moves) {
-              return {
-                panel: NONE,
-                closing: false,
-                instant: true,
-                draft: draftAfter(current, NONE),
-              };
-            }
-            return { ...current, closing: true, instant };
-          }
-          // «Nuova» again while its own exit plays takes the same draft back: the close is reversed.
-          // In a View Transition the new snapshot plays the entrance, not `Panel`.
-          return {
-            panel: next,
-            closing: false,
-            instant: instant || moves,
-            draft: draftAfter(current, next),
-          };
-        });
-      // The browser takes the old snapshot, then calls the update, which must reach the DOM before
-      // it returns. The URL changes now, in the click.
-      withViewTransition(
-        moves ? () => flushSync(update) : update,
-        moves ? ((opens ? styles.opening : styles.closing) ?? null) : null,
-      );
-```
-
-`pushState` stays after this call, outside the callback, so the URL changes in the click. In `follow`, wrap the
-`setView` call in `withViewTransition(() => setView(…), null)`: a URL that arrives while an update waits for its
-snapshot comes after that update.
-
-Notes:
-
-- **`instant` now means «no motion of its own».** A View Transition draws the entrance from the new snapshot, so the
-  panel opens with `instant: true`. `Panel` then latches `data-still`, and `panel-in-wide` does not play a second
-  time inside the snapshot. With no View Transition (below 1024px, reduced motion, no support), `instant` stays
-  false and `Panel` plays its own entrance and exit.
-- **The close has no `closing` phase and no timer.** The panel leaves the DOM in the update, and the old snapshot
-  plays the exit. The new form's `draft` changes in the same update, because the form leaves the screen there. The
-  timer still runs for an exit that `Panel` plays.
-- **The layout loses `data-instant`.** No transition is left on the grid.
-
-- [x] **Step 3: The grid, the column, the names and the animations**
-
-In `apps/web/app/(app)/transactions/transactions.module.css`, the wide layout becomes:
-
-```css
-/*
- * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The panel's track
- * takes its width in one frame. A pointer that opens or closes the panel runs a View Transition
- * (decision 5), which draws the movement from a snapshot before and a snapshot after: the list is
- * laid out once, not on every frame.
- */
-@media (min-width: 1024px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 0;
-    column-gap: 0;
-  }
-
-  .layout[data-panel] {
-    grid-template-columns: minmax(0, 1fr) var(--layout-panel-width);
-    column-gap: 24px;
-  }
-}
-```
-
-Replace the panel's column (Task 8 Step 2, wide part) with the block below. The column keeps
-`align-self: stretch`, so the panel stays sticky beside a long list. It keeps `overflow-x: clip`: an exit that
-`Panel` plays is in a track of 0 already, so the column clips it and no empty column stays. `display: flex`,
-`justify-content` and the `.side > aside` rule go: nothing grows any more.
-
-```css
-/*
- * The panel's column at and above the breakpoint. It spans the list's height, so the panel stays
- * sticky beside a long list. A panel that plays its exit without a View Transition (no support, or
- * reduced motion) is in a track of 0 already: the column clips it, so no empty column stays.
- */
-@media (min-width: 1024px) {
-  .side {
-    display: block;
-    align-self: stretch;
-    min-width: 0;
-    overflow-x: clip;
-  }
-}
-
-/*
- * The View Transition of a pointer that opens or closes the panel (decision 5). `<html>` carries
- * `.opening` or `.closing` while it runs, so the names exist only then: a name makes a stacking
- * context. The rest of the page does not change, so `<html>` itself takes no snapshot: it stays
- * live under the two parts, and the transition ends with them.
- */
-@media (min-width: 1024px) {
-  .opening,
-  .closing {
-    view-transition-name: none;
-  }
-
-  .opening .list,
-  .closing .list {
-    view-transition-name: tx-list;
-  }
-
-  .opening .side > aside,
-  .closing .side > aside {
-    view-transition-name: tx-panel;
-  }
-}
-
-/*
- * The list's box goes from one width to the other. Each snapshot keeps its own size at the box's
- * leading top corner, and the box clips it: the text does not stretch. The trailing edge covers
- * or uncovers it while the two snapshots cross-fade.
- */
-.opening::view-transition-group(tx-list),
-.closing::view-transition-group(tx-list) {
-  overflow: clip;
-}
-
-.opening::view-transition-old(tx-list),
-.opening::view-transition-new(tx-list),
-.closing::view-transition-old(tx-list),
-.closing::view-transition-new(tx-list) {
-  height: 100%;
-  object-fit: none;
-  object-position: left top;
-}
-
-/* In: `--motion-fade` with `--motion-swap-easing`, as `Panel`'s own entrance. */
-.opening::view-transition-group(tx-list),
-.opening::view-transition-image-pair(tx-list),
-.opening::view-transition-old(tx-list),
-.opening::view-transition-new(tx-list) {
-  animation-duration: var(--motion-fade);
-  animation-timing-function: var(--motion-swap-easing);
-}
-
-/* Out: quicker, as `Panel`'s own exit. */
-.closing::view-transition-group(tx-list),
-.closing::view-transition-image-pair(tx-list),
-.closing::view-transition-old(tx-list),
-.closing::view-transition-new(tx-list) {
-  animation-duration: 150ms;
-  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* The panel enters from the side it sits on, and leaves the same way. */
-.opening::view-transition-new(tx-panel):only-child {
-  animation: panel-in var(--motion-fade) var(--motion-swap-easing) both;
-}
-
-.closing::view-transition-old(tx-panel):only-child {
-  animation: panel-out 150ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    translate: 16px 0;
-  }
-}
-
-@keyframes panel-out {
-  to {
-    opacity: 0;
-    translate: 16px 0;
-  }
-}
-```
-
-Decisions:
-
-- **`<html>` takes no snapshot** (`view-transition-name: none` under `.opening` and `.closing`). The rest of the page
-  does not change, so it stays live under the two parts. The default root cross-fade (250 ms) does not lengthen
-  the transition.
-- **The names are unique.** The hidden new form is `display: none` in `<Activity>`, so the browser does not capture
-  it. During each transition of the check, the rendered elements with a name were `tx-list` and at most one
-  `tx-panel`, and `ready` resolved (a duplicate name rejects it).
-- **The snapshot style: clipped, not stretched.** The browser's default draws each snapshot at the box's width with
-  `block-size: auto`, so the list scales as a whole. At 60 ms into an opening, the text of the list was about 1.6×
-  its size, and the two snapshots were far apart. With `object-fit: none`, `object-position: left top` and
-  `overflow: clip`, the text keeps its size. The new snapshot is 40 px lower (the chips wrap to a second row in the
-  narrow list), so the cross-fade shows two rows close together for a short time. That reads better.
-
-- [x] **Step 4: The measurement reports the transition**
-
-In `apps/web/scripts/measure-panel.ts`, `arm()` wraps `document.startViewTransition` before its listeners:
-
-```ts
-  // A View Transition (decision 5): when it starts, and when its animation is done and the page
-  // takes input again.
-  if ('startViewTransition' in document) {
-    const native = document.startViewTransition.bind(document);
-    document.startViewTransition = (
-      options?: ViewTransitionUpdateCallback | StartViewTransitionOptions,
-    ) => {
-      const transition = native(options);
-      if (start !== null) {
-        mark('view transition starts');
-        const done = () => mark('view transition done');
-        transition.finished.then(done, done);
-      }
-      return transition;
-    };
-  }
-```
-
-«list starts to change» and «list settles» stay. The width of the list in the DOM now changes in one frame, in the
-update.
-
-- [x] **Step 5: Check in the browser**
-
-Build and start on 3100. A throwaway Playwright script (in `/tmp`, deleted after) wrapped `startViewTransition`,
-took screenshots at 60 ms and 120 ms, and read the DOM. Result on 2026-10-08, with no console errors or warnings:
-
-1. 1440px, a click on a row: one View Transition. The list goes from 1120px to 676px in the update. At 60 ms the
-   panel fades in from the right while the list's box narrows. `finished` came about 240 ms after the start
-   (CPU 1×): one frame for the old snapshot, then 200 ms of animation.
-2. The ✕: one View Transition, `finished` about 180 ms after the start. The panel is out of the DOM in the update
-   (about 17 ms after the start). The list is 1120px after it. No empty column.
-3. Another row with the panel open: no View Transition. The panel's title changes to the new row.
-4. `N`, Esc Esc (the first one leaves the amount field), ↓ ↓: no View Transition, and `getAnimations()` on the panel
-   is empty.
-5. Reduced motion: no View Transition. The list is 676px with the panel and 1120px after the ✕.
-6. 390px: the FAB raises the sheet with `sheet-in` and the scrim with `scrim-in`. A row opens the detail with
-   `panel-in`. No View Transition.
-7. «Nuova», type 12, ✕, «Nuova»: the amount is empty. A second click on a row 50 ms into an opening did nothing:
-   the transition's overlay takes the pointer, so the exit of a form cannot be reversed with the pointer. `N` during
-   the exit of a form skips the transition and opens an empty form: the old form had already left the DOM.
-8. After the ✕ the focus is back on the row (or on «Nuova») that opened the panel. With the panel open and the page
-   scrolled by 612px, the panel's top is at 96px (sticky). Back closes the panel; Forward opens it again. Neither
-   runs a View Transition.
-
-- [x] **Step 6: Measure**
-
-Three runs of `pnpm measure:panel http://localhost:3100`, median of each mark (production build, local Postgres):
-
-| Scenario | Panel in the DOM | List settles | View transition done | Longest frame |
-| --- | --- | --- | --- | --- |
-| «New transaction», CPU 1× | 64 ms | 78 ms | 297 ms | 50 ms |
-| «New transaction», CPU 4× | 137 ms | 160 ms | 365 ms | 100 ms |
-| `N`, CPU 4× | 94 ms | 93 ms | — | 93 ms |
-| From Home, CPU 4× | 365 ms | 293 ms | — | 83 ms |
-| A row, CPU 4× | 76 ms | 96 ms | 315 ms | 50 ms |
-| ✕ on the detail, CPU 4× | 35 ms (out) | 44 ms | 200 ms | 33 ms |
-| FAB at 390px, CPU 4× | 44 ms | — | — | 44 ms |
-
-«input» was at 2–8 ms and «view transition starts» 2–7 ms after it. Every scenario had `server requests: 0`, except
-the one from Home (1, a navigation).
-
-The View Transition moves «panel in the DOM» later by one frame: the browser renders the old state and takes its
-snapshot before it calls the update. At CPU 4× that frame was 50–60 ms, with the list named, with it not named, and
-with nothing named, so the size of the list is not the cause. The animation starts at `ready`, about 90–100 ms
-after the input for a row at CPU 4×. «view transition done» is about 200 ms after `ready` (open) and 150 ms after it
-(close). The longest frame of a row's opening fell from 77 ms (Task 8b) to 50 ms. Task 9 decides the targets.
-
-- [x] **Step 7: Typecheck, lint, test, commit**
-
-```bash
-rtk proxy pnpm --filter web typecheck
-rtk proxy pnpm lint
-rtk proxy pnpm --filter web test
-pnpm exec biome check --write "apps/web/app/(app)/transactions" apps/web/src/ui apps/web/scripts/measure-panel.ts
-rtk git add "apps/web/app/(app)/transactions" apps/web/src/ui/viewTransition.ts apps/web/scripts/measure-panel.ts \
-  docs/superpowers/plans/2026-10-07-web-panel-feel.md docs/superpowers/specs/2026-10-07-web-panel-feel.html
-rtk git commit -m "feat(web): the list makes room with a View Transition"
-```
-
----
-
 ### Task 9: Verify, measure, and record
 
 **Files:**
@@ -2755,20 +2348,11 @@ Acceptance:
 | Scenario | Required |
 | --- | --- |
 | «New transaction» on Transazioni, a row, the ✕, `N` | `server requests: 0` |
-| «New transaction» and the FAB | «panel in the DOM» ≤ 40 ms after «input» at CPU 1×, ≤ 100 ms at CPU 4× (see below) |
-| A click on a row, CPU 4× | «panel in the DOM» ≤ 50 ms after «input»; one «view transition starts»; «view transition done» about 200 ms after «view transition starts»: record the measured time |
-| ✕ on the detail, CPU 4× | «panel out of the DOM» ≤ 200 ms; one View Transition, done about 150 ms after its start |
-| Another row, `N`, ↑ ↓, Esc, Back | no «view transition starts» |
+| Same, CPU 1× and 4× | «panel in the DOM» ≤ 50 ms after «input» (≤ 20 ms at 1×) |
+| ✕ on the detail | «panel out of the DOM» ≤ 200 ms; «list settles» ≤ 200 ms |
+| A click on a row, CPU 4× | «list settles» ≤ 250 ms; «longest frame» ≤ 50 ms |
 | `N` | the list changes within one frame (no transition) |
-| From Home | not worse than the baseline (still a navigation from Home) |
-
-The targets for «New transaction» and the FAB are higher than for a row. The JavaScript of the click is about 10 ms
-(Task 8b). The rest of the time is the style and layout of the form that appears: `focus()` on the amount needs a
-layout, so it does that work in the click. The first frame has to do the same work before it paints.
-
-Task 8c measured «panel in the DOM» above these targets (64 ms and 137 ms for «New transaction», 76 ms for a row).
-The View Transition adds one frame before the update: the browser renders the old state and takes its snapshot.
-Record the numbers and the decision under «After».
+| From Home, and the FAB | not worse than the baseline (still a navigation from Home) |
 
 Paste the output under «After» at the end of this plan.
 
@@ -2793,7 +2377,7 @@ In the browser, at 1440px:
 7. A filter chip with the panel open: the list filters and the panel closes.
 8. Home → «New transaction»: Transazioni opens with the form, as before.
 9. Turn JavaScript off: a row link, the ✕ and «Annulla» still work as pages.
-10. macOS «Reduce motion» on: no View Transition and no slide, the panel appears and goes.
+10. macOS «Reduce motion» on: no slide, the panel appears and goes.
 
 - [ ] **Step 4: Run the gates**
 
@@ -2807,11 +2391,29 @@ rtk proxy pnpm test
 
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no type errors; every test passes.
 
-- [x] **Step 5: (Removed)**
+- [ ] **Step 5: Only if «longest frame» is above 50 ms at CPU 4×**
 
-This step added `content-visibility: auto` to the day sections if the grid transition's longest frame was above
-50 ms. It did not help, and Task 8c replaced the grid transition with a View Transition. The list is laid out once,
-so the step does not apply.
+The list reflows on every frame of the transition. Let the browser skip the day sections that are off screen. In
+`transactions.module.css`, after `.list { … }`, add:
+
+```css
+/* The track transition reflows the list on every frame: the days off screen are skipped. */
+.list > section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+```
+
+Measure again (Step 1). Check that ↑ ↓ still scroll the selected row into view, and that the browser's find in
+page still finds a row below the fold. Commit:
+
+```bash
+rtk git add "apps/web/app/(app)/transactions/transactions.module.css"
+rtk git commit -m "perf(web): skip off-screen days while the list makes room"
+```
+
+If the frame is still above 50 ms, stop and report to the user with the numbers: the fallback is a View
+Transition (decision 5), which is a product choice because it blocks input during the animation.
 
 - [ ] **Step 6: Update `TODO.md`**
 
@@ -2821,7 +2423,7 @@ paragraph:
 ```markdown
 Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-feel.md`): on Transazioni,
 «Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
-with a View Transition. Still open: the production region (`fra1::iad1` — the function runs in Washington, Neon in
+in one movement. Still open: the production region (`fra1::iad1` — the function runs in Washington, Neon in
 Frankfurt), the four queries in a chain on every page, `loading.tsx` and `useLinkStatus` for the top-level
 pages, the edit form (still a navigation), the same pattern on Conti and Profilo, and the motion the phone has
 that the web lacks.
@@ -2838,7 +2440,7 @@ In `docs/superpowers/plans/README.md`, before `## Future (not POC)`, add:
 
 - **Web: the Transazioni panel opens in the frame of the click.** The panel is client state and the URL follows
   it with `history.pushState`; the server renders every row's detail and the new form. The list makes room with
-  a View Transition. `N` and ↑ ↓ open without motion. «Modifica» is still a navigation.
+  a transition on its grid track. `N` and ↑ ↓ open without motion. «Modifica» is still a navigation.
 ```
 
 Add ` ✅ done` to the heading and a one-line status with the measured numbers when Task 9 is accepted.
