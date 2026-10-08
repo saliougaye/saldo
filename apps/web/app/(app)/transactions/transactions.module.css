@@ -6,29 +6,19 @@
 
 /*
  * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The panel's track
- * grows from nothing as the panel opens, so the list makes room in one movement — the amounts slide
- * to their new place instead of jumping — and a click during the movement reverses it from where it
- * is. Closing is quicker than opening, as the panel's own exit.
+ * takes its width in one frame. A pointer that opens or closes the panel runs a View Transition
+ * (decision 5), which draws the movement from a snapshot before and a snapshot after: the list is
+ * laid out once, not on every frame.
  */
 @media (min-width: 1024px) {
   .layout {
     grid-template-columns: minmax(0, 1fr) 0;
     column-gap: 0;
-    transition-property: grid-template-columns, column-gap;
-    transition-duration: 150ms;
-    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .layout[data-panel] {
     grid-template-columns: minmax(0, 1fr) var(--layout-panel-width);
     column-gap: 24px;
-    transition-duration: var(--motion-fade);
-    transition-timing-function: var(--motion-swap-easing);
-  }
-
-  /* Opened or closed from the keyboard: the list takes its new width on the next frame. */
-  .layout[data-instant] {
-    transition: none;
   }
 }
 
@@ -45,22 +35,99 @@
 }
 
 /*
- * The panel's column at and above the breakpoint. It clips what does not fit yet while it grows;
- * the panel sits at its trailing edge, so it is uncovered from the side it will sit on. It spans the
- * list's height, so the panel stays sticky beside a long list.
+ * The panel's column at and above the breakpoint. It spans the list's height, so the panel stays
+ * sticky beside a long list. A panel that plays its exit without a View Transition (no support, or
+ * reduced motion) is in a track of 0 already: the column clips it, so no empty column stays.
  */
 @media (min-width: 1024px) {
   .side {
-    display: flex;
-    justify-content: flex-end;
+    display: block;
     align-self: stretch;
     min-width: 0;
     overflow-x: clip;
   }
+}
 
-  .side > aside {
-    flex: none;
-    align-self: flex-start;
+/*
+ * The View Transition of a pointer that opens or closes the panel (decision 5). `<html>` carries
+ * `.opening` or `.closing` while it runs, so the names exist only then: a name makes a stacking
+ * context. The rest of the page does not change, so `<html>` itself takes no snapshot: it stays
+ * live under the two parts, and the transition ends with them.
+ */
+@media (min-width: 1024px) {
+  .opening,
+  .closing {
+    view-transition-name: none;
+  }
+
+  .opening .list,
+  .closing .list {
+    view-transition-name: tx-list;
+  }
+
+  .opening .side > aside,
+  .closing .side > aside {
+    view-transition-name: tx-panel;
+  }
+}
+
+/*
+ * The list's box goes from one width to the other. Each snapshot keeps its own size at the box's
+ * leading top corner, and the box clips it: the text does not stretch. The trailing edge covers
+ * or uncovers it while the two snapshots cross-fade.
+ */
+.opening::view-transition-group(tx-list),
+.closing::view-transition-group(tx-list) {
+  overflow: clip;
+}
+
+.opening::view-transition-old(tx-list),
+.opening::view-transition-new(tx-list),
+.closing::view-transition-old(tx-list),
+.closing::view-transition-new(tx-list) {
+  height: 100%;
+  object-fit: none;
+  object-position: left top;
+}
+
+/* In: `--motion-fade` with `--motion-swap-easing`, as `Panel`'s own entrance. */
+.opening::view-transition-group(tx-list),
+.opening::view-transition-image-pair(tx-list),
+.opening::view-transition-old(tx-list),
+.opening::view-transition-new(tx-list) {
+  animation-duration: var(--motion-fade);
+  animation-timing-function: var(--motion-swap-easing);
+}
+
+/* Out: quicker, as `Panel`'s own exit. */
+.closing::view-transition-group(tx-list),
+.closing::view-transition-image-pair(tx-list),
+.closing::view-transition-old(tx-list),
+.closing::view-transition-new(tx-list) {
+  animation-duration: 150ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The panel enters from the side it sits on, and leaves the same way. */
+.opening::view-transition-new(tx-panel):only-child {
+  animation: panel-in var(--motion-fade) var(--motion-swap-easing) both;
+}
+
+.closing::view-transition-old(tx-panel):only-child {
+  animation: panel-out 150ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: 16px 0;
+  }
+}
+
+@keyframes panel-out {
+  to {
+    opacity: 0;
+    translate: 16px 0;
   }
 }
 

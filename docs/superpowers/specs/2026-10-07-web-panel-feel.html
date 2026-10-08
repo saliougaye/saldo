@@ -228,6 +228,20 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
 @media (prefers-reduced-motion: reduce) {
   .screen .cols, .screen .panelbox { transition-property: opacity; }
 }
+/* The demo's View Transition: the same names, sizes and timing as the app. */
+html.demo-vt { view-transition-name: none; }
+.demo-vt .screen .cols, .demo-vt .screen .panelbox { transition: none; }
+.demo-vt .screen .cols:not(.open) .panelbox { display: none; }
+.demo-vt #demo .list { view-transition-name: demo-list; }
+.demo-vt #demo .panelbox { view-transition-name: demo-panel; }
+.demo-vt::view-transition-group(demo-list) { overflow: clip; }
+.demo-vt::view-transition-old(demo-list), .demo-vt::view-transition-new(demo-list) { height: 100%; object-fit: none; object-position: left top; }
+.demo-open::view-transition-group(demo-list), .demo-open::view-transition-image-pair(demo-list), .demo-open::view-transition-old(demo-list), .demo-open::view-transition-new(demo-list) { animation-duration: 200ms; animation-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.demo-close::view-transition-group(demo-list), .demo-close::view-transition-image-pair(demo-list), .demo-close::view-transition-old(demo-list), .demo-close::view-transition-new(demo-list) { animation-duration: 150ms; animation-timing-function: var(--ease-out); }
+.demo-open::view-transition-new(demo-panel):only-child { animation: demo-in 200ms cubic-bezier(0.2, 0, 0, 1) both; }
+.demo-close::view-transition-old(demo-panel):only-child { animation: demo-out 150ms var(--ease-out) both; }
+@keyframes demo-in { from { opacity: 0; translate: 12px 0; } }
+@keyframes demo-out { to { opacity: 0; translate: 12px 0; } }
 </style>
 <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -289,7 +303,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
       <p>This spec changes three things on Transazioni at 1024px and wider, and two things below 1024px:</p>
       <ol class="steps">
         <li>The panel opens and closes in the frame of the click. The browser sends no request.</li>
-        <li>At 1024px and wider, the list narrows in one movement while the panel enters. The amounts slide. They do not jump.</li>
+        <li>At 1024px and wider, the list narrows in one movement while the panel enters. The amounts do not jump: a View Transition narrows the list's box and cross-fades its two images.</li>
         <li>The close removes the panel from the layout at once. No empty column stays on the screen.</li>
       </ol>
       <p>Below 1024px the panel is a full screen or a sheet over the list. The list does not change width there, so only items 1 and 3 apply.</p>
@@ -408,7 +422,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <path class="ln-ink" d="M170 334 C 170 450, 600 450, 772 338" marker-end="url(#ah-ink)"/>
         <text x="250" y="470" font-size="15">Save: server, then the saved row's Detail</text>
       </svg>
-      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play the exit first. Esc closes on the next frame.</figcaption>
+      <figcaption><b>Figure 2.</b> Green: in place, in the frame of the input, no request. Black: a request to the server, as today. Dashed: a close. The ✕ and Cancel play an exit. Esc closes on the next frame.</figcaption>
     </figure>
   </div>
 </section>
@@ -477,19 +491,20 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     <div class="ch-head">
       <span class="ch-num">05</span>
       <h2 id="h-room">The list makes room</h2>
-      <p class="lead">At 1024px and wider, the list and the panel share a grid. The second track grows from 0 to the panel width with a CSS transition.</p>
+      <p class="lead">At 1024px and wider, the list and the panel share a grid. A click opens or closes the panel in a View Transition: the browser lays the list out once and animates two snapshots.</p>
     </div>
     <div class="prose">
-      <p>The list reflows on each frame of the transition. Thus the amounts slide to their new position. A click during the movement reverses it from the current position, because a CSS transition starts from the current value.</p>
-      <p>The panel's column clips its content while it grows. The panel stays at the trailing edge of the column. Thus the panel appears from the side where it stays.</p>
-      <p>On close, the track goes back to 0 at once, while the panel plays its exit. The panel leaves the DOM after its exit. No empty column stays.</p>
-      <div class="callout"><span class="meta">Why not a View Transition</span><p>A View Transition animates snapshots. The text of the list stretches while its box changes size, and the page ignores input until the animation ends. The track transition has neither problem. Its cost is a layout on each frame. The plan measures the longest frame, and adds <code>content-visibility: auto</code> to the day sections if that frame is longer than 50 ms at CPU 4×.</p></div>
+      <p>The second track goes from 0 to the panel width in one frame. Before that frame, the browser takes a snapshot of the list and of the panel. After it, the browser takes a second snapshot. Then it animates from the first snapshot to the second: the list's box narrows in 200&nbsp;ms, and the panel slides 16px in from the trailing side and fades in.</p>
+      <p>Each snapshot of the list keeps its size, at the leading top corner of the box. The box clips it. Thus the text of the list does not stretch: the old and the new image cross-fade while the trailing edge moves.</p>
+      <p>On close, the panel leaves the DOM at once. Its snapshot plays the exit in 150&nbsp;ms while the list's box widens. No empty column stays.</p>
+      <p>Only a click that opens the panel from nothing or closes it to nothing runs a View Transition. A switch to another row, a key, Back and a filter do not. Below 1024px, with reduced motion, or in a browser with no View Transitions, the track changes in one frame and the panel plays its own entrance.</p>
+      <div class="callout"><span class="meta">Why a View Transition</span><p>The first version animated the grid track with a CSS transition. The list reflowed on each frame. At CPU 4× a click on a row gave a first frame of 62&nbsp;ms (target 50), and the list settled at about 262&nbsp;ms (target 250). A View Transition lays the list out once. On 2026-10-08 the user accepted its two costs: the page ignores the pointer until the movement ends, and the text of the list cross-fades instead of sliding.</p></div>
     </div>
   </div>
   <div class="visual">
     <figure class="rv">
       <svg viewBox="0 0 1040 420" role="img" aria-labelledby="f4t">
-        <title id="f4t">The layout at 1440 pixels. Closed: the list is 1096 pixels and the panel track is 0. Open: the list is 676 pixels, a 24 pixel gap, and the panel track is 420 pixels. The panel is anchored at the trailing edge of its track.</title>
+        <title id="f4t">The layout at 1440 pixels. Closed: the list is 1096 pixels and the panel track is 0. Open: the list is 676 pixels, a 24 pixel gap, and the panel track is 420 pixels. The View Transition narrows the list's box and the panel enters from the trailing edge.</title>
         <text x="10" y="34" font-size="18" class="b">Closed</text>
         <rect class="bx" x="10" y="50" width="1020" height="120" rx="14"/>
         <text x="520" y="102" text-anchor="middle" font-size="19" class="b">List · 1096 px</text>
@@ -499,7 +514,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <text x="10" y="250" font-size="18" class="b">Open</text>
         <rect class="bx" x="10" y="266" width="610" height="120" rx="14"/>
         <text x="315" y="318" text-anchor="middle" font-size="19" class="b">List · 676 px</text>
-        <text x="315" y="348" text-anchor="middle" font-size="14" class="tm">the amounts slide left, they do not jump</text>
+        <text x="315" y="348" text-anchor="middle" font-size="14" class="tm">the old and the new image cross-fade</text>
         <rect class="bx-r" x="620" y="266" width="22" height="120"/>
         <text x="631" y="404" text-anchor="middle" font-size="13" class="tm">24</text>
         <rect class="bx-ok" x="642" y="266" width="388" height="120" rx="14"/>
@@ -508,11 +523,11 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
         <path class="ln-ok" d="M1010 226 H760" marker-end="url(#ah-ok)"/>
         <text x="1010" y="216" text-anchor="end" font-size="14" class="tok">the panel appears from the trailing edge</text>
       </svg>
-      <figcaption><b>Figure 4.</b> Both states at 1440px. Below 1024px the panel is fixed over the list, and the list does not change.</figcaption>
+      <figcaption><b>Figure 4.</b> Both states at 1440px. The track changes in one frame, and a View Transition animates from the first state to the second. Below 1024px the panel is fixed over the list, and the list does not change.</figcaption>
     </figure>
     <div class="stage rv">
       <div style="width:100%">
-        <div class="screen wide" role="img" aria-label="Interactive illustration of Transazioni at a wide size. A button opens and closes the panel with the real transition.">
+        <div class="screen wide" role="img" aria-label="Interactive illustration of Transazioni at a wide size. A button opens and closes the panel with a View Transition.">
           <div class="topbar"><span class="brandline" style="margin:0"><i></i>Saldo</span><span class="nav">Home</span><span class="nav"><b>Transactions</b></span><span class="nav">Statistics</span><span class="nav">Accounts</span><span class="new">New transaction</span></div>
           <div class="cols" id="demo">
             <div class="list">
@@ -533,7 +548,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
             </div></div>
           </div>
         </div>
-        <p class="stage-cap"><button class="demo-btn" type="button" aria-controls="demo" aria-pressed="false">Open the panel</button> Illustration · the real transition: 200 ms in, 150 ms out. Click during the movement to reverse it.</p>
+        <p class="stage-cap"><button class="demo-btn" type="button" aria-controls="demo" aria-pressed="false">Open the panel</button> Illustration · a View Transition: 200 ms in, 150 ms out. The page ignores clicks during the movement. With no View Transitions, a CSS transition plays.</p>
       </div>
     </div>
   </div>
@@ -550,7 +565,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
     <div class="prose">
       <p>A person presses <kbd>N</kbd> and the arrow keys many times a day. Motion on those keys makes the app feel slower each time. Thus the keyboard opens and closes the panel on the next frame, with no transition.</p>
       <p>The pointer gets a short entrance and a shorter exit. The values are those that <code>Panel</code> already uses.</p>
-      <p>Each opening of «New transaction» starts a new draft: the draft of the last form does not come back. An opening during the exit of the same form reverses the exit and keeps the draft.</p>
+      <p>Each opening of «New transaction» starts a new draft: the draft of the last form does not come back. Below 1024px, an opening during the exit of the same form reverses the exit and keeps the draft. At 1024px and wider the page ignores the pointer during the exit.</p>
     </div>
   </div>
   <div class="visual">
@@ -558,11 +573,12 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
       <table>
         <thead><tr><th scope="col">Input</th><th scope="col">Panel</th><th scope="col">List (1024px and wider)</th></tr></thead>
         <tbody>
-          <tr><td>Click, tap</td><td>In: 200 ms, slide 16px and fade. Out: 150 ms.</td><td>Track to 420px in 200 ms (<code>--motion-fade</code>, <code>--motion-swap-easing</code>). Back to 0 in 150 ms.</td></tr>
+          <tr><td>Click, tap</td><td>In: 200 ms, slide 16px and fade. Out: 150 ms.</td><td>A View Transition: the box narrows in 200 ms (<code>--motion-fade</code>, <code>--motion-swap-easing</code>) and widens in 150 ms. The page ignores the pointer until the movement ends.</td></tr>
           <tr><td><kbd>N</kbd>, <kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Esc</kbd></td><td>On the next frame</td><td>On the next frame</td></tr>
           <tr><td>Another row, panel open</td><td>Stays. Only its content changes.</td><td>Does not move</td></tr>
           <tr><td>Back, a filter, a save</td><td>Follows the new URL on the next frame</td><td>On the next frame</td></tr>
-          <tr><td>Reduce motion on</td><td colspan="2">The global rule of <code>globals.css</code> applies: the panel appears and goes, with no slide.</td></tr>
+          <tr><td>Reduce motion on</td><td colspan="2">No View Transition. The global rule of <code>globals.css</code> applies: the panel appears and goes, with no slide.</td></tr>
+          <tr><td>No View Transitions in the browser</td><td><code>Panel</code> plays its own entrance and exit.</td><td>On the next frame</td></tr>
         </tbody>
       </table>
     </div>
@@ -677,6 +693,7 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
           <tr><td>In place</td><td>The panel changes in the browser, with no request to the server.</td></tr>
           <tr><td>Navigation</td><td>The browser asks the server for the page with the new URL.</td></tr>
           <tr><td>Track</td><td>One column of a CSS grid.</td></tr>
+          <tr><td>View Transition</td><td>The browser takes a snapshot before and after a change, and animates from one to the other.</td></tr>
           <tr><td>Frame</td><td>One image on the screen. At 60 Hz a frame is 16.7 ms.</td></tr>
           <tr><td>RSC</td><td>React Server Components payload: what the server sends for a navigation.</td></tr>
           <tr><td>CPU 4×</td><td>Chrome makes the CPU four times slower, to show a slower computer.</td></tr>
@@ -743,10 +760,24 @@ kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); borde
   });
 
   var demo = document.getElementById('demo'), demoBtn = document.querySelector('.demo-btn');
+  // A View Transition, as in the app. With none, or with reduced motion, the CSS transition plays.
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  var root = document.documentElement;
   if (demo && demoBtn) demoBtn.addEventListener('click', function () {
-    var open = demo.classList.toggle('open');
-    demoBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
-    demoBtn.textContent = open ? 'Close the panel' : 'Open the panel';
+    var open = !demo.classList.contains('open');
+    var apply = function () {
+      demo.classList.toggle('open', open);
+      demoBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
+      demoBtn.textContent = open ? 'Close the panel' : 'Open the panel';
+    };
+    if (!document.startViewTransition || reduce.matches) { apply(); return; }
+    root.classList.remove('demo-open', 'demo-close');
+    root.classList.add('demo-vt', open ? 'demo-open' : 'demo-close');
+    var transition = document.startViewTransition(apply);
+    var end = function () {
+      if (root.classList.contains(open ? 'demo-open' : 'demo-close')) root.classList.remove('demo-vt', 'demo-open', 'demo-close');
+    };
+    transition.finished.then(end, end);
   });
 
   onScroll();
