@@ -1,0 +1,138 @@
+# Hidden amounts (the eye in the tab headers): totals and balances turn into «••••», on Home, on
+# Statistics, in the forecast sheet and in the period recap. The setting lives in `kv.amountsHidden`
+# on the device, so it must survive a relaunch.
+#
+# WHERE IT STARTS
+# ---------------
+# Run it with --seed, in English:
+#
+#   SALDO_APP_PATH=<Saldo.app> apps/mobile/maestro/run.sh <udid> apps/mobile/maestro/hidden-amounts.yaml --seed
+#
+# The seeded app starts on the tabs, behind the first-run intro. The flow taps the intro away.
+#
+# THE RECAP IS OPTIONAL
+# ---------------------
+# The recap sheet shows once, on the first open of a new period, and only to a person who finished
+# onboarding in an earlier period. A fresh seed is never due, so by default the flow skips the recap.
+# The recap sheet has no eye of its own: it can only be seen masked when the device is already hidden
+# at launch. To cover it, run these steps by hand instead of `run.sh`. Do them after the seed and
+# before `maestro test`:
+#
+#   sqlite3 "$(xcrun simctl get_app_container <udid> io.github.saldo.app data)/Documents/SQLite/saldo.db" \
+#     "insert or replace into kv(key,value) values ('lastRecapPeriod','replay'),('amountsHidden','true');"
+#
+# The app then opens on the recap with the figures hidden. The flow checks that, closes the recap,
+# and then goes on with the normal path.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`.
+appId: io.github.saldo.app
+name: Hide amounts on Home, Statistics, forecast and recap
+---
+- launchApp
+
+# The recap comes first when it is due, then the intro. «Start the new …» is the recap's button
+# («cycle», «month», …). «Continue» is the intro's button. Wait for whichever comes first.
+- extendedWaitUntil:
+    visible: "Start the new.*|Continue"
+    timeout: 30000
+
+# The recap sheet, only when the device was set up for it (see the header). The net, the income, the
+# expenses, the categories and the net worth are masks. The biggest expense is one single entry, so it
+# stays in clear by design (see `AmountText`, prop `plain`): the flow does not assert on it.
+- runFlow:
+    when:
+      visible: "Start the new.*"
+    commands:
+      - assertVisible: "Amount hidden"
+      - assertVisible: "Last cycle.*••••.*"
+      - assertNotVisible: "Last cycle.*€[0-9].*"
+      - assertNotVisible: "Net for the cycle.*€[0-9].*"
+      # The sheet scrolls: the lower sections hold the biggest expense and the net worth.
+      - scroll
+      - assertVisible: "Amount hidden"
+      - takeScreenshot: hidden-amounts-recap
+      - tapOn: "Start the new.*"
+      - extendedWaitUntil:
+          visible: "Continue"
+          timeout: 20000
+
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible:
+      id: "hide-amounts"
+    timeout: 20000
+
+# Start from "amounts shown", whatever the device had. The eye is labelled with its next action: it
+# reads «Show amounts» while the figures are hidden.
+- runFlow:
+    when:
+      visible: "Show amounts"
+    commands:
+      - tapOn:
+          id: "hide-amounts"
+- extendedWaitUntil:
+    visible: "Hide amounts"
+    timeout: 10000
+- assertNotVisible: "Amount hidden"
+# Home reads «Income €1,234.00» in clear: none of it is a mask.
+- assertNotVisible: "Income €••••"
+
+# 1. Home. One tap hides the totals: «Left to spend», Income and Expenses, the budgets.
+- tapOn:
+    id: "hide-amounts"
+- extendedWaitUntil:
+    visible: "Show amounts"
+    timeout: 10000
+- assertVisible: "Amount hidden"
+- assertVisible: "Income €••••"
+- assertVisible: "Expenses €••••"
+
+# 2. Statistics. The eye is in this header too, and the state is shared: the figures are already masked.
+- tapOn:
+    id: "tab-stats"
+- extendedWaitUntil:
+    visible: "Cashflow"
+    timeout: 10000
+- assertVisible: "Show amounts"
+- assertVisible: "Amount hidden"
+
+# 3. The forecast. The line under the chart opens its sheet; its label holds the amount, so the sheet
+#    is found by the words around it. In hidden mode the amount in that line is a mask too.
+- scrollUntilVisible:
+    element: "By .*, about.*••••.*"
+    direction: DOWN
+- tapOn: "By .*, about.*••••.*"
+- extendedWaitUntil:
+    visible: "Forecast"
+    timeout: 10000
+- assertVisible: "Amount hidden"
+- assertVisible: "Spending ~€••••"
+- takeScreenshot: hidden-amounts-forecast
+# Tap the dimmed screen above the sheet to close it.
+- tapOn:
+    point: 50%, 15%
+- extendedWaitUntil:
+    visible: "Cashflow"
+    timeout: 10000
+
+# 4. The setting is stored on the device. Stop the app and start it again without clearing its
+#    state: the figures must still be hidden, and so must the eye's state.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "hide-amounts"
+    timeout: 30000
+- assertVisible: "Show amounts"
+- assertVisible: "Amount hidden"
+- assertVisible: "Income €••••"
+
+# 5. Tapping the eye again shows the figures, and the mask goes away.
+- tapOn:
+    id: "hide-amounts"
+- extendedWaitUntil:
+    visible: "Hide amounts"
+    timeout: 10000
+- assertNotVisible: "Amount hidden"
+- assertNotVisible: "Income €••••"

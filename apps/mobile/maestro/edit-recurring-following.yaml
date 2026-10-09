@@ -1,12 +1,12 @@
 # §16's second end-to-end flow: editing one occurrence of a recurring transaction with "Questa e le
 # successive" replaces the future occurrences and leaves the past ones alone (§5.9 / §6.21).
 #
-# THE STATE THE DEVICE MUST BE IN
-# -------------------------------
-#  * The app is installed and signed in, and onboarding has been completed, i.e. launching it lands
-#    on the tabs. Sign-in is a passkey ceremony Maestro cannot drive — see the header of
-#    `onboarding-and-first-expense.yaml`, which has the full story.
-#  * Any account will do, empty or not: this flow creates the series it edits.
+# WHERE IT STARTS
+# ---------------
+# Run it with --seed: `apps/mobile/maestro/run.sh <udid> apps/mobile/maestro/edit-recurring-following.yaml --seed`.
+# The seeded app starts on the tabs, behind the first-run intro. The flow taps the intro away.
+# It uses the seeded account «Conto corrente» (demo data, not UI copy). Any account would do: this
+# flow creates the series it edits. The simulator runs in English.
 #
 # WHY IT CREATES ITS OWN DATA INSTEAD OF USING THE SEEDER
 # ------------------------------------------------------
@@ -29,20 +29,20 @@ appId: io.github.saldo.app
 name: Edit a recurring transaction, this one and the following ones
 ---
 - launchApp
+# The first-run intro (§6.40) covers the tabs once on a seeded install. Wait for it, then tap it away.
+# `tab-fab` is no good as the first wait: the tab bar is under the intro and the FAB still matches.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
 - extendedWaitUntil:
     visible:
       id: "tab-fab"
-    timeout: 30000
-# The first-run intro (§6.40) is up once after onboarding on this device; out of the way if so.
-- runFlow:
-    when:
-      visible:
-        id: "intro-continue"
-    commands:
-      - tapOn:
-          id: "intro-continue"
+    timeout: 20000
 
-# 1. A monthly series, dated today. Saving with "Ripeti" on turns the row into the first occurrence
+# 1. A monthly series, dated today. Saving with "Repeat" on turns the row into the first occurrence
 #    of a new recurrence and materialises the rest up to the end of the period after this one.
 - tapOn:
     id: "tab-fab"
@@ -54,27 +54,36 @@ name: Edit a recurring transaction, this one and the following ones
     id: "keypad-key-0"
 - tapOn:
     id: "keypad-key-0"
-# «Fatto» puts the keypad away, which is what frees the category grid below it.
+# «Done» puts the keypad away, which is what frees the category grid below it.
 - tapOn:
     id: "keypad-action"
 - tapOn:
     id: "txform-category-0"
+# The form does not pick an account for you.
+- tapOn: "Conto corrente"
+# "Repeat" is a chip row under the date (§6.16): "Every month" is the second chip. It is on screen
+# now, above the fold, so tap it before the form is swiped up.
+- tapOn:
+    id: "txform-repeat-monthly"
+# The description card starts under the pinned footer, and Maestro still finds it there. A plain tap
+# or `scrollUntilVisible` would land on the footer's «Add» button. Swipe the form up by hand.
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
 - tapOn:
     id: "txform-description"
 - inputText: "Maestro rent"
-- hideKeyboard
-# "Ripeti" is a chip row under the date (§6.16): "Ogni mese" is the second chip.
-- scrollUntilVisible:
-    element:
-      id: "txform-repeat-monthly"
-    direction: DOWN
-- tapOn:
-    id: "txform-repeat-monthly"
+# Return closes the keyboard, which covers the footer. `hideKeyboard` fails on iOS.
+- pressKey: Enter
 - tapOn:
     id: "txform-submit"
 
-# Home, "Ultime transazioni": today's occurrence. Text, but text this flow typed.
-- assertVisible: "Maestro rent"
+# Home, "Recent transactions": today's occurrence. Text, but text this flow typed. A row is one
+# accessible element labelled "<title>, <category>, <amount>", so the selector is a regex that starts
+# with the title.
+- extendedWaitUntil:
+    visible: "Maestro rent.*"
+    timeout: 10000
 
 # 2. The next occurrence is a month out, in the next period. Navigation stops at the current one
 #    (§6.15), so it is found in the upcoming fold, which reaches the end of the next period and
@@ -84,18 +93,25 @@ name: Edit a recurring transaction, this one and the following ones
 - tapOn:
     id: "transactions-upcoming"
 - scrollUntilVisible:
-    element: "Maestro rent"
+    element: "Maestro rent.*"
     direction: DOWN
 
 # 3. Open that future occurrence and rename it. The description is what changes, not the amount:
 #    it is the one field whose new value can be asserted without knowing the device's locale.
-- tapOn: "Maestro rent"
+- tapOn: "Maestro rent.*"
 - tapOn:
     id: "transaction-edit"
+# The edit form has two pinned buttons, «Save» and «Delete». They cover the description card, so swipe
+# the form up first. A tap on the covered field would press «Delete» and open its confirmation.
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
 - tapOn:
     id: "txform-description"
 - eraseText
 - inputText: "Maestro moved"
+# Return closes the keyboard, which covers the footer's submit button.
+- pressKey: Enter
 - tapOn:
     id: "txform-submit"
 
@@ -111,11 +127,11 @@ name: Edit a recurring transaction, this one and the following ones
 - tapOn:
     id: "back-button"
 # The future occurrence carries the new description.
-- assertVisible: "Maestro moved"
+- assertVisible: "Maestro moved.*"
 
 # 6. The occurrence that already happened is untouched: still in the same list, still called what
 #    it was. (No duplicate check here any more: today's row and the next one now share this list,
 #    so "not visible" cannot tell a duplicate apart; `planRecurrenceEdit`'s tests cover that.)
 - scrollUntilVisible:
-    element: "Maestro rent"
+    element: "Maestro rent.*"
     direction: DOWN

@@ -4,9 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+    # `labeled` starts the run when someone adds the `e2e` label to a pull request.
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   check:
+    # Adding a label does not need a second run of the unit checks.
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +23,23 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+  # The Playwright suite takes minutes: it runs only on a pull request that carries the `e2e` label.
+  e2e-web:
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm --filter web e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results

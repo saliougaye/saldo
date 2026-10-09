@@ -1,0 +1,174 @@
+# Period navigation (§6.15): the header's arrows stop at the current period, a custom range replaces the
+# period, and the sheets still take taps after the period changed.
+#
+# WHERE IT STARTS
+# ---------------
+# Run with --seed:
+#
+#   SALDO_APP_PATH=<Saldo.app> apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/period-navigation.yaml --seed
+#
+# The seed gives a pay cycle that starts on the 27th, so the current period is a cycle. The first-run
+# intro (§6.40) shows once over the tabs. The flow closes it and starts on Home.
+#
+# THE FLOW DOES NOT DEPEND ON THE DATE
+# ------------------------------------
+# The simulator clock is the real clock. The flow never names a month or a day count. The dates in the
+# header and its "day N of M" line are not in the accessibility tree: the button is labelled "Period"
+# as a whole. So the flow reads the first card of Home. It says "Left to spend" in the current period
+# and "Saved this period" in a period that is closed. The two arrows have testIDs, and the flow reads
+# their enabled state.
+# For a custom range the flow picks the 15th and the 18th of the month that the calendar opens on.
+# That month is the one of the period start, and it is never later than today's month.
+#
+# The other controls have no testID: the flow uses the English labels of the app, and the calendar
+# days have the date as their accessibility label.
+appId: io.github.saldo.app
+name: Period navigation - stops at the current period, custom range, sheets after navigating
+---
+- launchApp
+
+# The intro sits over the tabs on the first start. Wait for it: the tab bar is behind it.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+
+# 1. The current period. There is nothing after it: the › arrow is off and a tap on it does nothing.
+- assertVisible: "Left to spend"
+- assertVisible:
+    id: "period-next"
+    enabled: false
+- assertVisible:
+    id: "period-previous"
+    enabled: true
+- tapOn:
+    id: "period-next"
+- assertVisible: "Left to spend"
+- assertNotVisible: "Saved this period"
+
+# 2. Back in time. Each tap on ‹ shows a closed period, and › comes on.
+- tapOn:
+    id: "period-previous"
+- extendedWaitUntil:
+    visible: "Saved this period"
+    timeout: 10000
+- assertVisible:
+    id: "period-next"
+    enabled: true
+- tapOn:
+    id: "period-previous"
+- assertVisible: "Saved this period"
+- takeScreenshot: period-two-back
+
+# The period is shared by the tabs. Transactions has the same arrows, and › is on there too.
+- tapOn: "Transactions"
+- extendedWaitUntil:
+    visible:
+      id: "period-next"
+    timeout: 10000
+- assertVisible:
+    id: "period-next"
+    enabled: true
+- tapOn: "Home"
+
+# Forward again, two taps. The second one reaches the current period and turns › off.
+- tapOn:
+    id: "period-next"
+- assertVisible: "Saved this period"
+- tapOn:
+    id: "period-next"
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 10000
+- assertVisible:
+    id: "period-next"
+    enabled: false
+
+# 3. A custom range. The period sheet lists the last periods, then "Custom period". The calendar opens
+#    on the month of the period start. The first tap sets the start and the second one sets the end.
+- tapOn: "Period"
+- extendedWaitUntil:
+    visible: "Custom period"
+    timeout: 10000
+- tapOn: "Custom period"
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 10000
+- tapOn: "[A-Za-z]+ 15, [0-9]{4}"
+- tapOn: "[A-Za-z]+ 18, [0-9]{4}"
+- takeScreenshot: period-custom-calendar
+- tapOn: "Done"
+
+# Both sheets go away, one after the other. The range ends before today, so Home shows a closed period.
+- extendedWaitUntil:
+    visible: "Saved this period"
+    timeout: 10000
+# The header shows the two ends of the range, and the screenshot keeps them. The accessibility tree
+# does not have them: see the header of this file.
+- takeScreenshot: period-custom-applied
+
+# 4. The sheets still take taps. On iOS two sheets that go away at once can leave a screen that draws but
+#    ignores every touch. A tap on the header must open the period sheet again.
+- tapOn: "Period"
+- extendedWaitUntil:
+    visible: "Custom period"
+    timeout: 10000
+# The first row is the current period. A tap on it selects it and closes the sheet.
+- tapOn: ".*in progress.*"
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 10000
+- assertVisible:
+    id: "period-next"
+    enabled: false
+
+# The new transaction sheet takes taps too: the keypad is up with the amount field, and a key takes a tap.
+- tapOn:
+    id: "tab-fab"
+- extendedWaitUntil:
+    visible:
+      id: "txform-amount"
+    timeout: 10000
+- tapOn:
+    id: "txform-amount"
+- tapOn:
+    id: "keypad-key-5"
+- tapOn:
+    id: "back-button"
+
+# 5. Change the period kind. This opens a sheet over the period sheet. After it closes, the period sheet
+#    has to take taps, and its "Period type" row names the new kind.
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 10000
+- tapOn: "Period"
+- extendedWaitUntil:
+    visible: "Period type.*"
+    timeout: 10000
+- tapOn: "Period type.*"
+- extendedWaitUntil:
+    visible: "Calendar month.*"
+    timeout: 10000
+- tapOn: "Calendar month.*"
+- extendedWaitUntil:
+    visible: "Period type, Calendar month"
+    timeout: 10000
+- tapOn: "Close"
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 10000
+- assertVisible:
+    id: "period-next"
+    enabled: false
+- tapOn:
+    id: "period-previous"
+- extendedWaitUntil:
+    visible: "Saved this period"
+    timeout: 10000

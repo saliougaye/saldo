@@ -1,0 +1,145 @@
+# Tags (§5.10, §6.13): create one (an empty name and a duplicate name are refused), rename it, merge a
+# tag into another one, delete a tag.
+#
+# WHERE IT STARTS
+# ---------------
+# Run with --seed:
+#
+#   SALDO_APP_PATH=<Saldo.app> apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/tags.yaml --seed
+#
+# The demo data has four tags, with transactions on them: Regalo (3), Rimborsabile (4), Trasloco (7)
+# and Vacanza Grecia (22). The first-run intro (§6.40) shows once over the tabs. The flow closes it.
+# The flow starts from the tabs and goes to Profile -> Manage tags by itself.
+#
+# Most tag controls have no testID. The flow uses the English labels of the app: the simulator runs in
+# English. A row of the tag list is one accessibility element with the text "<name>, <n> transactions".
+# For this reason the flow selects a row with a pattern, for example "Regalo.*".
+appId: io.github.saldo.app
+name: Tags - create, rename, merge, delete
+---
+- launchApp
+
+# The intro sits over the tabs on the first start. Wait for it: the tab bar is behind it.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+
+# The profile is the avatar at the left of Home's header. Manage tags is a row of its card.
+- tapOn: "Profile"
+- tapOn: "Manage tags"
+- extendedWaitUntil:
+    visible: "Vacanza Grecia.*"
+    timeout: 10000
+- assertVisible: "Vacanza Grecia, 22 transactions"
+
+# 1. Create. The sheet opens with its field focused and nothing typed: the name is missing.
+- tapOn: "New tag"
+- extendedWaitUntil:
+    visible: "Enter a name to save."
+    timeout: 10000
+- takeScreenshot: tags-new-empty
+
+# A name that a live tag has is refused, and the check ignores the case (§5.10).
+- inputText: "regalo"
+- assertVisible: "A tag with this name already exists."
+- eraseText: 20
+
+# A free name is accepted. Return saves, since the keyboard hides the Save button on the simulator.
+- inputText: "Maestro tag"
+- assertNotVisible: "A tag with this name already exists."
+- assertNotVisible: "Enter a name to save."
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Maestro tag, 0 transactions"
+    timeout: 10000
+
+# 2. Rename. The tag screen has an edit button in its header.
+- tapOn: "Maestro tag.*"
+- tapOn: "Edit tag"
+- extendedWaitUntil:
+    visible: "Name"
+    timeout: 10000
+# The edit sheet starts with the name the tag has, and its field is not focused (the new-tag sheet
+# focuses its field, this one does not). The field has no testID, and a tap on its label does not
+# focus it. Tap the field by its place in the sheet. The rename may not take the name of another tag.
+- tapOn:
+    point: "50%,73%"
+- eraseText: 20
+- inputText: "Rimborsabile"
+- assertVisible: "A tag with this name already exists."
+- eraseText: 20
+- inputText: "Maestro renamed"
+- pressKey: Enter
+# The new name is the title of the tag screen.
+- extendedWaitUntil:
+    visible: "Maestro renamed"
+    timeout: 10000
+- takeScreenshot: tags-renamed
+
+# Back on the list, the tag has its new name and the old one is gone.
+- tapOn:
+    id: "back-button"
+- extendedWaitUntil:
+    visible: "Maestro renamed, 0 transactions"
+    timeout: 10000
+- assertNotVisible: "Maestro tag.*"
+
+# The tag screen counts the transactions up to today. The list counts all of them, future ones too.
+# So the flow does not check the count that the sheets say, only the counts on the list.
+# 3. Merge. Regalo (3 transactions) goes into Rimborsabile (4): Rimborsabile ends with 7 and Regalo is
+#    gone. The merge needs a second tap: the first one only picks the target and shows the note.
+- tapOn: "Regalo.*"
+- tapOn: "Merge into another tag"
+- extendedWaitUntil:
+    visible: "Merge “Regalo” into…"
+    timeout: 10000
+# The target list does not offer the tag itself.
+- tapOn: "Rimborsabile"
+- assertVisible: ".*transactions tagged “Regalo” move to “Rimborsabile”.*"
+- takeScreenshot: tags-merge-note
+- tapOn: "Merge"
+# The merged tag is gone, so the app leaves its screen and lands on the list.
+- extendedWaitUntil:
+    visible: "Tags"
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "Rimborsabile, 7 transactions"
+    timeout: 10000
+- assertNotVisible: "Regalo.*"
+
+# 4. Delete. The edit sheet leads to a confirmation of its own. The tag goes and its transactions stay.
+- tapOn: "Trasloco.*"
+- tapOn: "Edit tag"
+- extendedWaitUntil:
+    visible: "Delete tag"
+    timeout: 10000
+- tapOn: "Delete tag"
+- extendedWaitUntil:
+    visible: "Delete “Trasloco”?"
+    timeout: 10000
+- assertVisible: ".*transactions that carry it stay, without this tag.*"
+- takeScreenshot: tags-delete-confirm
+- tapOn: "Delete"
+- extendedWaitUntil:
+    visible: "Vacanza Grecia.*"
+    timeout: 10000
+- assertNotVisible: "Trasloco.*"
+# The tag Maestro made is still there. It has no transactions, so Delete says nothing uses it.
+- tapOn: "Maestro renamed.*"
+- tapOn: "Edit tag"
+- tapOn: "Delete tag"
+- extendedWaitUntil:
+    visible: "No transaction uses it."
+    timeout: 10000
+- tapOn: "Delete"
+- extendedWaitUntil:
+    visible: "Vacanza Grecia.*"
+    timeout: 10000
+- assertNotVisible: "Maestro renamed.*"

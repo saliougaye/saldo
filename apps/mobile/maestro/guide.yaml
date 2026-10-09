@@ -1,0 +1,137 @@
+# The in-app guide (§5.16, §6.40, §6.41, §6.42): the first-run intro, the ⓘ buttons, the Guide, and
+# a link that matches no screen.
+#
+# WHERE IT STARTS
+# ---------------
+# Run with --seed: the demo data gives the app a finished onboarding, so it opens on the tabs and
+# the first-run intro is due. The flow does not tap «Continue» for the first time until it has
+# checked the intro text.
+#
+#   apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/guide.yaml --seed
+#
+# The flow reads English text. The simulator must run in English.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one — change it here to match.
+appId: io.github.saldo.app
+name: Guide, intro and info buttons
+---
+- launchApp
+
+# The intro shows once per finished onboarding (§5.16). It opens over the tabs.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- assertVisible: "How Saldo thinks"
+- assertVisible: "You’ll find these, and the rest, in Profile → Guide."
+- takeScreenshot: guide-intro
+- tapOn:
+    id: "intro-continue"
+
+# The tabs are under the intro now.
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+- assertNotVisible:
+    id: "intro-continue"
+
+# A relaunch must not show the intro again: the app stored the day it was dismissed for.
+# `stopApp` is needed, because `launchApp` alone keeps a running app.
+- stopApp
+- launchApp
+# Wait for Home to draw before the negative check. Otherwise the check could pass before the
+# intro had time to open.
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 30000
+- assertNotVisible:
+    id: "intro-continue"
+
+# The Guide: Profile → Guide lists every concept (§6.42). The profile button is the avatar in the
+# Home header. It has no testID, but its accessibility label is «Profile».
+- tapOn: "Profile"
+- tapOn:
+    id: "profile-guide"
+- extendedWaitUntil:
+    visible:
+      id: "guide-period"
+    timeout: 10000
+- assertVisible: "How Saldo thinks, one idea at a time."
+- assertVisible: "The basics"
+- takeScreenshot: guide-list
+
+# One concept opens its page with the same text the ⓘ shows.
+- tapOn:
+    id: "guide-transfers"
+- assertVisible: "Moving money between two of your accounts is neither spending nor income."
+- assertVisible: "A transfer changes the two balances and nothing else.*"
+- takeScreenshot: guide-topic
+- tapOn:
+    id: "back-button"
+- extendedWaitUntil:
+    visible:
+      id: "guide-period"
+    timeout: 10000
+- tapOn:
+    id: "back-button"
+
+# An ⓘ opens its topic in a sheet. Profile → Cycle start has the one for «The period».
+# The row label also holds its value («Cycle start, from the 27»), so the text is a pattern.
+- extendedWaitUntil:
+    visible: "Cycle start.*"
+    timeout: 10000
+- tapOn: "Cycle start.*"
+- tapOn:
+    id: "info-period"
+- extendedWaitUntil:
+    visible: "Changing the period only groups your transactions differently.*"
+    timeout: 10000
+- assertVisible: "The period"
+- takeScreenshot: guide-info-sheet
+- tapOn: "Done"
+- extendedWaitUntil:
+    notVisible: "Changing the period only groups your transactions differently.*"
+    timeout: 10000
+
+# The same button on a form: the new budget screen. A link opens it directly.
+- openLink: saldo://budget/new
+# iOS sometimes asks «Open in "Saldo"?» for a link opened from outside the app. Confirm it when
+# it shows.
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "info-budgets"
+    timeout: 15000
+- tapOn:
+    id: "info-budgets"
+- extendedWaitUntil:
+    visible: "A spending cap on one or more categories.*"
+    timeout: 10000
+- takeScreenshot: guide-info-budgets
+- tapOn: "Done"
+- extendedWaitUntil:
+    notVisible: "A spending cap on one or more categories.*"
+    timeout: 10000
+
+# A link that matches no screen must not crash or leave a blank screen. The app has no
+# `+not-found` route, so Expo Router shows its own «Unmatched Route» page. That page and the app's
+# `NotFoundScreen` both have a «Go back» link, so the flow works with either. The step below
+# lands on Home (the link replaces the screens under it) to prove the way out works.
+- openLink: saldo://does-not-exist
+# iOS sometimes asks «Open in "Saldo"?» for a link opened from outside the app. Confirm it when
+# it shows.
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Go back"
+    timeout: 15000
+- takeScreenshot: guide-unknown-link
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 10000
