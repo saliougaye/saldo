@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { finishOnboarding } from './support/onboarding';
-import { ADMIN, ADMIN_STORAGE, saveAdminCredentials } from './support/state';
+import { ADMIN, ADMIN_STORAGE } from './support/state';
 
 test('the first-run wizard creates the admin with a passkey', async ({
   page,
@@ -37,6 +37,5 @@ test('the first-run wizard creates the admin with a passkey', async ({
   await finishOnboarding(page, t);
   await expect(page).toHaveURL(/\/home$/);
 
-  saveAdminCredentials(await authenticator.credentials());
   await page.context().storageState({ path: ADMIN_STORAGE });
 });

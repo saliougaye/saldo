@@ -18,8 +18,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? 'github' : 'list',
+  // No retries: every test registers a member with a fixed e-mail address in one shared database, so a retry
+  // would fail on «e-mail taken» and hide the first error.
+  retries: 0,
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL: E2E_ORIGIN,
     trace: 'retain-on-failure',

@@ -1,3 +1,4 @@
+import type { Locator, Page } from '@playwright/test';
 import { plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import { addTransaction, listRow, money, pickOption } from './support/ledger';
@@ -5,10 +6,13 @@ import { createMember } from './support/members';
 
 const SHOPPING = 'Shopping';
 
+// The yearly pace is 100 % only on the last day of the year, and the steps below need it under 100 %.
+const lastDayOfYear = new Date().getMonth() === 11 && new Date().getDate() === 31;
 test('a budget reads on track, over pace and over its limit as the spending grows, and it is deleted', async ({
   browser,
   t,
 }) => {
+  test.skip(lastDayOfYear, 'the yearly pace reaches the limit on 31 December');
   const member = await createMember(browser, t, {
     name: 'Giorgia',
     email: 'giorgia-budget@e2e.test',
@@ -78,7 +82,7 @@ test('a budget reads on track, over pace and over its limit as the spending grow
 });
 
 /** The names of the category rows in the order the list shows them (a row's first line). */
-async function categoryOrder(page: import('@playwright/test').Page): Promise<string[]> {
+async function categoryOrder(page: Page): Promise<string[]> {
   const rows = await page.locator('a[href*="/profile/categories?c="]').allInnerTexts();
   return rows.map((text) => text.split('\n')[0]?.trim() ?? '');
 }
@@ -260,7 +264,7 @@ test('a tag is created, refused when it exists, and renamed', async ({ browser, 
 });
 
 /** The number a tag row says: «6 transazioni» → 6. */
-async function usesOf(row: import('@playwright/test').Locator): Promise<number> {
+async function usesOf(row: Locator): Promise<number> {
   const text = await row.innerText();
   return Number(/\d+/.exec(text)?.[0]);
 }

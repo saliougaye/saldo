@@ -6,7 +6,7 @@
 #    move, and Home's «Left to spend» does not.
 #  * «Pay off card» on a credit card opens the transfer form filled in (amount = the statement,
 #    destination = the card). The user chooses the source account and saves. The card then reads
-#    «Paid» and its balance is zero.
+#    «Paid» and lists the payment.
 #
 # WHERE IT STARTS
 # ---------------

@@ -60,6 +60,11 @@ server with its own environment. The Maestro flows also lack a few `testID`s, so
 `keypad-key-sign` (hidden from the accessibility tree), the account name and balance fields of the account form,
 `period-picker`, `tag-edit-name`, `appearance-icon-search`.
 
+Three phone steps are not covered. The recap with hidden amounts: a seeded database is never due a recap, so the flow
+needs a `run.sh` option that sets `lastRecapPeriod` and `amountsHidden`. Pull to refresh offline: with no session the app
+has no refresh control, so it needs a signed-in device. «Add your email»: it needs a server and a passkey. The flows run
+in English only (decided 2026-10-09), so the copy of the other languages has no end-to-end check.
+
 ### Profile: the period row shows the period, not only the cycle day
 
 Found by the in-app guide analysis (2026-09-26). Profile's first row is «Inizio del ciclo · dal 27» whatever the

@@ -36,7 +36,7 @@ name: Amount keypad keys, then a credit card with a negative balance
       id: "amount-keypad"
     timeout: 10000
 
-# 1. Digits and the decimal separator. The field keeps two decimals: the sixth key press is ignored.
+# 1. Digits and the decimal separator. The field keeps two decimals: a third decimal digit is ignored.
 - tapOn:
     id: "keypad-key-1"
 - tapOn:

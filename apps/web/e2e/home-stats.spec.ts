@@ -94,6 +94,7 @@ test.describe('Home', () => {
     await expect(recent.locator('a[href^="/transactions?t="]')).toHaveCount(
       Math.min(5, settled.length),
     );
+    expect(settled.length).toBeGreaterThan(0);
     const newest = [...settled].sort((a, b) =>
       b.date.localeCompare(a.date),
     )[0] as LedgerTransaction;

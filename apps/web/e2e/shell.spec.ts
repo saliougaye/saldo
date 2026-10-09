@@ -3,6 +3,7 @@ import { clientHeaders, E2E_ORIGIN } from './env';
 import { expect, test } from './fixtures';
 import { openAdmin } from './support/admin';
 import { createMember } from './support/members';
+import { ADMIN } from './support/state';
 
 test.describe('navigation', () => {
   test('a member sees the four tabs and no Admin, and /admin answers not found', async ({
@@ -72,7 +73,7 @@ test.describe('PWA', () => {
       start_url: string;
       icons: { src: string; sizes: string; type: string }[];
     };
-    expect(manifest.name).toBeTruthy();
+    expect(manifest.name).toBe(ADMIN.instance);
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('/');
     expect(manifest.icons.length).toBeGreaterThanOrEqual(3);

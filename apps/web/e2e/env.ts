@@ -1,5 +1,11 @@
 /** Ports and configuration the end-to-end suite shares between Playwright's config and the tests. */
 /** Overridable, so two checkouts (two agents, a worktree) can run the suite side by side. */
+/**
+ * One time zone for the test process, the browsers and the server. The specs compute «today» in Node
+ * and read it from the app, and the two must name the same day.
+ */
+process.env.TZ = 'Europe/Rome';
+
 export const E2E_PORT = Number(process.env.E2E_PORT ?? 3100);
 export const E2E_DB_PORT = Number(process.env.E2E_DB_PORT ?? 54329);
 export const E2E_ORIGIN = `http://localhost:${E2E_PORT}`;
