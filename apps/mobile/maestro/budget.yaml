@@ -1,0 +1,195 @@
+# A budget from the Home card, then overspend it (§5.12, §6.34, §6.36).
+#
+# WHAT IT COVERS
+# --------------
+#  * Home with no budget shows «Create a budget». It opens the budgets screen, and «New budget»
+#    starts the three-step wizard: category, amount, details.
+#  * Home then shows the budget. A first expense inside the limit leaves money «left».
+#  * A second expense in the same category goes over the limit. Home says so on the card.
+#
+# WHERE IT STARTS
+# ---------------
+# From a fresh install, with NO data: run it without --seed.
+#
+#   apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/budget.yaml
+#
+# The flow does the onboarding itself (same steps as `onboarding-and-first-expense.yaml`). Seeded
+# data does not work here: the seeder already creates five budgets, and Home only offers
+# «Create a budget» when there are none. A fresh install has no date-dependent figures either, so
+# every amount below is exact on any day.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one.
+appId: io.github.saldo.app
+name: Budget from Home, then overspend it
+---
+- launchApp
+
+# ---- Onboarding: one account called «Maestro account», no permissions -------------------------
+
+- runFlow:
+    when:
+      visible:
+        id: "welcome-phone"
+    commands:
+      - tapOn:
+          id: "welcome-phone"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-start-fresh"
+    timeout: 30000
+- tapOn:
+    id: "onboarding-start-fresh"
+- tapOn:
+    id: "onboarding-period-continue"
+- tapOn:
+    id: "onboarding-account-name"
+- inputText: "Maestro account"
+# Return closes the keyboard, which covers the footer. `hideKeyboard` fails on iOS.
+- pressKey: Enter
+- tapOn:
+    id: "onboarding-account-continue"
+# Opening balance: 1000, on Saldo's own keypad.
+- tapOn:
+    id: "onboarding-balance-amount"
+- tapOn:
+    id: "keypad-key-1"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
+# Every category stays selected: the budget below needs «Groceries».
+- tapOn:
+    id: "onboarding-categories-continue"
+# A permission the OS already decided has no «Later» button.
+- runFlow:
+    when:
+      visible:
+        id: "permission-notifications-later"
+    commands:
+      - tapOn:
+          id: "permission-notifications-later"
+- runFlow:
+    when:
+      visible:
+        id: "permission-camera-later"
+    commands:
+      - tapOn:
+          id: "permission-camera-later"
+- runFlow:
+    when:
+      visible:
+        id: "permission-appLock-later"
+    commands:
+      - tapOn:
+          id: "permission-appLock-later"
+- tapOn:
+    id: "onboarding-start"
+# The first-run intro (§6.40) covers the tab bar until the user closes it.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 20000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    notVisible:
+      id: "intro-continue"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+
+# ---- 1. The budget, from the Home card -------------------------------------------------------
+
+# The card says «No budgets» and offers the way in.
+- assertVisible: "No budgets"
+- tapOn: "Create a budget"
+# The budgets screen is empty too. «New budget» starts the wizard.
+- tapOn: "New budget"
+
+# Step 1 of 3: the category. «Groceries» is a tile of the grid. The category tiles have no id.
+- tapOn: "Groceries"
+- tapOn: "Continue"
+
+# Step 2 of 3: the amount, on Saldo's own keypad. It is already open. The limit is €100.
+- tapOn:
+    id: "keypad-key-1"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
+- tapOn: "Continue"
+
+# Step 3 of 3: name, repetition and alerts. The defaults are right: the name is the category.
+- tapOn: "Create budget"
+- extendedWaitUntil:
+    visible: "Budget created"
+    timeout: 10000
+# The row label is «name, days left, spent, limit». The days left change every day.
+- assertVisible: "Groceries, .*€0\\.00, of €100\\.00"
+
+# Back to Home. The budget card now shows the budget.
+- tapOn:
+    id: "back-button"
+
+# ---- 2. A first expense, inside the limit ----------------------------------------------------
+
+- tapOn:
+    id: "tab-fab"
+- tapOn:
+    id: "txform-amount"
+- tapOn:
+    id: "keypad-key-6"
+- tapOn:
+    id: "keypad-key-0"
+# «Done» puts the keypad away, which frees the category grid below it.
+- tapOn:
+    id: "keypad-action"
+- tapOn: "Groceries"
+# The form does not pick an account for you.
+- tapOn: "Maestro account"
+- tapOn:
+    id: "txform-submit"
+- extendedWaitUntil:
+    visible: "Transaction added"
+    timeout: 10000
+
+# €60 of €100: the card is a single element, labelled «name, spent of limit, status». The status
+# is «over pace» or «on pace» and changes with the day, so only the figures are exact. The card
+# does not say «over the limit».
+- assertVisible: "Groceries, €60\\.00 of €100\\.00, .*"
+- assertNotVisible: ".*over the limit.*"
+
+# ---- 3. A second expense: the budget goes over the limit -------------------------------------
+
+- tapOn:
+    id: "tab-fab"
+- tapOn:
+    id: "txform-amount"
+- tapOn:
+    id: "keypad-key-6"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
+- tapOn: "Groceries"
+- tapOn: "Maestro account"
+- tapOn:
+    id: "txform-submit"
+- extendedWaitUntil:
+    visible: "Transaction added"
+    timeout: 10000
+
+# €120 of €100: the card header counts the budget as «over the limit», and its row says by how much.
+- extendedWaitUntil:
+    visible: "1 over the limit"
+    timeout: 10000
+- assertVisible: "Groceries, €120\\.00 of €100\\.00, €20\\.00 over the limit"

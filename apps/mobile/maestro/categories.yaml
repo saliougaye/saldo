@@ -1,0 +1,139 @@
+# Categories (§5.11, §6.9, §6.19, §6.20): create a category with an icon and a colour, then archive
+# another one and move its transactions to a different category.
+#
+# WHERE IT STARTS
+# ---------------
+# Run with --seed:
+#
+#   SALDO_APP_PATH=<Saldo.app> apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/categories.yaml --seed
+#
+# The demo data has categories with transactions on them. The flow uses two of them: Sport (2
+# entries) and Health (3 entries). The first-run intro (§6.40) shows once over the tabs. The flow
+# closes it, then goes to Profile -> Categories by itself.
+#
+# Categories have no testID. The flow uses the English labels of the app: the simulator runs in
+# English. The colour swatches and the icon tiles have an accessibility label (the colour name and
+# the icon name), and they report if they are selected. The flow uses this to check what the form saved.
+appId: io.github.saldo.app
+name: Categories - create with icon and colour, archive with a move
+---
+- launchApp
+
+# The intro sits over the tabs on the first start. Wait for it: the tab bar is behind it.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 20000
+
+- tapOn: "Profile"
+- tapOn: "Categories"
+- extendedWaitUntil:
+    visible: "Expenses"
+    timeout: 10000
+- assertVisible: "Sport.*"
+
+# 1. Create. The "+" of the title row opens the form. The name field is focused and Save says what is missing.
+- tapOn: "New category"
+- extendedWaitUntil:
+    visible: "Enter a name to save."
+    timeout: 10000
+- inputText: "Maestro cat"
+# Return closes the keyboard. It covers the footer otherwise.
+- pressKey: Enter
+- assertNotVisible: "Enter a name to save."
+
+# The preview card opens the appearance sheet: the colour first, then the icon.
+- tapOn: "Appearance"
+- extendedWaitUntil:
+    visible: "Teal"
+    timeout: 10000
+- tapOn: "Teal"
+# The icon library is long. The search field finds one icon by its name. A tap on the label does not
+# focus the field, so the flow taps the field by its place in the sheet.
+- tapOn:
+    point: "50%,49%"
+# The search text is a part of the name. A full name would match the field and the tile, and the
+# tap would go to the field.
+- inputText: "sailb"
+# The search left one tile: the other icons are gone.
+- assertNotVisible: "house"
+# Return does not close the keyboard in this field. The tile list is a scroll view, and its first tap
+# only closes the keyboard. The second tap picks the icon.
+- tapOn: "sailboat"
+- tapOn: "sailboat"
+- assertVisible:
+    text: "Teal"
+    selected: true
+- assertVisible:
+    text: "sailboat"
+    selected: true
+- takeScreenshot: categories-appearance
+- tapOn: "Close"
+- extendedWaitUntil:
+    visible: "Save"
+    timeout: 10000
+- tapOn: "Save"
+
+# Back on the list, in Expenses. The new category has no transactions, so it shows no count.
+- extendedWaitUntil:
+    visible: "Maestro cat.*"
+    timeout: 10000
+
+# The form saved the icon and the colour: open the category again and look at the sheet.
+- tapOn: "Maestro cat.*"
+- tapOn: "Edit category"
+- tapOn: "Appearance"
+- extendedWaitUntil:
+    visible:
+      text: "Teal"
+      selected: true
+    timeout: 10000
+- assertVisible:
+    text: "sailboat"
+    selected: true
+- tapOn: "Close"
+# Leave the form without a change: back to the category, then to the list.
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "back-button"
+- extendedWaitUntil:
+    visible: "Sport.*"
+    timeout: 10000
+
+# 2. Archive with a move. Sport has 2 transactions and Health has 3. The sheet offers the categories
+#    of the same direction as targets. "Move and archive" needs one picked.
+- tapOn: "Sport.*"
+- tapOn: "Edit category"
+- tapOn: "Archive"
+- extendedWaitUntil:
+    visible: "This category cannot be deleted"
+    timeout: 10000
+- assertVisible: "2 transactions use this category"
+- tapOn: "Health"
+- takeScreenshot: categories-archive-sheet
+- tapOn: "Move and archive"
+
+# The archived category leaves the list and the app lands on it. Health now has its own 3 and the 2
+# of Sport. The row reads "Health, 5": the title and the count of entries.
+- extendedWaitUntil:
+    visible: "Health.*"
+    timeout: 10000
+- assertVisible: "Health, 5"
+- assertNotVisible: "Sport.*"
+
+# The archived category is on the list of archived ones, which the list reaches with a row of its own.
+- scrollUntilVisible:
+    element: "Archived categories.*"
+    direction: DOWN
+- tapOn: "Archived categories.*"
+- extendedWaitUntil:
+    visible: "Sport.*"
+    timeout: 10000
+- takeScreenshot: categories-archived

@@ -1,0 +1,158 @@
+# Saldo's own amount keypad (§5.1, D23) and a NEGATIVE opening balance on a credit card account.
+# The keypad is in the "New account" form, where the balance field allows a negative value. The
+# flow covers every key of the pad: digits, decimal separator, sign, delete and the tall action key.
+#
+# WHERE IT STARTS
+# ---------------
+# Run it with --seed, in English:
+#
+#   SALDO_APP_PATH=<Saldo.app> apps/mobile/maestro/run.sh <udid> apps/mobile/maestro/amount-keypad-and-credit-card.yaml --seed
+#
+# The seeded app starts on the tabs, behind the first-run intro. The flow taps the intro away.
+# It creates one new account, «Maestro card», so it does not depend on the seeded accounts.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`.
+appId: io.github.saldo.app
+name: Amount keypad keys, then a credit card with a negative balance
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible:
+      id: "tab-accounts"
+    timeout: 20000
+- tapOn:
+    id: "tab-accounts"
+
+# The "New account" form opens with the balance field focused, so the keypad is already up.
+- tapOn: "New account"
+- extendedWaitUntil:
+    visible:
+      id: "amount-keypad"
+    timeout: 10000
+
+# 1. Digits and the decimal separator. The field keeps two decimals: the sixth key press is ignored.
+- tapOn:
+    id: "keypad-key-1"
+- tapOn:
+    id: "keypad-key-2"
+- tapOn:
+    id: "keypad-key-3"
+- tapOn:
+    id: "keypad-key-separator"
+- tapOn:
+    id: "keypad-key-4"
+- tapOn:
+    id: "keypad-key-5"
+- tapOn:
+    id: "keypad-key-6"
+- assertVisible: "123.45"
+# A second separator changes nothing.
+- tapOn:
+    id: "keypad-key-separator"
+- assertVisible: "123.45"
+
+# 2. Delete removes the last character, the separator included.
+- tapOn:
+    id: "keypad-key-delete"
+- assertVisible: "123.4"
+- tapOn:
+    id: "keypad-key-delete"
+- tapOn:
+    id: "keypad-key-delete"
+- assertVisible: "123"
+
+# 3. The sign key, bottom left. It is hidden from the accessibility tree (the sign tile beside the
+#    digits is the switch that assistive technology uses), so Maestro cannot find it by id or by
+#    text. It is tapped by its place on the screen instead. The sign tile reads the state: it is
+#    «Negative», checked or not.
+- assertVisible:
+    text: "Negative"
+    checked: false
+- tapOn:
+    point: 14%, 92%
+- assertVisible:
+    text: "Negative"
+    checked: true
+# The sign tile toggles it back, and the key toggles it again.
+- tapOn: "Negative"
+- assertVisible:
+    text: "Negative"
+    checked: false
+- tapOn:
+    point: 14%, 92%
+- assertVisible:
+    text: "Negative"
+    checked: true
+# Delete clears every digit; the field is empty again. The sign has no digits to sit in front of.
+- tapOn:
+    id: "keypad-key-delete"
+- tapOn:
+    id: "keypad-key-delete"
+- tapOn:
+    id: "keypad-key-delete"
+- takeScreenshot: amount-keypad-cleared
+- assertVisible:
+    text: "Negative"
+    checked: false
+
+# 4. A credit card. The type row sits above the pad, so it can be tapped with the pad up.
+- tapOn: "Type, .*"
+- tapOn: "Credit card"
+# The type row now reads «Credit card», and the card's own rows (close day, charge day, payment
+# account) are in the form below it.
+- assertVisible: "Type, Credit card"
+
+# 5. The card's debt: a negative opening balance. The pad is still up for the balance field.
+- tapOn:
+    id: "keypad-key-2"
+- tapOn:
+    id: "keypad-key-5"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-separator"
+- tapOn:
+    id: "keypad-key-5"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    point: 14%, 92%
+- assertVisible:
+    text: "Negative"
+    checked: true
+# The field announces its value with the typographic minus in front, so the match starts with `.*`.
+- assertVisible: ".*2500.50"
+# The tall key is «Done» here: it puts the pad away and keeps the value.
+- tapOn:
+    id: "keypad-action"
+- assertNotVisible:
+    id: "amount-keypad"
+- assertVisible:
+    text: "Negative"
+    checked: true
+- assertVisible: ".*2500.50"
+
+# 6. Name it and save. Return closes the device keyboard, which covers the pinned «Save» button.
+#    `hideKeyboard` fails on iOS.
+# «Name» matches two elements: the label, then the field itself.
+- tapOn:
+    text: "Name"
+    index: 1
+- inputText: "Maestro card"
+- pressKey: Enter
+- tapOn: "Save"
+
+# 7. Back on the Accounts tab, the card is listed with its debt: a minus sign, not a credit.
+#    Each row is one accessible element, labelled "<name>, <type>, <balance>", hence the regex.
+- extendedWaitUntil:
+    visible: "Maestro card.*−€2,500.50.*"
+    timeout: 10000
+- takeScreenshot: credit-card-listed

@@ -59,8 +59,8 @@ Do not write tests for these:
 - the behaviour of a library;
 - a rule that another test already covers.
 
-End-to-end tests cover the screens: Playwright for the web app, Maestro for the phone (`apps/mobile/maestro/`). See
-`TODO.md` for the flows that do not have a test yet.
+End-to-end tests cover the screens: Playwright for the web app (`apps/web/e2e/`, `pnpm --filter web e2e`), Maestro for the
+phone (`apps/mobile/maestro/`, run with `maestro/run.sh`). See `TODO.md` for the flows that do not have a test yet.
 
 ## Writing docs
 

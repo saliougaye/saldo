@@ -36,33 +36,29 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
 `describeAuthError` holds `NotAllowedError` and not that code. The person sees the generic alert and never
 `sync.cancelled`. Confirm it in the browser, add the code to the set, and turn the `fixme` into a test.
 
+### Phone: smaller defects found by the Maestro flows
+
+- An unknown deep link (`saldo://does-not-exist`) shows Expo Router's default «Unmatched Route» page: black, unthemed,
+  with an English «Sitemap» link. The app has no `+not-found` route.
+- `PeriodHeader` sets `accessibilityLabel` to `period.title` only, so VoiceOver reads «Period» and never the dates or
+  «day N of M».
+- The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
+  count only up to today. The numbers disagree (7 against 6).
+- `categories.missing_taken` reads «A tag with this name already exists.» It looks copied from the tags text.
+- The tag Edit sheet does not focus its name field, unlike New tag.
+
 ## Features
 
 Asked for and shaped enough to plan, or one decision away from it.
 
-### End-to-end tests: Maestro for the phone
+### End-to-end tests: a setting locked by the environment
 
-Decided 2026-10-05. The test suite keeps unit tests only for complex logic, security guards and real bug regressions.
-Integration and end-to-end tests cover the rest. The prune removed the component, view-model and copy tests, so the
-flows below are now covered by nobody. Write them before the next UI change on each screen.
-
-The web app has its Playwright suite (`apps/web/e2e`, plan `docs/superpowers/plans/2026-10-06-e2e-tests.md`). One web
-flow is still open: a setting locked by the environment. It needs a second server with its own environment.
-
-The phone has two Maestro flows (`apps/mobile/maestro/`). Add:
-
-1. Hidden amounts on Home, Statistiche, the forecast and the recap; the setting survives a relaunch.
-2. The amount keypad and a negative opening balance on a credit card.
-3. A transfer between accounts and a credit card settlement.
-4. A goal: create, top up, close with an expense.
-5. A budget from the Home card, then overspend it.
-6. Tags: create (empty and duplicate names refused), rename, merge, delete.
-7. Categories: create with icon and colour, archive with a move.
-8. Period navigation: the header stops at the current period, a custom range, the sheets still take taps.
-9. The guide: the intro shows once, the info buttons, an unknown deep link.
-10. Settings: time zone search, permissions, pull to refresh offline, add an email.
-
-Run the flows in Italian and in English, because the copy tests are gone too.
+The Playwright suite (`apps/web/e2e`) and the Maestro flows (`apps/mobile/maestro`) cover the flows decided on
+2026-10-05. One web flow is open: a setting that the environment locks must show as locked and refuse a save. It stays a
+`test.fixme` in `admin.spec.ts`, because one server cannot lock a setting that the other specs change. It needs a second
+server with its own environment. The Maestro flows also lack a few `testID`s, so some steps select by text or position:
+`keypad-key-sign` (hidden from the accessibility tree), the account name and balance fields of the account form,
+`period-picker`, `tag-edit-name`, `appearance-icon-search`.
 
 ### Profile: the period row shows the period, not only the cycle day
 

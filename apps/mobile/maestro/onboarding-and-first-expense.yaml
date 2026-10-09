@@ -50,6 +50,8 @@ name: Onboarding, then a first expense on Home
 - tapOn:
     id: "onboarding-account-name"
 - inputText: "Maestro account"
+# Return closes the keyboard; the footer's «Continua» sits under it otherwise. `hideKeyboard` fails on iOS.
+- pressKey: Enter
 - tapOn:
     id: "onboarding-account-continue"
 
@@ -76,12 +78,27 @@ name: Onboarding, then a first expense on Home
 # depend on a system prompt it cannot answer. On a fresh install all three rows are pending; a
 # permission the OS already decided starts closed and has no «Più tardi». "Inizia" writes settings,
 # the account and the categories, then replaces the route with the tabs.
-- tapOn:
-    id: "permission-notifications-later"
-- tapOn:
-    id: "permission-camera-later"
-- tapOn:
-    id: "permission-appLock-later"
+- runFlow:
+    when:
+      visible:
+        id: "permission-notifications-later"
+    commands:
+      - tapOn:
+          id: "permission-notifications-later"
+- runFlow:
+    when:
+      visible:
+        id: "permission-camera-later"
+    commands:
+      - tapOn:
+          id: "permission-camera-later"
+- runFlow:
+    when:
+      visible:
+        id: "permission-appLock-later"
+    commands:
+      - tapOn:
+          id: "permission-appLock-later"
 - tapOn:
     id: "onboarding-start"
 
@@ -124,14 +141,29 @@ name: Onboarding, then a first expense on Home
 # Whichever category the grid ranks first; an expense cannot be saved without one.
 - tapOn:
     id: "txform-category-0"
+# The form does not pick an account for you: the chip carries the name this flow typed in onboarding.
+# Tap it first, while it is still on screen.
+- tapOn: "Maestro account"
+# The description card starts under the pinned footer, and Maestro still finds it there, so
+# `scrollUntilVisible` stops at once and the tap lands on the footer's «Add» button instead. Swipe
+# the form up by hand to bring the card above the footer.
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
 - tapOn:
     id: "txform-description"
 - inputText: "Maestro coffee"
-- hideKeyboard
+# Return closes the keyboard, which covers the footer's «Add». `hideKeyboard` fails on iOS.
+- pressKey: Enter
 - tapOn:
     id: "txform-submit"
 
-# Back on Home, in "Ultime transazioni". The description is what the row is titled with when it has
+# Back on Home, in "Recent transactions". The description is what the row is titled with when it has
 # one, and it is text this flow typed rather than a translated label — which is the only reason a
 # text selector is safe here.
-- assertVisible: "Maestro coffee"
+# The row is one accessible element, labelled "<title>, <category>, <amount>". A plain text selector
+# matches the whole label, so use a regex that starts with the title. The sheet closes and the row
+# slides in, so wait for it instead of asserting at once.
+- extendedWaitUntil:
+    visible: "Maestro coffee.*"
+    timeout: 10000

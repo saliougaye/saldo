@@ -1,0 +1,149 @@
+# A transfer between two accounts, then a credit card settlement (§5.3, §6.10, §6.16).
+#
+# WHAT IT COVERS
+# --------------
+#  * A transfer moves money between two accounts. It is neither income nor expense: the balances
+#    move, and Home's «Left to spend» does not.
+#  * «Pay off card» on a credit card opens the transfer form filled in (amount = the statement,
+#    destination = the card). The user chooses the source account and saves. The card then reads
+#    «Paid» and its balance is zero.
+#
+# WHERE IT STARTS
+# ---------------
+# Run it with --seed, so the app starts on the tabs with the demo accounts:
+#
+#   apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/transfer-and-settlement.yaml --seed
+#
+# The seeder (`scripts/seed-database.ts`) names the accounts in Italian and the simulator is in
+# English. The flow uses the account names «Conto corrente» (bank), «Contanti» (cash) and «Amex»
+# (credit card, with an open statement). The first-run intro still shows once.
+#
+# WHY THE FLOW HAS NO MONEY FIGURES
+# ---------------------------------
+# The demo data moves with today's date, so the balances change every day. The flow reads «Left to
+# spend» before and after the transfer and compares the two. It moves the whole balance of the cash
+# account, so the result is always «€0.00».
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one.
+appId: io.github.saldo.app
+name: Transfer between accounts, then pay off a credit card
+---
+- launchApp
+# The first-run intro (§6.40) shows once after onboarding, over the tabs, and it covers the tab bar.
+# The wait is optional: on a later run the intro is gone.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: "intro-continue"
+    commands:
+      - tapOn:
+          id: "intro-continue"
+      - extendedWaitUntil:
+          notVisible:
+            id: "intro-continue"
+          timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 30000
+
+# 1. Read «Left to spend» on Home. The amount has no id, so the flow takes the first amount under
+#    the label.
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 20000
+- copyTextFrom:
+    text: "€.*"
+    below: "Left to spend"
+- evalScript: ${output.leftBefore = maestro.copiedText}
+# A guard: the copy must be the amount, or the comparison in step 3 proves nothing.
+- assertTrue: ${output.leftBefore.indexOf('€') == 0 && output.leftBefore.indexOf(' ') < 0}
+
+# 2. A transfer of the whole balance of the cash account to the bank account.
+- tapOn:
+    id: "tab-fab"
+- extendedWaitUntil:
+    visible:
+      id: "txform-amount"
+- tapOn: "Transfer"
+# «Done» puts the keypad away. The account chips are under it otherwise.
+- tapOn:
+    id: "keypad-action"
+# The «From» and «To» rows use the same chip ids, by position: «From» is the first match and
+# «To» is the second one. The order is the one of the Accounts tab: 0 = Conto corrente, 3 = Contanti.
+- tapOn:
+    id: "txform-account-3"
+    index: 0
+# This chip only exists on a transfer, once the source is chosen. It types the source balance.
+- tapOn:
+    id: "txform-fill-balance"
+- tapOn:
+    id: "txform-account-0"
+    index: 1
+- tapOn:
+    id: "txform-description"
+- inputText: "Maestro transfer"
+# Return closes the keyboard. `hideKeyboard` fails on iOS.
+- pressKey: Enter
+- tapOn:
+    id: "txform-submit"
+- extendedWaitUntil:
+    visible: "Transaction added"
+    timeout: 10000
+
+# 3. A transfer is not spending: «Left to spend» is the same as before.
+- extendedWaitUntil:
+    visible: "Left to spend"
+- copyTextFrom:
+    text: "€.*"
+    below: "Left to spend"
+- assertTrue: ${maestro.copiedText == output.leftBefore}
+
+# 4. The cash account is empty now. The row label is «name, institution, balance».
+- tapOn:
+    id: "tab-accounts"
+- assertVisible: "Contanti, .*€0\\.00"
+
+# 5. The transfer is in the list, as a «Transfer» row. The row label is «description, category,
+#    amount». The description is text this flow typed.
+- tapOn:
+    id: "tab-transactions"
+- assertVisible: "Maestro transfer, Transfer, .*"
+
+# 6. Credit card settlement. The seeded card «Amex» owes money and has a statement.
+- tapOn:
+    id: "tab-accounts"
+- tapOn: "Amex, .*"
+- extendedWaitUntil:
+    visible: "To repay"
+    timeout: 10000
+- tapOn: "Pay off card"
+# The form opens filled in: amount, destination = the card, and a description. Nothing is saved
+# until the user taps «Add». The card has no payment account, so the source stays empty.
+- extendedWaitUntil:
+    visible:
+      id: "txform-submit"
+- tapOn:
+    id: "keypad-action"
+- tapOn:
+    id: "txform-account-0"
+    index: 0
+# The date starts on the charge day of the card. «Today» makes the card balance move now, on any
+# day the flow runs.
+- tapOn: "Today"
+- tapOn:
+    id: "txform-submit"
+- extendedWaitUntil:
+    visible: "Transaction added"
+    timeout: 10000
+
+# 7. Back on the card: nothing to repay, the statement is paid, and the payment is listed.
+- assertVisible: "Current balance"
+- assertVisible: "Paid"
+- assertVisible: "Amex payment.*"

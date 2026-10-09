@@ -1,0 +1,154 @@
+# Profile settings (§6.8, §6.30): the time zone search, the permissions rows, pull to refresh with
+# no server, and the server screen of a phone that has no account.
+#
+# WHERE IT STARTS
+# ---------------
+# Run with --seed: the demo data gives the app a finished onboarding, so it opens on the tabs. The
+# first-run intro shows once and the flow closes it.
+#
+#   apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/settings.yaml --seed
+#
+# The flow reads English text. The simulator must run in English.
+#
+# NOT COVERED
+# -----------
+# «Add your email» (`sync.emailAddRow`) is a row of the server screen, and it shows only for a
+# signed-in account that still has the synthetic address of §9.1 (`needsEmail` in
+# `src/features/server/emailAsk.ts`). The same dialog opens after a sign-in. Both need a server
+# and a passkey, and Maestro drives neither. The flow checks that the row is absent without an
+# account.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one — change it here to match.
+appId: io.github.saldo.app
+name: Profile settings without a server
+---
+- launchApp
+
+# The seed leaves the intro due, so it always shows. Wait for it: a `when: visible` check would
+# race the first frames of the app and skip the tap.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+- tapOn:
+    id: "intro-continue"
+- extendedWaitUntil:
+    visible: "Left to spend"
+    timeout: 30000
+
+# The profile button is the avatar of the Home header. It has no testID, but its label is «Profile».
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible:
+      id: "profile-guide"
+    timeout: 10000
+- takeScreenshot: settings-profile
+
+# Pull to refresh with nothing to sync with (§8.5). `useSyncRefresh` returns null without a
+# session, so the screen has no refresh control at all. A pull must change nothing: no toast
+# («Could not sync…») and no error. A pull is a swipe down from the top of the content.
+- swipe:
+    start: 50%, 25%
+    end: 50%, 70%
+    duration: 400
+- assertNotVisible: "Could not sync.*"
+- assertVisible: "Profile"
+- assertVisible:
+    id: "profile-guide"
+- takeScreenshot: settings-after-pull
+
+# Time zone (D37). The row label holds its value, so the text is a pattern.
+- tapOn: "Time zone.*"
+- extendedWaitUntil:
+    visible: "Search for a city"
+    timeout: 10000
+- assertVisible: "It stays put when you travel.*"
+# The label above the field has the same text as the field, so a tap on the text can miss it.
+- tapOn:
+    text: "Search for a city"
+    index: 1
+# A search with no match says so.
+- inputText: "zzzz"
+- assertVisible: "No city found."
+- eraseText: 10
+- inputText: "Tokyo"
+- assertNotVisible: "No city found."
+- assertNotVisible: "Berlin.*"
+# Return closes the keyboard. `hideKeyboard` fails on iOS.
+- pressKey: Enter
+- takeScreenshot: settings-timezone-search
+
+# A tap saves at once. The city then shows on the Profile row.
+- tapOn: "Tokyo, .*"
+- tapOn:
+    id: "back-button"
+- extendedWaitUntil:
+    visible: "Time zone.*Tokyo.*"
+    timeout: 10000
+- takeScreenshot: settings-timezone-saved
+
+# Permissions (§6.29): what onboarding's step 5 asked, asked again from Profile. The seed skips
+# onboarding, so nothing has been asked yet.
+# The row is below the fold of the Profile screen.
+- scrollUntilVisible:
+    element: "Permissions.*"
+    timeout: 20000
+- tapOn: "Permissions.*"
+- extendedWaitUntil:
+    visible:
+      id: "profile-permission-notifications"
+    timeout: 10000
+- assertVisible:
+    id: "profile-permission-camera"
+- takeScreenshot: settings-permissions
+
+# A permission nobody asked yet shows «Turn on». The tap raises the system prompt, and the flow
+# allows it. The simulator may have granted it already: then the row shows «On» and this step is
+# skipped. Camera is usually granted in advance.
+- runFlow:
+    when:
+      visible: "Turn on"
+    commands:
+      - tapOn: "Turn on"
+      - tapOn:
+          text: "Allow"
+          optional: true
+      - extendedWaitUntil:
+          notVisible: "Turn on"
+          timeout: 10000
+- assertNotVisible: "Turn on"
+
+# Server and sync, on a phone with no account (§6.30). Pull to refresh has no server to ask, and
+# «Add your email» belongs to a signed-in account, so the screen offers neither.
+- tapOn:
+    id: "back-button"
+- scrollUntilVisible:
+    element: "Server and sync.*"
+    timeout: 20000
+- tapOn: "Server and sync.*"
+- extendedWaitUntil:
+    visible: "Sync is off. Your data stays on this phone."
+    timeout: 10000
+- assertVisible: "Not connected"
+- assertNotVisible: "Add your email"
+- assertNotVisible: "Sign out"
+- assertNotVisible: "Sync now"
+- takeScreenshot: settings-server-local
+
+# The address field checks what it is given before it asks any server. The hint explains a wrong
+# one. The screenshot shows «Continue» switched off.
+- tapOn:
+    id: "server-address"
+- inputText: "not a server"
+- assertVisible: "Type just the address.*"
+- pressKey: Enter
+- takeScreenshot: settings-server-invalid
+
+# A pull on this screen also finds nothing to sync with, so it shows no error.
+- swipe:
+    start: 50%, 25%
+    end: 50%, 70%
+    duration: 400
+- assertNotVisible: "Could not sync.*"
+- assertVisible: "Server and sync"

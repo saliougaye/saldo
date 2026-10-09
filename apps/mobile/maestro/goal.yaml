@@ -1,0 +1,139 @@
+# A goal from start to end: create it, set money aside, close it with an expense (§5.14, §6.35-6.37).
+#
+# WHAT IT COVERS
+# --------------
+#  * The four-step wizard of a new goal, opened from the «Goals» card on Home.
+#  * «Set aside»: a transfer from the account into the goal. The goal shows the new progress.
+#  * «Close goal» then «Record the expense»: the expense form opens with the goal as the account and
+#    the saved amount as the amount. The expense closes the goal. The goal moves to «Closed goals».
+#
+# WHERE IT STARTS
+# ---------------
+# Run it with --seed, so the app starts on the tabs with the demo accounts and no goal:
+#
+#   apps/mobile/maestro/run.sh <simulator-udid> apps/mobile/maestro/goal.yaml --seed
+#
+# The seeder names the accounts in Italian. The flow keeps the goal in «Conto corrente», which holds
+# enough money for the amounts below on any day. The first-run intro still shows once.
+#
+# `appId` is the `SALDO_BUNDLE_ID` fallback in `apps/mobile/app.config.ts`. A fork that builds with
+# that variable set has a different one.
+appId: io.github.saldo.app
+name: Goal, set money aside, close with an expense
+---
+- launchApp
+# The first-run intro (§6.40) covers the tab bar. The wait is optional: on a later run it is gone.
+- extendedWaitUntil:
+    visible:
+      id: "intro-continue"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: "intro-continue"
+    commands:
+      - tapOn:
+          id: "intro-continue"
+      - extendedWaitUntil:
+          notVisible:
+            id: "intro-continue"
+          timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "tab-fab"
+    timeout: 30000
+
+# 1. The «Goals» card is below the fold of Home. With no goal it offers «Create a goal».
+- scrollUntilVisible:
+    element: "Create a goal"
+- tapOn: "Create a goal"
+
+# 2. Wizard, step 1 of 4: the name. The field is autofocused. Return closes the keyboard, which
+#    covers the footer otherwise. `hideKeyboard` fails on iOS.
+- inputText: "Maestro holiday"
+- pressKey: Enter
+- tapOn: "Continue"
+
+# Step 2 of 4: the target, on Saldo's own keypad. It is already open.
+- tapOn:
+    id: "keypad-key-5"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
+- tapOn: "Continue"
+
+# Step 3 of 4: the deadline. «No deadline» is the default, so there is nothing to choose.
+- tapOn: "Continue"
+
+# Step 4 of 4: the account that holds the money. No account is chosen yet, and the button stays off
+# until one is.
+- tapOn: "Conto corrente"
+- tapOn: "Create a goal"
+
+# 3. The app opens the new goal. Nothing is set aside yet.
+- extendedWaitUntil:
+    visible: "Goal created"
+    timeout: 10000
+# The card reads «name, saved of target, status».
+- assertVisible: "Maestro holiday, €0\\.00 of €500\\.00, .*"
+
+# 4. Set aside €200. The form opens as a transfer, from the account into the goal. The keypad is
+#    already open.
+- tapOn: "Set aside"
+- tapOn:
+    id: "keypad-key-2"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-key-0"
+- tapOn:
+    id: "keypad-action"
+- tapOn:
+    id: "txform-submit"
+- extendedWaitUntil:
+    visible: "Transaction added"
+    timeout: 10000
+- assertVisible: "Maestro holiday, €200\\.00 of €500\\.00, .*"
+# The toast covers the «Close goal» button for a few seconds.
+- extendedWaitUntil:
+    notVisible: "Transaction added"
+    timeout: 10000
+
+# 5. Close the goal. The sheet says how much is still in it, and offers two exits. This flow takes
+#    «Record the expense».
+- scrollUntilVisible:
+    element: "Close goal"
+- tapOn: "Close goal"
+- assertVisible: "Did you use the money?"
+- assertVisible: "€200\\.00 is still in the goal\\."
+- tapOn: "Record the expense"
+
+# The expense form opens with the goal as the account, €200 as the amount and the goal name as the
+# description. It only needs a category.
+- tapOn:
+    id: "keypad-action"
+- tapOn:
+    id: "txform-category-0"
+- tapOn:
+    id: "txform-submit"
+
+# 6. Saving the expense closes the goal and shows the list of goals: no open goal, one closed.
+- extendedWaitUntil:
+    visible: "Goal closed"
+    timeout: 10000
+- assertVisible: "No goals"
+- assertVisible: "Restore"
+- assertVisible: "Maestro holiday.*"
+
+# 7. The expense is a real expense: it is in the list of transactions, next to the «Set aside»
+#    transfer. The row label is «description, category, amount». The minus sign is the real one
+#    (U+2212), which tells the expense from the transfer.
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "tab-transactions"
+- assertVisible: "Maestro holiday, .*−€200\\.00"
