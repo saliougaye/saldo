@@ -66,11 +66,11 @@ name: Tags - create, rename, merge, delete
 - extendedWaitUntil:
     visible: "Name"
     timeout: 10000
-# The edit sheet starts with the name the tag has, and its field is not focused (the new-tag sheet
-# focuses its field, this one does not). The field has no testID, and a tap on its label does not
-# focus it. Tap the field by its place in the sheet. The rename may not take the name of another tag.
-- tapOn:
-    point: "50%,73%"
+# The edit sheet starts with the name the tag has, and its field is focused, as in the new-tag sheet.
+# The rename may not take the name of another tag.
+- assertVisible:
+    id: "tag-edit-name"
+    focused: true
 - eraseText: 20
 - inputText: "Rimborsabile"
 - assertVisible: "A tag with this name already exists."

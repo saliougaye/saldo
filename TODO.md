@@ -44,7 +44,6 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
   «day N of M».
 - The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
   count only up to today. The numbers disagree (7 against 6).
-- The tag Edit sheet does not focus its name field, unlike New tag.
 
 ## Features
 
@@ -57,7 +56,7 @@ The Playwright suite (`apps/web/e2e`) and the Maestro flows (`apps/mobile/maestr
 `test.fixme` in `admin.spec.ts`, because one server cannot lock a setting that the other specs change. It needs a second
 server with its own environment. The Maestro flows also lack a few `testID`s, so some steps select by text or position:
 `keypad-key-sign` (hidden from the accessibility tree), the account name and balance fields of the account form,
-`period-picker`, `tag-edit-name`, `appearance-icon-search`.
+`period-picker`, `appearance-icon-search`.
 
 Three phone steps are not covered. The recap with hidden amounts: a seeded database is never due a recap, so the flow
 needs a `run.sh` option that sets `lastRecapPeriod` and `amountsHidden`. Pull to refresh offline: with no session the app
