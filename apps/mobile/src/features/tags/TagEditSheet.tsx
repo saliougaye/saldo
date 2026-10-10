@@ -57,9 +57,12 @@ export function TagEditSheet({ visible, onClose, tag, onDelete, onDismissed }: T
   return (
     <Sheet visible={visible} onClose={onClose} title={t('tags.editTag')} onDismissed={onDismissed}>
       <TextField
+        testID="tag-edit-name"
         label={t('tags.name')}
         value={name}
         onChangeText={setName}
+        // Focused as in "Nuovo tag": renaming is the reason to open this sheet.
+        autoFocus
         returnKeyType="done"
         onSubmitEditing={save}
       />

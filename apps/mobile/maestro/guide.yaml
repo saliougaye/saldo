@@ -117,10 +117,9 @@ name: Guide, intro and info buttons
     notVisible: "A spending cap on one or more categories.*"
     timeout: 10000
 
-# A link that matches no screen must not crash or leave a blank screen. The app has no
-# `+not-found` route, so Expo Router shows its own «Unmatched Route» page. That page and the app's
-# `NotFoundScreen` both have a «Go back» link, so the flow works with either. The step below
-# lands on Home (the link replaces the screens under it) to prove the way out works.
+# A link that matches no screen must not crash or leave a blank screen. The app's `+not-found`
+# route shows «This page does not exist» with a «Go back» button. The step below lands on Home
+# (the link replaces the screens under it) to prove the way out works.
 - openLink: saldo://does-not-exist
 # iOS sometimes asks «Open in "Saldo"?» for a link opened from outside the app. Confirm it when
 # it shows.
@@ -128,8 +127,9 @@ name: Guide, intro and info buttons
     text: "Open"
     optional: true
 - extendedWaitUntil:
-    visible: "Go back"
+    visible: "This page does not exist"
     timeout: 15000
+- assertNotVisible: "Sitemap"
 - takeScreenshot: guide-unknown-link
 - tapOn: "Go back"
 - extendedWaitUntil:

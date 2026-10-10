@@ -1,4 +1,10 @@
-import { rollupToParents, spendingByCategory, tagTotals, transactionRow } from '@saldo/core';
+import {
+  rollupToParents,
+  spendingByCategory,
+  tagTotals,
+  transactionRow,
+  transactionsWithTag,
+} from '@saldo/core';
 import { formatDayMonth } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,8 +37,13 @@ import { useLeaveGone } from '../../src/navigation/leave';
 import { Text } from '../../src/theme/Text';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-/** Where the tag view's rows start: a tag spans every date. */
+/**
+ * Where the tag view's rows start and end: a tag spans every date, scheduled ones included. The
+ * list, the count and the Merge and Delete sheets read the same rows as the tags list does
+ * (`tagUsage`); the totals and the split still keep only the counted ones.
+ */
 const ALL_DATES_START = '1970-01-01';
+const ALL_DATES_END = '2999-12-31';
 
 /** §6.11 / §5.10. A tag spans every date, so the period selector does not apply here. */
 export default function TagView() {
@@ -54,19 +65,13 @@ export default function TagView() {
   // drops a modal presented while another is still dismissing.
   const [deletePending, setDeletePending] = useState(false);
 
-  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(ALL_DATES_START, today);
+  const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(ALL_DATES_START, ALL_DATES_END);
   // The figures sum these rows: before they land, a total would paint as 0.
   const loaded = entityLoaded && rowsLoaded;
   const slow = useDelayed(!loaded);
   const tag = tags.find((candidate) => candidate.id === id);
 
-  const tagged = useMemo(
-    () =>
-      rows
-        .filter((tx) => id !== undefined && tx.tagIds.includes(id))
-        .sort((a, b) => a.date.localeCompare(b.date)),
-    [rows, id],
-  );
+  const tagged = useMemo(() => (id === undefined ? [] : transactionsWithTag(rows, id)), [rows, id]);
 
   const split = useMemo(() => {
     if (tagged.length === 0) return [];
