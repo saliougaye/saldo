@@ -27,6 +27,8 @@ export const fr: Messages = {
     thisOne: 'cette opération',
     notFoundTitle: 'Plus disponible',
     notFoundBody: 'Il a été supprimé, ou il n’est pas encore arrivé sur ce téléphone.',
+    unknownLinkTitle: 'Cette page n’existe pas',
+    unknownLinkBody: 'Le lien est erroné, ou il vient d’une autre version de Saldo.',
     stepOf: 'Étape {{step}} sur {{total}}',
     negative: 'Négatif',
     amountKeypad: 'Pavé numérique',

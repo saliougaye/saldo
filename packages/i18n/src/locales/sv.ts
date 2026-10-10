@@ -27,6 +27,8 @@ export const sv: Messages = {
     thisOne: 'den här posten',
     notFoundTitle: 'Finns inte längre',
     notFoundBody: 'Den har raderats, eller har inte kommit till den här telefonen än.',
+    unknownLinkTitle: 'Den här sidan finns inte',
+    unknownLinkBody: 'Länken är fel, eller så kommer den från en annan version av Saldo.',
     stepOf: 'Steg {{step}} av {{total}}',
     negative: 'Negativt',
     amountKeypad: 'Knappsats',

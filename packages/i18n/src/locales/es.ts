@@ -27,6 +27,8 @@ export const es: Messages = {
     thisOne: 'este movimiento',
     notFoundTitle: 'Ya no está',
     notFoundBody: 'Se eliminó, o todavía no ha llegado a este teléfono.',
+    unknownLinkTitle: 'Esta página no existe',
+    unknownLinkBody: 'El enlace es incorrecto, o viene de otra versión de Saldo.',
     stepOf: 'Paso {{step}} de {{total}}',
     negative: 'Negativo',
     amountKeypad: 'Teclado',

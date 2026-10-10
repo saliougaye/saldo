@@ -25,6 +25,8 @@ export const it = {
     thisOne: 'questa voce',
     notFoundTitle: 'Non c’è più',
     notFoundBody: 'È stato eliminato, oppure non è ancora arrivato su questo telefono.',
+    unknownLinkTitle: 'Questa pagina non esiste',
+    unknownLinkBody: 'Il link è sbagliato, oppure è di una versione di Saldo diversa da questa.',
     stepOf: 'Passo {{step}} di {{total}}',
     negative: 'Negativo',
     amountKeypad: 'Tastierino',

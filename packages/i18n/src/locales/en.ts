@@ -25,6 +25,8 @@ export const en: Messages = {
     thisOne: 'this entry',
     notFoundTitle: 'Not here any more',
     notFoundBody: 'It was deleted, or it has not reached this phone yet.',
+    unknownLinkTitle: 'This page does not exist',
+    unknownLinkBody: 'The link is wrong, or it comes from a different version of Saldo.',
     stepOf: 'Step {{step}} of {{total}}',
     negative: 'Negative',
     amountKeypad: 'Keypad',

@@ -38,8 +38,6 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
 
 ### Phone: smaller defects found by the Maestro flows
 
-- An unknown deep link (`saldo://does-not-exist`) shows Expo Router's default «Unmatched Route» page: black, unthemed,
-  with an English «Sitemap» link. The app has no `+not-found` route.
 - The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
   count only up to today. The numbers disagree (7 against 6).
 

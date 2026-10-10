@@ -28,6 +28,8 @@ export const pt: Messages = {
     thisOne: 'este movimento',
     notFoundTitle: 'Já não existe',
     notFoundBody: 'Foi eliminado, ou ainda não chegou a este telemóvel.',
+    unknownLinkTitle: 'Esta página não existe',
+    unknownLinkBody: 'A ligação está errada, ou vem de outra versão do Saldo.',
     stepOf: 'Passo {{step}} de {{total}}',
     negative: 'Negativo',
     amountKeypad: 'Teclado',
