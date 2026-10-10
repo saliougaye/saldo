@@ -28,14 +28,6 @@ in one movement. Still open:
 - the same pattern on Conti and Profilo;
 - the motion the phone has that the web lacks.
 
-### Web sign-in: closing the passkey prompt shows the generic error
-
-Found by the Playwright suite (`auth.spec.ts`, kept as `test.fixme`). When a person closes the browser's passkey prompt,
-the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it as a `WebAuthnError` with the code
-`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`, and Better Auth's client passes that code on. The `CANCELLED` set in
-`describeAuthError` holds `NotAllowedError` and not that code. The person sees the generic alert and never
-`sync.cancelled`. Confirm it in the browser, add the code to the set, and turn the `fixme` into a test.
-
 ### Phone: smaller defects found by the Maestro flows
 
 - An unknown deep link (`saldo://does-not-exist`) shows Expo Router's default «Unmatched Route» page: black, unthemed,
