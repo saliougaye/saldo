@@ -11,7 +11,7 @@ import {
   startMailSink,
   withAnotherDevice,
 } from './support/auth';
-import { addVirtualAuthenticator } from './support/authenticator';
+import { addVirtualAuthenticator, unknownCredential } from './support/authenticator';
 import { createMember, mintInvite } from './support/members';
 
 test.describe('register with an invite', () => {
@@ -132,22 +132,30 @@ test.describe('passkey sign-in', () => {
     await signOut(page, t);
     const signIn = page.getByRole('button', { name: t('sync.signIn') });
 
-    // The authenticator answers without verifying the person: the server turns the assertion down.
+    // The device holds only a passkey that no account holds: the server turns the assertion down.
+    // (An authenticator that does not verify the person never reaches the server: the browser
+    // rejects with `NotAllowedError`, which is the cancelled alert.)
+    const kept = await authenticator.credentials();
+    await authenticator.remove();
+    const stranger = await addVirtualAuthenticator(page);
+    await stranger.add(unknownCredential());
     await signIn.click();
     await expect(alertWith(page, t('web.auth.genericError'))).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
 
-    await authenticator.setUserVerified(true);
+    await stranger.remove();
+    const own = await addVirtualAuthenticator(page);
+    for (const credential of kept) await own.add(credential);
     await signIn.click();
     await expect(page).toHaveURL(/\/home$/);
     await member.context.close();
   });
 
-  // BUG: closing the browser's passkey prompt rejects with `NotAllowedError`. `@simplewebauthn/browser`
-  // wraps it as `WebAuthnError` with code `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`, and Better Auth's
-  // client passes that code on. `describeAuthError`'s CANCELLED set holds `NotAllowedError` itself
-  // and not that code, so the person sees the generic alert and never `sync.cancelled`.
-  test.fixme('a cancelled ceremony shows the cancelled alert', async ({ browser, t }) => {
+  // Regression: closing the browser's passkey prompt rejects with `NotAllowedError`.
+  // `@simplewebauthn/browser` wraps it as `WebAuthnError` with code
+  // `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`, and Better Auth's client passes that code on. The person
+  // saw the generic alert, not `sync.cancelled`.
+  test('a cancelled ceremony shows the cancelled alert', async ({ browser, t }) => {
     const member = await createMember(browser, t, { name: 'Dario', email: 'dario3@e2e.test' });
     const { page, authenticator } = member;
     await authenticator.setUserVerified(false);

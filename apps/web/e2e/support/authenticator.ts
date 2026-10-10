@@ -1,4 +1,6 @@
+import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import type { CDPSession, Page } from '@playwright/test';
+import { serverEnv } from '../env';
 
 /** What the virtual authenticator stores for one passkey; `credential` is CDP's own shape. */
 export interface StoredCredential {
@@ -16,6 +18,22 @@ export interface VirtualAuthenticator {
   /** Makes the next ceremony fail as if the person pressed «Cancel» on the browser's prompt. */
   setUserVerified: (verified: boolean) => Promise<void>;
   remove: () => Promise<void>;
+}
+
+/**
+ * A passkey for this server's RP ID that no account holds: what a device keeps after its account or
+ * its passkey is gone. The browser signs with it, and the server turns the assertion down.
+ */
+export function unknownCredential(): StoredCredential {
+  const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  return {
+    credentialId: randomBytes(16).toString('base64'),
+    isResidentCredential: true,
+    rpId: serverEnv.WEBAUTHN_RP_ID,
+    privateKey: privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64'),
+    userHandle: randomBytes(16).toString('base64'),
+    signCount: 0,
+  };
 }
 
 /**
