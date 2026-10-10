@@ -4,7 +4,6 @@ import {
   inRange,
   type LedgerTransaction,
   monthOf,
-  nextMonth,
   previousMonth,
   readLedger,
 } from './support/ledgerRows';
@@ -81,9 +80,11 @@ test.describe('seeded account', () => {
     const ledger = await readLedger(member);
     const lang = appLocale(locale);
     const money = moneyFormatter(ledger, lang);
-    // The seed writes two one-off expenses dated ahead; the list reaches to the end of next month.
-    const horizon = nextMonth(monthOf(ledger.today)).end;
-    const ahead = ledger.transactions.filter((tx) => tx.date > ledger.today && tx.date <= horizon);
+    // The seed writes two one-off expenses dated ahead, inside this month: «In arrivo» stops at
+    // the end of the period.
+    const { end } = monthOf(ledger.today);
+    test.skip(ledger.today === end, 'nothing is dated ahead inside the period on its last day');
+    const ahead = ledger.transactions.filter((tx) => tx.date > ledger.today && tx.date <= end);
     expect(ahead.length).toBeGreaterThanOrEqual(2);
 
     await page.goto('/transactions');

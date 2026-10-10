@@ -140,8 +140,8 @@ export function describePeriod(range: DateRange, today: LocalDate): PeriodView {
  * How far forward the period navigation goes (§6.15): no further than the current period.
  *
  * It used to be one: recurrences are materialised to the end of the *next* period (§5.9) and a
- * transaction can be dated ahead, so that period holds rows the user expects to find. They are
- * found in «In arrivo» instead, which reaches the end of the next period (`upcomingUntil`), and
+ * transaction can be dated ahead, so that period holds rows the user expects to find. «In arrivo»
+ * stops at the end of the current period, so those rows are found in the recurrence detail, and
  * Statistics shows what comes after as its forecast (§5.17). A period ahead was otherwise empty
  * cards — no spending has happened, no budget has moved — and read as a closed one.
  */

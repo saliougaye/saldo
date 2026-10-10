@@ -7,7 +7,6 @@ import {
   type ListTotals,
   type LocalDate,
   newestFirst,
-  type PeriodDef,
   type PeriodView,
   splitUpcoming,
   type Transaction,
@@ -19,7 +18,6 @@ import {
   totalsOf,
   transactionRow,
   type UserData,
-  upcomingUntil,
 } from '@saldo/core';
 
 export interface ListRowView extends TransactionRow {
@@ -61,7 +59,6 @@ export interface ListViewInput {
   data: UserData;
   filters: TransactionFilters;
   today: LocalDate;
-  def: PeriodDef;
   period: PeriodView;
   /** `t('kinds.<kind>')`, injected so this stays pure; the page passes its translator. */
   kindLabel?: (kind: TransactionKind) => string;
@@ -72,18 +69,10 @@ export interface ListViewInput {
  * dated ahead, then grouped by day. The rows are `transactionRow`'s, so the phone and the web title
  * and colour a transfer, a recurrence and an excluded row identically.
  */
-export function listView({
-  data,
-  filters,
-  today,
-  def,
-  period,
-  kindLabel,
-}: ListViewInput): ListView {
-  // Both ends are bounded. The start is the period's, and the end is the «In arrivo» horizon: the
-  // end of the next period while this one is current, and the period's own end once it is closed —
-  // where an unbounded upper end would show a closed September rows dated in October (§6.15).
-  const end = upcomingUntil(def, period.range, today);
+export function listView({ data, filters, today, period, kindLabel }: ListViewInput): ListView {
+  // Both ends are bounded by the period: an unbounded upper end would show a closed September
+  // rows dated in October, and «In arrivo» holds what is dated ahead *inside* the period (§6.15).
+  const end = period.range.end;
   // The order the phone's query returns, byte for byte (see `newestFirst`).
   const inRange = data.transactions
     .filter((tx) => tx.date >= period.range.start && tx.date <= end)
