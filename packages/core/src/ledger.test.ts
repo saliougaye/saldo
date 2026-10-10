@@ -7,7 +7,9 @@ import {
   splitUpcoming,
   summarizePeriod,
   tagTotals,
+  tagUsage,
   totalsOf,
+  transactionsWithTag,
 } from './ledger';
 
 describe('summarizePeriod', () => {
@@ -101,6 +103,28 @@ describe('tagTotals', () => {
     ];
     const [trip] = tagTotals(txs, APRIL_CYCLE, TODAY).tags;
     expect(trip).toMatchObject({ expense: 80_000, income: 30_000 });
+  });
+});
+
+describe('tagUsage and transactionsWithTag', () => {
+  // Regression: the tags list said «7 transactions» for Trasloco, while the tag screen and its
+  // Merge and Delete sheets said 6. The screen read its rows only up to today, so it dropped the
+  // one scheduled after today, which a merge or a delete still rewrites.
+  it('count a scheduled transaction, so the tags list and the tag screen agree (bug: 7 against 6)', () => {
+    const txs = [
+      // Scheduled: after TODAY (2026-04-18).
+      tx({ date: '2026-05-02', amount: 1200, tagIds: ['tag-move'] }),
+      tx({ date: '2026-03-30', amount: 4000, tagIds: ['tag-move', 'tag-trip'] }),
+      tx({ date: '2026-04-10', amount: 900, tagIds: ['tag-move'], excludeFromTotals: true }),
+      tx({ date: '2026-04-11', amount: 500, tagIds: [] }),
+    ];
+
+    const usage = tagUsage(txs);
+    const screen = transactionsWithTag(txs, 'tag-move');
+    expect(usage.get('tag-move')).toBe(3);
+    expect(screen).toHaveLength(3);
+    expect(screen.map((row) => row.date)).toEqual(['2026-03-30', '2026-04-10', '2026-05-02']);
+    expect(usage.get('tag-trip')).toBe(1);
   });
 });
 

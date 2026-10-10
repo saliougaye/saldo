@@ -100,8 +100,11 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
         </Pressable>
       ) : null}
       <Pressable
+        testID="period-picker"
         accessibilityRole="button"
-        accessibilityLabel={t('period.title')}
+        // One element for VoiceOver, so its label carries what the two lines show: the dates and
+        // «day N of M» (or «closed period»), not only the word «Period».
+        accessibilityLabel={t('period.headerLabel', { range: label, status: subtitle })}
         // A line of body text over a caption is ~32pt. Only the height grows — the picker is
         // already the width of the header — so the arrows beside it keep every tap of their own.
         hitSlop={{ top: 6, bottom: 6 }}

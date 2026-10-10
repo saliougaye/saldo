@@ -12,11 +12,11 @@
 #
 # THE FLOW DOES NOT DEPEND ON THE DATE
 # ------------------------------------
-# The simulator clock is the real clock. The flow never names a month or a day count. The dates in the
-# header and its "day N of M" line are not in the accessibility tree: the button is labelled "Period"
-# as a whole. So the flow reads the first card of Home. It says "Left to spend" in the current period
-# and "Saved this period" in a period that is closed. The two arrows have testIDs, and the flow reads
-# their enabled state.
+# The simulator clock is the real clock. The flow never names a month or a day count. The header
+# button has the testID "period-picker", and its label holds the dates and "day N of M", which change
+# with the date. So the flow reads the first card of Home. It says "Left to spend" in the current
+# period and "Saved this period" in a period that is closed. The two arrows have testIDs, and the
+# flow reads their enabled state.
 # For a custom range the flow picks the 15th and the 18th of the month that the calendar opens on.
 # That month is the one of the period start, and it is never later than today's month.
 #
@@ -92,7 +92,8 @@ name: Period navigation - stops at the current period, custom range, sheets afte
 
 # 3. A custom range. The period sheet lists the last periods, then "Custom period". The calendar opens
 #    on the month of the period start. The first tap sets the start and the second one sets the end.
-- tapOn: "Period"
+- tapOn:
+    id: "period-picker"
 - extendedWaitUntil:
     visible: "Custom period"
     timeout: 10000
@@ -109,13 +110,14 @@ name: Period navigation - stops at the current period, custom range, sheets afte
 - extendedWaitUntil:
     visible: "Saved this period"
     timeout: 10000
-# The header shows the two ends of the range, and the screenshot keeps them. The accessibility tree
-# does not have them: see the header of this file.
+# The header shows the two ends of the range, and the screenshot keeps them. The flow does not read
+# them: they change with the date (see the header of this file).
 - takeScreenshot: period-custom-applied
 
 # 4. The sheets still take taps. On iOS two sheets that go away at once can leave a screen that draws but
 #    ignores every touch. A tap on the header must open the period sheet again.
-- tapOn: "Period"
+- tapOn:
+    id: "period-picker"
 - extendedWaitUntil:
     visible: "Custom period"
     timeout: 10000
@@ -148,7 +150,8 @@ name: Period navigation - stops at the current period, custom range, sheets afte
     visible:
       id: "tab-fab"
     timeout: 10000
-- tapOn: "Period"
+- tapOn:
+    id: "period-picker"
 - extendedWaitUntil:
     visible: "Period type.*"
     timeout: 10000
