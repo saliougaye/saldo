@@ -36,11 +36,6 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
 `describeAuthError` holds `NotAllowedError` and not that code. The person sees the generic alert and never
 `sync.cancelled`. Confirm it in the browser, add the code to the set, and turn the `fixme` into a test.
 
-### Phone: smaller defects found by the Maestro flows
-
-- The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
-  count only up to today. The numbers disagree (7 against 6).
-
 ## Features
 
 Asked for and shaped enough to plan, or one decision away from it.

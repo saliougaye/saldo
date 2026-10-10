@@ -91,8 +91,8 @@ name: Tags - create, rename, merge, delete
     timeout: 10000
 - assertNotVisible: "Maestro tag.*"
 
-# The tag screen counts the transactions up to today. The list counts all of them, future ones too.
-# So the flow does not check the count that the sheets say, only the counts on the list.
+# The list, the tag screen and its sheets count the same transactions: all of them, scheduled ones
+# too. So the counts that the sheets say are the counts on the list.
 # 3. Merge. Regalo (3 transactions) goes into Rimborsabile (4): Rimborsabile ends with 7 and Regalo is
 #    gone. The merge needs a second tap: the first one only picks the target and shows the note.
 - tapOn: "Regalo.*"
@@ -102,7 +102,7 @@ name: Tags - create, rename, merge, delete
     timeout: 10000
 # The target list does not offer the tag itself.
 - tapOn: "Rimborsabile"
-- assertVisible: ".*transactions tagged “Regalo” move to “Rimborsabile”.*"
+- assertVisible: "The 3 transactions tagged “Regalo” move to “Rimborsabile”.*"
 - takeScreenshot: tags-merge-note
 - tapOn: "Merge"
 # The merged tag is gone, so the app leaves its screen and lands on the list.
@@ -124,7 +124,7 @@ name: Tags - create, rename, merge, delete
 - extendedWaitUntil:
     visible: "Delete “Trasloco”?"
     timeout: 10000
-- assertVisible: ".*transactions that carry it stay, without this tag.*"
+- assertVisible: "The 7 transactions that carry it stay, without this tag."
 - takeScreenshot: tags-delete-confirm
 - tapOn: "Delete"
 - extendedWaitUntil:

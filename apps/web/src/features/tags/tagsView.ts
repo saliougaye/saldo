@@ -1,4 +1,4 @@
-import { canCreateTag, type UserData } from '@saldo/core';
+import { canCreateTag, tagUsage, type UserData } from '@saldo/core';
 
 export interface TagRowView {
   id: string;
@@ -14,11 +14,7 @@ const binary = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** Profilo → Tag (§5.10): every tag with its usage, most used first, then by name. */
 export function tagsView(data: UserData): TagRowView[] {
-  const usage = new Map<string, number>();
-  for (const row of data.transactions) {
-    if (row.deletedAt !== null) continue;
-    for (const id of row.tagIds) usage.set(id, (usage.get(id) ?? 0) + 1);
-  }
+  const usage = tagUsage(data.transactions.filter((row) => row.deletedAt === null));
   return data.tags
     .map((tag) => ({
       id: tag.id,

@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { PrimaryButton, SecondaryButton } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Sheet } from '../../components/Sheet';
-import { useTags, useTransactionsInRange } from '../../db/hooks';
+import { useTags, useTagUsage } from '../../db/hooks';
 import { Text } from '../../theme/Text';
 
 export interface TagFilterSheetProps {
@@ -18,13 +18,12 @@ export interface TagFilterSheetProps {
 export function TagFilterSheet({ visible, onClose, selected, onChange }: TagFilterSheetProps) {
   const { t } = useTranslation();
   const tags = useTags();
-  const rows = useTransactionsInRange('1970-01-01', '2999-12-31');
+  const usage = useTagUsage();
 
-  const ordered = useMemo(() => {
-    const usage = new Map<string, number>();
-    for (const tx of rows) for (const id of tx.tagIds) usage.set(id, (usage.get(id) ?? 0) + 1);
-    return [...tags].sort((a, b) => (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0));
-  }, [tags, rows]);
+  const ordered = useMemo(
+    () => [...tags].sort((a, b) => (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0)),
+    [tags, usage],
+  );
 
   return (
     <Sheet visible={visible} onClose={onClose} title={t('transactions.tags')}>

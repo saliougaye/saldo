@@ -8,7 +8,7 @@ import type {
   Tag,
   Transaction,
 } from '@saldo/core';
-import { SETTINGS_ID } from '@saldo/core';
+import { SETTINGS_ID, tagUsage } from '@saldo/core';
 import { and, asc, count, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from './client';
@@ -164,7 +164,7 @@ export function useTags(): Tag[] {
 }
 
 /**
- * How many live transactions carry each tag, over the whole history (§5.10).
+ * How many live transactions carry each tag, whatever their date (`tagUsage`, §5.10).
  *
  * Live, like `useCategoryUsage`: a merge rewrites `tagIds` on the rows behind the admin list, and
  * a count read once when the screen mounted kept saying "0 transactions" for the tag that had
@@ -177,11 +177,7 @@ export function useTagUsage(): Map<string, number> {
       .from(transactions)
       .where(isNull(transactions.deletedAt)),
   );
-  const counts = new Map<string, number>();
-  for (const row of data) {
-    for (const id of row.tagIds) counts.set(id, (counts.get(id) ?? 0) + 1);
-  }
-  return counts;
+  return tagUsage(data);
 }
 
 export function useBudgetsQuery(): LiveRows<Budget> {
