@@ -8,14 +8,6 @@ shared finances, AI, web app, going public, releases — live in [`ROADMAP.md`](
 
 Something that works wrong today.
 
-### Maestro `edit-recurring-following.yaml` looks for the next occurrence in «In arrivo»
-
-Changed 2026-10-11: «In arrivo» stops at the end of the selected period. The next occurrence of a monthly
-recurrence is one month out, in the next period, so step 2 of the flow no longer finds it behind the
-`transactions-upcoming` fold. Open it from «Ricorrenti» (`transactions-recurrences`) and the recurrence detail
-instead, then check steps 5 and 6 again, because they go back to the list with the fold open. Not run after the
-change.
-
 ### Web app: a UI pass — navigation feels slow, motion is missing
 
 Reported 2026-10-04 after using the web app on a real instance. Moving between pages feels slow, and the suspect is

@@ -268,6 +268,7 @@ export default function RecurrenceDetail() {
             {occurrences.map((tx) => (
               <ListRow
                 key={tx.id}
+                testID={`recurrence-occurrence-${tx.date > today ? 'upcoming' : 'past'}-${tx.id}`}
                 title={formatDayMonth(tx.date, locale)}
                 subtitle={
                   tx.date > today
