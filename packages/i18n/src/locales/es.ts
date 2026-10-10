@@ -567,6 +567,7 @@ export const es: Messages = {
     customFrom: 'Del',
     customTo: 'Al',
     title: 'Periodo',
+    headerLabel: 'Periodo: {{range}}, {{status}}',
     dayOf: 'día {{elapsed}} de {{length}}',
     closed: 'periodo cerrado',
     inProgress: 'en curso, día {{elapsed}} de {{length}}',

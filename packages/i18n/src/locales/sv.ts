@@ -564,6 +564,7 @@ export const sv: Messages = {
     customFrom: 'Från',
     customTo: 'Till',
     title: 'Period',
+    headerLabel: 'Period: {{range}}, {{status}}',
     dayOf: 'dag {{elapsed}} av {{length}}',
     closed: 'avslutad period',
     inProgress: 'pågår, dag {{elapsed}} av {{length}}',

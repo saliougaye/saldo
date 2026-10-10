@@ -573,6 +573,7 @@ export const de: Messages = {
     customFrom: 'Vom',
     customTo: 'Bis',
     title: 'Zeitraum',
+    headerLabel: 'Zeitraum: {{range}}, {{status}}',
     dayOf: 'Tag {{elapsed}} von {{length}}',
     closed: 'abgeschlossen',
     inProgress: 'läuft, Tag {{elapsed}} von {{length}}',

@@ -40,8 +40,6 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
 
 - An unknown deep link (`saldo://does-not-exist`) shows Expo Router's default «Unmatched Route» page: black, unthemed,
   with an English «Sitemap» link. The app has no `+not-found` route.
-- `PeriodHeader` sets `accessibilityLabel` to `period.title` only, so VoiceOver reads «Period» and never the dates or
-  «day N of M».
 - The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
   count only up to today. The numbers disagree (7 against 6).
 
@@ -55,8 +53,8 @@ The Playwright suite (`apps/web/e2e`) and the Maestro flows (`apps/mobile/maestr
 2026-10-05. One web flow is open: a setting that the environment locks must show as locked and refuse a save. It stays a
 `test.fixme` in `admin.spec.ts`, because one server cannot lock a setting that the other specs change. It needs a second
 server with its own environment. The Maestro flows also lack a few `testID`s, so some steps select by text or position:
-`keypad-key-sign` (hidden from the accessibility tree), the account name and balance fields of the account form,
-`period-picker`, `appearance-icon-search`.
+`keypad-key-sign` (hidden from the accessibility tree), the account name and balance fields of the account form, and
+`appearance-icon-search`.
 
 Three phone steps are not covered. The recap with hidden amounts: a seeded database is never due a recap, so the flow
 needs a `run.sh` option that sets `lastRecapPeriod` and `amountsHidden`. Pull to refresh offline: with no session the app

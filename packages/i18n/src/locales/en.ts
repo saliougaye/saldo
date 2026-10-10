@@ -565,6 +565,7 @@ export const en: Messages = {
     customFrom: 'From',
     customTo: 'To',
     title: 'Period',
+    headerLabel: 'Period: {{range}}, {{status}}',
     dayOf: 'day {{elapsed}} of {{length}}',
     closed: 'closed period',
     inProgress: 'in progress, day {{elapsed}} of {{length}}',

@@ -564,6 +564,7 @@ export const it = {
     customFrom: 'Dal',
     customTo: 'Al',
     title: 'Periodo',
+    headerLabel: 'Periodo: {{range}}, {{status}}',
     dayOf: 'giorno {{elapsed}} di {{length}}',
     closed: 'periodo chiuso',
     inProgress: 'in corso, giorno {{elapsed}} di {{length}}',

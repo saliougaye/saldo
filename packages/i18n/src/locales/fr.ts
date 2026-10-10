@@ -573,6 +573,7 @@ export const fr: Messages = {
     customFrom: 'Du',
     customTo: 'Au',
     title: 'Période',
+    headerLabel: 'Période : {{range}}, {{status}}',
     dayOf: 'jour {{elapsed}} sur {{length}}',
     closed: 'période close',
     inProgress: 'en cours, jour {{elapsed}} sur {{length}}',
