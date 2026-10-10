@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { createContext, type MouseEvent, type ReactNode, useContext } from 'react';
+import { AppLink as Link } from './AppLink';
 
 /** What a page whose panel lives in client state gives the links inside it. */
 export interface PanelNav {

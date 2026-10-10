@@ -1,6 +1,5 @@
 import type { ToolScope } from '@saldo/core';
 import { plural } from '@saldo/i18n/translate';
-import Link from 'next/link';
 import { MCP_ADMIN_PATH } from '../../../../src/features/admin/mcpView';
 import { instantFormatter } from '../../../../src/features/admin/resolveMessage';
 import {
@@ -22,6 +21,7 @@ import { listConnectors } from '../../../../src/server/mcp/connectors';
 import { readPage } from '../../../../src/server/page/context';
 import { pageMcpSetting } from '../../../../src/server/page/instanceSettings';
 import { Alert } from '../../../../src/ui/Alert';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { Section } from '../../../../src/ui/Section';

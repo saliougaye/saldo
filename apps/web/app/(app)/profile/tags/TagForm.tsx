@@ -2,7 +2,6 @@
 
 import type { AppLocale } from '@saldo/i18n/format';
 import { makeTranslator, plural } from '@saldo/i18n/translate';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
@@ -16,6 +15,7 @@ import { tagNameProblem } from '../../../../src/features/tags/tagsView';
 import { tagWriteErrors } from '../../../../src/features/tags/writeErrors';
 import type { TagMessages } from '../../../../src/i18n/tagMessages';
 import { Alert } from '../../../../src/ui/Alert';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Icon } from '../../../../src/ui/Icon';
 import { TextField } from '../../../../src/ui/TextField';

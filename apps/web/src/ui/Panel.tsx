@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type MouseEvent,
@@ -11,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
 import styles from './Panel.module.css';

@@ -1,7 +1,6 @@
 import { catalogs, formatMoneyParts } from '@saldo/i18n';
 import { plural } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { archiveCategoryView } from '../../../../src/features/categories/archiveView';
 import {
   type CategoryRowView,
@@ -11,6 +10,7 @@ import { categoryFormView } from '../../../../src/features/categories/formView';
 import { categoryWriteErrors } from '../../../../src/features/categories/writeErrors';
 import { categoryMessages } from '../../../../src/i18n/categoryMessages';
 import { readPage } from '../../../../src/server/page/context';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { IconBox } from '../../../../src/ui/IconBox';

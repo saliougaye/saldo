@@ -1,10 +1,10 @@
 import { catalogs, formatMoney, formatMoneyParts } from '@saldo/i18n';
-import Link from 'next/link';
 import { budgetRowFor } from '../../../../src/features/budgets/budgetRow';
 import { budgetsView } from '../../../../src/features/budgets/budgetsView';
 import { budgetFormView } from '../../../../src/features/budgets/formView';
 import { budgetMessages } from '../../../../src/i18n/budgetMessages';
 import { readPage } from '../../../../src/server/page/context';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { Section } from '../../../../src/ui/Section';

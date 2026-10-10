@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { AppLink as Link } from './AppLink';
 import { Button } from './Button';
 import styles from './FormFoot.module.css';
 

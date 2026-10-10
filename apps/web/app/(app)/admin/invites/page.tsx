@@ -1,5 +1,4 @@
 import { plural } from '@saldo/i18n/translate';
-import Link from 'next/link';
 import { Fragment } from 'react';
 import { adminErrorStrings } from '../../../../src/features/admin/errorStrings';
 import { invitePanel, inviteRows, usedByAddress } from '../../../../src/features/admin/invitesView';
@@ -9,6 +8,7 @@ import { requireWebAdmin } from '../../../../src/server/auth/currentUser';
 import { listInvites, MAX_INVITE_LABEL_LENGTH } from '../../../../src/server/auth/invites';
 import { getDb } from '../../../../src/server/db/client';
 import { adminContext } from '../../../../src/server/page/adminContext';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { Section } from '../../../../src/ui/Section';

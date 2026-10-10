@@ -1,6 +1,6 @@
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { AppLink as Link } from './AppLink';
 import { IconBox } from './IconBox';
 import styles from './ListRow.module.css';
 import { PanelLink } from './PanelNav';

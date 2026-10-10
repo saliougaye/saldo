@@ -30,15 +30,15 @@
 - Port 3000 belongs to another project. Start Saldo on port 3100: `PUBLIC_URL=http://localhost:3100 pnpm --filter web build`, then `cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100`.
 - The dev database is the `saldo-dev-postgres` container. Start it with `docker-compose -f apps/web/docker/docker-compose.dev.yml up -d postgres` (the `docker compose` plugin is not installed). Colima must run. See `~/.claude-work/projects/-Users-saliougaye-sandbox-saldo/memory/web-manual-run-recipe.md`.
 - Every UI string uses i18n keys in `packages/i18n/src/locales/it.ts` **and** `en.ts`. Also add the key to the other locales that the parity test needs. Do not hard-code a colour, a radius or a size. Use the `@saldo/ui` tokens.
-- Commit each task with a Conventional Commit. End each message with `Co-Authored-By: Claude <noreply@anthropic.com>`.
+- Commit each task with a Conventional Commit. End each message with the `Co-Authored-By:` line that the session gives.
 - Work on the branch `fix/web-navigation-feel`, cut from `main`.
 
 ## File structure
 
 | Path (under `apps/web/`) | Action | Responsibility |
 | --- | --- | --- |
-| `src/ui/AppLink.tsx` | Create | `next/link` with a pending report. The only file that imports `next/link`. |
-| `src/ui/NavPending.tsx` | Create | `NavPendingProvider`, `LinkPending`, `useNavTransition`. Keeps the count of pending navigations. |
+| `src/ui/AppLink.tsx` | Create | `next/link` with a pending report. The only file that imports the `Link` of `next/link`. |
+| `src/ui/NavPending.tsx` | Create | `NavPendingProvider`, `LinkPending`, `useNavTransition`. Keeps the count of pending navigations. It imports `useLinkStatus` from `next/link`. |
 | `src/ui/NavPending.module.css` | Create | The progress bar. It shows after a short delay. |
 | `src/ui/PageSkeleton.tsx`, `PageSkeleton.module.css` | Create | The block shapes for `loading.tsx`. |
 | `app/(app)/loading.tsx`, `app/(app)/profile/loading.tsx`, `app/(app)/admin/loading.tsx` | Create | Suspense boundaries for a change of page. |
@@ -174,7 +174,7 @@ git commit -m "chore(web): measure-nav script for tab, chip and period navigatio
 
 `useLinkStatus` (from `next/link`) works only in a **child** of the `<Link>`. Thus `AppLink` renders a small child that calls it.
 
-- [ ] **Step 1: Write `NavPending.tsx`**
+- [x] **Step 1: Write `NavPending.tsx`**
 
 ```tsx
 'use client';
@@ -189,8 +189,8 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { VisuallyHidden } from './VisuallyHidden';
 import styles from './NavPending.module.css';
+import { VisuallyHidden } from './VisuallyHidden';
 
 type Report = (delta: 1 | -1) => void;
 
@@ -199,55 +199,54 @@ const NavPendingContext = createContext<Report>(() => {});
 /**
  * Counts the navigations that wait for the server. While the count is above zero it shows a thin bar
  * at the top of the page and tells a screen reader. The bar waits 150 ms (CSS), so a quick
- * navigation shows nothing.
+ * navigation shows nothing. The status element stays mounted, so that a screen reader hears the
+ * change of its text: a live region that arrives with its text is often not read.
  */
 export function NavPendingProvider({ label, children }: { label: string; children: ReactNode }) {
   const [count, setCount] = useState(0);
   const report = useCallback<Report>((delta) => setCount((current) => current + delta), []);
+  const pending = count > 0;
   return (
     <NavPendingContext value={report}>
-      {count > 0 ? (
-        <>
-          <div className={styles.bar} aria-hidden="true" />
-          <VisuallyHidden>
-            <span role="status">{label}</span>
-          </VisuallyHidden>
-        </>
-      ) : null}
+      {pending ? <div className={styles.bar} aria-hidden="true" /> : null}
+      <VisuallyHidden>
+        <span role="status">{pending ? label : ''}</span>
+      </VisuallyHidden>
       {children}
     </NavPendingContext>
   );
 }
 
-/** Rendered inside a `<Link>`: tells the provider while that link's navigation is pending. */
-export function LinkPending() {
-  const { pending } = useLinkStatus();
+/** Adds one to the count while `pending` is true, and removes it when it ends or on unmount. */
+function useReport(pending: boolean) {
   const report = useContext(NavPendingContext);
   useEffect(() => {
     if (!pending) return;
     report(1);
     return () => report(-1);
   }, [pending, report]);
+}
+
+/** Rendered inside a `<Link>`: tells the provider while that link's navigation is pending. */
+export function LinkPending() {
+  useReport(useLinkStatus().pending);
   return null;
 }
 
 /**
  * For a navigation that starts from code (`router.push` after a search, a key). Wrap the call in
- * `start`: the bar shows until the new page has rendered.
+ * the function this returns: the bar shows until the new page has rendered.
  */
 export function useNavTransition(): (action: () => void) => void {
   const [pending, start] = useTransition();
-  const report = useContext(NavPendingContext);
-  useEffect(() => {
-    if (!pending) return;
-    report(1);
-    return () => report(-1);
-  }, [pending, report]);
+  useReport(pending);
   return start;
 }
 ```
 
-- [ ] **Step 2: Write `NavPending.module.css`**
+The status element stays mounted, and only its text changes. A screen reader often does not read a live region that arrives with its text. The first version of this plan mounted the element with the bar.
+
+- [x] **Step 2: Write `NavPending.module.css`**
 
 ```css
 .bar {
@@ -289,7 +288,7 @@ export function useNavTransition(): (action: () => void) => void {
 
 `--color-accent` exists. `packages/ui/src/css.ts` writes one `--color-*` property for each value of the palette, and the palette has `accent`. Do not add a colour.
 
-- [ ] **Step 3: Write `AppLink.tsx`**
+- [x] **Step 3: Write `AppLink.tsx`**
 
 ```tsx
 import Link from 'next/link';
@@ -312,7 +311,7 @@ export function AppLink({ children, ...props }: ComponentProps<typeof Link>) {
 
 `LinkPending` renders `null`, so it adds no node and no layout.
 
-- [ ] **Step 4: Mount the provider**
+- [x] **Step 4: Mount the provider**
 
 In `app/(app)/layout.tsx`, put the shell `div` in the provider:
 
@@ -326,7 +325,7 @@ import { NavPendingProvider } from '../../src/ui/NavPending';
     </NavPendingProvider>
 ```
 
-- [ ] **Step 5: Write a guard test**
+- [x] **Step 5: Write a guard test**
 
 Create `apps/web/src/ui/appLink.test.ts`. It uses the same `sources()` walk as `clientImports.test.ts`. Copy the 10-line helper. Do not export a helper from one test file to another.
 
@@ -346,12 +345,18 @@ function sources(dir: string): string[] {
   });
 }
 
+/**
+ * `AppLink` renders `next/link`. `NavPending` imports `useLinkStatus` from it: that hook must be in a
+ * client file, and `AppLink` is not one.
+ */
+const ALLOWED = ['/src/ui/AppLink.tsx', '/src/ui/NavPending.tsx'];
+
 /** A link that skips `AppLink` never shows the bar. */
 describe('links', () => {
   it('import next/link only in AppLink', () => {
     const offenders = [...sources(join(ROOT, 'app')), ...sources(join(ROOT, 'src'))].filter(
       (path) =>
-        !path.endsWith('/src/ui/AppLink.tsx') &&
+        !ALLOWED.some((allowed) => path.endsWith(allowed)) &&
         /from 'next\/link'/.test(readFileSync(path, 'utf8')),
     );
     expect(offenders).toEqual([]);
@@ -359,23 +364,23 @@ describe('links', () => {
 });
 ```
 
-- [ ] **Step 6: Run it and see it fail**
+- [x] **Step 6: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test appLink`
 Expected: FAIL. `offenders` lists every file that still imports `next/link` (24 files on 2026-10-11).
 
-- [ ] **Step 7: Replace the imports**
+- [x] **Step 7: Replace the imports**
 
-To find the files, run `grep -rln "from 'next/link'" apps/web/app apps/web/src`. In each file except `AppLink.tsx`, replace `import Link from 'next/link';` with `import { AppLink as Link } from '<relative path to src/ui/AppLink>';`. Keep the local name `Link`, so the JSX does not change. The same replacement applies to the files in `src/ui`, for example `PanelNav.tsx`, `Panel.tsx` and `NavLink.tsx`. A file outside `src/ui` imports `../../…/src/ui/AppLink`.
+To find the files, run `grep -rln "^import Link from 'next/link'" apps/web/app apps/web/src`. In each file except `AppLink.tsx`, replace `import Link from 'next/link';` with `import { AppLink as Link } from '<relative path to src/ui/AppLink>';`. Keep the local name `Link`, so the JSX does not change. The same replacement applies to the files in `src/ui`, for example `PanelNav.tsx`, `Panel.tsx` and `NavLink.tsx`. A file outside `src/ui` imports `../../…/src/ui/AppLink`.
 
-A client file can import `AppLink`. `AppLink` has no `'use client'`, and `LinkPending` is the client part.
+A client file can import `AppLink`. `AppLink` has no `'use client'`, and `LinkPending` is the client part. Thus `NavPending.tsx` must import `useLinkStatus` from `next/link`, and the guard test permits that file too. The first version of the test permitted only `AppLink.tsx`.
 
-- [ ] **Step 8: Run all gates**
+- [x] **Step 8: Run all gates**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm --filter web test`
 Expected: the guard test passes, there are no `lint/…` lines, and all tests pass.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A apps/web

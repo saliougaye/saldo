@@ -1,7 +1,7 @@
 'use client';
 
 import { Menu } from '@base-ui/react';
-import Link from 'next/link';
+import { AppLink as Link } from './AppLink';
 import chip from './Chip.module.css';
 import styles from './FilterMenu.module.css';
 import { Icon } from './Icon';

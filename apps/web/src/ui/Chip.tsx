@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { AppLink as Link } from './AppLink';
 import styles from './Chip.module.css';
 
 interface Props {

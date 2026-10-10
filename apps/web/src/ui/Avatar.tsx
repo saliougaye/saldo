@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isCurrent } from '../features/shell/nav';
+import { AppLink as Link } from './AppLink';
 import styles from './Avatar.module.css';
 import { initials } from './initials';
 

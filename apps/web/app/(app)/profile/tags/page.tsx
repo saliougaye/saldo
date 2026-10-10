@@ -1,9 +1,9 @@
 import { catalogs } from '@saldo/i18n';
 import { plural } from '@saldo/i18n/translate';
-import Link from 'next/link';
 import { tagsView } from '../../../../src/features/tags/tagsView';
 import { tagMessages } from '../../../../src/i18n/tagMessages';
 import { readPage } from '../../../../src/server/page/context';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { ListRow } from '../../../../src/ui/ListRow';

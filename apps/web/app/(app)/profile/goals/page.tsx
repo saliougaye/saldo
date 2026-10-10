@@ -1,7 +1,6 @@
 import { type GoalView, goalTone, goalViews, pocketParentCandidates } from '@saldo/core';
 import { catalogs, formatMoney, formatMoneyParts, type GoalTextDeps, goalOf } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { archivedView } from '../../../../src/features/accounts/archivedView';
 import { goalFormView } from '../../../../src/features/accounts/formView';
 import { goalAccountsHref, NEW_GOAL_HREF } from '../../../../src/features/accounts/goalLinks';
@@ -9,6 +8,7 @@ import { accountWriteErrors } from '../../../../src/features/accounts/writeError
 import { accountMessages } from '../../../../src/i18n/accountMessages';
 import { readPage } from '../../../../src/server/page/context';
 import { AmountText } from '../../../../src/ui/AmountText';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { Icon } from '../../../../src/ui/Icon';
 import { IconBox } from '../../../../src/ui/IconBox';
 import { ListRow } from '../../../../src/ui/ListRow';
