@@ -178,6 +178,33 @@ export function tagTotals(txs: readonly LedgerTx[], range: DateRange, today: Loc
   return { tags, untagged, untaggedCount };
 }
 
+/**
+ * How many transactions carry each tag, whatever their date (§5.10).
+ *
+ * A tag spans every date, and a merge or a delete rewrites every transaction that carries it,
+ * scheduled ones included. So this is the one count that the tags list, the tag screen and its
+ * Merge and Delete sheets show. It is not `TagTotal.count`, which counts only the rows in a total.
+ * Callers pass live rows only.
+ */
+export function tagUsage(txs: readonly Pick<LedgerTx, 'tagIds'>[]): Map<string, number> {
+  const usage = new Map<string, number>();
+  for (const tx of txs) {
+    for (const tagId of new Set(tx.tagIds)) usage.set(tagId, (usage.get(tagId) ?? 0) + 1);
+  }
+  return usage;
+}
+
+/**
+ * The transactions that carry `tagId`, whatever their date, oldest first: the tag screen's list
+ * (§5.10). Its length is `tagUsage(txs).get(tagId)`.
+ */
+export function transactionsWithTag<T extends Pick<LedgerTx, 'tagIds' | 'date'>>(
+  txs: readonly T[],
+  tagId: string,
+): T[] {
+  return txs.filter((tx) => tx.tagIds.includes(tagId)).sort((a, b) => a.date.localeCompare(b.date));
+}
+
 /** Merges child category amounts into their parent. Categories are one level deep (§4). */
 export function rollupToParents(
   amounts: ReadonlyMap<string, number>,

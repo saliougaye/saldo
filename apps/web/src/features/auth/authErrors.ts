@@ -3,10 +3,15 @@ export interface AuthMessage {
   bodyKey: string;
 }
 
-/** What the browser and `@simplewebauthn` call "the person closed the window". */
+/**
+ * What the browser and `@simplewebauthn` call "the person closed the window". A closed prompt rejects
+ * with `NotAllowedError`, and `@simplewebauthn/browser` wraps that as a `WebAuthnError` whose code is
+ * `ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY` — the code Better Auth's client hands on.
+ */
 const CANCELLED = new Set([
   'AUTH_CANCELLED',
   'ERROR_CEREMONY_ABORTED',
+  'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY',
   'REGISTRATION_CANCELLED',
   'NotAllowedError',
 ]);
