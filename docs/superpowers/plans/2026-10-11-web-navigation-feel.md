@@ -2,55 +2,55 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A click on a tab, a chip, a period arrow or a search shows feedback in the frame of the click. A page shows its shell and a skeleton while the server works. A panel on Conti, Profilo and Admin opens in place, as it does on Transazioni.
+**Goal:** A click on a tab, a chip, a period arrow or a search shows feedback in the frame of the click. A page shows its shell and a skeleton while the server works. A panel on Conti, Profilo and Admin opens in place, as on Transazioni.
 
-**Architecture:** Three independent parts, in this order. Part A adds feedback: one `AppLink` that reports its pending state to a provider in the `(app)` layout, plus `loading.tsx` boundaries. Part B shortens the chain of queries before a page can render. Part C lifts the in-place panel of `TransactionsPanels` into a shared controller, then uses it on the other pages. Pages stay server components. The server still renders the data. The change is that the browser sees something before the data is ready.
+**Architecture:** The plan has three independent parts. Do them in this order. Part A adds feedback: one `AppLink` reports its pending state to a provider in the `(app)` layout, and `loading.tsx` files add Suspense boundaries. Part B makes the chain of queries before a render shorter. Part C moves the in-place panel of `TransactionsPanels` into a shared controller. Then the other pages use it. Pages stay server components, and the server still renders the data. The change is that the browser shows a result before the data is ready.
 
 **Tech Stack:** Next.js 16.3.4 App Router, React 19.2, CSS Modules, Better Auth 1.7, Vitest, Playwright.
 
-**Spec:** `docs/superpowers/specs/2026-10-07-web-panel-feel.html` still holds the rules for panel motion, focus and Esc. This plan adds no new motion. It applies those rules to more pages. The decisions below come from the thread of 2026-10-11.
+**Spec:** `docs/superpowers/specs/2026-10-11-web-navigation-feel.html`. On this topic, that spec wins over the POC spec and over this plan. The rules for panel motion, focus and Esc stay in `docs/superpowers/specs/2026-10-07-web-panel-feel.html`. This plan adds no new motion. It applies those rules to more pages.
 
 ---
 
 ## Why this plan exists
 
-`TODO.md` («Web app: a UI pass») lists five open items. The user ruled on 2026-10-11:
+`TODO.md` («Web app: a UI pass») lists five open items. The user made these decisions on 2026-10-11:
 
-- The region is **not** in this plan (`fra1::iad1`). A loading state hides the wait. It does not shorten the wait. Keep the region as its own item in `TODO.md`.
-- Keep `next/link`. A plain `<a>` reloads the page and drops the mounted shell. The cost is the wait for the server, not the prefetch. No page has a `loading.tsx`, so Next has little to prefetch and a click shows nothing.
-- Do not move to dialogs. The panel beside the list is the decision of §17.1.7. The slowness does not come from the panel type.
-- Do not move data fetching to client components. A client fetch adds a round trip after the JavaScript loads, and it duplicates the query. Use streaming: the shell and a skeleton first, then the data.
-- Filters, period and search stay navigations. They show a pending state. Only the panels change in place.
-- Run the in-place panel on every page that has a panel: Conti, every Profilo section, every Admin section.
+- The production region (`fra1::iad1`) is **not** in this plan. A loading state hides the wait. It does not make the wait shorter. Keep the region as its own item in `TODO.md`.
+- Keep `next/link`. A plain `<a>` loads the whole page again and removes the mounted shell. The cost is the wait for the server, not the prefetch. No page has a `loading.tsx`, so Next.js has almost nothing to prefetch, and a click shows nothing.
+- Do not use dialogs. The panel beside the list is decision §17.1.7 of the POC spec. The type of panel does not cause the slow response.
+- Do not move data fetching to client components. A client fetch adds a round trip after the JavaScript loads, and it repeats the query. Use streaming: first the shell and a skeleton, then the data.
+- Filters, the period and the search stay navigations. They show a pending state. Only the panels change in place.
+- Use the in-place panel on every page that has a panel: Conti, every Profilo section and every Admin section.
 
 ## Rules for every task
 
-- **Gates** (AGENTS.md «Reading the results» — read the output, not the exit code): `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck`, `rtk proxy pnpm test`. Clean lint means **no** `lint/…` lines and no `× Some errors were emitted while running checks.`
-- Single-package loop: `rtk proxy pnpm --filter web test <pattern>`. Fix format with `pnpm exec biome check --write <files>` before each commit.
-- Port 3000 belongs to another project. Start Saldo on 3100: `PUBLIC_URL=http://localhost:3100 pnpm --filter web build`, then `cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100`.
-- The dev database is the `saldo-dev-postgres` container: `docker compose -f apps/web/docker/docker-compose.dev.yml up -d postgres` (colima must run). See `~/.claude-work/projects/-Users-saliougaye-sandbox-saldo/memory/web-manual-run-recipe.md`.
-- Every UI string goes through i18n keys in `packages/i18n/src/locales/it.ts` **and** `en.ts` (and the other locales the parity test needs). Do not hard-code a colour, radius or size: use `@saldo/ui` tokens.
+- **Gates.** Read the output, not the exit code (AGENTS.md «Reading the results»). Run `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck` and `rtk proxy pnpm test`. A clean lint has **no** `lint/…` lines and no `× Some errors were emitted while running checks.`
+- To test one package, run `rtk proxy pnpm --filter web test <pattern>`. Before each commit, fix the format with `pnpm exec biome check --write <files>`.
+- Port 3000 belongs to another project. Start Saldo on port 3100: `PUBLIC_URL=http://localhost:3100 pnpm --filter web build`, then `cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100`.
+- The dev database is the `saldo-dev-postgres` container. Start it with `docker compose -f apps/web/docker/docker-compose.dev.yml up -d postgres`. Colima must run. See `~/.claude-work/projects/-Users-saliougaye-sandbox-saldo/memory/web-manual-run-recipe.md`.
+- Every UI string uses i18n keys in `packages/i18n/src/locales/it.ts` **and** `en.ts`. Also add the key to the other locales that the parity test needs. Do not hard-code a colour, a radius or a size. Use the `@saldo/ui` tokens.
 - Commit each task with a Conventional Commit. End each message with `Co-Authored-By: Claude <noreply@anthropic.com>`.
-- Work on branch `fix/web-navigation-feel`, cut from `main`.
+- Work on the branch `fix/web-navigation-feel`, cut from `main`.
 
 ## File structure
 
 | Path (under `apps/web/`) | Action | Responsibility |
 | --- | --- | --- |
-| `src/ui/AppLink.tsx` | Create | `next/link` plus a pending report. The only place that imports `next/link`. |
-| `src/ui/NavPending.tsx` | Create | `NavPendingProvider`, `LinkPending`, `useNavTransition`. Owns the count of pending navigations. |
+| `src/ui/AppLink.tsx` | Create | `next/link` with a pending report. The only file that imports `next/link`. |
+| `src/ui/NavPending.tsx` | Create | `NavPendingProvider`, `LinkPending`, `useNavTransition`. Keeps the count of pending navigations. |
 | `src/ui/NavPending.module.css` | Create | The progress bar. It shows after a short delay. |
-| `src/ui/PageSkeleton.tsx`, `PageSkeleton.module.css` | Create | The block shapes of `loading.tsx`. |
+| `src/ui/PageSkeleton.tsx`, `PageSkeleton.module.css` | Create | The block shapes for `loading.tsx`. |
 | `app/(app)/loading.tsx`, `app/(app)/profile/loading.tsx`, `app/(app)/admin/loading.tsx` | Create | Suspense boundaries for a change of page. |
-| `app/(app)/layout.tsx` | Modify | Mount `NavPendingProvider`. Take «admin» from the session. |
-| `src/server/auth/session.ts`, `currentUser.ts`, `admin.ts` | Modify | Read `role` and `banned` from the session user. Drop two queries. |
-| `src/server/page/context.ts` | Modify | Run the independent awaits together. |
-| `src/ui/usePanelController.ts` | Create | The state machine now in `TransactionsPanels`, free of Transazioni. |
-| `src/ui/panelUrl.ts` + `panelUrl.test.ts` | Create | Pure helpers: panel key from a query, «only the panel changes». |
-| `src/ui/PanelSwitch.tsx` | Create | Renders one of many server-rendered panels, in place. |
-| `app/(app)/transactions/TransactionsPanels.tsx`, `src/features/transactions/panelState.ts` | Modify | Use the controller. Behaviour does not change. |
+| `app/(app)/layout.tsx` | Modify | Mount `NavPendingProvider`. Read «admin» from the session. |
+| `src/server/auth/session.ts`, `currentUser.ts`, `admin.ts` | Modify | Read `role` and `banned` from the session user. Remove two queries. |
+| `src/server/page/context.ts` | Modify | Start the independent awaits together. |
+| `src/ui/usePanelController.ts` | Create | The state machine that is now in `TransactionsPanels`, without the parts specific to Transazioni. |
+| `src/ui/panelUrl.ts` + `panelUrl.test.ts` | Create | Pure helpers: the panel key from a query, and «only the panel changes». |
+| `src/ui/PanelSwitch.tsx` | Create | Shows one of many panels that the server rendered, in place. |
+| `app/(app)/transactions/TransactionsPanels.tsx`, `src/features/transactions/panelState.ts` | Modify | Use the controller. The behaviour does not change. |
 | `app/(app)/accounts/page.tsx`, `app/(app)/profile/*/page.tsx`, `app/(app)/admin/*/page.tsx` | Modify | Use `PanelSwitch`. |
-| `scripts/measure-nav.ts`, `package.json` | Create, modify | The measurement of tab, chip and period navigation, before and after. |
+| `scripts/measure-nav.ts`, `package.json` | Create, modify | Measures the tab, chip and period navigations, before and after. |
 
 ---
 
@@ -65,20 +65,22 @@
 
 - [ ] **Step 1: Branch**
 
+The branch already exists: it holds this plan and its spec. Switch to it with `git switch fix/web-navigation-feel`. Use the command below only if you start again from `main`.
+
 ```bash
 git switch -c fix/web-navigation-feel main
 ```
 
 - [ ] **Step 2: Move the sign-in helpers**
 
-Move `COOKIE`, `LOCAL_HOSTS`, `onlyUser`, `signIn` and the function that deletes the session out of `measure-panel.ts` into `scripts/lib/devSession.ts`, with `export`. Import them back in `measure-panel.ts`. Do not change what they do. Keep the local-only guard.
+Move `COOKIE`, `LOCAL_HOSTS`, `onlyUser`, `signIn` and the function that deletes the session from `measure-panel.ts` to `scripts/lib/devSession.ts`. Export them. Import them again in `measure-panel.ts`. Do not change their behaviour. Keep the guard that permits only a local host.
 
 - [ ] **Step 3: Write `measure-nav.ts`**
 
-The script opens a signed-in page on a production build, throttles the CPU 4×, then runs four inputs. For each input it records two times, from the click:
+The script opens a signed-in page on a production build. It makes the CPU four times slower. Then it runs four inputs. For each input, it records two times from the click:
 
-- **feedback**: the first frame in which something on the page changed. A `MutationObserver` on `document.body` (attributes, childList, subtree) notes `performance.now()` at the first mutation after the click.
-- **settled**: the first frame in which the new content shows. For a tab, that is the new `<h1>` text or the new `pathname`. For a chip, the `aria-current="true"` moves.
+- **feedback**: the first frame with a change on the page. A `MutationObserver` on `document.body` (attributes, childList, subtree) records `performance.now()` at the first mutation after the click.
+- **settled**: the first frame that shows the new content. For a tab, that is the new `<h1>` text or the new `pathname`. For a chip, `aria-current="true"` moves to the new chip.
 
 ```ts
 import { chromium } from '@playwright/test';
@@ -133,11 +135,11 @@ async function main() {
 void main();
 ```
 
-`openSession` is `signIn` plus the cookie and cleanup that `measure-panel.ts` already does. Export it from `devSession.ts` in step 2 with the shape `{ cookie(base): Cookie; close(): Promise<void> }`. Add a global type for `window.__marks` at the top of the file with `declare global { interface Window { __marks: { feedback: number | null } } }`.
+`openSession` is `signIn` plus the cookie and the cleanup that `measure-panel.ts` already does. Export it from `devSession.ts` in step 2, with the shape `{ cookie(base): Cookie; close(): Promise<void> }`. At the top of the file, add a global type for `window.__marks`: `declare global { interface Window { __marks: { feedback: number | null } } }`.
 
 - [ ] **Step 4: Add the script**
 
-In `package.json` scripts add `"measure:nav": "tsx --env-file-if-exists=.env scripts/measure-nav.ts"`.
+In the `scripts` of `package.json`, add `"measure:nav": "tsx --env-file-if-exists=.env scripts/measure-nav.ts"`.
 
 - [ ] **Step 5: Measure and record**
 
@@ -148,7 +150,7 @@ cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100 &
 pnpm --filter web measure:nav http://localhost:3100
 ```
 
-Expected: four lines. «feedback» is about equal to «settled» (nothing shows before the server answers). Paste the four lines into the «Measurements» section at the end of this file, as «Before».
+Expected: four lines. «feedback» is about equal to «settled», because nothing shows before the server answers. Paste the four lines in the «Measurements» section at the end of this file, in the «Before» column.
 
 - [ ] **Step 6: Commit**
 
@@ -161,9 +163,9 @@ git commit -m "chore(web): measure-nav script for tab, chip and period navigatio
 
 **Files:**
 - Create: `apps/web/src/ui/NavPending.tsx`, `apps/web/src/ui/NavPending.module.css`, `apps/web/src/ui/AppLink.tsx`
-- Modify: `apps/web/app/(app)/layout.tsx`, `packages/i18n/src/locales/*.ts` only if `common.loading` is missing (it exists: the pages use it)
+- Modify: `apps/web/app/(app)/layout.tsx`. Modify `packages/i18n/src/locales/*.ts` only if `common.loading` is missing. It exists today («Loading…»), and the pages use it.
 
-`useLinkStatus` (from `next/link`) must run in a **descendant** of the `<Link>`, so `AppLink` renders a small child that calls it.
+`useLinkStatus` (from `next/link`) works only in a **child** of the `<Link>`. Thus `AppLink` renders a small child that calls it.
 
 - [ ] **Step 1: Write `NavPending.tsx`**
 
@@ -278,7 +280,7 @@ export function useNavTransition(): (action: () => void) => void {
 }
 ```
 
-Check that `--color-accent` exists in `@saldo/ui` tokens (`grep -rn "color-accent" packages/ui/src apps/web/src/styles`). If the token has another name, use that name. Do not add a colour.
+`--color-accent` exists. `packages/ui/src/css.ts` writes one `--color-*` property for each value of the palette, and the palette has `accent`. Do not add a colour.
 
 - [ ] **Step 3: Write `AppLink.tsx`**
 
@@ -305,7 +307,7 @@ export function AppLink({ children, ...props }: ComponentProps<typeof Link>) {
 
 - [ ] **Step 4: Mount the provider**
 
-In `app/(app)/layout.tsx` wrap the shell `div`:
+In `app/(app)/layout.tsx`, put the shell `div` in the provider:
 
 ```tsx
 import { NavPendingProvider } from '../../src/ui/NavPending';
@@ -319,7 +321,7 @@ import { NavPendingProvider } from '../../src/ui/NavPending';
 
 - [ ] **Step 5: Write a guard test**
 
-Create `apps/web/src/ui/appLink.test.ts`. It reuses the `sources()` walk of `clientImports.test.ts` (copy the 10-line helper; do not export across test files).
+Create `apps/web/src/ui/appLink.test.ts`. It uses the same `sources()` walk as `clientImports.test.ts`. Copy the 10-line helper. Do not export a helper from one test file to another.
 
 ```ts
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -353,18 +355,18 @@ describe('links', () => {
 - [ ] **Step 6: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test appLink`
-Expected: FAIL. `offenders` lists every file that still imports `next/link` (about 30).
+Expected: FAIL. `offenders` lists every file that still imports `next/link` (24 files on 2026-10-11).
 
 - [ ] **Step 7: Replace the imports**
 
-Find them: `grep -rln "from 'next/link'" apps/web/app apps/web/src`. In each file except `AppLink.tsx`, replace `import Link from 'next/link';` with `import { AppLink as Link } from '<relative path to src/ui/AppLink>';`. Keep the local name `Link` so the JSX does not change. **Exception:** `src/ui/PanelNav.tsx`, `src/ui/Panel.tsx` and `src/ui/NavLink.tsx` also use `Link` — the same replacement applies. Files outside `src/ui` import `../../…/src/ui/AppLink`.
+To find the files, run `grep -rln "from 'next/link'" apps/web/app apps/web/src`. In each file except `AppLink.tsx`, replace `import Link from 'next/link';` with `import { AppLink as Link } from '<relative path to src/ui/AppLink>';`. Keep the local name `Link`, so the JSX does not change. The same replacement applies to the files in `src/ui`, for example `PanelNav.tsx`, `Panel.tsx` and `NavLink.tsx`. A file outside `src/ui` imports `../../…/src/ui/AppLink`.
 
-A client file that imports `AppLink` is fine: `AppLink` has no `'use client'`, and `LinkPending` is the client part.
+A client file can import `AppLink`. `AppLink` has no `'use client'`, and `LinkPending` is the client part.
 
 - [ ] **Step 8: Run all gates**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm --filter web test`
-Expected: the guard passes, no `lint/…` lines, tests green.
+Expected: the guard test passes, there are no `lint/…` lines, and all tests pass.
 
 - [ ] **Step 9: Commit**
 
@@ -373,25 +375,25 @@ git add -A apps/web
 git commit -m "feat(web): every link reports its pending state to a bar in the shell"
 ```
 
-### Task 3: Code-started navigations use the same bar
+### Task 3: Navigations that start from code use the same bar
 
 **Files:**
 - Modify: `apps/web/src/ui/SearchField.tsx:59`, `apps/web/src/ui/Panel.tsx:106,110`, `apps/web/src/ui/ListKeys.tsx:66,88`, `apps/web/src/ui/Shortcuts.tsx:21`
 
-- [ ] **Step 1: Wrap `router.push` / `router.replace` that change the page**
+- [ ] **Step 1: Wrap the `router.push` and `router.replace` calls that change the page**
 
-In each file add `const startNav = useNavTransition();` next to `useRouter()`, and change the call:
+In each file, add `const startNav = useNavTransition();` next to `useRouter()`. Then change the call:
 
 ```tsx
 // SearchField.tsx, was: router.push(params === '' ? path : `${path}?${params}`);
 startNav(() => router.push(params === '' ? path : `${path}?${params}`));
 ```
 
-Do the same for the calls in `Panel.tsx` (both `router.push(closeHref)`), `ListKeys.tsx` (both) and `Shortcuts.tsx`. A form's `router.replace(afterSave)` after a save stays as it is: the form has its own busy state.
+Do the same for the calls in `Panel.tsx` (the two `router.push(closeHref)`), `ListKeys.tsx` (the two calls) and `Shortcuts.tsx`. Do not change the `router.replace(afterSave)` of a form after a save. The form has its own busy state.
 
-- [ ] **Step 2: Gates, then check by hand**
+- [ ] **Step 2: Run the gates, then check by hand**
 
-Run the gates of Task 2 step 8. Then start the build on port 3100, open `/transactions`, type in the search box, and see the bar appear when the server takes more than 150 ms. To force a slow answer, set the DevTools network throttle to «Slow 4G».
+Run the gates of Task 2 step 8. Then start the build on port 3100. In DevTools, set the network throttle to «Slow 4G», so the server answers slowly. Open `/transactions` and type in the search field. Make sure that the bar shows when the server takes more than 150 ms.
 
 - [ ] **Step 3: Commit**
 
@@ -405,7 +407,7 @@ git commit -m "feat(web): search, keys and panel close show the navigation bar"
 **Files:**
 - Create: `apps/web/src/ui/PageSkeleton.tsx`, `apps/web/src/ui/PageSkeleton.module.css`, `apps/web/app/(app)/loading.tsx`, `apps/web/app/(app)/profile/loading.tsx`, `apps/web/app/(app)/admin/loading.tsx`
 
-`loading.tsx` wraps the page in a Suspense boundary. The layout stays mounted, so a tab change shows the shell and the skeleton at once. A change of query on the **same** page (a chip, the period) does not show it: that case uses the bar of Task 2.
+`loading.tsx` puts the page in a Suspense boundary. The layout stays mounted, so a change of tab shows the shell and the skeleton at once. A change of query on the **same** page (a chip, the period) does not show the skeleton. For that case, the bar of Task 2 shows.
 
 - [ ] **Step 1: Write `PageSkeleton.tsx`**
 
@@ -437,8 +439,8 @@ export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
 }
 
 .line {
-  border-radius: var(--radius-md);
-  background: var(--color-surface-2);
+  border-radius: var(--radius-card);
+  background: var(--color-raised);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -464,7 +466,7 @@ export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
 }
 ```
 
-Check that `--radius-md` and `--color-surface-2` exist (`grep -rn "radius-md\|color-surface" packages/ui/src apps/web/src/styles`). Use the real token names. Do not add a value.
+The token names come from `packages/ui/src/tokens.ts`. `radii.card` gives `--radius-card`, and the palette value `raised` gives `--color-raised`. The first version of this plan used `--radius-md` and `--color-surface-2`. These tokens do not exist. Do not add a value.
 
 - [ ] **Step 3: Write the three `loading.tsx` files**
 
@@ -477,13 +479,13 @@ export default function Loading() {
 }
 ```
 
-`profile/loading.tsx` and `admin/loading.tsx` render `<PageSkeleton blocks={3} />`. The sub-navigation of those two layouts stays on screen, because the layout is above the boundary.
+`profile/loading.tsx` and `admin/loading.tsx` render `<PageSkeleton blocks={3} />`. The sub-navigation of these two layouts stays on the screen, because the layout is above the boundary.
 
 - [ ] **Step 4: Check by hand**
 
-Build and start on 3100, throttle «Slow 4G», click Home → Conti. See the shell and the skeleton at once, then the page. In the Network tab, the prefetch of a tab link is small (no user data).
+Build and start on port 3100. Set the throttle to «Slow 4G». Click Home → Conti. Make sure that the shell and the skeleton show at once, and then the page. In the Network tab, make sure that the prefetch of a tab link is small (no user data).
 
-- [ ] **Step 5: Gates and commit**
+- [ ] **Step 5: Run the gates and commit**
 
 ```bash
 git add -A apps/web
@@ -492,9 +494,9 @@ git commit -m "feat(web): loading boundaries show a skeleton while a page loads"
 
 ### Task 5: Measure Part A
 
-- [ ] **Step 1: Run `pnpm --filter web measure:nav http://localhost:3100`** on a fresh production build.
+- [ ] **Step 1: On a new production build, run `pnpm --filter web measure:nav http://localhost:3100`**
 
-Expected: «feedback» for the two tab inputs is under about 50 ms. The chip and period inputs show «feedback» at about 150 ms (the bar delay) when «settled» is longer than that, and about equal to «settled» when it is shorter. Paste the lines under «After Part A».
+Expected: for the two tab inputs, «feedback» is less than about 50 ms. For the chip and the period inputs, «feedback» is about 150 ms (the bar delay) if «settled» is longer. When «settled» is shorter, «feedback» is about equal to «settled». Paste the lines in the «After A» column.
 
 - [ ] **Step 2: Commit the numbers**
 
@@ -507,17 +509,24 @@ git commit -m "docs: measurements after part A"
 
 # Part B — A shorter chain before a page renders
 
-Today a page waits for four things, one after the other: the session (Better Auth), `isRevoked` (a second read of the user row), `loadUserData` (all rows of the user), and in the layout `isAdmin` (a third read of the user row). The layout and the page run side by side, but each starts after the session. The admin plugin of Better Auth already puts `role` and `banned` on `session.user`, and `getSession` reads the database on every call (no cookie cache is set). So the two extra reads give no fresher answer.
+Today a page waits for four steps, one after the other:
+
+1. the session (Better Auth);
+2. `isRevoked`, a second read of the user row;
+3. `loadUserData`, all the rows of the user;
+4. in the layout, `isAdmin`, a third read of the user row.
+
+The layout and the page run in parallel, but each one starts after the session. The admin plugin of Better Auth already puts `role` and `banned` on `session.user`. `getSession` reads the database on each call, because the app sets no cookie cache. Thus the two extra reads give no fresher answer.
 
 ### Task 6: Read `role` and `banned` from the session
 
 **Files:**
 - Modify: `apps/web/src/server/auth/session.ts`, `apps/web/src/server/auth/currentUser.ts`, `apps/web/app/(app)/layout.tsx`
-- Test: the existing revocation tests (`apps/web/app/api/auth/adminPlugin.test.ts`)
+- Test: the revocation tests that exist (`apps/web/app/api/auth/adminPlugin.test.ts`)
 
-- [ ] **Step 1: Count the queries now (throwaway patch, not committed)**
+- [ ] **Step 1: Count the queries now (a temporary patch: do not commit it)**
 
-In `src/server/db/client.ts`, inside `getDb`, after `pool = new Pool(...)` add:
+In `src/server/db/client.ts`, in `getDb`, add these lines after `pool = new Pool(...)`:
 
 ```ts
 const original = pool.query.bind(pool);
@@ -529,11 +538,11 @@ let n = 0;
 };
 ```
 
-Run `next start`, load `/transactions` once, and count the lines. Write the count and the statements under «Queries per request, before». Then `git checkout apps/web/src/server/db/client.ts`.
+Run `next start` and load `/transactions` one time. Count the lines. Write the count and the statements in «Queries per request on `/transactions`: before». Then run `git checkout apps/web/src/server/db/client.ts`.
 
 - [ ] **Step 2: Write the failing test**
 
-In `adminPlugin.test.ts` (or the file that already tests `authenticate` for a banned user — find it with `grep -rn "banned" apps/web --include=*.test.ts -l`), add a test that a banned user's session reads as signed out **without** a call to `isRevoked`. If the file mocks the database, assert on the result only: `authenticate(headersOfBannedUser)` returns `null`. The test exists in some form; it must stay green after step 3. If it does not exist, add:
+Find the test file for `authenticate` with a banned user: `grep -rn "banned" apps/web --include=*.test.ts -l`. It can be `adminPlugin.test.ts` or another file. In it, add a test: the session of a banned user reads as signed out **without** a call to `isRevoked`. If the file mocks the database, assert on the result only: `authenticate(headersOfBannedUser)` returns `null`. A test of this type can exist already. It must stay green after step 3. If no such test exists, add this test:
 
 ```ts
 it('reads a banned account as signed out (§10)', async () => {
@@ -543,7 +552,7 @@ it('reads a banned account as signed out (§10)', async () => {
 });
 ```
 
-using the helpers that file already has for «signed in» and «ban».
+Use the helpers for «signed in» and «ban» that the file already has.
 
 - [ ] **Step 3: Change `authenticate`**
 
@@ -572,11 +581,11 @@ export async function authenticate(headers: Headers): Promise<AuthenticatedUser 
 }
 ```
 
-Remove the `isRevoked` and `getDb` imports from `session.ts` if nothing else uses them. If `tsc` says `banned` or `role` does not exist on `session.user`, use the inferred type of the admin plugin (`auth().$Infer.Session.user`). Do not use `any`.
+Remove the `isRevoked` and `getDb` imports from `session.ts` if no other code in the file uses them. `tsc` can say that `banned` or `role` does not exist on `session.user`. In that case, use the inferred type of the admin plugin (`auth().$Infer.Session.user`). Do not use `any`.
 
 - [ ] **Step 4: Add `isAdminUser` and use it in the layout**
 
-In `src/server/auth/admin.ts` keep `isAdmin(db, userId)` (Server Actions and `requireWebAdmin` call it, and a mutation must not trust a stale read). Add:
+In `src/server/auth/admin.ts`, keep `isAdmin(db, userId)`. Server Actions and `requireWebAdmin` call it, and a mutation must not trust an old read. Add:
 
 ```ts
 /** For a page render: the role was read with the session. */
@@ -585,23 +594,23 @@ export function isAdminUser(user: { role: string | null }): boolean {
 }
 ```
 
-In `app/(app)/layout.tsx` replace the `Promise.all([isAdmin(getDb(), user.id), userI18n(user.id)])` with:
+In `app/(app)/layout.tsx`, replace `Promise.all([isAdmin(getDb(), user.id), userI18n(user.id)])` with:
 
 ```tsx
 const admin = isAdminUser(user);
 const { t } = await userI18n(user.id);
 ```
 
-Do the same in `app/(app)/profile/layout.tsx`.
+Do the same in `app/(app)/profile/layout.tsx`. There the call is `Promise.all([userI18n(user.id), isAdmin(getDb(), user.id)])`.
 
 - [ ] **Step 5: Run the tests**
 
 Run: `rtk proxy pnpm --filter web test auth`
-Expected: PASS, including the revocation test and every `requireWebAdmin` test.
+Expected: PASS. This includes the revocation test and every `requireWebAdmin` test.
 
 - [ ] **Step 6: Count again, then commit**
 
-Repeat step 1. Expected: two fewer statements. Write the count under «Queries per request, after». Revert the throwaway patch.
+Do step 1 again. Expected: two statements fewer. Write the count in «Queries per request on `/transactions`: after». Remove the temporary patch.
 
 ```bash
 git add -A apps/web
@@ -615,7 +624,7 @@ git commit -m "perf(web): read role and banned with the session, not in two more
 
 - [ ] **Step 1: Change `readPage`**
 
-`searchParams` does not depend on the user. Start it with the session, and keep the order only where one result feeds the next:
+`searchParams` does not depend on the user. Start it together with the session. Keep the order only where one result is the input of the next:
 
 ```ts
 export async function readPage(
@@ -635,15 +644,15 @@ export async function readPage(
 }
 ```
 
-`userI18n` awaits the same cached `loadUserData`, so it adds no query. Running both with `Promise.all` only removes a microtask gap.
+`userI18n` awaits the same cached `loadUserData`, so it adds no query. `Promise.all` for these two only removes a microtask gap.
 
-- [ ] **Step 2: Parallelise the page's own extra read**
+- [ ] **Step 2: Start the extra read of the page earlier**
 
-In `transactions/page.tsx` the `loadRow` for `?deleted=` waits for the whole `readPage`. It needs only the user id. Read the page file around line 125 and start `loadRow` as soon as `page.user.id` is known, with `Promise.all` together with any other awaited read in that function. If there is nothing else to await beside it, leave it: one await after `readPage` is correct, and the plan does not invent a change.
+In `transactions/page.tsx`, `loadRow` for `?deleted=` waits for all of `readPage`. It needs only the user id. Read the page file near line 125. If the function awaits another read, start `loadRow` together with it in a `Promise.all`, as soon as `page.user.id` is known. On 2026-10-11 the function has no other await after `readPage`. In that case, keep the code: one await after `readPage` is correct. This plan does not invent a change.
 
-- [ ] **Step 3: Gates, measure, commit**
+- [ ] **Step 3: Run the gates, measure, commit**
 
-Run the gates. Run `measure:nav` and paste the lines under «After Part B».
+Run the gates. Run `measure:nav` and paste the lines in the «After B» column.
 
 ```bash
 git add -A apps/web
@@ -654,16 +663,16 @@ git commit -m "perf(web): readPage starts the session and the query together"
 
 # Part C — The panel opens in place on every page
 
-`TransactionsPanels` holds a state machine that is not specific to transactions: the URL as state through `history.pushState`, the list of URLs it wrote itself, the exit that plays for 150 ms, the focus that goes back to where it came from. Part C moves that into a hook, then lets a page give a **map of panels**. Each page renders the body of every panel on the server (as Transazioni does with `details`), so a click only chooses which one shows.
+`TransactionsPanels` holds a state machine that is not specific to transactions. It keeps the URL as the state through `history.pushState`. It keeps the list of the URLs that it wrote. It plays the exit for 150 ms. It moves the focus back to the opener. Part C moves this state machine into a hook. Then a page gives a **map of panels**. Each page renders the body of every panel on the server, as Transazioni does with `details`. A click only selects the panel to show.
 
-**Out of scope here:** a form that needs data only the server can compute for one row (the edit form of a transaction, which needs the row's balances). It stays a navigation, as `TransactionsPanels` already does for `edit`. The plan treats the edit form of an account the same way if `accountForm()` needs the balances. Step 1 of Task 10 says how to decide.
+**Out of scope:** a form that needs data that only the server can calculate for one row. An example is the edit form of a transaction, which needs the balances of the row. It stays a navigation, as `edit` does in `TransactionsPanels` today. The edit form of an account gets the same rule if `accountFormView()` needs the balances. Step 2 of Task 13 tells how to decide.
 
 ### Task 8: Pure helpers for a panel key
 
 **Files:**
 - Create: `apps/web/src/ui/panelUrl.ts`, `apps/web/src/ui/panelUrl.test.ts`
 
-A **panel key** is the string that names what the URL opens: `new`, `tag:ID`, `account:ID`, `archived`. A page declares which parameters carry it.
+A **panel key** is the string that names what the URL opens: `new`, `tag:ID`, `account:ID`, `archived`. A page declares which parameters carry the key.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -709,7 +718,7 @@ describe('panelHrefFor', () => {
 - [ ] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test panelUrl`
-Expected: FAIL, `panelUrl` does not exist.
+Expected: FAIL, because `panelUrl` does not exist.
 
 - [ ] **Step 3: Write `panelUrl.ts`**
 
@@ -784,19 +793,19 @@ git add apps/web/src/ui/panelUrl.ts apps/web/src/ui/panelUrl.test.ts
 git commit -m "feat(web): pure helpers that name a panel from the query"
 ```
 
-### Task 9: Lift the controller out of `TransactionsPanels`
+### Task 9: Move the controller out of `TransactionsPanels`
 
 **Files:**
 - Create: `apps/web/src/ui/usePanelController.ts`
 - Modify: `apps/web/app/(app)/transactions/TransactionsPanels.tsx`
 - Test: `apps/web/e2e/transactions.spec.ts` (must stay green), `apps/web/src/features/transactions/panelState.test.ts`
 
-This task changes no behaviour. It is a move.
+This task changes no behaviour. It only moves code.
 
-- [ ] **Step 1: Run the transactions end-to-end suite first**
+- [ ] **Step 1: Run the end-to-end suite of Transazioni first**
 
 Run: `rtk proxy pnpm --filter web e2e transactions`
-Expected: PASS. If it fails on `main` already, stop and report: the move needs a green baseline.
+Expected: PASS. If it fails on `main` already, stop and report. The move needs a green baseline.
 
 - [ ] **Step 2: Create `usePanelController.ts`**
 
@@ -815,27 +824,27 @@ export interface PanelConfig<S> {
 }
 ```
 
-Move into the hook, **unchanged** apart from `panelFromSearch` → `config.parse`, `samePanel` → `config.same`, `panelOnlyChange` → `config.onlyChange`, `NONE` → `config.none`, and `next.kind === 'none'` → `config.isNone(next)`:
+Move these parts into the hook. Do **not** change them, with these exceptions: `panelFromSearch` → `config.parse`, `samePanel` → `config.same`, `panelOnlyChange` → `config.onlyChange`, `NONE` → `config.none`, and `next.kind === 'none'` → `config.isNone(next)`.
 
-- `View` (without `draft`; add `extra: number` is not needed: `draft` stays in `TransactionsPanels`, which derives it from the controller's `onLeave` callback — see step 3),
-- `searchOf`, `locationQuery`,
-- the refs `seen`, `written`, `opener`, `returnTo`, `side`,
-- `track`, `follow`, the `useLayoutEffect` on `search`, the `popstate` effect, `go`,
-- the effect that plays the exit (`EXIT_MS`),
-- the focus-return effect.
+- `View`, without `draft`. `draft` stays in `TransactionsPanels`. It gets it from the `onChange` callback of the controller (see below).
+- `searchOf`, `locationQuery`.
+- The refs `seen`, `written`, `opener`, `returnTo`, `side`.
+- `track`, `follow`, the `useLayoutEffect` on `search`, the `popstate` effect, `go`.
+- The effect that plays the exit (`EXIT_MS`).
+- The effect that moves the focus back.
 
-It returns `{ view, go, shown, side, closeToList }` where `shown = view.closing ? config.none : view.panel`.
+The hook returns `{ view, go, shown, side, closeToList }`, where `shown = view.closing ? config.none : view.panel`.
 
-For `draft`, accept an optional `onChange?: (previous: S, next: S) => void` in the config. `TransactionsPanels` uses it to bump its counter when `previous.kind === 'new'` and `next.kind !== 'new'`. It calls it from the same places that `draftAfter` runs today (`follow`, `go`, and the exit effect).
+For `draft`, accept an optional `onChange?: (previous: S, next: S) => void` in the config. `TransactionsPanels` uses it to increase its counter when `previous.kind === 'new'` and `next.kind !== 'new'`. The hook calls it from the places where `draftAfter` runs today: `follow`, `go` and the exit effect.
 
-- [ ] **Step 3: Rewrite `TransactionsPanels` on top of the hook**
+- [ ] **Step 3: Write `TransactionsPanels` again on top of the hook**
 
-Keep: the `Activity` for the new form, `ListKeys`, the `NEW_TRANSACTION_EVENT` effect, `PanelNavContext`, the `content` and `editing` branches. Replace everything moved in step 2 with `const controller = usePanelController<PanelState>({ parse: panelFromSearch, same: samePanel, isNone: (s) => s.kind === 'none', none: NONE, onlyChange: (cur, href) => { const next = panelOnlyChange(cur, href); return next === null || next.kind === 'edit' ? null : next; }, onChange: … })`. The `edit` exception moves into `onlyChange`.
+Keep these parts: the `Activity` for the new form, `ListKeys`, the `NEW_TRANSACTION_EVENT` effect, `PanelNavContext`, and the `content` and `editing` branches. Replace all the code that step 2 moved with `const controller = usePanelController<PanelState>({ parse: panelFromSearch, same: samePanel, isNone: (s) => s.kind === 'none', none: NONE, onlyChange: (cur, href) => { const next = panelOnlyChange(cur, href); return next === null || next.kind === 'edit' ? null : next; }, onChange: … })`. The `edit` exception moves into `onlyChange`.
 
 - [ ] **Step 4: Run the gates and the end-to-end suite**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm --filter web test && rtk proxy pnpm --filter web e2e transactions`
-Expected: all green, same numbers as step 1. `TransactionsPanels.tsx` is about 150 lines shorter.
+Expected: all pass, with the same numbers as step 1. `TransactionsPanels.tsx` is about 150 lines shorter.
 
 - [ ] **Step 5: Commit**
 
@@ -850,7 +859,7 @@ git commit -m "refactor(web): the in-place panel state machine is a hook, not pa
 - Create: `apps/web/src/ui/PanelSwitch.tsx`
 - Modify: `apps/web/src/ui/SlotPanel.tsx`
 
-`PanelSwitch` is the shared client component. A page gives it the bodies of all its panels, rendered on the server.
+`PanelSwitch` is the shared client component. A page gives it the bodies of all its panels, which the server rendered.
 
 - [ ] **Step 1: Write `PanelSwitch.tsx`**
 
@@ -944,15 +953,15 @@ export function PanelSwitch({ baseHref, params, panels, closeLabel, children, sl
 }
 ```
 
-Delete the two `void` lines and the unused `pathname`/`search` reads if `usePanelController` already calls `usePathname` and `useSearchParams` itself (it does after Task 9: it needs them for `follow`). They are in this sketch only to show the dependency; do not keep unused variables (Biome `noUnusedVariables`).
+After Task 9, `usePanelController` calls `usePathname` and `useSearchParams` itself, because `follow` needs them. Thus delete the two `void` lines and the unused `pathname` and `search` reads. The sketch shows them only to show the dependency. Do not keep unused variables (Biome `noUnusedVariables`).
 
-- [ ] **Step 2: Split `SlotPanel` so the portal can be reused**
+- [ ] **Step 2: Split `SlotPanel` so that other components can use the portal**
 
-In `SlotPanel.tsx` export a `SlotPortal({ children })` that does the `useState`/`useEffect`/`createPortal` part, and make `SlotPanel` render `<SlotPortal><Panel {...props} /></SlotPortal>`. No behaviour change for the sections that still use `ProfilePanel`.
+In `SlotPanel.tsx`, export a `SlotPortal({ children })` that does the `useState`/`useEffect`/`createPortal` part. Make `SlotPanel` render `<SlotPortal><Panel {...props} /></SlotPortal>`. The behaviour does not change for the sections that still use `ProfilePanel`.
 
-- [ ] **Step 3: Gates and commit**
+- [ ] **Step 3: Run the gates and commit**
 
-Run the gates. No page uses `PanelSwitch` yet, so only types and lint are checked.
+Run the gates. No page uses `PanelSwitch` yet, so only the types and the lint check it.
 
 ```bash
 git add -A apps/web
@@ -965,16 +974,16 @@ git commit -m "feat(web): PanelSwitch shows one server-rendered panel in place, 
 - Modify: `apps/web/app/(app)/profile/tags/page.tsx`
 - Test: `apps/web/e2e/budgets-categories-tags.spec.ts`
 
-The server renders one form per tag, and one for «Nuovo tag». A click picks one.
+The server renders one form for each tag, and one form for «Nuovo tag». A click selects one.
 
-- [ ] **Step 1: Run the tags e2e flows first (baseline)**
+- [ ] **Step 1: Run the e2e flows of the tags first (baseline)**
 
 Run: `rtk proxy pnpm --filter web e2e budgets-categories-tags`
 Expected: PASS.
 
 - [ ] **Step 2: Change the page**
 
-Replace the `creating`/`editing`/`open` block and the `ProfilePanel` with a map. The rows' links become `PanelLink`s so a plain click goes through the controller:
+Replace the `creating`/`editing`/`open` block and the `ProfilePanel` with a map. The links of the rows become `PanelLink`s, so a plain click goes to the controller:
 
 ```tsx
 import { PanelLink } from '../../../../src/ui/PanelNav';
@@ -1033,16 +1042,24 @@ return (
 );
 ```
 
-`ListRow` already takes `href` and `selected`. Check how `ListRow` renders its link (`src/ui/ListRow.tsx` imports `PanelLink`): rows pass `selectId` through the `PanelNavContext`, as the rows of Transazioni do. Read `ListRow.tsx` and pass `selectId={row.id}` the same way `transactions/page.tsx` does. For the «Nuovo tag» link, use `<PanelLink href={`${PATH}?new`} className={styles.newTag}>`.
+`ListRow` already takes `href` and `selected`, and it renders a `PanelLink` (`src/ui/ListRow.tsx` imports it). The rows give `selectId` through the `PanelNavContext`, as the rows of Transazioni do. Read `ListRow.tsx`, and pass `selectId={row.id}` as `transactions/page.tsx` does. For the «Nuovo tag» link, use `<PanelLink href={`${PATH}?new`} className={styles.newTag}>`.
 
-`afterSave` and `closeHref` stay `PATH`: a save is still a navigation (`router.replace(afterSave)`), so the list shows the new name. That is the rule «a save is a navigation».
+`afterSave` and `closeHref` stay `PATH`. A save is still a navigation (`router.replace(afterSave)`), so the list shows the new name. This is the rule «a save is a navigation».
 
-- [ ] **Step 3: Check by hand and run the e2e suite**
+- [ ] **Step 3: Run the e2e suite and check by hand**
 
 Run: `rtk proxy pnpm --filter web e2e budgets-categories-tags`
-Expected: PASS. By hand: open `/profile/tags`, click a tag. The form shows in the frame of the click, the URL becomes `?tag=ID`, Back closes it, a reload with `?tag=ID` opens with the panel. No request in the Network tab on the click.
+Expected: PASS.
 
-- [ ] **Step 4: Gates and commit**
+Then open `/profile/tags` and click a tag. Make sure that:
+
+- the form shows in the frame of the click;
+- the URL changes to `?tag=ID`;
+- Back closes the form;
+- a reload with `?tag=ID` opens the page with the panel;
+- the Network tab shows no request for the click.
+
+- [ ] **Step 4: Run the gates and commit**
 
 ```bash
 git add -A apps/web
@@ -1051,36 +1068,45 @@ git commit -m "feat(web): Profilo → Tag opens its panel in place"
 
 ### Task 12: The other Profilo sections
 
-**Files:** one `page.tsx` per row. Each task is Task 11 with these parameters. Do one section per commit, running the section's e2e flow before and after.
+**Files:** one `page.tsx` for each row. Each row is Task 11 with these parameters. Do one section in each commit. Run the e2e flow of the section before and after the change.
+
+The table gives the parameters that each page reads on 2026-10-11.
 
 | Page | `flags` | `values` | Panels (key → body) | Stays a navigation |
 | --- | --- | --- | --- | --- |
-| `profile/categories/page.tsx` | `new` | `category` | `new` → `CategoryForm` (new), `category:ID` → `CategoryForm` (edit) | reorder, archive, restore |
-| `profile/budgets/page.tsx` | `new` | `budget` | `new` → `BudgetForm`, `budget:ID` → `BudgetForm` | delete |
-| `profile/goals/page.tsx` | read the page: it lists the parameters it reads at the top | read | read | read |
-| `profile/connectors/page.tsx` | read | read | read | revoke |
-| `profile/preferences/page.tsx` | read | read | `CurrencyPanel`, `CyclePanel`, `LanguagePanel`, `ThemePanel`, `TimeZonePanel` by key | save (`useSaveSetting`) |
+| `profile/categories/page.tsx` | `new`, `archived` | `c` | `new` → `CategoryForm` (new), `c:ID` → `CategoryForm` (edit), `archived` → the list of archived categories with «Ripristina» | save, reorder, archive, restore |
+| `profile/budgets/page.tsx` | `new` | `b` | `new` → `BudgetForm` (new), `b:ID` → `BudgetForm` (edit) | save, delete |
+| `profile/goals/page.tsx` | `new` | `g` | `new` → `GoalForm` (new), only when `canCreate` is true; `g:ID` → `GoalForm` (edit), one for each open goal | save (`afterSave` is `${PATH}?g=__ID__`); the `web.accounts.openInAccounts` link (`goalAccountsHref`, another path) |
+| `profile/connectors/page.tsx` | none | `connector` (`CONNECTOR_PARAM`) | `connector:CLIENT_ID` → the facts of the connector and `RevokeConnector`, one for each row | revoke (`RevokeConnector`) |
+| `profile/preferences/page.tsx` | none | `edit` | `edit:cycle` → `CyclePanel`, `edit:currency` → `CurrencyPanel`, `edit:language` → `LanguagePanel`, `edit:theme` → `ThemePanel`, `edit:timeZone` → `TimeZonePanel` (the keys are `PREFERENCE_KEYS`) | each save (`useSaveSetting`) |
 
-- [ ] **Step 1: For each page, read its `searchParams` use** (`params.new`, `params.<name>`) and write the `PANEL_PARAMS` constant from it. Use exactly the names the page already reads: a link that a person bookmarked must keep working.
-- [ ] **Step 2: Build the `panels` map** the way Task 11 does. Where a panel needs data that only exists for one selected row and is costly (a long list), say so in the commit and keep that panel a navigation: leave `panelOnlyChange` unable to open it by omitting its key from `panels`. The controller then answers `null` and the link navigates.
-- [ ] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after. Both must pass.
+The first version of this plan named the values of Categories and Budgets `category` and `budget`. The pages read `c` and `b`.
+
+On Categories, the page lets `?c=` win over `?archived`. `panelKeyFromSearch` lets a flag win over a value. No link on the page writes both parameters. Thus the difference shows only for a URL that a person wrote by hand.
+
+- [ ] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
+- [ ] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
+- [ ] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after the change. Both must pass.
 - [ ] **Step 4: Commit** with `feat(web): Profilo → <section> opens its panel in place`.
 
-`profile/passkeys` has no panel of its own (it uses `PasskeyList` with client state). `profile/account` and `profile/data` have no panel. Do not touch them.
+`profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
 ### Task 13: Conti
 
 **Files:**
-- Modify: `apps/web/app/(app)/accounts/page.tsx` (panels at lines about 355, 381, 448, 541)
+- Modify: `apps/web/app/(app)/accounts/page.tsx` (panels near lines 355, 381, 448 and 541)
 - Test: `apps/web/e2e/accounts-goals.spec.ts`
 
-Conti has four panels: the account form (`?new`, `?a=ID&edit`), the goal form (`?g=…`), the archived list (`?archived`), the account detail (`?a=ID`), and the goal detail.
+Conti has four panels: the account form (`?new`, `?a=ID&edit`), the archived list (`?archived`), the account detail (`?a=ID`) and the goal detail (`?g=ID`). Conti has no goal form. The goal form is on `/profile/goals`.
 
 - [ ] **Step 1: Run the e2e flow first**, `rtk proxy pnpm --filter web e2e accounts-goals`. Expected: PASS.
-- [ ] **Step 2: Decide what is in place.** Read `accountDetail` and the form views at the top of the page. A **detail** needs `accountDetail({ data, today, def, id })` per account: render it for every listed account (there are few). An **edit form** that needs the balances of one account stays a navigation, as the edit form of a transaction does: leave `a:ID&edit` out of `panels`. «Nuovo conto» and «Nuovo obiettivo» need no row, so they are in place.
-- [ ] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `newGoal`, `archived`, `a:ID` (detail), `g:ID` (goal detail). `PANEL_PARAMS = { flags: ['new', 'newGoal', 'archived'], values: ['a', 'g'] }`. Check the real parameter names in the page (`readPage` `params.*`) and use them.
-- [ ] **Step 4: Replace `Panel` with `PanelSwitch`** (no `slot`: Conti has no `SubnavLayout`). The page's rows become `PanelLink`s via `ListRow`.
-- [ ] **Step 5: Run the e2e flow, check by hand, commit** `feat(web): Conti opens its panels in place`.
+- [ ] **Step 2: Decide what is in place.** Read `accountDetail` and the form views at the top of the page. A **detail** needs `accountDetail({ data, today, def, id })` for each account. Render it for each listed account (there are few). An **edit form** that needs the balances of one account stays a navigation, as for a transaction. `edit` is not a panel parameter. Thus `?a=ID&edit` and `?a=ID` differ in the other parameters, and the link navigates. «Nuovo conto» needs no row, so it is in place.
+- [ ] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `archived`, `a:ID` (account detail) and `g:ID` (goal detail). Use `PANEL_PARAMS = { flags: ['new', 'archived'], values: ['g', 'a'] }`. These are the names that the page reads: `params.new`, `params.archived`, `params.a`, `params.g`. Put `g` first, because the page lets `?g=` win over `?a=`. The first version of this plan had a `newGoal` flag. The page reads no such parameter.
+
+  > **Caution:** `panelKeyFromSearch` reads `?a=ID&edit` as `a:ID`. For that URL, make sure that the page shows the edit form, not the detail.
+
+- [ ] **Step 4: Replace `Panel` with `PanelSwitch`.** Do not set `slot`: Conti has no `SubnavLayout`. The rows of the page become `PanelLink`s through `ListRow`.
+- [ ] **Step 5: Run the e2e flow, check by hand, and commit** with `feat(web): Conti opens its panels in place`.
 
 ### Task 14: Admin
 
@@ -1088,10 +1114,15 @@ Conti has four panels: the account form (`?new`, `?a=ID&edit`), the goal form (`
 - Modify: `apps/web/app/(app)/admin/accounts/page.tsx`, `admin/invites/page.tsx`, `admin/settings/page.tsx`
 - Test: `apps/web/e2e/admin.spec.ts`
 
-Admin uses `SlotPanel` in a `SubnavLayout`, like Profilo, so `slot` is on.
+Admin uses `SlotPanel` in a `SubnavLayout`, as Profilo does. Thus set `slot`. The Admin pages do not use `readPage`. Each page awaits `searchParams` in its own `Promise.all`.
 
-- [ ] **Step 1: Run `rtk proxy pnpm --filter web e2e admin` first.** Expected: PASS (the `fixme` stays).
-- [ ] **Step 2: For each of the three pages**, repeat Task 11 with the page's own parameters. Panels that confirm a destructive action (delete an account, revoke an invite) are in place only if the body needs nothing from the server beyond the row. `settings` panels (`NamePanel`, `RegistrationPanel`, `SmtpPanel`) have client forms that call `router.push(closeHref)` on save: a save stays a navigation.
+- [ ] **Step 1: Run `rtk proxy pnpm --filter web e2e admin` first.** Expected: PASS. The `fixme` test stays.
+- [ ] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page:
+  - `admin/accounts`: no flags, values `u`. The detail comes from `accountDetail(db, id)`, one database read for each account. Render all the details only if this is cheap. If it is not cheap, keep the detail a navigation.
+  - `admin/invites`: flags `new`, values `i` (see `invitePanel`).
+  - `admin/settings`: no flags, values `edit`. The keys are `edit:name`, `edit:registration` and `edit:smtp` (see `settingsPanel`).
+
+  A panel can confirm a destructive action, for example «delete an account» or «revoke an invite». That panel is in place only if its body needs nothing from the server except the row. The `settings` panels (`NamePanel`, `RegistrationPanel`, `SmtpPanel`) have client forms that call `router.push(closeHref)` on save. A save stays a navigation.
 - [ ] **Step 3: Run the e2e flow and commit** one page at a time: `feat(web): Admin → <page> opens its panel in place`.
 
 ### Task 15: Close the work
@@ -1099,15 +1130,17 @@ Admin uses `SlotPanel` in a `SubnavLayout`, like Profilo, so `slot` is on.
 - [ ] **Step 1: Run every gate and the whole web e2e suite**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm test && rtk proxy pnpm --filter web e2e`
-Expected: green. Read the output, not the exit code.
+Expected: all pass. Read the output, not the exit code.
 
-- [ ] **Step 2: Measure** with `measure:nav` and `measure:panel`. Paste the lines under «After Part C». Check that the numbers of `measure:panel` did not get worse than the 2026-10-07 table.
+- [ ] **Step 2: Measure** with `measure:nav` and `measure:panel`. Paste the lines in the «After C» column. Make sure that the `measure:panel` numbers are not worse than the table of 2026-10-07. Copy the values of the «Measurements» section into section 07 of the spec.
 
-- [ ] **Step 3: Update `TODO.md`.** In «Web app: a UI pass», delete the items this plan closes (the four queries, `loading.tsx` and `useLinkStatus`, the same pattern on Conti and Profilo). Keep the production region and the motion the phone has. Name this plan next to the 2026-10-07 one.
+- [ ] **Step 3: Update `TODO.md`.** In «Web app: a UI pass», delete the items that this plan closes. These items are the four queries, `loading.tsx` and `useLinkStatus`, and the same pattern on Conti and Profilo. Keep the production region and the motion that the phone has. Write the name of this plan next to the plan of 2026-10-07.
 
-- [ ] **Step 4: Request code review** (`requesting-code-review`), then merge to `main`.
+- [ ] **Step 4: Request a code review** (`requesting-code-review`). Then merge to `main`.
 
 - [ ] **Step 5: Commit**
+
+Also stage the spec, because step 2 changed it: `git add docs/superpowers/specs/2026-10-11-web-navigation-feel.html`.
 
 ```bash
 git add TODO.md docs/superpowers/plans/2026-10-11-web-navigation-feel.md
@@ -1129,7 +1162,7 @@ Queries per request on `/transactions`: before ___, after ___.
 
 ## Risks
 
-- **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when a link was prefetched and the navigation is quick. That is correct: nothing waits.
-- **`banned` on `session.user`.** The types depend on the admin plugin. If the field is missing from the inferred type, Task 6 step 3 says what to do. If `getSession` ever gets a cookie cache, `banned` can lag. Add a comment at the `getSession` call that says so, and put a test next to it.
-- **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this already (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page grows past this, leave that panel a navigation (Task 12 step 2).
-- **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel (unlike the new form of Transazioni, which uses `<Activity>`). A switch between two keys is a new form: the `key` on `Panel` makes that so.
+- **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
+- **`banned` on `session.user`.** The types come from the admin plugin. If the inferred type has no `banned`, do what Task 6 step 3 says. If `getSession` gets a cookie cache, `banned` can be late. Write a comment at the `getSession` call that says this, and put a test next to it.
+- **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
+- **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because of the `key` on `Panel`.

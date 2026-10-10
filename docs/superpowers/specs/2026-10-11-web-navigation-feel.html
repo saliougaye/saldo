@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — Every click shows its result at once</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── This spec: both themes side by side, the shell, the bar, the skeleton ── */
+/* .light and .dark force one @saldo/ui palette. --accent is the palette value `accent` (packages/ui/src/tokens.ts). */
+.light { --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF; --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18); --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A; --accent: #4A4A46; --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05); color-scheme: light; color: var(--text); }
+.dark { --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A; --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14); --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C; --accent: #C7C7C7; --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5); color-scheme: dark; color: var(--text); }
+kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0 5px; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.duo > div { background: var(--page); border-radius: var(--r-sheet); padding: 18px 14px 14px; min-width: 0; }
+.duo .meta { display: block; margin: 0 0 12px 4px; }
+.duo .stage-cap { margin-top: 12px; }
+.duo.rows { grid-template-columns: minmax(0, 1fr); }
+table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
+@media (max-width: 640px) {
+  table.wrap1 th, table.wrap1 td { padding: 10px 8px; }
+  table.wrap1 td:first-child { min-width: 6em; }
+  table.wrap1 :not(pre) > code { white-space: normal; overflow-wrap: anywhere; }
+}
+.screen.app { width: 100%; max-width: none; border-radius: 16px; padding: 0; overflow: hidden; position: relative; }
+.screen .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.screen .topbar .brandline { margin: 0; }
+.screen .topbar .nav { color: var(--text-muted); }
+.screen .topbar .nav b { color: var(--text); font-weight: 500; background: var(--raised); padding: 4px 8px; border-radius: 8px; }
+.screen .topbar .new { margin-left: auto; background: var(--text); color: var(--bg); border-radius: 10px; padding: 5px 10px; font-weight: 500; }
+.screen .navbar { position: absolute; top: 0; left: 0; height: 2px; width: 62%; background: var(--accent); }
+.screen .skel { display: flex; flex-direction: column; gap: 10px; padding: 18px 14px 20px; }
+.screen .skel i { display: block; height: 44px; border-radius: 14px; background: var(--raised); }
+.screen .skel i.t { height: 22px; width: 40%; border-radius: 10px; }
+.screen .sr-note { margin: 0 14px 14px; padding: 8px 10px; border-radius: 10px; background: var(--raised); font-size: 12px; color: var(--text-muted); }
+.screen .sr-note b { color: var(--text); font-weight: 500; }
+.screen .split { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 16px 14px 18px; }
+.screen .subnav { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-muted); }
+.screen .subnav span { padding: 5px 8px; border-radius: 8px; }
+.screen .subnav span.on { background: var(--raised); color: var(--text); font-weight: 500; }
+.screen .list h5 { font-size: 17px; margin: 0 0 4px; }
+.screen .list .muted { margin-bottom: 6px; }
+.screen .list .row { padding: 8px 6px; border-radius: 8px; }
+.screen .list .row.sel { background: var(--raised); }
+.screen .pbox { border-left: 1px solid var(--border); padding-left: 14px; min-width: 0; }
+.screen .phead { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.screen .plink { display: block; font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+@media (max-width: 640px) {
+  .screen .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .screen .subnav { display: none; }
+}
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#problem"><span>01</span>Problem and scope</a></li>
+    <li><a href="#decisions"><span>02</span>Decisions</a></li>
+    <li><a href="#feedback"><span>03</span>Feedback at the click</a></li>
+    <li><a href="#chain"><span>04</span>A shorter chain</a></li>
+    <li><a href="#panels"><span>05</span>Panels in place</a></li>
+    <li><a href="#a11y"><span>06</span>Accessibility and motion</a></li>
+    <li><a href="#measure"><span>07</span>How to measure</a></li>
+    <li><a href="#risks"><span>08</span>Risks</a></li>
+    <li><a href="#words"><span>09</span>Words</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo web · Navigation · Spec</span>
+    <h1>Every click shows its result at once</h1>
+    <p>A click on a tab, a chip, a period arrow or a panel changes the screen in the frame of the click. The server still renders the data. The browser shows a pending state until the data arrives.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> Spec §17.1.7 · TODO «Web app: a UI pass» · spec 2026-10-07</span>
+    <span><b>Plan</b> <code>2026-10-11-web-navigation-feel.md</code></span>
+    <span><b>Date</b> 2026-10-11</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="problem" aria-labelledby="h-problem">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-problem">Problem and scope</h2>
+      <p class="lead">The user reported on 2026-10-11 that a click on a tab, a chip, a period arrow or a panel feels slow.</p>
+    </div>
+    <div class="prose">
+      <p>The 2026-10-07 spec made the panels of Transazioni open in place. The other clicks still show nothing until the server answers.</p>
+      <p>The code shows three causes. Nobody has measured them yet. The plan measures them before it changes the code (section 07).</p>
+      <ol class="steps">
+        <li>No page has a <code>loading.tsx</code>. Thus a click shows nothing until the server sends the whole page.</li>
+        <li>The server waits on a chain of four steps: the session, <code>isRevoked</code>, <code>loadUserData</code> and, in the layout, <code>isAdmin</code>.</li>
+        <li>Every panel outside Transazioni is still a navigation. Each open and each close of a panel waits for the server.</li>
+      </ol>
+      <div class="callout"><span class="meta">Out of scope</span><p>This spec does not change the production region (<code>fra1::iad1</code>). A loading state hides the wait. It does not make the wait shorter. The region stays as its own item in <code>TODO.md</code>.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="cards">
+      <div class="card rv"><div class="stat">0</div><h4><code>loading.tsx</code> files</h4><p>A click on a tab shows nothing until the server sends the new page.</p></div>
+      <div class="card rv"><div class="stat">4</div><h4>Steps in a chain</h4><p>Each step starts after the previous step ends. Three of them read the database.</p></div>
+      <div class="card rv"><div class="stat">10</div><h4>Pages with a panel that navigates</h4><p>Conti, six Profilo sections and three Admin sections.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="decisions" aria-labelledby="h-decisions">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-decisions">Decisions</h2>
+      <p class="lead">The user made these decisions on 2026-10-11. Each decision has a reason that the code supports.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Decision</th><th scope="col">Reason</th></tr></thead>
+        <tbody>
+          <tr><td>Keep <code>next/link</code></td><td>A plain <code>&lt;a&gt;</code> loads the whole page again and removes the mounted shell. Today there is no large prefetch to remove: with no <code>loading.tsx</code>, Next.js has almost nothing to prefetch.</td></tr>
+          <tr><td>No dialogs</td><td>The panel beside the list is decision §17.1.7 of the POC spec. A dialog does not remove the wait for the server. Keep dialogs for short confirmations only.</td></tr>
+          <tr><td>Server components</td><td>Pages stay server components. A client fetch adds a round trip after the JavaScript loads, and it repeats the query. Use streaming: first the shell and a skeleton, then the data.</td></tr>
+          <tr><td>Filters stay navigations</td><td>A filter, the period and the search go to the server. They show a pending state. Only a panel changes in place.</td></tr>
+          <tr><td>Panels in place everywhere</td><td>The panel in place applies to every page with a panel: Conti, all Profilo sections and all Admin sections.</td></tr>
+          <tr><td>Some forms navigate</td><td>A form that needs data that only the server calculates for one row stays a navigation. Examples: the edit form of a transaction, and possibly the edit form of an account.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="feedback" aria-labelledby="h-feedback">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-feedback">Feedback in the frame of the click</h2>
+      <p class="lead">A change of page shows the shell and a skeleton at once. A change on the same page shows a thin bar after 150 ms.</p>
+    </div>
+    <div class="prose">
+      <p><b><code>AppLink</code>.</b> Every link that navigates uses <code>AppLink</code>. It is <code>next/link</code> with one child, <code>LinkPending</code>. Only <code>AppLink.tsx</code> imports <code>next/link</code>. A test makes sure of this.</p>
+      <p><b><code>LinkPending</code>.</b> It calls <code>useLinkStatus</code>. This hook works only in a child of the <code>&lt;Link&gt;</code>. Thus <code>LinkPending</code> must be inside the link. It renders <code>null</code>, so it adds no node and no layout.</p>
+      <p><b><code>NavPendingProvider</code>.</b> The <code>(app)</code> layout mounts it. It keeps a count of the navigations that wait for the server. Each pending link adds 1. When the navigation ends, the link removes 1.</p>
+      <p><b>The bar.</b> When the count is more than 0, the provider shows a bar of 2px at the top of the page. A CSS delay of 150 ms hides the bar for a quick answer. The bar grows slowly and never reaches the end, because nobody knows the duration of the wait.</p>
+      <p><b>The status text.</b> With the bar, the provider renders a hidden <code>role="status"</code> element. Its text is <code>common.loading</code>: «Loading…».</p>
+      <p><b><code>useNavTransition</code>.</b> Some navigations start from code with <code>router.push</code>: the search, the list keys, the close of a panel and the <kbd>N</kbd> shortcut. They call <code>router.push</code> inside a transition from <code>useNavTransition</code>. The transition reports to the same count.</p>
+      <p><b><code>loading.tsx</code>.</b> Three files add Suspense boundaries: <code>(app)</code>, <code>(app)/profile</code> and <code>(app)/admin</code>. The layout stays mounted. Thus a change of page shows the shell and <code>PageSkeleton</code> at once. The sub-navigation of Profilo and Admin also stays on the screen.</p>
+      <div class="callout"><span class="meta">Note</span><p>A change of query on the <b>same</b> page does not show <code>loading.tsx</code>. Examples: a chip, the period arrows, the search. These clicks use the bar.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 500" role="img" aria-labelledby="f1t">
+        <title id="f1t">Four timelines from the click. Today: nothing changes until the server answers, then the page shows. New, a change of page: the shell and the skeleton show at once, then the page. New, a change on the same page: nothing for 150 milliseconds, then the bar until the page shows. New, a quick answer: the page shows before 150 milliseconds and the bar never shows.</title>
+        <g font-size="15" class="tf" text-anchor="middle">
+          <line class="lane" x1="250" y1="30" x2="250" y2="460"/><text x="250" y="486">0 ms</text>
+          <line class="lane" x1="400" y1="30" x2="400" y2="460"/><text x="400" y="486">150</text>
+          <line class="lane" x1="600" y1="30" x2="600" y2="460"/><text x="600" y="486">350</text>
+          <line class="lane" x1="800" y1="30" x2="800" y2="460"/><text x="800" y="486">550</text>
+          <line class="lane" x1="1000" y1="30" x2="1000" y2="460"/><text x="1000" y="486">750</text>
+        </g>
+
+        <text x="10" y="74" font-size="19" class="b">Today</text>
+        <text x="10" y="98" font-size="14" class="tm">every click</text>
+        <rect class="bx-r" x="250" y="52" width="560" height="48" rx="10"/>
+        <text x="530" y="82" text-anchor="middle" font-size="15">nothing changes on the screen</text>
+        <rect class="bx" x="810" y="52" width="190" height="48" rx="10"/>
+        <text x="905" y="82" text-anchor="middle" font-size="15" class="b">page</text>
+
+        <text x="10" y="184" font-size="19" class="b tok">New · page</text>
+        <text x="10" y="208" font-size="14" class="tm">a tab, a sub-section</text>
+        <rect class="bx-ok" x="250" y="162" width="560" height="48" rx="10"/>
+        <text x="530" y="192" text-anchor="middle" font-size="15" class="tok b">shell + skeleton (loading.tsx)</text>
+        <rect class="bx" x="810" y="162" width="190" height="48" rx="10"/>
+        <text x="905" y="192" text-anchor="middle" font-size="15" class="b">page</text>
+
+        <text x="10" y="294" font-size="19" class="b tok">New · same page</text>
+        <text x="10" y="318" font-size="14" class="tm">a chip, ‹ ›, the search</text>
+        <rect class="bx-dash" x="250" y="272" width="150" height="48" rx="10"/>
+        <text x="325" y="302" text-anchor="middle" font-size="14" class="tm">no change</text>
+        <rect class="bx-ok" x="400" y="272" width="410" height="48" rx="10"/>
+        <text x="605" y="302" text-anchor="middle" font-size="15" class="tok b">bar grows · «Loading…» for a screen reader</text>
+        <rect class="bx" x="810" y="272" width="190" height="48" rx="10"/>
+        <text x="905" y="302" text-anchor="middle" font-size="15" class="b">page</text>
+
+        <text x="10" y="404" font-size="19" class="b tok">New · quick</text>
+        <text x="10" y="428" font-size="14" class="tm">answer in 120 ms</text>
+        <rect class="bx-dash" x="250" y="382" width="120" height="48" rx="10"/>
+        <rect class="bx" x="370" y="382" width="190" height="48" rx="10"/>
+        <text x="465" y="412" text-anchor="middle" font-size="15" class="b">page</text>
+        <text x="580" y="412" font-size="14" class="tm">the bar never shows</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> Grey: no change on the screen. Green: feedback. The server time is an example. Section 07 holds the measured times.</figcaption>
+    </figure>
+
+    <figure class="rv">
+      <svg viewBox="0 0 1040 430" role="img" aria-labelledby="f2t">
+        <title id="f2t">The parts of the feedback. AppLink with LinkPending, and useNavTransition, add one to the count of NavPendingProvider and remove one when the navigation ends. When the count is more than zero, the provider shows the bar and the status text. Separately, loading.tsx shows the skeleton for a change of page.</title>
+        <rect class="bx-dash" x="6" y="6" width="1028" height="418" rx="22"/>
+        <text x="30" y="40" font-size="15" class="tm mono">app/(app)/layout.tsx</text>
+
+        <rect class="bx-ink" x="330" y="60" width="330" height="100" rx="18"/>
+        <text x="495" y="100" text-anchor="middle" class="ti b" font-size="20">NavPendingProvider</text>
+        <text x="495" y="130" text-anchor="middle" class="ti" font-size="15" opacity=".75">count of pending navigations</text>
+
+        <rect class="bx" x="30" y="250" width="300" height="130" rx="16"/>
+        <text x="52" y="284" font-size="19" class="b">AppLink</text>
+        <text x="52" y="312" font-size="14" class="mono">&lt;Link&gt; + &lt;LinkPending /&gt;</text>
+        <text x="52" y="338" font-size="15" class="tm">useLinkStatus() → pending</text>
+        <text x="52" y="362" font-size="15" class="tm">tabs, chips, ‹ ›, rows</text>
+
+        <rect class="bx" x="360" y="250" width="300" height="130" rx="16"/>
+        <text x="382" y="284" font-size="19" class="b">useNavTransition</text>
+        <text x="382" y="312" font-size="14" class="mono">startNav(() =&gt; router.push(…))</text>
+        <text x="382" y="338" font-size="15" class="tm">search, list keys,</text>
+        <text x="382" y="362" font-size="15" class="tm">panel close, N</text>
+
+        <path class="ln-ink" d="M180 246 V200 H420 V164" marker-end="url(#ah-ink)"/>
+        <path class="ln-ink" d="M510 246 V164" marker-end="url(#ah-ink)"/>
+        <text x="300" y="192" font-size="15" class="b">+1 · −1</text>
+        <text x="522" y="214" font-size="15" class="b">+1 · −1</text>
+
+        <rect class="bx-ok" x="720" y="40" width="290" height="80" rx="16"/>
+        <text x="742" y="72" font-size="18" class="b tok">Bar · 2px</text>
+        <text x="742" y="100" font-size="14" class="tm">after 150 ms · --color-accent</text>
+        <rect class="bx-ok" x="720" y="136" width="290" height="80" rx="16"/>
+        <text x="742" y="168" font-size="18" class="b tok">role="status"</text>
+        <text x="742" y="196" font-size="14" class="tm">«Loading…» · common.loading</text>
+        <path class="ln-ok" d="M664 92 H714" marker-end="url(#ah-ok)"/>
+        <path class="ln-ok" d="M664 130 C 690 130, 690 176, 714 176" marker-end="url(#ah-ok)"/>
+        <text x="668" y="80" font-size="13" class="tok">count &gt; 0</text>
+
+        <rect class="bx" x="720" y="250" width="290" height="130" rx="16"/>
+        <text x="742" y="284" font-size="19" class="b">loading.tsx</text>
+        <text x="742" y="312" font-size="15" class="tm">a Suspense boundary</text>
+        <text x="742" y="338" font-size="15" class="tm">change of page only</text>
+        <text x="742" y="362" font-size="14" class="mono">&lt;PageSkeleton /&gt;</text>
+      </svg>
+      <figcaption><b>Figure 2.</b> Black: the one owner of the count. Green: what the person sees and hears. <code>loading.tsx</code> does not use the count. Next.js shows it for a change of page.</figcaption>
+    </figure>
+
+    <div class="duo rows rv">
+      <div class="light">
+        <span class="meta">Light</span>
+        <div class="screen app" role="img" aria-label="Illustration, light theme: the shell after a click on Accounts. A thin bar is at the top. The top bar stays. The content area shows a skeleton: a title line and four blocks.">
+          <div class="navbar"></div>
+          <div class="topbar"><span class="brandline"><i></i>Saldo</span><span class="nav">Home</span><span class="nav">Transactions</span><span class="nav">Statistics</span><span class="nav"><b>Accounts</b></span><span class="new">New transaction</span></div>
+          <div class="skel"><i class="t"></i><i></i><i></i><i></i><i></i></div>
+          <div class="sr-note">Screen reader: <b>Loading…</b></div>
+        </div>
+      </div>
+      <div class="dark">
+        <span class="meta">Dark</span>
+        <div class="screen app" role="img" aria-label="Illustration, dark theme: the same shell with the bar and the skeleton.">
+          <div class="navbar"></div>
+          <div class="topbar"><span class="brandline"><i></i>Saldo</span><span class="nav">Home</span><span class="nav">Transactions</span><span class="nav">Statistics</span><span class="nav"><b>Accounts</b></span><span class="new">New transaction</span></div>
+          <div class="skel"><i class="t"></i><i></i><i></i><i></i><i></i></div>
+          <div class="sr-note">Screen reader: <b>Loading…</b></div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap">Illustration · Home → Accounts, while the server works. The bar is the <code>accent</code> colour. The blocks are the <code>raised</code> colour.</p>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="chain" aria-labelledby="h-chain">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-chain">A shorter chain</h2>
+      <p class="lead">Today a page waits for four steps, one after the other. After the change, the chain has two database reads.</p>
+    </div>
+    <div class="prose">
+      <p>Today <code>authenticate</code> reads the session, then reads the user row again for <code>isRevoked</code>. Then <code>readPage</code> calls <code>loadUserData</code>. The layout reads the user row a third time for <code>isAdmin</code>. The layout and the page run in parallel, but each one starts after the session.</p>
+      <p>The admin plugin of Better Auth already puts <code>role</code> and <code>banned</code> on <code>session.user</code>. <code>getSession</code> reads the database on each call, because the app sets no cookie cache. Thus <code>role</code> and <code>banned</code> on <code>session.user</code> are as fresh as the two extra reads.</p>
+      <ol class="steps">
+        <li><code>authenticate</code> returns <code>null</code> when <code>session.user.banned</code> is <code>true</code>. It does not call <code>isRevoked</code>.</li>
+        <li><code>AuthenticatedUser</code> gets <code>role</code>. The layouts use <code>isAdminUser(user)</code> for a page render.</li>
+        <li><code>readPage</code> starts <code>searchParams</code> together with the session.</li>
+      </ol>
+      <div class="callout caution"><span class="meta">Caution</span><p>A mutation must not trust a role from the render. Server Actions and <code>requireWebAdmin</code> keep their call to <code>isAdmin(db, id)</code>.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 590" role="img" aria-labelledby="f3t">
+        <title id="f3t">Before: getSession, then isRevoked, then loadUserData and, in the layout, isAdmin, then searchParams, then the render. After: getSession with role and banned, together with searchParams, then loadUserData, then the render. isRevoked and isAdmin are removed from the render.</title>
+        <text x="10" y="36" font-size="20" class="b">Before</text>
+        <text x="10" y="92" font-size="15" class="tm">page</text>
+        <text x="10" y="172" font-size="15" class="tm">layout</text>
+        <g font-size="15" text-anchor="middle">
+          <rect class="bx" x="90" y="64" width="170" height="48" rx="10"/><text x="175" y="94" class="mono">getSession</text>
+          <line class="ln-ink" x1="262" y1="88" x2="282" y2="88" marker-end="url(#ah-ink)"/>
+          <rect class="bx-bad" x="286" y="64" width="160" height="48" rx="10"/><text x="366" y="94" class="mono tbad">isRevoked</text>
+          <line class="ln-ink" x1="448" y1="88" x2="468" y2="88" marker-end="url(#ah-ink)"/>
+          <rect class="bx" x="472" y="64" width="190" height="48" rx="10"/><text x="567" y="94" class="mono">loadUserData</text>
+          <line class="ln-ink" x1="664" y1="88" x2="684" y2="88" marker-end="url(#ah-ink)"/>
+          <rect class="bx-r" x="688" y="64" width="150" height="48" rx="10"/><text x="763" y="94" class="mono" font-size="14">searchParams</text>
+          <line class="ln-ink" x1="840" y1="88" x2="860" y2="88" marker-end="url(#ah-ink)"/>
+          <rect class="bx-ink" x="864" y="64" width="166" height="48" rx="10"/><text x="947" y="94" class="ti b">render</text>
+          <path class="ln" d="M446 112 V168 H468" marker-end="url(#ah)"/>
+          <rect class="bx-bad" x="472" y="144" width="190" height="48" rx="10"/><text x="567" y="174" class="mono tbad">isAdmin</text>
+        </g>
+        <text x="90" y="232" font-size="15" class="tm">Two reads end before <tspan class="mono">loadUserData</tspan> starts. The layout reads the user row a third time.</text>
+
+        <line class="lane" x1="10" y1="262" x2="1030" y2="262"/>
+
+        <text x="10" y="306" font-size="20" class="b tok">After</text>
+        <text x="10" y="362" font-size="15" class="tm">page</text>
+        <g font-size="15" text-anchor="middle">
+          <rect class="bx-ok" x="90" y="334" width="250" height="48" rx="10"/><text x="215" y="364" class="mono tok">getSession · role, banned</text>
+          <rect class="bx-r" x="90" y="396" width="250" height="40" rx="10"/><text x="215" y="421" class="mono" font-size="14">searchParams</text>
+          <text x="350" y="420" text-anchor="start" font-size="13" class="tm">together</text>
+          <line class="ln-ink" x1="342" y1="358" x2="380" y2="358" marker-end="url(#ah-ink)"/>
+          <rect class="bx" x="384" y="334" width="250" height="48" rx="10"/><text x="509" y="364" class="mono">loadUserData</text>
+          <text x="509" y="402" font-size="13" class="tm">userI18n uses the same cache</text>
+          <line class="ln-ink" x1="636" y1="358" x2="674" y2="358" marker-end="url(#ah-ink)"/>
+          <rect class="bx-ink" x="678" y="334" width="166" height="48" rx="10"/><text x="761" y="364" class="ti b">render</text>
+        </g>
+        <g font-size="15">
+          <rect class="bx-dash" x="90" y="466" width="440" height="110" rx="12"/>
+          <text x="110" y="496" class="b">Removed from the render</text>
+          <text x="110" y="524" class="tm"><tspan class="mono">isRevoked</tspan> → <tspan class="mono">session.user.banned</tspan></text>
+          <text x="110" y="550" class="tm"><tspan class="mono">isAdmin</tspan> → <tspan class="mono">isAdminUser(user)</tspan></text>
+          <rect class="bx" x="560" y="466" width="470" height="110" rx="12"/>
+          <text x="580" y="496" class="b">Not changed</text>
+          <text x="580" y="524" class="tm">Server Actions and <tspan class="mono">requireWebAdmin</tspan></text>
+          <text x="580" y="550" class="tm">still call <tspan class="mono">isAdmin(db, id)</tspan></text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 3.</b> Red: a read that the change removes from the render. Green: the read that now carries <code>role</code> and <code>banned</code>. The plan counts the queries for one request before and after (section 07).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="panels" aria-labelledby="h-panels">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-panels">The panel in place on every page</h2>
+      <p class="lead">The state machine of <code>TransactionsPanels</code> becomes a shared controller. Every page with a panel uses it.</p>
+    </div>
+    <div class="prose">
+      <p><b>The controller.</b> <code>usePanelController</code> keeps the URL as the state. It changes the URL with <code>history.pushState</code> and keeps a list of the URLs that it wrote. A URL that is not on the list comes from a navigation. The controller then follows that URL. On <code>popstate</code> (Back, Forward) it reads the panel from the URL. A close plays the exit for 150 ms. After the close, the focus goes back to the element that opened the panel.</p>
+      <p><b>The panel key.</b> A key is the string that names what the URL opens: <code>new</code>, <code>tag:ID</code>, <code>a:ID</code>, <code>archived</code>. Each page declares its <code>flags</code> (<code>?new</code>) and its <code>values</code> (<code>?tag=ID</code>). A flag wins over a value. <code>panelOnlyChange</code> compares two URLs. If only the panel parameters change, it gives the new key. Otherwise it gives <code>null</code>, and the click is a navigation.</p>
+      <p><b><code>PanelSwitch</code>.</b> The page renders the body of every panel on the server, as Transazioni does with the details. The page gives <code>PanelSwitch</code> a map from key to panel. A click only selects the panel to show. A key that has no entry in <code>panels</code> is a navigation.</p>
+      <p><b><code>PanelLink</code>.</b> The rows and the «New» links use <code>PanelLink</code>. A plain click goes to the controller. A click with <kbd>⌘</kbd>, <kbd>Ctrl</kbd> or <kbd>Shift</kbd> keeps the behaviour of a link.</p>
+      <p><b><code>SlotPortal</code>.</b> Profilo and Admin show the panel in the <code>#profile-panel</code> slot of <code>SubnavLayout</code>. <code>SlotPortal</code> is the portal part of <code>SlotPanel</code>, so <code>PanelSwitch</code> can use it.</p>
+      <p><b>Load and save.</b> A load of a URL with a key opens the page with the panel open. A save stays a navigation, so the list shows the new values.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 600" role="img" aria-labelledby="f4t">
+        <title id="f4t">State diagram of the shared controller. From No panel, a PanelLink click with a key in panels opens the panel in place and pushes the URL. From Open, another key changes the content. Close or Cancel goes to Closing for 150 milliseconds, then to No panel, and the focus returns. Esc and Back go to No panel at once. A click during Closing reverses the exit. A click whose target is not in panels, or that changes the path or a filter, is a navigation to the server; the controller follows the new URL.</title>
+        <rect class="bx-ink" x="30" y="250" width="240" height="90" rx="45"/>
+        <text x="150" y="290" text-anchor="middle" class="ti b" font-size="22">No panel</text>
+        <text x="150" y="316" text-anchor="middle" class="ti mono" font-size="14" opacity=".7">key = null</text>
+
+        <rect class="bx" x="560" y="250" width="260" height="90" rx="18"/>
+        <text x="690" y="290" text-anchor="middle" class="b" font-size="22">Open</text>
+        <text x="690" y="316" text-anchor="middle" class="tm mono" font-size="14">key = tag:ID</text>
+
+        <rect class="bx-dash" x="560" y="460" width="260" height="90" rx="18"/>
+        <text x="690" y="500" text-anchor="middle" class="b" font-size="22">Closing</text>
+        <text x="690" y="526" text-anchor="middle" class="tm" font-size="14">exit · 150 ms</text>
+
+        <rect class="bx" x="700" y="30" width="330" height="110" rx="18"/>
+        <text x="865" y="64" text-anchor="middle" class="b" font-size="19">Navigation</text>
+        <text x="865" y="92" text-anchor="middle" font-size="15">the server renders the page</text>
+        <text x="865" y="118" text-anchor="middle" font-size="14" class="tm">the controller follows the URL</text>
+
+        <path class="ln-ok" d="M250 256 C 340 200, 470 200, 556 262" marker-end="url(#ah-ok)"/>
+        <text x="400" y="190" text-anchor="middle" font-size="15" class="tok b">PanelLink click · key in panels</text>
+        <text x="400" y="212" text-anchor="middle" font-size="14" class="tm mono">pushState · URL on the list</text>
+
+        <path class="ln-ok" d="M820 276 C 880 250, 880 340, 820 314"/>
+        <text x="886" y="300" font-size="14" class="tok">another key:</text>
+        <text x="886" y="320" font-size="14" class="tok">content changes</text>
+
+        <path class="ln dash" d="M556 328 C 470 380, 340 380, 254 334" marker-end="url(#ah)"/>
+        <text x="400" y="400" text-anchor="middle" font-size="15" class="tm">Esc · Back (popstate): at once</text>
+
+        <path class="ln-ink" d="M670 344 V454" marker-end="url(#ah-ink)"/>
+        <text x="656" y="404" text-anchor="end" font-size="15">✕ · Cancel</text>
+        <path class="ln-ok" d="M710 456 V348" marker-end="url(#ah-ok)"/>
+        <text x="724" y="404" font-size="14" class="tok">click again: the exit reverses</text>
+
+        <path class="ln dash" d="M556 512 C 330 540, 160 480, 150 346" marker-end="url(#ah)"/>
+        <text x="120" y="584" font-size="15" class="tm">after 150 ms · the focus returns to the opener</text>
+
+        <path class="ln-ink" d="M150 246 C 150 90, 500 80, 694 84" marker-end="url(#ah-ink)"/>
+        <path class="ln-ink" d="M760 246 V146" marker-end="url(#ah-ink)"/>
+        <text x="200" y="118" font-size="15">key not in panels · other path · other filter · save</text>
+      </svg>
+      <figcaption><b>Figure 4.</b> Green: in place, no request. Black: a navigation or a pointer close. Dashed: a close. The rules for motion, focus and <kbd>Esc</kbd> are those of the 2026-10-07 spec.</figcaption>
+    </figure>
+
+    <figure class="rv">
+      <svg viewBox="0 0 1040 470" role="img" aria-labelledby="f5t">
+        <title id="f5t">The panel key model for Profilo, Tags, with flags new and values tag. The query new gives the key new. The query tag equals abc gives tag colon abc. The query with both gives new, because a flag wins. An empty query gives null. A key with an entry in panels opens in place. A key with no entry is a navigation.</title>
+        <text x="10" y="30" font-size="15" class="tm mono">PANEL_PARAMS = { flags: ['new'], values: ['tag'] }</text>
+        <text x="130" y="72" text-anchor="middle" font-size="16" class="b">Query</text>
+        <text x="520" y="72" text-anchor="middle" font-size="16" class="b">Key</text>
+        <text x="880" y="72" text-anchor="middle" font-size="16" class="b">Result</text>
+        <g font-size="16" text-anchor="middle">
+          <rect class="bx" x="10" y="92" width="240" height="56" rx="12"/><text x="130" y="126" class="mono">?new</text>
+          <rect class="bx" x="10" y="168" width="240" height="56" rx="12"/><text x="130" y="202" class="mono">?tag=abc</text>
+          <rect class="bx" x="10" y="244" width="240" height="56" rx="12"/><text x="130" y="278" class="mono">?tag=abc&amp;new</text>
+          <rect class="bx" x="10" y="320" width="240" height="56" rx="12"/><text x="130" y="354" class="mono">(empty)</text>
+
+          <line class="ln" x1="254" y1="120" x2="414" y2="120" marker-end="url(#ah)"/>
+          <line class="ln" x1="254" y1="196" x2="414" y2="196" marker-end="url(#ah)"/>
+          <line class="ln" x1="254" y1="272" x2="414" y2="272" marker-end="url(#ah)"/>
+          <line class="ln" x1="254" y1="348" x2="414" y2="348" marker-end="url(#ah)"/>
+          <text x="334" y="262" font-size="13" class="tm">flag wins</text>
+
+          <rect class="bx-r" x="420" y="92" width="200" height="56" rx="12"/><text x="520" y="126" class="mono b">new</text>
+          <rect class="bx-r" x="420" y="168" width="200" height="56" rx="12"/><text x="520" y="202" class="mono b">tag:abc</text>
+          <rect class="bx-r" x="420" y="244" width="200" height="56" rx="12"/><text x="520" y="278" class="mono b">new</text>
+          <rect class="bx-r" x="420" y="320" width="200" height="56" rx="12"/><text x="520" y="354" class="mono b">null</text>
+
+          <line class="ln-ok" x1="624" y1="120" x2="724" y2="150" marker-end="url(#ah-ok)"/>
+          <line class="ln-ok" x1="624" y1="196" x2="724" y2="166" marker-end="url(#ah-ok)"/>
+          <line class="ln-ok" x1="624" y1="272" x2="724" y2="176" marker-end="url(#ah-ok)"/>
+          <line class="ln" x1="624" y1="348" x2="724" y2="348" marker-end="url(#ah)"/>
+
+          <rect class="bx-ok" x="730" y="110" width="300" height="100" rx="14"/>
+          <text x="880" y="146" class="b tok">In place</text>
+          <text x="880" y="172" font-size="14">key has an entry in</text>
+          <text x="880" y="194" font-size="14" class="mono">panels</text>
+          <rect class="bx-r" x="730" y="320" width="300" height="56" rx="14"/>
+          <text x="880" y="354">No panel</text>
+          <rect class="bx" x="730" y="396" width="300" height="56" rx="14"/>
+          <text x="880" y="430" font-size="15">no entry in <tspan class="mono">panels</tspan>: navigation</text>
+        </g>
+        <text x="10" y="420" font-size="14" class="tm"><tspan class="mono">panelOnlyChange</tspan> gives <tspan class="mono">null</tspan> for another path,</text>
+        <text x="10" y="442" font-size="14" class="tm">another filter, a fragment or another origin.</text>
+      </svg>
+      <figcaption><b>Figure 5.</b> <code>panelKeyFromSearch</code> reads the key from the query. <code>panelHrefFor</code> writes a key back as a URL. Both are pure functions with unit tests.</figcaption>
+    </figure>
+
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Page</th><th scope="col"><code>flags</code></th><th scope="col"><code>values</code></th><th scope="col">In place</th><th scope="col">Stays a navigation</th></tr></thead>
+        <tbody>
+          <tr><td>Conti</td><td><code>new</code>, <code>archived</code></td><td><code>a</code>, <code>g</code></td><td>account form (new), archived list, account detail, goal detail</td><td>edit form of an account (<code>?a=ID&amp;edit</code>) if it needs the balances; «New goal» (goes to <code>/profile/goals?new</code>); save</td></tr>
+          <tr><td>Profilo › Categories</td><td><code>new</code>, <code>archived</code></td><td><code>c</code></td><td>category form (new, edit), archived list</td><td>save, reorder, archive, restore</td></tr>
+          <tr><td>Profilo › Tags</td><td><code>new</code></td><td><code>tag</code></td><td>tag form (new, edit)</td><td>save, merge, delete</td></tr>
+          <tr><td>Profilo › Budgets</td><td><code>new</code></td><td><code>b</code></td><td>budget form (new, edit)</td><td>save, delete</td></tr>
+          <tr><td>Profilo › Goals</td><td><code>new</code></td><td><code>g</code></td><td>goal form (new, edit)</td><td>save; «Open in Accounts»</td></tr>
+          <tr><td>Profilo › Connectors</td><td>none</td><td><code>connector</code></td><td>connector detail</td><td>«Revoke access»</td></tr>
+          <tr><td>Profilo › Preferences</td><td>none</td><td><code>edit</code></td><td><code>edit:cycle</code>, <code>edit:currency</code>, <code>edit:language</code>, <code>edit:theme</code>, <code>edit:timeZone</code></td><td>each save (<code>useSaveSetting</code>)</td></tr>
+          <tr><td>Admin › Accounts</td><td>none</td><td><code>u</code></td><td>account detail, if one render for each row is cheap</td><td>every action on an account</td></tr>
+          <tr><td>Admin › Invites</td><td><code>new</code></td><td><code>i</code></td><td>invite form, invite detail</td><td>create, revoke</td></tr>
+          <tr><td>Admin › Settings</td><td>none</td><td><code>edit</code></td><td><code>edit:name</code>, <code>edit:registration</code>, <code>edit:smtp</code></td><td>each save</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Source</span><p>The parameter names are the names that each <code>page.tsx</code> reads on 2026-10-11. A bookmarked link must keep its meaning. Thus the controller uses the same names. Passkeys, Account and Data have no panel and do not change.</p></div>
+
+    <div class="duo rows rv">
+      <div class="light">
+        <span class="meta">Light</span>
+        <div class="screen app" role="img" aria-label="Illustration, light theme: Profile, Tags, with the Edit tag panel open beside the list. The row Lisbon trip is selected.">
+          <div class="split">
+            <div class="subnav"><span>Profile</span><span>Preferences</span><span>Categories</span><span class="on">Tags</span><span>Budgets</span><span>Goals</span></div>
+            <div class="list">
+              <h5>Tags</h5>
+              <div class="muted">Tags cut across periods: a trip, a move, a refund to claim.</div>
+              <div class="row sel"><div class="grow"><b>Lisbon trip</b><div class="muted">12 transactions</div></div></div>
+              <div class="row"><div class="grow"><b>Moving house</b><div class="muted">5 transactions</div></div></div>
+              <div class="row"><div class="grow"><b>Refund to claim</b><div class="muted">1 transaction</div></div></div>
+            </div>
+            <div class="pbox">
+              <div class="phead"><b>Edit tag</b><span class="muted">✕</span></div>
+              <div class="lbl">Name</div>
+              <div class="field"><span>Lisbon trip</span></div>
+              <span class="btn p">Save</span><span class="btn">Cancel</span>
+              <span class="plink">Merge into another tag</span>
+              <span class="plink">Delete tag</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dark">
+        <span class="meta">Dark</span>
+        <div class="screen app" role="img" aria-label="Illustration, dark theme: the same Tags page with the Edit tag panel open.">
+          <div class="split">
+            <div class="subnav"><span>Profile</span><span>Preferences</span><span>Categories</span><span class="on">Tags</span><span>Budgets</span><span>Goals</span></div>
+            <div class="list">
+              <h5>Tags</h5>
+              <div class="muted">Tags cut across periods: a trip, a move, a refund to claim.</div>
+              <div class="row sel"><div class="grow"><b>Lisbon trip</b><div class="muted">12 transactions</div></div></div>
+              <div class="row"><div class="grow"><b>Moving house</b><div class="muted">5 transactions</div></div></div>
+              <div class="row"><div class="grow"><b>Refund to claim</b><div class="muted">1 transaction</div></div></div>
+            </div>
+            <div class="pbox">
+              <div class="phead"><b>Edit tag</b><span class="muted">✕</span></div>
+              <div class="lbl">Name</div>
+              <div class="field"><span>Lisbon trip</span></div>
+              <span class="btn p">Save</span><span class="btn">Cancel</span>
+              <span class="plink">Merge into another tag</span>
+              <span class="plink">Delete tag</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap">Illustration · <code>/profile/tags?tag=ID</code>. The panel shows in the frame of the click. The browser sends no request.</p>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="a11y" aria-labelledby="h-a11y">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-a11y">Accessibility and motion</h2>
+      <p class="lead">This spec adds no new motion to the panels. The bar and the skeleton follow the «reduce motion» setting.</p>
+    </div>
+    <div class="prose">
+      <p>The rules of the 2026-10-07 spec for motion, focus and <kbd>Esc</kbd> still apply. This spec applies them to more pages.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Part</th><th scope="col">Normal</th><th scope="col">Reduce motion on</th></tr></thead>
+        <tbody>
+          <tr><td>Bar</td><td>Shows after 150 ms. Grows from 5% to 90% of the width over 8 s.</td><td>Shows after 150 ms at full width. It does not grow.</td></tr>
+          <tr><td>Skeleton</td><td>The blocks pulse slowly (1.4 s).</td><td>The blocks do not pulse.</td></tr>
+          <tr><td>Status text</td><td colspan="2">A hidden <code>role="status"</code> element says «Loading…» while the count is more than 0. The bar itself has <code>aria-hidden="true"</code>.</td></tr>
+          <tr><td>Skeleton for a screen reader</td><td colspan="2"><code>PageSkeleton</code> has <code>aria-hidden="true"</code>. It says nothing about the content.</td></tr>
+          <tr><td>Panels</td><td colspan="2">As on Transazioni: the pointer gets the entrance and the exit. The keyboard and <kbd>Esc</kbd> change the panel on the next frame. The focus returns to the opener after a close.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="measure" aria-labelledby="h-measure">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-measure">How to measure</h2>
+      <p class="lead">A script measures four inputs on a production build, before the change and after each part of the plan.</p>
+    </div>
+    <div class="prose">
+      <p>The script <code>measure-nav</code> opens a signed-in page at 1440px. Chrome runs with the CPU four times slower. For each input the script records two times from the click:</p>
+      <ol class="steps">
+        <li><b>feedback</b>: the first frame with a change on the page. A <code>MutationObserver</code> on <code>document.body</code> records the time.</li>
+        <li><b>settled</b>: the time when the new content shows and the network is idle.</li>
+      </ol>
+      <p>Before the change, «feedback» is about equal to «settled». After part A, «feedback» for a tab must be less than about 50 ms. For a chip or a period arrow, «feedback» is about 150 ms (the delay of the bar) when the server is slower than that.</p>
+      <div class="code">
+        <pre><code>pnpm --filter web measure:nav http://localhost:3100</code></pre>
+        <button class="copy" type="button" aria-label="Copy command" data-copy="pnpm --filter web measure:nav http://localhost:3100">
+          <svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect class="ico" x="9" y="9" width="11" height="11" rx="2"/><path class="ico" d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+          <svg class="i-check" viewBox="0 0 24 24" aria-hidden="true"><path class="ico" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </button>
+      </div>
+      <p>The plan also counts the queries for one request on <code>/transactions</code>, before and after part B. A temporary counter in <code>getDb</code> writes each query to the log. The plan does not commit the counter.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Input (1440px, CPU 4×)</th><th scope="col">Before</th><th scope="col">After A</th><th scope="col">After B</th><th scope="col">After C</th></tr></thead>
+        <tbody>
+          <tr><td>Tab Accounts → Statistics</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Tab Home → Transactions</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Chip on Transactions</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Period ‹ on Transactions</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Queries per request</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Record</span><p>Nobody has measured these values yet (—). Each cell will hold «feedback / settled» in ms. The plan writes the values in its «Measurements» section. Copy them here when the plan is complete.</p></div>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="risks" aria-labelledby="h-risks">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-risks">Risks</h2>
+      <p class="lead">Four risks are known. Each one has a check or a fallback.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Risk</th><th scope="col">What to do</th></tr></thead>
+        <tbody>
+          <tr><td><code>useLinkStatus</code> and prefetch</td><td><code>useLinkStatus</code> can stay <code>false</code> when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.</td></tr>
+          <tr><td><code>banned</code> on <code>session.user</code></td><td>The type comes from the admin plugin. If the inferred type has no <code>banned</code>, use <code>auth().$Infer.Session.user</code> (plan Task 6). If <code>getSession</code> gets a cookie cache, <code>banned</code> can be late. Write a comment at the <code>getSession</code> call that says this. Put a test next to it.</td></tr>
+          <tr><td>The size of the response</td><td>Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep its panel a navigation: give it no entry in <code>panels</code>.</td></tr>
+          <tr><td>A form with state in a hidden panel</td><td><code>PanelSwitch</code> mounts only the open panel. The new form of Transazioni is different: it uses <code>&lt;Activity&gt;</code>. A change from one key to another key starts a new form, because of the <code>key</code> on <code>Panel</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="words" aria-labelledby="h-words">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-words">Words</h2>
+      <p class="lead">The meaning of the special words in this document.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Word</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Navigation</td><td>The browser asks the server for the page with the new URL.</td></tr>
+          <tr><td>In place</td><td>The screen changes in the browser, with no request to the server.</td></tr>
+          <tr><td>Pending</td><td>A navigation started and the server did not answer yet.</td></tr>
+          <tr><td>Bar</td><td>The thin line at the top of the page that shows a pending navigation.</td></tr>
+          <tr><td>Skeleton</td><td>Grey blocks in the shape of a page. They show while the server works.</td></tr>
+          <tr><td>Shell</td><td>The top bar, the tab bar and the sub-navigation. They stay mounted during a navigation.</td></tr>
+          <tr><td>Panel key</td><td>The string that names the open panel, for example <code>tag:ID</code>.</td></tr>
+          <tr><td>Flag</td><td>A query parameter with no value that opens a panel, for example <code>?new</code>.</td></tr>
+          <tr><td>Streaming</td><td>The server sends the shell first and the data later, in the same response.</td></tr>
+          <tr><td>Frame</td><td>One image on the screen. At 60 Hz a frame is 16.7 ms.</td></tr>
+          <tr><td>CPU 4×</td><td>Chrome makes the CPU four times slower, to show a slower computer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · web · navigation feedback and panels in place · spec 2026-10-11</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>
