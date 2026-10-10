@@ -28,7 +28,7 @@
 - **Gates.** Read the output, not the exit code (AGENTS.md «Reading the results»). Run `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck` and `rtk proxy pnpm test`. A clean lint has **no** `lint/…` lines and no `× Some errors were emitted while running checks.`
 - To test one package, run `rtk proxy pnpm --filter web test <pattern>`. Before each commit, fix the format with `pnpm exec biome check --write <files>`.
 - Port 3000 belongs to another project. Start Saldo on port 3100: `PUBLIC_URL=http://localhost:3100 pnpm --filter web build`, then `cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100`.
-- The dev database is the `saldo-dev-postgres` container. Start it with `docker compose -f apps/web/docker/docker-compose.dev.yml up -d postgres`. Colima must run. See `~/.claude-work/projects/-Users-saliougaye-sandbox-saldo/memory/web-manual-run-recipe.md`.
+- The dev database is the `saldo-dev-postgres` container. Start it with `docker-compose -f apps/web/docker/docker-compose.dev.yml up -d postgres` (the `docker compose` plugin is not installed). Colima must run. See `~/.claude-work/projects/-Users-saliougaye-sandbox-saldo/memory/web-manual-run-recipe.md`.
 - Every UI string uses i18n keys in `packages/i18n/src/locales/it.ts` **and** `en.ts`. Also add the key to the other locales that the parity test needs. Do not hard-code a colour, a radius or a size. Use the `@saldo/ui` tokens.
 - Commit each task with a Conventional Commit. End each message with `Co-Authored-By: Claude <noreply@anthropic.com>`.
 - Work on the branch `fix/web-navigation-feel`, cut from `main`.
@@ -63,7 +63,7 @@
 - Create: `apps/web/scripts/lib/devSession.ts`, `apps/web/scripts/measure-nav.ts`
 - Modify: `apps/web/scripts/measure-panel.ts`, `apps/web/package.json`
 
-- [ ] **Step 1: Branch**
+- [x] **Step 1: Branch**
 
 The branch already exists: it holds this plan and its spec. Switch to it with `git switch fix/web-navigation-feel`. Use the command below only if you start again from `main`.
 
@@ -71,11 +71,11 @@ The branch already exists: it holds this plan and its spec. Switch to it with `g
 git switch -c fix/web-navigation-feel main
 ```
 
-- [ ] **Step 2: Move the sign-in helpers**
+- [x] **Step 2: Move the sign-in helpers**
 
 Move `COOKIE`, `LOCAL_HOSTS`, `onlyUser`, `signIn` and the function that deletes the session from `measure-panel.ts` to `scripts/lib/devSession.ts`. Export them. Import them again in `measure-panel.ts`. Do not change their behaviour. Keep the guard that permits only a local host.
 
-- [ ] **Step 3: Write `measure-nav.ts`**
+- [x] **Step 3: Write `measure-nav.ts`**
 
 The script opens a signed-in page on a production build. It makes the CPU four times slower. Then it runs four inputs. For each input, it records two times from the click:
 
@@ -91,8 +91,8 @@ const base = process.argv[2] ?? 'http://localhost:3100';
 const INPUTS = [
   { label: 'tab Conti → Stats', from: '/accounts', act: 'nav a[href="/stats"]:visible' },
   { label: 'tab Home → Transazioni', from: '/home', act: 'nav a[href="/transactions"]:visible' },
-  { label: 'chip on Transazioni', from: '/transactions', act: 'main a[href*="type="]:visible' },
-  { label: 'period ‹ on Transazioni', from: '/transactions', act: 'main a[aria-label]:visible' },
+  { label: 'chip on Transazioni', from: '/transactions', act: 'main a[href*="direction=expense"]:visible' },
+  { label: 'period ‹ on Transazioni', from: '/transactions', act: 'main a[aria-label][href*="p="]:visible' },
 ];
 
 const PROBE = `(() => {
@@ -135,24 +135,31 @@ async function main() {
 void main();
 ```
 
-`openSession` is `signIn` plus the cookie and the cleanup that `measure-panel.ts` already does. Export it from `devSession.ts` in step 2, with the shape `{ cookie(base): Cookie; close(): Promise<void> }`. At the top of the file, add a global type for `window.__marks`: `declare global { interface Window { __marks: { feedback: number | null } } }`.
+The code above is a sketch. The real `measure-nav.ts` differs in these points:
 
-- [ ] **Step 4: Add the script**
+- `devSession.ts` exports `COOKIE`, `LOCAL_HOSTS`, `assertLocalOnly(base)`, `onlyUser`, `signIn(userId, id, userAgent)`, `deleteSession` and `openSession(userId, userAgent, beforeClose)`. `openSession` returns `{ cookie(base), close() }`. `close` deletes the session and closes the database. `measure-nav.ts` calls `assertLocalOnly` first, as `measure-panel.ts` does.
+- The chip selector is `main a[href*="direction=expense"]:visible`. The chip links have no `type=` parameter.
+- The clock starts at the first `pointerdown`, not at a `page.evaluate` before the click. The probe is a string, so that tsx does not add its `__name` helper to it.
+- The app has a Content Security Policy without `unsafe-eval`. `waitForFunction` with a string fails. Pass a function.
+- «settled» is a predicate in the page, checked each frame. It is a new URL for a tab and for a period arrow, and a new `aria-current` chip for a chip. `waitForLoadState('networkidle')` after the click can return before the navigation starts.
+- Each input runs five times in a new context. The line shows the median and every run.
+
+- [x] **Step 4: Add the script**
 
 In the `scripts` of `package.json`, add `"measure:nav": "tsx --env-file-if-exists=.env scripts/measure-nav.ts"`.
 
-- [ ] **Step 5: Measure and record**
+- [x] **Step 5: Measure and record**
 
 ```bash
-docker compose -f apps/web/docker/docker-compose.dev.yml up -d postgres
+docker-compose -f apps/web/docker/docker-compose.dev.yml up -d postgres
 PUBLIC_URL=http://localhost:3100 pnpm --filter web build
 cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100 &
 pnpm --filter web measure:nav http://localhost:3100
 ```
 
-Expected: four lines. «feedback» is about equal to «settled», because nothing shows before the server answers. Paste the four lines in the «Measurements» section at the end of this file, in the «Before» column.
+Expected: four lines. «feedback» is close to «settled», because nothing shows before the server answers. On a local server, the server answers in about 60 ms, so «feedback» is 3 to 40 ms before «settled». The first change in the page is the active tab that moves, or the chip that gets `aria-current`. Paste the four lines in the «Measurements» section at the end of this file, in the «Before» column.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/scripts apps/web/package.json docs/superpowers/plans/2026-10-11-web-navigation-feel.md
@@ -1153,12 +1160,14 @@ git commit -m "docs: record the web navigation work and what stays open"
 
 | Input (1440px, CPU 4×) | Before | After A | After B | After C |
 | --- | --- | --- | --- | --- |
-| Tab Conti → Stats, feedback | | | | |
-| Tab Home → Transazioni, feedback | | | | |
-| Chip on Transazioni, feedback | | | | |
-| Period ‹ on Transazioni, feedback | | | | |
+| Tab Conti → Stats, feedback / settled | 85 / 120 ms | | | |
+| Tab Home → Transazioni, feedback / settled | 142 / 175 ms | | | |
+| Chip on Transazioni, feedback / settled | 102 / 105 ms | | | |
+| Period ‹ on Transazioni, feedback / settled | 94 / 126 ms | | | |
 
-Queries per request on `/transactions`: before ___, after ___.
+Each cell is the median of five runs, in ms from the click, on a production build and a local server, with the CPU four times slower. The Before runs were on 2026-10-11, on commit `1d008060`.
+
+Queries per request on `/transactions`: before 5, after ___. The five queries are: the session row, the user row of the session, `select "banned"` (`isRevoked`), the `sync_rows` of the user (`loadUserData`), and `select "role", "banned"` (`isAdmin` in the layout). The first request after a start has two more: an OAuth client read and the update of the session.
 
 ## Risks
 

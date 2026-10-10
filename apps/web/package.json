@@ -14,6 +14,7 @@
     "user": "tsx --env-file-if-exists=.env scripts/user.ts",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "measure:panel": "tsx --env-file-if-exists=.env scripts/measure-panel.ts",
+    "measure:nav": "tsx --env-file-if-exists=.env scripts/measure-nav.ts",
     "build:migrate": "esbuild src/server/db/migrate.ts --bundle --platform=node --format=cjs --outfile=migrate.cjs --external:pg-native --log-level=error",
     "e2e": "playwright test",
     "e2e:install": "playwright install chromium"

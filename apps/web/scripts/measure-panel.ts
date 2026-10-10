@@ -14,15 +14,10 @@
  * (`next-router-prefetch: 1`), so those are counted on their own line. «panel in the DOM» means a
  * visible `aside`: Transazioni keeps its new form in the DOM, hidden by `<Activity>`.
  */
-import { createHmac, randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { type Browser, chromium, type Page } from '@playwright/test';
-import { eq } from 'drizzle-orm';
-import { session, user } from '../src/server/db/authSchema';
-import { closeDb, getDb } from '../src/server/db/client';
-import { env } from '../src/server/env';
-
-const COOKIE = 'better-auth.session_token';
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+import { closeDb } from '../src/server/db/client';
+import { assertLocalOnly, COOKIE, deleteSession, onlyUser, signIn } from './lib/devSession';
 
 interface Mark {
   t: number;
@@ -100,33 +95,6 @@ const SCENARIOS: Scenario[] = [
     act: (p) => p.locator(NEW_BUTTON).first().click(),
   },
 ];
-
-async function onlyUser(requested: string | undefined): Promise<string> {
-  if (requested !== undefined) return requested;
-  const rows = await getDb().select({ id: user.id }).from(user);
-  const only = rows[0];
-  if (rows.length !== 1 || only === undefined) {
-    throw new Error(`${rows.length} accounts in the database: pass the userId to measure.`);
-  }
-  return only.id;
-}
-
-/** A session row and the cookie Better Auth signs for it: `token.base64(HMAC-SHA256(secret, token))`. */
-async function signIn(userId: string, id: string): Promise<string> {
-  const token = randomBytes(24).toString('base64url');
-  const signature = createHmac('sha256', env().secret).update(token).digest('base64');
-  await getDb()
-    .insert(session)
-    .values({
-      id,
-      token,
-      userId,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-      updatedAt: new Date(),
-      userAgent: 'measure-panel',
-    });
-  return encodeURIComponent(`${token}.${signature}`);
-}
 
 /** Runs in the page: the clock starts at the timeStamp of the first pointerdown or keydown after this call. */
 function arm(): void {
@@ -252,18 +220,7 @@ async function main(): Promise<void> {
     return;
   }
   const base = argument.replace(/\/$/, '');
-  const database = new URL(env().databaseUrl);
-  if (
-    !LOCAL_HOSTS.has(new URL(base).hostname) ||
-    !LOCAL_HOSTS.has(new URL(env().publicUrl).hostname) ||
-    !LOCAL_HOSTS.has(database.hostname) ||
-    // `pg` lets `?host=` override the host of the URL.
-    database.searchParams.has('host')
-  ) {
-    throw new Error(
-      'Refused: this script signs a person in, so it runs against a local server and a local database only.',
-    );
-  }
+  assertLocalOnly(base);
   let browser: Browser | undefined;
   let sessionId: string | undefined;
   let cleaning: Promise<void> | undefined;
@@ -271,10 +228,7 @@ async function main(): Promise<void> {
     cleaning ??= (async () => {
       await browser?.close().catch(() => undefined);
       if (sessionId !== undefined) {
-        await getDb()
-          .delete(session)
-          .where(eq(session.id, sessionId))
-          .catch((error: unknown) => console.error('Could not delete the session', error));
+        await deleteSession(sessionId);
       }
       await closeDb();
     })();
@@ -287,7 +241,7 @@ async function main(): Promise<void> {
     const userId = await onlyUser(process.argv[3]);
     // The id is known before the insert: a Ctrl-C during the insert still deletes the row.
     sessionId = randomUUID();
-    const cookie = await signIn(userId, sessionId);
+    const cookie = await signIn(userId, sessionId, 'measure-panel');
     // Our `cleanup` closes the browser. Playwright's own handler would exit before the delete.
     browser = await chromium.launch({ handleSIGINT: false });
     for (const scenario of SCENARIOS) await measure(browser, base, cookie, scenario);
