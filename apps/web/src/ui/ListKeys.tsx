@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { ignoresShortcut } from './isEditable';
+import { useNavTransition } from './NavPending';
 
 /** What `href` and `editHref` carry in place of a row's id. */
 const ID = '__ID__';
@@ -43,6 +44,7 @@ export function ListKeys({
   onSelect,
 }: Props) {
   const router = useRouter();
+  const startNav = useNavTransition();
   const moved = useRef(false);
 
   // `scroll: false` keeps the page still, so the row an arrow reached is brought into view here —
@@ -63,7 +65,7 @@ export function ListKeys({
       if (edit) {
         if (selectedId === null) return;
         event.preventDefault();
-        router.push(editHref.replace(ID, encodeURIComponent(selectedId)));
+        startNav(() => router.push(editHref.replace(ID, encodeURIComponent(selectedId))));
         return;
       }
       const disclosure = document.getElementById(upcomingDisclosureId);
@@ -85,10 +87,20 @@ export function ListKeys({
       event.preventDefault();
       moved.current = true;
       if (onSelect?.(next) === true) return;
-      router.replace(href.replace(ID, encodeURIComponent(next)), { scroll: false });
+      startNav(() => router.replace(href.replace(ID, encodeURIComponent(next)), { scroll: false }));
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router, upcomingIds, ids, upcomingDisclosureId, selectedId, href, editHref, onSelect]);
+  }, [
+    router,
+    startNav,
+    upcomingIds,
+    ids,
+    upcomingDisclosureId,
+    selectedId,
+    href,
+    editHref,
+    onSelect,
+  ]);
   return null;
 }

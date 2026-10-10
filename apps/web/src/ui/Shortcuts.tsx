@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { ignoresShortcut } from './isEditable';
+import { useNavTransition } from './NavPending';
 import { NEW_TRANSACTION_HREF, openNewTransaction } from './NewTransactionLink';
 
 /**
@@ -13,15 +14,16 @@ import { NEW_TRANSACTION_HREF, openNewTransaction } from './NewTransactionLink';
  */
 export function Shortcuts() {
   const router = useRouter();
+  const startNav = useNavTransition();
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'n' && event.key !== 'N') return;
       if (ignoresShortcut(event)) return;
       event.preventDefault();
-      if (!openNewTransaction(true)) router.push(NEW_TRANSACTION_HREF);
+      if (!openNewTransaction(true)) startNav(() => router.push(NEW_TRANSACTION_HREF));
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router]);
+  }, [router, startNav]);
   return null;
 }

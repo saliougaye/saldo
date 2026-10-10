@@ -392,7 +392,7 @@ git commit -m "feat(web): every link reports its pending state to a bar in the s
 **Files:**
 - Modify: `apps/web/src/ui/SearchField.tsx:59`, `apps/web/src/ui/Panel.tsx:106,110`, `apps/web/src/ui/ListKeys.tsx:66,88`, `apps/web/src/ui/Shortcuts.tsx:21`
 
-- [ ] **Step 1: Wrap the `router.push` and `router.replace` calls that change the page**
+- [x] **Step 1: Wrap the `router.push` and `router.replace` calls that change the page**
 
 In each file, add `const startNav = useNavTransition();` next to `useRouter()`. Then change the call:
 
@@ -401,13 +401,15 @@ In each file, add `const startNav = useNavTransition();` next to `useRouter()`. 
 startNav(() => router.push(params === '' ? path : `${path}?${params}`));
 ```
 
-Do the same for the calls in `Panel.tsx` (the two `router.push(closeHref)`), `ListKeys.tsx` (the two calls) and `Shortcuts.tsx`. Do not change the `router.replace(afterSave)` of a form after a save. The form has its own busy state.
+Do the same for the calls in `Panel.tsx` (the two `router.push(closeHref)`), `ListKeys.tsx` (the two calls) and `Shortcuts.tsx`. Add `startNav` to the dependency list of the `useEffect` or `useCallback` that calls it. Do not change the `router.replace(afterSave)` of a form after a save. The form has its own busy state.
 
-- [ ] **Step 2: Run the gates, then check by hand**
+- [x] **Step 2: Run the gates, then check by hand**
 
 Run the gates of Task 2 step 8. Then start the build on port 3100. In DevTools, set the network throttle to «Slow 4G», so the server answers slowly. Open `/transactions` and type in the search field. Make sure that the bar shows when the server takes more than 150 ms.
 
-- [ ] **Step 3: Commit**
+On 2026-10-11 a Playwright script did this check. It used `scripts/lib/devSession.ts` to sign in, and CDP `Network.emulateNetworkConditions` (latency 600 ms, 400 kbit/s). It was not committed. For the search, a chip, `E` (ListKeys), Esc on a Conti panel, `N` and a tab, the bar mounted 40 to 140 ms after the input. It showed 150 to 180 ms later, and it went away when the URL changed. The status text was «Loading…». With «reduce motion», the bar had the full width.
+
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A apps/web

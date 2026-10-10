@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { useNavTransition } from './NavPending';
 import styles from './SearchField.module.css';
 import { VisuallyHidden } from './VisuallyHidden';
 
@@ -26,6 +27,7 @@ interface Props {
  */
 export function SearchField({ path, keep, value, label, placeholder }: Props) {
   const router = useRouter();
+  const startNav = useNavTransition();
   const [text, setText] = useState(value);
   const input = useRef<HTMLInputElement>(null);
   const id = useId();
@@ -56,7 +58,7 @@ export function SearchField({ path, keep, value, label, placeholder }: Props) {
           const query = text.trim();
           if (query !== '') next.set('q', query);
           const params = next.toString();
-          router.push(params === '' ? path : `${path}?${params}`);
+          startNav(() => router.push(params === '' ? path : `${path}?${params}`));
         }}
       >
         <label className={styles.field} htmlFor={id}>

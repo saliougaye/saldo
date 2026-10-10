@@ -13,6 +13,7 @@ import {
 import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
+import { useNavTransition } from './NavPending';
 import styles from './Panel.module.css';
 import { isPlainClick } from './PanelNav';
 
@@ -74,6 +75,7 @@ export function Panel({
   children,
 }: Props) {
   const router = useRouter();
+  const startNav = useNavTransition();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (on Conti,
@@ -103,13 +105,13 @@ export function Panel({
       clearTimeout(timer.current);
       // The keyboard closes on the next frame: no exit (spec §06).
       if (from === 'key') {
-        router.push(closeHref);
+        startNav(() => router.push(closeHref));
         return;
       }
       setClosingFor(closeHref);
-      timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
+      timer.current = setTimeout(() => startNav(() => router.push(closeHref)), EXIT_MS);
     },
-    [router, closeHref, closingFor, onClose, closingProp],
+    [router, startNav, closeHref, closingFor, onClose, closingProp],
   );
 
   // Unmounted, or hidden in `<Activity>`: a panel that shows again starts open.
