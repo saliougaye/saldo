@@ -44,7 +44,6 @@ the browser rejects with `NotAllowedError`. `@simplewebauthn/browser` wraps it a
   «day N of M».
 - The tags list counts every transaction of a tag, including future ones. The tag screen and its Merge and Delete sheets
   count only up to today. The numbers disagree (7 against 6).
-- `categories.missing_taken` reads «A tag with this name already exists.» It looks copied from the tags text.
 - The tag Edit sheet does not focus its name field, unlike New tag.
 
 ## Features
