@@ -11,7 +11,6 @@ import {
   totalsOf,
   touchesClosedGoal,
   transactionRow,
-  upcomingUntil,
 } from '@saldo/core';
 import { formatDayMonth, formatMoney } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
@@ -62,7 +61,7 @@ export default function TransactionsTab() {
   const { accounts, loaded: accountsLoaded } = useAccountsQuery();
   const { rows: categories, loaded: categoriesLoaded } = useCategoriesQuery();
   const tags = useTags();
-  const { today, def, period } = usePeriod();
+  const { today, period } = usePeriod();
   const currency = settings?.currency ?? 'EUR';
 
   // Filters arrive as route params — from "Ultime transazioni" on an account, and from the excluded
@@ -91,11 +90,10 @@ export default function TransactionsTab() {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [upcomingOpen, setUpcomingOpen] = useState(false);
 
-  // The upcoming fold reaches into the next period while this one is current (§5.12, §6.15):
-  // navigation stops here, so this is where rows dated next period are found.
+  // The upcoming fold holds what is dated after today inside the period (§5.12, §6.15).
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(
     period.range.start,
-    upcomingUntil(def, period.range, today),
+    period.range.end,
   );
   // Rows need their names: before accounts and categories answer they would paint as "—".
   const loaded = rowsLoaded && accountsLoaded && categoriesLoaded;

@@ -224,9 +224,17 @@ async function main(): Promise<void> {
   await tx('2026-09-14', 'expense', 65, 'Regalo compleanno Luca', C.shopping, { tagIds: [family] });
   await tx('2026-09-22', 'expense', 149, 'Corso online di fotografia', C.education);
   await tx('2026-09-25', 'expense', 120, 'Idraulico', C.maintenance);
-  // Future one-off expenses (they show up in list_upcoming next to the recurrences).
-  await tx(addDays(today, 11), 'expense', 420, 'Assicurazione auto', C.transport);
-  await tx(addDays(today, 16), 'expense', 120, 'Dentista', C.health);
+  // Future one-off expenses (they show up in list_upcoming next to the recurrences). They stay
+  // inside the current month, since «In arrivo» stops at the end of the period.
+  const [todayYear = 0, todayMonth = 0] = [Number(today.slice(0, 4)), Number(today.slice(5, 7))];
+  const lastDay = new Date(Date.UTC(todayYear, todayMonth, 0)).getUTCDate();
+  const monthEnd = `${today.slice(0, 8)}${String(lastDay).padStart(2, '0')}`;
+  const ahead = (days: number) => {
+    const date = addDays(today, days);
+    return date > monthEnd ? monthEnd : date;
+  };
+  await tx(ahead(11), 'expense', 420, 'Assicurazione auto', C.transport);
+  await tx(ahead(16), 'expense', 120, 'Dentista', C.health);
 
   // The main account started at 0 at onboarding; give it a believable current balance (the form
   // keeps the history and moves the opening balance).

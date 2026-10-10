@@ -28,7 +28,6 @@ import {
   type TransactionRowDeps,
   transactionRow,
   type UserData,
-  upcomingUntil,
 } from '@saldo/core';
 import { budgetsView } from '../budgets/budgetsView';
 
@@ -104,7 +103,7 @@ export interface HomeViewInput {
 export function homeView({ data, today, def, period, kindLabel }: HomeViewInput): HomeView {
   const txs = data.transactions;
   const summary = summarizePeriod(txs, period.range, today);
-  const upcomingEnd = upcomingUntil(def, period.range, today);
+  const periodEnd = period.range.end;
 
   const categories = new Map(data.categories.map((category) => [category.id, category]));
   const accounts = new Map(data.accounts.map((account) => [account.id, account]));
@@ -125,17 +124,14 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
     recurring: tx.recurrenceId !== null,
   });
 
-  // «In arrivo» reaches into the next period while this one is current; everything else is
-  // filtered by the period itself (§5.12, §6.15).
-  const upcomingAll = byDateDesc.filter((tx) => isUpcoming(tx, today) && tx.date <= upcomingEnd);
-  // `upcomingEnd` bounds this list too, and not only «In arrivo»: the phone's query never loads a
-  // row past it, so on a **closed** period — where the horizon is the period's own end — its
-  // «Ultime transazioni» stops at the period. Without the bound the web reaches into the periods
-  // after it and shows five rows the phone does not.
+  // «In arrivo» stops at the end of the period: a row dated after it belongs to the next period
+  // (§5.12, §6.15).
+  const upcomingAll = byDateDesc.filter((tx) => isUpcoming(tx, today) && tx.date <= periodEnd);
+  // `periodEnd` bounds this list too, and not only «In arrivo»: the phone's query never loads a
+  // row past it, so on a **closed** period its «Ultime transazioni» stops at the period. Without
+  // the bound the web reaches into the periods after it and shows five rows the phone does not.
   const recent = byDateDesc
-    .filter(
-      (tx) => !isUpcoming(tx, today) && tx.date >= period.range.start && tx.date <= upcomingEnd,
-    )
+    .filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start && tx.date <= periodEnd)
     .slice(0, HOME_ROWS)
     .map(row);
 

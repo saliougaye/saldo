@@ -1,4 +1,3 @@
-import type { DateRange } from './cycle';
 import {
   addDays,
   addMonths,
@@ -59,18 +58,6 @@ export function occurrenceDates(schedule: RecurrenceSchedule, horizonEnd: LocalD
 /** How far ahead the materialiser goes: the end of the cycle after the current one (§5.9). */
 export function recurrenceHorizonEnd(def: PeriodDef, today: LocalDate): LocalDate {
   return shiftPeriod(def, periodContaining(def, today), 1).end;
-}
-
-/**
- * How far «In arrivo» reaches for a range (§5.12, §6.15). While the range holds today it reaches
- * the materialiser's horizon, the end of the next period: navigation stops at the current period,
- * so this is where the next rent and anything dated ahead are found. A range that already reaches
- * further keeps its own end, and a closed one has nothing upcoming past it.
- */
-export function upcomingUntil(def: PeriodDef, range: DateRange, today: LocalDate): LocalDate {
-  if (today < range.start || today > range.end) return range.end;
-  const horizon = recurrenceHorizonEnd(def, today);
-  return horizon > range.end ? horizon : range.end;
 }
 
 /** A scheduled occurrence, ready for the transactions repository. */

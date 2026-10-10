@@ -5,7 +5,6 @@ import {
   summarizePeriod,
   type TransactionRowDeps,
   transactionRow,
-  upcomingUntil,
 } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'expo-router';
@@ -60,9 +59,8 @@ export default function HomeTab() {
 
   // Load the selected cycle plus the previous six, which is all the baselines need (§7).
   const historyStart = previousPeriods(def, period.range, 6).at(-1)?.start ?? period.range.start;
-  // «In arrivo» reaches into the next period while this one is current: navigation stops here, so
-  // that is where next month's rent is found (§6.15). Everything else filters by the period.
-  const upcomingEnd = upcomingUntil(def, period.range, today);
+  // «In arrivo» stops at the end of the period: what is dated after it belongs to the next one.
+  const upcomingEnd = period.range.end;
   const { rows, loaded: rowsLoaded } = useTransactionsInRangeQuery(historyStart, upcomingEnd);
   // Before both answer, the hero would read "0 €" and the recent card "no transactions yet".
   // The skeleton shows at once rather than behind `useDelayed`: this is the screen the app opens

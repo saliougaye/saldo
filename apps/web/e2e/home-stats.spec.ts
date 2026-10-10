@@ -7,7 +7,6 @@ import {
   type Ledger,
   type LedgerTransaction,
   monthOf,
-  nextMonth,
   previousMonth,
   readLedger,
   sum,
@@ -61,8 +60,11 @@ test.describe('Home', () => {
     const lang = appLocale(locale);
     const money = moneyFormatter(ledger, lang);
     const month = monthOf(ledger.today);
+    test.skip(
+      ledger.today === month.end,
+      'nothing is dated ahead inside the period on its last day',
+    );
     const { income, spent } = summary(ledger, month);
-    const horizon = nextMonth(month).end;
 
     await page.goto('/home');
     await expect(
@@ -74,7 +76,7 @@ test.describe('Home', () => {
 
     // «In arrivo»: every row dated ahead, up to the five the card shows.
     const ahead = ledger.transactions
-      .filter((tx) => tx.date > ledger.today && tx.date <= horizon)
+      .filter((tx) => tx.date > ledger.today && tx.date <= month.end)
       .sort((a, b) => b.date.localeCompare(a.date));
     expect(ahead.length).toBeGreaterThanOrEqual(2);
     const upcoming = sectionOf(page, t('home.upcoming'));

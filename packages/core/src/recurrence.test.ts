@@ -11,7 +11,6 @@ import {
   planStopRecurrence,
   recurrenceHorizonEnd,
   recurringMonthlyTotals,
-  upcomingUntil,
 } from './recurrence';
 
 const TEMPLATE: Recurrence['template'] = {
@@ -120,29 +119,6 @@ describe('recurrenceHorizonEnd', () => {
     // A month period reaches the end of next month, a week period the end of next week.
     expect(recurrenceHorizonEnd({ kind: 'month', startDay: 1 }, '2026-09-10')).toBe('2026-10-31');
     expect(recurrenceHorizonEnd({ kind: 'week', startDay: 1 }, '2026-09-10')).toBe('2026-09-20');
-  });
-});
-
-describe('upcomingUntil', () => {
-  const month = { kind: 'month', startDay: 1 } as const;
-
-  it('reaches into the next period while the range holds today', () => {
-    // Navigation stops at the current period (§6.15), so «In arrivo» shows what the next one holds.
-    expect(upcomingUntil(month, { start: '2026-09-01', end: '2026-09-30' }, '2026-09-26')).toBe(
-      '2026-10-31',
-    );
-  });
-
-  it('keeps a custom range that already reaches further', () => {
-    expect(upcomingUntil(month, { start: '2026-09-01', end: '2026-12-31' }, '2026-09-26')).toBe(
-      '2026-12-31',
-    );
-  });
-
-  it('stops at the end of a closed range', () => {
-    expect(upcomingUntil(month, { start: '2026-08-01', end: '2026-08-31' }, '2026-09-26')).toBe(
-      '2026-08-31',
-    );
   });
 });
 

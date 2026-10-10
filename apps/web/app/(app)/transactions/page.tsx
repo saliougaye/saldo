@@ -90,7 +90,7 @@ export default async function TransactionsPage({
   const { t, locale, currency, today, def, period, params } = page;
   const filters = filtersFromSearch(params);
   const kindLabel = (kind: string) => t(`kinds.${kind}`);
-  const view = listView({ data: page.data, filters, today, def, period, kindLabel });
+  const view = listView({ data: page.data, filters, today, period, kindLabel });
   const choices = filterChoices(page.data);
   // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
   // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.

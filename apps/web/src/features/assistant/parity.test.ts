@@ -255,7 +255,7 @@ describe('the read tools say what the pages say', () => {
     // at the period, by decision.)
     const period = periodFromParam(DEF, CTX.today, '2026-08-10');
     for (const filters of [EMPTY_FILTERS, { ...EMPTY_FILTERS, categoryId: CATEGORY.id }]) {
-      const page = listView({ data: data(), filters, today: CTX.today, def: DEF, period });
+      const page = listView({ data: data(), filters, today: CTX.today, period });
       const tool = listTransactionsTool.run(data(), CTX, {
         period: '2026-08-10',
         categoryId: filters.categoryId ?? undefined,
