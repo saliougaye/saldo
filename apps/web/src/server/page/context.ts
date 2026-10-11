@@ -87,11 +87,12 @@ export interface PageContext extends PageState, WebI18n {
 export async function readPage(
   searchParams: Promise<Record<string, string | string[] | undefined>>,
 ): Promise<PageContext> {
-  const user = await requireWebUser();
-  const data = await loadUserData(user.id);
+  // Start together what does not depend on each other. The query does not depend on the user, and
+  // `userI18n` awaits the same `cache()`d `loadUserData`, so it adds no query.
+  const [user, rawParams] = await Promise.all([requireWebUser(), searchParams]);
+  const [data, i18n] = await Promise.all([loadUserData(user.id), userI18n(user.id)]);
   if (data.settings === null) redirect('/onboarding');
-  const i18n = await userI18n(user.id);
-  const params = narrowParams(await searchParams);
+  const params = narrowParams(rawParams);
   return {
     ...pageState({ data, now: new Date(), fallbackTimeZone: env().defaultTimeZone, params }),
     ...i18n,

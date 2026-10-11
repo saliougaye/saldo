@@ -666,7 +666,7 @@ git commit -m "perf(web): read role and banned with the session, not in two more
 **Files:**
 - Modify: `apps/web/src/server/page/context.ts`, `apps/web/app/(app)/transactions/page.tsx:125`
 
-- [ ] **Step 1: Change `readPage`**
+- [x] **Step 1: Change `readPage`**
 
 `searchParams` does not depend on the user. Start it together with the session. Keep the order only where one result is the input of the next:
 
@@ -690,13 +690,17 @@ export async function readPage(
 
 `userI18n` awaits the same cached `loadUserData`, so it adds no query. `Promise.all` for these two only removes a microtask gap.
 
-- [ ] **Step 2: Start the extra read of the page earlier**
+- [x] **Step 2: Start the extra read of the page earlier**
 
 In `transactions/page.tsx`, `loadRow` for `?deleted=` waits for all of `readPage`. It needs only the user id. Read the page file near line 125. If the function awaits another read, start `loadRow` together with it in a `Promise.all`, as soon as `page.user.id` is known. On 2026-10-11 the function has no other await after `readPage`. In that case, keep the code: one await after `readPage` is correct. This plan does not invent a change.
 
-- [ ] **Step 3: Run the gates, measure, commit**
+On 2026-10-11 this was still true: `loadRow` is the only await after `readPage`, and it needs `?deleted=` from the narrowed query. `transactions/page.tsx` did not change.
+
+- [x] **Step 3: Run the gates, measure, commit**
 
 Run the gates. Run `measure:nav` and paste the lines in the «After B» column.
+
+On 2026-10-11 the commit of this task did not include the «After B» column. The measurement runs with Task 5, on one build for Part A and Part B. The e2e specs `auth`, `shell` and `transactions` passed after this step.
 
 ```bash
 git add -A apps/web
