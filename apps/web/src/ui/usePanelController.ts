@@ -2,16 +2,14 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { exited, followed, type PanelRules, type PanelView, shownOf, went } from './panelView';
 
 /** `Panel`'s own exit: the panel leaves the screen once it has played. */
 const EXIT_MS = 150;
 
-export interface PanelConfig<S> {
+export interface PanelConfig<S> extends PanelRules<S> {
   /** What a query opens. */
   parse: (search: URLSearchParams) => S;
-  same: (a: S, b: S) => boolean;
-  isNone: (state: S) => boolean;
-  none: S;
   /**
    * The state `href` opens when only the panel changes, or null for a navigation (and for a form
    * the page cannot show in place). A close is `{ state: none }`, not null.
@@ -20,23 +18,10 @@ export interface PanelConfig<S> {
     current: { pathname: string; search: URLSearchParams },
     href: string,
   ) => { state: S } | null;
-  /**
-   * `next` takes the place of `previous`, and what `previous` held is spent: `epoch` counts up.
-   * Transazioni's new form is spent when it leaves the screen, so the next opening is a new draft.
-   */
-  spends?: (previous: S, next: S) => boolean;
   exitMs?: number;
 }
 
-export interface PanelView<S> {
-  panel: S;
-  /** The exit is playing: the panel is still in the DOM, and the list already takes its room back. */
-  closing: boolean;
-  /** Opened or closed from the keyboard: no motion. */
-  instant: boolean;
-  /** How many times a panel was spent (`PanelConfig.spends`): a key for what must start afresh. */
-  epoch: number;
-}
+export type { PanelView };
 
 export type PanelGo = (href: string, options?: { replace?: boolean; instant?: boolean }) => boolean;
 
@@ -100,53 +85,33 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
   // The panel's column: a focus left in it is in a panel that is gone or hidden.
   const side = useRef<HTMLDivElement>(null);
 
-  /** The epoch once `next` takes the place of the panel of `current`. Pure: it runs in the updaters. */
-  const epochAfter = useCallback(
-    (current: PanelView<S>, next: S): number =>
-      configRef.current.spends?.(current.panel, next) === true ? current.epoch + 1 : current.epoch,
-    [],
-  );
-
-  /** What the person sees: a panel that plays its exit is already closed. */
-  const shownOf = useCallback(
-    (current: PanelView<S>): S => (current.closing ? configRef.current.none : current.panel),
-    [],
-  );
-
   /** Before the panel opens or closes: keep the focus's way back. */
-  const track = useCallback(
-    (next: S) => {
-      const { isNone } = configRef.current;
-      const shown = shownOf(viewRef.current);
-      if (isNone(shown) && !isNone(next)) {
-        const active = document.activeElement;
-        opener.current = active === document.body ? null : active;
-        returnTo.current = null;
-      } else if (!isNone(shown) && isNone(next)) {
-        returnTo.current =
-          opener.current?.isConnected === true
-            ? opener.current
-            : document.querySelector('#content a[aria-current="true"]');
-        opener.current = null;
-      }
-    },
-    [shownOf],
-  );
+  const track = useCallback((next: S) => {
+    const { isNone } = configRef.current;
+    const shown = shownOf(viewRef.current, configRef.current);
+    if (isNone(shown) && !isNone(next)) {
+      const active = document.activeElement;
+      opener.current = active === document.body ? null : active;
+      returnTo.current = null;
+    } else if (!isNone(shown) && isNone(next)) {
+      returnTo.current =
+        opener.current?.isConnected === true
+          ? opener.current
+          : document.querySelector('#content a[aria-current="true"]');
+      opener.current = null;
+    }
+  }, []);
 
   /** A URL this component did not write (a navigation, Back): the panel follows it, with no motion. */
   const follow = useCallback(
     (query: string) => {
-      const { parse, same } = configRef.current;
-      const next = parse(new URLSearchParams(query));
-      if (same(next, shownOf(viewRef.current))) return;
+      const config = configRef.current;
+      const next = config.parse(new URLSearchParams(query));
+      if (config.same(next, shownOf(viewRef.current, config))) return;
       track(next);
-      setView((current) =>
-        same(next, shownOf(current))
-          ? current
-          : { panel: next, closing: false, instant: true, epoch: epochAfter(current, next) },
-      );
+      setView((current) => followed(current, next, configRef.current));
     },
-    [track, shownOf, epochAfter],
+    [track],
   );
 
   // A new query in `useSearchParams`. One that `go` wrote and has since replaced is old: the panel
@@ -180,20 +145,14 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
 
   const go = useCallback<PanelGo>(
     (href, options = {}) => {
-      const { onlyChange, isNone } = configRef.current;
+      const { onlyChange } = configRef.current;
       const here = locationQuery();
       const result = onlyChange({ pathname, search: new URLSearchParams(here) }, href);
       if (result === null) return false;
       const next = result.state;
       const instant = options.instant === true;
       track(next);
-      setView((current) => {
-        if (isNone(next)) {
-          return isNone(current.panel) ? current : { ...current, closing: true, instant };
-        }
-        // The same panel again while its own exit plays takes it back: the close is reversed.
-        return { panel: next, closing: false, instant, epoch: epochAfter(current, next) };
-      });
+      setView((current) => went(current, next, instant, configRef.current));
       // The selected row clicked again: the same URL is not a second history entry.
       const target = searchOf(href);
       if (target !== here) {
@@ -203,7 +162,7 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
       }
       return true;
     },
-    [pathname, track, epochAfter],
+    [pathname, track],
   );
 
   // The exit has played: the panel leaves the screen, unless something opened again meanwhile.
@@ -211,18 +170,11 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
     if (!view.closing) return;
     const closed = view.panel;
     const timer = setTimeout(
-      () => {
-        const { none } = configRef.current;
-        setView((current) =>
-          current.closing && current.panel === closed
-            ? { ...current, panel: none, closing: false, epoch: epochAfter(current, none) }
-            : current,
-        );
-      },
+      () => setView((current) => exited(current, closed, configRef.current)),
       view.instant ? 0 : (configRef.current.exitMs ?? EXIT_MS),
     );
     return () => clearTimeout(timer);
-  }, [view.closing, view.panel, view.instant, epochAfter]);
+  }, [view.closing, view.panel, view.instant]);
 
   // The panel has left: the focus, which was in it, goes back where it came from. Not when the
   // person has put it somewhere else meanwhile. A focus still in the side counts as lost: React
@@ -242,5 +194,5 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
     target.focus();
   }, [view.panel]);
 
-  return { view, viewRef, go, shown: shownOf(view), side };
+  return { view, viewRef, go, shown: shownOf(view, config), side };
 }
