@@ -511,11 +511,13 @@ git commit -m "feat(web): loading boundaries show a skeleton while a page loads"
 
 ### Task 5: Measure Part A
 
-- [ ] **Step 1: On a new production build, run `pnpm --filter web measure:nav http://localhost:3100`**
+- [x] **Step 1: On a new production build, run `pnpm --filter web measure:nav http://localhost:3100`**
 
 Expected: for the two tab inputs, «feedback» is less than about 50 ms. For the chip and the period inputs, «feedback» is about 150 ms (the bar delay) if «settled» is longer. When «settled» is shorter, «feedback» is about equal to «settled». Paste the lines in the «After A» column.
 
-- [ ] **Step 2: Commit the numbers**
+On 2026-10-11 the numbers are in the «Measurements» section. They are for commit `ce1e8f5d` with the `data-skeleton` marker of commit `2036793c`, and for the two parts together in the «After B» column (commit `e05a4503`).
+
+- [x] **Step 2: Commit the numbers**
 
 ```bash
 git add docs/superpowers/plans/2026-10-11-web-navigation-feel.md
@@ -1201,18 +1203,29 @@ git commit -m "docs: record the web navigation work and what stays open"
 
 | Input (1440px, CPU 4×) | Before | After A | After B | After C |
 | --- | --- | --- | --- | --- |
-| Tab Conti → Stats, feedback / settled | 93 / 93 ms | | | |
-| Tab Home → Transazioni, feedback / settled | 156 / 156 ms | | | |
-| Chip on Transazioni, feedback / settled | 109 / 109 ms | | | |
-| Period ‹ on Transazioni, feedback / settled | 107 / 107 ms | | | |
+| Tab Conti → Stats, feedback / settled | 93 / 93 ms | 19 / 119 ms | 19 / 119 ms | |
+| Tab Home → Transazioni, feedback / settled | 156 / 156 ms | 19 / 397 ms | 19 / 202 ms | |
+| Chip on Transazioni, feedback / settled | 109 / 109 ms | 62 / 118 ms | 60 / 118 ms | |
+| Period ‹ on Transazioni, feedback / settled | 107 / 107 ms | 20 / 146 ms | 20 / 145 ms | |
 
-Each cell is the median of five runs. Times are in ms from the click.
+Each cell is the median of five runs. In the After columns it is the median of three such medians. Times are in ms from the click.
 
 - The runs used a production build, a local server and a local database. The CPU was four times slower.
 - The Before runs were on 2026-10-11, on the code of commit `1d008060`. This is the code before Part A.
 - A second run of the same script gave 102, 178, 122 and 135 ms. Expect a difference of about 20 ms between runs.
+- The After A runs used commit `ce1e8f5d` in a temporary worktree. They used the scripts of commit `e05a4503` and one more change: `data-skeleton=""` on `PageSkeleton`, as in commit `2036793c`. Without this marker `measure-nav` cannot see a skeleton. Then «settled» is the time of the skeleton, not of the content.
+- After A: the script ran 3 times (5 runs each) on one build. Each cell is the median of the 3 medians. «settled» for Home → Transazioni was 397, 396 and 397 ms. For Conti → Stats it was 114, 123 and 119 ms.
+- After B: the script ran 3 times (5 runs each) on one build of commit `e05a4503` in the main checkout. Each cell is the median of the 3 medians. A fourth run, and a build of the same commit in a worktree, gave the same values within 20 ms.
+- Both builds used the same machine, the same development database (161 rows) and port 3100. One server ran at a time.
+- A control build of commit `1d008060` ran on the same day. It gave 95 / 95, 91 / 91 and 92 / 92 ms for Conti → Stats, and 157 to 166 ms for Home → Transazioni. This matches the Before column. The machine state is the same.
+- «settled» is the time when the real page replaces the skeleton. With a `loading.tsx`, «settled» can be longer than Before while «feedback» is much shorter. This is the case here.
+- «feedback» went from 93 and 156 ms to about 19 ms for the two tabs. It went from 109 to 60 ms for the chip, and from 107 to 20 ms for the period arrow.
+- «settled» is worse than Before in every row. After B it is longer by 26 ms (Conti → Stats), 46 ms (Home → Transazioni), 9 ms (chip) and 38 ms (period arrow).
+- After A, Home → Transazioni settled in 397 ms. This is 241 ms longer than Before. Part B removed 195 ms of it. It did not go back to 156 ms.
+- Task 5 expected «feedback» of about 150 ms for the chip and the period arrow. The real values are 60 ms and 20 ms. The bar shows earlier than expected.
+- After C is empty. Part C fills it.
 
-Queries per request on `/transactions`: before 5, after 3. The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times.
+Queries per request on `/transactions`: before 5, after A not measured, after B 3 (measured in Task 6). The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times.
 
 ## Risks
 
