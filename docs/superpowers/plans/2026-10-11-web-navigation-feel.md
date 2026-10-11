@@ -41,7 +41,7 @@
 | `src/ui/NavPending.tsx` | Create | `NavPendingProvider`, `LinkPending`, `useNavTransition`. Keeps the count of pending navigations. It imports `useLinkStatus` from `next/link`. |
 | `src/ui/NavPending.module.css` | Create | The progress bar. It shows after a short delay. |
 | `src/ui/PageSkeleton.tsx`, `PageSkeleton.module.css` | Create | The block shapes for `loading.tsx`. |
-| `app/(app)/loading.tsx`, `app/(app)/profile/loading.tsx`, `app/(app)/admin/loading.tsx` | Create | Suspense boundaries for a change of page. |
+| `app/(app)/{home,transactions,stats,accounts,profile,admin}/loading.tsx` | Create | Suspense boundaries for a change of page. |
 | `app/(app)/layout.tsx` | Modify | Mount `NavPendingProvider`. Read «admin» from the session. |
 | `src/server/auth/session.ts`, `currentUser.ts`, `admin.ts` | Modify | Read `role` and `banned` from the session user. Remove two queries. |
 | `src/server/page/context.ts` | Modify | Start the independent awaits together. |
@@ -419,11 +419,12 @@ git commit -m "feat(web): search, keys and panel close show the navigation bar"
 ### Task 4: `loading.tsx` for a change of page
 
 **Files:**
-- Create: `apps/web/src/ui/PageSkeleton.tsx`, `apps/web/src/ui/PageSkeleton.module.css`, `apps/web/app/(app)/loading.tsx`, `apps/web/app/(app)/profile/loading.tsx`, `apps/web/app/(app)/admin/loading.tsx`
+- Create: `apps/web/src/ui/PageSkeleton.tsx`, `apps/web/src/ui/PageSkeleton.module.css`, a `loading.tsx` in each of `apps/web/app/(app)/home`, `transactions`, `stats`, `accounts`, `profile` and `admin`
+- Modify: `apps/web/e2e/transactions.spec.ts` (the toast locator, see step 5)
 
 `loading.tsx` puts the page in a Suspense boundary. The layout stays mounted, so a change of tab shows the shell and the skeleton at once. A change of query on the **same** page (a chip, the period) does not show the skeleton. For that case, the bar of Task 2 shows.
 
-- [ ] **Step 1: Write `PageSkeleton.tsx`**
+- [x] **Step 1: Write `PageSkeleton.tsx`**
 
 ```tsx
 import styles from './PageSkeleton.module.css';
@@ -443,7 +444,7 @@ export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
 }
 ```
 
-- [ ] **Step 2: Write `PageSkeleton.module.css`**
+- [x] **Step 2: Write `PageSkeleton.module.css`**
 
 ```css
 .page {
@@ -482,11 +483,11 @@ export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
 
 The token names come from `packages/ui/src/tokens.ts`. `radii.card` gives `--radius-card`, and the palette value `raised` gives `--color-raised`. The first version of this plan used `--radius-md` and `--color-surface-2`. These tokens do not exist. Do not add a value.
 
-- [ ] **Step 3: Write the three `loading.tsx` files**
+- [x] **Step 3: Write the six `loading.tsx` files**
 
 ```tsx
-// app/(app)/loading.tsx
-import { PageSkeleton } from '../../src/ui/PageSkeleton';
+// app/(app)/home/loading.tsx, and the same in transactions, stats and accounts
+import { PageSkeleton } from '../../../src/ui/PageSkeleton';
 
 export default function Loading() {
   return <PageSkeleton />;
@@ -495,11 +496,17 @@ export default function Loading() {
 
 `profile/loading.tsx` and `admin/loading.tsx` render `<PageSkeleton blocks={3} />`. The sub-navigation of these two layouts stays on the screen, because the layout is above the boundary.
 
-- [ ] **Step 4: Check by hand**
+> **Caution:** Do not put a `loading.tsx` in `(app)`. The first version of this plan did. That boundary also wraps `admin/layout.tsx`. The `notFound()` of `requireWebAdmin` then streams after the shell, and `/admin` answers 200 to a member. The e2e test «/admin answers not found» found this. A redirect in a page under a boundary (`readPage` to `/onboarding`, `/profile`, `/admin`) also streams. The browser still follows it, but the status is 200, not 307.
+
+- [x] **Step 4: Check by hand**
 
 Build and start on port 3100. Set the throttle to «Slow 4G». Click Home → Conti. Make sure that the shell and the skeleton show at once, and then the page. In the Network tab, make sure that the prefetch of a tab link is small (no user data).
 
-- [ ] **Step 5: Run the gates and commit**
+On 2026-10-11 a Playwright script did this check, with the same throttle as Task 3 step 2. It was not committed. Home → Conti, Home → Profilo, `N`, Profilo → Tag and Admin → Inviti showed the skeleton 70 to 115 ms after the click, and the URL changed at the same time. The page came 0.6 to 4.8 s later. The sub-navigation stayed. The bar did not show, because the navigation ends when the skeleton shows. A chip, a period arrow, the search and `E` showed no skeleton, only the bar. With «reduce motion», the blocks did not pulse. A tab prefetch was 320 to 1,870 bytes and had no account name in it. In headless Chromium, the browser aborted the prefetch requests. Thus the script read the prefetch responses with `fetch` and the same headers.
+
+- [x] **Step 5: Run the gates and commit**
+
+Also run `rtk proxy pnpm --filter web e2e shell transactions`. The shell has an empty `role="status"` element now (Task 2). Thus `getByRole('status')` alone finds two elements. In `transactions.spec.ts`, find the toast with `.filter({ hasText })`, as `e2e/support/auth.ts` does.
 
 ```bash
 git add -A apps/web
