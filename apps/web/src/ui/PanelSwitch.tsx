@@ -3,8 +3,8 @@
 import { Fragment, type ReactNode, useCallback, useMemo } from 'react';
 import { type CloseFrom, Panel } from './Panel';
 import { type PanelNav, PanelNavContext } from './PanelNav';
+import styles from './PanelSwitch.module.css';
 import { type PanelParams, panelHrefFor, panelKeyFromSearch, panelOnlyChange } from './panelUrl';
-import { SlotPortal } from './SlotPanel';
 import { usePanelController } from './usePanelController';
 
 export interface PanelSpec {
@@ -27,7 +27,11 @@ interface Props {
   closeLabel: string;
   /** The page's list: the rows' links are `PanelLink`s, which read the controller. */
   children?: ReactNode;
-  /** `slot`: render into the `#profile-panel` slot of a `SubnavLayout`. Otherwise render in place. */
+  /**
+   * `slot`: the page is a section of a `SubnavLayout`, and the panel takes the layout's trailing
+   * column. `PanelSwitch` must then be the page's root, the direct child of the section. Otherwise
+   * the panel renders in place, after `children`.
+   */
   slot?: boolean;
 }
 
@@ -47,7 +51,7 @@ export function PanelSwitch({
 }: Props) {
   const known = (key: string | null): string | null =>
     key !== null && panels[key] !== undefined ? key : null;
-  const { view, go, shown } = usePanelController<string | null>({
+  const { view, go, shown, side } = usePanelController<string | null>({
     parse: (query) => known(panelKeyFromSearch(query, params)),
     same: (a, b) => a === b,
     isNone: (key) => key === null,
@@ -95,10 +99,25 @@ export function PanelSwitch({
       </Panel>
     );
 
+  // In a `SubnavLayout`, the section lets these two take its column and the slot's (`:has`), so the
+  // server renders the panel beside the list: a load of `?tag=ID` paints it, also with JavaScript off.
   return (
     <PanelNavContext value={nav}>
-      {children}
-      {slot ? <SlotPortal>{panel}</SlotPortal> : panel}
+      {slot ? (
+        <>
+          <div className={styles.list} data-panel-switch="">
+            {children}
+          </div>
+          <div className={styles.side} ref={side}>
+            {panel}
+          </div>
+        </>
+      ) : (
+        <>
+          {children}
+          {panel}
+        </>
+      )}
     </PanelNavContext>
   );
 }

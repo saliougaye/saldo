@@ -1031,6 +1031,13 @@ On 2026-10-11 the code differs from the sketch in these points. The code in `app
 
 In `SlotPanel.tsx`, export a `SlotPortal({ children })` that does the `useState`/`useEffect`/`createPortal` part. Make `SlotPanel` render `<SlotPortal><Panel {...props} /></SlotPortal>`. The behaviour does not change for the sections that still use `ProfilePanel`.
 
+On 2026-10-11 the review found a problem with the portal in `PanelSwitch`. A portal renders nothing on the server and on the hydration render. Thus a load of `?tag=ID` painted the page without the panel, then the column appeared, and the panel slid in. With JavaScript off the panel never showed. `PanelSwitch` with `slot` does not use `SlotPortal` now:
+
+- It renders `<div data-panel-switch>` with the list and `<div>` with the panel (`PanelSwitch.module.css` copies the rules of `.section` and `.slot`).
+- In `SubnavLayout.module.css`, `.section:has(> [data-panel-switch])` is `display: contents`. Thus the two elements take the section column and the slot column of the layout grid, and the server renders the panel.
+- `PanelSwitch` must be the root of the page, the direct child of the section.
+- The pages that still use `SlotPanel` keep the portal. Nothing matches the new rule on these pages, so they do not change.
+
 - [x] **Step 3: Run the gates and commit**
 
 Run the gates. No page uses `PanelSwitch` yet, so only the types and the lint check it.
