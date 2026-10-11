@@ -763,9 +763,9 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <p>The script <code>measure-nav</code> opens a signed-in page at 1440px. Chrome runs with the CPU four times slower. For each input the script records two times from the click:</p>
       <ol class="steps">
         <li><b>feedback</b>: the first frame with a change on the page. A <code>MutationObserver</code> on <code>document.body</code> records the time.</li>
-        <li><b>settled</b>: the time when the new content shows and the network is idle.</li>
+        <li><b>settled</b>: the first moment when the URL is new and <code>main</code> holds no skeleton. The root of a skeleton has the attribute <code>data-skeleton</code>. The script checks this in the same callback as «feedback», and in each frame. Only the Accounts page has a <code>main h1</code>, so the script does not use a new title.</li>
       </ol>
-      <p>Before the change, «feedback» is about equal to «settled». After part A, «feedback» for a tab must be less than about 50 ms. For a chip or a period arrow, «feedback» is about 150 ms (the delay of the bar) when the server is slower than that.</p>
+      <p>Before the change, «feedback» is equal to «settled», because nothing shows before the new page. After part A, «feedback» for a tab must be less than about 50 ms. For a chip or a period arrow, «feedback» is about 150 ms (the delay of the bar) when the server is slower than that.</p>
       <div class="code">
         <pre><code>pnpm --filter web measure:nav http://localhost:3100</code></pre>
         <button class="copy" type="button" aria-label="Copy command" data-copy="pnpm --filter web measure:nav http://localhost:3100">

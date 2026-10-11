@@ -77,72 +77,19 @@ Move `COOKIE`, `LOCAL_HOSTS`, `onlyUser`, `signIn` and the function that deletes
 
 - [x] **Step 3: Write `measure-nav.ts`**
 
-The script opens a signed-in page on a production build. It makes the CPU four times slower. Then it runs four inputs. For each input, it records two times from the click:
+The script opens a signed-in page on a production build. It makes the CPU four times slower. Then it runs four inputs, five times each. For each run, it records two times from the click:
 
-- **feedback**: the first frame with a change on the page. A `MutationObserver` on `document.body` (attributes, childList, subtree) records `performance.now()` at the first mutation after the click.
-- **settled**: the first frame that shows the new content. For a tab, that is the new `<h1>` text or the new `pathname`. For a chip, `aria-current="true"` moves to the new chip.
+- **feedback**: the first change in `document.body` (attributes, childList, subtree) after the first `pointerdown`.
+- **settled**: the first moment when the URL differs from the URL before the click, and `main` holds no `[data-skeleton]`. `PageSkeleton` puts `data-skeleton` on its root. Only Conti has a `main h1`, so a new `h1` cannot be the test for the other tabs.
 
-```ts
-import { chromium } from '@playwright/test';
-import { onlyUser, openSession } from './lib/devSession';
+The code is in `apps/web/scripts/measure-nav.ts`. The sign-in helpers are in `apps/web/scripts/lib/devSession.ts`. Read both files: they are the source. Keep these rules when you change them:
 
-const base = process.argv[2] ?? 'http://localhost:3100';
-
-const INPUTS = [
-  { label: 'tab Conti → Stats', from: '/accounts', act: 'nav a[href="/stats"]:visible' },
-  { label: 'tab Home → Transazioni', from: '/home', act: 'nav a[href="/transactions"]:visible' },
-  { label: 'chip on Transazioni', from: '/transactions', act: 'main a[href*="direction=expense"]:visible' },
-  { label: 'period ‹ on Transazioni', from: '/transactions', act: 'main a[aria-label][href*="p="]:visible' },
-];
-
-const PROBE = `(() => {
-  window.__marks = { feedback: null };
-  new MutationObserver(() => {
-    if (window.__marks.feedback === null) window.__marks.feedback = performance.now();
-  }).observe(document.body, { attributes: true, childList: true, subtree: true });
-})()`;
-
-async function main() {
-  const userId = await onlyUser(process.argv[3]);
-  const session = await openSession(userId);
-  const browser = await chromium.launch();
-  try {
-    for (const input of INPUTS) {
-      const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-      await context.addCookies([session.cookie(base)]);
-      const page = await context.newPage();
-      const cdp = await context.newCDPSession(page);
-      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-      await page.goto(base + input.from);
-      await page.waitForLoadState('networkidle');
-      await page.evaluate(PROBE);
-      const started = await page.evaluate(() => performance.now());
-      await page.locator(input.act).first().click();
-      await page.waitForLoadState('networkidle');
-      const settled = await page.evaluate(() => performance.now());
-      const feedback = await page.evaluate(() => window.__marks.feedback);
-      console.log(
-        `${input.label.padEnd(28)} feedback ${Math.round((feedback ?? settled) - started)} ms · settled ${Math.round(settled - started)} ms`,
-      );
-      await context.close();
-    }
-  } finally {
-    await browser.close();
-    await session.close();
-  }
-}
-
-void main();
-```
-
-The code above is a sketch. The real `measure-nav.ts` differs in these points:
-
-- `devSession.ts` exports `COOKIE`, `LOCAL_HOSTS`, `assertLocalOnly(base)`, `onlyUser`, `signIn(userId, id, userAgent)`, `deleteSession` and `openSession(userId, userAgent, beforeClose)`. `openSession` returns `{ cookie(base), close() }`. `close` deletes the session and closes the database. `measure-nav.ts` calls `assertLocalOnly` first, as `measure-panel.ts` does.
+- Call `assertLocalOnly(base)` first. The script signs a person in, so it runs against a local server and a local database only. `openSession` deletes the session in `close`, also after an error and after Ctrl-C.
 - The chip selector is `main a[href*="direction=expense"]:visible`. The chip links have no `type=` parameter.
-- The clock starts at the first `pointerdown`, not at a `page.evaluate` before the click. The probe is a string, so that tsx does not add its `__name` helper to it.
+- The probe is a string, so that tsx does not add its `__name` helper to it.
 - The app has a Content Security Policy without `unsafe-eval`. `waitForFunction` with a string fails. Pass a function.
-- «settled» is a predicate in the page, checked each frame. It is a new URL for a tab and for a period arrow, and a new `aria-current` chip for a chip. `waitForLoadState('networkidle')` after the click can return before the navigation starts.
-- Each input runs five times in a new context. The line shows the median and every run.
+- Test «settled» in the `MutationObserver` callback, where «feedback» is stamped. Test it again in each frame, because a URL change is not a DOM mutation. Do not test it only in the frame: that adds up to one frame to «settled» only.
+- Do not use `waitForLoadState('networkidle')` after the click. It can return before the navigation starts.
 
 - [x] **Step 4: Add the script**
 
@@ -157,7 +104,7 @@ cd apps/web && PUBLIC_URL=http://localhost:3100 pnpm exec next start -p 3100 &
 pnpm --filter web measure:nav http://localhost:3100
 ```
 
-Expected: four lines. «feedback» is close to «settled», because nothing shows before the server answers. On a local server, the server answers in about 60 ms, so «feedback» is 3 to 40 ms before «settled». The first change in the page is the active tab that moves, or the chip that gets `aria-current`. Paste the four lines in the «Measurements» section at the end of this file, in the «Before» column.
+Expected: four lines. «feedback» is equal to «settled», because nothing shows before the server answers. The first change in the page is the new page itself. Paste the four lines in the «Measurements» section at the end of this file, in the «Before» column.
 
 - [x] **Step 6: Commit**
 
@@ -560,6 +507,16 @@ let n = 0;
 ```
 
 Run `next start` and load `/transactions` one time. Count the lines. Write the count and the statements in «Queries per request on `/transactions`: before». Then run `git checkout apps/web/src/server/db/client.ts`.
+
+Task 1 measured this on the code of commit `1d008060` (the count is the same in two runs). A request after the first one runs five queries:
+
+- the session row;
+- the user row of the session;
+- `select "banned"` (`isRevoked`);
+- the `sync_rows` of the user (`loadUserData`);
+- `select "role", "banned"` (`isAdmin`, in the layout).
+
+The first request after a start runs two more: an OAuth client read and the update of the session. Count a request after the first one. Tick this box when you have measured it on the code before step 3.
 
 - [ ] **Step 2: Write the failing test**
 
@@ -1174,14 +1131,18 @@ git commit -m "docs: record the web navigation work and what stays open"
 
 | Input (1440px, CPU 4×) | Before | After A | After B | After C |
 | --- | --- | --- | --- | --- |
-| Tab Conti → Stats, feedback / settled | 85 / 120 ms | | | |
-| Tab Home → Transazioni, feedback / settled | 142 / 175 ms | | | |
-| Chip on Transazioni, feedback / settled | 102 / 105 ms | | | |
-| Period ‹ on Transazioni, feedback / settled | 94 / 126 ms | | | |
+| Tab Conti → Stats, feedback / settled | 93 / 93 ms | | | |
+| Tab Home → Transazioni, feedback / settled | 156 / 156 ms | | | |
+| Chip on Transazioni, feedback / settled | 109 / 109 ms | | | |
+| Period ‹ on Transazioni, feedback / settled | 107 / 107 ms | | | |
 
-Each cell is the median of five runs, in ms from the click, on a production build and a local server, with the CPU four times slower. The Before runs were on 2026-10-11, on commit `1d008060`.
+Each cell is the median of five runs. Times are in ms from the click.
 
-Queries per request on `/transactions`: before 5, after ___. The five queries are: the session row, the user row of the session, `select "banned"` (`isRevoked`), the `sync_rows` of the user (`loadUserData`), and `select "role", "banned"` (`isAdmin` in the layout). The first request after a start has two more: an OAuth client read and the update of the session.
+- The runs used a production build, a local server and a local database. The CPU was four times slower.
+- The Before runs were on 2026-10-11, on the code of commit `1d008060`. This is the code before Part A.
+- A second run of the same script gave 102, 178, 122 and 135 ms. Expect a difference of about 20 ms between runs.
+
+Queries per request on `/transactions`: before 5, after ___. The list of the five queries is in Task 6 step 1.
 
 ## Risks
 

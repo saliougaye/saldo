@@ -13,9 +13,13 @@
  *
  * - feedback: the first change in `document.body` (attributes, childList, subtree) after the
  *   first `pointerdown`.
- * - settled: the first frame where `settled` is true. For a tab and for a period arrow, that is a
- *   new URL; for a chip, an `aria-current` chip that was not on the page before. A URL changes when
- *   the navigation commits: with a `loading.tsx` that is the skeleton, not the data.
+ * - settled: the first moment when the URL (path and query) differs from the one before the click
+ *   AND `main` holds no `[data-skeleton]` (the root of `PageSkeleton`, drawn by a `loading.tsx`).
+ *   A URL changes when the navigation commits. Before a `loading.tsx` exists, that commit already
+ *   holds the content. After it, the skeleton commits first, so the second condition waits for the
+ *   content. The predicate runs in the `MutationObserver` callback, where `feedback` is stamped
+ *   too, and on each frame as a fallback (a URL change is not a DOM mutation). Only Conti has a
+ *   `main h1`, so a new `h1` cannot be the test for the other tabs.
  */
 import { type Browser, chromium } from '@playwright/test';
 import { closeDb } from '../src/server/db/client';
@@ -29,37 +33,26 @@ interface Input {
   from: string;
   /** The element to click. */
   act: string;
-  /** A page expression: true when the new content shows. `before` is the state before the click. */
-  settled: string;
 }
 
-const URL_CHANGED = 'location.pathname + location.search !== before.url';
-
 const INPUTS: Input[] = [
-  {
-    label: 'tab Conti → Stats',
-    from: '/accounts',
-    act: 'nav a[href="/stats"]:visible',
-    settled: URL_CHANGED,
-  },
+  { label: 'tab Conti → Stats', from: '/accounts', act: 'nav a[href="/stats"]:visible' },
   {
     label: 'tab Home → Transazioni',
     from: '/home',
     act: 'nav a[href="/transactions"]:visible',
-    settled: URL_CHANGED,
   },
   {
     label: 'chip on Transazioni',
     from: '/transactions',
     act: 'main a[href*="direction=expense"]:visible',
-    settled: `document.querySelectorAll('main a[aria-current="true"]').length > before.current`,
   },
   {
     label: 'period ‹ on Transazioni',
     from: '/transactions',
-    // The ‹ comes first in the stepper, and the only links with a label in `main` are the stepper's.
+    // A link with a label and a `p=` period in its href: the ‹ of the stepper (the › may be a
+    // span). The other links with a label in `main` do not carry `p=`.
     act: 'main a[aria-label][href*="p="]:visible',
-    settled: URL_CHANGED,
   },
 ];
 
@@ -70,26 +63,29 @@ interface Marks {
 }
 
 /** Runs in the page. A string, so that tsx does not add its `__name` helper to it. */
-const probe = (settled: string): string => `(() => {
-  const before = {
-    url: location.pathname + location.search,
-    current: document.querySelectorAll('main a[aria-current="true"]').length,
-  };
+const PROBE = `(() => {
+  const url = () => location.pathname + location.search;
+  const before = url();
   const marks = { start: null, feedback: null, settled: null };
   window.__marks = marks;
+  const check = () => {
+    if (marks.start === null || marks.settled !== null) return;
+    if (url() !== before && document.querySelector('main [data-skeleton]') === null) {
+      marks.settled = performance.now();
+    }
+  };
   document.addEventListener('pointerdown', (event) => {
     if (marks.start === null) marks.start = event.timeStamp;
   }, { capture: true });
   new MutationObserver(() => {
     if (marks.start !== null && marks.feedback === null) marks.feedback = performance.now();
+    check();
   }).observe(document.body, { attributes: true, childList: true, subtree: true });
-  const check = () => {
-    if (marks.start !== null && marks.settled === null && (${settled})) {
-      marks.settled = performance.now();
-    }
-    if (marks.settled === null) requestAnimationFrame(check);
+  const frame = () => {
+    check();
+    if (marks.settled === null) requestAnimationFrame(frame);
   };
-  requestAnimationFrame(check);
+  requestAnimationFrame(frame);
 })()`;
 
 function median(values: number[]): number {
@@ -100,7 +96,7 @@ function median(values: number[]): number {
 async function run(
   browser: Browser,
   base: string,
-  cookie: { name: string; value: string; url: string },
+  cookie: ReturnType<DevSession['cookie']>,
   input: Input,
 ): Promise<{ feedback: number; settled: number }> {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -111,16 +107,17 @@ async function run(
     await page.waitForTimeout(1500);
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-    await page.evaluate(probe(input.settled));
+    await page.evaluate(PROBE);
     await page.locator(input.act).first().click();
     // A function, not a string: the app's CSP forbids the `eval` that Playwright uses for a string.
+    // `__marks?.` so that a full reload shows «No marks», not a TypeError.
     await page.waitForFunction(
-      () => (window as unknown as { __marks: Marks }).__marks.settled !== null,
+      () => (window as unknown as { __marks?: Marks }).__marks?.settled != null,
       undefined,
-      { timeout: TIMEOUT },
+      { timeout: TIMEOUT, polling: 100 },
     );
-    const marks = await page.evaluate(() => (window as unknown as { __marks: Marks }).__marks);
-    if (marks.start === null || marks.settled === null) throw new Error('No marks: page reloaded?');
+    const marks = await page.evaluate(() => (window as unknown as { __marks?: Marks }).__marks);
+    if (marks?.start == null || marks.settled === null) throw new Error('No marks: page reloaded?');
     return {
       feedback: (marks.feedback ?? marks.settled) - marks.start,
       settled: marks.settled - marks.start,

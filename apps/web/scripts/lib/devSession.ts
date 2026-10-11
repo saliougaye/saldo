@@ -82,10 +82,13 @@ export async function openSession(
   beforeClose?: () => Promise<void>,
 ): Promise<DevSession> {
   const id = randomUUID();
+  let signing: Promise<string> | undefined;
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
     closing ??= (async () => {
       await beforeClose?.().catch(() => undefined);
+      // A Ctrl-C during the insert: wait for it, so that the delete finds the row.
+      await signing?.catch(() => undefined);
       await deleteSession(id);
       await closeDb();
     })();
@@ -94,7 +97,8 @@ export async function openSession(
   process.once('SIGINT', () => {
     void close().finally(() => process.exit(130));
   });
-  const value = await signIn(userId, id, userAgent).catch(async (error: unknown) => {
+  signing = signIn(userId, id, userAgent);
+  const value = await signing.catch(async (error: unknown) => {
     await close();
     throw error;
   });

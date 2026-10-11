@@ -223,10 +223,13 @@ async function main(): Promise<void> {
   assertLocalOnly(base);
   let browser: Browser | undefined;
   let sessionId: string | undefined;
+  let signing: Promise<string> | undefined;
   let cleaning: Promise<void> | undefined;
   const cleanup = (): Promise<void> => {
     cleaning ??= (async () => {
       await browser?.close().catch(() => undefined);
+      // A Ctrl-C during the insert: wait for it, so that the delete finds the row.
+      await signing?.catch(() => undefined);
       if (sessionId !== undefined) {
         await deleteSession(sessionId);
       }
@@ -241,7 +244,8 @@ async function main(): Promise<void> {
     const userId = await onlyUser(process.argv[3]);
     // The id is known before the insert: a Ctrl-C during the insert still deletes the row.
     sessionId = randomUUID();
-    const cookie = await signIn(userId, sessionId, 'measure-panel');
+    signing = signIn(userId, sessionId, 'measure-panel');
+    const cookie = await signing;
     // Our `cleanup` closes the browser. Playwright's own handler would exit before the delete.
     browser = await chromium.launch({ handleSIGINT: false });
     for (const scenario of SCENARIOS) await measure(browser, base, cookie, scenario);
