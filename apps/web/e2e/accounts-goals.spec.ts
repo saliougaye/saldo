@@ -53,6 +53,17 @@ test('accounts sit in their group, a goal sits under its account, and an account
   await expect(page.getByText(t('goals.closeFirst'))).toBeVisible();
   await expect(page.getByRole('button', { name: t('accounts.archive') })).toHaveCount(0);
 
+  // The panel opens in place, but «Modifica» loads the account's own form (`?a=ID&edit`), and its
+  // ✕ goes back to the detail of that account, not to the list.
+  const risparmi = page.getByRole('complementary', { name: 'Risparmi' });
+  await risparmi.getByRole('link', { name: t('common.edit') }).click();
+  await expect(page).toHaveURL(/\/accounts\?a=[^&]+&edit$/);
+  const edit = page.getByRole('complementary', { name: t('accounts.editAccount') });
+  await expect(edit.getByLabel(t('accounts.name'), { exact: true })).toHaveValue('Risparmi');
+  await edit.getByRole('link', { name: t('common.close') }).click();
+  await expect(risparmi).toBeVisible();
+  await expect(page).toHaveURL(/\/accounts\?a=[^&]+$/);
+
   // Archive «Contanti»: a question first, then the row leaves the list.
   await listRow(page, 'Contanti').click();
   const detail = page.getByRole('complementary', { name: 'Contanti' });
