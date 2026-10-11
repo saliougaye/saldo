@@ -14,14 +14,17 @@ export interface PanelConfig<S> {
   none: S;
   /**
    * The state `href` opens when only the panel changes, or null for a navigation (and for a form
-   * the page cannot show in place).
+   * the page cannot show in place). A close is `{ state: none }`, not null.
    */
-  onlyChange: (current: { pathname: string; search: URLSearchParams }, href: string) => S | null;
+  onlyChange: (
+    current: { pathname: string; search: URLSearchParams },
+    href: string,
+  ) => { state: S } | null;
   /**
-   * `next` takes the place of the panel `previous` on screen: an open, a switch, or the end of an
-   * exit. Called in the same event as the change, so a state the page sets here renders with it.
+   * `next` takes the place of `previous`, and what `previous` held is spent: `epoch` counts up.
+   * Transazioni's new form is spent when it leaves the screen, so the next opening is a new draft.
    */
-  onChange?: (previous: S, next: S) => void;
+  spends?: (previous: S, next: S) => boolean;
   exitMs?: number;
 }
 
@@ -31,6 +34,8 @@ export interface PanelView<S> {
   closing: boolean;
   /** Opened or closed from the keyboard: no motion. */
   instant: boolean;
+  /** How many times a panel was spent (`PanelConfig.spends`): a key for what must start afresh. */
+  epoch: number;
 }
 
 export type PanelGo = (href: string, options?: { replace?: boolean; instant?: boolean }) => boolean;
@@ -77,6 +82,7 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
     panel: config.parse(new URLSearchParams(search)),
     closing: false,
     instant: false,
+    epoch: 0,
   }));
   // The handlers below read the committed view; they are not new functions on every render.
   const viewRef = useRef(view);
@@ -93,6 +99,13 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
   const returnTo = useRef<Element | null>(null);
   // The panel's column: a focus left in it is in a panel that is gone or hidden.
   const side = useRef<HTMLDivElement>(null);
+
+  /** The epoch once `next` takes the place of the panel of `current`. Pure: it runs in the updaters. */
+  const epochAfter = useCallback(
+    (current: PanelView<S>, next: S): number =>
+      configRef.current.spends?.(current.panel, next) === true ? current.epoch + 1 : current.epoch,
+    [],
+  );
 
   /** What the person sees: a panel that plays its exit is already closed. */
   const shownOf = useCallback(
@@ -123,16 +136,17 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
   /** A URL this component did not write (a navigation, Back): the panel follows it, with no motion. */
   const follow = useCallback(
     (query: string) => {
-      const { parse, same, onChange } = configRef.current;
+      const { parse, same } = configRef.current;
       const next = parse(new URLSearchParams(query));
       if (same(next, shownOf(viewRef.current))) return;
       track(next);
-      onChange?.(viewRef.current.panel, next);
       setView((current) =>
-        same(next, shownOf(current)) ? current : { panel: next, closing: false, instant: true },
+        same(next, shownOf(current))
+          ? current
+          : { panel: next, closing: false, instant: true, epoch: epochAfter(current, next) },
       );
     },
-    [track, shownOf],
+    [track, shownOf, epochAfter],
   );
 
   // A new query in `useSearchParams`. One that `go` wrote and has since replaced is old: the panel
@@ -166,19 +180,19 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
 
   const go = useCallback<PanelGo>(
     (href, options = {}) => {
-      const { onlyChange, isNone, onChange } = configRef.current;
+      const { onlyChange, isNone } = configRef.current;
       const here = locationQuery();
-      const next = onlyChange({ pathname, search: new URLSearchParams(here) }, href);
-      if (next === null) return false;
+      const result = onlyChange({ pathname, search: new URLSearchParams(here) }, href);
+      if (result === null) return false;
+      const next = result.state;
       const instant = options.instant === true;
       track(next);
-      if (!isNone(next)) onChange?.(viewRef.current.panel, next);
       setView((current) => {
         if (isNone(next)) {
           return isNone(current.panel) ? current : { ...current, closing: true, instant };
         }
         // The same panel again while its own exit plays takes it back: the close is reversed.
-        return { panel: next, closing: false, instant };
+        return { panel: next, closing: false, instant, epoch: epochAfter(current, next) };
       });
       // The selected row clicked again: the same URL is not a second history entry.
       const target = searchOf(href);
@@ -189,7 +203,7 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
       }
       return true;
     },
-    [pathname, track],
+    [pathname, track, epochAfter],
   );
 
   // The exit has played: the panel leaves the screen, unless something opened again meanwhile.
@@ -198,19 +212,17 @@ export function usePanelController<S>(config: PanelConfig<S>): PanelController<S
     const closed = view.panel;
     const timer = setTimeout(
       () => {
-        const { none, onChange } = configRef.current;
-        const current = viewRef.current;
-        if (current.closing && current.panel === closed) onChange?.(closed, none);
-        setView((latest) =>
-          latest.closing && latest.panel === closed
-            ? { ...latest, panel: none, closing: false }
-            : latest,
+        const { none } = configRef.current;
+        setView((current) =>
+          current.closing && current.panel === closed
+            ? { ...current, panel: none, closing: false, epoch: epochAfter(current, none) }
+            : current,
         );
       },
       view.instant ? 0 : (configRef.current.exitMs ?? EXIT_MS),
     );
     return () => clearTimeout(timer);
-  }, [view.closing, view.panel, view.instant]);
+  }, [view.closing, view.panel, view.instant, epochAfter]);
 
   // The panel has left: the focus, which was in it, goes back where it came from. Not when the
   // person has put it somewhere else meanwhile. A focus still in the side counts as lost: React

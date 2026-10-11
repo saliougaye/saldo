@@ -31,18 +31,11 @@ interface Props {
   slot?: boolean;
 }
 
-/** The value part of a key (`tag:ID` → `ID`): what a row's `PanelLink` gives as `selectId`. */
-function selectedIdOf(key: string | null): string | null {
-  if (key === null) return null;
-  const split = key.indexOf(':');
-  return split === -1 ? null : key.slice(split + 1);
-}
-
 /**
  * One panel at a time, chosen by the query, changed in the frame of the click
  * (`usePanelController`). The server renders the body of every panel; a click only chooses the one
  * to show. A key that is in the URL on the first render opens with the page. Rows must be
- * `PanelLink`s with a `selectId` equal to the key's value.
+ * `PanelLink`s with a `selectId` equal to their whole key (`tag:ID`), so `a:ID` and `g:ID` differ.
  */
 export function PanelSwitch({
   baseHref,
@@ -61,13 +54,18 @@ export function PanelSwitch({
     none: null,
     onlyChange: (current, href) => {
       const next = panelOnlyChange(current, href, params);
-      return next === null || (next.key !== null && known(next.key) === null) ? null : next.key;
+      // A close is `{ state: null }`; null is a navigation.
+      return next === null || (next.key !== null && known(next.key) === null)
+        ? null
+        : { state: next.key };
     },
   });
 
-  const key = view.panel;
+  // A refresh can drop the open key from `panels` (a deleted row) while the URL keeps it: then
+  // nothing shows, and no row is selected.
+  const key = known(view.panel);
   const spec = key === null ? undefined : panels[key];
-  const selectedId = selectedIdOf(shown);
+  const selectedId = known(shown);
   const nav = useMemo<PanelNav>(() => ({ selectedId, go }), [selectedId, go]);
   const closeHref = panelHrefFor(baseHref, spec?.closeTo ?? null, params);
   // Stable across renders: `Panel` subscribes Esc through it. Esc closes with no motion; the ✕

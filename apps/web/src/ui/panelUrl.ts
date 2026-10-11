@@ -7,7 +7,8 @@ export interface PanelParams {
   readonly values: readonly string[];
   /**
    * The precedence the page already has, for a page that lets a value win over a flag (Conti lets
-   * `?a=` win over `?archived`). Names that it leaves out come after it, flags first.
+   * `?a=` win over `?archived`). Names that it leaves out come after it, flags first. A name that
+   * is not in `flags` or `values` is not read.
    */
   readonly order?: readonly string[];
 }
@@ -16,8 +17,10 @@ export interface PanelParams {
 const ORIGIN = 'http://panel.invalid';
 
 /** Every panel parameter, first the one that wins. */
-const panelNames = (params: PanelParams): ReadonlySet<string> =>
-  new Set([...(params.order ?? []), ...params.flags, ...params.values]);
+function panelNames(params: PanelParams): ReadonlySet<string> {
+  const own = [...params.flags, ...params.values];
+  return new Set([...(params.order ?? []).filter((name) => own.includes(name)), ...own]);
+}
 
 /** What the query opens: a flag's name (`new`), `name:value` (`tag:ID`), or null for no panel. */
 export function panelKeyFromSearch(search: URLSearchParams, params: PanelParams): string | null {

@@ -891,9 +891,11 @@ The hook returns `{ view, go, shown, side, closeToList }`, where `shown = view.c
 
 For `draft`, accept an optional `onChange?: (previous: S, next: S) => void` in the config. `TransactionsPanels` uses it to increase its counter when `previous.kind === 'new'` and `next.kind !== 'new'`. The hook calls it from the places where `draftAfter` runs today: `follow`, `go` and the exit effect.
 
-On 2026-10-11 the code differs from this step in three points:
+On 2026-10-11 the code differs from this step in these points:
 
-- The hook calls `onChange` before `setView`, not in the updater of `setView`. An updater must be pure, and React warns about a `setState` in an updater. `previous` is the committed view (`viewRef`). Both updates happen in the same event, so React renders them together.
+- The config has no `onChange`. It has `spends?: (previous: S, next: S) => boolean`, and the view has an `epoch` counter. The three updaters (`follow`, `go` and the exit timer) add 1 to `epoch` when `spends(current.panel, next)` is true. `TransactionsPanels` uses `view.epoch` as the key of the new form, and has no `draft` state of its own.
+- The first version called `onChange` before `setView`, with `previous` from the committed view. That is not equivalent. Example: a pointer close of «Nuova» plays its exit, and N comes 1 ms before the 150 ms timer. The timer then reads a committed view that is still closing, and starts a new draft in a form that is open again (decision 7). In the updaters, the decision reads the latest state.
+- `onlyChange` returns `{ state: S } | null`. `null` is a navigation, and a close is `{ state: none }`. With `S | null`, the close of `PanelSwitch` (`S = string | null`) was a navigation.
 - The hook returns `{ view, viewRef, go, shown, side }`. `closeToList` stays in `TransactionsPanels`, because it needs `baseHref`, which the config does not have. `viewRef` is the committed view: the `NEW_TRANSACTION_EVENT` handler reads it.
 - The hook keeps the config in a ref, so `go` and `follow` keep their identity when a page gives a new config on each render.
 
@@ -1019,8 +1021,9 @@ After Task 9, `usePanelController` calls `usePathname` and `useSearchParams` its
 
 On 2026-10-11 the code differs from the sketch in these points. The code in `apps/web/src/ui/PanelSwitch.tsx` is the reference.
 
-- `parse` and `onlyChange` read a key with no entry in `panels` as no panel. Thus a URL with an unknown id opens nothing, and the controller does not keep a panel that does not show.
-- `selectedId` comes from `shown`, so no row is selected while the exit plays, as on Transazioni.
+- `parse` reads a key with no entry in `panels` as no panel. Thus a URL with an unknown id opens nothing. `onlyChange` returns null for such a key, so its link navigates.
+- The render reads the key through `panels` again. A refresh can remove the open key from `panels` (a deleted row) while the URL keeps it. Then no panel shows and no row is selected.
+- `selectedId` is the whole key of `shown` (`tag:ID`), so no row is selected while the exit plays, as on Transazioni. A row gives its whole key as `selectId`. Thus `a:ID` and `g:ID` on Conti do not select the same row.
 - The `PanelNav` value is in `useMemo`, and `onClose` is in `useCallback`. `Panel` subscribes Esc through `onClose`, so it must keep its identity.
 - The `key` of `Panel` is its shape: `'form'` for a sheet, `'detail'` for the other panels. The panel key is the `key` of a `Fragment` around the body. Thus the panel stays put while the selection moves between rows, as the 2026-10-07 spec says, and the body of each row is a new form. The sketch above puts the panel key on `Panel`. That replays the entrance at each click on a row.
 
@@ -1107,13 +1110,13 @@ const panels: Record<string, PanelSpec> = {
 return (
   <PanelSwitch baseHref={PATH} params={PANEL_PARAMS} panels={panels} closeLabel={t('common.close')} slot>
     <Section /* unchanged, but: */>
-      {/* the «Nuovo tag» link and each row's link use PanelLink, with selectId={row.id} on the rows */}
+      {/* the «Nuovo tag» link and each row's link use PanelLink, with selectId={`tag:${row.id}`} on the rows */}
     </Section>
   </PanelSwitch>
 );
 ```
 
-`ListRow` already takes `href` and `selected`, and it renders a `PanelLink` (`src/ui/ListRow.tsx` imports it). The rows give `selectId` through the `PanelNavContext`, as the rows of Transazioni do. Read `ListRow.tsx`, and pass `selectId={row.id}` as `transactions/page.tsx` does. For the «Nuovo tag» link, use `<PanelLink href={`${PATH}?new`} className={styles.newTag}>`.
+`ListRow` already takes `href` and `selected`, and it renders a `PanelLink` (`src/ui/ListRow.tsx` imports it). The rows give `selectId` through the `PanelNavContext`, as the rows of Transazioni do. Read `ListRow.tsx`. Pass the whole key of the row: `selectId={`tag:${row.id}`}`. `PanelSwitch` compares `selectId` with the whole key, not with the id only. For the «Nuovo tag» link, use `<PanelLink href={`${PATH}?new`} className={styles.newTag}>`.
 
 `afterSave` and `closeHref` stay `PATH`. A save is still a navigation (`router.replace(afterSave)`), so the list shows the new name. This is the rule «a save is a navigation».
 
@@ -1155,6 +1158,8 @@ The first version of this plan named the values of Categories and Budgets `categ
 
 On Categories, the page lets `?new` win over `?c=`, and `?c=` win over `?archived`. Give `order: ['new', 'c', 'archived']` in `PANEL_PARAMS` to keep this precedence. Without `order`, `panelKeyFromSearch` lets every flag win over a value.
 
+Each row gives its whole key as `selectId` (for example `c:${id}`), as in Task 11.
+
 - [ ] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
 - [ ] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
 - [ ] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after the change. Both must pass.
@@ -1176,7 +1181,7 @@ Conti has four panels: the account form (`?new`, `?a=ID&edit`), the archived lis
 
   > **Caution:** `panelKeyFromSearch` reads `?a=ID&edit` as `a:ID`. For that URL, make sure that the page shows the edit form, not the detail.
 
-- [ ] **Step 4: Replace `Panel` with `PanelSwitch`.** Do not set `slot`: Conti has no `SubnavLayout`. The rows of the page become `PanelLink`s through `ListRow`.
+- [ ] **Step 4: Replace `Panel` with `PanelSwitch`.** Do not set `slot`: Conti has no `SubnavLayout`. The rows of the page become `PanelLink`s through `ListRow`. An account row gives `selectId={`a:${id}`}`, and a goal row gives `selectId={`g:${id}`}`.
 - [ ] **Step 5: Run the e2e flow, check by hand, and commit** with `feat(web): Conti opens its panels in place`.
 
 ### Task 14: Admin
@@ -1188,7 +1193,7 @@ Conti has four panels: the account form (`?new`, `?a=ID&edit`), the archived lis
 Admin uses `SlotPanel` in a `SubnavLayout`, as Profilo does. Thus set `slot`. The Admin pages do not use `readPage`. Each page awaits `searchParams` in its own `Promise.all`.
 
 - [ ] **Step 1: Run `rtk proxy pnpm --filter web e2e admin` first.** Expected: PASS. The `fixme` test stays.
-- [ ] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page:
+- [ ] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page. Each row gives its whole key as `selectId` (for example `u:${id}`):
   - `admin/accounts`: no flags, values `u`. The detail comes from `accountDetail(db, id)`, one database read for each account. Render all the details only if this is cheap. If it is not cheap, keep the detail a navigation.
   - `admin/invites`: flags `new`, values `i` (see `invitePanel`).
   - `admin/settings`: no flags, values `edit`. The keys are `edit:name`, `edit:registration` and `edit:smtp` (see `settingsPanel`).

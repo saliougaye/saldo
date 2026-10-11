@@ -23,6 +23,10 @@ describe('panelKeyFromSearch', () => {
     expect(panelKeyFromSearch(new URLSearchParams('archived&a=1'), accounts)).toBe('a:1');
     expect(panelKeyFromSearch(new URLSearchParams('g=2&new'), accounts)).toBe('new');
     expect(panelKeyFromSearch(new URLSearchParams('archived&a='), accounts)).toBe('archived');
+    // A name in `order` that is not a panel parameter is not read.
+    const typo: PanelParams = { flags: ['new'], values: ['tag'], order: ['x', 'tag'] };
+    expect(panelKeyFromSearch(new URLSearchParams('x=1'), typo)).toBeNull();
+    expect(panelKeyFromSearch(new URLSearchParams('new&tag=a'), typo)).toBe('tag:a');
   });
 });
 
@@ -50,5 +54,12 @@ describe('panelHrefFor', () => {
     expect(panelHrefFor('/profile/tags', 'new', TAGS)).toBe('/profile/tags?new=');
     expect(panelHrefFor('/profile/tags?q=x', null, TAGS)).toBe('/profile/tags?q=x');
     expect(panelHrefFor('/profile/tags?q=x&new', 'tag:a', TAGS)).toBe('/profile/tags?q=x&tag=a');
+  });
+  it('keeps a colon in the value: the key splits at the first one', () => {
+    const href = panelHrefFor('/profile/tags', 'tag:a:b', TAGS);
+    expect(href).toBe('/profile/tags?tag=a%3Ab');
+    expect(panelKeyFromSearch(new URL(href, 'http://x.invalid').searchParams, TAGS)).toBe(
+      'tag:a:b',
+    );
   });
 });

@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  Activity,
-  Fragment,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { Activity, Fragment, type ReactNode, useCallback, useEffect, useMemo } from 'react';
 import {
   type PanelState,
   panelFromSearch,
@@ -66,11 +58,6 @@ function spendsDraft(previous: PanelState, next: PanelState): boolean {
  */
 export function TransactionsPanels(props: Props) {
   const { baseHref, details, edit, newForm } = props;
-  /**
-   * The new form's key. It changes when the form leaves the screen, so the next opening is a new
-   * draft, which React renders hidden in the background meanwhile.
-   */
-  const [draft, setDraft] = useState(0);
   const { view, viewRef, go, side } = usePanelController<PanelState>({
     parse: panelFromSearch,
     same: samePanel,
@@ -79,11 +66,9 @@ export function TransactionsPanels(props: Props) {
     onlyChange: (current, href) => {
       const next = panelOnlyChange(current, href);
       // The edit form is not on the page until the server renders it: that one stays a navigation.
-      return next === null || next.kind === 'edit' ? null : next;
+      return next === null || next.kind === 'edit' ? null : { state: next };
     },
-    onChange: (previous, next) => {
-      if (spendsDraft(previous, next)) setDraft((current) => current + 1);
-    },
+    spends: spendsDraft,
   });
 
   // The top bar's button, the FAB and N: on this page they open the form here.
@@ -148,7 +133,9 @@ export function TransactionsPanels(props: Props) {
           closing={creating && view.closing}
           instant={view.instant}
         >
-          <Fragment key={draft}>{newForm}</Fragment>
+          {/* The new form's key changes when the form leaves the screen, so the next opening is a
+              new draft, which React renders hidden in the background meanwhile. */}
+          <Fragment key={view.epoch}>{newForm}</Fragment>
         </Panel>
       </Activity>
     );
