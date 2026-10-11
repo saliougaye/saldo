@@ -442,15 +442,19 @@ git commit -m "test(web): the time zone list opens in place, with the browser's 
 
   On 2026-10-11 a temporary script on the build with the warm-up gave these results. ✕ closes with no RSC request, the URL is `/profile/preferences`, and the focus is on the row. Back closes with no RSC request. A choice of Tokyo saves: the URL keeps `?edit=timeZone`, the row shows «Tokyo», the panel stays open and Tokyo is checked. A load of `?edit=timeZone` shows 418 rows, and its HTML holds the list. The console has no error, also on a load of `?edit=timeZone` (no hydration mismatch). The text of the 418 rows, with the hours removed, is the same as on `main`, row for row. The 8 screenshots (the list and `?edit=timeZone`, 1440px and 500px, light and dark, hours hidden) are the same bytes as on `main`.
 
-- [ ] **Step 6: Copy the numbers** into section 06 of the spec. Delete the temporary scripts.
+- [x] **Step 6: Copy the numbers** into section 06 of the spec. Delete the temporary scripts.
+
+  On 2026-10-11 the spec also got the warm-up (sections 03 and 04) and the size of the real chunk: 16.3 KB with gzip, not the 12.8 KB of the esbuild estimate. The five temporary scripts are deleted.
 
 ### Task 6: Close the work
 
-- [ ] **Step 1: Update the docs.**
+- [x] **Step 1: Update the docs.**
   - `TODO.md`, «Web app: a UI pass»: delete only the sentence about the time zone list. Keep the sentence about the edit forms.
   - `docs/superpowers/specs/2026-10-11-web-navigation-feel.html` §05, row «Profilo › Preferences»: `edit:timeZone` is in place now. Name this spec.
-- [ ] **Step 2: Run every gate and the whole web e2e suite.** `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck --force`, `rtk proxy pnpm --filter web test`, then `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e`. Expected on `main`: 73 passed and 1 skipped (`fixme`). After this plan: 74 passed and 1 skipped.
-- [ ] **Step 3: Commit.**
+- [x] **Step 2: Run every gate and the whole web e2e suite.** `rtk proxy pnpm lint`, `rtk proxy pnpm typecheck --force`, `rtk proxy pnpm --filter web test`, then `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e`. Expected on `main`: 73 passed and 1 skipped (`fixme`). After this plan: 74 passed and 1 skipped.
+
+  On 2026-10-11: `pnpm lint` checked 1101 files with no `lint/` line and no «Some errors». `pnpm typecheck --force` ran 5 tasks with no `error TS`. The web tests gave 109 files and 500 tests passed (1 file and 3 tests skipped). The web e2e suite gave 74 passed and 1 skipped.
+- [x] **Step 3: Commit.**
 
 ```bash
 git add TODO.md docs/superpowers

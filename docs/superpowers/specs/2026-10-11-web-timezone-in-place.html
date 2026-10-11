@@ -334,7 +334,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         <tbody>
           <tr><td>A. Keep the navigation</td><td>1 RSC request and 38 KB (6.8 KB with gzip) for each open, and again after each save while the panel is open.</td><td>Rejected. The click waits for the server.</td></tr>
           <tr><td>B. The server renders the list with every load, without the hours</td><td>About 33 KB (6 KB with gzip) in each response of the page, also when nobody opens the panel. The browser adds the hours.</td><td>Rejected. Each load and each <code>router.refresh</code> pays for a list that is rarely opened.</td></tr>
-          <tr><td>C. The browser makes the list</td><td>The client code of the page gets the tables once: 52 KB minified, 12.8 KB with gzip. The browser keeps the file in its cache. The response of the page grows by less than 1 KB.</td><td><b>Chosen.</b> No request at the click, and no list in the response.</td></tr>
+          <tr><td>C. The browser makes the list</td><td>The client code of the page gets the tables once: a chunk of 59 KB, 16.3 KB with gzip. The browser keeps the file in its cache. The response of the page grows by 1.8 KB.</td><td><b>Chosen.</b> No request at the click, and no list in the response.</td></tr>
         </tbody>
       </table>
     </div>
@@ -365,6 +365,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
     <div class="prose">
       <p><b>The server.</b> The page puts <code>edit:timeZone</code> in <code>panels</code> with every render. The body is <code>TimeZonePanel</code> with four props: <code>saved</code>, <code>locale</code>, <code>renderedAt</code> (the minute of the render) and <code>strings</code>. It has no list.</p>
       <p><b>The browser.</b> <code>timeZoneRows(locale, saved)</code> gives the rows: each zone of <code>TIME_ZONES</code>, plus the saved zone when the table does not hold it. Each row has the zone, the city and the name of the zone. <code>zoneTimes(zones, now)</code> gives the hour of each row. Both functions are pure and live in <code>src/features/profile/timeZoneRows.ts</code>.</p>
+      <p><b>The warm-up.</b> <code>Intl</code> makes the rows and the hours slowly (section 04). Thus <code>TimeZoneWarmup</code>, which renders nothing, makes them in idle time after the Preferences page mounts. <code>zoneCache.ts</code> keeps them: the rows for a language and a saved zone, and the hours of one minute. The panel reads the same cache. A zone that the warm-up did not reach gets its hour at the render.</p>
       <p><b>The device zone.</b> <code>listedZone</code> reads the aliases from <code>TIME_ZONE_ALIASES</code> of the static table. The server does not send them now.</p>
       <p><b>A load of <code>?edit=timeZone</code>.</b> The server renders the panel as before, so the HTML holds the list. The rows of the HTML have the hours of <code>renderedAt</code>. The browser then shows the hours of its own minute.</p>
     </div>
@@ -414,19 +415,19 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
 
     <figure class="rv">
       <svg viewBox="0 0 1040 400" role="img" aria-labelledby="f2t">
-        <title id="f2t">What the server sends and what the browser calculates. The server sends the saved zone, the language, the minute of the render and the strings, less than 1 kilobyte. The client code holds the static tables: 418 zone ids, the city names and the zone names in seven languages, 12.8 kilobytes with gzip, loaded once and kept in the cache. The browser calculates the rows, the order by city and the hour in each zone.</title>
+        <title id="f2t">What the server sends and what the browser calculates. The server sends the saved zone, the language, the minute of the render and the strings: props of less than 1 kilobyte. The client code holds the static tables: 418 zone ids, the city names and the zone names in seven languages, 16.3 kilobytes with gzip, loaded once and kept in the cache. The browser calculates the rows, the order by city and the hour in each zone.</title>
         <rect class="bx" x="20" y="30" width="300" height="200" rx="16"/>
         <text x="40" y="64" font-size="17" class="b">The server sends</text>
         <text x="40" y="98" font-size="15" class="mono">saved</text>
         <text x="40" y="126" font-size="15" class="mono">locale</text>
         <text x="40" y="154" font-size="15" class="mono">renderedAt</text>
         <text x="40" y="182" font-size="15" class="mono">strings</text>
-        <text x="40" y="214" font-size="14" class="tm">less than 1 KB, each render</text>
+        <text x="40" y="214" font-size="14" class="tm">props under 1 KB, each render</text>
 
         <rect class="bx-r" x="20" y="260" width="300" height="120" rx="16"/>
         <text x="40" y="294" font-size="17" class="b">Client code</text>
         <text x="40" y="322" font-size="14" class="mono">@saldo/i18n/timeZones</text>
-        <text x="40" y="350" font-size="14" class="tm">12.8 KB with gzip, once, cached</text>
+        <text x="40" y="350" font-size="14" class="tm">16.3 KB with gzip, once, cached</text>
 
         <line class="ln" x1="324" y1="130" x2="430" y2="190" marker-end="url(#ah)"/>
         <line class="ln" x1="324" y1="320" x2="430" y2="240" marker-end="url(#ah)"/>
@@ -523,7 +524,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         <li><code>subscribe</code> starts a timer for the next minute, then one timer for each minute. The timer stops when the panel closes.</li>
       </ol>
       <p>The rows and their order do not depend on the minute. Only the hours change at each minute.</p>
-      <div class="callout"><span class="meta">Cost</span><p><code>wallClock</code> makes one <code>Intl.DateTimeFormat</code> for each zone, and keeps it. In Chrome with the CPU 4× slower, the first 418 formatters took 70 ms. The plan measures the first open with and without a warm-up in idle time. It keeps the warm-up only if it makes the median shorter by more than 20 ms.</p></div>
+      <div class="callout"><span class="meta">Cost</span><p><code>wallClock</code> makes one <code>Intl.DateTimeFormat</code> for each zone, and keeps it. In Chrome with the CPU 4× slower, the first 418 formatters took 70 ms. Without a warm-up, a click took 315 ms, and most of it was <code>Intl</code>: the formatters, <code>formatToParts</code> for each zone, and the collator. With the warm-up in idle time, a click takes 87 ms. Thus the warm-up stays. At a new minute the open panel makes the new hours in one render.</p></div>
     </div>
   </div>
   <div class="visual">
@@ -603,15 +604,18 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <table class="wrap1">
         <thead><tr><th scope="col">Value</th><th scope="col">Before (main)</th><th scope="col">After</th></tr></thead>
         <tbody>
-          <tr><td>Click to visible list, CPU 4×</td><td>348 ms (293–399)</td><td>The plan records it (Task 5)</td></tr>
-          <tr><td>RSC requests for the click</td><td>1</td><td>The plan records it</td></tr>
-          <tr><td>RSC response, <code>/profile/preferences</code></td><td>41.1 KB (9.0 KB gzip)</td><td>The plan records it</td></tr>
-          <tr><td>RSC response, <code>?edit=timeZone</code></td><td>79.0 KB (15.8 KB gzip)</td><td>The plan records it</td></tr>
-          <tr><td>HTML, <code>?edit=timeZone</code></td><td>391.8 KB (28.8 KB gzip)</td><td>The plan records it</td></tr>
+          <tr><td>Click to visible list, CPU 4×</td><td>348 ms (293–399)</td><td>87 ms (81–93)</td></tr>
+          <tr><td>The same, without the warm-up</td><td>—</td><td>315 ms (292–346)</td></tr>
+          <tr><td>RSC requests for the click</td><td>1</td><td>0</td></tr>
+          <tr><td>RSC response, <code>/profile/preferences</code></td><td>41.1 KB (9.0 KB gzip)</td><td>42.9 KB (9.2 KB gzip)</td></tr>
+          <tr><td>RSC response, <code>?edit=timeZone</code>, also after each save</td><td>79.0 KB (15.8 KB gzip)</td><td>42.9 KB (9.2 KB gzip)</td></tr>
+          <tr><td>HTML, <code>?edit=timeZone</code></td><td>391.8 KB (28.8 KB gzip)</td><td>349.1 KB (22.3 KB gzip)</td></tr>
+          <tr><td>Client chunk with the tables, once</td><td>—</td><td>59.0 KB (16.3 KB gzip)</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="callout"><span class="meta">Record</span><p>The Before values are from commit <code>526e23a0</code> (main), on a copy of the development database (5 accounts, 124 transactions). The machine also ran the work of other agents, so a difference of less than 20 ms is noise.</p></div>
+    <div class="callout"><span class="meta">Record</span><p>The Before values are from commit <code>526e23a0</code> (main). The After values are from commit <code>4348b1b9</code>. Both ran on port 3101, on a copy of the development database (5 accounts, 124 transactions). The machine also ran the work of other agents, so a difference of less than 20 ms is noise.</p>
+    <p>The text of the 418 rows, with the hours removed, is the same as on main, row for row. The screenshots of the list and of <code>?edit=timeZone</code>, at 1440px and 500px, in the light and the dark theme, with the hours hidden, are the same bytes as on main. A load of <code>?edit=timeZone</code> writes no error in the console.</p></div>
   </div>
 </section>
 
@@ -629,9 +633,9 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <table class="wrap1">
         <thead><tr><th scope="col">Risk</th><th scope="col">What to do</th></tr></thead>
         <tbody>
-          <tr><td>A different order in the browser</td><td>The server render and the hydration sort with two collators: the one of Node and the one of the browser. If they disagree on two cities, React reports a hydration mismatch on a load of <code>?edit=timeZone</code>, and it renders the panel again in the browser. The plan checks the console and the order in Chromium. The CLDR root collation is the same in both.</td></tr>
-          <tr><td>The size of the client code</td><td>The page loads 12.8 KB more with gzip once. The browser keeps it in its cache until the next deployment. Only the Preferences page imports it.</td></tr>
-          <tr><td>The first open on a slow device</td><td>The first 418 formatters take time (section 04). The plan measures it and decides about a warm-up.</td></tr>
+          <tr><td>A different order in the browser</td><td>The server render and the hydration sort with two collators: the one of Node and the one of the browser. If they disagree on two cities, React reports a hydration mismatch on a load of <code>?edit=timeZone</code>, and it renders the panel again in the browser. The CLDR root collation is the same in both. In Chromium the order is the same as on main, and the console has no error. Safari and Firefox were not checked.</td></tr>
+          <tr><td>The size of the client code</td><td>The page loads 16.3 KB more with gzip once. The browser keeps it in its cache until the next deployment. Only the Preferences page imports it.</td></tr>
+          <tr><td>The first open on a slow device</td><td>The warm-up makes the list in idle time (section 04). A click before the warm-up ends makes the rest of the hours at the render, as without a warm-up.</td></tr>
           <tr><td>A browser with another <code>Intl</code> name</td><td>A browser can report a zone with another id (<code>Asia/Kolkata</code>). <code>listedZone</code> maps it with <code>TIME_ZONE_ALIASES</code>, as before.</td></tr>
         </tbody>
       </table>
