@@ -779,16 +779,28 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <table class="wrap1">
         <thead><tr><th scope="col">Input (1440px, CPU 4×)</th><th scope="col">Before</th><th scope="col">After A</th><th scope="col">After B</th><th scope="col">After C</th></tr></thead>
         <tbody>
-          <tr><td>Tab Accounts → Statistics</td><td>93 / 93 ms</td><td>19 / 119 ms</td><td>19 / 119 ms</td><td>—</td></tr>
-          <tr><td>Tab Home → Transactions</td><td>156 / 156 ms</td><td>19 / 397 ms</td><td>19 / 202 ms</td><td>—</td></tr>
-          <tr><td>Chip on Transactions</td><td>109 / 109 ms</td><td>62 / 118 ms</td><td>60 / 118 ms</td><td>—</td></tr>
-          <tr><td>Period ‹ on Transactions</td><td>107 / 107 ms</td><td>20 / 146 ms</td><td>20 / 145 ms</td><td>—</td></tr>
-          <tr><td>Queries per request</td><td>5</td><td>not measured</td><td>3</td><td>—</td></tr>
+          <tr><td>Tab Accounts → Statistics</td><td>93 / 93 ms</td><td>19 / 119 ms</td><td>19 / 119 ms</td><td>20 / 121 ms</td></tr>
+          <tr><td>Tab Home → Transactions</td><td>156 / 156 ms</td><td>19 / 397 ms</td><td>19 / 202 ms</td><td>20 / 188 ms</td></tr>
+          <tr><td>Chip on Transactions</td><td>109 / 109 ms</td><td>62 / 118 ms</td><td>60 / 118 ms</td><td>62 / 117 ms</td></tr>
+          <tr><td>Period ‹ on Transactions</td><td>107 / 107 ms</td><td>20 / 146 ms</td><td>20 / 145 ms</td><td>21 / 152 ms</td></tr>
+          <tr><td>Queries per request</td><td>5</td><td>not measured</td><td>3</td><td>not measured</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="callout"><span class="meta">Record</span><p>Each cell holds «feedback / settled» in ms. The Before cells are from commit <code>1d008060</code>. The After A cells are from commit <code>ce1e8f5d</code> with the <code>data-skeleton</code> marker. The After B cells are from commit <code>e05a4503</code>. Each After cell is the median of 3 script runs. Each script run is the median of 5 runs.</p>
-    <p>«settled» is the time when the real page replaces the skeleton. With a <code>loading.tsx</code>, «settled» can be longer than Before while «feedback» is much shorter. «settled» is longer than Before in every row: by 9 to 46 ms after B, and by 241 ms after A for Home → Transactions. After C is empty.</p></div>
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Click on the first row (1440px, CPU 4×)</th><th scope="col">Before C: a navigation</th><th scope="col">After C: in place</th></tr></thead>
+        <tbody>
+          <tr><td><code>/profile/tags</code></td><td>285 ms, 1 RSC request</td><td>93 ms, no request</td></tr>
+          <tr><td><code>/profile/categories</code></td><td>310 ms, 1 RSC request</td><td>97 ms, no request</td></tr>
+          <tr><td><code>/accounts</code></td><td>137 ms, 1 RSC request</td><td>38 ms, no request</td></tr>
+          <tr><td><code>/admin/accounts</code></td><td>116 ms, 1 RSC request</td><td>31 ms, no request</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Record</span><p>Each cell holds «feedback / settled» in ms. The Before cells are from commit <code>1d008060</code>. The After A cells are from commit <code>ce1e8f5d</code> with the <code>data-skeleton</code> marker. The After B cells are from commit <code>e05a4503</code>. The After C cells are from commit <code>1820a79e</code>. Each After cell is the median of 3 script runs. Each script run is the median of 5 runs.</p>
+    <p>«settled» is the time when the real page replaces the skeleton. With a <code>loading.tsx</code>, «settled» can be longer than Before while «feedback» is much shorter. «settled» is longer than Before in every row: by 9 to 46 ms after B, and by 241 ms after A for Home → Transactions. After C it is longer by 8 to 45 ms, and it is within the noise of After B. The cause is not investigated.</p>
+    <p>The second table is the time from a click on the first row to a visible panel. It is the median of two runs of seven clicks on a production build. «Before C» is commit <code>8acc1436</code>, where the click is a navigation. The script is not in the repository. The machine was busy when it ran, so a difference of less than 20 ms is noise.</p></div>
   </div>
 </section>
 

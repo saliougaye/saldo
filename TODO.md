@@ -19,13 +19,21 @@ phone, then a plan for both.
 
 Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-feel.md`): on Transazioni,
 «Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
-in one movement. Still open:
+in one movement. Picked up again on 2026-10-11 (`docs/superpowers/plans/2026-10-11-web-navigation-feel.md`): every
+tab shows a skeleton and a navigation bar while it loads, a page reads the session in one step, and the panels of
+Transazioni, Conti, Profilo and Admin open in place. Still open:
 
 - the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
-- the four queries in a chain on every page;
-- `loading.tsx` and `useLinkStatus` for the top-level pages;
-- the edit form (still a navigation);
-- the same pattern on Conti and Profilo;
+- the edit form of a transaction and of an account (`?a=ID&edit`) stays a navigation, because it needs the balances
+  of one row, which only the server calculates. The time zone list of Preferenze stays a navigation for the same
+  reason (its hours are right only at the render);
+- «settled» is longer on the pages that have a skeleton. Home → Transazioni took 156 ms before the work, 397 ms
+  after the skeletons, 202 ms after the shorter query chain and 188 ms at the end of the work. The `loading.tsx`
+  boundary seems to add wall-clock time. The cause is not investigated;
+- a save in a panel makes about 34 RSC prefetch requests. `prefetch={false}` on the links that open in place
+  removed some of them. `router.refresh` after a save prefetches every visible link again, and the ✕ and the
+  scrim of `Panel` still prefetch their close URL. Check if the `router.refresh` after `router.replace` in the
+  forms is needed;
 - the motion the phone has that the web lacks.
 
 ## Features

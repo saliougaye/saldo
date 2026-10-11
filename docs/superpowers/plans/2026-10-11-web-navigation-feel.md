@@ -1377,14 +1377,16 @@ On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave
 
 ### Task 15: Close the work
 
-- [ ] **Step 1: Run every gate and the whole web e2e suite**
+- [x] **Step 1: Run every gate and the whole web e2e suite**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm test && rtk proxy pnpm --filter web e2e`
 Expected: all pass. Read the output, not the exit code.
 
-- [ ] **Step 2: Measure** with `measure:nav` and `measure:panel`. Paste the lines in the «After C» column. Make sure that the `measure:panel` numbers are not worse than the table of 2026-10-07. Copy the values of the «Measurements» section into section 07 of the spec.
+On 2026-10-11 the gates ran on commit `1820a79e`. `pnpm lint` checked 1096 files with no `lint/` line and no «Some errors». `pnpm typecheck --force` ran 5 tasks with no `error TS`. `pnpm test` gave: core 49 files and 360 tests, ui 1 and 1, i18n 3 and 32, web 107 files and 494 tests (1 file and 3 tests skipped), mobile 37 suites and 208 tests. Turbo replayed the logs of core, ui and i18n from its cache: their inputs did not change. Mobile did not time out (71 s). The web e2e suite gave 73 passed and 1 skipped: the `test.fixme` of a setting that the environment locks. The log of the server has the known line «The destination stream closed early».
 
-- [ ] **Step 3: Update `TODO.md`.** In «Web app: a UI pass», delete the items that this plan closes. These items are the four queries, `loading.tsx` and `useLinkStatus`, and the same pattern on Conti and Profilo. Keep the production region and the motion that the phone has. Write the name of this plan next to the plan of 2026-10-07.
+- [x] **Step 2: Measure** with `measure:nav` and `measure:panel`. Paste the lines in the «After C» column. Make sure that the `measure:panel` numbers are not worse than the table of 2026-10-07. Copy the values of the «Measurements» section into section 07 of the spec.
+
+- [x] **Step 3: Update `TODO.md`.** In «Web app: a UI pass», delete the items that this plan closes. These items are the four queries, `loading.tsx` and `useLinkStatus`, and the same pattern on Conti and Profilo. Keep the production region and the motion that the phone has. Write the name of this plan next to the plan of 2026-10-07.
 
 - [ ] **Step 4: Request a code review** (`requesting-code-review`). Then merge to `main`.
 
@@ -1403,10 +1405,10 @@ git commit -m "docs: record the web navigation work and what stays open"
 
 | Input (1440px, CPU 4×) | Before | After A | After B | After C |
 | --- | --- | --- | --- | --- |
-| Tab Conti → Stats, feedback / settled | 93 / 93 ms | 19 / 119 ms | 19 / 119 ms | |
-| Tab Home → Transazioni, feedback / settled | 156 / 156 ms | 19 / 397 ms | 19 / 202 ms | |
-| Chip on Transazioni, feedback / settled | 109 / 109 ms | 62 / 118 ms | 60 / 118 ms | |
-| Period ‹ on Transazioni, feedback / settled | 107 / 107 ms | 20 / 146 ms | 20 / 145 ms | |
+| Tab Conti → Stats, feedback / settled | 93 / 93 ms | 19 / 119 ms | 19 / 119 ms | 20 / 121 ms |
+| Tab Home → Transazioni, feedback / settled | 156 / 156 ms | 19 / 397 ms | 19 / 202 ms | 20 / 188 ms |
+| Chip on Transazioni, feedback / settled | 109 / 109 ms | 62 / 118 ms | 60 / 118 ms | 62 / 117 ms |
+| Period ‹ on Transazioni, feedback / settled | 107 / 107 ms | 20 / 146 ms | 20 / 145 ms | 21 / 152 ms |
 
 Each cell is the median of five runs. In the After columns it is the median of three such medians. Times are in ms from the click.
 
@@ -1423,9 +1425,50 @@ Each cell is the median of five runs. In the After columns it is the median of t
 - «settled» is worse than Before in every row. After B it is longer by 26 ms (Conti → Stats), 46 ms (Home → Transazioni), 9 ms (chip) and 38 ms (period arrow).
 - After A, Home → Transazioni settled in 397 ms. This is 241 ms longer than Before. Part B removed 195 ms of it. It did not go back to 156 ms.
 - Task 5 expected «feedback» of about 150 ms for the chip and the period arrow. The real values are 60 ms and 20 ms. The bar shows earlier than expected.
-- After C is empty. Part C fills it.
+- After C: the script ran 3 times (5 runs each) on one production build of commit `1820a79e` in the main checkout. Each cell is the median of the 3 medians. The three medians of «settled» were 113, 121 and 123 ms (Conti → Stats), 188, 181 and 189 ms (Home → Transazioni), 115, 119 and 117 ms (chip) and 144, 158 and 152 ms (period arrow).
+- «feedback» did not change. «settled» is within the 20 ms of noise of After B: 2 ms longer, 14 ms shorter, 1 ms shorter and 7 ms longer. Part C does not make these four inputs slower or faster.
+- «settled» is still longer than Before in every row: by 28 ms (Conti → Stats), 32 ms (Home → Transazioni), 8 ms (chip) and 45 ms (period arrow). The cause is not investigated: a `loading.tsx` seems to add wall-clock time. It is an open item in `TODO.md`.
+- The load of the machine was high on that day (load average from 28 to 75 on 2026-10-11, other work ran at the same time). Treat a difference of less than 20 ms as noise.
 
-Queries per request on `/transactions`: before 5, after A not measured, after B 3 (measured in Task 6). The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times. After Task 14 the page runs the five queries of `accountDetails` in place of `listAccounts`, and an open panel adds no query.
+Queries per request on `/transactions`: before 5, after A not measured, after B 3 (measured in Task 6), after C not measured. The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times. After Task 14 the page runs the five queries of `accountDetails` in place of `listAccounts`, and an open panel adds no query.
+
+### Panel opens: a click on a row until the panel is in the DOM
+
+Part C buys this. A temporary Playwright script measured the time from the click on the first row to a visible `aside`. It ran on a production build, at 1440px, with the CPU four times slower, as `measure-nav` does. It used the development database and seeded nothing. Each cell is the median of two runs of seven clicks. The script is not in the repository.
+
+| Page (first row) | Before C: a navigation | After C: in place |
+| --- | --- | --- |
+| `/profile/tags` | 285 ms (292, 277), 1 RSC request | 93 ms (94, 91), 0 requests |
+| `/profile/categories` | 310 ms (316, 304), 1 RSC request | 97 ms (88, 106), 0 requests |
+| `/accounts` | 137 ms (136, 138), 1 RSC request | 38 ms (38, 37), 0 requests |
+| `/admin/accounts` | 116 ms (114, 118), 1 RSC request | 31 ms (31, 31), 0 requests |
+
+- «Before C» is a build of commit `8acc1436` in the temporary worktree `/tmp/saldo-before-c`. This is the last commit before Part C. The click there is a real navigation. «After C» is commit `1820a79e`. The same script and the same selectors ran on both. The worktree is removed.
+- All four pages are faster, by 2.6 to 3.6 times. A click makes no RSC request after Part C.
+- Tags and Categories take about 90 ms after Part C, and Conti and Admin take 30 to 40 ms. The cause is not investigated.
+
+### `measure:panel` after Part C
+
+`pnpm --filter web measure:panel http://localhost:3100` ran 3 times on commit `1820a79e`. It also ran once on the build of `8acc1436` as a control, in the same hour. The column of 2026-10-08 comes from the plan of 2026-10-07. Times are in ms after «input». Each cell of «After C» is the median of the 3 runs, with the values of the runs.
+
+| Scenario | 2026-10-08 | Control `8acc1436` | After C | Target |
+| --- | --- | --- | --- | --- |
+| «New transaction», CPU 1×, panel in the DOM | 23 (22–26) | 29 | 84 (30, 86, 84) | ≤ 40 |
+| «New transaction», CPU 4×, panel in the DOM | 59 (50–61) | 75 | 79 (79, 80, 75) | ≤ 100 |
+| FAB, 390px, CPU 4×, panel in the DOM | 38 (36–48) | 44 | 50 (53, 50, 46) | ≤ 100 |
+| Click on a row, CPU 4×, panel in the DOM | 17 (15–20) | 24 | 26 (27, 22, 26) | ≤ 50 |
+| Click on a row, CPU 4×, longest frame | 62 (59–76) | 77 | 76 (76, 59, 77) | ≤ 70 |
+| Click on a row, CPU 4×, list settles | 262 (256–270) | 277 | 276 (276, 276, 277) | ≤ 300 |
+| ✕ on the detail, panel out of the DOM | 166 | 169 | 168 (168, 166, 171) | ≤ 200 |
+| ✕ on the detail, list settles | 141 | 141 | 143 (142, 144, 143) | ≤ 200 |
+| `N`, CPU 4×, list starts and settles | one frame (69–127) | one frame (86) | one frame (87, 78, 82) | one frame |
+| «New transaction» from Home, CPU 4×, panel in the DOM | 322 (305–430) | 333 | 337 (337, 464, 331) | not worse |
+| Server requests on Transazioni | 0 | 0 | 0 (1 from Home, as designed) | 0 |
+
+- Part C did not change the numbers of Transazioni. The control build of `8acc1436`, run the same day, gives the same values as `1820a79e` within 10 ms, except for the first row (see below). Thus the difference from 2026-10-08 comes from the day (the load of the machine, or the commits of Parts A and B), not from Part C.
+- The numbers are worse than the table of 2026-10-08 in these rows: «New transaction» at CPU 4× (79 against 59 ms), the FAB (50 against 38 ms), the row (26 against 17 ms) and «New transaction» at CPU 1× (84 against 23 ms). All meet their target, except «New transaction» at CPU 1× and the longest frame of the row (see below).
+- «New transaction» at CPU 1× missed its target of 40 ms in 2 of 3 runs (86 and 84 ms). The first run gave 30 ms, and the control gave 29 ms. At CPU 1×, a time near the time at CPU 4× points to a busy machine, but a quiet-machine run on `1820a79e` was not made. Run the scenario again on a quiet machine before you trust or reject this row.
+- The longest frame of the row was 76 and 77 ms in two runs, against a target of 70 ms. The control gave 77 ms. The median of 2026-10-08 was 62 ms, with one run of 76 ms.
 
 ## Risks
 
