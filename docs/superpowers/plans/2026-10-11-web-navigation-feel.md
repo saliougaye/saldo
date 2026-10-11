@@ -1057,12 +1057,12 @@ git commit -m "feat(web): PanelSwitch shows one server-rendered panel in place, 
 
 The server renders one form for each tag, and one form for «Nuovo tag». A click selects one.
 
-- [ ] **Step 1: Run the e2e flows of the tags first (baseline)**
+- [x] **Step 1: Run the e2e flows of the tags first (baseline)**
 
 Run: `rtk proxy pnpm --filter web e2e budgets-categories-tags`
 Expected: PASS.
 
-- [ ] **Step 2: Change the page**
+- [x] **Step 2: Change the page**
 
 Replace the `creating`/`editing`/`open` block and the `ProfilePanel` with a map. The links of the rows become `PanelLink`s, so a plain click goes to the controller:
 
@@ -1127,7 +1127,14 @@ return (
 
 `afterSave` and `closeHref` stay `PATH`. A save is still a navigation (`router.replace(afterSave)`), so the list shows the new name. This is the rule «a save is a navigation».
 
-- [ ] **Step 3: Run the e2e suite and check by hand**
+On 2026-10-11 the work found these points. Tasks 12 to 14 use the same rules.
+
+- «Annulla» of `FormFoot` was a plain link, so it closed the panel with a request to the server. `FormFoot` now renders `PanelLink`. In a `PanelSwitch`, «Annulla» closes in place. Outside a panel in client state, `PanelLink` is the same link as before.
+- The `TagForm` elements have no `key`. `PanelSwitch` puts the panel key on the body, so each tag already gets a new form.
+- `MergeTag` and `DeleteTag` stay navigations: `router.push(afterHref)` and `router.refresh()`, with `afterHref` equal to `PATH`. The URL then has no panel parameter, so the controller closes the panel. The e2e tests of merge and delete pass from the panel in place.
+- The page does not read `params` now. `PanelSwitch` reads the query.
+
+- [x] **Step 3: Run the e2e suite and check by hand**
 
 Run: `rtk proxy pnpm --filter web e2e budgets-categories-tags`
 Expected: PASS.
@@ -1140,7 +1147,17 @@ Then open `/profile/tags` and click a tag. Make sure that:
 - a reload with `?tag=ID` opens the page with the panel;
 - the Network tab shows no request for the click.
 
-- [ ] **Step 4: Run the gates and commit**
+On 2026-10-11 a temporary Playwright spec on a production build (port 3100, 1440px) gave these results:
+
+- A click on a tag shows the panel in the next frame. The URL is `?tag=ID`, and the browser sends no RSC request. The row has `aria-current="true"`.
+- A click on a second tag keeps the same `aside` element, with no running animation. The form shows the name of the second tag.
+- ✕, Esc and «Annulla» close with no RSC request. After ✕ and Esc the focus is on the row that opened the panel. Back closes the panel.
+- «Nuovo tag» opens `?new` with no RSC request, and the focus is in the name field. A click with ⌘ opens the tag in a new tab.
+- A load of `?tag=ID` opens the page with the panel. A save goes to `/profile/tags`, and the list shows the new name.
+- The screenshots of `/profile/tags`, `/profile/tags?tag=ID` and `/profile/budgets` are the same, pixel for pixel, before and after the change (1440px and 500px, light and dark).
+- With JavaScript off, the HTML of `?tag=ID` holds the panel and its form. But the browser shows the skeleton of `profile/loading.tsx` (Task 4): Next streams the page into a hidden element, and only a script shows it. This is true for every page with a `loading.tsx`, not only for the panel.
+
+- [x] **Step 4: Run the gates and commit**
 
 ```bash
 git add -A apps/web
