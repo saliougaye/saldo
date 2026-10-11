@@ -1189,7 +1189,7 @@ The table gives the parameters that each page reads on 2026-10-11.
 | `profile/budgets/page.tsx` | `new` | `b` | `new` → `BudgetForm` (new), `b:ID` → `BudgetForm` (edit) | save, delete |
 | `profile/goals/page.tsx` | `new` | `g` | `new` → `GoalForm` (new), only when `canCreate` is true; `g:ID` → `GoalForm` (edit), one for each open goal | save (`afterSave` is `${PATH}?g=__ID__`); the `web.accounts.openInAccounts` link (`goalAccountsHref`, another path) |
 | `profile/connectors/page.tsx` | none | `connector` (`CONNECTOR_PARAM`) | `connector:CLIENT_ID` → the facts of the connector and `RevokeConnector`, one for each row | revoke (`RevokeConnector`) |
-| `profile/preferences/page.tsx` | none | `edit` | `edit:cycle` → `CyclePanel`, `edit:currency` → `CurrencyPanel`, `edit:language` → `LanguagePanel`, `edit:theme` → `ThemePanel`, `edit:timeZone` → `TimeZonePanel` (the keys are `PREFERENCE_KEYS`) | each save (`useSaveSetting`) |
+| `profile/preferences/page.tsx` | none | `edit` | `edit:cycle` → `CyclePanel`, `edit:currency` → `CurrencyPanel`, `edit:language` → `LanguagePanel`, `edit:theme` → `ThemePanel` (the keys are `PREFERENCE_KEYS`) | `edit:timeZone` → `TimeZonePanel`; each save (`useSaveSetting`) |
 
 The first version of this plan named the values of Categories and Budgets `category` and `budget`. The pages read `c` and `b`.
 
@@ -1197,12 +1197,12 @@ On Categories, the page lets `?new` win over `?c=`, and `?c=` win over `?archive
 
 Each row gives its whole key as `selectId` (for example `c:${id}`), as in Task 11.
 
-On 2026-10-11 Categories, Budgets and Goals use `PanelSwitch`. Connectors and Preferences still use `SlotPanel` and `ProfilePanel`. Thus the steps below stay open.
+On 2026-10-11 every Profilo section with a panel uses `PanelSwitch`: Tags, Categories, Budgets, Goals, Connectors and Preferences. `ProfilePanel` is deleted. Task 12 is complete.
 
-- [ ] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
-- [ ] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
-- [ ] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after the change. Both must pass.
-- [ ] **Step 4: Commit** with `feat(web): Profilo → <section> opens its panel in place`.
+- [x] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
+- [x] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
+- [x] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after the change. Both must pass.
+- [x] **Step 4: Commit** with `feat(web): Profilo → <section> opens its panel in place`.
 
 **The size of the response.** The page renders one form for each row, and the RSC response carries the props of every form. Give a body only the props that are its own. Give the props that all the forms share once, through a provider at the root of the page. `sharedProps` in `src/ui/sharedProps.tsx` makes the provider and the hook. The provider renders no element, so `PanelSwitch` stays the root of the section. Examples of shared props: the messages, the money format, and lists of options such as the categories or the parent accounts. When each form needs a list that differs only a little, give the shared rows once. Then let the form call core on them, for example `categoryParentCandidates`.
 
@@ -1213,10 +1213,17 @@ On 2026-10-11 a temporary spec measured `/profile/categories` with 50 more categ
 On 2026-10-11 the work on Categories found these points:
 
 - `CategoryFormView` has no `parents` now. `CategoryForm` calls `categoryParentOptions` on the shared categories.
-- `ArchiveCategoryView` has no `targets` now. `ArchiveCategory` calls `archiveTargets` on the shared categories. It gets its strings from the shared props. A body gives only `id`, `updatedAt`, `uses` and the body text with the count.
+- `ArchiveCategory` calls `archiveMoveTargets` on the shared categories. It gets its strings from the shared props. A body gives only `id`, `updatedAt`, `uses` and the body text with the count.
 - The archived list is the panel `archived`. Its row has `selectId="archived"`. «Ripristina» stays a navigation.
 - A URL with `?c=` and an id that is not a live category opens nothing, also with `?archived`. Before, `?archived` then opened the archived list. `PanelSwitch` reads the first name of `order` that the URL has.
 - The goals flows are in `accounts-goals`, not in `budgets-categories-tags`. Step 3 runs the spec of the section.
+
+On 2026-10-11 the review of the Categories commit found these problems. Commit `fix(web): review findings on the Profilo categories, budgets and goals panels` fixes them:
+
+- The archive dialog showed «Sposta le transazioni in» for each category in use. Thus the only income category with transactions showed a select with only «Nessuna». `archiveMoveTargets` now gives null when nothing uses the category or no category can take its transactions. Then the dialog shows no select. `archiveView.test.ts` has the regression test.
+- The page made a `c:ID` panel only for the rows of the list. Thus `?c=` with a live child of an archived parent opened nothing. A link from MCP can give such an id. Now every live category has its form.
+- The page called `archiveCategoryView` for each row. That read every transaction for each category. Now the dialog gets its count from `categoriesView` (`usage`) and its version from the form view. `archiveCategoryView` is deleted.
+- `CategoryFormSharedValue.categories` stays `Category[]`. Core's `categoryParentCandidates`, `topLevelCategories` and `movableTargets` take `readonly Category[]`. A smaller row needs these three functions to be generic. It would save only `createdAt`, `updatedAt` and `deletedAt`.
 
 On 2026-10-11 the work on Budgets found these points:
 
@@ -1235,6 +1242,32 @@ On 2026-10-11 the review of Task 11 found the same luck on Tags. The page sent t
 
 - `TagFormShared` gives the tag list, the locale, the messages, `closeHref` and `afterSave` once. A body gives only `tag` and `transactionsHref`.
 - With 50 more tags the RSC response was 131 KB before and 123 KB after. A message of the form is in the response once, before and after. The string `"/profile/tags"` was in it 110 times before and 4 times after.
+
+On 2026-10-11 the work on Connectors found these points:
+
+- A panel shows the facts of the user's own consent: the name, the scopes, the host that the client returns to, the dates and the count of calls. The list row already shows most of them. No panel holds a token, a secret or a whole redirect URI. Thus the page renders a panel for each row. Before, the page rendered only the panel of the selected row.
+- `RevokeConnectorShared` gives the strings of «Revoca accesso» and `closeHref` once. A body gives only `clientId` and the title with the name. «Revoca accesso» stays a navigation: `router.replace(closeHref)`.
+- `connectorRows` has no `selectedId` and no `selected` now. The rows are `PanelLink`s with `selectId={`connector:${clientId}`}`.
+- `ConnectPanel` is the «Collega» block above the list, not a panel. It does not change.
+- With 10 connectors the RSC response was 48 KB before and 85 KB after (6.7 KB and 8.0 KB with gzip).
+
+On 2026-10-11 the work on Preferences found these points:
+
+- A save calls `router.refresh()`. The page renders again with the new settings, and the panel stays open. A change of language renders the whole page in the new language. The URL does not change.
+- `edit:timeZone` stays a navigation. Its list has about 400 zones, with the hour in each zone at the time of the render. The list is 40 KB, and its hours are right only at the render. The page puts `edit:timeZone` in `panels` only when the URL has `?edit=timeZone`. Thus a load or a navigation to it opens the panel, and from there the other four open in place.
+- `SettingErrorsShared` gives the error strings once. `useSaveSetting` reads them, so the five panels have no `errors` prop.
+- `SummaryRow` takes `selectId`, as `ListRow` does. Admin → Settings can use it in Task 14.
+- `editPanel` is deleted. `PanelSwitch` reads `?edit=`.
+- The RSC response of `/profile/preferences` was 27 KB before. It was 79 KB with all five panels, and it is 41 KB with the time zone as a navigation (5.3 KB, 15.7 KB and 8.9 KB with gzip).
+
+On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave these results on Connectors (10 rows) and Preferences:
+
+- A click on a row shows the panel in the next frame, with the parameter in the URL and no RSC request. A click on a second row keeps the same `aside` element, and the row has `aria-current="true"`.
+- ✕ and Esc close with no RSC request, and the focus goes back to the row. Back closes the panel.
+- A load with the parameter opens the page with the panel. The server HTML holds the `aside`, also with JavaScript off.
+- On Connectors, «Revoca accesso» goes to `/profile/connectors` with no panel, and the list has one row less.
+- On Preferences, the row of the time zone sends one RSC request and opens its panel. A save of the theme, the language or the zone keeps the panel open, and the row shows the new value.
+- The screenshots of the two lists and of `?edit=theme` are the same, pixel for pixel, before and after (1440px and 500px, light and dark). So is `?connector=ID` at 1440px. At 500px the page under the full-screen panel of a connector is 24px shorter: the empty slot of the layout has no row in the grid now. The pixels above that are the same.
 
 `profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
@@ -1328,5 +1361,5 @@ Queries per request on `/transactions`: before 5, after A not measured, after B 
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
 - **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
-- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
+- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. Connectors with 10 rows went from 48 KB to 85 KB. Preferences went from 27 KB to 41 KB, with the time zone as a navigation. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because the panel key is the `key` of the body. The `key` of `Panel` is only its shape, so the panel does not play its entrance again.
