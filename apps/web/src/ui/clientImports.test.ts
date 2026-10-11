@@ -33,5 +33,7 @@ describe('client components', () => {
     const translate = await import('@saldo/i18n/translate');
     expect(typeof format.formatMoney).toBe('function');
     expect(typeof translate.makeTranslator).toBe('function');
+    const zones = await import('@saldo/i18n/timeZones');
+    expect(typeof zones.timeZoneCity).toBe('function');
   });
 });

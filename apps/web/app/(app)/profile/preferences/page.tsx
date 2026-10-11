@@ -3,13 +3,13 @@ import {
   currencyOptions,
   languageOptions,
   themeOptions,
-  timeZoneOptions,
 } from '../../../../src/features/profile/preferenceOptions';
 import {
   PREFERENCES_PATH,
   type PreferenceKey,
   preferenceRows,
 } from '../../../../src/features/profile/profileRows';
+import { minuteOf } from '../../../../src/features/profile/timeZoneRows';
 import { readPage } from '../../../../src/server/page/context';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
@@ -18,7 +18,7 @@ import { CurrencyPanel } from './CurrencyPanel';
 import { CyclePanel } from './CyclePanel';
 import { LanguagePanel } from './LanguagePanel';
 import { ThemePanel } from './ThemePanel';
-import { TimeZonePanel } from './TimeZonePanel';
+import { TimeZonePanel, TimeZoneWarmup } from './TimeZonePanel';
 import { type SettingErrors, SettingErrorsShared } from './useSaveSetting';
 
 export const runtime = 'nodejs';
@@ -28,17 +28,11 @@ export const dynamic = 'force-dynamic';
 const PANEL_PARAMS = { flags: [], values: ['edit'] } as const;
 
 /**
- * The editor that stays a navigation: its list of about 400 zones, each with the hour there now, is
- * 40 KB of the response and is right only at the time of the render. The page renders it only when
- * the URL asks for it.
- */
-const ON_REQUEST: PreferenceKey = 'timeZone';
-
-/**
  * Profilo → Preferenze (§6.8, §17.1.7): the phone's five rows, each opening its editor in the
- * profile panel through `?edit=` — in place (`PanelSwitch`), but for the time zone. A choice is
- * saved as it is made — the currency asks first — and everything a panel lists is resolved here:
- * the client gets plain rows, never a catalog.
+ * profile panel through `?edit=`, in place (`PanelSwitch`). A choice is saved as it is made — the
+ * currency asks first — and everything a panel lists is resolved here: the client gets plain rows,
+ * never a catalog. The time zone list is the one exception: the browser makes it from static
+ * tables, with its own hours (`TimeZonePanel`), so the page sends no list of 400 zones.
  */
 export default async function ProfilePreferencesPage({
   searchParams,
@@ -46,8 +40,10 @@ export default async function ProfilePreferencesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const page = await readPage(searchParams);
-  const { t, locale, settings, today, params } = page;
+  const { t, locale, settings, today } = page;
   const rows = preferenceRows(settings, locale);
+  // Under the id the time zone list holds it.
+  const savedZone = settings.timeZone == null ? null : canonicalTimeZone(settings.timeZone);
 
   const errors: SettingErrors = {
     invalid: t('web.preferences.error_invalid'),
@@ -110,11 +106,11 @@ export default async function ProfilePreferencesPage({
           />
         );
       case 'timeZone': {
-        const saved = settings.timeZone ?? null;
         return (
           <TimeZonePanel
-            saved={saved === null ? null : canonicalTimeZone(saved)}
-            {...timeZoneOptions(locale, new Date(), saved)}
+            saved={savedZone}
+            locale={locale}
+            renderedAt={minuteOf(new Date())}
             strings={{
               title: t('profile.timeZone'),
               note: t('timeZone.subtitle'),
@@ -130,16 +126,14 @@ export default async function ProfilePreferencesPage({
     }
   };
 
-  // Every editor, rendered here: a click only chooses one (`PanelSwitch`). The time zone's is here
-  // only when the URL opens it, so its row navigates. A choice is saved as it is made, and
-  // `router.refresh()` renders the page again with the panel still open.
+  // Every editor, rendered here: a click only chooses one (`PanelSwitch`), which mounts only the
+  // open one. A choice is saved as it is made, and `router.refresh()` renders the page again with
+  // the panel still open.
   const panels: Record<string, PanelSpec> = Object.fromEntries(
-    rows
-      .filter((row) => row.key !== ON_REQUEST || params.edit === ON_REQUEST)
-      .map((row): [string, PanelSpec] => [
-        `edit:${row.key}`,
-        { title: t(row.labelKey), body: body(row.key) },
-      ]),
+    rows.map((row): [string, PanelSpec] => [
+      `edit:${row.key}`,
+      { title: t(row.labelKey), body: body(row.key) },
+    ]),
   );
 
   return (
@@ -169,6 +163,8 @@ export default async function ProfilePreferencesPage({
               }
             />
           ))}
+          {/* Renders nothing: it makes the time zone list in idle time, so its row opens at once. */}
+          <TimeZoneWarmup locale={locale} saved={savedZone} />
         </Section>
       </PanelSwitch>
     </SettingErrorsShared>

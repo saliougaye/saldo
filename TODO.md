@@ -21,12 +21,12 @@ Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-fe
 «Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
 in one movement. Picked up again on 2026-10-11 (`docs/superpowers/plans/2026-10-11-web-navigation-feel.md`): every
 tab shows a skeleton and a navigation bar while it loads, a page reads the session in one step, and the panels of
-Transazioni, Conti, Profilo and Admin open in place. Still open:
+Transazioni, Conti, Profilo and Admin open in place. The time zone list of Preferenze opens in place too
+(`docs/superpowers/plans/2026-10-11-web-timezone-in-place.md`). Still open:
 
 - the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
 - the edit form of a transaction and of an account (`?a=ID&edit`) stays a navigation, because it needs the balances
-  of one row, which only the server calculates. The time zone list of Preferenze stays a navigation for the same
-  reason (its hours are right only at the render);
+  of one row, which only the server calculates;
 - «settled» is longer on the pages that have a skeleton. Home → Transazioni took 156 ms before the work, 397 ms
   after the skeletons, 202 ms after the shorter query chain and 188 ms at the end of the work. The `loading.tsx`
   boundary seems to add wall-clock time. The cause is not investigated;

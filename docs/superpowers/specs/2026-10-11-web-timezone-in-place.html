@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The time zone list opens in place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── This spec: both themes side by side, the shell, the bar, the skeleton ── */
+/* .light and .dark force one @saldo/ui palette. --accent is the palette value `accent` (packages/ui/src/tokens.ts). */
+.light { --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF; --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18); --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A; --accent: #4A4A46; --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05); color-scheme: light; color: var(--text); }
+.dark { --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A; --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14); --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C; --accent: #C7C7C7; --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5); color-scheme: dark; color: var(--text); }
+kbd { font: 500 .82em var(--mono); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0 5px; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.duo > div { background: var(--page); border-radius: var(--r-sheet); padding: 18px 14px 14px; min-width: 0; }
+.duo .meta { display: block; margin: 0 0 12px 4px; }
+.duo .stage-cap { margin-top: 12px; }
+.duo.rows { grid-template-columns: minmax(0, 1fr); }
+table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
+@media (max-width: 640px) {
+  table.wrap1 th, table.wrap1 td { padding: 10px 8px; }
+  table.wrap1 td:first-child { min-width: 6em; }
+  table.wrap1 :not(pre) > code { white-space: normal; overflow-wrap: anywhere; }
+}
+.screen.app { width: 100%; max-width: none; border-radius: 16px; padding: 0; overflow: hidden; position: relative; }
+.screen .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.screen .topbar .brandline { margin: 0; }
+.screen .topbar .nav { color: var(--text-muted); }
+.screen .topbar .nav b { color: var(--text); font-weight: 500; background: var(--raised); padding: 4px 8px; border-radius: 8px; }
+.screen .topbar .new { margin-left: auto; background: var(--text); color: var(--bg); border-radius: 10px; padding: 5px 10px; font-weight: 500; }
+.screen .skel { display: flex; flex-direction: column; gap: 10px; padding: 18px 14px 20px; }
+.screen .skel i { display: block; height: 44px; border-radius: 14px; background: var(--raised); }
+.screen .skel i.t { height: 22px; width: 40%; border-radius: 10px; }
+.screen .sr-note { margin: 0 14px 14px; padding: 8px 10px; border-radius: 10px; background: var(--raised); font-size: 12px; color: var(--text-muted); }
+.screen .sr-note b { color: var(--text); font-weight: 500; }
+.screen .split { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 16px 14px 18px; }
+.screen .subnav { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-muted); }
+.screen .subnav span { padding: 5px 8px; border-radius: 8px; }
+.screen .subnav span.on { background: var(--raised); color: var(--text); font-weight: 500; }
+.screen .list h5 { font-size: 17px; margin: 0 0 4px; }
+.screen .list .muted { margin-bottom: 6px; }
+.screen .list .row { padding: 8px 6px; border-radius: 8px; }
+.screen .list .row.sel { background: var(--raised); }
+.screen .pbox { border-left: 1px solid var(--border); padding-left: 14px; min-width: 0; }
+.screen .phead { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.screen .plink { display: block; font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+@media (max-width: 640px) {
+  .screen .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .screen .subnav { display: none; }
+}
+/* This spec: the rows of the time zone list */
+.screen .tznote { margin: 8px 0 2px; }
+.screen .grp { font: 500 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); margin: 12px 0 4px; }
+.screen .opt { display: flex; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); font-size: 12px; }
+.screen .opt .grow { flex: 1; min-width: 0; }
+.screen .opt .num { color: var(--text-muted); }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#problem"><span>01</span>Problem and scope</a></li>
+    <li><a href="#decisions"><span>02</span>Decisions</a></li>
+    <li><a href="#panel"><span>03</span>The panel in the browser</a></li>
+    <li><a href="#hours"><span>04</span>The hours</a></li>
+    <li><a href="#safe"><span>05</span>Correctness and security</a></li>
+    <li><a href="#measure"><span>06</span>How to measure</a></li>
+    <li><a href="#risks"><span>07</span>Risks</a></li>
+    <li><a href="#words"><span>08</span>Words</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo web · Preferences · Spec</span>
+    <h1>The time zone list opens in place</h1>
+    <p>On Profile › Preferences, the row «Time zone» opens its list in the frame of the click, as the other four rows do. The browser calculates the hour in each zone. The server still checks the zone that a person saves.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> TODO «Web app: a UI pass» · spec 2026-10-11 «web navigation feel» §05</span>
+    <span><b>Plan</b> <code>2026-10-11-web-timezone-in-place.md</code></span>
+    <span><b>Date</b> 2026-10-11</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="problem" aria-labelledby="h-problem">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-problem">Problem and scope</h2>
+      <p class="lead">The time zone panel is the only panel of Preferences that is still a navigation.</p>
+    </div>
+    <div class="prose">
+      <p>The 2026-10-11 work made the panels of Preferences open in place. It kept <code>edit:timeZone</code> a navigation for two reasons:</p>
+      <ol class="steps">
+        <li>The list has 418 zones. Each row has the city, the name of the zone and the hour there. The list adds 38 KB to the RSC response of the page.</li>
+        <li>The server calculates the hours at the render. If the server renders the list with every load of the page, the hours are old when a person opens the panel later.</li>
+      </ol>
+      <p>Thus a click on «Time zone» sends one RSC request and waits for the server. The other four rows open with no request.</p>
+      <div class="callout"><span class="meta">Out of scope</span><p>This spec covers only the time zone panel. The edit form of a transaction (<code>?t=ID&amp;edit</code>) and of an account (<code>?a=ID&amp;edit</code>) stay navigations. A separate review decides about them. This spec does not change their code.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="cards">
+      <div class="card rv"><div class="stat num">348 ms</div><h4>Click to list, before</h4><p>The median of 7 clicks on a production build, CPU 4×, 1440px.</p></div>
+      <div class="card rv"><div class="stat num">1</div><h4>RSC request for each open</h4><p>The panel is not on the page until the server renders it.</p></div>
+      <div class="card rv"><div class="stat num">38 KB</div><h4>The list in the response</h4><p>79 KB with the list, 41 KB without it (15.8 KB and 9.0 KB with gzip).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="decisions" aria-labelledby="h-decisions">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-decisions">Decisions</h2>
+      <p class="lead">The browser makes the list from static tables. The server sends only the saved zone, the language and the minute of the render.</p>
+    </div>
+    <div class="prose">
+      <p>The names of the zones and of the cities do not change at run time. They are static tables in <code>@saldo/i18n</code> (<code>timeZones.generated.ts</code> and <code>timeZoneCities.ts</code>). The hour in a zone is <code>wallClock</code>, which uses <code>Intl.DateTimeFormat</code>. Every browser has it. Three designs were compared.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Design</th><th scope="col">Cost</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          <tr><td>A. Keep the navigation</td><td>1 RSC request and 38 KB (6.8 KB with gzip) for each open, and again after each save while the panel is open.</td><td>Rejected. The click waits for the server.</td></tr>
+          <tr><td>B. The server renders the list with every load, without the hours</td><td>About 33 KB (6 KB with gzip) in each response of the page, also when nobody opens the panel. The browser adds the hours.</td><td>Rejected. Each load and each <code>router.refresh</code> pays for a list that is rarely opened.</td></tr>
+          <tr><td>C. The browser makes the list</td><td>The client code of the page gets the tables once: a chunk of 59 KB, 16.3 KB with gzip. The browser keeps the file in its cache. The response of the page grows by 1.8 KB.</td><td><b>Chosen.</b> No request at the click, and no list in the response.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Decision</th><th scope="col">Reason</th></tr></thead>
+        <tbody>
+          <tr><td>A subpath <code>@saldo/i18n/timeZones</code></td><td>A client component must not import the root of <code>@saldo/i18n</code>, because the root holds the seven catalogs (<code>clientImports.test.ts</code>). <code>timeZones.ts</code> imports no catalog.</td></tr>
+          <tr><td>The same functions as before</td><td>The rows use <code>timeZoneCity</code>, <code>timeZoneName</code>, <code>wallClock</code> and <code>formatWallTime</code>, as <code>timeZoneOptions</code> did on the server. Thus the text of each row does not change.</td></tr>
+          <tr><td>The same order</td><td>The rows are sorted by city with <code>Intl.Collator(locale)</code>. This is the comparison that <code>localeCompare(b, locale)</code> made on the server.</td></tr>
+          <tr><td><code>edit:timeZone</code> is always in <code>panels</code></td><td><code>PanelSwitch</code> mounts only the open panel. Thus the browser makes the list only when the panel shows.</td></tr>
+          <tr><td>The hours tick</td><td>The panel reads the current minute. A timer starts a new render at each new minute while the panel is open. Thus the hours are never old.</td></tr>
+          <tr><td>The server check stays</td><td><code>saveSetting</code> still refuses a zone that <code>Intl</code> does not know (<code>isTimeZone</code>), and it still stores the CLDR id (<code>canonicalTimeZone</code>). This spec does not change the action.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="panel" aria-labelledby="h-panel">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-panel">The panel in the browser</h2>
+      <p class="lead">A click on «Time zone» only selects a panel that the page already has. The browser then makes the rows.</p>
+    </div>
+    <div class="prose">
+      <p><b>The server.</b> The page puts <code>edit:timeZone</code> in <code>panels</code> with every render. The body is <code>TimeZonePanel</code> with four props: <code>saved</code>, <code>locale</code>, <code>renderedAt</code> (the minute of the render) and <code>strings</code>. It has no list.</p>
+      <p><b>The browser.</b> <code>timeZoneRows(locale, saved)</code> gives the rows: each zone of <code>TIME_ZONES</code>, plus the saved zone when the table does not hold it. Each row has the zone, the city and the name of the zone. <code>zoneTimes(zones, now)</code> gives the hour of each row. Both functions are pure and live in <code>src/features/profile/timeZoneRows.ts</code>.</p>
+      <p><b>The warm-up.</b> <code>Intl</code> makes the rows and the hours slowly (section 04). Thus <code>TimeZoneWarmup</code>, which renders nothing, makes them in idle time after the Preferences page mounts. <code>zoneCache.ts</code> keeps them: the rows for a language and a saved zone, and the hours of one minute. The panel reads the same cache. A zone that the warm-up did not reach gets its hour at the render.</p>
+      <p><b>The device zone.</b> <code>listedZone</code> reads the aliases from <code>TIME_ZONE_ALIASES</code> of the static table. The server does not send them now.</p>
+      <p><b>A load of <code>?edit=timeZone</code>.</b> The server renders the panel as before, so the HTML holds the list. The rows of the HTML have the hours of <code>renderedAt</code>. The browser then shows the hours of its own minute.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 520" role="img" aria-labelledby="f1t">
+        <title id="f1t">Two sequences for a click on the Time zone row. Before: the browser sends an RSC request, the server builds 418 rows with the hour at the render, and the browser shows the panel after about 348 milliseconds. After: the page already has the panel, the browser builds the rows from the static tables and the hours from Intl, and the panel shows in the next frame with no request.</title>
+        <text x="20" y="34" font-size="18" class="b">Before: a navigation</text>
+        <rect class="bx" x="20" y="56" width="200" height="64" rx="14"/>
+        <text x="120" y="94" text-anchor="middle" font-size="16">Click «Time zone»</text>
+        <line class="ln" x1="224" y1="88" x2="320" y2="88" marker-end="url(#ah)"/>
+        <text x="272" y="76" text-anchor="middle" font-size="13" class="tm mono">RSC</text>
+        <rect class="bx-r" x="326" y="56" width="330" height="64" rx="14"/>
+        <text x="491" y="84" text-anchor="middle" font-size="16">Server: 418 rows</text>
+        <text x="491" y="106" text-anchor="middle" font-size="13" class="tm">city · name · hour at the render</text>
+        <line class="ln" x1="660" y1="88" x2="756" y2="88" marker-end="url(#ah)"/>
+        <text x="708" y="76" text-anchor="middle" font-size="13" class="tm mono">+38 KB</text>
+        <rect class="bx" x="762" y="56" width="258" height="64" rx="14"/>
+        <text x="891" y="84" text-anchor="middle" font-size="16">Panel shows</text>
+        <text x="891" y="106" text-anchor="middle" font-size="13" class="tm num">≈ 348 ms</text>
+
+        <line class="lane" x1="20" y1="170" x2="1020" y2="170"/>
+
+        <text x="20" y="220" font-size="18" class="b tok">After: in place</text>
+        <rect class="bx" x="20" y="242" width="200" height="64" rx="14"/>
+        <text x="120" y="280" text-anchor="middle" font-size="16">Click «Time zone»</text>
+        <line class="ln-ok" x1="224" y1="274" x2="320" y2="274" marker-end="url(#ah-ok)"/>
+        <text x="272" y="262" text-anchor="middle" font-size="13" class="tok">no request</text>
+        <rect class="bx-ok" x="326" y="242" width="330" height="64" rx="14"/>
+        <text x="491" y="270" text-anchor="middle" font-size="16">Browser: 418 rows</text>
+        <text x="491" y="292" text-anchor="middle" font-size="13" class="tm">static tables · Intl hours</text>
+        <line class="ln-ok" x1="660" y1="274" x2="756" y2="274" marker-end="url(#ah-ok)"/>
+        <rect class="bx-ok" x="762" y="242" width="258" height="64" rx="14"/>
+        <text x="891" y="270" text-anchor="middle" font-size="16">Panel shows</text>
+        <text x="891" y="292" text-anchor="middle" font-size="13" class="tm">the next frame</text>
+
+        <rect class="bx-dash" x="326" y="360" width="694" height="130" rx="14"/>
+        <text x="350" y="392" font-size="15" class="b">A choice is a save, as before</text>
+        <text x="350" y="420" font-size="14" class="tm">saveSettingAction → saveSetting: isTimeZone, canonicalTimeZone</text>
+        <text x="350" y="446" font-size="14" class="tm">router.refresh() renders the page again: the row shows the new zone,</text>
+        <text x="350" y="470" font-size="14" class="tm">and the panel stays open.</text>
+        <line class="ln-ink" x1="891" y1="310" x2="891" y2="356" marker-end="url(#ah-ink)"/>
+      </svg>
+      <figcaption><b>Figure 1.</b> Green: in the browser, with no request. The save is a Server Action, as before.</figcaption>
+    </figure>
+
+    <figure class="rv">
+      <svg viewBox="0 0 1040 400" role="img" aria-labelledby="f2t">
+        <title id="f2t">What the server sends and what the browser calculates. The server sends the saved zone, the language, the minute of the render and the strings: props of less than 1 kilobyte. The client code holds the static tables: 418 zone ids, the city names and the zone names in seven languages, 16.3 kilobytes with gzip, loaded once and kept in the cache. The browser calculates the rows, the order by city and the hour in each zone.</title>
+        <rect class="bx" x="20" y="30" width="300" height="200" rx="16"/>
+        <text x="40" y="64" font-size="17" class="b">The server sends</text>
+        <text x="40" y="98" font-size="15" class="mono">saved</text>
+        <text x="40" y="126" font-size="15" class="mono">locale</text>
+        <text x="40" y="154" font-size="15" class="mono">renderedAt</text>
+        <text x="40" y="182" font-size="15" class="mono">strings</text>
+        <text x="40" y="214" font-size="14" class="tm">props under 1 KB, each render</text>
+
+        <rect class="bx-r" x="20" y="260" width="300" height="120" rx="16"/>
+        <text x="40" y="294" font-size="17" class="b">Client code</text>
+        <text x="40" y="322" font-size="14" class="mono">@saldo/i18n/timeZones</text>
+        <text x="40" y="350" font-size="14" class="tm">16.3 KB with gzip, once, cached</text>
+
+        <line class="ln" x1="324" y1="130" x2="430" y2="190" marker-end="url(#ah)"/>
+        <line class="ln" x1="324" y1="320" x2="430" y2="240" marker-end="url(#ah)"/>
+
+        <rect class="bx-ok" x="436" y="120" width="300" height="190" rx="16"/>
+        <text x="456" y="154" font-size="17" class="b">The browser</text>
+        <text x="456" y="186" font-size="14" class="mono">timeZoneRows(locale, saved)</text>
+        <text x="456" y="212" font-size="14" class="tm">zone · city · name, by city</text>
+        <text x="456" y="244" font-size="14" class="mono">zoneTimes(zones, now)</text>
+        <text x="456" y="270" font-size="14" class="tm">HH:MM from wallClock</text>
+
+        <line class="ln-ok" x1="740" y1="215" x2="806" y2="215" marker-end="url(#ah-ok)"/>
+        <rect class="bx" x="812" y="150" width="208" height="130" rx="16"/>
+        <text x="916" y="190" text-anchor="middle" font-size="16" class="b">OptionList</text>
+        <text x="916" y="218" text-anchor="middle" font-size="14" class="tm">Current · All</text>
+        <text x="916" y="244" text-anchor="middle" font-size="14" class="tm">418 rows</text>
+      </svg>
+      <figcaption><b>Figure 2.</b> The list moves from the response of each page to the client code, which the browser loads once.</figcaption>
+    </figure>
+
+    <div class="duo rows rv">
+      <div class="light">
+        <span class="meta">Light</span>
+        <div class="screen app" role="img" aria-label="Illustration, light theme: Profile, Preferences, with the Time zone panel open beside the list. The row Time zone is selected. The panel shows the search field, the group Current with Rome, and the group All.">
+          <div class="split">
+            <div class="subnav"><span>Profile</span><span class="on">Preferences</span><span>Categories</span><span>Tags</span><span>Budgets</span><span>Goals</span></div>
+            <div class="list">
+              <h5>Preferences</h5>
+              <div class="muted">These apply to the phone too: they are synced.</div>
+              <div class="row"><div class="grow"><b>Cycle start</b><div class="muted">from the 27</div></div></div>
+              <div class="row"><div class="grow"><b>Currency</b><div class="muted">EUR</div></div></div>
+              <div class="row"><div class="grow"><b>Language</b><div class="muted">System</div></div></div>
+              <div class="row"><div class="grow"><b>Theme</b><div class="muted">System</div></div></div>
+              <div class="row sel"><div class="grow"><b>Time zone</b><div class="muted">Rome</div></div></div>
+            </div>
+            <div class="pbox">
+              <div class="phead"><b>Time zone</b><span class="muted">✕</span></div>
+              <div class="muted tznote">It stays put when you travel: the period closes where you live.</div>
+              <div class="field"><span>Search for a city</span></div>
+              <div class="grp">Current</div>
+              <div class="opt"><div class="grow"><b>Rome</b><div class="muted">Central European Time</div></div><span class="num">11:30</span></div>
+              <div class="grp">All</div>
+              <div class="opt"><div class="grow"><b>Abidjan</b><div class="muted">Greenwich Mean Time</div></div><span class="num">09:30</span></div>
+              <div class="opt"><div class="grow"><b>Accra</b><div class="muted">Greenwich Mean Time</div></div><span class="num">09:30</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dark">
+        <span class="meta">Dark</span>
+        <div class="screen app" role="img" aria-label="Illustration, dark theme: the same Preferences page with the Time zone panel open.">
+          <div class="split">
+            <div class="subnav"><span>Profile</span><span class="on">Preferences</span><span>Categories</span><span>Tags</span><span>Budgets</span><span>Goals</span></div>
+            <div class="list">
+              <h5>Preferences</h5>
+              <div class="muted">These apply to the phone too: they are synced.</div>
+              <div class="row"><div class="grow"><b>Cycle start</b><div class="muted">from the 27</div></div></div>
+              <div class="row"><div class="grow"><b>Currency</b><div class="muted">EUR</div></div></div>
+              <div class="row"><div class="grow"><b>Language</b><div class="muted">System</div></div></div>
+              <div class="row"><div class="grow"><b>Theme</b><div class="muted">System</div></div></div>
+              <div class="row sel"><div class="grow"><b>Time zone</b><div class="muted">Rome</div></div></div>
+            </div>
+            <div class="pbox">
+              <div class="phead"><b>Time zone</b><span class="muted">✕</span></div>
+              <div class="muted tznote">It stays put when you travel: the period closes where you live.</div>
+              <div class="field"><span>Search for a city</span></div>
+              <div class="grp">Current</div>
+              <div class="opt"><div class="grow"><b>Rome</b><div class="muted">Central European Time</div></div><span class="num">11:30</span></div>
+              <div class="grp">All</div>
+              <div class="opt"><div class="grow"><b>Abidjan</b><div class="muted">Greenwich Mean Time</div></div><span class="num">09:30</span></div>
+              <div class="opt"><div class="grow"><b>Accra</b><div class="muted">Greenwich Mean Time</div></div><span class="num">09:30</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap">Illustration · <code>/profile/preferences?edit=timeZone</code>. The panel shows in the frame of the click. The browser sends no request. The screen does not change from the version before this spec.</p>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="hours" aria-labelledby="h-hours">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-hours">The hours</h2>
+      <p class="lead">The panel reads the minute through <code>useSyncExternalStore</code>. Thus the hydration matches the server, and the hours are right after it.</p>
+    </div>
+    <div class="prose">
+      <p><code>useMinute(renderedAt)</code> gives the current minute as a number: <code>Math.floor(Date.now() / 60000)</code>. It has three parts:</p>
+      <ol class="steps">
+        <li><code>getServerSnapshot</code> gives <code>renderedAt</code>. The server render and the hydration render use it. Thus the text of the hours is the same in the two renders, and React reports no mismatch.</li>
+        <li><code>getSnapshot</code> gives the minute of the browser. After the hydration, React renders again with it when it differs. A panel that a click opens uses it in the first render.</li>
+        <li><code>subscribe</code> starts a timer for the next minute, then one timer for each minute. The timer stops when the panel closes.</li>
+      </ol>
+      <p>The rows and their order do not depend on the minute. Only the hours change at each minute.</p>
+      <div class="callout"><span class="meta">Cost</span><p><code>wallClock</code> makes one <code>Intl.DateTimeFormat</code> for each zone, and keeps it. In Chrome with the CPU 4× slower, the first 418 formatters took 70 ms. Without a warm-up, a click took 315 ms, and most of it was <code>Intl</code>: the formatters, <code>formatToParts</code> for each zone, and the collator. With the warm-up in idle time, a click takes 87 ms. Thus the warm-up stays. At a new minute the open panel makes the new hours in one render.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f3t">
+        <title id="f3t">A timeline of the minute that the panel reads. On a load of the URL with edit equals timeZone, the server render and the hydration use renderedAt, then React renders again with the minute of the browser. On a click, the first render already uses the minute of the browser. While the panel is open, a timer renders the hours again at each new minute. When the panel closes, the timer stops.</title>
+        <line class="ln" x1="40" y1="90" x2="1010" y2="90" marker-end="url(#ah)"/>
+        <text x="40" y="40" font-size="17" class="b">A load of ?edit=timeZone</text>
+        <rect class="bx-r" x="40" y="110" width="220" height="64" rx="12"/>
+        <text x="150" y="138" text-anchor="middle" font-size="15">Server render</text>
+        <text x="150" y="160" text-anchor="middle" font-size="13" class="tm mono">renderedAt</text>
+        <rect class="bx-r" x="290" y="110" width="220" height="64" rx="12"/>
+        <text x="400" y="138" text-anchor="middle" font-size="15">Hydration</text>
+        <text x="400" y="160" text-anchor="middle" font-size="13" class="tm mono">renderedAt</text>
+        <rect class="bx-ok" x="540" y="110" width="220" height="64" rx="12"/>
+        <text x="650" y="138" text-anchor="middle" font-size="15">Next render</text>
+        <text x="650" y="160" text-anchor="middle" font-size="13" class="tm mono">Date.now()</text>
+        <rect class="bx-ok" x="790" y="110" width="220" height="64" rx="12"/>
+        <text x="900" y="138" text-anchor="middle" font-size="15">Each new minute</text>
+        <text x="900" y="160" text-anchor="middle" font-size="13" class="tm">timer · new hours</text>
+
+        <line class="ln" x1="40" y1="250" x2="1010" y2="250" marker-end="url(#ah)"/>
+        <text x="40" y="226" font-size="17" class="b">A click on the row</text>
+        <rect class="bx-ok" x="290" y="266" width="220" height="50" rx="12"/>
+        <text x="400" y="297" text-anchor="middle" font-size="15">First render · Date.now()</text>
+        <rect class="bx-ok" x="790" y="266" width="220" height="50" rx="12"/>
+        <text x="900" y="297" text-anchor="middle" font-size="15">Each new minute</text>
+        <rect class="bx-dash" x="540" y="266" width="220" height="50" rx="12"/>
+        <text x="650" y="297" text-anchor="middle" font-size="14" class="tm">close: the timer stops</text>
+      </svg>
+      <figcaption><b>Figure 3.</b> Grey: the minute of the render. Green: the minute of the browser.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="safe" aria-labelledby="h-safe">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-safe">Correctness and security</h2>
+      <p class="lead">The change moves only the display of the list. The save and its checks stay on the server.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Property</th><th scope="col">How it holds</th></tr></thead>
+        <tbody>
+          <tr><td>The zone that is saved</td><td>The browser sends a zone id. <code>saveSetting</code> refuses an id that <code>Intl</code> does not know, and it stores the CLDR id. The tests in <code>settings.test.ts</code> do not change.</td></tr>
+          <tr><td>The text of the rows</td><td>The same functions of <code>@saldo/i18n</code> make the city, the name and the hour. A unit test fixes the rows at one instant for two languages.</td></tr>
+          <tr><td>The hours</td><td>They are the hours of the browser at the current minute. They are never the hours of an old render.</td></tr>
+          <tr><td>Data in the response</td><td>The response holds the saved zone of the person who reads the page, as before. It holds no other person's data and no secret. The tables are public data.</td></tr>
+          <tr><td>Motion, focus, <kbd>Esc</kbd>, Back</td><td>The rules of the 2026-10-07 spec, through <code>PanelSwitch</code>, as for the other four panels.</td></tr>
+          <tr><td>Prefetch</td><td>The row is a <code>SummaryRow</code>, which renders a <code>PanelLink</code>. In a <code>PanelSwitch</code> it has <code>prefetch={false}</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="measure" aria-labelledby="h-measure">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-measure">How to measure</h2>
+      <p class="lead">A temporary script measures a production build on port 3101, before and after the change.</p>
+    </div>
+    <div class="prose">
+      <p>The script signs a person in with a session row, as <code>measure-nav</code> does. It opens <code>/profile/preferences</code> at 1440px. Chrome runs with the CPU four times slower. The script records the time from the <code>pointerdown</code> on «Time zone» to the first frame with a visible row of the list. It also counts the RSC requests that are not prefetches. Each value is the median of 7 clicks.</p>
+      <p>The script also fetches the RSC response and the HTML of the page, with and without <code>?edit=timeZone</code>. It saves the text of the 418 rows, and screenshots at 1440px and 500px in the light and the dark theme. The hours are hidden in the screenshots, because they change each minute.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Value</th><th scope="col">Before (main)</th><th scope="col">After</th></tr></thead>
+        <tbody>
+          <tr><td>Click to visible list, CPU 4×</td><td>348 ms (293–399)</td><td>87 ms (81–93)</td></tr>
+          <tr><td>The same, without the warm-up</td><td>—</td><td>315 ms (292–346)</td></tr>
+          <tr><td>RSC requests for the click</td><td>1</td><td>0</td></tr>
+          <tr><td>RSC response, <code>/profile/preferences</code></td><td>41.1 KB (9.0 KB gzip)</td><td>42.9 KB (9.2 KB gzip)</td></tr>
+          <tr><td>RSC response, <code>?edit=timeZone</code>, also after each save</td><td>79.0 KB (15.8 KB gzip)</td><td>42.9 KB (9.2 KB gzip)</td></tr>
+          <tr><td>HTML, <code>?edit=timeZone</code></td><td>391.8 KB (28.8 KB gzip)</td><td>349.1 KB (22.3 KB gzip)</td></tr>
+          <tr><td>Client chunk with the tables, once</td><td>—</td><td>59.0 KB (16.3 KB gzip)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Record</span><p>The Before values are from commit <code>526e23a0</code> (main). The After values are from commit <code>4348b1b9</code>. Both ran on port 3101, on a copy of the development database (5 accounts, 124 transactions). The machine also ran the work of other agents, so a difference of less than 20 ms is noise.</p>
+    <p>The text of the 418 rows, with the hours removed, is the same as on main, row for row. The screenshots of the list and of <code>?edit=timeZone</code>, at 1440px and 500px, in the light and the dark theme, with the hours hidden, are the same bytes as on main. A load of <code>?edit=timeZone</code> writes no error in the console.</p></div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="risks" aria-labelledby="h-risks">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-risks">Risks</h2>
+      <p class="lead">Four risks are known. Each one has a check or a rule.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">Risk</th><th scope="col">What to do</th></tr></thead>
+        <tbody>
+          <tr><td>A different order in the browser</td><td>The server render and the hydration sort with two collators: the one of Node and the one of the browser. If they disagree on two cities, React reports a hydration mismatch on a load of <code>?edit=timeZone</code>, and it renders the panel again in the browser. The CLDR root collation is the same in both. In Chromium the order is the same as on main, and the console has no error. Safari and Firefox were not checked.</td></tr>
+          <tr><td>The size of the client code</td><td>The page loads 16.3 KB more with gzip once. The browser keeps it in its cache until the next deployment. Only the Preferences page imports it.</td></tr>
+          <tr><td>The first open on a slow device</td><td>The warm-up makes the list in idle time (section 04). A click before the warm-up ends makes the rest of the hours at the render, as without a warm-up.</td></tr>
+          <tr><td>A browser with another <code>Intl</code> name</td><td>A browser can report a zone with another id (<code>Asia/Kolkata</code>). <code>listedZone</code> maps it with <code>TIME_ZONE_ALIASES</code>, as before.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="words" aria-labelledby="h-words">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-words">Words</h2>
+      <p class="lead">The meaning of the special words in this document.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Word</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Navigation</td><td>The browser asks the server for the page with the new URL.</td></tr>
+          <tr><td>In place</td><td>The screen changes in the browser, with no request to the server.</td></tr>
+          <tr><td>Zone</td><td>An IANA time zone id, for example <code>Europe/Rome</code>.</td></tr>
+          <tr><td>CLDR</td><td>The Unicode data for the names of cities and zones in each language.</td></tr>
+          <tr><td>Hydration</td><td>React connects the HTML of the server to the code in the browser.</td></tr>
+          <tr><td>Frame</td><td>One image on the screen. At 60 Hz a frame is 16.7 ms.</td></tr>
+          <tr><td>CPU 4×</td><td>Chrome makes the CPU four times slower, to show a slower computer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · web · the time zone list in place · spec 2026-10-11</footer>
+
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>

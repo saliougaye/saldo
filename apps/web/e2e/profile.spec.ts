@@ -252,6 +252,57 @@ test('the time zone is searched by city, saved as chosen and survives a reload',
   await member.context.close();
 });
 
+test('the time zone row opens its list in place, with the hours of this browser', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Prefs Fuso Posto',
+    email: 'prefs-zone-place@e2e.test',
+  });
+  const { page } = member;
+  await page.goto(PREFERENCES);
+  // The requests of a navigation; a prefetch is not one.
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    const headers = request.headers();
+    if (headers.rsc === '1' && headers['next-router-prefetch'] === undefined) {
+      requests.push(request.url());
+    }
+  });
+
+  const zoneRow = row(page, t('profile.timeZone'));
+  await zoneRow.click();
+  await expect(page).toHaveURL(/edit=timeZone$/);
+  const list = page.getByRole('radiogroup', { name: t('profile.timeZone') });
+  const tokyo = list.getByRole('radio', {
+    name: new RegExp(`^${timeZoneCity('Asia/Tokyo', 'it')}`),
+  });
+  await expect(tokyo).toBeVisible();
+  // The hour in Tokyo as this browser reads it now: the panel did not get it from a render. Read
+  // again on each try, so a new minute during the check does not fail it.
+  const tokyoHour = () =>
+    page.evaluate(() =>
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Tokyo',
+        hourCycle: 'h23',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date()),
+    );
+  await expect
+    .poll(async () => (await tokyo.textContent())?.includes(await tokyoHour()))
+    .toBe(true);
+  expect(requests).toEqual([]);
+
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(new RegExp(`${PREFERENCES}$`));
+  await expect(list).toHaveCount(0);
+  await expect(zoneRow).toBeFocused();
+  expect(requests).toEqual([]);
+  await member.context.close();
+});
+
 test('the account shows the name and the email, and says the address stays unverified without mail', async ({
   browser,
   t,
