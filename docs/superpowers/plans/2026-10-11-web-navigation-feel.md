@@ -1068,32 +1068,42 @@ Expected: PASS.
 
 - [x] **Step 2: Change the page**
 
-Replace the `creating`/`editing`/`open` block and the `ProfilePanel` with a map. The links of the rows become `PanelLink`s, so a plain click goes to the controller:
+Replace the `creating`/`editing`/`open` block and the `ProfilePanel` with a map. The links of the rows become `PanelLink`s, so a plain click goes to the controller. The props that all the forms share go once to a provider above `PanelSwitch` (see «The size of the response» in Task 12). A body gets only the props of its own row. The code in `apps/web/app/(app)/profile/tags/page.tsx` and `TagForm.tsx` is the reference:
 
 ```tsx
+// TagForm.tsx: the props that every form shares, given once.
+export interface TagFormSharedValue {
+  tags: readonly { id: string; name: string }[];
+  locale: AppLocale;
+  messages: TagMessages;
+  closeHref: string;
+  afterSave: string;
+}
+const shared = sharedProps<TagFormSharedValue>('TagForm');
+export const TagFormShared = shared.Provider;
+// TagForm({ tag, transactionsHref }) reads the rest with `shared.useShared()`.
+```
+
+```tsx
+// page.tsx
 import { PanelLink } from '../../../../src/ui/PanelNav';
-import { PanelSwitch, type PanelSpec } from '../../../../src/ui/PanelSwitch';
+import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
+import { TagForm, TagFormShared, type TagFormSharedValue } from './TagForm';
 
 const PANEL_PARAMS = { flags: ['new'], values: ['tag'] } as const;
 // … inside ProfileTagsPage, after `const rows = tagsView(page.data);`
-const tagList = rows.map((row) => ({ id: row.id, name: row.name }));
-const messages = tagMessages(catalogs[locale]);
+const shared: TagFormSharedValue = {
+  tags: rows.map((row) => ({ id: row.id, name: row.name })),
+  locale,
+  messages: tagMessages(catalogs[locale]),
+  closeHref: PATH,
+  afterSave: PATH,
+};
 const panels: Record<string, PanelSpec> = {
   new: {
     title: t('tags.newTag'),
     sheet: true,
-    body: (
-      <TagForm
-        key="new"
-        tag={null}
-        tags={tagList}
-        locale={locale}
-        messages={messages}
-        closeHref={PATH}
-        afterSave={PATH}
-        transactionsHref={null}
-      />
-    ),
+    body: <TagForm tag={null} transactionsHref={null} />,
   },
   ...Object.fromEntries(
     rows.map((row): [string, PanelSpec] => [
@@ -1103,13 +1113,7 @@ const panels: Record<string, PanelSpec> = {
         sheet: true,
         body: (
           <TagForm
-            key={row.id}
             tag={row}
-            tags={tagList}
-            locale={locale}
-            messages={messages}
-            closeHref={PATH}
-            afterSave={PATH}
             transactionsHref={`/transactions?tag=${encodeURIComponent(row.id)}`}
           />
         ),
@@ -1119,13 +1123,17 @@ const panels: Record<string, PanelSpec> = {
 };
 
 return (
-  <PanelSwitch baseHref={PATH} params={PANEL_PARAMS} panels={panels} closeLabel={t('common.close')} slot>
-    <Section /* unchanged, but: */>
-      {/* the «Nuovo tag» link and each row's link use PanelLink, with selectId={`tag:${row.id}`} on the rows */}
-    </Section>
-  </PanelSwitch>
+  <TagFormShared value={shared}>
+    <PanelSwitch baseHref={PATH} params={PANEL_PARAMS} panels={panels} closeLabel={t('common.close')} slot>
+      <Section /* unchanged, but: */>
+        {/* the «Nuovo tag» link and each row's link use PanelLink, with selectId={`tag:${row.id}`} on the rows */}
+      </Section>
+    </PanelSwitch>
+  </TagFormShared>
 );
 ```
+
+The provider renders no element, so `PanelSwitch` stays the only child of the section.
 
 `ListRow` already takes `href` and `selected`, and it renders a `PanelLink` (`src/ui/ListRow.tsx` imports it). The rows give `selectId` through the `PanelNavContext`, as the rows of Transazioni do. Read `ListRow.tsx`. Pass the whole key of the row: `selectId={`tag:${row.id}`}`. `PanelSwitch` compares `selectId` with the whole key, not with the id only. For the «Nuovo tag» link, use `<PanelLink href={`${PATH}?new`} className={styles.newTag}>`.
 
@@ -1188,6 +1196,8 @@ The first version of this plan named the values of Categories and Budgets `categ
 On Categories, the page lets `?new` win over `?c=`, and `?c=` win over `?archived`. Give `order: ['new', 'c', 'archived']` in `PANEL_PARAMS` to keep this precedence. Without `order`, `panelKeyFromSearch` lets every flag win over a value.
 
 Each row gives its whole key as `selectId` (for example `c:${id}`), as in Task 11.
+
+On 2026-10-11 Categories, Budgets and Goals use `PanelSwitch`. Connectors and Preferences still use `SlotPanel` and `ProfilePanel`. Thus the steps below stay open.
 
 - [ ] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
 - [ ] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
@@ -1318,5 +1328,5 @@ Queries per request on `/transactions`: before 5, after A not measured, after B 
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
 - **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
-- **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
+- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because the panel key is the `key` of the body. The `key` of `Panel` is only its shape, so the panel does not play its entrance again.
