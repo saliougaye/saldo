@@ -3,10 +3,16 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { SettingInput, SettingWriteError } from '../../../../src/server/write/settings';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { saveSettingAction } from './actions';
 
 /** `web.preferences.error_<error>` for every error the action can return, and a throw. */
 export type SettingErrors = Record<SettingWriteError | 'unexpected', string>;
+
+const shared = sharedProps<SettingErrors>('SettingPanel');
+
+/** Gives every preference panel below it the errors, once for the five panels of the page. */
+export const SettingErrorsShared = shared.Provider;
 
 /**
  * Save-on-choice, as the phone (`repos.settings.update` on tap). The choice shows at once; the
@@ -14,7 +20,8 @@ export type SettingErrors = Record<SettingWriteError | 'unexpected', string>;
  * `lang` and `data-theme` are — with the settings as stored. A refused or thrown save says why and
  * the selection goes back to what the server last sent.
  */
-export function useSaveSetting<T>(value: T, errors: SettingErrors) {
+export function useSaveSetting<T>(value: T) {
+  const errors = shared.useShared();
   const router = useRouter();
   // The choice made here, held against the value it replaced: once the server sends another value
   // (the refresh landed, or a phone changed it meanwhile) the override no longer applies.

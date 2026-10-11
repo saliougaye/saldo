@@ -22,11 +22,6 @@ export interface PreferenceRow {
   href: string;
 }
 
-/** Which panel `?edit=` opens; anything that is not one of the five opens none. */
-export function editPanel(param: string | undefined): PreferenceKey | null {
-  return PREFERENCE_KEYS.find((key) => key === param) ?? null;
-}
-
 /**
  * Profilo's preferences (§6.28): the same five rows as the phone, reading the same synced `settings`,
  * so a change made on the phone is what the web shows on its next request. The cycle's row shows

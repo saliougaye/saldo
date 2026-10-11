@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { AppLink as Link } from './AppLink';
+import { PanelLink } from './PanelNav';
 import styles from './SummaryRow.module.css';
 
 interface Props {
@@ -17,6 +18,11 @@ interface Props {
   /** Its editor is the one open in the panel. */
   selected?: boolean;
   /**
+   * The row of a page whose panel lives in client state (`PanelSwitch`): its whole panel key. A
+   * click opens it in the same frame. `selected` is not read then.
+   */
+  selectId?: string;
+  /**
    * The row is a file to save (Profilo → Dati): a plain `<a download>`, which the browser answers
    * by itself — `Link` would try to navigate to a route handler as if it were a page.
    */
@@ -32,6 +38,7 @@ export function SummaryRow({
   trailing,
   href,
   selected = false,
+  selectId,
   download = false,
 }: Props) {
   const body = (
@@ -51,6 +58,18 @@ export function SummaryRow({
       <a className={styles.row} href={href} download>
         {body}
       </a>
+    );
+  }
+  if (selectId !== undefined) {
+    return (
+      <PanelLink
+        className={styles.row}
+        selectedClassName={styles.selected}
+        selectId={selectId}
+        href={href}
+      >
+        {body}
+      </PanelLink>
     );
   }
   return (

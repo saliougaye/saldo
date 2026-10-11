@@ -8,7 +8,7 @@ import { Alert } from '../../../../src/ui/Alert';
 import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
 import styles from './preferences.module.css';
-import { type SettingErrors, useSaveSetting } from './useSaveSetting';
+import { useSaveSetting } from './useSaveSetting';
 
 interface Props {
   /** The zone in the synced settings, under the id the list holds; null if none is stored yet. */
@@ -27,7 +27,6 @@ interface Props {
     all: string;
     noResults: string;
   };
-  errors: SettingErrors;
 }
 
 /**
@@ -35,8 +34,8 @@ interface Props {
  * under it when they differ — travelling must not bury it under «R» — then every zone, searchable
  * by city, zone name or id. Saved as it is chosen; the server computes «today» with it.
  */
-export function TimeZonePanel({ saved, zones, aliases, strings, errors }: Props) {
-  const { shown, error, save } = useSaveSetting(saved, errors);
+export function TimeZonePanel({ saved, zones, aliases, strings }: Props) {
+  const { shown, error, save } = useSaveSetting(saved);
   const [query, setQuery] = useState('');
   const byZone = useMemo(() => new Map(zones.map((option) => [option.zone, option])), [zones]);
 

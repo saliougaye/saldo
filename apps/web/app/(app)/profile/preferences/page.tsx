@@ -6,28 +6,39 @@ import {
   timeZoneOptions,
 } from '../../../../src/features/profile/preferenceOptions';
 import {
-  editPanel,
   PREFERENCES_PATH,
+  type PreferenceKey,
   preferenceRows,
 } from '../../../../src/features/profile/profileRows';
 import { readPage } from '../../../../src/server/page/context';
+import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
-import { ProfilePanel } from '../ProfilePanel';
 import { CurrencyPanel } from './CurrencyPanel';
 import { CyclePanel } from './CyclePanel';
 import { LanguagePanel } from './LanguagePanel';
 import { ThemePanel } from './ThemePanel';
 import { TimeZonePanel } from './TimeZonePanel';
-import type { SettingErrors } from './useSaveSetting';
+import { type SettingErrors, SettingErrorsShared } from './useSaveSetting';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** `?edit={key}` opens the editor of one preference. Any other value opens nothing. */
+const PANEL_PARAMS = { flags: [], values: ['edit'] } as const;
+
+/**
+ * The editor that stays a navigation: its list of about 400 zones, each with the hour there now, is
+ * 40 KB of the response and is right only at the time of the render. The page renders it only when
+ * the URL asks for it.
+ */
+const ON_REQUEST: PreferenceKey = 'timeZone';
+
 /**
  * Profilo → Preferenze (§6.8, §17.1.7): the phone's five rows, each opening its editor in the
- * profile panel through `?edit=`. A choice is saved as it is made — the currency asks first — and
- * everything a panel lists is resolved here: the client gets plain rows, never a catalog.
+ * profile panel through `?edit=` — in place (`PanelSwitch`), but for the time zone. A choice is
+ * saved as it is made — the currency asks first — and everything a panel lists is resolved here:
+ * the client gets plain rows, never a catalog.
  */
 export default async function ProfilePreferencesPage({
   searchParams,
@@ -37,7 +48,6 @@ export default async function ProfilePreferencesPage({
   const page = await readPage(searchParams);
   const { t, locale, settings, today, params } = page;
   const rows = preferenceRows(settings, locale);
-  const edit = editPanel(params.edit);
 
   const errors: SettingErrors = {
     invalid: t('web.preferences.error_invalid'),
@@ -46,17 +56,14 @@ export default async function ProfilePreferencesPage({
     unexpected: t('web.preferences.error_unexpected'),
   };
 
-  const panel = () => {
-    switch (edit) {
-      case null:
-        return null;
+  const body = (key: PreferenceKey) => {
+    switch (key) {
       case 'language':
         return (
           <LanguagePanel
             value={settings.language}
             options={languageOptions(t('profile.system'))}
             strings={{ title: t('profile.language'), note: t('web.preferences.systemFollows') }}
-            errors={errors}
           />
         );
       case 'theme':
@@ -65,7 +72,6 @@ export default async function ProfilePreferencesPage({
             value={settings.theme}
             options={themeOptions(t)}
             strings={{ title: t('profile.theme'), note: t('web.preferences.systemFollows') }}
-            errors={errors}
           />
         );
       case 'cycle':
@@ -80,7 +86,6 @@ export default async function ProfilePreferencesPage({
               preview: t('profile.cyclePreview'),
               day: t('profile.cycleDay'),
             }}
-            errors={errors}
           />
         );
       case 'currency':
@@ -102,7 +107,6 @@ export default async function ProfilePreferencesPage({
               cancel: t('common.cancel'),
               busy: t('common.loading'),
             }}
-            errors={errors}
           />
         );
       case 'timeZone': {
@@ -120,44 +124,53 @@ export default async function ProfilePreferencesPage({
               all: t('timeZone.all'),
               noResults: t('timeZone.noResults'),
             }}
-            errors={errors}
           />
         );
       }
     }
   };
 
-  return (
-    <>
-      <Section open title={t('settings.preferences')} trailing={t('settings.appliesToPhone')}>
-        {rows.map((row) => (
-          <SummaryRow
-            key={row.key}
-            href={row.href}
-            selected={row.key === edit}
-            title={t(row.labelKey)}
-            value={
-              row.key === 'cycle'
-                ? t('settings.cycleValue', { day: row.value })
-                : row.key === 'theme'
-                  ? t(`profile.${row.value}`)
-                  : row.value === ''
-                    ? t('profile.system')
-                    : row.value
-            }
-          />
-        ))}
-      </Section>
+  // Every editor, rendered here: a click only chooses one (`PanelSwitch`). The time zone's is here
+  // only when the URL opens it, so its row navigates. A choice is saved as it is made, and
+  // `router.refresh()` renders the page again with the panel still open.
+  const panels: Record<string, PanelSpec> = Object.fromEntries(
+    rows
+      .filter((row) => row.key !== ON_REQUEST || params.edit === ON_REQUEST)
+      .map((row): [string, PanelSpec] => [
+        `edit:${row.key}`,
+        { title: t(row.labelKey), body: body(row.key) },
+      ]),
+  );
 
-      {edit === null ? null : (
-        <ProfilePanel
-          title={t(rows.find((row) => row.key === edit)?.labelKey ?? 'settings.preferences')}
-          closeHref={PREFERENCES_PATH}
-          closeLabel={t('common.close')}
-        >
-          {panel()}
-        </ProfilePanel>
-      )}
-    </>
+  return (
+    <SettingErrorsShared value={errors}>
+      <PanelSwitch
+        baseHref={PREFERENCES_PATH}
+        params={PANEL_PARAMS}
+        panels={panels}
+        closeLabel={t('common.close')}
+        slot
+      >
+        <Section open title={t('settings.preferences')} trailing={t('settings.appliesToPhone')}>
+          {rows.map((row) => (
+            <SummaryRow
+              key={row.key}
+              href={row.href}
+              selectId={`edit:${row.key}`}
+              title={t(row.labelKey)}
+              value={
+                row.key === 'cycle'
+                  ? t('settings.cycleValue', { day: row.value })
+                  : row.key === 'theme'
+                    ? t(`profile.${row.value}`)
+                    : row.value === ''
+                      ? t('profile.system')
+                      : row.value
+              }
+            />
+          ))}
+        </Section>
+      </PanelSwitch>
+    </SettingErrorsShared>
   );
 }
