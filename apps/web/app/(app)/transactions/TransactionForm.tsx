@@ -35,6 +35,7 @@ import { accountsFor, type FormView } from '../../../src/features/transactions/f
 import type { FormMessages } from '../../../src/i18n/formMessages';
 import { Alert } from '../../../src/ui/Alert';
 import { AmountField } from '../../../src/ui/AmountField';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { Button } from '../../../src/ui/Button';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
@@ -222,9 +223,9 @@ export function TransactionForm({
         return;
       }
       if (result.ok) {
+        await actionApplied();
         // `replace`: Back from the saved row goes where the form was opened from, not into the form.
         router.replace(afterSave.replace('__ID__', encodeURIComponent(result.id)));
-        router.refresh();
         return;
       }
       if ('missing' in result) {

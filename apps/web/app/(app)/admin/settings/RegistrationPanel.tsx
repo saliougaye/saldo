@@ -5,6 +5,7 @@ import { type FormEvent, type KeyboardEvent, useState, useTransition } from 'rea
 import type { SettingsErrorStrings } from '../../../../src/features/admin/errorStrings';
 import type { RegistrationMode } from '../../../../src/server/env';
 import { Alert } from '../../../../src/ui/Alert';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import styles from '../admin.module.css';
@@ -47,8 +48,8 @@ export function RegistrationPanel({ value, options, locked, closeHref, strings }
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.push(closeHref);
-        router.refresh();
         return;
       }
       setProblem(strings.errors[result.error]);

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { AccountWriteError } from '../../../src/server/write/accounts';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../src/ui/Icon';
 import { sharedProps } from '../../../src/ui/sharedProps';
@@ -61,8 +62,8 @@ export function ArchiveAccount({ id, updatedAt, body }: Props) {
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(afterHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { BudgetWriteError } from '../../../../src/server/write/budgets';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';
 import { deleteBudgetAction } from './actions';
@@ -50,8 +51,8 @@ export function DeleteBudget({ id, updatedAt, afterHref, strings }: Props) {
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(afterHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

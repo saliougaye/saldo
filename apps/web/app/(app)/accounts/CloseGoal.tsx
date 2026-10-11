@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { AccountWriteError } from '../../../src/server/write/accounts';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { Button } from '../../../src/ui/Button';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
 import { useNavTransition } from '../../../src/ui/NavPending';
@@ -73,8 +74,8 @@ export function CloseGoal({ id, updatedAt, expenseHref, body, returnTo }: Props)
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(afterHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

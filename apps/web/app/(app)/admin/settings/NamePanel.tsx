@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, type KeyboardEvent, useState, useTransition } from 'react';
 import type { SettingsErrorStrings } from '../../../../src/features/admin/errorStrings';
 import { Alert } from '../../../../src/ui/Alert';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { TextField } from '../../../../src/ui/TextField';
 import styles from '../admin.module.css';
@@ -46,8 +47,8 @@ export function NamePanel({ value, placeholder, locked, closeHref, maxLength, st
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.push(closeHref);
-        router.refresh();
         return;
       }
       setProblem(strings.errors[result.error]);

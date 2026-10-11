@@ -142,6 +142,10 @@ export function Panel({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [close]);
 
+  // With `onClose`, a plain click closes in place and the link never navigates: a prefetch of
+  // `closeHref` only loads a page that nobody asks for. A modified click still opens it.
+  const prefetch = onClose === undefined ? undefined : false;
+
   // A modified click (new tab) keeps the link's own behaviour.
   const onLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!isPlainClick(event)) return;
@@ -156,6 +160,7 @@ export function Panel({
         <Link
           className={styles.scrim}
           href={closeHref}
+          prefetch={prefetch}
           aria-hidden="true"
           tabIndex={-1}
           onClick={onLinkClick}
@@ -184,6 +189,7 @@ export function Panel({
           <Link
             className={styles.close}
             href={closeHref}
+            prefetch={prefetch}
             aria-label={closeLabel}
             onClick={onLinkClick}
           >

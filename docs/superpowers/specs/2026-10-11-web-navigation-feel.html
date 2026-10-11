@@ -325,7 +325,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <table>
         <thead><tr><th scope="col">Decision</th><th scope="col">Reason</th></tr></thead>
         <tbody>
-          <tr><td>Keep <code>next/link</code></td><td>A plain <code>&lt;a&gt;</code> loads the whole page again and removes the mounted shell. Next.js prefetches each visible link, and it prefetches them again after each <code>router.refresh</code>. With a <code>loading.tsx</code>, each prefetch is larger. A <code>PanelLink</code> in a page with a panel in client state does not prefetch, because the controller opens it in place. On <code>/profile/tags</code> with 3 tags, a save then starts 14 prefetches, not 18.</td></tr>
+          <tr><td>Keep <code>next/link</code></td><td>A plain <code>&lt;a&gt;</code> loads the whole page again and removes the mounted shell. Next.js prefetches each visible link, and it prefetches them again after each <code>router.refresh</code>. With a <code>loading.tsx</code>, each prefetch is larger. A <code>PanelLink</code> in a page with a panel in client state does not prefetch, because the controller opens it in place. On <code>/profile/tags</code> with 3 tags, a save then starts 14 prefetches, not 18. The ✕ and the scrim of a <code>Panel</code> with <code>onClose</code> do not prefetch either. Since 2026-10-11 a save outside Admin starts no prefetch: the action refreshes the page, not <code>router.refresh</code> (see Risks).</td></tr>
           <tr><td>No dialogs</td><td>The panel beside the list is decision §17.1.7 of the POC spec. A dialog does not remove the wait for the server. Keep dialogs for short confirmations only.</td></tr>
           <tr><td>Server components</td><td>Pages stay server components. A client fetch adds a round trip after the JavaScript loads, and it repeats the query. Use streaming: first the shell and a skeleton, then the data.</td></tr>
           <tr><td>Filters stay navigations</td><td>A filter, the period and the search go to the server. They show a pending state. Only a panel changes in place.</td></tr>
@@ -772,6 +772,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         </button>
       </div>
       <p>The plan also counts the queries for one request on <code>/transactions</code>, before and after part B. A temporary counter in <code>getDb</code> writes each query to the log. The plan does not commit the counter.</p>
+      <p>On 2026-10-11 a temporary Playwright script also counted the requests of one save. It signs in with <code>scripts/lib/devSession.ts</code>, as <code>measure-nav</code> does. It counts three kinds of request: a prefetch has the header <code>next-router-prefetch: 1</code>. An RSC request has <code>RSC: 1</code> and no prefetch header. An action has <code>Next-Action</code>. The count starts at the first click of the flow. It stops 3 s after the list shows the change. The script is not in the repository.</p>
     </div>
   </div>
   <div class="visual">
@@ -798,9 +799,23 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         </tbody>
       </table>
     </div>
+    <div class="tablewrap rv">
+      <table class="wrap1">
+        <thead><tr><th scope="col">One save (1440px): prefetch / RSC / action</th><th scope="col">Before</th><th scope="col">After</th></tr></thead>
+        <tbody>
+          <tr><td>Tags: rename a tag in the panel</td><td>14 / 1 / 1</td><td>0 / 1 / 1</td></tr>
+          <tr><td>Categories: rename a category in the panel</td><td>13 / 1 / 1</td><td>0 / 1 / 1</td></tr>
+          <tr><td>Categories: one reorder arrow</td><td>13–14 / 1 / 1</td><td>0 / 0 / 1</td></tr>
+          <tr><td>Accounts: rename an account (the edit form is a navigation)</td><td>6–7 / 3 / 1</td><td>0 / 2 / 1</td></tr>
+          <tr><td>Transactions: change an amount (the edit form is a navigation)</td><td>9 / 3 / 1</td><td>0 / 2 / 1</td></tr>
+          <tr><td>Admin → Invites: mint an invite, then «Done»</td><td>19 / 2 / 1</td><td>19 / 1 / 1</td></tr>
+        </tbody>
+      </table>
+    </div>
     <div class="callout"><span class="meta">Record</span><p>Each cell holds «feedback / settled» in ms. The Before cells are from commit <code>1d008060</code>. The After A cells are from commit <code>ce1e8f5d</code> with the <code>data-skeleton</code> marker. The After B cells are from commit <code>e05a4503</code>. The After C cells are from commit <code>1820a79e</code>. Each After cell is the median of 3 script runs. Each script run is the median of 5 runs.</p>
     <p>«settled» is the time when the real page replaces the skeleton. With a <code>loading.tsx</code>, «settled» can be longer than Before while «feedback» is much shorter. «settled» is longer than Before in every row: by 9 to 46 ms after B, and by 241 ms after A for Home → Transactions. After C it is longer by 8 to 45 ms, and it is within the noise of After B. The cause is not investigated.</p>
-    <p>The second table is the time from a click on the first row to a visible panel. It is the median of two runs of seven clicks on a production build. «Before C» is commit <code>8acc1436</code>, where the click is a navigation. The script is not in the repository. The machine was busy when it ran, so a difference of less than 20 ms is noise.</p></div>
+    <p>The second table is the time from a click on the first row to a visible panel. It is the median of two runs of seven clicks on a production build. «Before C» is commit <code>8acc1436</code>, where the click is a navigation. The script is not in the repository. The machine was busy when it ran, so a difference of less than 20 ms is noise.</p>
+    <p>The third table counts the requests of one save. «Before» is commit <code>526e23a0</code>, and «After» is commit <code>71e6049a</code>. Both ran on a production build with a copy of the development database. Each flow ran two times; a range gives the two values. On Accounts and Transactions, one RSC request opens the edit form. The prefetches went to the links of the top bar and of the sub-navigation. After the change the response of the action holds the page, as the response of <code>router.refresh</code> did, and no prefetch follows the save. Admin keeps its prefetches: its actions call <code>revalidatePath</code> (see Risks).</p></div>
   </div>
 </section>
 
@@ -810,7 +825,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
     <div class="ch-head">
       <span class="ch-num">08</span>
       <h2 id="h-risks">Risks</h2>
-      <p class="lead">Seven risks are known. Each one has a check, a fallback or a rule.</p>
+      <p class="lead">Eight risks are known. Each one has a check, a fallback or a rule.</p>
     </div>
   </div>
   <div class="visual">
@@ -825,6 +840,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
           <tr><td>A redirect under a <code>loading.tsx</code></td><td>A <code>redirect()</code> in a page under a boundary streams after the shell and the skeleton. The status is 200, and the browser follows the redirect in the page. This applies to <code>readPage</code> → <code>/onboarding</code> on the four tabs and the Profilo sections. <code>next.config.ts</code> redirects <code>/profile</code> and <code>/admin</code> with a 307 before any render. <code>/budgets</code> has no boundary, and it keeps its 307. A <code>notFound()</code> in a layout above the boundary keeps its 404: a member gets 404 for <code>/admin</code> and <code>/admin/accounts</code>.</td></tr>
           <tr><td>A form with state in a hidden panel</td><td><code>PanelSwitch</code> mounts only the open panel. The new form of Transazioni is different: it uses <code>&lt;Activity&gt;</code>. A change from one key to another key starts a new form, because the panel key is the <code>key</code> of the body. The <code>key</code> of <code>Panel</code> is only its shape (form or detail), so the panel does not play its entrance again.</td></tr>
           <tr><td>The app needs JavaScript</td><td>Sign-in uses a passkey only, and the passkey ceremony runs in the browser. With JavaScript off, a page under a <code>loading.tsx</code> shows only its skeleton: Next.js streams the page into a hidden element, and only a script shows it. Thus do not write that a page, a link or a panel works with JavaScript off. This row replaces the row «JavaScript off» of the 2026-10-07 spec.</td></tr>
+          <tr><td>A save and the router cache</td><td>Do not call <code>router.refresh()</code> after a save. It empties the prefetch cache, and Next.js then prefetches every visible link again. Do not only remove it either. A panel opened in place changes the URL with <code>history.pushState</code>, and the router keeps the page that it rendered for the URL without the panel. <code>router.replace</code> to that URL then uses the old page and sends no request: the list keeps the old values. Thus a write action calls <code>refreshAfterWrite</code> (<code>refresh()</code> of <code>next/cache</code>) when it succeeds. Its response holds the page again and empties the back/forward cache, but it keeps the prefetch cache. The form awaits <code>actionApplied()</code> before it navigates. If the navigation starts before Next.js applies the response, Next.js discards the response and calls <code>router.refresh()</code> itself. Admin actions call <code>revalidatePath</code>, which also empties the prefetch cache: the Admin layout shows counts, and a prefetch of an Admin page holds that layout. The guard is the test «a save in a panel opened in place updates the list and prefetches no visible link again» in <code>budgets-categories-tags.spec.ts</code>.</td></tr>
         </tbody>
       </table>
     </div>

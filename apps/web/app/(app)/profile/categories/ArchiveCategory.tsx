@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { archiveMoveTargets } from '../../../../src/features/categories/archiveView';
 import type { CategoryWriteError } from '../../../../src/server/write/categories';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';
 import { Select } from '../../../../src/ui/Select';
@@ -71,8 +72,8 @@ export function ArchiveCategory({ id, updatedAt, afterHref, uses, body }: Props)
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(afterHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { CategoryWriteError } from '../../../../src/server/write/categories';
 import { Button } from '../../../../src/ui/Button';
@@ -17,7 +16,6 @@ interface Props {
 
 /** «Ripristina» for an archived category; the page refreshes in place. */
 export function RestoreCategory({ id, label, busyLabel, errors }: Props) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -32,10 +30,8 @@ export function RestoreCategory({ id, label, busyLabel, errors }: Props) {
         setError(errors.unexpected);
         return;
       }
-      if (result.ok) {
-        router.refresh();
-        return;
-      }
+      // The action renders the page again (`refreshAfterWrite`): nothing to refresh here.
+      if (result.ok) return;
       setError(errors[result.error]);
     });
   };

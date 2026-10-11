@@ -16,6 +16,7 @@ import { tagWriteErrors } from '../../../../src/features/tags/writeErrors';
 import type { TagMessages } from '../../../../src/i18n/tagMessages';
 import { Alert } from '../../../../src/ui/Alert';
 import { AppLink as Link } from '../../../../src/ui/AppLink';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Icon } from '../../../../src/ui/Icon';
 import { sharedProps } from '../../../../src/ui/sharedProps';
@@ -85,8 +86,8 @@ export function TagForm({ tag, transactionsHref }: Props) {
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.replace(afterSave);
-        router.refresh();
         return;
       }
       setProblem({ field: result.error === 'taken', text: errors[result.error] });

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { WriteError } from '../../../src/server/write/transactions';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../src/ui/Icon';
 import { deleteTransactionAction } from './actions';
@@ -51,8 +52,8 @@ export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(deletedHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

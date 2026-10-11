@@ -485,3 +485,65 @@ test('regression: a ?tag=ID load renders the panel beside the list in the server
 
   await member.context.close();
 });
+
+/** The prefetches that the page sends from now on, as path and query, without Next's `_rsc`. */
+function prefetchRequests(page: Page): string[] {
+  const hrefs: string[] = [];
+  page.on('request', (request) => {
+    if (request.headers()['next-router-prefetch'] !== '1') return;
+    const url = new URL(request.url());
+    url.searchParams.delete('_rsc');
+    hrefs.push(url.pathname + url.search);
+  });
+  return hrefs;
+}
+
+// Regression: a save in a panel ran `router.refresh()` after `router.replace`. The refresh made
+// Next prefetch every visible link again: about 14 requests for each save on a Profilo page.
+// Without any refresh the list kept the old name: a panel opened in place leaves the router on the
+// page it rendered for the URL without the panel, so `router.replace` to that URL reused it.
+test('regression: a save in a panel opened in place updates the list and prefetches no visible link again', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Pietro',
+    email: 'pietro-tag-save@e2e.test',
+    seed: true,
+  });
+  const { page } = member;
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.goto('/profile/tags');
+  await page.waitForLoadState('networkidle');
+  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  await listRow(page, 'Vacanze').click();
+  // A page that shows the tag: left now, and entered again with Forward after the save.
+  await panel.locator('a[href^="/transactions?tag="]').click();
+  await expect(page).toHaveURL(/\/transactions\?tag=/);
+  await expect(page.getByRole('main').getByText('Vacanze', { exact: true }).first()).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/profile\/tags\?tag=/);
+  const name = panel.getByLabel(t('tags.name'), { exact: true });
+  await expect(name).toHaveValue('Vacanze');
+
+  const visibleLinks = await page
+    .locator('nav a[href]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+  const prefetched = prefetchRequests(page);
+  await name.fill('Ferie');
+  await panel.getByRole('button', { name: t('common.save') }).click();
+  await expect(page).toHaveURL(/\/profile\/tags$/);
+  await expect(listRow(page, 'Ferie')).toBeVisible();
+  await expect(listRow(page, 'Vacanze')).toHaveCount(0);
+  // Next prefetches again after a pause of 300 ms: wait longer than that before the check.
+  await page.waitForTimeout(1000);
+  expect(prefetched.filter((href) => visibleLinks.includes(href))).toEqual([]);
+
+  // The save also dropped the back/forward cache: Forward shows the new name.
+  await page.goForward();
+  await expect(page).toHaveURL(/\/transactions\?tag=/);
+  await expect(page.getByRole('main').getByText('Ferie', { exact: true }).first()).toBeVisible();
+
+  await member.context.close();
+});
