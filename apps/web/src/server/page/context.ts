@@ -82,7 +82,7 @@ export interface PageContext extends PageState, WebI18n {
  * that awaited it a second time could narrow it differently. `loadUserData` is shared with the layout.
  *
  * An account with no `settings` row has never onboarded (§17.1.2): every page sends it to
- * `/onboarding` before computing anything. `redirect` throws, so nothing after it runs.
+ * `/onboarding` before it builds the page state. `redirect` throws, so nothing after it runs.
  */
 export async function readPage(
   searchParams: Promise<Record<string, string | string[] | undefined>>,

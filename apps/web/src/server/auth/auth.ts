@@ -48,10 +48,6 @@ const SESSION_UPDATE_AGE_DAYS = 14;
 const SESSION_EXPIRES_IN_DAYS = 180;
 
 /**
- * The options, separate from the instance, because `@better-auth/cli` needs a module that exports
- * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
- */
-/**
  * The plugins as a tuple, not as an array of their union. `betterAuth` infers the fields that the
  * plugins add to `session.user` (the admin plugin's `role` and `banned`) only from a tuple. An array
  * literal returned from `buildAuthOptions` widens to the union, and those fields disappear from the
@@ -61,6 +57,10 @@ function pluginTuple<const T extends BetterAuthPlugin[]>(...plugins: T): T {
   return plugins;
 }
 
+/**
+ * The options, separate from the instance, because `@better-auth/cli` needs a module that exports
+ * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
+ */
 export function buildAuthOptions() {
   const { publicUrl, rpId, rpName, appRedirectSchemes, secret, trustedProxies } = env();
   const db = getDb();

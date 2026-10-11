@@ -583,7 +583,7 @@ it('reads a banned account as signed out (§10)', async () => {
 
 Use the helpers for «signed in» and «ban» that the file already has.
 
-On 2026-10-11 no such test existed. `src/server/auth/session.test.ts` has three tests. Two set `banned` on the user row and keep the session rows, then call `authenticate` with the bearer and with the cookie. Both must return `null`. The third test checks that `authenticate` gives `role`. It failed before step 3. When the ban check was removed for a test run, the two ban tests failed.
+On 2026-10-11 no such test existed. `src/server/auth/session.test.ts` has three tests. Two set `banned` on the user row and keep the session rows, then call `authenticate` with the bearer and with the cookie. Both must return `null`. The third test checks that `authenticate` gives `role`. It failed before step 3. When the ban check was removed for a test run, the two ban tests failed. These tests send no `session_data` cookie, so they do not prove that there is no cookie cache. After the review, a fourth test checks the settings: `buildAuthOptions()` has no `session.cookieCache` and no `secondaryStorage`, and the `$context` of the instance has no enabled cookie cache. With `cookieCache: { enabled: true }` in `auth.ts` for one run, it failed.
 
 - [x] **Step 3: Change `authenticate`**
 
@@ -1230,6 +1230,6 @@ Queries per request on `/transactions`: before 5, after A not measured, after B 
 ## Risks
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
-- **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this, and `session.test.ts` checks a ban with live session rows.
+- **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
 - **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because of the `key` on `Panel`.

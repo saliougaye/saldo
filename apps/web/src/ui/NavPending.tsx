@@ -49,7 +49,9 @@ export function NavPendingProvider({ label, children }: { label: string; childre
   }, [busy]);
   return (
     <NavPendingContext value={report}>
-      {counts.navigation > 0 ? <div className={styles.bar} aria-hidden="true" /> : null}
+      {counts.navigation > 0 && counts.skeleton === 0 ? (
+        <div className={styles.bar} aria-hidden="true" />
+      ) : null}
       <VisuallyHidden>
         <span role="status">{announced ? label : ''}</span>
       </VisuallyHidden>

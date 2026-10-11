@@ -26,8 +26,9 @@ export interface AuthenticatedUser {
  * `banned` and `role` come from the admin plugin, on the user row that `getSession` reads with the
  * session: no second query, and no older answer. That holds only while `getSession` reads the
  * database on every call. A `session.cookieCache` (or a `secondaryStorage`) in `auth.ts` would let
- * `banned` arrive late: with one, read the flag from the database here again
- * (`session.test.ts` checks a ban with the session rows still alive).
+ * `banned` arrive late: with one, read the flag from the database here again. In `session.test.ts`,
+ * «reads the database on every call» fails when either one appears; the ban tests with live
+ * session rows prove the check below.
  */
 export async function authenticate(headers: Headers): Promise<AuthenticatedUser | null> {
   const session = await auth().api.getSession({ headers });

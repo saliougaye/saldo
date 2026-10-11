@@ -79,8 +79,8 @@ export async function isAdmin(db: ServerDatabase, userId: string): Promise<boole
 }
 
 /**
- * For a page render: the role was read with the session (`authenticate`), and a banned account has
- * no session at all. A Server Action and an admin route call `isAdmin`: a mutation must not trust
+ * For a page render: the role was read with the session (`authenticate`), and `authenticate` reads
+ * a banned account as signed out. A Server Action and an admin route call `isAdmin`: a mutation must not trust
  * an older read.
  */
 export function isAdminUser(account: { role: string | null }): boolean {

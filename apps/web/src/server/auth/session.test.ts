@@ -1,9 +1,11 @@
+import type { BetterAuthOptions } from 'better-auth';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { user } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession, sessionCookie } from '../test/session';
 import { ADMIN_ROLE, MEMBER_ROLE } from './admin';
+import { auth, buildAuthOptions } from './auth';
 import { authenticate } from './session';
 
 let harness: TestDatabase;
@@ -24,6 +26,25 @@ afterAll(async () => {
 async function banOnly(userId: string): Promise<void> {
   await harness.db.update(user).set({ banned: true }).where(eq(user.id, userId));
 }
+
+/**
+ * The guard against a future cookie cache. `authenticate` trusts `session.user.banned` because
+ * `getSession` reads the user row on every call. A cached session is used only when the request has
+ * a `session_data` cookie, so the ban tests below would still pass with a cache: this checks the
+ * setting itself.
+ */
+describe('the session settings', () => {
+  it('reads the database on every call: no cookie cache, no secondary storage', async () => {
+    const options = buildAuthOptions();
+    expect(options.session).not.toHaveProperty('cookieCache');
+    expect(options).not.toHaveProperty('secondaryStorage');
+    // What `getSession` reads at run time.
+    // Widened to the library's type: the instance's own type names only the keys that are set.
+    const running: BetterAuthOptions = (await auth().$context).options;
+    expect(running.session?.cookieCache?.enabled).not.toBe(true);
+    expect(running.secondaryStorage).toBeUndefined();
+  });
+});
 
 describe('authenticate', () => {
   it('reads a banned account with a live bearer as signed out (§10)', async () => {
