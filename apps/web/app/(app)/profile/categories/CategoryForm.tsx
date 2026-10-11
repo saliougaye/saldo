@@ -1,6 +1,6 @@
 'use client';
 
-import { type CategoryFormValues, categoryMissingForSave } from '@saldo/core';
+import { type Category, type CategoryFormValues, categoryMissingForSave } from '@saldo/core';
 import { makeTranslator } from '@saldo/i18n/translate';
 import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,10 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { CategoryFormView } from '../../../../src/features/categories/formView';
+import {
+  type CategoryFormView,
+  categoryParentOptions,
+} from '../../../../src/features/categories/formView';
 import { categoryWriteErrors } from '../../../../src/features/categories/writeErrors';
 import type { CategoryMessages } from '../../../../src/i18n/categoryMessages';
 import { Alert } from '../../../../src/ui/Alert';
@@ -23,16 +26,32 @@ import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Segmented } from '../../../../src/ui/Segmented';
 import { Select } from '../../../../src/ui/Select';
 import { Switch } from '../../../../src/ui/Switch';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { TextField } from '../../../../src/ui/TextField';
+import type { ArchiveStrings } from './ArchiveCategory';
 import { saveCategoryAction } from './actions';
 import styles from './categories.module.css';
 
-interface Props {
-  view: CategoryFormView;
+/** What every category form of the page shares, given once (`CategoryFormShared`). */
+export interface CategoryFormSharedValue {
+  /** The page's categories: the parents and the archive's targets are core's choice among them. */
+  categories: readonly Category[];
   decimalSeparator: string;
   symbol: string;
   symbolPosition: 'prefix' | 'suffix';
   messages: CategoryMessages;
+  /** The archive dialog's copy that does not depend on the category. */
+  archive: ArchiveStrings;
+}
+
+const shared = sharedProps<CategoryFormSharedValue>('CategoryForm');
+
+/** Gives every `CategoryForm` (and `ArchiveCategory`) below it the props they share. */
+export const CategoryFormShared = shared.Provider;
+export const useCategoryFormShared = shared.useShared;
+
+interface Props {
+  view: CategoryFormView;
   closeHref: string;
   /** Where a save lands. */
   afterSave: string;
@@ -50,16 +69,9 @@ const CATEGORY_ICONS = categoryIconGroups.flatMap((group) => [...group.icons]);
  * only), parent, appearance and — for an expense — «Budget mensile». The rules are core's
  * (`categoryMissingForSave`, the parent candidates in the view); the server re-checks them.
  */
-export function CategoryForm({
-  view,
-  decimalSeparator,
-  symbol,
-  symbolPosition,
-  messages,
-  closeHref,
-  afterSave,
-  archive,
-}: Props) {
+export function CategoryForm({ view, closeHref, afterSave, archive }: Props) {
+  const { categories, decimalSeparator, symbol, symbolPosition, messages } =
+    useCategoryFormShared();
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -131,7 +143,7 @@ export function CategoryForm({
     }
   };
 
-  const parents = view.parents[values.direction];
+  const parents = categoryParentOptions(categories, values.direction, view.id);
   const parentOptions = [
     { value: '', label: t('categories.noParent') },
     ...parents.map((parent) => ({

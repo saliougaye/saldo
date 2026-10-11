@@ -1189,6 +1189,20 @@ Each row gives its whole key as `selectId` (for example `c:${id}`), as in Task 1
 - [ ] **Step 3: Run `rtk proxy pnpm --filter web e2e profile` and `budgets-categories-tags`** before and after the change. Both must pass.
 - [ ] **Step 4: Commit** with `feat(web): Profilo → <section> opens its panel in place`.
 
+**The size of the response.** The page renders one form for each row, and the RSC response carries the props of every form. Give a body only the props that are its own. Give the props that all the forms share once, through a provider at the root of the page. `sharedProps` in `src/ui/sharedProps.tsx` makes the provider and the hook. The provider renders no element, so `PanelSwitch` stays the root of the section. Examples of shared props: the messages, the money format, and lists of options such as the categories or the parent accounts. When each form needs a list that differs only a little, give the shared rows once. Then let the form call core on them, for example `categoryParentCandidates`.
+
+Do not trust React's deduplication. React writes an object that repeats as a reference only if it can name the path of the first copy. A key with a colon, such as `c:ID`, stops the path. Thus a list that starts under a row's key goes into the response once for each row.
+
+On 2026-10-11 a temporary spec measured `/profile/categories` with 50 more categories. Each category has its own budget and one transaction. The RSC response was 148 KB before the change. The approach of Task 11 gave 1124 KB, because each form had its own lists of parents. With the shared props it was 227 KB.
+
+On 2026-10-11 the work on Categories found these points:
+
+- `CategoryFormView` has no `parents` now. `CategoryForm` calls `categoryParentOptions` on the shared categories.
+- `ArchiveCategoryView` has no `targets` now. `ArchiveCategory` calls `archiveTargets` on the shared categories. It gets its strings from the shared props. A body gives only `id`, `updatedAt`, `uses` and the body text with the count.
+- The archived list is the panel `archived`. Its row has `selectId="archived"`. «Ripristina» stays a navigation.
+- A URL with `?c=` and an id that is not a live category opens nothing, also with `?archived`. Before, `?archived` then opened the archived list. `PanelSwitch` reads the first name of `order` that the URL has.
+- The goals flows are in `accounts-goals`, not in `budgets-categories-tags`. Step 3 runs the spec of the section.
+
 `profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
 ### Task 13: Conti

@@ -1,4 +1,4 @@
-import { movableTargets, rollUpCategoryUsage, type UserData } from '@saldo/core';
+import { type Category, movableTargets, rollUpCategoryUsage, type UserData } from '@saldo/core';
 
 export interface ArchiveCategoryView {
   id: string;
@@ -7,8 +7,13 @@ export interface ArchiveCategoryView {
   updatedAt: string;
   /** The count the list shows for it, children folded in — the phone's sheet reads the same. */
   uses: number;
-  /** Where the transactions can move (§5.11): live, same direction, not itself nor its children. */
-  targets: { id: string; name: string; icon: string; colorIndex: number }[];
+}
+
+export interface ArchiveTarget {
+  id: string;
+  name: string;
+  icon: string;
+  colorIndex: number;
 }
 
 /** What the archive dialog asks about a live category; null for any other id. */
@@ -25,11 +30,20 @@ export function archiveCategoryView(data: UserData, id: string): ArchiveCategory
     name: category.name,
     updatedAt: category.updatedAt,
     uses: rollUpCategoryUsage(data.categories, direct).get(category.id) ?? 0,
-    targets: movableTargets(data.categories, category).map((row) => ({
-      id: row.id,
-      name: row.name,
-      icon: row.icon,
-      colorIndex: row.colorIndex,
-    })),
   };
+}
+
+/**
+ * Where the transactions of category `id` can move (§5.11): live, same direction, not itself nor
+ * its children. The archive dialog calls it on the page's categories (`sharedProps`).
+ */
+export function archiveTargets(categories: readonly Category[], id: string): ArchiveTarget[] {
+  const category = categories.find((row) => row.id === id);
+  if (category === undefined) return [];
+  return movableTargets(categories, category).map((row) => ({
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    colorIndex: row.colorIndex,
+  }));
 }
