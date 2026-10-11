@@ -46,16 +46,16 @@
 - Modify: `packages/i18n/package.json`
 - Modify: `apps/web/src/ui/clientImports.test.ts`
 
-- [ ] **Step 1: Write the failing test.** In `clientImports.test.ts`, add the subpath to the test «can reach the formatter and the translator without the catalogs»:
+- [x] **Step 1: Write the failing test.** In `clientImports.test.ts`, add the subpath to the test «can reach the formatter and the translator without the catalogs»:
 
 ```ts
     const zones = await import('@saldo/i18n/timeZones');
     expect(typeof zones.timeZoneCity).toBe('function');
 ```
 
-- [ ] **Step 2: Run it and see it fail.** Run: `rtk proxy pnpm --filter web test clientImports`. Expected: FAIL, because the package does not export `./timeZones`.
+- [x] **Step 2: Run it and see it fail.** Run: `rtk proxy pnpm --filter web test clientImports`. Expected: FAIL, because the package does not export `./timeZones`.
 
-- [ ] **Step 3: Add the export.** In `packages/i18n/package.json`:
+- [x] **Step 3: Add the export.** In `packages/i18n/package.json`:
 
 ```json
   "exports": {
@@ -68,7 +68,7 @@
 
 `timeZones.ts` imports `./format` for a type only, `./timeZoneCities` and `./timeZones.generated`. It imports no catalog.
 
-- [ ] **Step 4: Run the test, then commit.** Expected: PASS.
+- [x] **Step 4: Run the test, then commit.** Expected: PASS.
 
 ```bash
 git add packages/i18n/package.json apps/web/src/ui/clientImports.test.ts
@@ -83,7 +83,7 @@ git commit -m "feat(i18n): a subpath for the time zone tables, with no catalog"
 
 The test fixes the text of the rows at one instant. This is the guard that the browser shows the text that the server showed (spec §05). It covers dates: the hour in two zones on the two sides of a change of daylight saving time.
 
-- [ ] **Step 1: Write the failing test.**
+- [x] **Step 1: Write the failing test.**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -141,9 +141,9 @@ describe('zoneTimes', () => {
 
 On 2026-10-11 every zone of `Intl.supportedValuesOf('timeZone')` in Node is in `TIME_ZONES` or in `TIME_ZONE_ALIASES`. `Etc/GMT+5` is not in the two tables, and `Intl` knows it. A phone can store such an id. The city of an unlisted zone comes from its id (`timeZoneCity`).
 
-- [ ] **Step 2: Run it and see it fail.** Run: `rtk proxy pnpm --filter web test timeZoneRows`. Expected: FAIL, because the module does not exist.
+- [x] **Step 2: Run it and see it fail.** Run: `rtk proxy pnpm --filter web test timeZoneRows`. Expected: FAIL, because the module does not exist.
 
-- [ ] **Step 3: Write `timeZoneRows.ts`.**
+- [x] **Step 3: Write `timeZoneRows.ts`.**
 
 ```ts
 import {
@@ -196,9 +196,13 @@ export function zoneTimes(zones: readonly string[], now: Date): Map<string, stri
 
 `Intl.Collator(locale).compare` is the comparison of `String.prototype.localeCompare(b, locale)`, which `timeZoneOptions` used on the server.
 
-- [ ] **Step 4: Run the test.** Expected: PASS.
+On 2026-10-11 the work also put `minuteOf` (Task 3, step 2) in this module in this task, with one more test: the first instant of a minute shows the same hours as the last instant (`Asia/Kathmandu`, +05:45). The code in `apps/web/src/features/profile/timeZoneRows.ts` is the reference.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 4: Run the test.** Expected: PASS.
+
+  On 2026-10-11: 5 passed.
+
+- [x] **Step 5: Commit.**
 
 ```bash
 git add apps/web/src/features/profile/timeZoneRows.ts apps/web/src/features/profile/timeZoneRows.test.ts
