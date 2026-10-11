@@ -5,13 +5,13 @@ import { useState, useTransition } from 'react';
 import type { AdminErrorStrings } from '../../../../src/features/admin/errorStrings';
 import { Button } from '../../../../src/ui/Button';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { revokeInviteAction } from './actions';
 
-interface Props {
-  id: string;
+/** What every invite's «Revoca» shares, given once (`RevokeInviteShared`). */
+export interface RevokeInviteSharedValue {
   strings: {
     action: string;
-    title: string;
     body: string;
     cancel: string;
     busy: string;
@@ -19,8 +19,20 @@ interface Props {
   };
 }
 
+const shared = sharedProps<RevokeInviteSharedValue>('RevokeInvite');
+
+/** Gives every `RevokeInvite` below it the props they share. */
+export const RevokeInviteShared = shared.Provider;
+
+interface Props {
+  id: string;
+  /** `admin.invites.revokeTitle`, with the invite's label. */
+  title: string;
+}
+
 /** «Revoca» an active invite; it asks first, because the code stops working at once. */
-export function RevokeInvite({ id, strings }: Props) {
+export function RevokeInvite({ id, title }: Props) {
+  const { strings } = shared.useShared();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +74,7 @@ export function RevokeInvite({ id, strings }: Props) {
           if (pending) return;
           setOpen(next);
         }}
-        title={strings.title}
+        title={title}
         body={strings.body}
         error={error ?? undefined}
         confirmLabel={strings.action}

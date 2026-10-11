@@ -321,6 +321,54 @@ test.describe('invites', () => {
     expect(length).toBeLessThan(200);
     await admin.context.close();
   });
+
+  // SECURITY GUARD: an invite code is a bearer secret. The page renders the panel of every invite
+  // in one response, so no response of the page may hold a code: not the list, not a panel, not
+  // the refresh after a mint.
+  test('SECURITY GUARD: no response of the invites page holds an invite code', async ({
+    browser,
+    t,
+  }) => {
+    const label = 'Codice Segreto';
+    const fromApi = await mintInvite('Invito Api');
+    const admin = await openAdmin(browser);
+    const { page } = admin;
+    await page.goto('/admin/invites');
+    await page
+      .getByRole('link', { name: t('admin.invites.new') })
+      .first()
+      .click();
+    const form = page.getByRole('complementary', { name: t('admin.invites.new') });
+    await form.getByLabel(t('admin.invites.label')).fill(label);
+    await form.getByRole('button', { name: t('admin.invites.create') }).click();
+    await expect(form.getByText(t('admin.invites.copyNow'))).toBeVisible();
+    const minted =
+      (await form
+        .locator('p', { hasText: /^[A-Z0-9-]{16,}$/ })
+        .first()
+        .textContent()) ?? '';
+    expect(minted).not.toBe('');
+
+    // ✕ closes in place, and the list behind it already has the new invite.
+    await form.getByRole('link', { name: t('common.close') }).click();
+    await expect(form).toHaveCount(0);
+    const row = page.getByRole('link', { name: new RegExp(label) });
+    await expect(row).toContainText(t('admin.invites.statusActive'));
+
+    const href = (await row.getAttribute('href')) ?? '';
+    for (const url of ['/admin/invites', href, '/admin/invites?new']) {
+      for (const rsc of [false, true]) {
+        const { body } = await fetchIn(page, url, rsc);
+        // The control: the response is the page, with the invite in it.
+        expect(body).toContain(label);
+        for (const code of [minted, fromApi]) {
+          expect(body).not.toContain(code);
+          expect(body).not.toContain(code.replaceAll('-', ''));
+        }
+      }
+    }
+    await admin.context.close();
+  });
 });
 
 test.describe('instance and settings', () => {

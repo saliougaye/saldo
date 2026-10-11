@@ -57,12 +57,17 @@ function subtitle(invite: InviteSummary): AdminMessage {
   }
 }
 
-const STATUS_KEYS: Record<InviteStatus, string> = {
+const STATUS_KEYS: Readonly<Record<InviteStatus, string>> = {
   active: 'admin.invites.statusActive',
   used: 'admin.invites.statusUsed',
   revoked: 'admin.invites.statusRevoked',
   expired: 'admin.invites.statusExpired',
 };
+
+/** The word for a status, e.g. `admin.invites.statusActive`: the row's trailing side, the panel's line. */
+export function inviteStatusKey(status: InviteStatus): string {
+  return STATUS_KEYS[status];
+}
 
 /** Admin → Inviti: one row per invite, in the order `listInvites` gives (newest first). */
 export function inviteRows(invites: readonly InviteSummary[]): InviteRowView[] {
@@ -70,7 +75,7 @@ export function inviteRows(invites: readonly InviteSummary[]): InviteRowView[] {
     id: invite.id,
     label: invite.label,
     status: invite.status,
-    statusKey: STATUS_KEYS[invite.status],
+    statusKey: inviteStatusKey(invite.status),
     muted: invite.status !== 'active',
     subtitle: subtitle(invite),
   }));
@@ -79,24 +84,4 @@ export function inviteRows(invites: readonly InviteSummary[]): InviteRowView[] {
 /** The count in the sub-navigation: only what can still be used. */
 export function activeInviteCount(invites: readonly InviteSummary[]): number {
   return invites.filter((invite) => invite.status === 'active').length;
-}
-
-export type InvitePanel = { kind: 'new' } | { kind: 'invite'; invite: InviteSummary } | null;
-
-type Param = string | string[] | undefined;
-
-const first = (param: Param): string | undefined => (Array.isArray(param) ? param[0] : param);
-
-/**
- * Which panel the URL opens. `?new` (which arrives as an empty string, so it is tested for being
- * present, not for being truthy) wins over `?i=`; an id that names nothing opens nothing.
- */
-export function invitePanel(
-  params: { new?: Param; i?: Param },
-  invites: readonly InviteSummary[],
-): InvitePanel {
-  if (params.new !== undefined) return { kind: 'new' };
-  const id = first(params.i);
-  const invite = id === undefined ? undefined : invites.find((candidate) => candidate.id === id);
-  return invite === undefined ? null : { kind: 'invite', invite };
 }
