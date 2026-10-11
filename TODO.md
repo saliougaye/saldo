@@ -30,10 +30,11 @@ Transazioni, Conti, Profilo and Admin open in place. Still open:
 - «settled» is longer on the pages that have a skeleton. Home → Transazioni took 156 ms before the work, 397 ms
   after the skeletons, 202 ms after the shorter query chain and 188 ms at the end of the work. The `loading.tsx`
   boundary seems to add wall-clock time. The cause is not investigated;
-- a save in a panel makes about 34 RSC prefetch requests. `prefetch={false}` on the links that open in place
-  removed some of them. `router.refresh` after a save prefetches every visible link again, and the ✕ and the
-  scrim of `Panel` still prefetch their close URL. Check if the `router.refresh` after `router.replace` in the
-  forms is needed;
+- a save in Admin still prefetches every visible link again (19 requests when an invite is minted). The Admin
+  actions call `revalidatePath`, which empties the prefetch cache, because a prefetch of an Admin page holds the
+  layout with the counts. `DeleteAccount`, `AccountActions`, `RevokeInvite`, `McpSwitch`, `SmtpPanel` and
+  `useSaveSetting` (Preferences) still call `router.refresh()`. The other forms use `refreshAfterWrite` and
+  `actionApplied` (fixed on 2026-10-11, see the note at the end of the 2026-10-11 plan);
 - the motion the phone has that the web lacks;
 - two known costs of the panels in place. Do not fix them now. Conti runs `accountDetail` once for each listed
   account and goal: the work is O(accounts × transactions) in each request. If a user has many accounts, compute
