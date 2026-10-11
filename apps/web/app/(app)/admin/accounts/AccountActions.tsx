@@ -11,7 +11,7 @@ import styles from '../admin.module.css';
 import { promoteAccountAction, restoreAccountAction, revokeAccountAction } from './actions';
 
 /** What every account's actions share, given once (`AccountActionsShared`). */
-export interface AccountActionsSharedValue {
+interface AccountActionsSharedValue {
   strings: {
     promote: string;
     revoke: string;

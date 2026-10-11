@@ -23,7 +23,7 @@ export function SubnavLayout({
         {nav}
       </nav>
       <div className={styles.section}>{children}</div>
-      {/* Where a section's panel opens (`createPortal` from a client component): beside the section, as in Transazioni. */}
+      {/* The column beside the section. `PasskeyList` opens its panel here with `createPortal`. */}
       <div id={PANEL_SLOT} className={styles.slot} />
     </div>
   );

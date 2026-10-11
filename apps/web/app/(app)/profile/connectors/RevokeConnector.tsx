@@ -9,7 +9,7 @@ import { type RevokeConnectorResult, revokeConnectorAction } from './actions';
 import styles from './connectors.module.css';
 
 /** What every connector's «Revoca accesso» shares, given once (`RevokeConnectorShared`). */
-export interface RevokeConnectorSharedValue {
+interface RevokeConnectorSharedValue {
   /** The list without a selection: where the page goes once the connector is gone. */
   closeHref: string;
   strings: {

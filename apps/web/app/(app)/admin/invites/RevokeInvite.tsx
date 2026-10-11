@@ -9,7 +9,7 @@ import { sharedProps } from '../../../../src/ui/sharedProps';
 import { revokeInviteAction } from './actions';
 
 /** What every invite's «Revoca» shares, given once (`RevokeInviteShared`). */
-export interface RevokeInviteSharedValue {
+interface RevokeInviteSharedValue {
   strings: {
     action: string;
     body: string;

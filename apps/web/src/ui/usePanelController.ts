@@ -21,8 +21,6 @@ export interface PanelConfig<S> extends PanelRules<S> {
   exitMs?: number;
 }
 
-export type { PanelView };
-
 export type PanelGo = (href: string, options?: { replace?: boolean; instant?: boolean }) => boolean;
 
 export interface PanelController<S> {

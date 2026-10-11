@@ -214,6 +214,7 @@ export async function accountDetail(
     .select({ id: invites.id, label: invites.label })
     .from(invites)
     .where(eq(invites.usedBy, userId))
+    .orderBy(asc(invites.createdAt))
     .limit(1);
 
   return {

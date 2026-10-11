@@ -20,10 +20,9 @@ describe('the draft of the new form', () => {
     expect(exited(closing, 'new', RULES)).toMatchObject({ panel: 'none', epoch: 1 });
   });
 
-  // Regression: the first controller decided the draft before `setView`, from the committed view.
-  // N pressed 1 ms before the 150 ms exit timer reopened the form, and then the timer, which read
-  // a committed view that was still closing, started a new draft in the form on screen.
-  it('regression: N 1 ms before the exit timer keeps the draft', () => {
+  // The exit timer of a close can fire after the user reopens the form. The exit is ignored when
+  // `closing` is false, so the epoch stays and the draft stays. This test covers the pure rule only.
+  it('keeps the draft when the exit of an earlier close fires after a reopen', () => {
     const closing = went(openNew, 'none', false, RULES);
     const reopened = went(closing, 'new', true, RULES);
     expect(reopened).toMatchObject({ panel: 'new', closing: false, epoch: 0 });

@@ -12,7 +12,7 @@ import styles from '../admin.module.css';
 import { deleteAccountAction } from './actions';
 
 /** What every account's «Elimina account» shares, given once (`DeleteAccountShared`). */
-export interface DeleteAccountSharedValue {
+interface DeleteAccountSharedValue {
   /** Where the page goes once the account is gone: the list with no panel. */
   afterHref: string;
   strings: {
