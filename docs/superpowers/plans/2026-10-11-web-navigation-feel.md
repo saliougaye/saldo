@@ -1022,7 +1022,7 @@ On 2026-10-11 the code differs from the sketch in these points. The code in `app
 - `parse` and `onlyChange` read a key with no entry in `panels` as no panel. Thus a URL with an unknown id opens nothing, and the controller does not keep a panel that does not show.
 - `selectedId` comes from `shown`, so no row is selected while the exit plays, as on Transazioni.
 - The `PanelNav` value is in `useMemo`, and `onClose` is in `useCallback`. `Panel` subscribes Esc through `onClose`, so it must keep its identity.
-- The `Panel` gets `key={key}` only when a panel shows. No `'none'` key is necessary.
+- The `key` of `Panel` is its shape: `'form'` for a sheet, `'detail'` for the other panels. The panel key is the `key` of a `Fragment` around the body. Thus the panel stays put while the selection moves between rows, as the 2026-10-07 spec says, and the body of each row is a new form. The sketch above puts the panel key on `Panel`. That replays the entrance at each click on a row.
 
 - [x] **Step 2: Split `SlotPanel` so that other components can use the portal**
 
@@ -1253,4 +1253,4 @@ Queries per request on `/transactions`: before 5, after A not measured, after B 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
 - **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
 - **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
-- **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because of the `key` on `Panel`.
+- **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because the panel key is the `key` of the body. The `key` of `Panel` is only its shape, so the panel does not play its entrance again.

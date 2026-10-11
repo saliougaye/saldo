@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useCallback, useMemo } from 'react';
+import { Fragment, type ReactNode, useCallback, useMemo } from 'react';
 import { type CloseFrom, Panel } from './Panel';
 import { type PanelNav, PanelNavContext } from './PanelNav';
 import { type PanelParams, panelHrefFor, panelKeyFromSearch, panelOnlyChange } from './panelUrl';
@@ -77,11 +77,13 @@ export function PanelSwitch({
     [go, closeHref],
   );
 
-  // The key on `Panel`: a switch from one key to another is a new panel, and a new form.
+  // The panel stays put while the selection moves between rows (2026-10-07 spec): its key is its
+  // shape only, as on Transazioni, where a form and a detail are different panels. The body's key is
+  // the panel key: a switch from one key to another is a new form, with no state from the last one.
   const panel =
     key === null || spec === undefined ? null : (
       <Panel
-        key={key}
+        key={spec.sheet === true ? 'form' : 'detail'}
         title={spec.title}
         sheet={spec.sheet}
         bare={spec.bare}
@@ -91,7 +93,7 @@ export function PanelSwitch({
         closing={view.closing}
         instant={view.instant}
       >
-        {spec.body}
+        <Fragment key={key}>{spec.body}</Fragment>
       </Panel>
     );
 
