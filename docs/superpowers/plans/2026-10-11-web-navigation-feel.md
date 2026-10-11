@@ -1203,6 +1203,12 @@ On 2026-10-11 the work on Categories found these points:
 - A URL with `?c=` and an id that is not a live category opens nothing, also with `?archived`. Before, `?archived` then opened the archived list. `PanelSwitch` reads the first name of `order` that the URL has.
 - The goals flows are in `accounts-goals`, not in `budgets-categories-tags`. Step 3 runs the spec of the section.
 
+On 2026-10-11 the work on Budgets found these points:
+
+- `budgetFormView` gives only what is the budget's own, with `heldIds`. `budgetFormShared` gives the lists that are the same for every form: the categories, the budgets, the history and `categoryRefs`. `BudgetForm` gets its tiles from `budgetCategoryTiles`, which calls core's `takenCategoryIds`.
+- `budgetRowFor` takes `selectId`, so the rows are `PanelLink`s. Home does not give it.
+- With 50 more budgets the RSC response was 159 KB before, 916 KB with the approach of Task 11, and 218 KB with the shared props.
+
 `profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
 ### Task 13: Conti

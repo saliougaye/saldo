@@ -1,7 +1,7 @@
 import { type Budget, budgetSchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { CATEGORY, CATEGORY_2, CATEGORY_CHILD, dataWith, tx } from '../test/fixtures';
-import { budgetFormView } from './formView';
+import { budgetFormShared } from './formView';
 
 const BUDGET: Budget = budgetSchema.parse({
   id: 'b1',
@@ -18,7 +18,7 @@ const BUDGET: Budget = budgetSchema.parse({
   deletedAt: null,
 });
 
-describe('budgetFormView', () => {
+describe('budgetFormShared', () => {
   it('hands over the past periods as plain records, parent-level, newest first', () => {
     const data = dataWith(
       [
@@ -28,7 +28,7 @@ describe('budgetFormView', () => {
       ],
       { budgets: [BUDGET], categories: [CATEGORY, CATEGORY_CHILD, CATEGORY_2] },
     );
-    const view = budgetFormView({
+    const shared = budgetFormShared({
       data,
       today: '2026-09-20',
       def: { kind: 'month', startDay: 1 },
@@ -38,11 +38,8 @@ describe('budgetFormView', () => {
         elapsed: 20,
         length: 30,
       },
-      currency: 'EUR',
-      mode: 'new',
-      id: null,
     });
-    expect(view?.history).toEqual([{ c1: 3500 }, { c2: 700 }]);
-    expect(JSON.parse(JSON.stringify(view))).toEqual(view);
+    expect(shared.history).toEqual([{ c1: 3500 }, { c2: 700 }]);
+    expect(JSON.parse(JSON.stringify(shared))).toEqual(shared);
   });
 });
