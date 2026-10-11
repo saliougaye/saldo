@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./format": "./src/format.ts",
+    "./timeZones": "./src/timeZones.ts",
     "./translate": "./src/translate.ts"
   },
   "scripts": {
