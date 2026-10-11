@@ -468,6 +468,55 @@ test.describe('instance and settings', () => {
     await admin.context.close();
   });
 
+  // SECURITY GUARD: the page renders the SMTP panel on every load, open or not. The stored password
+  // must not reach any response of the page: the panel learns only that there is one.
+  test('SECURITY GUARD: no response of the settings page holds the SMTP password', async ({
+    browser,
+    t,
+  }) => {
+    const host = 'smtp.e2e.test';
+    const password = 'Pw-Segreta-e2e-4821';
+    const admin = await openAdmin(browser);
+    const { page } = admin;
+    const smtpRow = () =>
+      page.getByRole('link', { name: startsWith(t('admin.settings.smtp.title')) });
+    const panel = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
+    try {
+      await page.goto('/admin/settings');
+      await smtpRow().click();
+      await panel.getByLabel(t('admin.settings.smtp.host')).fill(host);
+      await panel.getByLabel(t('admin.settings.smtp.port')).fill('2525');
+      await panel.getByLabel(t('admin.settings.smtp.user')).fill('postino');
+      await panel.getByLabel(t('admin.settings.smtp.password'), { exact: true }).fill(password);
+      await panel.getByLabel(t('admin.settings.smtp.from')).fill('saldo@e2e.test');
+      await panel.getByRole('button', { name: t('common.save'), exact: true }).click();
+      await expect(panel.getByText(t('admin.settings.saved'))).toBeVisible();
+      await expect(panel.getByText(t('admin.settings.smtp.passwordSet'))).toBeVisible();
+
+      for (const url of ['/admin/settings', '/admin/settings?edit=smtp']) {
+        for (const rsc of [false, true]) {
+          const { body } = await fetchIn(page, url, rsc);
+          // The control: the response is the page, with the saved mail settings in it.
+          expect(body).toContain(host);
+          expect(body).not.toContain(password);
+        }
+      }
+    } finally {
+      await page.goto('/admin/settings?edit=smtp');
+      const remove = panel.getByRole('button', { name: t('admin.settings.smtp.remove') });
+      // Nothing to remove when the save itself failed: the error of the test is the one to read.
+      if ((await remove.count()) > 0) {
+        await remove.click();
+        await page
+          .getByRole('alertdialog')
+          .getByRole('button', { name: t('admin.settings.smtp.removeConfirm') })
+          .click();
+        await expect(smtpRow()).toContainText(t('admin.settings.smtp.notConfigured'));
+      }
+    }
+    await admin.context.close();
+  });
+
   // A setting the environment sets: its panel names the variable and offers no «Salva».
   // The harness sets no variable that locks one of the three settings (it sets
   // ATTACHMENT_STORAGE and APP_REDIRECT_SCHEMES, which show on Istanza only). Needs a variable in
