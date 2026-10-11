@@ -18,6 +18,7 @@ import type { AccountMessages } from '../../../src/i18n/accountMessages';
 import { Alert } from '../../../src/ui/Alert';
 import { AmountField } from '../../../src/ui/AmountField';
 import { AppearancePicker } from '../../../src/ui/AppearancePicker';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { FormFoot } from '../../../src/ui/FormFoot';
 import { Select, type SelectOption } from '../../../src/ui/Select';
 import { Switch } from '../../../src/ui/Switch';
@@ -100,9 +101,9 @@ export function AccountForm({
         return;
       }
       if (result.ok) {
+        await actionApplied();
         // `replace`: Back from the saved account goes where the form was opened from.
         router.replace(afterSave.replace('__ID__', encodeURIComponent(result.id)));
-        router.refresh();
         return;
       }
       if ('missing' in result) {

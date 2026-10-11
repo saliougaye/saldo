@@ -33,6 +33,7 @@ import type { BudgetMessages } from '../../../../src/i18n/budgetMessages';
 import { Alert } from '../../../../src/ui/Alert';
 import { AmountField } from '../../../../src/ui/AmountField';
 import { AppearancePicker } from '../../../../src/ui/AppearancePicker';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { IconBox } from '../../../../src/ui/IconBox';
 import { Segmented } from '../../../../src/ui/Segmented';
@@ -169,8 +170,8 @@ export function BudgetForm({ view, closeHref, afterSave, savedName }: Props) {
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.replace(afterSave);
-        router.refresh();
         return;
       }
       if ('missing' in result) {

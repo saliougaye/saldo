@@ -199,7 +199,6 @@ export function MintInvite(props: Props) {
       <Button
         onClick={() => {
           router.replace(doneHref);
-          router.refresh();
         }}
       >
         {strings.done}

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { AccountWriteError } from '../../../src/server/write/accounts';
 import { Button } from '../../../src/ui/Button';
@@ -20,7 +19,6 @@ interface Props {
 
 /** «Ripristina» for an archived account or a closed goal; both refresh the page in place. */
 export function RestoreButton({ id, kind, label, busyLabel, errors, disabledNote }: Props) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -35,10 +33,8 @@ export function RestoreButton({ id, kind, label, busyLabel, errors, disabledNote
         setError(errors.unexpected);
         return;
       }
-      if (result.ok) {
-        router.refresh();
-        return;
-      }
+      // The action renders the page again (`refreshAfterWrite`): nothing to refresh here.
+      if (result.ok) return;
       setError(errors[result.error]);
     });
   };

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { CategoryWriteError } from '../../../../src/server/write/categories';
 import { Icon } from '../../../../src/ui/Icon';
@@ -21,7 +20,6 @@ interface Props {
  * disabled at either end. The write renumbers the group; the page refreshes to show the new order.
  */
 export function ReorderButtons({ id, canMoveUp, canMoveDown, upLabel, downLabel, errors }: Props) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -36,10 +34,8 @@ export function ReorderButtons({ id, canMoveUp, canMoveDown, upLabel, downLabel,
         setError(errors.unexpected);
         return;
       }
-      if (result.ok) {
-        router.refresh();
-        return;
-      }
+      // The action renders the page again (`refreshAfterWrite`): nothing to refresh here.
+      if (result.ok) return;
       setError(errors[result.error]);
     });
   };

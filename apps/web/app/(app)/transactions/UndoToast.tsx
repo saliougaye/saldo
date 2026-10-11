@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState, useTransition } from 'react';
 import type { WriteError } from '../../../src/server/write/transactions';
+import { actionApplied } from '../../../src/ui/actionApplied';
 import { Toast } from '../../../src/ui/Toast';
 import { restoreTransactionAction } from './actions';
 
@@ -55,8 +56,8 @@ export function UndoToast({ id, restoredHref, withoutDeletedHref, strings }: Pro
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.replace(restoredHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);

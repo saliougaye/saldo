@@ -22,6 +22,7 @@ import type { CategoryMessages } from '../../../../src/i18n/categoryMessages';
 import { Alert } from '../../../../src/ui/Alert';
 import { AmountField } from '../../../../src/ui/AmountField';
 import { AppearancePicker } from '../../../../src/ui/AppearancePicker';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Segmented } from '../../../../src/ui/Segmented';
 import { Select } from '../../../../src/ui/Select';
@@ -115,8 +116,8 @@ export function CategoryForm({ view, closeHref, afterSave, archive }: Props) {
         return;
       }
       if (result.ok) {
+        await actionApplied();
         router.replace(afterSave);
-        router.refresh();
         return;
       }
       setProblem({ error: errors[result.error] });

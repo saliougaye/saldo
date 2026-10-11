@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { TagWriteError } from '../../../../src/server/write/tags';
+import { actionApplied } from '../../../../src/ui/actionApplied';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Select } from '../../../../src/ui/Select';
 import { mergeTagsAction } from './actions';
@@ -60,8 +61,8 @@ export function MergeTag({ id, updatedAt, targets, afterHref, strings }: Props) 
       }
       if (result.ok) {
         setOpen(false);
+        await actionApplied();
         router.push(afterHref);
-        router.refresh();
         return;
       }
       setError(strings.errors[result.error]);
