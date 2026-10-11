@@ -16,6 +16,24 @@ function startsWith(text: string): RegExp {
   return new RegExp(`^${literal(text).source}`);
 }
 
+/**
+ * What the browser of `page` gets for `href`: the document, or the RSC payload that a click asks for.
+ * From the page, so that the request carries the browser's language as a real one does.
+ */
+async function fetchIn(
+  page: Page,
+  href: string,
+  rsc: boolean,
+): Promise<{ status: number; body: string }> {
+  return page.evaluate(
+    async (input) => {
+      const response = await fetch(input.href, { headers: input.rsc ? { RSC: '1' } : {} });
+      return { status: response.status, body: await response.text() };
+    },
+    { href, rsc },
+  );
+}
+
 /** An account's row in Admin → Account: its link names the name, the address and the role. */
 function accountRow(page: Page, name: string) {
   return page.getByRole('link', { name: new RegExp(name) });
@@ -164,6 +182,35 @@ test.describe('accounts', () => {
     await expect(accountRow(page, member.name)).toHaveCount(0);
     await member.context.close();
     await admin.context.close();
+  });
+
+  // SECURITY GUARD: the page renders the panel of every account in one response. A member who asks
+  // for it, as a page or as the RSC payload of a click, gets the not-found page and none of the facts.
+  test('SECURITY GUARD: a member who asks for an account panel gets 404 and none of its facts', async ({
+    browser,
+    t,
+  }) => {
+    const member = await createMember(browser, t, { name: 'Mia Curiosa', email: 'mia@e2e.test' });
+    const admin = await openAdmin(browser);
+    await admin.page.goto('/admin/accounts');
+    const href = (await accountRow(admin.page, ADMIN.name).getAttribute('href')) ?? '';
+    expect(href).toMatch(/\?u=/);
+    // The control: the same request from the admin carries what the member must not get.
+    const own = await fetchIn(admin.page, href, true);
+    expect(own.body).toContain(ADMIN.email);
+    expect(own.body).toContain(t('admin.accounts.lastSignIn'));
+    await admin.context.close();
+
+    for (const rsc of [false, true]) {
+      const { status, body } = await fetchIn(member.page, href, rsc);
+      // Next answers the RSC request of a `notFound()` with 200 and the not-found tree in the body.
+      if (rsc) expect(body).toContain('NEXT_HTTP_ERROR_FALLBACK;404');
+      else expect(status).toBe(404);
+      expect(body).not.toContain(ADMIN.email);
+      expect(body).not.toContain(t('admin.accounts.lastSignIn'));
+      expect(body).not.toContain(t('admin.accounts.dangerZone'));
+    }
+    await member.context.close();
   });
 });
 
