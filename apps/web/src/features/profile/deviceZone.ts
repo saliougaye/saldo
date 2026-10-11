@@ -1,14 +1,11 @@
+import { TIME_ZONE_ALIASES } from '@saldo/i18n/timeZones';
+
 /**
  * The id the time-zone list holds for a zone the browser reports, or null when it holds none: a
- * browser says Asia/Kolkata where CLDR lists Asia/Calcutta. The aliases come from the server, which
- * is where the zone tables are.
+ * browser says Asia/Kolkata where CLDR lists Asia/Calcutta.
  */
-export function listedZone(
-  zone: string | undefined,
-  aliases: Readonly<Record<string, string>>,
-  known: ReadonlySet<string>,
-): string | null {
+export function listedZone(zone: string | undefined, known: ReadonlySet<string>): string | null {
   if (zone === undefined || zone === '') return null;
-  const id = Object.hasOwn(aliases, zone) ? (aliases[zone] ?? zone) : zone;
+  const id = Object.hasOwn(TIME_ZONE_ALIASES, zone) ? (TIME_ZONE_ALIASES[zone] ?? zone) : zone;
   return known.has(id) ? id : null;
 }

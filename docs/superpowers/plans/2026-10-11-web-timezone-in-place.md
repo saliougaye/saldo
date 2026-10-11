@@ -217,9 +217,9 @@ git commit -m "feat(web): the rows and the hours of the time zone list, as pure 
 - Modify: `apps/web/app/(app)/profile/preferences/TimeZonePanel.tsx`, `apps/web/app/(app)/profile/preferences/page.tsx`
 - Test: `apps/web/e2e/profile.spec.ts` (must stay green)
 
-- [ ] **Step 1: Run the e2e flow of the profile first (baseline).** Run: `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS.
+- [x] **Step 1: Run the e2e flow of the profile first (baseline).** Run: `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS.
 
-- [ ] **Step 2: Write `useMinute.ts`.**
+- [x] **Step 2: Write `useMinute.ts`.**
 
 ```ts
 'use client';
@@ -268,7 +268,7 @@ export function minuteOf(date: Date): number {
 }
 ```
 
-- [ ] **Step 3: Read the aliases from the static table.** In `deviceZone.ts`, delete the `aliases` parameter. Import `TIME_ZONE_ALIASES` from `@saldo/i18n/timeZones`:
+- [x] **Step 3: Read the aliases from the static table.** In `deviceZone.ts`, delete the `aliases` parameter. Import `TIME_ZONE_ALIASES` from `@saldo/i18n/timeZones`:
 
 ```ts
 import { TIME_ZONE_ALIASES } from '@saldo/i18n/timeZones';
@@ -284,7 +284,7 @@ export function listedZone(zone: string | undefined, known: ReadonlySet<string>)
 }
 ```
 
-- [ ] **Step 4: Change `TimeZonePanel`.** The props are `saved`, `locale`, `renderedAt` and `strings`. The rows come from `timeZoneRows`, and the hours from `zoneTimes` at the minute of `useMinute`:
+- [x] **Step 4: Change `TimeZonePanel`.** The props are `saved`, `locale`, `renderedAt` and `strings`. The rows come from `timeZoneRows`, and the hours from `zoneTimes` at the minute of `useMinute`:
 
 ```tsx
 export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
@@ -310,7 +310,7 @@ export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
 
 `new Date(minute * 60_000)` is the first instant of the minute. The hour of a zone does not change in the minute, because every zone offset is a whole number of minutes.
 
-- [ ] **Step 5: Change the page.** In `page.tsx`, delete `ON_REQUEST` and the filter on it: every row has its panel. Give the panel the new props:
+- [x] **Step 5: Change the page.** In `page.tsx`, delete `ON_REQUEST` and the filter on it: every row has its panel. Give the panel the new props:
 
 ```tsx
       case 'timeZone': {
@@ -328,9 +328,11 @@ export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
 
 Update the comment above `panels`: every editor is rendered here, and a click only chooses one. Delete `timeZoneOptions`, `ZoneOption` and `TimeZoneOptions` from `preferenceOptions.ts`, and the imports that only they used (`canonicalTimeZone`, `formatWallTime`, `TIME_ZONE_ALIASES`, `TIME_ZONES`, `timeZoneCity`, `timeZoneName`, `wallClock`). Keep the comment at the top of the file true: the time zone rows are now the one exception that the browser makes.
 
-- [ ] **Step 6: Run the gates and the e2e flow.** Run the three gates, then `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS, with the same count as step 1.
+- [x] **Step 6: Run the gates and the e2e flow.** Run the three gates, then `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS, with the same count as step 1.
 
-- [ ] **Step 7: Commit.**
+  On 2026-10-11: step 1 gave 9 passed, and step 6 gave 9 passed. `pnpm lint` checked 1101 files with no `lint/` line. `pnpm --filter web typecheck` gave no `error TS`. The web tests gave 108 files and 499 tests passed (1 file and 3 tests skipped).
+
+- [x] **Step 7: Commit.**
 
 ```bash
 git add -A apps/web packages/i18n

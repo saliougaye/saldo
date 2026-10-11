@@ -1,22 +1,16 @@
 import { CURRENCY_CODES, type CurrencyCode, type Settings } from '@saldo/core';
 import {
   type AppLocale,
-  canonicalTimeZone,
   currencyName,
   formatMoney,
-  formatWallTime,
   LANGUAGE_NAMES,
-  TIME_ZONE_ALIASES,
-  TIME_ZONES,
   type Translate,
-  timeZoneCity,
-  timeZoneName,
-  wallClock,
 } from '@saldo/i18n';
 
 /**
  * What Profilo's panels list, resolved on the server: a client component must not import the root
- * of `@saldo/i18n` (the seven catalogs, the zone and currency names), so it gets plain rows.
+ * of `@saldo/i18n` (the seven catalogs, the currency names), so it gets plain rows. The time zone
+ * list is not here: the browser makes it from `@saldo/i18n/timeZones` (`timeZoneRows`).
  */
 export interface ChoiceOption<V extends string = string> {
   value: V;
@@ -56,46 +50,4 @@ export function currencyOptions(locale: AppLocale): CurrencyOption[] {
     name: currencyName(code, locale),
     sample: formatMoney(0, code, locale),
   }));
-}
-
-export interface ZoneOption {
-  zone: string;
-  city: string;
-  /** «Ora dell’Europa centrale»; absent for an id CLDR does not list. */
-  name?: string;
-  /** The wall time there at `now`, read once when the page renders, not ticked. */
-  time?: string;
-}
-
-export interface TimeZoneOptions {
-  /** Sorted by city in the app's language, as the phone's list. */
-  zones: ZoneOption[];
-  /** A current IANA name → the id `zones` lists it under, for the zone the browser reports. */
-  aliases: Readonly<Record<string, string>>;
-}
-
-/**
- * Every zone of the list, plus the saved one if the list does not hold it (a zone `Intl` knows and
- * CLDR does not name), so the panel can always show what is selected.
- */
-export function timeZoneOptions(
-  locale: AppLocale,
-  now: Date,
-  saved: string | null,
-): TimeZoneOptions {
-  const ids: string[] = [...TIME_ZONES];
-  const current = saved === null ? null : canonicalTimeZone(saved);
-  if (current !== null && !ids.includes(current)) ids.push(current);
-  const zones = ids
-    .map((zone): ZoneOption => {
-      const clock = wallClock(zone, now);
-      return {
-        zone,
-        city: timeZoneCity(zone, locale),
-        name: timeZoneName(zone, locale),
-        time: clock === null ? undefined : formatWallTime(clock),
-      };
-    })
-    .sort((a, b) => a.city.localeCompare(b.city, locale));
-  return { zones, aliases: TIME_ZONE_ALIASES };
 }

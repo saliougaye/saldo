@@ -1,9 +1,11 @@
 'use client';
 
 import { groupTimeZones } from '@saldo/core';
+import type { AppLocale } from '@saldo/i18n/format';
 import { useEffect, useMemo, useState } from 'react';
 import { listedZone } from '../../../../src/features/profile/deviceZone';
-import type { ZoneOption } from '../../../../src/features/profile/preferenceOptions';
+import { timeZoneRows, zoneTimes } from '../../../../src/features/profile/timeZoneRows';
+import { useMinute } from '../../../../src/features/profile/useMinute';
 import { Alert } from '../../../../src/ui/Alert';
 import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
@@ -13,10 +15,10 @@ import { useSaveSetting } from './useSaveSetting';
 interface Props {
   /** The zone in the synced settings, under the id the list holds; null if none is stored yet. */
   saved: string | null;
-  /** Every zone, sorted by city in the app's language, with the hour there when the page rendered. */
-  zones: readonly ZoneOption[];
-  /** A current IANA name → the id `zones` lists it under, for the zone this browser reports. */
-  aliases: Readonly<Record<string, string>>;
+  /** The app's language: the cities, the names of the zones and their order. */
+  locale: AppLocale;
+  /** The minute of the server's render (`minuteOf`): the hours of the HTML, and of the hydration. */
+  renderedAt: number;
   strings: {
     title: string;
     note: string;
@@ -33,48 +35,51 @@ interface Props {
  * §6.8 Fuso orario (D37), as the phone's `TimeZoneList`: the saved zone on top, and this device's
  * under it when they differ — travelling must not bury it under «R» — then every zone, searchable
  * by city, zone name or id. Saved as it is chosen; the server computes «today» with it.
+ *
+ * The list is the browser's: the zones and their names are static tables, and the hour in each
+ * zone is this browser's, new at each minute while the panel is open. The page sends no list, so
+ * the panel opens in place like the other preferences.
  */
-export function TimeZonePanel({ saved, zones, aliases, strings }: Props) {
+export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
   const { shown, error, save } = useSaveSetting(saved);
   const [query, setQuery] = useState('');
-  const byZone = useMemo(() => new Map(zones.map((option) => [option.zone, option])), [zones]);
+  const zones = useMemo(() => timeZoneRows(locale, saved), [locale, saved]);
+  const ids = useMemo(() => zones.map((row) => row.zone), [zones]);
+  const byZone = useMemo(() => new Map(zones.map((row) => [row.zone, row])), [zones]);
+  const minute = useMinute(renderedAt);
+  const times = useMemo(() => zoneTimes(ids, new Date(minute * 60_000)), [ids, minute]);
 
   // The browser's zone is only known here, after the mount: the server renders for any browser.
   const [device, setDevice] = useState<string | null>(null);
   useEffect(() => {
     const reported = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setDevice(listedZone(reported, aliases, new Set(zones.map((option) => option.zone))));
-  }, [aliases, zones]);
+    setDevice(listedZone(reported, new Set(ids)));
+  }, [ids]);
 
   const current = shown ?? device;
   const away = device !== null && current !== null && current !== device;
   const groups = useMemo(() => {
+    const labelsOf = (zone: string) => [byZone.get(zone)?.city ?? '', byZone.get(zone)?.name ?? ''];
     if (current === null) {
       // Neither a saved zone nor one the browser names: the plain list.
-      const found = groupTimeZones({
-        query,
-        saved: null,
-        device: '',
-        zones: zones.map((option) => option.zone),
-        labelsOf: (zone) => [byZone.get(zone)?.city ?? '', byZone.get(zone)?.name ?? ''],
-      });
+      const found = groupTimeZones({ query, saved: null, device: '', zones: ids, labelsOf });
       return { top: [], all: found.all };
     }
     return groupTimeZones({
       query,
       saved: current,
       device: device ?? current,
-      zones: zones.map((option) => option.zone),
-      labelsOf: (zone) => [byZone.get(zone)?.city ?? '', byZone.get(zone)?.name ?? ''],
+      zones: ids,
+      labelsOf,
     });
-  }, [query, current, device, zones, byZone]);
+  }, [query, current, device, ids, byZone]);
 
   const rows = (list: readonly string[]): ListOption<string>[] =>
     list.map((zone) => ({
       value: zone,
       label: byZone.get(zone)?.city ?? zone,
       subtitle: byZone.get(zone)?.name,
-      detail: byZone.get(zone)?.time,
+      detail: times.get(zone),
     }));
 
   return (
