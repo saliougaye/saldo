@@ -1,6 +1,14 @@
 'use client';
 
-import { Fragment, type ReactNode, useCallback, useMemo } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { type CloseFrom, Panel } from './Panel';
 import { type PanelNav, PanelNavContext } from './PanelNav';
 import styles from './PanelSwitch.module.css';
@@ -29,8 +37,9 @@ interface Props {
   children?: ReactNode;
   /**
    * `slot`: the page is a section of a `SubnavLayout`, and the panel takes the layout's trailing
-   * column. `PanelSwitch` must then be the page's root, the direct child of the section. Otherwise
-   * the panel renders in place, after `children`.
+   * column. `PanelSwitch` must then be the ONLY child of the section: the page's root, with only
+   * providers that render no element above it. Otherwise the panel's column follows `children`, in
+   * the page's own grid.
    */
   slot?: boolean;
 }
@@ -40,6 +49,10 @@ interface Props {
  * (`usePanelController`). The server renders the body of every panel; a click only chooses the one
  * to show. A key that is in the URL on the first render opens with the page. Rows must be
  * `PanelLink`s with a `selectId` equal to their whole key (`tag:ID`), so `a:ID` and `g:ID` differ.
+ *
+ * With `slot`, `PanelSwitch` renders two elements, the list and the panel's column, and the section
+ * of the `SubnavLayout` lets them through to the layout's grid (`display: contents`). Thus it must
+ * be the only child of the section. A development build says so in the console when it is not.
  */
 export function PanelSwitch({
   baseHref,
@@ -51,6 +64,7 @@ export function PanelSwitch({
 }: Props) {
   const known = (key: string | null): string | null =>
     key !== null && panels[key] !== undefined ? key : null;
+  const list = useRef<HTMLDivElement>(null);
   const { view, go, shown, side } = usePanelController<string | null>({
     parse: (query) => known(panelKeyFromSearch(query, params)),
     same: (a, b) => a === b,
@@ -79,6 +93,38 @@ export function PanelSwitch({
     [go, closeHref],
   );
 
+  // A refresh dropped the open key (a deleted row) while the URL kept it: the URL closes too, so
+  // that a reload does not hold a dead key, and the focus goes back to the list.
+  const lost = view.panel !== null && !view.closing && key === null;
+  useEffect(() => {
+    if (lost) go(closeHref, { replace: true, instant: true });
+  }, [lost, go, closeHref]);
+
+  // A browser without `:has` (Firefox before 121): the section lets the two elements through by
+  // hand, from the first client render. The server's paint then shows the panel below the list.
+  useLayoutEffect(() => {
+    const section = list.current?.parentElement ?? null;
+    if (!slot || section === null || CSS.supports('selector(:has(*))')) return;
+    section.style.display = 'contents';
+    return () => {
+      section.style.removeProperty('display');
+    };
+  }, [slot]);
+
+  // Development only: a section with another child, or one that does not let the two elements
+  // through, puts the panel in the wrong column with no error.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !slot) return;
+    const section = list.current?.parentElement ?? null;
+    if (section === null) return;
+    if (getComputedStyle(section).display !== 'contents' || section.childElementCount !== 2) {
+      console.error(
+        'PanelSwitch with `slot` must be the only child of the section of a SubnavLayout.',
+        section,
+      );
+    }
+  }, [slot]);
+
   // The panel stays put while the selection moves between rows (2026-10-07 spec): its key is its
   // shape only, as on Transazioni, where a form and a detail are different panels. The body's key is
   // the panel key: a switch from one key to another is a new form, with no state from the last one.
@@ -101,23 +147,19 @@ export function PanelSwitch({
 
   // In a `SubnavLayout`, the section lets these two take its column and the slot's (`:has`), so the
   // server renders the panel beside the list: a load of `?tag=ID` paints it with the list.
+  // The panel's column is an element in both modes: the focus-return of the controller reads it.
   return (
     <PanelNavContext value={nav}>
       {slot ? (
-        <>
-          <div className={styles.list} data-panel-switch="">
-            {children}
-          </div>
-          <div className={styles.side} ref={side}>
-            {panel}
-          </div>
-        </>
-      ) : (
-        <>
+        <div className={styles.list} data-panel-switch="" ref={list}>
           {children}
-          {panel}
-        </>
+        </div>
+      ) : (
+        children
       )}
+      <div className={styles.side} ref={side}>
+        {panel}
+      </div>
     </PanelNavContext>
   );
 }

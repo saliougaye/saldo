@@ -1033,9 +1033,13 @@ In `SlotPanel.tsx`, export a `SlotPortal({ children })` that does the `useState`
 
 On 2026-10-11 the review found a problem with the portal in `PanelSwitch`. A portal renders nothing on the server and on the hydration render. Thus a load of `?tag=ID` painted the page without the panel, then the column appeared, and the panel slid in. With JavaScript off the panel never showed. `PanelSwitch` with `slot` does not use `SlotPortal` now:
 
-- It renders `<div data-panel-switch>` with the list and `<div>` with the panel (`PanelSwitch.module.css` copies the rules of `.section` and `.slot`).
+- It renders `<div data-panel-switch>` with the list and `<div>` with the panel. In `PanelSwitch.module.css` they use `composes` on `.section` and `.slot` of `SubnavLayout.module.css`.
 - In `SubnavLayout.module.css`, `.section:has(> [data-panel-switch])` is `display: contents`. Thus the two elements take the section column and the slot column of the layout grid, and the server renders the panel.
-- `PanelSwitch` must be the root of the page, the direct child of the section.
+- `PanelSwitch` must be the only child of the section. Only providers that render no element can be above it. A development build writes a `console.error` when the section has another child or is not `display: contents`.
+- A browser without `:has` (Firefox before 121) gets `display: contents` on the section from a layout effect. The effect removes it when the page unmounts, because the section belongs to the layout.
+- At 1024px and more, the panel's column has `align-self: stretch`, as on Transazioni. Thus the panel stays sticky beside a long list. Below 1024px the column is `display: contents`, so it adds no row to the grid. The column is an element also without `slot`, because the controller reads it to give the focus back.
+- `Panel.module.css` gave a sheet `inset: auto` at 1024px and more, and that removed its `top`. Thus no form was sticky, also on Transazioni. The rule now sets `top` again.
+- When a refresh removes the open key from `panels` and the URL keeps it, an effect replaces the URL with the URL of the close.
 - The pages that still use `SlotPanel` keep the portal. Nothing matches the new rule on these pages, so they do not change.
 
 - [x] **Step 3: Run the gates and commit**

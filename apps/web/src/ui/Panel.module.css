@@ -195,8 +195,10 @@
     display: none;
   }
 
+  /* `inset: auto` undoes the sheet's bottom edge; `top` comes back, or a form is not sticky. */
   .panel[data-sheet] {
     inset: auto;
+    top: calc(var(--layout-topbar-height) + 32px);
     z-index: 0;
     max-block-size: calc(100dvh - var(--layout-topbar-height) - 64px);
     padding: 0 0 0 24px;
