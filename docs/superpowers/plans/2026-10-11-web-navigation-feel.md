@@ -1279,14 +1279,37 @@ On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave
 
 Conti has four panels: the account form (`?new`, `?a=ID&edit`), the archived list (`?archived`), the account detail (`?a=ID`) and the goal detail (`?g=ID`). Conti has no goal form. The goal form is on `/profile/goals`.
 
-- [ ] **Step 1: Run the e2e flow first**, `rtk proxy pnpm --filter web e2e accounts-goals`. Expected: PASS.
-- [ ] **Step 2: Decide what is in place.** Read `accountDetail` and the form views at the top of the page. A **detail** needs `accountDetail({ data, today, def, id })` for each account. Render it for each listed account (there are few). An **edit form** that needs the balances of one account stays a navigation, as for a transaction. `edit` is not a panel parameter. Thus `?a=ID&edit` and `?a=ID` differ in the other parameters, and the link navigates. «Nuovo conto» needs no row, so it is in place.
-- [ ] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `archived`, `a:ID` (account detail) and `g:ID` (goal detail). Use `PANEL_PARAMS = { flags: ['new', 'archived'], values: ['g', 'a'], order: ['new', 'g', 'a', 'archived'] }`. These are the names that the page reads: `params.new`, `params.archived`, `params.a`, `params.g`. The `order` is the precedence of the page: `?new` wins, then `?g=` over `?a=`, and a detail wins over `?archived`. The first version of this plan had a `newGoal` flag. The page reads no such parameter.
+On 2026-10-11 Conti uses `PanelSwitch`. Task 13 is complete.
+
+- [x] **Step 1: Run the e2e flow first**, `rtk proxy pnpm --filter web e2e accounts-goals`. Expected: PASS.
+
+  On 2026-10-11 the run `e2e accounts-goals home-stats profile` gave 18 passed.
+
+- [x] **Step 2: Decide what is in place.** Read `accountDetail` and the form views at the top of the page. A **detail** needs `accountDetail({ data, today, def, id })` for each account. Render it for each listed account (there are few). An **edit form** that needs the balances of one account stays a navigation, as for a transaction. `edit` is not a panel parameter. Thus `?a=ID&edit` and `?a=ID` differ in the other parameters, and the link navigates. «Nuovo conto» needs no row, so it is in place.
+- [x] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `archived`, `a:ID` (account detail) and `g:ID` (goal detail). Use `PANEL_PARAMS = { flags: ['new', 'archived'], values: ['g', 'a'], order: ['new', 'g', 'a', 'archived'] }`. These are the names that the page reads: `params.new`, `params.archived`, `params.a`, `params.g`. The `order` is the precedence of the page: `?new` wins, then `?g=` over `?a=`, and a detail wins over `?archived`. The first version of this plan had a `newGoal` flag. The page reads no such parameter.
 
   > **Caution:** `panelKeyFromSearch` reads `?a=ID&edit` as `a:ID`. For that URL, make sure that the page shows the edit form, not the detail.
 
-- [ ] **Step 4: Replace `Panel` with `PanelSwitch`.** Do not set `slot`: Conti has no `SubnavLayout`. The rows of the page become `PanelLink`s through `ListRow`. An account row gives `selectId={`a:${id}`}`, and a goal row gives `selectId={`g:${id}`}`.
-- [ ] **Step 5: Run the e2e flow, check by hand, and commit** with `feat(web): Conti opens its panels in place`.
+- [x] **Step 4: Replace `Panel` with `PanelSwitch`.** Do not set `slot`: Conti has no `SubnavLayout`. The rows of the page become `PanelLink`s through `ListRow`. An account row gives `selectId={`a:${id}`}`, and a goal row gives `selectId={`g:${id}`}`.
+- [x] **Step 5: Run the e2e flow, check by hand, and commit** with `feat(web): Conti opens its panels in place`.
+
+On 2026-10-11 the work on Conti found these points. The code in `apps/web/app/(app)/accounts/page.tsx` is the reference.
+
+- `?a=ID&edit` stays a navigation, and `PanelSwitch` does not change. `edit` is not a panel parameter, so a link to it changes more than the panel. For a URL with `?a=ID&edit`, the server puts the edit form under the key `a:ID`, in place of the detail. The form has `closeTo: 'a:ID'`. The current URL has `edit`, so ✕, Esc and «Annulla» also navigate, to `?a=ID`. Thus the caution of step 3 is met. Only the account in the URL gets an edit form, because the form needs the balance of that account.
+- While the URL has `edit`, every row link also navigates, as before the change.
+- The page renders `a:ID` for each listed account and `g:ID` for each listed goal. The panel of a transaction links to the account of each side with `?a=ID`. That account can be a pocket or an archived account, which the list does not show. An MCP link can also name any account or goal. Thus the page also renders the panel of the id in `?a=` or `?g=` when the list does not show it, as Preferences does for the time zone.
+- `ArchiveAccountShared` and `CloseGoalShared` give the strings and `afterHref` once. A body gives only the id, the version, and the strings with the name or the amount.
+- `PanelSwitch` without `slot` renders its panel column after the list, in the grid of the page (`minmax(0, 1fr) auto`). With no panel the column is empty and takes no cell (`.slot:empty`). The screenshots of the list, `?a=ID`, `?g=ID`, `?archived`, `?new` and `?a=ID&edit` are the same, pixel for pixel, before and after (1440px and 500px, light and dark).
+- A temporary Playwright spec on a production build (port 3100) gave these results. A click on an account shows the panel in the next frame, with `?a=ID` and no RSC request for `/accounts`. A click on a second account keeps the same `aside` element, with no running animation. A goal row, the archived row and «Nuovo conto» open in place. The goal row is selected and the account row that holds it is not. ✕ and Esc close with no RSC request, and the focus goes back to the row. Back closes. «Modifica» sends one RSC request and shows the form with the name of the account. ✕, Esc and «Annulla» of the edit form go to `?a=ID`. A save of the edit form and of «Nuovo conto» goes to `?a=ID`. A load of each panel URL has the `aside` in the server HTML, also with JavaScript off.
+- The size of the response. With the seed (3 accounts, 2 goals) the RSC response of `/accounts` was 35 KB before and 86 KB after (6.3 KB and 12.6 KB with gzip). With 17 more accounts, each with 3 transactions, it was 67 KB before and 248 KB after (7.5 KB and 18.9 KB with gzip). An account panel is about 8 KB. Most of it is the list of the last 6 movements: each row has an inline SVG icon and an amount in parts.
+- The e2e test of the archive in `accounts-goals.spec.ts` now also opens «Modifica» and closes it back to the detail.
+- After the change, `e2e accounts-goals home-stats profile transactions shell` gave 33 passed.
+
+These URLs open something else now:
+
+- `?g=ID` with an id that is not a goal opens nothing, also with `?a=` or `?archived`. Before, `?g=ACCOUNT&a=X` showed the detail of the account in `?g=`, and `?g=X&archived` opened the archived list.
+- `?g=&a=ID` (an empty `g`) opens the account. Before it opened nothing.
+- `?edit&archived` with no `?a=` opens the archived list, as before. `?a=ID&edit` for a pocket or an archived account shows the detail, as before.
 
 ### Task 14: Admin
 
@@ -1361,5 +1384,5 @@ Queries per request on `/transactions`: before 5, after A not measured, after B 
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
 - **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
-- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. Connectors with 10 rows went from 48 KB to 85 KB. Preferences went from 27 KB to 41 KB, with the time zone as a navigation. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
+- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. Connectors with 10 rows went from 48 KB to 85 KB. Preferences went from 27 KB to 41 KB, with the time zone as a navigation. Conti with 20 accounts went from 67 KB to 248 KB (7.5 KB to 18.9 KB with gzip). If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because the panel key is the `key` of the body. The `key` of `Panel` is only its shape, so the panel does not play its entrance again.
