@@ -74,9 +74,9 @@ export interface PeriodSteps {
 }
 
 /**
- * The ‹ › of the period header, as links — so they work with no JavaScript and can be opened in a
- * tab. `reach` mirrors `periodFromParam`'s: `next` stays non-null up to that many periods after the
- * current one. It is computed here rather than with `@saldo/core`'s `canShiftPeriod`, which hard-codes
+ * The ‹ › of the period header, as links — so they can be opened in a tab, and Back does what the
+ * person means. `reach` mirrors `periodFromParam`'s: `next` stays non-null up to that many periods
+ * after the current one. It is computed here rather than with `@saldo/core`'s `canShiftPeriod`, which hard-codes
  * the phone's `MAX_PERIODS_AHEAD` (0) — the web's forecast columns give some screens a `reach` above
  * zero without changing what the phone allows. Backwards has no such limit: history always exists.
  */

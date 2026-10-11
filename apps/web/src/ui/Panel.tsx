@@ -59,9 +59,9 @@ const EXIT_MS = 150;
  * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
- * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
- * and still closes; only the key does nothing. A page can keep the panel in client state instead
- * (`onClose`): the URL then follows the panel, and nothing waits for the server.
+ * navigation and the ✕ is a plain link: a reload keeps the panel open, and a modified click opens
+ * the list in a new tab. A page can keep the panel in client state instead (`onClose`): the URL then
+ * follows the panel, and nothing waits for the server.
  */
 export function Panel({
   title,

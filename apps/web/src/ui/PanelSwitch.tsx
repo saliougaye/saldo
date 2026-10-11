@@ -100,7 +100,7 @@ export function PanelSwitch({
     );
 
   // In a `SubnavLayout`, the section lets these two take its column and the slot's (`:has`), so the
-  // server renders the panel beside the list: a load of `?tag=ID` paints it, also with JavaScript off.
+  // server renders the panel beside the list: a load of `?tag=ID` paints it with the list.
   return (
     <PanelNavContext value={nav}>
       {slot ? (

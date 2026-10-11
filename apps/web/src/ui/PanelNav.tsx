@@ -38,7 +38,7 @@ interface Props {
 /**
  * A link inside a page whose panel lives in client state (Transazioni). A plain click that only
  * changes the panel changes it in the frame of the click, and the URL follows; anything else is the
- * link it always was — outside such a page too, and with JavaScript off.
+ * link it always was — outside such a page too.
  */
 export function PanelLink({ href, className, selectedClassName, selectId, children }: Props) {
   const nav = usePanelNav();

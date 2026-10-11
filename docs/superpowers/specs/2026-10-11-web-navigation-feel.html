@@ -554,7 +554,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <p><b>The panel key.</b> A key is the string that names what the URL opens: <code>new</code>, <code>tag:ID</code>, <code>a:ID</code>, <code>archived</code>. Each page declares its <code>flags</code> (<code>?new</code>) and its <code>values</code> (<code>?tag=ID</code>). A flag wins over a value, unless the page gives an <code>order</code>. Conti and Categories give one, because they let a value win over <code>archived</code>. <code>panelOnlyChange</code> compares two URLs. If only the panel parameters change, it gives the new key. Otherwise it gives <code>null</code>, and the click is a navigation.</p>
       <p><b><code>PanelSwitch</code>.</b> The page renders the body of every panel on the server, as Transazioni does with the details. The page gives <code>PanelSwitch</code> a map from key to panel. A click only selects the panel to show. A key that has no entry in <code>panels</code> is a navigation. The panel stays on the screen while the selection moves from one row to another row. Only its body changes, and the body of the new row is a new form.</p>
       <p><b><code>PanelLink</code>.</b> The rows and the «New» links use <code>PanelLink</code>. A plain click goes to the controller. A click with <kbd>⌘</kbd>, <kbd>Ctrl</kbd> or <kbd>Shift</kbd> keeps the behaviour of a link.</p>
-      <p><b>The slot column.</b> Profilo and Admin show the panel in the trailing column of <code>SubnavLayout</code>. A page that uses <code>PanelSwitch</code> with <code>slot</code> renders its list and its panel as two elements. The section of the layout then lets the two elements take its column and the slot column. Thus the server renders the panel. A load of <code>?tag=ID</code> paints the panel at once, also with JavaScript off. A portal cannot do this, because a portal renders only after the page mounts. The pages that still use <code>SlotPanel</code> keep the portal and do not change.</p>
+      <p><b>The slot column.</b> Profilo and Admin show the panel in the trailing column of <code>SubnavLayout</code>. A page that uses <code>PanelSwitch</code> with <code>slot</code> renders its list and its panel as two elements. The section of the layout then lets the two elements take its column and the slot column. Thus the server renders the panel, and a load of <code>?tag=ID</code> paints the panel with the list. A portal cannot do this, because a portal renders only after the page mounts. The pages that still use <code>SlotPanel</code> keep the portal and do not change.</p>
       <p><b>Load and save.</b> A load of a URL with a key opens the page with the panel open. A save stays a navigation, so the list shows the new values.</p>
     </div>
   </div>
@@ -798,7 +798,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
     <div class="ch-head">
       <span class="ch-num">08</span>
       <h2 id="h-risks">Risks</h2>
-      <p class="lead">Five risks are known. Each one has a check or a fallback.</p>
+      <p class="lead">Six risks are known. Each one has a check, a fallback or a rule.</p>
     </div>
   </div>
   <div class="visual">
@@ -811,6 +811,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
           <tr><td>The size of the response</td><td>Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep its panel a navigation: give it no entry in <code>panels</code>.</td></tr>
           <tr><td>A redirect under a <code>loading.tsx</code></td><td>A <code>redirect()</code> in a page under a boundary streams after the shell and the skeleton. The status is 200, and the browser follows the redirect in the page. This applies to <code>readPage</code> → <code>/onboarding</code> on the four tabs and the Profilo sections. <code>next.config.ts</code> redirects <code>/profile</code> and <code>/admin</code> with a 307 before any render. <code>/budgets</code> has no boundary, and it keeps its 307. A <code>notFound()</code> in a layout above the boundary keeps its 404: a member gets 404 for <code>/admin</code> and <code>/admin/accounts</code>.</td></tr>
           <tr><td>A form with state in a hidden panel</td><td><code>PanelSwitch</code> mounts only the open panel. The new form of Transazioni is different: it uses <code>&lt;Activity&gt;</code>. A change from one key to another key starts a new form, because the panel key is the <code>key</code> of the body. The <code>key</code> of <code>Panel</code> is only its shape (form or detail), so the panel does not play its entrance again.</td></tr>
+          <tr><td>The app needs JavaScript</td><td>Sign-in uses a passkey only, and the passkey ceremony runs in the browser. With JavaScript off, a page under a <code>loading.tsx</code> shows only its skeleton: Next.js streams the page into a hidden element, and only a script shows it. Thus do not write that a page, a link or a panel works with JavaScript off. This row replaces the row «JavaScript off» of the 2026-10-07 spec.</td></tr>
         </tbody>
       </table>
     </div>

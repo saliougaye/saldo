@@ -49,7 +49,7 @@ function locationQuery(): string {
 
 /**
  * A trailing panel (§17.1.7) in client state. The URL still says what is open, so a reload, a link
- * from another page and Back work, and without JavaScript every link is a page. A click that only
+ * from another page, a new tab and Back work. A click that only
  * changes the panel changes it in the frame of the click, and the URL follows through
  * `history.pushState`, which Next syncs into `useSearchParams`. Anything else — a filter, the
  * period, a save, Back — is a navigation, and the panel follows the URL it brings.

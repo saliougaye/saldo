@@ -530,7 +530,7 @@ export default async function TransactionsPage({
         ) : (
           <>
             {/* §5.12: what is still to come is folded behind one row. A native disclosure, so it
-                opens with no client state and without JavaScript — the phone's `UpcomingRow`. */}
+                opens with no client state — the phone's `UpcomingRow`. */}
             {view.upcoming.count === 0 ? null : (
               <details className={styles.upcoming} id={UPCOMING_ID}>
                 <summary className={styles.upcomingSummary}>
