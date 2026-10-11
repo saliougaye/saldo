@@ -215,7 +215,6 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
 .screen .topbar .nav { color: var(--text-muted); }
 .screen .topbar .nav b { color: var(--text); font-weight: 500; background: var(--raised); padding: 4px 8px; border-radius: 8px; }
 .screen .topbar .new { margin-left: auto; background: var(--text); color: var(--bg); border-radius: 10px; padding: 5px 10px; font-weight: 500; }
-.screen .navbar { position: absolute; top: 0; left: 0; height: 2px; width: 62%; background: var(--accent); }
 .screen .skel { display: flex; flex-direction: column; gap: 10px; padding: 18px 14px 20px; }
 .screen .skel i { display: block; height: 44px; border-radius: 14px; background: var(--raised); }
 .screen .skel i.t { height: 22px; width: 40%; border-radius: 10px; }
@@ -349,11 +348,11 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
     <div class="prose">
       <p><b><code>AppLink</code>.</b> Every link that navigates uses <code>AppLink</code>. It is <code>next/link</code> with one child, <code>LinkPending</code>. Only <code>AppLink.tsx</code> imports the <code>Link</code> of <code>next/link</code>. <code>NavPending.tsx</code> imports only <code>useLinkStatus</code> from it. A test makes sure of this.</p>
       <p><b><code>LinkPending</code>.</b> It calls <code>useLinkStatus</code>. This hook works only in a child of the <code>&lt;Link&gt;</code>. Thus <code>LinkPending</code> must be inside the link. It renders <code>null</code>, so it adds no node and no layout.</p>
-      <p><b><code>NavPendingProvider</code>.</b> The <code>(app)</code> layout mounts it. It keeps a count of the navigations that wait for the server. Each pending link adds 1. When the navigation ends, the link removes 1.</p>
+      <p><b><code>NavPendingProvider</code>.</b> The <code>(app)</code> layout mounts it. It keeps a count of the navigations that wait for the server. Each pending link adds 1. When the navigation ends, the link removes 1. It keeps a second count for the skeletons on the screen (see <code>loading.tsx</code> below).</p>
       <p><b>The bar.</b> When the count is more than 0, the provider shows a bar of 2px at the top of the page. A CSS delay of 150 ms hides the bar for a quick answer. The bar grows slowly and never reaches the end, because nobody knows the duration of the wait.</p>
-      <p><b>The status text.</b> The provider always renders a hidden <code>role="status"</code> element. While the count is more than 0, its text is <code>common.loading</code>: «Loading…». Otherwise it is empty. A screen reader often does not read a live region that arrives with its text.</p>
-      <p><b><code>useNavTransition</code>.</b> Some navigations start from code with <code>router.push</code>: the search, the list keys, the close of a panel and the <kbd>N</kbd> shortcut. They call <code>router.push</code> inside a transition from <code>useNavTransition</code>. The transition reports to the same count.</p>
-      <p><b><code>loading.tsx</code>.</b> Six files add Suspense boundaries: one in each tab (<code>home</code>, <code>transactions</code>, <code>stats</code>, <code>accounts</code>), one in <code>profile</code> and one in <code>admin</code>. The layout stays mounted. Thus a change of page shows the shell and <code>PageSkeleton</code> at once. The sub-navigation of Profilo and Admin also stays on the screen.</p>
+      <p><b>The status text.</b> The provider always renders a hidden <code>role="status"</code> element. A screen reader often does not read a live region that arrives with its text. When a navigation waits or a skeleton shows, a timer of 150 ms starts. After the timer, the text is <code>common.loading</code>: «Loading…». When nothing waits, the provider stops the timer and the text is empty. Thus a quick navigation says nothing, as it shows nothing.</p>
+      <p><b><code>useNavTransition</code>.</b> Some navigations start from code with <code>router.push</code>: the search, the list keys, the close of a panel, the <kbd>N</kbd> shortcut and «Record the expense» when a goal closes. They call <code>router.push</code> inside a transition from <code>useNavTransition</code>. The transition reports to the same count.</p>
+      <p><b><code>loading.tsx</code>.</b> Six files add Suspense boundaries: one in each tab (<code>home</code>, <code>transactions</code>, <code>stats</code>, <code>accounts</code>), one in <code>profile</code> and one in <code>admin</code>. The layout stays mounted. Thus a change of page shows the shell and <code>PageSkeleton</code> at once. The sub-navigation of Profilo and Admin also stays on the screen. <code>PageSkeleton</code> holds <code>SkeletonPending</code>, a client part that renders nothing. It adds 1 to the count of skeletons while the skeleton is on the screen.</p>
       <p>Do not put a <code>loading.tsx</code> in <code>(app)</code>. It wraps the admin layout too. The <code>notFound()</code> of that layout then streams after the shell, and a member gets the status 200 for <code>/admin</code>, not 404.</p>
       <div class="callout"><span class="meta">Note</span><p>A change of query on the <b>same</b> page does not show <code>loading.tsx</code>. Examples: a chip, the period arrows, the search. These clicks use the bar.</p></div>
     </div>
@@ -405,7 +404,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
 
     <figure class="rv">
       <svg viewBox="0 0 1040 430" role="img" aria-labelledby="f2t">
-        <title id="f2t">The parts of the feedback. AppLink with LinkPending, and useNavTransition, add one to the count of NavPendingProvider and remove one when the navigation ends. When the count is more than zero, the provider shows the bar and the status text. Separately, loading.tsx shows the skeleton for a change of page.</title>
+        <title id="f2t">The parts of the feedback. AppLink with LinkPending, and useNavTransition, add one to the count of NavPendingProvider and remove one when the navigation ends. When the count is more than zero, the provider shows the bar and the status text. Separately, loading.tsx shows the skeleton for a change of page. The skeleton adds one to a second count, which gives the status text and no bar.</title>
         <rect class="bx-dash" x="6" y="6" width="1028" height="418" rx="22"/>
         <text x="30" y="40" font-size="15" class="tm mono">app/(app)/layout.tsx</text>
 
@@ -446,14 +445,13 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         <text x="742" y="338" font-size="15" class="tm">change of page only</text>
         <text x="742" y="362" font-size="14" class="mono">&lt;PageSkeleton /&gt;</text>
       </svg>
-      <figcaption><b>Figure 2.</b> Black: the one owner of the count. Green: what the person sees and hears. <code>loading.tsx</code> does not use the count. Next.js shows it for a change of page.</figcaption>
+      <figcaption><b>Figure 2.</b> Black: the one owner of the count. Green: what the person sees and hears. Next.js shows <code>loading.tsx</code> for a change of page. Its <code>SkeletonPending</code> adds 1 to a second count of the provider. That count gives the status text and no bar.</figcaption>
     </figure>
 
     <div class="duo rows rv">
       <div class="light">
         <span class="meta">Light</span>
-        <div class="screen app" role="img" aria-label="Illustration, light theme: the shell after a click on Accounts. A thin bar is at the top. The top bar stays. The content area shows a skeleton: a title line and four blocks.">
-          <div class="navbar"></div>
+        <div class="screen app" role="img" aria-label="Illustration, light theme: the shell after a click on Accounts. The top bar stays. The content area shows a skeleton: a title line and four blocks. No thin bar shows.">
           <div class="topbar"><span class="brandline"><i></i>Saldo</span><span class="nav">Home</span><span class="nav">Transactions</span><span class="nav">Statistics</span><span class="nav"><b>Accounts</b></span><span class="new">New transaction</span></div>
           <div class="skel"><i class="t"></i><i></i><i></i><i></i><i></i></div>
           <div class="sr-note">Screen reader: <b>Loading…</b></div>
@@ -461,15 +459,14 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       </div>
       <div class="dark">
         <span class="meta">Dark</span>
-        <div class="screen app" role="img" aria-label="Illustration, dark theme: the same shell with the bar and the skeleton.">
-          <div class="navbar"></div>
+        <div class="screen app" role="img" aria-label="Illustration, dark theme: the same shell with the skeleton.">
           <div class="topbar"><span class="brandline"><i></i>Saldo</span><span class="nav">Home</span><span class="nav">Transactions</span><span class="nav">Statistics</span><span class="nav"><b>Accounts</b></span><span class="new">New transaction</span></div>
           <div class="skel"><i class="t"></i><i></i><i></i><i></i><i></i></div>
           <div class="sr-note">Screen reader: <b>Loading…</b></div>
         </div>
       </div>
     </div>
-    <p class="stage-cap">Illustration · Home → Accounts, while the server works. The bar is the <code>accent</code> colour. The blocks are the <code>raised</code> colour.</p>
+    <p class="stage-cap">Illustration · Home → Accounts, while the server works. The blocks are the <code>raised</code> colour. The bar (the <code>accent</code> colour) does not show over a skeleton. It shows for a change on the same page.</p>
   </div>
 </section>
 
@@ -742,8 +739,9 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
         <tbody>
           <tr><td>Bar</td><td>Shows after 150 ms. Grows from 5% to 90% of the width over 8 s.</td><td>Shows after 150 ms at full width. It does not grow.</td></tr>
           <tr><td>Skeleton</td><td>The blocks pulse slowly (1.4 s).</td><td>The blocks do not pulse.</td></tr>
-          <tr><td>Status text</td><td colspan="2">A hidden <code>role="status"</code> element says «Loading…» while the count is more than 0. The bar itself has <code>aria-hidden="true"</code>.</td></tr>
-          <tr><td>Skeleton for a screen reader</td><td colspan="2"><code>PageSkeleton</code> has <code>aria-hidden="true"</code>. It says nothing about the content.</td></tr>
+          <tr><td>Status text</td><td colspan="2">A hidden <code>role="status"</code> element says «Loading…» 150 ms after a navigation starts to wait or a skeleton shows, until nothing waits. A quicker answer says nothing. The bar itself has <code>aria-hidden="true"</code>.</td></tr>
+          <tr><td>Skeleton for a screen reader</td><td colspan="2"><code>PageSkeleton</code> has <code>aria-hidden="true"</code>. It says nothing about the content. The link stops being pending when the skeleton shows. Thus <code>SkeletonPending</code> keeps «Loading…» until the page replaces the skeleton.</td></tr>
+          <tr><td>Bar during a skeleton</td><td colspan="2">The bar does not show. The skeleton already shows that the page loads, and two signals for one wait add motion with no new information.</td></tr>
           <tr><td>Panels</td><td colspan="2">As on Transazioni: the pointer gets the entrance and the exit. The keyboard and <kbd>Esc</kbd> change the panel on the next frame. The focus returns to the opener after a close.</td></tr>
         </tbody>
       </table>
@@ -799,7 +797,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
     <div class="ch-head">
       <span class="ch-num">08</span>
       <h2 id="h-risks">Risks</h2>
-      <p class="lead">Four risks are known. Each one has a check or a fallback.</p>
+      <p class="lead">Five risks are known. Each one has a check or a fallback.</p>
     </div>
   </div>
   <div class="visual">
@@ -810,6 +808,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
           <tr><td><code>useLinkStatus</code> and prefetch</td><td><code>useLinkStatus</code> can stay <code>false</code> when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.</td></tr>
           <tr><td><code>banned</code> on <code>session.user</code></td><td>The type comes from the admin plugin. If the inferred type has no <code>banned</code>, use <code>auth().$Infer.Session.user</code> (plan Task 6). If <code>getSession</code> gets a cookie cache, <code>banned</code> can be late. Write a comment at the <code>getSession</code> call that says this. Put a test next to it.</td></tr>
           <tr><td>The size of the response</td><td>Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep its panel a navigation: give it no entry in <code>panels</code>.</td></tr>
+          <tr><td>A redirect under a <code>loading.tsx</code></td><td>A <code>redirect()</code> in a page under a boundary streams after the shell and the skeleton. The status is 200, and the browser follows the redirect in the page. This applies to <code>readPage</code> → <code>/onboarding</code> on the four tabs. <code>next.config.ts</code> redirects <code>/profile</code> and <code>/admin</code> with a 307 before any render. <code>/budgets</code> has no boundary, and it keeps its 307. A <code>notFound()</code> in a layout above the boundary keeps its 404: a member gets 404 for <code>/admin</code> and <code>/admin/accounts</code>.</td></tr>
           <tr><td>A form with state in a hidden panel</td><td><code>PanelSwitch</code> mounts only the open panel. The new form of Transazioni is different: it uses <code>&lt;Activity&gt;</code>. A change from one key to another key starts a new form, because of the <code>key</code> on <code>Panel</code>.</td></tr>
         </tbody>
       </table>

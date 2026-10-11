@@ -139,44 +139,73 @@ import {
 import styles from './NavPending.module.css';
 import { VisuallyHidden } from './VisuallyHidden';
 
-type Report = (delta: 1 | -1) => void;
+/** A navigation that waits for the server, or a `PageSkeleton` on the screen. */
+type Kind = 'navigation' | 'skeleton';
+type Report = (kind: Kind, delta: 1 | -1) => void;
 
 const NavPendingContext = createContext<Report>(() => {});
 
+/** The same delay as the bar's `animation-delay` in `NavPending.module.css`. */
+const ANNOUNCE_DELAY_MS = 150;
+
 /**
- * Counts the navigations that wait for the server. While the count is above zero it shows a thin bar
- * at the top of the page and tells a screen reader. The bar waits 150 ms (CSS), so a quick
- * navigation shows nothing. The status element stays mounted, so that a screen reader hears the
- * change of its text: a live region that arrives with its text is often not read.
+ * Counts what waits for the server: the navigations, and the skeletons on the screen.
+ *
+ * - A navigation shows a thin bar at the top of the page. The bar waits 150 ms (CSS), so a quick
+ *   navigation shows nothing.
+ * - A skeleton shows no bar: the skeleton is already the visible feedback.
+ * - For both, a screen reader hears «Loading…» after the same 150 ms. The status element stays
+ *   mounted, because a live region that arrives with its text is often not read.
  */
 export function NavPendingProvider({ label, children }: { label: string; children: ReactNode }) {
-  const [count, setCount] = useState(0);
-  const report = useCallback<Report>((delta) => setCount((current) => current + delta), []);
-  const pending = count > 0;
+  const [counts, setCounts] = useState<Record<Kind, number>>({ navigation: 0, skeleton: 0 });
+  const report = useCallback<Report>(
+    (kind, delta) => setCounts((current) => ({ ...current, [kind]: current[kind] + delta })),
+    [],
+  );
+  const busy = counts.navigation > 0 || counts.skeleton > 0;
+  const [announced, setAnnounced] = useState(false);
+  useEffect(() => {
+    if (!busy) return;
+    const timer = setTimeout(() => setAnnounced(true), ANNOUNCE_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      setAnnounced(false);
+    };
+  }, [busy]);
   return (
     <NavPendingContext value={report}>
-      {pending ? <div className={styles.bar} aria-hidden="true" /> : null}
+      {counts.navigation > 0 ? <div className={styles.bar} aria-hidden="true" /> : null}
       <VisuallyHidden>
-        <span role="status">{pending ? label : ''}</span>
+        <span role="status">{announced ? label : ''}</span>
       </VisuallyHidden>
       {children}
     </NavPendingContext>
   );
 }
 
-/** Adds one to the count while `pending` is true, and removes it when it ends or on unmount. */
-function useReport(pending: boolean) {
+/** Adds one to the count of `kind` while `pending` is true, and removes it when it ends or on unmount. */
+function useReport(kind: Kind, pending: boolean) {
   const report = useContext(NavPendingContext);
   useEffect(() => {
     if (!pending) return;
-    report(1);
-    return () => report(-1);
-  }, [pending, report]);
+    report(kind, 1);
+    return () => report(kind, -1);
+  }, [kind, pending, report]);
 }
 
 /** Rendered inside a `<Link>`: tells the provider while that link's navigation is pending. */
 export function LinkPending() {
-  useReport(useLinkStatus().pending);
+  useReport('navigation', useLinkStatus().pending);
+  return null;
+}
+
+/**
+ * Rendered inside `PageSkeleton`: the link stops being pending when the skeleton shows, and the
+ * skeleton is `aria-hidden`. This keeps «Loading…» for a screen reader until the page replaces it.
+ */
+export function SkeletonPending() {
+  useReport('skeleton', true);
   return null;
 }
 
@@ -186,12 +215,12 @@ export function LinkPending() {
  */
 export function useNavTransition(): (action: () => void) => void {
   const [pending, start] = useTransition();
-  useReport(pending);
+  useReport('navigation', pending);
   return start;
 }
 ```
 
-The status element stays mounted, and only its text changes. A screen reader often does not read a live region that arrives with its text. The first version of this plan mounted the element with the bar.
+The status element stays mounted, and only its text changes. A screen reader often does not read a live region that arrives with its text. The first version of this plan mounted the element with the bar. The review of Tasks 2 to 4 added the 150 ms delay of the text and the count of skeletons (`SkeletonPending`, Task 4).
 
 - [x] **Step 2: Write `NavPending.module.css`**
 
@@ -296,17 +325,31 @@ function sources(dir: string): string[] {
  * `AppLink` renders `next/link`. `NavPending` imports `useLinkStatus` from it: that hook must be in a
  * client file, and `AppLink` is not one.
  */
-const ALLOWED = ['/src/ui/AppLink.tsx', '/src/ui/NavPending.tsx'];
+const APP_LINK = '/src/ui/AppLink.tsx';
+const NAV_PENDING = '/src/ui/NavPending.tsx';
+
+/** The import clauses of every `import … from 'next/link'` in `text`. */
+function nextLinkImports(text: string): string[] {
+  return [...text.matchAll(/import\s+([^;]*?)\s+from 'next\/link'/g)].map((match) =>
+    (match[1] ?? '').replace(/\s+/g, ' '),
+  );
+}
 
 /** A link that skips `AppLink` never shows the bar. */
 describe('links', () => {
-  it('import next/link only in AppLink', () => {
+  it('import next/link only in AppLink and NavPending', () => {
     const offenders = [...sources(join(ROOT, 'app')), ...sources(join(ROOT, 'src'))].filter(
       (path) =>
-        !ALLOWED.some((allowed) => path.endsWith(allowed)) &&
+        !path.endsWith(APP_LINK) &&
+        !path.endsWith(NAV_PENDING) &&
         /from 'next\/link'/.test(readFileSync(path, 'utf8')),
     );
     expect(offenders).toEqual([]);
+  });
+
+  it('take only useLinkStatus from next/link in NavPending', () => {
+    const text = readFileSync(join(ROOT, NAV_PENDING), 'utf8');
+    expect(nextLinkImports(text)).toEqual(['{ useLinkStatus }']);
   });
 });
 ```
@@ -337,7 +380,7 @@ git commit -m "feat(web): every link reports its pending state to a bar in the s
 ### Task 3: Navigations that start from code use the same bar
 
 **Files:**
-- Modify: `apps/web/src/ui/SearchField.tsx:59`, `apps/web/src/ui/Panel.tsx:106,110`, `apps/web/src/ui/ListKeys.tsx:66,88`, `apps/web/src/ui/Shortcuts.tsx:21`
+- Modify: `apps/web/src/ui/SearchField.tsx:59`, `apps/web/src/ui/Panel.tsx:106,110`, `apps/web/src/ui/ListKeys.tsx:66,88`, `apps/web/src/ui/Shortcuts.tsx:21`, `apps/web/app/(app)/accounts/CloseGoal.tsx:74` (`recordExpense`, added after the review)
 
 - [x] **Step 1: Wrap the `router.push` and `router.replace` calls that change the page**
 
@@ -354,7 +397,7 @@ Do the same for the calls in `Panel.tsx` (the two `router.push(closeHref)`), `Li
 
 Run the gates of Task 2 step 8. Then start the build on port 3100. In DevTools, set the network throttle to «Slow 4G», so the server answers slowly. Open `/transactions` and type in the search field. Make sure that the bar shows when the server takes more than 150 ms.
 
-On 2026-10-11 a Playwright script did this check. It used `scripts/lib/devSession.ts` to sign in, and CDP `Network.emulateNetworkConditions` (latency 600 ms, 400 kbit/s). It was not committed. For the search, a chip, `E` (ListKeys), Esc on a Conti panel, `N` and a tab, the bar mounted 40 to 140 ms after the input. It showed 150 to 180 ms later, and it went away when the URL changed. The status text was «Loading…». With «reduce motion», the bar had the full width.
+On 2026-10-11 a Playwright script did this check. It used `scripts/lib/devSession.ts` to sign in, and CDP `Network.emulateNetworkConditions` (latency 600 ms, 400 kbit/s). The script is not in the repository. For the search, a chip, `E` (ListKeys), Esc on a Conti panel, `N` and a tab, the bar mounted 40 to 140 ms after the input. It showed 150 to 180 ms later, and it disappeared when the URL changed. The status text was «Loading…». With «reduce motion», the bar had the full width.
 
 - [x] **Step 3: Commit**
 
@@ -374,18 +417,24 @@ git commit -m "feat(web): search, keys and panel close show the navigation bar"
 - [x] **Step 1: Write `PageSkeleton.tsx`**
 
 ```tsx
+import { SkeletonPending } from './NavPending';
 import styles from './PageSkeleton.module.css';
 
-/** The shape of a page while the server works: a title line, then blocks. It says nothing about the content. */
+/**
+ * The shape of a page while the server works: a title line, then blocks. It says nothing about the content.
+ * `data-skeleton` is the marker that `scripts/measure-nav.ts` looks for to tell a skeleton from content.
+ * `SkeletonPending` (client, renders nothing) keeps «Loading…» for a screen reader while this shows.
+ */
 export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
   return (
-    <div className={styles.page} aria-hidden="true">
+    <div className={styles.page} aria-hidden="true" data-skeleton="">
       <div className={`${styles.line} ${styles.title}`} />
       {Array.from({ length: blocks }, (_, index) => (
         // The blocks never change order: the index is the identity.
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
         <div key={index} className={`${styles.line} ${styles.block}`} />
       ))}
+      <SkeletonPending />
     </div>
   );
 }
@@ -432,6 +481,8 @@ The token names come from `packages/ui/src/tokens.ts`. `radii.card` gives `--rad
 
 - [x] **Step 3: Write the six `loading.tsx` files**
 
+> **Caution:** Do not put a `loading.tsx` in `(app)`. The first version of this plan did. That boundary also wraps `admin/layout.tsx`. The `notFound()` of `requireWebAdmin` then streams after the shell, and `/admin` answers 200 to a member. The e2e test «/admin answers not found» found this. A redirect in a page under a boundary (`readPage` to `/onboarding`, `/profile`, `/admin`) also streams. The browser still follows it, but the status is 200, not 307. Thus `next.config.ts` redirects `/profile` and `/admin` with a 307 before any render (see the spec, section 08).
+
 ```tsx
 // app/(app)/home/loading.tsx, and the same in transactions, stats and accounts
 import { PageSkeleton } from '../../../src/ui/PageSkeleton';
@@ -443,13 +494,11 @@ export default function Loading() {
 
 `profile/loading.tsx` and `admin/loading.tsx` render `<PageSkeleton blocks={3} />`. The sub-navigation of these two layouts stays on the screen, because the layout is above the boundary.
 
-> **Caution:** Do not put a `loading.tsx` in `(app)`. The first version of this plan did. That boundary also wraps `admin/layout.tsx`. The `notFound()` of `requireWebAdmin` then streams after the shell, and `/admin` answers 200 to a member. The e2e test «/admin answers not found» found this. A redirect in a page under a boundary (`readPage` to `/onboarding`, `/profile`, `/admin`) also streams. The browser still follows it, but the status is 200, not 307.
-
 - [x] **Step 4: Check by hand**
 
 Build and start on port 3100. Set the throttle to «Slow 4G». Click Home → Conti. Make sure that the shell and the skeleton show at once, and then the page. In the Network tab, make sure that the prefetch of a tab link is small (no user data).
 
-On 2026-10-11 a Playwright script did this check, with the same throttle as Task 3 step 2. It was not committed. Home → Conti, Home → Profilo, `N`, Profilo → Tag and Admin → Inviti showed the skeleton 70 to 115 ms after the click, and the URL changed at the same time. The page came 0.6 to 4.8 s later. The sub-navigation stayed. The bar did not show, because the navigation ends when the skeleton shows. A chip, a period arrow, the search and `E` showed no skeleton, only the bar. With «reduce motion», the blocks did not pulse. A tab prefetch was 320 to 1,870 bytes and had no account name in it. In headless Chromium, the browser aborted the prefetch requests. Thus the script read the prefetch responses with `fetch` and the same headers.
+On 2026-10-11 a Playwright script did this check, with the same throttle as Task 3 step 2. The script is not in the repository. Home → Conti, Home → Profilo, `N`, Profilo → Tag and Admin → Inviti showed the skeleton 70 to 115 ms after the click, and the URL changed at the same time. The page came 0.6 to 4.8 s later. The sub-navigation stayed. The bar did not show, because the navigation ends when the skeleton shows. A chip, a period arrow, the search and `E` showed no skeleton, only the bar. With «reduce motion», the blocks did not pulse. A tab prefetch was 320 to 1,870 bytes and had no account name in it. In headless Chromium, the browser aborted the prefetch requests. Thus the script read the prefetch responses with `fetch` and the same headers.
 
 - [x] **Step 5: Run the gates and commit**
 

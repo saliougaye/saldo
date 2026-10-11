@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import type { AccountWriteError } from '../../../src/server/write/accounts';
 import { Button } from '../../../src/ui/Button';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
+import { useNavTransition } from '../../../src/ui/NavPending';
 import styles from './accountForms.module.css';
 import { closeGoalAction } from './actions';
 
@@ -43,6 +44,7 @@ interface Props {
  */
 export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Props) {
   const router = useRouter();
+  const startNav = useNavTransition();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -71,7 +73,7 @@ export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Pr
   const recordExpense = () => {
     if (expenseHref === null || pending) return;
     setOpen(false);
-    router.push(expenseHref);
+    startNav(() => router.push(expenseHref));
   };
 
   return (
