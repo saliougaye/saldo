@@ -18,15 +18,15 @@ import { Alert } from '../../../../src/ui/Alert';
 import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Icon } from '../../../../src/ui/Icon';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { TextField } from '../../../../src/ui/TextField';
 import { newTagAction, renameTagAction } from './actions';
 import { DeleteTag } from './DeleteTag';
 import { MergeTag } from './MergeTag';
 import styles from './tags.module.css';
 
-interface Props {
-  /** Null for «Nuovo tag». */
-  tag: { id: string; name: string; updatedAt: string; uses: number } | null;
+/** What every tag form of the page shares, given once (`TagFormShared`). */
+export interface TagFormSharedValue {
   /** Every live tag: the names already taken, and — without this one — what it can merge into. */
   tags: readonly { id: string; name: string }[];
   locale: AppLocale;
@@ -34,6 +34,16 @@ interface Props {
   closeHref: string;
   /** Where a save, a merge or a delete lands. */
   afterSave: string;
+}
+
+const shared = sharedProps<TagFormSharedValue>('TagForm');
+
+/** Gives every `TagForm` below it the props they share. */
+export const TagFormShared = shared.Provider;
+
+interface Props {
+  /** Null for «Nuovo tag». */
+  tag: { id: string; name: string; updatedAt: string; uses: number } | null;
   /** The transactions list filtered by this tag; null for a new one. */
   transactionsHref: string | null;
 }
@@ -42,15 +52,8 @@ interface Props {
  * «Nuovo tag» and «Modifica tag» (§5.10): a tag is only its name. An existing one also offers
  * «Vedi le transazioni», «Unisci a un altro tag» and «Elimina tag»; the last two ask first.
  */
-export function TagForm({
-  tag,
-  tags,
-  locale,
-  messages,
-  closeHref,
-  afterSave,
-  transactionsHref,
-}: Props) {
+export function TagForm({ tag, transactionsHref }: Props) {
+  const { tags, locale, messages, closeHref, afterSave } = shared.useShared();
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);

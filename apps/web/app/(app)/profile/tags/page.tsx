@@ -9,7 +9,7 @@ import { ListRow } from '../../../../src/ui/ListRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
-import { TagForm } from './TagForm';
+import { TagForm, TagFormShared, type TagFormSharedValue } from './TagForm';
 import styles from './tags.module.css';
 
 export const runtime = 'nodejs';
@@ -34,25 +34,21 @@ export default async function ProfileTagsPage({
   const { t, locale } = page;
   const rows = tagsView(page.data);
 
-  const tagList = rows.map((row) => ({ id: row.id, name: row.name }));
-  const messages = tagMessages(catalogs[locale]);
+  // What every form shares goes once to the provider; a body gets only what is its own.
+  const shared: TagFormSharedValue = {
+    tags: rows.map((row) => ({ id: row.id, name: row.name })),
+    locale,
+    messages: tagMessages(catalogs[locale]),
+    closeHref: PATH,
+    afterSave: PATH,
+  };
   // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`). A save,
   // a merge and a delete stay navigations to `PATH`, so the list shows what the server holds.
   const panels: Record<string, PanelSpec> = {
     new: {
       title: t('tags.newTag'),
       sheet: true,
-      body: (
-        <TagForm
-          tag={null}
-          tags={tagList}
-          locale={locale}
-          messages={messages}
-          closeHref={PATH}
-          afterSave={PATH}
-          transactionsHref={null}
-        />
-      ),
+      body: <TagForm tag={null} transactionsHref={null} />,
     },
     ...Object.fromEntries(
       rows.map((row): [string, PanelSpec] => [
@@ -63,11 +59,6 @@ export default async function ProfileTagsPage({
           body: (
             <TagForm
               tag={row}
-              tags={tagList}
-              locale={locale}
-              messages={messages}
-              closeHref={PATH}
-              afterSave={PATH}
               transactionsHref={`/transactions?tag=${encodeURIComponent(row.id)}`}
             />
           ),
@@ -77,43 +68,45 @@ export default async function ProfileTagsPage({
   };
 
   return (
-    <PanelSwitch
-      baseHref={PATH}
-      params={PANEL_PARAMS}
-      panels={panels}
-      closeLabel={t('common.close')}
-      slot
-    >
-      <Section
-        open
-        title={t('tags.title')}
-        trailing={
-          <PanelLink className={styles.newTag} href={`${PATH}?new`}>
-            <Icon name="plus" size={16} />
-            {t('tags.newTag')}
-          </PanelLink>
-        }
+    <TagFormShared value={shared}>
+      <PanelSwitch
+        baseHref={PATH}
+        params={PANEL_PARAMS}
+        panels={panels}
+        closeLabel={t('common.close')}
+        slot
       >
-        <p className={styles.note}>{t('tags.footnote')}</p>
-        {rows.length === 0 ? (
-          <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
-        ) : (
-          <div>
-            {rows.map((row) => (
-              <ListRow
-                key={row.id}
-                href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
-                selectId={`tag:${row.id}`}
-                icon="tag"
-                title={row.name}
-                trailing={
-                  <span className={styles.uses}>{plural(t, locale, 'tags.uses', row.uses)}</span>
-                }
-              />
-            ))}
-          </div>
-        )}
-      </Section>
-    </PanelSwitch>
+        <Section
+          open
+          title={t('tags.title')}
+          trailing={
+            <PanelLink className={styles.newTag} href={`${PATH}?new`}>
+              <Icon name="plus" size={16} />
+              {t('tags.newTag')}
+            </PanelLink>
+          }
+        >
+          <p className={styles.note}>{t('tags.footnote')}</p>
+          {rows.length === 0 ? (
+            <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
+          ) : (
+            <div>
+              {rows.map((row) => (
+                <ListRow
+                  key={row.id}
+                  href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
+                  selectId={`tag:${row.id}`}
+                  icon="tag"
+                  title={row.name}
+                  trailing={
+                    <span className={styles.uses}>{plural(t, locale, 'tags.uses', row.uses)}</span>
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </Section>
+      </PanelSwitch>
+    </TagFormShared>
   );
 }

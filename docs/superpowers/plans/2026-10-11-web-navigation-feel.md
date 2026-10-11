@@ -1221,6 +1221,11 @@ On 2026-10-11 the work on Goals found these points:
 - A URL with `?new` and `?g=` opens nothing when no account can hold a goal: `?new` wins, and it has no panel then. Before, `?g=` then opened the goal.
 - With 50 more goals the RSC response was 147 KB before, 228 KB with the approach of Task 11, and 204 KB with the shared props. The approach of Task 11 sent the messages only once on this page. React could name the path of the first copy, under the key `new`, which has no colon.
 
+On 2026-10-11 the review of Task 11 found the same luck on Tags. The page sent the messages and the tag list once only because the first copy was under `new`. Tags now uses the shared props too:
+
+- `TagFormShared` gives the tag list, the locale, the messages, `closeHref` and `afterSave` once. A body gives only `tag` and `transactionsHref`.
+- With 50 more tags the RSC response was 131 KB before and 123 KB after. A message of the form is in the response once, before and after. The string `"/profile/tags"` was in it 110 times before and 4 times after.
+
 `profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
 ### Task 13: Conti
