@@ -1,5 +1,3 @@
-import { getDb } from '../db/client';
-import { isRevoked } from './admin';
 import { auth } from './auth';
 
 export interface AuthenticatedUser {
@@ -8,6 +6,11 @@ export interface AuthenticatedUser {
   /** Synthetic (`@passkey.saldo.invalid`) for an account created before D32; see `email.ts`. */
   email: string;
   emailVerified: boolean;
+  /**
+   * `ADMIN_ROLE`, `MEMBER_ROLE`, or null for an account older than roles. Read with the session, so
+   * it is good for a page render only: a Server Action and an admin route call `isAdmin` again.
+   */
+  role: string | null;
 }
 
 /**
@@ -19,15 +22,22 @@ export interface AuthenticatedUser {
  * the ban flag when a session is **created**, so a live token would otherwise survive until its
  * session row happened to be deleted. §10 promises a revoked account stops at once, and that promise
  * is kept here rather than by remembering to delete rows everywhere else.
+ *
+ * `banned` and `role` come from the admin plugin, on the user row that `getSession` reads with the
+ * session: no second query, and no older answer. That holds only while `getSession` reads the
+ * database on every call. A `session.cookieCache` (or a `secondaryStorage`) in `auth.ts` would let
+ * `banned` arrive late: with one, read the flag from the database here again
+ * (`session.test.ts` checks a ban with the session rows still alive).
  */
 export async function authenticate(headers: Headers): Promise<AuthenticatedUser | null> {
   const session = await auth().api.getSession({ headers });
   if (session === null) return null;
-  if (await isRevoked(getDb(), session.user.id)) return null;
+  if (session.user.banned === true) return null;
   return {
     id: session.user.id,
     displayName: session.user.name,
     email: session.user.email,
     emailVerified: session.user.emailVerified,
+    role: session.user.role ?? null,
   };
 }

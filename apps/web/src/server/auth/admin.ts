@@ -78,6 +78,15 @@ export async function isAdmin(db: ServerDatabase, userId: string): Promise<boole
   return row.role === ADMIN_ROLE;
 }
 
+/**
+ * For a page render: the role was read with the session (`authenticate`), and a banned account has
+ * no session at all. A Server Action and an admin route call `isAdmin`: a mutation must not trust
+ * an older read.
+ */
+export function isAdminUser(account: { role: string | null }): boolean {
+  return account.role === ADMIN_ROLE;
+}
+
 export async function isRevoked(db: ServerDatabase, userId: string): Promise<boolean> {
   const [row] = await db.select({ banned: user.banned }).from(user).where(eq(user.id, userId));
   return row?.banned === true;

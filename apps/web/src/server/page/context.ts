@@ -69,7 +69,8 @@ export function narrowParams(
 }
 
 export interface PageContext extends PageState, WebI18n {
-  user: { id: string; displayName: string; email: string };
+  /** `role` was read with the session: good for a render, not for a Server Action (`isAdmin`). */
+  user: { id: string; displayName: string; email: string; role: string | null };
   data: UserData;
   /** The query narrowed once, for the parameters a page reads itself (`?t=`, `?q=`, `?a=`…). */
   params: Record<string, string | undefined>;
@@ -94,7 +95,7 @@ export async function readPage(
   return {
     ...pageState({ data, now: new Date(), fallbackTimeZone: env().defaultTimeZone, params }),
     ...i18n,
-    user: { id: user.id, displayName: user.displayName, email: user.email },
+    user: { id: user.id, displayName: user.displayName, email: user.email, role: user.role },
     data,
     params,
   };

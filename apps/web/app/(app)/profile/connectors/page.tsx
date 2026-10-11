@@ -14,8 +14,7 @@ import {
   mcpRemoteCommand,
   PROTECTED_RESOURCE_PATH,
 } from '../../../../src/features/connectors/connectorsView';
-import { isAdmin } from '../../../../src/server/auth/admin';
-import { getDb } from '../../../../src/server/db/client';
+import { isAdminUser } from '../../../../src/server/auth/admin';
 import { env } from '../../../../src/server/env';
 import { listConnectors } from '../../../../src/server/mcp/connectors';
 import { readPage } from '../../../../src/server/page/context';
@@ -53,11 +52,8 @@ export default async function ConnectorsPage({
   const page = await readPage(searchParams);
   const { t, locale, timeZone, user } = page;
   const now = new Date();
-  const [connectors, mcp, admin] = await Promise.all([
-    listConnectors(user.id),
-    pageMcpSetting(),
-    isAdmin(getDb(), user.id),
-  ]);
+  const admin = isAdminUser(user);
+  const [connectors, mcp] = await Promise.all([listConnectors(user.id), pageMcpSetting()]);
   const rows = connectorRows(connectors, page.params[CONNECTOR_PARAM] ?? null, now, timeZone);
   const selected = rows.find((row) => row.selected) ?? null;
   const notice = connectorsNotice({ enabled: mcp.value, lockedByEnv: mcp.source === 'env', admin });

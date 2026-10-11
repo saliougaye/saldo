@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { userI18n } from '../../../src/i18n/server';
-import { isAdmin } from '../../../src/server/auth/admin';
+import { isAdminUser } from '../../../src/server/auth/admin';
 import { requireWebUser } from '../../../src/server/auth/currentUser';
-import { getDb } from '../../../src/server/db/client';
 import { initials } from '../../../src/ui/initials';
 import { NavLink } from '../../../src/ui/NavLink';
 import { SignOutButton } from '../../../src/ui/SignOutButton';
@@ -18,7 +17,8 @@ export const dynamic = 'force-dynamic';
  */
 export default async function ProfileLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();
-  const [{ t }, admin] = await Promise.all([userI18n(user.id), isAdmin(getDb(), user.id)]);
+  const admin = isAdminUser(user);
+  const { t } = await userI18n(user.id);
   return (
     <div className={styles.page}>
       <header className={styles.head}>

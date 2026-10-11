@@ -1,6 +1,6 @@
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
-import { type BetterAuthOptions, betterAuth } from 'better-auth';
+import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { admin, bearer, magicLink, oneTimeToken } from 'better-auth/plugins';
@@ -51,6 +51,16 @@ const SESSION_EXPIRES_IN_DAYS = 180;
  * The options, separate from the instance, because `@better-auth/cli` needs a module that exports
  * an eagerly-built instance (see `authForCli.ts`) while the app needs a lazily-built one.
  */
+/**
+ * The plugins as a tuple, not as an array of their union. `betterAuth` infers the fields that the
+ * plugins add to `session.user` (the admin plugin's `role` and `banned`) only from a tuple. An array
+ * literal returned from `buildAuthOptions` widens to the union, and those fields disappear from the
+ * type. `authenticate` reads them.
+ */
+function pluginTuple<const T extends BetterAuthPlugin[]>(...plugins: T): T {
+  return plugins;
+}
+
 export function buildAuthOptions() {
   const { publicUrl, rpId, rpName, appRedirectSchemes, secret, trustedProxies } = env();
   const db = getDb();
@@ -109,7 +119,7 @@ export function buildAuthOptions() {
         trustedProxies,
       },
     },
-    plugins: [
+    plugins: pluginTuple(
       passkey({
         rpID: rpId,
         rpName,
@@ -187,7 +197,7 @@ export function buildAuthOptions() {
       expo(),
       // Must stay last (Better Auth's Next.js integration requires it).
       nextCookies(),
-    ],
+    ),
   };
 }
 

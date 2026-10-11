@@ -538,10 +538,10 @@ The layout and the page run in parallel, but each one starts after the session. 
 ### Task 6: Read `role` and `banned` from the session
 
 **Files:**
-- Modify: `apps/web/src/server/auth/session.ts`, `apps/web/src/server/auth/currentUser.ts`, `apps/web/app/(app)/layout.tsx`
-- Test: the revocation tests that exist (`apps/web/app/api/auth/adminPlugin.test.ts`)
+- Modify: `apps/web/src/server/auth/session.ts`, `apps/web/src/server/auth/auth.ts`, `apps/web/app/api/me/route.ts`, `apps/web/src/server/auth/admin.ts`, `apps/web/src/server/page/context.ts`, `apps/web/app/(app)/layout.tsx`, `apps/web/app/(app)/profile/layout.tsx`, `apps/web/app/(app)/profile/connectors/page.tsx`
+- Test: `apps/web/src/server/auth/session.test.ts` (new). The tests that existed revoke with `revokeUser`. That function also deletes the session rows, so these tests pass without a ban check in `authenticate`.
 
-- [ ] **Step 1: Count the queries now (a temporary patch: do not commit it)**
+- [x] **Step 1: Count the queries now (a temporary patch: do not commit it)**
 
 In `src/server/db/client.ts`, in `getDb`, add these lines after `pool = new Pool(...)`:
 
@@ -567,7 +567,7 @@ Task 1 measured this on the code of commit `1d008060` (the count is the same in 
 
 The first request after a start runs two more: an OAuth client read and the update of the session. Count a request after the first one. Tick this box when you have measured it on the code before step 3.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Find the test file for `authenticate` with a banned user: `grep -rn "banned" apps/web --include=*.test.ts -l`. It can be `adminPlugin.test.ts` or another file. In it, add a test: the session of a banned user reads as signed out **without** a call to `isRevoked`. If the file mocks the database, assert on the result only: `authenticate(headersOfBannedUser)` returns `null`. A test of this type can exist already. It must stay green after step 3. If no such test exists, add this test:
 
@@ -581,7 +581,9 @@ it('reads a banned account as signed out (§10)', async () => {
 
 Use the helpers for «signed in» and «ban» that the file already has.
 
-- [ ] **Step 3: Change `authenticate`**
+On 2026-10-11 no such test existed. `src/server/auth/session.test.ts` has three tests. Two set `banned` on the user row and keep the session rows, then call `authenticate` with the bearer and with the cookie. Both must return `null`. The third test checks that `authenticate` gives `role`. It failed before step 3. When the ban check was removed for a test run, the two ban tests failed.
+
+- [x] **Step 3: Change `authenticate`**
 
 ```ts
 export interface AuthenticatedUser {
@@ -610,7 +612,18 @@ export async function authenticate(headers: Headers): Promise<AuthenticatedUser 
 
 Remove the `isRevoked` and `getDb` imports from `session.ts` if no other code in the file uses them. `tsc` can say that `banned` or `role` does not exist on `session.user`. In that case, use the inferred type of the admin plugin (`auth().$Infer.Session.user`). Do not use `any`.
 
-- [ ] **Step 4: Add `isAdminUser` and use it in the layout**
+On 2026-10-11 `tsc` said this, and `auth().$Infer.Session.user` also had no `role`. The cause is in `auth.ts`: `buildAuthOptions` returns the plugins as an array of their union. `betterAuth` infers the fields of the plugins only from a tuple. The fix is a helper in `auth.ts`:
+
+```ts
+function pluginTuple<const T extends BetterAuthPlugin[]>(...plugins: T): T {
+  return plugins;
+}
+// in buildAuthOptions: plugins: pluginTuple(passkey(…), …, nextCookies()),
+```
+
+`getSession` reads the database on every call. `auth.ts` sets no `session.cookieCache` and no `secondaryStorage`. In better-auth 1.7.7, `getSession` uses the cookie cache only when `cookieCache.enabled === true`. The query count of step 6 shows the session row and the user row on each request.
+
+- [x] **Step 4: Add `isAdminUser` and use it in the layout**
 
 In `src/server/auth/admin.ts`, keep `isAdmin(db, userId)`. Server Actions and `requireWebAdmin` call it, and a mutation must not trust an old read. Add:
 
@@ -630,12 +643,16 @@ const { t } = await userI18n(user.id);
 
 Do the same in `app/(app)/profile/layout.tsx`. There the call is `Promise.all([userI18n(user.id), isAdmin(getDb(), user.id)])`.
 
-- [ ] **Step 5: Run the tests**
+`app/api/me/route.ts` sent the whole `AuthenticatedUser`. It now names its four fields, so that the response to the phone does not get `role`. `app/api/me/route.test.ts` found this.
+
+`profile/connectors/page.tsx` also called `isAdmin(getDb(), user.id)` in its render, for a notice. It now calls `isAdminUser(user)`. For this, `readPage` gives `role` in `PageContext.user`.
+
+- [x] **Step 5: Run the tests**
 
 Run: `rtk proxy pnpm --filter web test auth`
 Expected: PASS. This includes the revocation test and every `requireWebAdmin` test.
 
-- [ ] **Step 6: Count again, then commit**
+- [x] **Step 6: Count again, then commit**
 
 Do step 1 again. Expected: two statements fewer. Write the count in «Queries per request on `/transactions`: after». Remove the temporary patch.
 
@@ -1191,11 +1208,11 @@ Each cell is the median of five runs. Times are in ms from the click.
 - The Before runs were on 2026-10-11, on the code of commit `1d008060`. This is the code before Part A.
 - A second run of the same script gave 102, 178, 122 and 135 ms. Expect a difference of about 20 ms between runs.
 
-Queries per request on `/transactions`: before 5, after ___. The list of the five queries is in Task 6 step 1.
+Queries per request on `/transactions`: before 5, after 3. The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times.
 
 ## Risks
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
-- **`banned` on `session.user`.** The types come from the admin plugin. If the inferred type has no `banned`, do what Task 6 step 3 says. If `getSession` gets a cookie cache, `banned` can be late. Write a comment at the `getSession` call that says this, and put a test next to it.
+- **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this, and `session.test.ts` checks a ban with live session rows.
 - **The size of the response.** Part C renders every panel of a page in one response. Transazioni does this today (47 KB for 12 rows). Conti and the Profilo lists are shorter. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because of the `key` on `Panel`.

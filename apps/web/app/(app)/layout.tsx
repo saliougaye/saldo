@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { navItems } from '../../src/features/shell/nav';
 import { userI18n } from '../../src/i18n/server';
-import { isAdmin } from '../../src/server/auth/admin';
+import { isAdminUser } from '../../src/server/auth/admin';
 import { requireWebUser } from '../../src/server/auth/currentUser';
-import { getDb } from '../../src/server/db/client';
 import { NavPendingProvider } from '../../src/ui/NavPending';
 import { Shortcuts } from '../../src/ui/Shortcuts';
 import { TabBar } from '../../src/ui/TabBar';
@@ -20,7 +19,8 @@ export const dynamic = 'force-dynamic';
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();
-  const [admin, { t }] = await Promise.all([isAdmin(getDb(), user.id), userI18n(user.id)]);
+  const admin = isAdminUser(user);
+  const { t } = await userI18n(user.id);
   const items = navItems(admin).map((item) => ({ ...item, label: t(item.labelKey) }));
   return (
     <NavPendingProvider label={t('common.loading')}>
