@@ -11,7 +11,6 @@ import {
   plural,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PERIOD_PARAM } from '../../../src/features/period/periodParams';
 import {
@@ -36,6 +35,7 @@ import { getDb } from '../../../src/server/db/client';
 import { readPage } from '../../../src/server/page/context';
 import { loadRow } from '../../../src/server/userData/row';
 import { AmountText } from '../../../src/ui/AmountText';
+import { AppLink as Link } from '../../../src/ui/AppLink';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
@@ -530,7 +530,7 @@ export default async function TransactionsPage({
         ) : (
           <>
             {/* §5.12: what is still to come is folded behind one row. A native disclosure, so it
-                opens with no client state and without JavaScript — the phone's `UpcomingRow`. */}
+                opens with no client state — the phone's `UpcomingRow`. */}
             {view.upcoming.count === 0 ? null : (
               <details className={styles.upcoming} id={UPCOMING_ID}>
                 <summary className={styles.upcomingSummary}>

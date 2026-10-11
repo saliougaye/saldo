@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq, isNotNull, max, sql } from 'drizzle-orm';
 import { invites, passkey, session, syncRows, user } from '../db/schema';
 import type { ServerDatabase } from '../db/types';
 
@@ -76,6 +76,15 @@ export async function isAdmin(db: ServerDatabase, userId: string): Promise<boole
     .where(eq(user.id, userId));
   if (row === undefined || row.banned === true) return false;
   return row.role === ADMIN_ROLE;
+}
+
+/**
+ * For a page render: the role was read with the session (`authenticate`), and `authenticate` reads
+ * a banned account as signed out. A Server Action and an admin route call `isAdmin`: a mutation must not trust
+ * an older read.
+ */
+export function isAdminUser(account: { role: string | null }): boolean {
+  return account.role === ADMIN_ROLE;
 }
 
 export async function isRevoked(db: ServerDatabase, userId: string): Promise<boolean> {
@@ -205,6 +214,7 @@ export async function accountDetail(
     .select({ id: invites.id, label: invites.label })
     .from(invites)
     .where(eq(invites.usedBy, userId))
+    .orderBy(asc(invites.createdAt))
     .limit(1);
 
   return {
@@ -221,4 +231,67 @@ export async function accountDetail(
     syncedRows: rows?.n ?? 0,
     invite: invite ?? null,
   };
+}
+
+/**
+ * `accountDetail` for every account, in `listAccounts`'s order (oldest first). Admin → Account
+ * renders the panel of each row (`PanelSwitch`), so it reads them all: five queries for the whole
+ * list, not four for each account.
+ */
+export async function accountDetails(db: ServerDatabase): Promise<AccountDetail[]> {
+  const [rows, sessions, passkeys, synced, used] = await Promise.all([
+    db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        role: user.role,
+        banned: user.banned,
+        banReason: user.banReason,
+        createdAt: user.createdAt,
+      })
+      .from(user)
+      .orderBy(asc(user.createdAt)),
+    db
+      .select({ userId: session.userId, latest: max(session.createdAt) })
+      .from(session)
+      .groupBy(session.userId),
+    db
+      .select({ userId: passkey.userId, n: sql<number>`count(*)::int` })
+      .from(passkey)
+      .groupBy(passkey.userId),
+    db
+      .select({ userId: syncRows.userId, n: sql<number>`count(*)::int` })
+      .from(syncRows)
+      .groupBy(syncRows.userId),
+    db
+      .select({ usedBy: invites.usedBy, id: invites.id, label: invites.label })
+      .from(invites)
+      .where(isNotNull(invites.usedBy))
+      .orderBy(asc(invites.createdAt)),
+  ]);
+  const latest = new Map(sessions.map((row) => [row.userId, row.latest]));
+  const passkeyCount = new Map(passkeys.map((row) => [row.userId, row.n]));
+  const syncedRows = new Map(synced.map((row) => [row.userId, row.n]));
+  const invite = new Map<string, { id: string; label: string | null }>();
+  for (const row of used) {
+    if (row.usedBy !== null && !invite.has(row.usedBy)) {
+      invite.set(row.usedBy, { id: row.id, label: row.label });
+    }
+  }
+  return rows.map((row) => ({
+    id: row.id,
+    displayName: row.name,
+    email: row.email,
+    role: row.role ?? MEMBER_ROLE,
+    revoked: row.banned === true,
+    revokedReason: row.banReason,
+    createdAt: row.createdAt.toISOString(),
+    emailVerified: row.emailVerified,
+    lastSignInAt: latest.get(row.id)?.toISOString() ?? null,
+    passkeyCount: passkeyCount.get(row.id) ?? 0,
+    syncedRows: syncedRows.get(row.id) ?? 0,
+    invite: invite.get(row.id) ?? null,
+  }));
 }

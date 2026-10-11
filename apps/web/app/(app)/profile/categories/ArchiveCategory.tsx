@@ -1,13 +1,31 @@
 'use client';
 
+import type { IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { archiveMoveTargets } from '../../../../src/features/categories/archiveView';
 import type { CategoryWriteError } from '../../../../src/server/write/categories';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';
-import { Select, type SelectOption } from '../../../../src/ui/Select';
+import { Select } from '../../../../src/ui/Select';
 import { archiveCategoryAction } from './actions';
+import { useCategoryFormShared } from './CategoryForm';
 import styles from './categories.module.css';
+
+/** The dialog's copy that does not depend on the category: the page gives it once. */
+export interface ArchiveStrings {
+  /** The button in the form's foot, «Archivia». */
+  action: string;
+  title: string;
+  moveTo: string;
+  /** The first option of the select: no move. */
+  noMove: string;
+  confirm: string;
+  confirmMove: string;
+  cancel: string;
+  busy: string;
+  errors: Record<CategoryWriteError | 'unexpected', string>;
+}
 
 interface Props {
   id: string;
@@ -15,30 +33,22 @@ interface Props {
   updatedAt: string;
   /** Where the page goes once the category is archived: `/profile/categories`. */
   afterHref: string;
-  /** Targets for «Sposta le transazioni in»; offered only when something uses the category. */
-  targets: readonly SelectOption[];
-  strings: {
-    /** The button in the form's foot, «Archivia». */
-    action: string;
-    title: string;
-    /** `categories.archiveBody` with the count. */
-    body: string;
-    moveTo: string;
-    /** The first option of the select: no move. */
-    noMove: string;
-    confirm: string;
-    confirmMove: string;
-    cancel: string;
-    busy: string;
-    errors: Record<CategoryWriteError | 'unexpected', string>;
-  };
+  /**
+   * How many transactions use it. «Sposta le transazioni in» is offered only when some do and
+   * another category can take them (`archiveMoveTargets`).
+   */
+  uses: number;
+  /** `categories.archiveBody` with the count. */
+  body: string;
 }
 
 /**
  * «Archivia» and its question (§5.11, §6.20). A category is never deleted; the transactions that
  * use it can move to another category of the same direction in the same write.
  */
-export function ArchiveCategory({ id, updatedAt, afterHref, targets, strings }: Props) {
+export function ArchiveCategory({ id, updatedAt, afterHref, uses, body }: Props) {
+  const { categories, archive: strings } = useCategoryFormShared();
+  const targets = archiveMoveTargets(categories, id, uses);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState('');
@@ -90,7 +100,7 @@ export function ArchiveCategory({ id, updatedAt, afterHref, targets, strings }: 
           setOpen(next);
         }}
         title={strings.title}
-        body={strings.body}
+        body={body}
         error={error ?? undefined}
         confirmLabel={target === '' ? strings.confirm : strings.confirmMove}
         cancelLabel={strings.cancel}
@@ -98,11 +108,19 @@ export function ArchiveCategory({ id, updatedAt, afterHref, targets, strings }: 
         busyLabel={strings.busy}
         onConfirm={confirm}
       >
-        {targets.length === 0 ? null : (
+        {targets === null ? null : (
           <Select
             label={strings.moveTo}
             value={target}
-            options={[{ value: '', label: strings.noMove }, ...targets]}
+            options={[
+              { value: '', label: strings.noMove },
+              ...targets.map((row) => ({
+                value: row.id,
+                label: row.name,
+                icon: row.icon as IconName,
+                colorIndex: row.colorIndex,
+              })),
+            ]}
             placeholder={strings.noMove}
             onChange={setTarget}
           />

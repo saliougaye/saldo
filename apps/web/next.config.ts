@@ -27,6 +27,18 @@ const nextConfig: NextConfig = {
       ? { allowedOrigins: [new URL(process.env.PUBLIC_URL).host] }
       : undefined,
   },
+  /**
+   * The index pages of Profilo and Admin only redirect (`app/(app)/profile/page.tsx`,
+   * `app/(app)/admin/page.tsx`). Under a `loading.tsx` that redirect streams after the shell and a
+   * skeleton, with the status 200. Here it is a 307 before any render. The pages stay as the
+   * fallback. A member still gets 404 for Admin: `/admin/accounts` answers it.
+   */
+  async redirects() {
+    return [
+      { source: '/profile', destination: '/profile/account', permanent: false },
+      { source: '/admin', destination: '/admin/accounts', permanent: false },
+    ];
+  },
   async headers() {
     /**
      * React's development build uses `eval()` for its debugging features, so a policy without

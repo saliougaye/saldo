@@ -1,0 +1,35 @@
+.bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 50;
+  background: var(--color-accent);
+  transform-origin: left;
+  opacity: 0;
+  /* Nothing for 150 ms, then a bar that grows slowly and never reaches the end. */
+  animation:
+    bar-in 0s linear 150ms forwards,
+    bar-grow 8s cubic-bezier(0.1, 0.6, 0.3, 1) 150ms forwards;
+}
+
+@keyframes bar-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0.05);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: bar-in 0s linear 150ms forwards;
+    transform: scaleX(1);
+  }
+}

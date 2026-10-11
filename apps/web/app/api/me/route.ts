@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export function GET(request: Request): Promise<Response> {
   return handle(async () => {
-    const user = await requireUser(request);
-    return Response.json(user);
+    const { id, displayName, email, emailVerified } = await requireUser(request);
+    // The fields by name: `AuthenticatedUser` also carries `role`, which the phone does not read.
+    return Response.json({ id, displayName, email, emailVerified });
   });
 }

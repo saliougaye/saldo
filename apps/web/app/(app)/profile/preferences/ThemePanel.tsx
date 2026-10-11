@@ -4,7 +4,7 @@ import type { Settings } from '@saldo/core';
 import { Alert } from '../../../../src/ui/Alert';
 import { OptionList } from '../../../../src/ui/OptionList';
 import styles from './preferences.module.css';
-import { type SettingErrors, useSaveSetting } from './useSaveSetting';
+import { useSaveSetting } from './useSaveSetting';
 
 type Theme = Settings['theme'];
 
@@ -12,12 +12,11 @@ interface Props {
   value: Theme;
   options: readonly { value: Theme; label: string }[];
   strings: { title: string; note: string };
-  errors: SettingErrors;
 }
 
 /** §6.8 Tema: Sistema / Scuro / Chiaro. The refresh puts the choice on `<html data-theme>`. */
-export function ThemePanel({ value, options, strings, errors }: Props) {
-  const { shown, error, save } = useSaveSetting(value, errors);
+export function ThemePanel({ value, options, strings }: Props) {
+  const { shown, error, save } = useSaveSetting(value);
   return (
     <>
       <p className={styles.note}>{strings.note}</p>

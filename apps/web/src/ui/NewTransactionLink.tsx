@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import type { MouseEvent, ReactNode } from 'react';
+import { AppLink as Link } from './AppLink';
 import { isPlainClick } from './PanelNav';
 
 /** Decision 8: «Nuova transazione» is the form on Transazioni, from any page. */

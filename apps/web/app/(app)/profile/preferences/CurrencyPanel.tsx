@@ -9,7 +9,7 @@ import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
 import styles from './preferences.module.css';
-import { type SettingErrors, useSaveSetting } from './useSaveSetting';
+import { useSaveSetting } from './useSaveSetting';
 
 interface Props {
   value: CurrencyCode;
@@ -30,15 +30,14 @@ interface Props {
     cancel: string;
     busy: string;
   };
-  errors: SettingErrors;
 }
 
 /**
  * §6.8 + §5.1 + §6.25 Valuta: every currency, «Comuni» first, searchable. The one preference that
  * asks before it saves: changing it reformats every amount and converts none.
  */
-export function CurrencyPanel({ value, locale, options, strings, errors }: Props) {
-  const { shown, error, pending, save, clearError } = useSaveSetting(value, errors);
+export function CurrencyPanel({ value, locale, options, strings }: Props) {
+  const { shown, error, pending, save, clearError } = useSaveSetting(value);
   const [query, setQuery] = useState('');
   // The question stays as it was asked while the dialog closes — and while the refresh brings the
   // new currency in — so its body does not change on the way out.

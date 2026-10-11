@@ -1,0 +1,25 @@
+/* The section's column of a `SubnavLayout`, laid out as the section. */
+.list {
+  composes: section from "./SubnavLayout.module.css";
+}
+
+/*
+ * The panel's column. With no panel it takes no column and no gap (`.slot:empty`). Below the
+ * breakpoint the panel is fixed over the screen, so its wrapper takes no row of the grid.
+ */
+.side {
+  composes: slot from "./SubnavLayout.module.css";
+  display: contents;
+}
+
+/*
+ * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The column spans
+ * the list's height, so the panel stays sticky beside a long list, as on Transazioni.
+ */
+@media (min-width: 1024px) {
+  .side {
+    display: block;
+    align-self: stretch;
+    min-width: 0;
+  }
+}

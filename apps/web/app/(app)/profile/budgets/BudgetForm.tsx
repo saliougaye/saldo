@@ -22,7 +22,11 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { BudgetFormView } from '../../../../src/features/budgets/formView';
+import {
+  type BudgetFormShared,
+  type BudgetFormView,
+  budgetCategoryTiles,
+} from '../../../../src/features/budgets/formView';
 import { resolveBudgetName } from '../../../../src/features/budgets/name';
 import { budgetWriteErrors } from '../../../../src/features/budgets/writeErrors';
 import type { BudgetMessages } from '../../../../src/i18n/budgetMessages';
@@ -33,19 +37,29 @@ import { FormFoot } from '../../../../src/ui/FormFoot';
 import { IconBox } from '../../../../src/ui/IconBox';
 import { Segmented } from '../../../../src/ui/Segmented';
 import { Switch } from '../../../../src/ui/Switch';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { TextField } from '../../../../src/ui/TextField';
 import { saveBudgetAction } from './actions';
 import styles from './budgets.module.css';
 import { DeleteBudget } from './DeleteBudget';
 
-interface Props {
-  view: BudgetFormView;
+/** What every budget form of the page shares, given once (`BudgetFormProvider`). */
+export interface BudgetFormSharedValue extends BudgetFormShared {
   locale: AppLocale;
   currency: CurrencyCode;
   decimalSeparator: string;
   symbol: string;
   symbolPosition: 'prefix' | 'suffix';
   messages: BudgetMessages;
+}
+
+const shared = sharedProps<BudgetFormSharedValue>('BudgetForm');
+
+/** Gives every `BudgetForm` below it the props they share. */
+export const BudgetFormProvider = shared.Provider;
+
+interface Props {
+  view: BudgetFormView;
   closeHref: string;
   /** `/budgets`: where a save lands. */
   afterSave: string;
@@ -69,18 +83,10 @@ const KNOWN_ERRORS = ['invalid', 'notFound', 'conflict'];
  * then the amount with the median of the last six periods beside it, then name, repeat, alert,
  * rollover and icon. The checks are `budgetStepMissing('details', …)`: both gaps at once.
  */
-export function BudgetForm({
-  view,
-  locale,
-  currency,
-  decimalSeparator,
-  symbol,
-  symbolPosition,
-  messages,
-  closeHref,
-  afterSave,
-  savedName,
-}: Props) {
+export function BudgetForm({ view, closeHref, afterSave, savedName }: Props) {
+  const common = shared.useShared();
+  const { locale, currency, decimalSeparator, symbol, symbolPosition, messages } = common;
+  const categories = useMemo(() => budgetCategoryTiles(common, view), [common, view]);
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -96,7 +102,7 @@ export function BudgetForm({
   };
 
   const chosen = values.categoryIds.flatMap((id) => {
-    const category = view.categories.find((row) => row.id === id);
+    const category = categories.find((row) => row.id === id);
     return category === undefined ? [] : [category];
   });
   const autoName = autoBudgetName(
@@ -110,10 +116,10 @@ export function BudgetForm({
   // The median of the six periods before this one, plus the headroom (§5.5): computed here, on
   // the numbers the server handed over, so it follows every category picked.
   const suggestion = useMemo(() => {
-    const history = view.history.map((record) => new Map(Object.entries(record)));
-    const value = suggestBudgetAmount(history, values.categoryIds, view.categoryRefs);
+    const history = common.history.map((record) => new Map(Object.entries(record)));
+    const value = suggestBudgetAmount(history, values.categoryIds, common.categoryRefs);
     return value === null ? null : Math.round(value * (1 + SUGGESTION_HEADROOM));
-  }, [view.history, view.categoryRefs, values.categoryIds]);
+  }, [common.history, common.categoryRefs, values.categoryIds]);
 
   const focusField = (field: string) => {
     form.current
@@ -227,7 +233,7 @@ export function BudgetForm({
       <fieldset className={styles.field} data-field="categories">
         <legend className={styles.label}>{t('budgets.categories')}</legend>
         <div className={styles.tiles}>
-          {view.categories.map((category) => {
+          {categories.map((category) => {
             const selected = values.categoryIds.includes(category.id);
             const taken = category.taken && !selected;
             return (

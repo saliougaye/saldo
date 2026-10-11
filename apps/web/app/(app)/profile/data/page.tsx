@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Profilo → Dati (§11, §17.1.7): the phone's exports as three files to save. Each row is a plain
- * download link to a route handler, so it works with no JavaScript and the browser names the file.
+ * download link to a route handler, so the download needs no client code and the browser names the
+ * file.
  * Everything that replaces or deletes data — restore, CSV import, «Elimina tutti i dati» — and the
  * ZIP with the attachments' bytes stay on the phone, and the page says so.
  */

@@ -1,8 +1,16 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { user } from '../db/schema';
+import { invites, passkey, session, syncRows, user } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
 import { createTestSession } from '../test/session';
-import { ADMIN_ROLE, claimRoleForNewUser, isAdmin, MEMBER_ROLE, revokeUser } from './admin';
+import {
+  ADMIN_ROLE,
+  accountDetail,
+  accountDetails,
+  claimRoleForNewUser,
+  isAdmin,
+  MEMBER_ROLE,
+  revokeUser,
+} from './admin';
 
 let harness: TestDatabase;
 const NOW = new Date('2026-09-11T09:00:00.000Z');
@@ -76,5 +84,84 @@ describe('isAdmin', () => {
     const admin = await createTestSession(harness.db, 'Ada', ADMIN_ROLE);
     await revokeUser(harness.db, admin.userId, 'left the household', NOW);
     await expect(isAdmin(harness.db, admin.userId)).resolves.toBe(false);
+  });
+});
+
+describe('accountDetails', () => {
+  it('gives every account what accountDetail gives it, oldest first, in one pass', async () => {
+    // Admin → Account renders the panel of every row from this one read. A grouped query that
+    // drops an account with no session, or gives one account's counts to another, shows wrong
+    // facts in a panel nobody re-checks.
+    const ada = await accountWithNoRole('Ada', new Date('2026-09-11T09:00:00.000Z'));
+    const bob = await accountWithNoRole('Bob', new Date('2026-09-11T10:00:00.000Z'));
+    const cleo = await accountWithNoRole('Cleo', new Date('2026-09-11T11:00:00.000Z'));
+    await claimRoleForNewUser(harness.db, ada);
+    await revokeUser(harness.db, cleo, 'moved out', NOW);
+    const LATER = new Date('2026-09-12T08:00:00.000Z');
+    for (const createdAt of [LATER, NOW]) {
+      await harness.db.insert(session).values({
+        id: crypto.randomUUID(),
+        userId: bob,
+        token: crypto.randomUUID(),
+        createdAt,
+        expiresAt: new Date('2026-12-01T00:00:00.000Z'),
+        updatedAt: createdAt,
+      });
+    }
+    for (const id of ['k1', 'k2']) {
+      await harness.db.insert(passkey).values({
+        id,
+        userId: bob,
+        name: null,
+        publicKey: 'key',
+        credentialID: `credential-${id}`,
+        counter: 0,
+        deviceType: 'singleDevice',
+        backedUp: false,
+        transports: 'internal',
+        createdAt: NOW,
+        aaguid: null,
+      });
+    }
+    for (const [seq, userId] of [ada, bob, bob].entries()) {
+      await harness.db.insert(syncRows).values({
+        userId,
+        entity: 'tag',
+        id: `t${seq}`,
+        updatedAt: 'h',
+        deletedAt: null,
+        data: {},
+        seq,
+      });
+    }
+    await harness.db.insert(invites).values({
+      id: 'invite-bob',
+      codeHash: 'hash-bob',
+      label: 'Per Bob',
+      createdBy: ada,
+      createdAt: NOW,
+      expiresAt: new Date('2026-09-18T09:00:00.000Z'),
+      usedAt: NOW,
+      usedBy: bob,
+    });
+
+    const all = await accountDetails(harness.db);
+    expect(all.map((detail) => detail.displayName)).toEqual(['Ada', 'Bob', 'Cleo']);
+    for (const id of [ada, bob, cleo]) {
+      expect(all.find((detail) => detail.id === id)).toEqual(await accountDetail(harness.db, id));
+    }
+    expect(all[1]).toMatchObject({
+      lastSignInAt: LATER.toISOString(),
+      passkeyCount: 2,
+      syncedRows: 2,
+      invite: { id: 'invite-bob', label: 'Per Bob' },
+    });
+    expect(all[2]).toMatchObject({
+      revoked: true,
+      lastSignInAt: null,
+      passkeyCount: 0,
+      syncedRows: 0,
+      invite: null,
+    });
   });
 });

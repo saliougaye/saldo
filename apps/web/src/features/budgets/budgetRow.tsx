@@ -28,13 +28,24 @@ interface Input {
   /** Where a row goes; absent, the row is not a link. */
   href?: (item: BudgetView) => string;
   selectedId?: string | null;
+  /** The row's whole panel key (`b:ID`), for a page whose panel lives in client state (`PanelSwitch`). */
+  selectId?: (item: BudgetView) => string;
 }
 
 /**
  * The budget row Home and `/budgets` share (§5.13): the ring, the name and what is left, the
  * percentage over the state. Returns the row builder plus the pieces the featured card reuses.
  */
-export function budgetRowFor({ t, money, percent, categories, styles, href, selectedId }: Input) {
+export function budgetRowFor({
+  t,
+  money,
+  percent,
+  categories,
+  styles,
+  href,
+  selectedId,
+  selectId,
+}: Input) {
   const deps = { t, money };
   const row = (item: BudgetView): ReactElement => (
     <ListRow
@@ -43,6 +54,7 @@ export function budgetRowFor({ t, money, percent, categories, styles, href, sele
       label={budgetLabel(item, deps)}
       href={href?.(item)}
       selected={selectedId === item.budget.id}
+      selectId={selectId?.(item)}
       leading={
         <TargetRing
           size={ROW_RING}

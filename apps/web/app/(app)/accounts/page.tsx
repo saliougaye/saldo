@@ -22,12 +22,11 @@ import {
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { archivedView } from '../../../src/features/accounts/archivedView';
-import { accountDetail } from '../../../src/features/accounts/detailView';
-import { accountFormView } from '../../../src/features/accounts/formView';
+import { type AccountDetailView, accountDetail } from '../../../src/features/accounts/detailView';
+import { type AccountFormView, accountFormView } from '../../../src/features/accounts/formView';
 import {
   goalEditHref,
   goalExpenseHref,
@@ -37,20 +36,26 @@ import { accountWriteErrors } from '../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
+import { AppLink as Link } from '../../../src/ui/AppLink';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
-import { Panel } from '../../../src/ui/Panel';
+import { PanelLink } from '../../../src/ui/PanelNav';
+import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
 import { AccountForm } from './AccountForm';
-import { ArchiveAccount } from './ArchiveAccount';
+import {
+  ArchiveAccount,
+  ArchiveAccountShared,
+  type ArchiveAccountSharedValue,
+} from './ArchiveAccount';
 import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
-import { CloseGoal } from './CloseGoal';
+import { CloseGoal, CloseGoalShared, type CloseGoalSharedValue } from './CloseGoal';
 import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
@@ -109,10 +114,29 @@ function goalRingTone(progress: GoalProgress): 'normal' | 'over' | 'done' {
 }
 
 /**
+ * Which query parameters open a panel (§17.1.7), with the precedence the page always had: `?new`
+ * wins, then `?g=` over `?a=`, and a detail wins over `?archived`. `?a={id}&edit` is not a panel of
+ * its own: `edit` is not a panel parameter, so a link to it changes more than the panel and
+ * navigates, and the server then puts the edit form in place of the detail under `a:{id}`.
+ */
+const PANEL_PARAMS = {
+  flags: ['new', 'archived'],
+  values: ['g', 'a'],
+  order: ['new', 'g', 'a', 'archived'],
+} as const;
+
+/** How many movements an account's or a goal's panel lists. */
+const RECENT = 6;
+
+/**
  * Conti on the web (§5.3, §5.14, §17.1.7): the band's two totals, the spendable and the savings
  * groups, and — in the trailing panel — one account's balance and recent movements (`?a=`) or one
  * pocket's goal (`?g=`). Every figure is `accountsView` and `accountDetail`, the same `@saldo/core`
  * the phone calls: nothing is added up here.
+ *
+ * The server renders the panel of every listed account and goal, «Nuovo conto» and the archived
+ * list; a click only chooses the one to show (`PanelSwitch`). «Modifica conto» needs the account's
+ * own balance, so it stays a navigation (`?a={id}&edit`), as a save, an archive and a close do.
  */
 export default async function AccountsPage({
   searchParams,
@@ -125,6 +149,7 @@ export default async function AccountsPage({
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
   const accountNames = new Map(page.data.accounts.map((row) => [row.id, row.name]));
+  const accountsById = new Map(page.data.accounts.map((row) => [row.id, row]));
   const categories = new Map(page.data.categories.map((row) => [row.id, row]));
 
   const goalDeps: GoalTextDeps = {
@@ -135,55 +160,17 @@ export default async function AccountsPage({
     periodKind: settings.periodKind,
   };
 
-  // `?g=` wins over `?a=` when a hand-edited URL somehow carries both: a pocket is never reached
-  // through `?a=`, so there is nothing useful the other parameter could mean alongside it.
-  const goalId = params.g;
-  const accountId = params.a;
-  const selectedId = goalId ?? accountId;
-  const selected =
-    selectedId === undefined
-      ? null
-      : accountDetail({ data: page.data, id: selectedId, today, def });
-  const showGoalPanel = goalId !== undefined && selected !== null && selected.goal !== null;
-  const showAccountPanel = !showGoalPanel && accountId !== undefined && selected !== null;
-
-  // `?new` opens «Nuovo conto»; `?a={id}&edit` opens «Modifica conto». Presence is what counts.
-  const creating = params.new !== undefined;
-  const editing = !creating && showAccountPanel && params.edit !== undefined;
-  const form =
-    creating || editing
-      ? accountFormView({
-          data: page.data,
-          today,
-          currency,
-          mode: creating ? 'new' : 'edit',
-          id: creating ? null : (selected?.account.id ?? null),
-        })
-      : null;
-  const formCloseHref = form?.id == null ? PATH : `${PATH}?a=${form.id}`;
-
-  const goalParent =
-    selected?.account.parentAccountId == null
-      ? null
-      : (page.data.accounts.find((row) => row.id === selected.account.parentAccountId) ?? null);
-  const formOpen = form !== null;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
-
-  // `?archived` opens the list of archived accounts and closed goals; a form or a detail wins.
   const archived = archivedView(page.data);
-  const archivedOpen =
-    params.archived !== undefined && !formOpen && !showAccountPanel && !showGoalPanel;
   const archivedTotal = view.archivedCount + archived.goals.length;
   const writeErrors = accountWriteErrors(catalogs[locale].web.accounts);
-  const canArchive =
-    selected !== null && canArchiveAccount(page.data.accounts, selected.account.id);
 
   const accountRow = (row: AccountRowView) => (
     <ListRow
       key={row.account.id}
       open
-      href={`/accounts?a=${row.account.id}`}
-      selected={accountId === row.account.id}
+      href={`${PATH}?a=${row.account.id}`}
+      selectId={`a:${row.account.id}`}
       icon={row.account.icon as IconName}
       colorIndex={row.account.colorIndex}
       title={row.account.name}
@@ -196,8 +183,8 @@ export default async function AccountsPage({
     <div key={pocket.account.id} className={styles.pocketRow}>
       <ListRow
         open
-        href={`/accounts?g=${pocket.account.id}`}
-        selected={goalId === pocket.account.id}
+        href={`${PATH}?g=${pocket.account.id}`}
+        selectId={`g:${pocket.account.id}`}
         leading={
           <TargetRing
             size={ROW_RING}
@@ -234,25 +221,19 @@ export default async function AccountsPage({
 
   const empty = view.spending.length === 0 && view.savings.length === 0;
 
-  const recentTransactions =
-    selected === null
-      ? []
-      : [...page.data.transactions]
-          .filter(
-            (tx) =>
-              (tx.accountId === selected.account.id || tx.toAccountId === selected.account.id) &&
-              tx.date <= today,
-          )
-          .sort(newestFirst)
-          .slice(0, 6);
+  // The movements of the panels, newest first, sorted once for every panel.
+  const past = page.data.transactions.filter((tx) => tx.date <= today).sort(newestFirst);
+  const recentOf = (accountId: string) =>
+    past
+      .filter((tx) => tx.accountId === accountId || tx.toAccountId === accountId)
+      .slice(0, RECENT);
 
-  const recentRow = (tx: (typeof recentTransactions)[number]) => {
-    if (selected === null) return null;
+  const recentRow = (accountId: string, tx: (typeof past)[number]) => {
     const row = transactionRow(tx, {
       category: (categoryId) => categories.get(categoryId),
       accountName: (id) => accountNames.get(id) ?? '',
       kindLabel: (kind) => t(`kinds.${kind}`),
-      viewpointAccountId: selected.account.id,
+      viewpointAccountId: accountId,
     });
     return (
       <ListRow
@@ -275,392 +256,438 @@ export default async function AccountsPage({
     );
   };
 
-  // The account panel's hero (§5.3): a card in debt shows what it owes, everything else its balance
-  // — a card never holds a pocket (§5.14), so its balance is always its own.
-  const heroDue = selected !== null && selected.due !== null && selected.due > 0;
-  const heroLabel = heroDue ? t('accounts.toRepay') : t('accounts.balance');
-  const heroAmount = selected === null ? 0 : heroDue ? (selected.due ?? 0) : selected.balance;
+  /** The account panel (§5.3): what it holds or owes, its sparkline, its statement and its period. */
+  const accountBody = (selected: AccountDetailView) => {
+    // A card in debt shows what it owes, everything else its balance — a card never holds a pocket
+    // (§5.14), so its balance is always its own.
+    const heroDue = selected.due !== null && selected.due > 0;
+    const heroLabel = heroDue ? t('accounts.toRepay') : t('accounts.balance');
+    const heroAmount = heroDue ? (selected.due ?? 0) : selected.balance;
+    // The statement rows: the same figures, the same fallback date, as the phone's account screen
+    // box (`apps/mobile/app/account/[id].tsx`).
+    const statement = selected.statement;
+    const statementDue = statement?.due ?? 0;
+    const chargeDate = statementDue > 0 ? (statement?.chargeDate ?? null) : null;
+    const statementPaid = statement !== null && statement.statement > 0 && statement.due === 0;
+    const recent = recentOf(selected.account.id);
+    return (
+      <>
+        <div className={formStyles.actions}>
+          <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
+            {t('common.edit')}
+          </Link>
+          {canArchiveAccount(page.data.accounts, selected.account.id) ? (
+            <ArchiveAccount
+              id={selected.account.id}
+              updatedAt={selected.account.updatedAt}
+              body={t('web.accounts.archiveBody', { name: selected.account.name })}
+            />
+          ) : (
+            <span className={formStyles.muted}>{t('goals.closeFirst')}</span>
+          )}
+        </div>
+        <span className={styles.label}>{heroLabel}</span>
+        <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
+        <Sparkline series={selected.series} />
 
-  // The statement rows (§5.3): the same figures, the same fallback date, as the phone's account
-  // screen box (`apps/mobile/app/account/[id].tsx`).
-  const statement = selected?.statement ?? null;
-  const statementDue = statement?.due ?? 0;
-  const chargeDate = statementDue > 0 ? (statement?.chargeDate ?? null) : null;
-  const statementPaid = statement !== null && statement.statement > 0 && statement.due === 0;
+        {statement === null ? null : (
+          <div className={styles.cardRows}>
+            {selected.account.creditCloseDay === null ? null : (
+              <ListRow
+                title={t('accounts.accruedInCycle')}
+                trailing={
+                  <AmountText minor={selected.accrued ?? 0} currency={currency} locale={locale} />
+                }
+              />
+            )}
+            {selected.account.creditChargeDay === null ? null : (
+              <ListRow
+                title={t('accounts.nextCharge')}
+                subtitle={
+                  chargeDate === null
+                    ? formatDayMonthLong(
+                        nextCreditChargeDate(selected.account.creditChargeDay, today),
+                        locale,
+                      )
+                    : `${formatDayMonthLong(chargeDate, locale)} · ${t('accounts.statementShort')}`
+                }
+                trailing={
+                  chargeDate === null ? (
+                    statementPaid ? (
+                      <span className={styles.paid}>
+                        <Icon name="check" size={14} />
+                        {t('accounts.paidShort')}
+                      </span>
+                    ) : null
+                  ) : (
+                    <AmountText minor={statementDue} currency={currency} locale={locale} />
+                  )
+                }
+              />
+            )}
+          </div>
+        )}
+
+        <div className={styles.periodRow}>
+          <div>
+            <span className={styles.label}>{t('home.income')}</span>
+            <AmountText minor={selected.period.income} currency={currency} locale={locale} />
+          </div>
+          <div>
+            <span className={styles.label}>{t('home.expenses')}</span>
+            <AmountText minor={selected.period.spent} currency={currency} locale={locale} />
+          </div>
+        </div>
+
+        <Section title={t('accounts.lastTransactions')}>
+          {recent.length === 0 ? (
+            <EmptyState title={t('transactions.empty')} />
+          ) : (
+            recent.map((tx) => recentRow(selected.account.id, tx))
+          )}
+        </Section>
+      </>
+    );
+  };
+
+  /** The goal panel (§5.14): the ring, the sentence, the figures, the movements and the close. */
+  const goalBody = (selected: AccountDetailView, goal: GoalProgress) => {
+    const parentId = selected.account.parentAccountId;
+    const goalParent = parentId == null ? null : (accountsById.get(parentId) ?? null);
+    const parentLive = goalParent !== null && goalParent.archivedAt === null;
+    const subject: GoalTextSubject = { account: selected.account, progress: goal };
+    const { action, state } = goalSentence(subject, goalDeps);
+    const recent = recentOf(selected.account.id);
+    return (
+      <>
+        <div className={styles.goalHead}>
+          <TargetRing
+            size={GOAL_RING}
+            ratio={goal.ratio}
+            pace={goalPace(goal)}
+            tone={goalRingTone(goal)}
+          />
+          <div>
+            <AmountText minor={goal.saved} currency={currency} locale={locale} size="title" />
+            <span className={styles.note}>{goalOf(subject, goalDeps)}</span>
+          </div>
+        </div>
+        <p className={styles.sentence}>
+          <Rich text={richText(action, t, locale)} />
+          {state === null ? null : <span className={styles.note}> {state}</span>}
+        </p>
+
+        {parentLive ? (
+          <div className={formStyles.actions}>
+            <Link
+              className={formStyles.actionLink}
+              href={goalTransferHref(parentId ?? '', selected.account.id, selected.account.name)}
+            >
+              {t('goals.setAside')}
+            </Link>
+            <Link
+              className={formStyles.actionLink}
+              href={goalTransferHref(selected.account.id, parentId ?? '', selected.account.name)}
+            >
+              {t('goals.withdraw')}
+            </Link>
+          </div>
+        ) : null}
+
+        <div className={styles.cardRows}>
+          <ListRow
+            title={t('goals.parent')}
+            trailing={<span className={styles.count}>{goalParent?.name ?? '—'}</span>}
+          />
+          <ListRow
+            title={t('goals.deadline')}
+            trailing={
+              <span className={styles.count}>
+                {selected.account.goalDeadline == null
+                  ? t('goals.deadlineNone')
+                  : formatLongDate(selected.account.goalDeadline, locale)}
+              </span>
+            }
+          />
+          <ListRow
+            title={t('goals.createdOn')}
+            trailing={
+              <span className={styles.count}>
+                {formatLongDate(selected.account.goalStartDate ?? today, locale)}
+              </span>
+            }
+          />
+        </div>
+
+        <Section title={t('goals.movements')}>
+          {recent.length === 0 ? (
+            <EmptyState title={t('goals.noMovements')} />
+          ) : (
+            recent.map((tx) => recentRow(selected.account.id, tx))
+          )}
+        </Section>
+
+        <div className={formStyles.actions}>
+          <Link className={formStyles.actionLink} href={goalEditHref(selected.account.id)}>
+            {t('common.edit')}
+          </Link>
+          <CloseGoal
+            id={selected.account.id}
+            updatedAt={selected.account.updatedAt}
+            expenseHref={
+              goal.saved > 0
+                ? goalExpenseHref(selected.account.id, goal.saved, selected.account.name)
+                : null
+            }
+            body={
+              goal.saved > 0
+                ? t('goals.closeBody', { amount: money(goal.saved) })
+                : t('goals.closeEmpty')
+            }
+            returnTo={t('goals.returnTo', { name: goalParent?.name ?? '' })}
+          />
+        </div>
+      </>
+    );
+  };
+
+  const formBody = (form: AccountFormView, closeHref: string) => (
+    <AccountForm
+      view={form}
+      locale={locale}
+      currency={currency}
+      decimalSeparator={moneyParts.decimalSeparator}
+      symbol={moneyParts.symbol}
+      symbolPosition={moneyParts.symbolPosition}
+      messages={accountMessages(catalogs[locale])}
+      closeHref={closeHref}
+      afterSave={`${PATH}?a=__ID__`}
+    />
+  );
+
+  // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`).
+  const panels: Record<string, PanelSpec> = {};
+  const fresh = accountFormView({ data: page.data, today, currency, mode: 'new', id: null });
+  if (fresh !== null) {
+    panels.new = {
+      title: t('accounts.newAccount'),
+      sheet: true,
+      bare: true,
+      body: formBody(fresh, PATH),
+    };
+  }
+  panels.archived = {
+    title: t('web.accounts.archivedTitle'),
+    body:
+      archived.accounts.length === 0 && archived.goals.length === 0 ? (
+        <EmptyState title={t('accounts.archivedEmpty')} />
+      ) : (
+        <>
+          {archived.accounts.length === 0 ? null : (
+            <Section title={t('web.accounts.archivedAccounts')}>
+              {archived.accounts.map((row) => (
+                <ListRow
+                  key={row.id}
+                  leading={
+                    <span className={formStyles.faded}>
+                      <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                    </span>
+                  }
+                  title={row.name}
+                  subtitle={t('accounts.archivedBadge')}
+                  trailing={
+                    <RestoreButton
+                      id={row.id}
+                      kind="account"
+                      label={t('accounts.restore')}
+                      busyLabel={t('common.loading')}
+                      errors={writeErrors}
+                    />
+                  }
+                />
+              ))}
+            </Section>
+          )}
+          {archived.goals.length === 0 ? null : (
+            <Section title={t('web.accounts.closedGoals')}>
+              {archived.goals.map((row) => (
+                <ListRow
+                  key={row.id}
+                  leading={
+                    <span className={formStyles.faded}>
+                      <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                    </span>
+                  }
+                  title={row.name}
+                  subtitle={row.parentName}
+                  trailing={
+                    <RestoreButton
+                      id={row.id}
+                      kind="goal"
+                      label={t('accounts.restore')}
+                      busyLabel={t('common.loading')}
+                      errors={writeErrors}
+                      disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
+                    />
+                  }
+                />
+              ))}
+            </Section>
+          )}
+        </>
+      ),
+  };
+
+  // The listed accounts and goals, and the one the URL names when the list does not show it: a
+  // transaction's panel links to the account of each side, which can be a pocket or an archived
+  // account, and an MCP link can name any account or goal.
+  const rows = [...view.spending, ...view.savings];
+  const accountIds = new Set(rows.map((row) => row.account.id));
+  const goalIds = new Set(rows.flatMap((row) => row.pockets.map((pocket) => pocket.account.id)));
+  if (params.a !== undefined && params.a !== '') accountIds.add(params.a);
+  if (params.g !== undefined && params.g !== '') goalIds.add(params.g);
+  const detailOf = (id: string) => accountDetail({ data: page.data, id, today, def });
+
+  // `?a={id}&edit` opens «Modifica conto» under the key `a:{id}` when that key is the one the URL
+  // opens. The form needs the account's own balance, so only that account gets one, and a link to
+  // it navigates. ✕ and «Annulla» go back to the detail, `?a={id}`: a navigation too.
+  const editId =
+    params.edit !== undefined && params.new === undefined && params.g === undefined
+      ? params.a
+      : undefined;
+  const editing =
+    editId === undefined
+      ? null
+      : accountFormView({ data: page.data, today, currency, mode: 'edit', id: editId });
+
+  for (const id of accountIds) {
+    const key = `a:${id}`;
+    if (editing !== null && editing.id === id) {
+      panels[key] = {
+        title: t('accounts.editAccount'),
+        sheet: true,
+        bare: true,
+        closeTo: key,
+        body: formBody(editing, `${PATH}?a=${id}`),
+      };
+      continue;
+    }
+    const detail = detailOf(id);
+    if (detail === null) continue;
+    panels[key] = { title: detail.account.name, body: accountBody(detail) };
+  }
+  for (const id of goalIds) {
+    const detail = detailOf(id);
+    if (detail === null || detail.goal === null) continue;
+    panels[`g:${id}`] = { title: detail.account.name, body: goalBody(detail, detail.goal) };
+  }
+
+  const archiveShared: ArchiveAccountSharedValue = {
+    afterHref: PATH,
+    strings: {
+      action: t('accounts.archive'),
+      title: t('accounts.archive'),
+      confirm: t('common.archive'),
+      cancel: t('common.cancel'),
+      busy: t('common.loading'),
+      errors: writeErrors,
+    },
+  };
+  const closeGoalShared: CloseGoalSharedValue = {
+    afterHref: PATH,
+    strings: {
+      action: t('goals.close'),
+      fundedTitle: t('goals.closeTitle'),
+      confirm: t('goals.confirmClose'),
+      recordExpense: t('goals.recordExpense'),
+      cancel: t('common.cancel'),
+      busy: t('common.loading'),
+      errors: writeErrors,
+    },
+  };
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.list}>
-        <HeroBand
-          period={
-            <div className={styles.titleRow}>
-              <h1 className={styles.title}>{t('accounts.title')}</h1>
-              <Link className={styles.newAccount} href={`${PATH}?new`}>
-                <Icon name="plus" size={16} />
-                {t('accounts.newAccount')}
-              </Link>
-            </div>
-          }
-          hero={
-            <Figure label={t('accounts.netWorth')}>
-              <AmountText minor={view.netWorth} currency={currency} locale={locale} size="hero" />
-            </Figure>
-          }
-          stats={
-            <Figure label={t('accounts.spendable')} note={t('accounts.spendableNote')}>
-              <AmountText
-                minor={view.spendable}
-                currency={currency}
-                locale={locale}
-                size="headline"
-              />
-            </Figure>
-          }
-        />
-
-        {empty ? (
-          <EmptyState title={t('accounts.empty')} />
-        ) : (
-          <>
-            <Section
-              open
-              title={t('accounts.spending')}
-              trailing={plural(t, locale, 'accounts.count', view.spending.length)}
-            >
-              {view.spending.map(group)}
-            </Section>
-
-            {view.savings.length === 0 ? null : (
-              <Section open title={t('accounts.savings')} trailing={t('accounts.outsideSpendable')}>
-                {view.savings.map(group)}
-              </Section>
-            )}
-          </>
-        )}
-
-        {archivedTotal === 0 ? (
-          <p className={styles.note}>{t('profile.archivedAccounts')}</p>
-        ) : (
-          <ListRow
-            open
-            href={`${PATH}?archived`}
-            selected={archivedOpen}
-            title={t('profile.archivedAccounts')}
-            trailing={<span className={styles.count}>{archivedTotal}</span>}
-          />
-        )}
-      </div>
-
-      {form === null ? null : (
-        <Panel
-          // Not the detail's panel: closing the form mounts the detail fresh, not one still leaving.
-          key="form"
-          sheet
-          bare
-          title={t(form.mode === 'new' ? 'accounts.newAccount' : 'accounts.editAccount')}
-          closeHref={formCloseHref}
-          closeLabel={t('common.close')}
-        >
-          <AccountForm
-            // A switch between «Nuovo» and «Modifica», or between two accounts, is a new form.
-            key={`${form.mode}:${form.id ?? ''}`}
-            view={form}
-            locale={locale}
-            currency={currency}
-            decimalSeparator={moneyParts.decimalSeparator}
-            symbol={moneyParts.symbol}
-            symbolPosition={moneyParts.symbolPosition}
-            messages={accountMessages(catalogs[locale])}
-            closeHref={formCloseHref}
-            afterSave={`${PATH}?a=__ID__`}
-          />
-        </Panel>
-      )}
-
-      {!archivedOpen ? null : (
-        <Panel
-          key="archived"
-          title={t('web.accounts.archivedTitle')}
-          closeHref={PATH}
-          closeLabel={t('common.close')}
-        >
-          {archived.accounts.length === 0 && archived.goals.length === 0 ? (
-            <EmptyState title={t('accounts.archivedEmpty')} />
-          ) : (
-            <>
-              {archived.accounts.length === 0 ? null : (
-                <Section title={t('web.accounts.archivedAccounts')}>
-                  {archived.accounts.map((row) => (
-                    <ListRow
-                      key={row.id}
-                      leading={
-                        <span className={formStyles.faded}>
-                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
-                        </span>
-                      }
-                      title={row.name}
-                      subtitle={t('accounts.archivedBadge')}
-                      trailing={
-                        <RestoreButton
-                          id={row.id}
-                          kind="account"
-                          label={t('accounts.restore')}
-                          busyLabel={t('common.loading')}
-                          errors={writeErrors}
-                        />
-                      }
-                    />
-                  ))}
-                </Section>
-              )}
-              {archived.goals.length === 0 ? null : (
-                <Section title={t('web.accounts.closedGoals')}>
-                  {archived.goals.map((row) => (
-                    <ListRow
-                      key={row.id}
-                      leading={
-                        <span className={formStyles.faded}>
-                          <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
-                        </span>
-                      }
-                      title={row.name}
-                      subtitle={row.parentName}
-                      trailing={
-                        <RestoreButton
-                          id={row.id}
-                          kind="goal"
-                          label={t('accounts.restore')}
-                          busyLabel={t('common.loading')}
-                          errors={writeErrors}
-                          disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
-                        />
-                      }
-                    />
-                  ))}
-                </Section>
-              )}
-            </>
-          )}
-        </Panel>
-      )}
-
-      {formOpen || !showAccountPanel || selected === null ? null : (
-        <Panel
-          key="detail"
-          title={selected.account.name}
-          closeHref={PATH}
-          closeLabel={t('common.close')}
-        >
-          <div className={formStyles.actions}>
-            <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
-              {t('common.edit')}
-            </Link>
-            {canArchive ? (
-              <ArchiveAccount
-                id={selected.account.id}
-                updatedAt={selected.account.updatedAt}
-                afterHref={PATH}
-                strings={{
-                  action: t('accounts.archive'),
-                  title: t('accounts.archive'),
-                  body: t('web.accounts.archiveBody', { name: selected.account.name }),
-                  confirm: t('common.archive'),
-                  cancel: t('common.cancel'),
-                  busy: t('common.loading'),
-                  errors: writeErrors,
-                }}
-              />
-            ) : (
-              <span className={formStyles.muted}>{t('goals.closeFirst')}</span>
-            )}
-          </div>
-          <span className={styles.label}>{heroLabel}</span>
-          <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
-          <Sparkline series={selected.series} />
-
-          {selected.statement === null ? null : (
-            <div className={styles.cardRows}>
-              {selected.account.creditCloseDay === null ? null : (
-                <ListRow
-                  title={t('accounts.accruedInCycle')}
-                  trailing={
-                    <AmountText minor={selected.accrued ?? 0} currency={currency} locale={locale} />
-                  }
-                />
-              )}
-              {selected.account.creditChargeDay === null ? null : (
-                <ListRow
-                  title={t('accounts.nextCharge')}
-                  subtitle={
-                    chargeDate === null
-                      ? formatDayMonthLong(
-                          nextCreditChargeDate(selected.account.creditChargeDay, today),
-                          locale,
-                        )
-                      : `${formatDayMonthLong(chargeDate, locale)} · ${t('accounts.statementShort')}`
-                  }
-                  trailing={
-                    chargeDate === null ? (
-                      statementPaid ? (
-                        <span className={styles.paid}>
-                          <Icon name="check" size={14} />
-                          {t('accounts.paidShort')}
-                        </span>
-                      ) : null
-                    ) : (
-                      <AmountText minor={statementDue} currency={currency} locale={locale} />
-                    )
-                  }
-                />
-              )}
-            </div>
-          )}
-
-          <div className={styles.periodRow}>
-            <div>
-              <span className={styles.label}>{t('home.income')}</span>
-              <AmountText minor={selected.period.income} currency={currency} locale={locale} />
-            </div>
-            <div>
-              <span className={styles.label}>{t('home.expenses')}</span>
-              <AmountText minor={selected.period.spent} currency={currency} locale={locale} />
-            </div>
-          </div>
-
-          <Section title={t('accounts.lastTransactions')}>
-            {recentTransactions.length === 0 ? (
-              <EmptyState title={t('transactions.empty')} />
-            ) : (
-              recentTransactions.map(recentRow)
-            )}
-          </Section>
-        </Panel>
-      )}
-
-      {form !== null || !showGoalPanel || selected === null || selected.goal === null ? null : (
-        <Panel title={selected.account.name} closeHref={PATH} closeLabel={t('common.close')}>
-          {(() => {
-            const goal = selected.goal;
-            const parentLive = goalParent !== null && goalParent.archivedAt === null;
-            const subject: GoalTextSubject = { account: selected.account, progress: goal };
-            const { action, state } = goalSentence(subject, goalDeps);
-            const sentence = <Rich text={richText(action, t, locale)} />;
-            return (
-              <>
-                <div className={styles.goalHead}>
-                  <TargetRing
-                    size={GOAL_RING}
-                    ratio={goal.ratio}
-                    pace={goalPace(goal)}
-                    tone={goalRingTone(goal)}
-                  />
-                  <div>
+    <ArchiveAccountShared value={archiveShared}>
+      <CloseGoalShared value={closeGoalShared}>
+        <div className={styles.layout}>
+          <PanelSwitch
+            baseHref={PATH}
+            params={PANEL_PARAMS}
+            panels={panels}
+            closeLabel={t('common.close')}
+          >
+            <div className={styles.list}>
+              <HeroBand
+                period={
+                  <div className={styles.titleRow}>
+                    <h1 className={styles.title}>{t('accounts.title')}</h1>
+                    <PanelLink className={styles.newAccount} href={`${PATH}?new`}>
+                      <Icon name="plus" size={16} />
+                      {t('accounts.newAccount')}
+                    </PanelLink>
+                  </div>
+                }
+                hero={
+                  <Figure label={t('accounts.netWorth')}>
                     <AmountText
-                      minor={goal.saved}
+                      minor={view.netWorth}
                       currency={currency}
                       locale={locale}
-                      size="title"
+                      size="hero"
                     />
-                    <span className={styles.note}>{goalOf(subject, goalDeps)}</span>
-                  </div>
-                </div>
-                <p className={styles.sentence}>
-                  {sentence}
-                  {state === null ? null : <span className={styles.note}> {state}</span>}
-                </p>
+                  </Figure>
+                }
+                stats={
+                  <Figure label={t('accounts.spendable')} note={t('accounts.spendableNote')}>
+                    <AmountText
+                      minor={view.spendable}
+                      currency={currency}
+                      locale={locale}
+                      size="headline"
+                    />
+                  </Figure>
+                }
+              />
 
-                {parentLive ? (
-                  <div className={formStyles.actions}>
-                    <Link
-                      className={formStyles.actionLink}
-                      href={goalTransferHref(
-                        selected.account.parentAccountId ?? '',
-                        selected.account.id,
-                        selected.account.name,
-                      )}
+              {empty ? (
+                <EmptyState title={t('accounts.empty')} />
+              ) : (
+                <>
+                  <Section
+                    open
+                    title={t('accounts.spending')}
+                    trailing={plural(t, locale, 'accounts.count', view.spending.length)}
+                  >
+                    {view.spending.map(group)}
+                  </Section>
+
+                  {view.savings.length === 0 ? null : (
+                    <Section
+                      open
+                      title={t('accounts.savings')}
+                      trailing={t('accounts.outsideSpendable')}
                     >
-                      {t('goals.setAside')}
-                    </Link>
-                    <Link
-                      className={formStyles.actionLink}
-                      href={goalTransferHref(
-                        selected.account.id,
-                        selected.account.parentAccountId ?? '',
-                        selected.account.name,
-                      )}
-                    >
-                      {t('goals.withdraw')}
-                    </Link>
-                  </div>
-                ) : null}
-
-                <div className={styles.cardRows}>
-                  <ListRow
-                    title={t('goals.parent')}
-                    trailing={<span className={styles.count}>{goalParent?.name ?? '—'}</span>}
-                  />
-                  <ListRow
-                    title={t('goals.deadline')}
-                    trailing={
-                      <span className={styles.count}>
-                        {selected.account.goalDeadline == null
-                          ? t('goals.deadlineNone')
-                          : formatLongDate(selected.account.goalDeadline, locale)}
-                      </span>
-                    }
-                  />
-                  <ListRow
-                    title={t('goals.createdOn')}
-                    trailing={
-                      <span className={styles.count}>
-                        {formatLongDate(selected.account.goalStartDate ?? today, locale)}
-                      </span>
-                    }
-                  />
-                </div>
-
-                <Section title={t('goals.movements')}>
-                  {recentTransactions.length === 0 ? (
-                    <EmptyState title={t('goals.noMovements')} />
-                  ) : (
-                    recentTransactions.map(recentRow)
+                      {view.savings.map(group)}
+                    </Section>
                   )}
-                </Section>
+                </>
+              )}
 
-                <div className={formStyles.actions}>
-                  <Link className={formStyles.actionLink} href={goalEditHref(selected.account.id)}>
-                    {t('common.edit')}
-                  </Link>
-                  <CloseGoal
-                    id={selected.account.id}
-                    updatedAt={selected.account.updatedAt}
-                    afterHref={PATH}
-                    expenseHref={
-                      goal.saved > 0
-                        ? goalExpenseHref(selected.account.id, goal.saved, selected.account.name)
-                        : null
-                    }
-                    strings={{
-                      action: t('goals.close'),
-                      title: goal.saved > 0 ? t('goals.closeTitle') : t('goals.close'),
-                      body:
-                        goal.saved > 0
-                          ? t('goals.closeBody', { amount: money(goal.saved) })
-                          : t('goals.closeEmpty'),
-                      confirm: t('goals.confirmClose'),
-                      recordExpense: t('goals.recordExpense'),
-                      returnTo: t('goals.returnTo', { name: goalParent?.name ?? '' }),
-                      cancel: t('common.cancel'),
-                      busy: t('common.loading'),
-                      errors: writeErrors,
-                    }}
-                  />
-                </div>
-              </>
-            );
-          })()}
-        </Panel>
-      )}
-    </div>
+              {archivedTotal === 0 ? (
+                <p className={styles.note}>{t('profile.archivedAccounts')}</p>
+              ) : (
+                <ListRow
+                  open
+                  href={`${PATH}?archived`}
+                  selectId="archived"
+                  title={t('profile.archivedAccounts')}
+                  trailing={<span className={styles.count}>{archivedTotal}</span>}
+                />
+              )}
+            </div>
+          </PanelSwitch>
+        </div>
+      </CloseGoalShared>
+    </ArchiveAccountShared>
   );
 }

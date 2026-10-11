@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,6 +12,7 @@ import {
   type StoredPasskey,
 } from '../../../../src/features/passkeys/list';
 import { passkeyProvider } from '../../../../src/features/passkeys/provider';
+import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { Button } from '../../../../src/ui/Button';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';

@@ -6,20 +6,17 @@ import { confirmationMatches } from '../../../../src/features/admin/confirmation
 import type { AdminErrorStrings } from '../../../../src/features/admin/errorStrings';
 import { Button } from '../../../../src/ui/Button';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import { TextField } from '../../../../src/ui/TextField';
 import styles from '../admin.module.css';
 import { deleteAccountAction } from './actions';
 
-interface Props {
-  id: string;
-  /** What must be typed (the address, or the display name for a synthetic one); compared, never shown as a hint. */
-  expected: string;
+/** What every account's «Elimina account» shares, given once (`DeleteAccountShared`). */
+interface DeleteAccountSharedValue {
+  /** Where the page goes once the account is gone: the list with no panel. */
   afterHref: string;
   strings: {
     action: string;
-    title: string;
-    body: string;
-    label: string;
     confirm: string;
     cancel: string;
     busy: string;
@@ -27,8 +24,22 @@ interface Props {
   };
 }
 
+const shared = sharedProps<DeleteAccountSharedValue>('DeleteAccount');
+
+/** Gives every `DeleteAccount` below it the props they share. */
+export const DeleteAccountShared = shared.Provider;
+
+interface Props {
+  id: string;
+  /** What must be typed (the address, or the display name for a synthetic one); compared, never shown as a hint. */
+  expected: string;
+  /** `admin.accounts.deleteTitle` with the name, the body with the count of rows, the field's label. */
+  text: { title: string; body: string; label: string };
+}
+
 /** «Elimina account» and its question: the confirm button waits until the typed text matches. */
-export function DeleteAccount({ id, expected, afterHref, strings }: Props) {
+export function DeleteAccount({ id, expected, text }: Props) {
+  const { afterHref, strings } = shared.useShared();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState('');
@@ -82,8 +93,8 @@ export function DeleteAccount({ id, expected, afterHref, strings }: Props) {
           if (pending) return;
           setOpen(next);
         }}
-        title={strings.title}
-        body={strings.body}
+        title={text.title}
+        body={text.body}
         error={error ?? undefined}
         confirmLabel={strings.confirm}
         cancelLabel={strings.cancel}
@@ -94,7 +105,7 @@ export function DeleteAccount({ id, expected, afterHref, strings }: Props) {
       >
         <form className={styles.confirmField} onSubmit={onSubmit} noValidate>
           <TextField
-            label={strings.label}
+            label={text.label}
             value={typed}
             autoComplete="off"
             autoCapitalize="off"

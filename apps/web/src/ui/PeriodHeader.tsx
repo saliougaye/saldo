@@ -1,7 +1,7 @@
 import type { LocalDate, PeriodDef, PeriodView } from '@saldo/core';
 import { type AppLocale, formatCycleRange, formatMonthLong } from '@saldo/i18n';
-import Link from 'next/link';
 import { periodSteps } from '../features/period/periodParams';
+import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
 import styles from './PeriodHeader.module.css';
 

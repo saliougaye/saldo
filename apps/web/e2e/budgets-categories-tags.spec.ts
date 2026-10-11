@@ -353,3 +353,135 @@ test('deleting a tag removes it from its transactions and leaves them in place',
 
   await member.context.close();
 });
+
+/** The requests that ask the server for a page: RSC, and not a prefetch. A close in place sends none. */
+function pageRequests(page: Page): string[] {
+  const urls: string[] = [];
+  page.on('request', (request) => {
+    const headers = request.headers();
+    if (headers.rsc === '1' && headers['next-router-prefetch'] !== '1') urls.push(request.url());
+  });
+  return urls;
+}
+
+// Regression: with `onlyChange` typed `S | null`, the close of `PanelSwitch` (state `null`) read as
+// «a navigation». ✕, Esc and «Annulla» then asked the server for the page and lost the focus.
+test('regression: a close in PanelSwitch is not a navigation, and the focus goes back to the row', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Marco',
+    email: 'marco-tag-close@e2e.test',
+    seed: true,
+  });
+  const { page } = member;
+
+  await page.goto('/profile/tags');
+  const row = listRow(page, 'Vacanze');
+  const href = await row.getAttribute('href');
+  if (href === null) throw new Error('the row has no link');
+  const sent = pageRequests(page);
+  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const closes: [string, () => Promise<void>][] = [
+    ['✕', () => panel.getByRole('link', { name: t('common.close') }).click()],
+    ['Esc', () => page.keyboard.press('Escape')],
+    ['Annulla', () => panel.getByRole('link', { name: t('common.cancel') }).click()],
+  ];
+  const closeAndCheck = async (name: string, close: () => Promise<void>) => {
+    await expect(panel, name).toBeVisible();
+    await close();
+    await expect(panel, name).toBeHidden();
+    await expect(page, name).toHaveURL(/\/profile\/tags$/);
+    await expect(row, name).toBeFocused();
+  };
+  // A load of the panel's URL first: the router then has no copy of the list's URL, so a close
+  // that navigates must ask the server. The focus goes to the selected row.
+  for (const [name, close] of closes) {
+    await page.goto(href);
+    await closeAndCheck(`${name} after a load`, close);
+  }
+  // Opened by a click: the focus goes back to the row that opened the panel.
+  for (const [name, close] of closes) {
+    await row.click();
+    await expect(page).toHaveURL(/\?tag=/);
+    await closeAndCheck(`${name} after a click`, close);
+  }
+  expect(sent).toEqual([]);
+
+  await member.context.close();
+});
+
+// Regression: the panel key was the `key` of `Panel`, so each click on another row mounted a new
+// panel, which played its entrance again (2026-10-07 spec: the panel stays put).
+test('regression: the panel stays mounted while the row changes', async ({ browser, t }) => {
+  const member = await createMember(browser, t, {
+    name: 'Nadia',
+    email: 'nadia-tag-switch@e2e.test',
+    seed: true,
+  });
+  const { page } = member;
+
+  await page.goto('/profile/tags');
+  const sent = pageRequests(page);
+  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const name = panel.getByLabel(t('tags.name'), { exact: true });
+  await listRow(page, 'Vacanze').click();
+  await expect(name).toHaveValue('Vacanze');
+  await panel.evaluate((element) => {
+    element.setAttribute('data-e2e-mark', 'first');
+  });
+
+  await listRow(page, 'Famiglia').click();
+  // The body is a new form, in the same panel.
+  await expect(name).toHaveValue('Famiglia');
+  await expect(panel).toHaveAttribute('data-e2e-mark', 'first');
+  await expect(listRow(page, 'Famiglia')).toHaveAttribute('aria-current', 'true');
+  expect(sent).toEqual([]);
+
+  await member.context.close();
+});
+
+// Regression: `PanelSwitch` with `slot` first rendered its panel through a portal, which renders
+// nothing on the server. A load of `?tag=ID` painted the list alone, then the panel slid in.
+test('regression: a ?tag=ID load renders the panel beside the list in the server HTML', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Ottavio',
+    email: 'ottavio-tag-load@e2e.test',
+    seed: true,
+  });
+  const { page } = member;
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.goto('/profile/tags');
+  const href = await listRow(page, 'Vacanze').getAttribute('href');
+  expect(href).toMatch(/\?tag=/);
+  if (href === null) throw new Error('the row has no link');
+
+  // At 1440px the panel takes the slot column, to the right of the list.
+  await page.goto(href);
+  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  await expect(panel.getByLabel(t('tags.name'), { exact: true })).toHaveValue('Vacanze');
+  const list = await page.locator('[data-panel-switch]').boundingBox();
+  const side = await panel.boundingBox();
+  if (list === null || side === null) throw new Error('the list or the panel has no box');
+  expect(side.x).toBeGreaterThanOrEqual(list.x + list.width);
+
+  // The server's HTML holds the panel and its form, before any script runs.
+  const noScript = await browser.newContext({
+    javaScriptEnabled: false,
+    storageState: await member.context.storageState(),
+    locale: 'it-IT',
+  });
+  const raw = await noScript.newPage();
+  await raw.goto(new URL(href, page.url()).toString());
+  const field = raw.locator(`aside[aria-label="${t('tags.editTag')}"] [data-field="name"] input`);
+  await expect(field).toHaveCount(1);
+  await expect(field).toHaveValue('Vacanze');
+  await noScript.close();
+
+  await member.context.close();
+});

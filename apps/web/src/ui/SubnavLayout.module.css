@@ -50,6 +50,14 @@
   min-width: 0;
 }
 
+/*
+ * A `PanelSwitch` page (`slot`): its list and its panel take the section's column and the slot's,
+ * so the server renders the panel in place of a portal.
+ */
+.section:has(> [data-panel-switch]) {
+  display: contents;
+}
+
 /* An empty slot takes no column and no gap. */
 .slot:empty {
   display: none;

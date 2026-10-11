@@ -5,30 +5,24 @@ import { useState, useTransition } from 'react';
 import type { AccountWriteError } from '../../../src/server/write/accounts';
 import { Button } from '../../../src/ui/Button';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
+import { useNavTransition } from '../../../src/ui/NavPending';
+import { sharedProps } from '../../../src/ui/sharedProps';
 import styles from './accountForms.module.css';
 import { closeGoalAction } from './actions';
 
-interface Props {
-  id: string;
-  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
-  updatedAt: string;
+/** What every goal's «Chiudi obiettivo» shares, given once (`CloseGoalShared`). */
+export interface CloseGoalSharedValue {
   /** Where the page goes once the goal is closed: `/accounts`. */
   afterHref: string;
-  /** «Registra la spesa»: `goalExpenseHref` for a funded goal; the dialog offers it only then. */
-  expenseHref: string | null;
   strings: {
-    /** The button in the goal panel, «Chiudi obiettivo». */
+    /** The button in the goal panel, «Chiudi obiettivo»; also the title of an empty goal's question. */
     action: string;
-    /** Funded: `goals.closeTitle`; empty: `goals.close`. */
-    title: string;
-    /** Funded: `goals.closeBody` with the balance; empty: `goals.closeEmpty`. */
-    body: string;
+    /** The title of a funded goal's question: `goals.closeTitle`. */
+    fundedTitle: string;
     /** Empty goal: `goals.confirmClose`. */
     confirm: string;
     /** Funded goal, first answer: `goals.recordExpense`. */
     recordExpense: string;
-    /** Funded goal, second answer: `goals.returnTo` with the parent's name. */
-    returnTo: string;
     cancel: string;
     busy: string;
     /** `web.accounts.error_<error>` for every error the action can return, and a throw. */
@@ -36,13 +30,32 @@ interface Props {
   };
 }
 
+const shared = sharedProps<CloseGoalSharedValue>('CloseGoal');
+
+/** Gives every `CloseGoal` below it the props they share. */
+export const CloseGoalShared = shared.Provider;
+
+interface Props {
+  id: string;
+  /** The row's version as the page loaded it: a phone's edit since then is a `conflict` (§17.4.2). */
+  updatedAt: string;
+  /** «Registra la spesa»: `goalExpenseHref` for a funded goal; the dialog offers it only then. */
+  expenseHref: string | null;
+  /** Funded: `goals.closeBody` with the balance; empty: `goals.closeEmpty`. */
+  body: string;
+  /** Funded goal, second answer: `goals.returnTo` with the parent's name. */
+  returnTo: string;
+}
+
 /**
  * §6.38: closing a goal. An empty one only confirms; one that holds money asks what happened to it:
  * «Registra la spesa» goes to the expense form (saving that closes the goal), «Riporta in {conto}»
  * closes it here and now, the money back in the parent.
  */
-export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Props) {
+export function CloseGoal({ id, updatedAt, expenseHref, body, returnTo }: Props) {
+  const { afterHref, strings } = shared.useShared();
   const router = useRouter();
+  const startNav = useNavTransition();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -71,7 +84,7 @@ export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Pr
   const recordExpense = () => {
     if (expenseHref === null || pending) return;
     setOpen(false);
-    router.push(expenseHref);
+    startNav(() => router.push(expenseHref));
   };
 
   return (
@@ -92,8 +105,8 @@ export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Pr
           if (pending) return;
           setOpen(next);
         }}
-        title={strings.title}
-        body={strings.body}
+        title={funded ? strings.fundedTitle : strings.action}
+        body={body}
         error={error ?? undefined}
         cancelLabel={strings.cancel}
         // Funded: the primary answer is the expense; the return is the second one. Empty: one answer.
@@ -104,7 +117,7 @@ export function CloseGoal({ id, updatedAt, afterHref, expenseHref, strings }: Pr
         secondary={
           funded ? (
             <Button variant="secondary" busy={pending} busyLabel={strings.busy} onClick={close}>
-              {strings.returnTo}
+              {returnTo}
             </Button>
           ) : undefined
         }

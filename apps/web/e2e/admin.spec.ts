@@ -16,6 +16,24 @@ function startsWith(text: string): RegExp {
   return new RegExp(`^${literal(text).source}`);
 }
 
+/**
+ * What the browser of `page` gets for `href`: the document, or the RSC payload that a click asks for.
+ * From the page, so that the request carries the browser's language as a real one does.
+ */
+async function fetchIn(
+  page: Page,
+  href: string,
+  rsc: boolean,
+): Promise<{ status: number; body: string }> {
+  return page.evaluate(
+    async (input) => {
+      const response = await fetch(input.href, { headers: input.rsc ? { RSC: '1' } : {} });
+      return { status: response.status, body: await response.text() };
+    },
+    { href, rsc },
+  );
+}
+
 /** An account's row in Admin → Account: its link names the name, the address and the role. */
 function accountRow(page: Page, name: string) {
   return page.getByRole('link', { name: new RegExp(name) });
@@ -165,6 +183,35 @@ test.describe('accounts', () => {
     await member.context.close();
     await admin.context.close();
   });
+
+  // SECURITY GUARD: the page renders the panel of every account in one response. A member who asks
+  // for it, as a page or as the RSC payload of a click, gets the not-found page and none of the facts.
+  test('SECURITY GUARD: a member who asks for an account panel gets 404 and none of its facts', async ({
+    browser,
+    t,
+  }) => {
+    const member = await createMember(browser, t, { name: 'Mia Curiosa', email: 'mia@e2e.test' });
+    const admin = await openAdmin(browser);
+    await admin.page.goto('/admin/accounts');
+    const href = (await accountRow(admin.page, ADMIN.name).getAttribute('href')) ?? '';
+    expect(href).toMatch(/\?u=/);
+    // The control: the same request from the admin carries what the member must not get.
+    const own = await fetchIn(admin.page, href, true);
+    expect(own.body).toContain(ADMIN.email);
+    expect(own.body).toContain(t('admin.accounts.lastSignIn'));
+    await admin.context.close();
+
+    for (const rsc of [false, true]) {
+      const { status, body } = await fetchIn(member.page, href, rsc);
+      // Next answers the RSC request of a `notFound()` with 200 and the not-found tree in the body.
+      if (rsc) expect(body).toContain('NEXT_HTTP_ERROR_FALLBACK;404');
+      else expect(status).toBe(404);
+      expect(body).not.toContain(ADMIN.email);
+      expect(body).not.toContain(t('admin.accounts.lastSignIn'));
+      expect(body).not.toContain(t('admin.accounts.dangerZone'));
+    }
+    await member.context.close();
+  });
 });
 
 test.describe('invites', () => {
@@ -274,6 +321,54 @@ test.describe('invites', () => {
     expect(length).toBeLessThan(200);
     await admin.context.close();
   });
+
+  // SECURITY GUARD: an invite code is a bearer secret. The page renders the panel of every invite
+  // in one response, so no response of the page may hold a code: not the list, not a panel, not
+  // the refresh after a mint.
+  test('SECURITY GUARD: no response of the invites page holds an invite code', async ({
+    browser,
+    t,
+  }) => {
+    const label = 'Codice Segreto';
+    const fromApi = await mintInvite('Invito Api');
+    const admin = await openAdmin(browser);
+    const { page } = admin;
+    await page.goto('/admin/invites');
+    await page
+      .getByRole('link', { name: t('admin.invites.new') })
+      .first()
+      .click();
+    const form = page.getByRole('complementary', { name: t('admin.invites.new') });
+    await form.getByLabel(t('admin.invites.label')).fill(label);
+    await form.getByRole('button', { name: t('admin.invites.create') }).click();
+    await expect(form.getByText(t('admin.invites.copyNow'))).toBeVisible();
+    const minted =
+      (await form
+        .locator('p', { hasText: /^[A-Z0-9-]{16,}$/ })
+        .first()
+        .textContent()) ?? '';
+    expect(minted).not.toBe('');
+
+    // ✕ closes in place, and the list behind it already has the new invite.
+    await form.getByRole('link', { name: t('common.close') }).click();
+    await expect(form).toHaveCount(0);
+    const row = page.getByRole('link', { name: new RegExp(label) });
+    await expect(row).toContainText(t('admin.invites.statusActive'));
+
+    const href = (await row.getAttribute('href')) ?? '';
+    for (const url of ['/admin/invites', href, '/admin/invites?new']) {
+      for (const rsc of [false, true]) {
+        const { body } = await fetchIn(page, url, rsc);
+        // The control: the response is the page, with the invite in it.
+        expect(body).toContain(label);
+        for (const code of [minted, fromApi]) {
+          expect(body).not.toContain(code);
+          expect(body).not.toContain(code.replaceAll('-', ''));
+        }
+      }
+    }
+    await admin.context.close();
+  });
 });
 
 test.describe('instance and settings', () => {
@@ -370,6 +465,55 @@ test.describe('instance and settings', () => {
       await choose(t('admin.settings.registration.invite'), true);
     }
     await expect(row()).toHaveText(before ?? '');
+    await admin.context.close();
+  });
+
+  // SECURITY GUARD: the page renders the SMTP panel on every load, open or not. The stored password
+  // must not reach any response of the page: the panel learns only that there is one.
+  test('SECURITY GUARD: no response of the settings page holds the SMTP password', async ({
+    browser,
+    t,
+  }) => {
+    const host = 'smtp.e2e.test';
+    const password = 'Pw-Segreta-e2e-4821';
+    const admin = await openAdmin(browser);
+    const { page } = admin;
+    const smtpRow = () =>
+      page.getByRole('link', { name: startsWith(t('admin.settings.smtp.title')) });
+    const panel = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
+    try {
+      await page.goto('/admin/settings');
+      await smtpRow().click();
+      await panel.getByLabel(t('admin.settings.smtp.host')).fill(host);
+      await panel.getByLabel(t('admin.settings.smtp.port')).fill('2525');
+      await panel.getByLabel(t('admin.settings.smtp.user')).fill('postino');
+      await panel.getByLabel(t('admin.settings.smtp.password'), { exact: true }).fill(password);
+      await panel.getByLabel(t('admin.settings.smtp.from')).fill('saldo@e2e.test');
+      await panel.getByRole('button', { name: t('common.save'), exact: true }).click();
+      await expect(panel.getByText(t('admin.settings.saved'))).toBeVisible();
+      await expect(panel.getByText(t('admin.settings.smtp.passwordSet'))).toBeVisible();
+
+      for (const url of ['/admin/settings', '/admin/settings?edit=smtp']) {
+        for (const rsc of [false, true]) {
+          const { body } = await fetchIn(page, url, rsc);
+          // The control: the response is the page, with the saved mail settings in it.
+          expect(body).toContain(host);
+          expect(body).not.toContain(password);
+        }
+      }
+    } finally {
+      await page.goto('/admin/settings?edit=smtp');
+      const remove = panel.getByRole('button', { name: t('admin.settings.smtp.remove') });
+      // Nothing to remove when the save itself failed: the error of the test is the one to read.
+      if ((await remove.count()) > 0) {
+        await remove.click();
+        await page
+          .getByRole('alertdialog')
+          .getByRole('button', { name: t('admin.settings.smtp.removeConfirm') })
+          .click();
+        await expect(smtpRow()).toContainText(t('admin.settings.smtp.notConfigured'));
+      }
+    }
     await admin.context.close();
   });
 

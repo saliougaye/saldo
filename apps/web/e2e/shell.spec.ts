@@ -23,6 +23,9 @@ test.describe('navigation', () => {
     // The panel does not admit that it exists.
     const response = await page.goto('/admin');
     expect(response?.status()).toBe(404);
+    // A section too, not only the index: the admin layout must refuse before anything streams.
+    const section = await page.goto('/admin/accounts');
+    expect(section?.status()).toBe(404);
     await member.context.close();
   });
 

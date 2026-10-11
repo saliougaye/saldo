@@ -1,35 +1,32 @@
-import { movableTargets, rollUpCategoryUsage, type UserData } from '@saldo/core';
+import { type Category, movableTargets } from '@saldo/core';
 
-export interface ArchiveCategoryView {
+export interface ArchiveTarget {
   id: string;
   name: string;
-  /** The category's version as loaded: archiving a category a phone changed since is a `conflict`. */
-  updatedAt: string;
-  /** The count the list shows for it, children folded in — the phone's sheet reads the same. */
-  uses: number;
-  /** Where the transactions can move (§5.11): live, same direction, not itself nor its children. */
-  targets: { id: string; name: string; icon: string; colorIndex: number }[];
+  icon: string;
+  colorIndex: number;
 }
 
-/** What the archive dialog asks about a live category; null for any other id. */
-export function archiveCategoryView(data: UserData, id: string): ArchiveCategoryView | null {
-  const category = data.categories.find((row) => row.id === id && row.archivedAt === null);
+/**
+ * Where the transactions of category `id` can move (§5.11): live, same direction, not itself nor
+ * its children. Null when the dialog offers no move: nothing uses the category, or no category can
+ * take its transactions (the only income category, say). The dialog then shows no «Sposta le
+ * transazioni in», rather than a select whose only option is «Nessuna». The archive dialog calls it
+ * on the page's categories (`sharedProps`).
+ */
+export function archiveMoveTargets(
+  categories: readonly Category[],
+  id: string,
+  uses: number,
+): ArchiveTarget[] | null {
+  if (uses === 0) return null;
+  const category = categories.find((row) => row.id === id);
   if (category === undefined) return null;
-  const direct = new Map<string, number>();
-  for (const row of data.transactions) {
-    if (row.deletedAt !== null || row.categoryId === null) continue;
-    direct.set(row.categoryId, (direct.get(row.categoryId) ?? 0) + 1);
-  }
-  return {
-    id: category.id,
-    name: category.name,
-    updatedAt: category.updatedAt,
-    uses: rollUpCategoryUsage(data.categories, direct).get(category.id) ?? 0,
-    targets: movableTargets(data.categories, category).map((row) => ({
-      id: row.id,
-      name: row.name,
-      icon: row.icon,
-      colorIndex: row.colorIndex,
-    })),
-  };
+  const targets = movableTargets(categories, category).map((row) => ({
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    colorIndex: row.colorIndex,
+  }));
+  return targets.length === 0 ? null : targets;
 }

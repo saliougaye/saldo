@@ -7,7 +7,7 @@ import { Alert } from '../../../../src/ui/Alert';
 import { useRovingFocus } from '../../../../src/ui/OptionList';
 import { rovingTabStop } from '../../../../src/ui/rovingRadios';
 import styles from './preferences.module.css';
-import { type SettingErrors, useSaveSetting } from './useSaveSetting';
+import { useSaveSetting } from './useSaveSetting';
 
 /** §5.2: 1–28, a day every month has, as four weeks of seven. */
 const DAYS = Array.from({ length: 28 }, (_, index) => index + 1);
@@ -25,15 +25,14 @@ interface Props {
     /** `profile.cycleDay`, with `{{day}}`: a key's name for a screen reader. */
     day: string;
   };
-  errors: SettingErrors;
 }
 
 /**
  * §6.8 «Inizio del ciclo», as the phone draws it: the cycle the chosen day produces — «27 ago –
  * 26 set» says what the whole app will show, the number alone says nothing — over the grid of days.
  */
-export function CyclePanel({ value, locale, today, strings, errors }: Props) {
-  const { shown, error, save } = useSaveSetting(value, errors);
+export function CyclePanel({ value, locale, today, strings }: Props) {
+  const { shown, error, save } = useSaveSetting(value);
   const roving = useRovingFocus(DAYS.length);
   const stop = rovingTabStop(DAYS.indexOf(shown), DAYS.length);
   const preview = periodContaining({ kind: 'cycle', startDay: shown }, today);

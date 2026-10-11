@@ -26,8 +26,6 @@ export interface CategoryFormView {
    */
   updatedAt: string | null;
   initial: CategoryFormValues;
-  /** The parents each direction offers (§4); both are handed over because a new category can switch. */
-  parents: Record<Category['direction'], ParentOption[]>;
   /** A category with children cannot get a parent, so its parent select is hidden. */
   hasChildren: boolean;
   minorDigits: MinorDigits;
@@ -55,14 +53,6 @@ export function categoryFormView(input: {
           (budget) => budget.categoryIds.length === 1 && budget.categoryIds[0] === editing.id,
         ) ?? null);
 
-  const options = (direction: Category['direction']): ParentOption[] =>
-    categoryParentCandidates(data.categories, direction, editing?.id ?? null).map((row) => ({
-      id: row.id,
-      name: row.name,
-      icon: row.icon,
-      colorIndex: row.colorIndex,
-    }));
-
   return {
     mode: input.mode,
     id: editing?.id ?? null,
@@ -71,9 +61,26 @@ export function categoryFormView(input: {
       editing === undefined
         ? emptyCategoryForm()
         : categoryFormFrom(editing, own?.amount ?? null, minorDigits),
-    parents: { expense: options('expense'), income: options('income') },
     hasChildren:
       editing !== undefined && data.categories.some((row) => row.parentId === editing.id),
     minorDigits,
   };
+}
+
+/**
+ * The parents a category can take in `direction` (§4): core's candidates, as options. The form
+ * calls it on the page's categories, which it gets once for every row (`sharedProps`), so a page
+ * with a form for each category does not send a list of parents for each of them.
+ */
+export function categoryParentOptions(
+  categories: readonly Category[],
+  direction: Category['direction'],
+  editingId: string | null,
+): ParentOption[] {
+  return categoryParentCandidates(categories, direction, editingId).map((row) => ({
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    colorIndex: row.colorIndex,
+  }));
 }

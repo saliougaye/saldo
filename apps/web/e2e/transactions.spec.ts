@@ -281,9 +281,12 @@ test.describe('own rows', () => {
     await expect(dialog).toContainText(t('transactions.deleteTitle', { name: 'Cena di prova' }));
     await dialog.getByRole('button', { name: t('common.delete') }).click();
     await expect(page).toHaveURL(new RegExp(`[?&]deleted=${id}`));
-    await expect(page.getByRole('status')).toContainText(
-      t('transactions.deleted', { name: 'Cena di prova' }),
-    );
+    // The shell has its own status element (the navigation bar's «Loading…»): find the toast by its text.
+    await expect(
+      page
+        .getByRole('status')
+        .filter({ hasText: t('transactions.deleted', { name: 'Cena di prova' }) }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Cena di prova' })).toHaveCount(0);
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));

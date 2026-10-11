@@ -2046,7 +2046,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   Dati.
   **Built in 0.3e-2b (2026-09-30): Categorie, Budget and Obiettivi.** The sub-navigation gains the three links after
   Preferenze and before Passkey; each section renders its form through `ProfilePanel`, which portals the panel into the
-  layout's `#profile-panel` slot. `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
+  layout's `#profile-panel` slot. The 2026-10-11 spec replaces this portal design for the pages that use `PanelSwitch`.
+  `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
   rolled up, up/down buttons to reorder within a sibling group (drag is the phone's), no delete; «Nuova categoria» and
   the edit form (`?new`, `?c={id}`) with name, direction (locked once the category has a parent or children), parent,
   appearance and «Budget mensile»; archiving asks with the usage count and an optional «Sposta le transazioni in»
@@ -2073,7 +2074,9 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   transactions stay). Names are unique case-insensitively among **live** tags — a merged or deleted tag's name is free
   again. The tag view (totals, split) is not on the web: «Vedi le transazioni» opens `/transactions?tag={id}`.
   **Dati** (`/profile/data`): three plain download links — the JSON backup, the CSV of every transaction and the CSV
-  of the current period — that work without JavaScript. The backup holds the attachments' rows, not their bytes.
+  of the current period — to route handlers. A download needs no script. Exception (2026-10-11): with JavaScript off,
+  the page shows only the skeleton of `profile/loading.tsx`, so the links do not show. The backup holds the
+  attachments' rows, not their bytes.
   **What stays on the phone:** the ZIP backup with the attachments' files, restore, CSV import, «Elimina tutti i
   dati», the tag view, and changing the period kind.
 - **Auth pages (decided 2026-09-27, mockup `2026-09-27-web-auth-variants.html`, variant «4 · Un passo alla volta»;
@@ -2104,7 +2107,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
   **Built in 0.3f-1 (2026-09-30): Account, Inviti and Istanza.** `/admin` redirects to `/admin/accounts`; the head is
   «Admin» over «{instance name} · {N} account», and the sub-navigation (Account, Inviti with the count of *active*
-  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). Every page and every Server Action starts with
+  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). The 2026-10-11 spec replaces this portal design
+  for the pages that use `PanelSwitch`. Every page and every Server Action starts with
   `requireWebAdmin()`: a member gets a 404, nobody signed in goes to `/login`; an admin who has not onboarded still
   gets in, in the default time zone. **Account** (`?u={id}`; an id that names nothing opens nothing): the facts (role,
   state and reason, email verified or not, created and the invite's label, last sign-in, passkeys, synced rows), and
@@ -2135,10 +2139,11 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   for a panel's selection). An **offset** was considered and not taken: «three periods before now» changes meaning at
   midnight and cannot be shared or bookmarked, while a date is the same period whenever it is opened, and
   `describePeriod` turns it straight back into a `PeriodView`. The consequence that matters for the markup is that
-  every chip, every ‹ › and every row that opens a panel is an `<a href>`: they work with no JavaScript, they can be
-  opened in a new tab, and the back button does what the user means. A URL that could not be reached by clicking
-  falls back to the period containing «today» rather than rendering — a hand-typed `?p=` must not be able to show a
-  page the interface does not offer.
+  every chip, every ‹ › and every row that opens a panel is an `<a href>`: they can be opened in a new tab, and the
+  back button does what the user means. Exception (2026-10-11): the app needs JavaScript. Sign-in uses a passkey only,
+  and with JavaScript off a page under a `loading.tsx` shows only its skeleton. A URL that could not be reached by
+  clicking falls back to the period containing «today» rather than rendering — a hand-typed `?p=` must not be able to
+  show a page the interface does not offer.
 
 - **Chart geometry is shared.** The calculations inside the phone's charts (axis scale, ticks, bar heights, the
   forecast band, arcs) move into renderer-agnostic pure functions that return coordinates. The phone draws them

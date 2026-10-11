@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { createContext, type MouseEvent, type ReactNode, useContext } from 'react';
+import { AppLink as Link } from './AppLink';
 
 /** What a page whose panel lives in client state gives the links inside it. */
 export interface PanelNav {
@@ -38,7 +38,7 @@ interface Props {
 /**
  * A link inside a page whose panel lives in client state (Transazioni). A plain click that only
  * changes the panel changes it in the frame of the click, and the URL follows; anything else is the
- * link it always was — outside such a page too, and with JavaScript off.
+ * link it always was — outside such a page too.
  */
 export function PanelLink({ href, className, selectedClassName, selectId, children }: Props) {
   const nav = usePanelNav();
@@ -51,6 +51,9 @@ export function PanelLink({ href, className, selectedClassName, selectId, childr
   return (
     <Link
       href={href}
+      // In a page whose panel lives in client state, the controller opens this link in place: a
+      // prefetch only loads a page that nobody asks for, again after each `router.refresh`.
+      prefetch={nav === null ? undefined : false}
       className={classes}
       aria-current={selected ? 'true' : undefined}
       onClick={onClick}

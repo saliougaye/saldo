@@ -6,20 +6,18 @@ import type { AdminErrorStrings } from '../../../../src/features/admin/errorStri
 import { Alert } from '../../../../src/ui/Alert';
 import { Button } from '../../../../src/ui/Button';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
+import { sharedProps } from '../../../../src/ui/sharedProps';
 import styles from '../admin.module.css';
 import { promoteAccountAction, restoreAccountAction, revokeAccountAction } from './actions';
 
-interface Props {
-  id: string;
-  can: { promote: boolean; revoke: boolean; restore: boolean };
+/** What every account's actions share, given once (`AccountActionsShared`). */
+interface AccountActionsSharedValue {
   strings: {
     promote: string;
     revoke: string;
     restore: string;
-    promoteTitle: string;
     promoteNote: string;
     promoteConfirm: string;
-    revokeTitle: string;
     revokeNote: string;
     revokeConfirm: string;
     cancel: string;
@@ -28,10 +26,23 @@ interface Props {
   };
 }
 
+const shared = sharedProps<AccountActionsSharedValue>('AccountActions');
+
+/** Gives every `AccountActions` below it the props they share. */
+export const AccountActionsShared = shared.Provider;
+
+interface Props {
+  id: string;
+  can: { promote: boolean; revoke: boolean; restore: boolean };
+  /** `admin.accounts.promoteTitle` and `admin.accounts.revokeTitle`, with the account's name. */
+  titles: { promote: string; revoke: string };
+}
+
 /** «Rendi admin» and «Revoca accesso» (both ask first) and «Ripristina accesso» (which does not).
  * Promotion cannot be undone from the panel or the CLI, hence the question.
  */
-export function AccountActions({ id, can, strings }: Props) {
+export function AccountActions({ id, can, titles }: Props) {
+  const { strings } = shared.useShared();
   const router = useRouter();
   const [open, setOpen] = useState<'promote' | 'revoke' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +122,7 @@ export function AccountActions({ id, can, strings }: Props) {
           if (pending) return;
           setOpen(next ? 'promote' : null);
         }}
-        title={strings.promoteTitle}
+        title={titles.promote}
         body={strings.promoteNote}
         error={error ?? undefined}
         confirmLabel={strings.promoteConfirm}
@@ -126,7 +137,7 @@ export function AccountActions({ id, can, strings }: Props) {
           if (pending) return;
           setOpen(next ? 'revoke' : null);
         }}
-        title={strings.revokeTitle}
+        title={titles.revoke}
         body={strings.revokeNote}
         error={error ?? undefined}
         confirmLabel={strings.revokeConfirm}

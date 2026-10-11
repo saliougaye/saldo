@@ -1,6 +1,6 @@
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import type { NavItem } from '../features/shell/nav';
+import { AppLink as Link } from './AppLink';
 import { Avatar } from './Avatar';
 import { Brand } from './Brand';
 import { Icon } from './Icon';

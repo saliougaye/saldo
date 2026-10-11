@@ -91,16 +91,6 @@ export function settingsRows(input: SettingsInput): SettingsRowView[] {
   ];
 }
 
-type Param = string | string[] | undefined;
-
-const PANELS: readonly SettingsPanelId[] = ['name', 'registration', 'smtp'];
-
-/** Which panel `?edit=` opens; anything else opens nothing. */
-export function settingsPanel(edit: Param): SettingsPanelId | null {
-  const raw = Array.isArray(edit) ? edit[0] : edit;
-  return PANELS.find((id) => id === raw) ?? null;
-}
-
 export interface RegistrationChoice {
   value: RegistrationMode;
   labelKey: string;

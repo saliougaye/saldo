@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  addDays,
-  type CurrencyCode,
-  type GoalFormValues,
-  type GoalMissing,
-  goalStepMissing,
-} from '@saldo/core';
-import type { AppLocale } from '@saldo/i18n/format';
+import { addDays, type GoalFormValues, type GoalMissing, goalStepMissing } from '@saldo/core';
 import { makeTranslator } from '@saldo/i18n/translate';
 import { categoryIconGroups, type IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
@@ -19,25 +12,35 @@ import {
   useState,
   useTransition,
 } from 'react';
-import type { GoalFormView } from '../../../src/features/accounts/formView';
+import type { GoalFormView, GoalParentOption } from '../../../src/features/accounts/formView';
 import type { AccountMessages } from '../../../src/i18n/accountMessages';
 import { Alert } from '../../../src/ui/Alert';
 import { AmountField } from '../../../src/ui/AmountField';
 import { AppearancePicker } from '../../../src/ui/AppearancePicker';
 import { FormFoot } from '../../../src/ui/FormFoot';
 import { Select, type SelectOption } from '../../../src/ui/Select';
+import { sharedProps } from '../../../src/ui/sharedProps';
 import { TextField } from '../../../src/ui/TextField';
 import styles from './accountForms.module.css';
 import { saveGoalAction } from './actions';
 
-interface Props {
-  view: GoalFormView;
-  locale: AppLocale;
-  currency: CurrencyCode;
+/** What every goal form of the page shares, given once (`GoalFormProvider`). */
+export interface GoalFormSharedValue {
+  /** Where a new goal can sit. */
+  parents: GoalParentOption[];
   decimalSeparator: string;
   symbol: string;
   symbolPosition: 'prefix' | 'suffix';
   messages: AccountMessages;
+}
+
+const shared = sharedProps<GoalFormSharedValue>('GoalForm');
+
+/** Gives every `GoalForm` below it the props they share. */
+export const GoalFormProvider = shared.Provider;
+
+interface Props {
+  view: GoalFormView;
   /** An edit shows the parent's name and never changes it (§5.14). */
   parentName: string | null;
   closeHref: string;
@@ -65,16 +68,8 @@ const GOAL_ICONS = categoryIconGroups.flatMap((group) => [...group.icons]);
  * «Nuovo obiettivo» and «Modifica obiettivo» (§6.37): the phone's four steps as one panel. The
  * checks are `goalStepMissing`'s (all four for a new goal, name and target for an edit).
  */
-export function GoalForm({
-  view,
-  decimalSeparator,
-  symbol,
-  symbolPosition,
-  messages,
-  parentName,
-  closeHref,
-  afterSave,
-}: Props) {
+export function GoalForm({ view, parentName, closeHref, afterSave }: Props) {
+  const { parents, decimalSeparator, symbol, symbolPosition, messages } = shared.useShared();
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -157,7 +152,7 @@ export function GoalForm({
           `web.accounts.error_${KNOWN_ERRORS.includes(current.error) ? current.error : 'unexpected'}`,
         );
 
-  const parentOptions: SelectOption[] = view.parents.map((parent) => ({
+  const parentOptions: SelectOption[] = parents.map((parent) => ({
     value: parent.id,
     label: parent.name,
     icon: parent.icon as IconName,

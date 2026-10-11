@@ -6,8 +6,8 @@ import {
   cashflowChart,
   cashflowColumns,
 } from '@saldo/ui';
-import Link from 'next/link';
 import type { NavigatorColumn } from '../../features/stats/navigatorView';
+import { AppLink as Link } from '../AppLink';
 import styles from './CashflowChart.module.css';
 
 const {

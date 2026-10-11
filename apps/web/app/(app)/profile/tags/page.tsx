@@ -1,21 +1,24 @@
 import { catalogs } from '@saldo/i18n';
 import { plural } from '@saldo/i18n/translate';
-import Link from 'next/link';
 import { tagsView } from '../../../../src/features/tags/tagsView';
 import { tagMessages } from '../../../../src/i18n/tagMessages';
 import { readPage } from '../../../../src/server/page/context';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { ListRow } from '../../../../src/ui/ListRow';
+import { PanelLink } from '../../../../src/ui/PanelNav';
+import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
-import { ProfilePanel } from '../ProfilePanel';
-import { TagForm } from './TagForm';
+import { TagForm, TagFormShared, type TagFormSharedValue } from './TagForm';
 import styles from './tags.module.css';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PATH = '/profile/tags';
+
+/** `?new` opens «Nuovo tag», `?tag={id}` one tag; `?new` wins. An id that is not a live tag opens nothing. */
+const PANEL_PARAMS = { flags: ['new'], values: ['tag'] } as const;
 
 /**
  * Profilo → Tag (§5.10, §17.1.7): every tag with how many transactions carry it, most used first,
@@ -28,70 +31,82 @@ export default async function ProfileTagsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const page = await readPage(searchParams);
-  const { t, locale, params } = page;
+  const { t, locale } = page;
   const rows = tagsView(page.data);
 
-  // `?new` wins over `?tag=`; an id that is not a live tag opens nothing.
-  const creating = params.new !== undefined;
-  const editing = creating ? undefined : rows.find((row) => row.id === params.tag);
-  const open = creating || editing !== undefined;
+  // What every form shares goes once to the provider; a body gets only what is its own.
+  const shared: TagFormSharedValue = {
+    tags: rows.map((row) => ({ id: row.id, name: row.name })),
+    locale,
+    messages: tagMessages(catalogs[locale]),
+    closeHref: PATH,
+    afterSave: PATH,
+  };
+  // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`). A save,
+  // a merge and a delete stay navigations to `PATH`, so the list shows what the server holds.
+  const panels: Record<string, PanelSpec> = {
+    new: {
+      title: t('tags.newTag'),
+      sheet: true,
+      body: <TagForm tag={null} transactionsHref={null} />,
+    },
+    ...Object.fromEntries(
+      rows.map((row): [string, PanelSpec] => [
+        `tag:${row.id}`,
+        {
+          title: t('tags.editTag'),
+          sheet: true,
+          body: (
+            <TagForm
+              tag={row}
+              transactionsHref={`/transactions?tag=${encodeURIComponent(row.id)}`}
+            />
+          ),
+        },
+      ]),
+    ),
+  };
 
   return (
-    <>
-      <Section
-        open
-        title={t('tags.title')}
-        trailing={
-          <Link className={styles.newTag} href={`${PATH}?new`}>
-            <Icon name="plus" size={16} />
-            {t('tags.newTag')}
-          </Link>
-        }
+    <TagFormShared value={shared}>
+      <PanelSwitch
+        baseHref={PATH}
+        params={PANEL_PARAMS}
+        panels={panels}
+        closeLabel={t('common.close')}
+        slot
       >
-        <p className={styles.note}>{t('tags.footnote')}</p>
-        {rows.length === 0 ? (
-          <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
-        ) : (
-          <div>
-            {rows.map((row) => (
-              <ListRow
-                key={row.id}
-                href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
-                selected={editing?.id === row.id}
-                icon="tag"
-                title={row.name}
-                trailing={
-                  <span className={styles.uses}>{plural(t, locale, 'tags.uses', row.uses)}</span>
-                }
-              />
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {open ? (
-        <ProfilePanel
-          key="form"
-          sheet
-          title={t(creating ? 'tags.newTag' : 'tags.editTag')}
-          closeHref={PATH}
-          closeLabel={t('common.close')}
+        <Section
+          open
+          title={t('tags.title')}
+          trailing={
+            <PanelLink className={styles.newTag} href={`${PATH}?new`}>
+              <Icon name="plus" size={16} />
+              {t('tags.newTag')}
+            </PanelLink>
+          }
         >
-          <TagForm
-            // A switch between «Nuovo» and «Modifica», or between two tags, is a new form.
-            key={editing?.id ?? 'new'}
-            tag={editing ?? null}
-            tags={rows.map((row) => ({ id: row.id, name: row.name }))}
-            locale={locale}
-            messages={tagMessages(catalogs[locale])}
-            closeHref={PATH}
-            afterSave={PATH}
-            transactionsHref={
-              editing === undefined ? null : `/transactions?tag=${encodeURIComponent(editing.id)}`
-            }
-          />
-        </ProfilePanel>
-      ) : null}
-    </>
+          <p className={styles.note}>{t('tags.footnote')}</p>
+          {rows.length === 0 ? (
+            <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
+          ) : (
+            <div>
+              {rows.map((row) => (
+                <ListRow
+                  key={row.id}
+                  href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
+                  selectId={`tag:${row.id}`}
+                  icon="tag"
+                  title={row.name}
+                  trailing={
+                    <span className={styles.uses}>{plural(t, locale, 'tags.uses', row.uses)}</span>
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </Section>
+      </PanelSwitch>
+    </TagFormShared>
   );
 }

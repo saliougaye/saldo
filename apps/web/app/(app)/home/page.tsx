@@ -17,13 +17,13 @@ import {
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import { NEW_GOAL_HREF } from '../../../src/features/accounts/goalLinks';
 import { budgetRowFor, ROW_RING } from '../../../src/features/budgets/budgetRow';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
+import { AppLink as Link } from '../../../src/ui/AppLink';
 import { Columns } from '../../../src/ui/Columns';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';

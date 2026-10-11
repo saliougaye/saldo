@@ -1,9 +1,9 @@
 'use client';
 
 import type { IconName } from '@saldo/ui';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isCurrent } from '../features/shell/nav';
+import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
 import styles from './NavLink.module.css';
 

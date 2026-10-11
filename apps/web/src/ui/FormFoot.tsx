@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Button } from './Button';
 import styles from './FormFoot.module.css';
+import { PanelLink } from './PanelNav';
 
 interface Props {
   hint: string;
@@ -29,9 +29,10 @@ export function FormFoot({
     <div className={styles.foot}>
       {leading === undefined ? null : <div className={styles.leading}>{leading}</div>}
       <span className={styles.hint}>{hint}</span>
-      <Link className={styles.cancel} href={cancelHref}>
+      {/* In a panel that lives in client state, «Annulla» closes it in place; elsewhere it is a link. */}
+      <PanelLink className={styles.cancel} href={cancelHref}>
         {cancelLabel}
-      </Link>
+      </PanelLink>
       <div>
         <Button type="submit" busy={pending} busyLabel={busyLabel}>
           {submitLabel}

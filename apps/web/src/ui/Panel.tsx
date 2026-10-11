@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type MouseEvent,
@@ -11,8 +10,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
 import { isEditable } from './isEditable';
+import { useNavTransition } from './NavPending';
 import styles from './Panel.module.css';
 import { isPlainClick } from './PanelNav';
 
@@ -58,9 +59,9 @@ const EXIT_MS = 150;
  * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
- * navigation and the ✕ is a plain link — with JavaScript off the panel still opens, still reloads
- * and still closes; only the key does nothing. A page can keep the panel in client state instead
- * (`onClose`): the URL then follows the panel, and nothing waits for the server.
+ * navigation and the ✕ is a plain link: a reload keeps the panel open, and a modified click opens
+ * the list in a new tab. A page can keep the panel in client state instead (`onClose`): the URL then
+ * follows the panel, and nothing waits for the server.
  */
 export function Panel({
   title,
@@ -74,6 +75,7 @@ export function Panel({
   children,
 }: Props) {
   const router = useRouter();
+  const startNav = useNavTransition();
   const heading = useRef<HTMLHeadingElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (on Conti,
@@ -103,13 +105,13 @@ export function Panel({
       clearTimeout(timer.current);
       // The keyboard closes on the next frame: no exit (spec §06).
       if (from === 'key') {
-        router.push(closeHref);
+        startNav(() => router.push(closeHref));
         return;
       }
       setClosingFor(closeHref);
-      timer.current = setTimeout(() => router.push(closeHref), EXIT_MS);
+      timer.current = setTimeout(() => startNav(() => router.push(closeHref)), EXIT_MS);
     },
-    [router, closeHref, closingFor, onClose, closingProp],
+    [router, startNav, closeHref, closingFor, onClose, closingProp],
   );
 
   // Unmounted, or hidden in `<Activity>`: a panel that shows again starts open.

@@ -2,7 +2,6 @@ import { budgetSchema, categorySchema, tagSchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { accountFormView, goalFormView } from './accounts/formView';
 import { budgetFormView } from './budgets/formView';
-import { archiveCategoryView } from './categories/archiveView';
 import { categoryFormView } from './categories/formView';
 import { tagsView } from './tags/tagsView';
 import { ACCOUNT, account, CATEGORY, CATEGORY_2, dataWith, TAG, tx } from './test/fixtures';
@@ -79,6 +78,7 @@ describe('the web hands each edit the version it loaded (§17.4.2 «As built (0.
     expect(budgetFormView({ ...base, mode: 'new', id: null })?.updatedAt).toBeNull();
   });
 
+  // The archive dialog sends the form's version: the page gives it `updatedAt` of the form view.
   it('categories: the form and the archive dialog', () => {
     expect(
       categoryFormView({ data, currency: 'EUR', mode: 'edit', id: CATEGORY.id })?.updatedAt,
@@ -86,7 +86,6 @@ describe('the web hands each edit the version it loaded (§17.4.2 «As built (0.
     expect(
       categoryFormView({ data, currency: 'EUR', mode: 'new', id: null })?.updatedAt,
     ).toBeNull();
-    expect(archiveCategoryView(data, CATEGORY.id)?.updatedAt).toBe(STAMP);
   });
 
   it('tags', () => {

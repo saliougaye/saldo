@@ -69,7 +69,8 @@ export function narrowParams(
 }
 
 export interface PageContext extends PageState, WebI18n {
-  user: { id: string; displayName: string; email: string };
+  /** `role` was read with the session: good for a render, not for a Server Action (`isAdmin`). */
+  user: { id: string; displayName: string; email: string; role: string | null };
   data: UserData;
   /** The query narrowed once, for the parameters a page reads itself (`?t=`, `?q=`, `?a=`…). */
   params: Record<string, string | undefined>;
@@ -81,20 +82,21 @@ export interface PageContext extends PageState, WebI18n {
  * that awaited it a second time could narrow it differently. `loadUserData` is shared with the layout.
  *
  * An account with no `settings` row has never onboarded (§17.1.2): every page sends it to
- * `/onboarding` before computing anything. `redirect` throws, so nothing after it runs.
+ * `/onboarding` before it builds the page state. `redirect` throws, so nothing after it runs.
  */
 export async function readPage(
   searchParams: Promise<Record<string, string | string[] | undefined>>,
 ): Promise<PageContext> {
-  const user = await requireWebUser();
-  const data = await loadUserData(user.id);
+  // Start together what does not depend on each other. The query does not depend on the user, and
+  // `userI18n` awaits the same `cache()`d `loadUserData`, so it adds no query.
+  const [user, rawParams] = await Promise.all([requireWebUser(), searchParams]);
+  const [data, i18n] = await Promise.all([loadUserData(user.id), userI18n(user.id)]);
   if (data.settings === null) redirect('/onboarding');
-  const i18n = await userI18n(user.id);
-  const params = narrowParams(await searchParams);
+  const params = narrowParams(rawParams);
   return {
     ...pageState({ data, now: new Date(), fallbackTimeZone: env().defaultTimeZone, params }),
     ...i18n,
-    user: { id: user.id, displayName: user.displayName, email: user.email },
+    user: { id: user.id, displayName: user.displayName, email: user.email, role: user.role },
     data,
     params,
   };
