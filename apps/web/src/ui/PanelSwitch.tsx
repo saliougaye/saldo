@@ -1,0 +1,104 @@
+'use client';
+
+import { type ReactNode, useCallback, useMemo } from 'react';
+import { type CloseFrom, Panel } from './Panel';
+import { type PanelNav, PanelNavContext } from './PanelNav';
+import { type PanelParams, panelHrefFor, panelKeyFromSearch, panelOnlyChange } from './panelUrl';
+import { SlotPortal } from './SlotPanel';
+import { usePanelController } from './usePanelController';
+
+export interface PanelSpec {
+  title: string;
+  body: ReactNode;
+  /** Below the breakpoint, a bottom sheet (a form) and not the whole screen. */
+  sheet?: boolean;
+  /** The body carries its own heading. */
+  bare?: boolean;
+  /** Where ✕ and Esc go from this panel, as a key. Default: no panel. */
+  closeTo?: string | null;
+}
+
+interface Props {
+  /** The page's URL with no panel: its own path and filters. */
+  baseHref: string;
+  params: PanelParams;
+  /** Every panel the page can show, by key. A key with no entry opens nothing, and its link navigates. */
+  panels: Record<string, PanelSpec>;
+  closeLabel: string;
+  /** The page's list: the rows' links are `PanelLink`s, which read the controller. */
+  children?: ReactNode;
+  /** `slot`: render into the `#profile-panel` slot of a `SubnavLayout`. Otherwise render in place. */
+  slot?: boolean;
+}
+
+/** The value part of a key (`tag:ID` → `ID`): what a row's `PanelLink` gives as `selectId`. */
+function selectedIdOf(key: string | null): string | null {
+  if (key === null) return null;
+  const split = key.indexOf(':');
+  return split === -1 ? null : key.slice(split + 1);
+}
+
+/**
+ * One panel at a time, chosen by the query, changed in the frame of the click
+ * (`usePanelController`). The server renders the body of every panel; a click only chooses the one
+ * to show. A key that is in the URL on the first render opens with the page. Rows must be
+ * `PanelLink`s with a `selectId` equal to the key's value.
+ */
+export function PanelSwitch({
+  baseHref,
+  params,
+  panels,
+  closeLabel,
+  children,
+  slot = false,
+}: Props) {
+  const known = (key: string | null): string | null =>
+    key !== null && panels[key] !== undefined ? key : null;
+  const { view, go, shown } = usePanelController<string | null>({
+    parse: (query) => known(panelKeyFromSearch(query, params)),
+    same: (a, b) => a === b,
+    isNone: (key) => key === null,
+    none: null,
+    onlyChange: (current, href) => {
+      const next = panelOnlyChange(current, href, params);
+      return next === null || (next.key !== null && known(next.key) === null) ? null : next.key;
+    },
+  });
+
+  const key = view.panel;
+  const spec = key === null ? undefined : panels[key];
+  const selectedId = selectedIdOf(shown);
+  const nav = useMemo<PanelNav>(() => ({ selectedId, go }), [selectedId, go]);
+  const closeHref = panelHrefFor(baseHref, spec?.closeTo ?? null, params);
+  // Stable across renders: `Panel` subscribes Esc through it. Esc closes with no motion; the ✕
+  // and the scrim play the exit.
+  const onClose = useCallback(
+    (from: CloseFrom) => go(closeHref, { instant: from === 'key' }),
+    [go, closeHref],
+  );
+
+  // The key on `Panel`: a switch from one key to another is a new panel, and a new form.
+  const panel =
+    key === null || spec === undefined ? null : (
+      <Panel
+        key={key}
+        title={spec.title}
+        sheet={spec.sheet}
+        bare={spec.bare}
+        closeHref={closeHref}
+        closeLabel={closeLabel}
+        onClose={onClose}
+        closing={view.closing}
+        instant={view.instant}
+      >
+        {spec.body}
+      </Panel>
+    );
+
+  return (
+    <PanelNavContext value={nav}>
+      {children}
+      {slot ? <SlotPortal>{panel}</SlotPortal> : panel}
+    </PanelNavContext>
+  );
+}

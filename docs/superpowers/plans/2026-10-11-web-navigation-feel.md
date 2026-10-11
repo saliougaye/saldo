@@ -923,7 +923,7 @@ git commit -m "refactor(web): the in-place panel state machine is a hook, not pa
 
 `PanelSwitch` is the shared client component. A page gives it the bodies of all its panels, which the server rendered.
 
-- [ ] **Step 1: Write `PanelSwitch.tsx`**
+- [x] **Step 1: Write `PanelSwitch.tsx`**
 
 ```tsx
 'use client';
@@ -1017,13 +1017,22 @@ export function PanelSwitch({ baseHref, params, panels, closeLabel, children, sl
 
 After Task 9, `usePanelController` calls `usePathname` and `useSearchParams` itself, because `follow` needs them. Thus delete the two `void` lines and the unused `pathname` and `search` reads. The sketch shows them only to show the dependency. Do not keep unused variables (Biome `noUnusedVariables`).
 
-- [ ] **Step 2: Split `SlotPanel` so that other components can use the portal**
+On 2026-10-11 the code differs from the sketch in these points. The code in `apps/web/src/ui/PanelSwitch.tsx` is the reference.
+
+- `parse` and `onlyChange` read a key with no entry in `panels` as no panel. Thus a URL with an unknown id opens nothing, and the controller does not keep a panel that does not show.
+- `selectedId` comes from `shown`, so no row is selected while the exit plays, as on Transazioni.
+- The `PanelNav` value is in `useMemo`, and `onClose` is in `useCallback`. `Panel` subscribes Esc through `onClose`, so it must keep its identity.
+- The `Panel` gets `key={key}` only when a panel shows. No `'none'` key is necessary.
+
+- [x] **Step 2: Split `SlotPanel` so that other components can use the portal**
 
 In `SlotPanel.tsx`, export a `SlotPortal({ children })` that does the `useState`/`useEffect`/`createPortal` part. Make `SlotPanel` render `<SlotPortal><Panel {...props} /></SlotPortal>`. The behaviour does not change for the sections that still use `ProfilePanel`.
 
-- [ ] **Step 3: Run the gates and commit**
+- [x] **Step 3: Run the gates and commit**
 
 Run the gates. No page uses `PanelSwitch` yet, so only the types and the lint check it.
+
+On 2026-10-11 the e2e specs `profile` and `budgets-categories-tags` passed after the split of `SlotPanel` (15 passed).
 
 ```bash
 git add -A apps/web
