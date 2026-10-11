@@ -8,14 +8,12 @@ shared finances, AI, web app, going public, releases — live in [`ROADMAP.md`](
 
 Something that works wrong today.
 
-### Web app: a UI pass — navigation feels slow, motion is missing
+### Web app: a UI pass — navigation feels slow
 
 Reported 2026-10-04 after using the web app on a real instance. Moving between pages feels slow, and the suspect is
 how `next/link` is used: every page is a dynamic server render, so a click waits for the server with nothing on
 screen to say so. Prefetch, `loading.tsx` boundaries, and keeping the shell mounted while the panel changes are the
-first things to check, measured before and after. The animations the phone has (sheets, swaps, list changes, the
-design's transitions) are mostly absent on the web too. Needs a full check of the web UI against the design and the
-phone, then a plan for both.
+first things to check, measured before and after.
 
 Picked up in part on 2026-10-07 (`docs/superpowers/plans/2026-10-07-web-panel-feel.md`): on Transazioni,
 «Nuova transazione» and the detail of a row open and close in the frame of the click, and the list makes room
@@ -24,11 +22,10 @@ tab shows a skeleton and a navigation bar while it loads, a page reads the sessi
 Transazioni, Conti, Profilo and Admin open in place. The time zone list of Preferenze opens in place too
 (`docs/superpowers/plans/2026-10-11-web-timezone-in-place.md`). Still open:
 
-- the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
 - the edit form of a transaction and of an account (`?t=ID&edit`, `?a=ID&edit`) stays a navigation by choice. The
   balances it needs are already on the page or can be derived with pure `@saldo/core` functions. Measured on
   2026-10-11: the form shows after about 0.6 to 0.7 s at production latency, with the navigation bar visible after
-  0.2 s. Editing is a rare action. Open it again only if editing still feels slow after the region change. Then
+  0.2 s. Editing is a rare action. Open it again only if editing still feels slow. Then
   split the form view into a shared part and a small part for each row, and open it with `go()`. Do not prefetch the
   edit link on hover: on Conti it left the main area blank;
 - `actionApplied()` waits one tick so that Next applies the answer of a Server Action before the form navigates.
@@ -42,7 +39,6 @@ Transazioni, Conti, Profilo and Admin open in place. The time zone list of Prefe
   layout with the counts. `DeleteAccount`, `AccountActions`, `RevokeInvite`, `McpSwitch`, `SmtpPanel` and
   `useSaveSetting` (Preferences) still call `router.refresh()`. The other forms use `refreshAfterWrite` and
   `actionApplied` (fixed on 2026-10-11, see the note at the end of the 2026-10-11 plan);
-- the motion the phone has that the web lacks;
 - two known costs of the panels in place. Do not fix them now. Conti runs `accountDetail` once for each listed
   account and goal: the work is O(accounts × transactions) in each request. If a user has many accounts, compute
   `accountBalances` once. Admin → Account counts `sync_rows` for every user on each load. This is fine at household scale.
