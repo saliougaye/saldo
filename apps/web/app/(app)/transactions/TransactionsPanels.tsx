@@ -1,15 +1,12 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Activity,
   Fragment,
   type ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import {
@@ -23,10 +20,8 @@ import { ListKeys } from '../../../src/ui/ListKeys';
 import { NEW_TRANSACTION_EVENT, wantsInstant } from '../../../src/ui/NewTransactionLink';
 import { type CloseFrom, Panel } from '../../../src/ui/Panel';
 import { type PanelNav, PanelNavContext } from '../../../src/ui/PanelNav';
+import { usePanelController } from '../../../src/ui/usePanelController';
 import styles from './transactions.module.css';
-
-/** `Panel`'s own exit: the panel leaves the screen once it has played. */
-const EXIT_MS = 150;
 
 const NONE: PanelState = { kind: 'none' };
 
@@ -60,193 +55,36 @@ interface Props {
   upcomingDisclosureId: string;
 }
 
-interface View {
-  panel: PanelState;
-  /** The exit is playing: the panel is still in the DOM, and the list already takes its room back. */
-  closing: boolean;
-  /** Opened or closed from the keyboard: no motion. */
-  instant: boolean;
+/** `next` takes the place of `previous`: a new form that leaves is spent, and the next one is a new draft. */
+function spendsDraft(previous: PanelState, next: PanelState): boolean {
+  return previous.kind === 'new' && next.kind !== 'new';
+}
+
+/**
+ * The trailing panel of Transazioni (§17.1.7), in client state (`usePanelController`). The server
+ * renders the detail of every row and the new form, so a click only chooses the one to show.
+ */
+export function TransactionsPanels(props: Props) {
+  const { baseHref, details, edit, newForm } = props;
   /**
    * The new form's key. It changes when the form leaves the screen, so the next opening is a new
    * draft, which React renders hidden in the background meanwhile.
    */
-  draft: number;
-}
-
-/** The query of `href` as `useSearchParams().toString()` writes it. */
-function searchOf(href: string): string {
-  return new URL(href, 'http://panel.invalid').searchParams.toString();
-}
-
-/** The query of the address bar, written the same way. */
-function locationQuery(): string {
-  return new URLSearchParams(window.location.search).toString();
-}
-
-/** The new form's key once `to` takes the place of the current panel: a form that leaves is spent. */
-function draftAfter(current: View, to: PanelState): number {
-  return current.panel.kind === 'new' && to.kind !== 'new' ? current.draft + 1 : current.draft;
-}
-
-/** What the person sees: a panel that plays its exit is already closed. */
-function shownOf(view: View): PanelState {
-  return view.closing ? NONE : view.panel;
-}
-
-/**
- * The trailing panel of Transazioni (§17.1.7), in client state. The URL still says what is open, so
- * a reload, a link from Home and Back work, and without JavaScript every link is a page. A click
- * that only changes the panel changes it in the frame of the click, and the URL follows through
- * `history.pushState`, which Next syncs into `useSearchParams`. Anything else — a filter, the
- * period, a save, Back — is a navigation, and the panel follows the URL it brings.
- */
-export function TransactionsPanels(props: Props) {
-  const { baseHref, details, edit, newForm } = props;
-  const pathname = usePathname();
-  const search = useSearchParams().toString();
-  // The first state is the server's: the same query, read the same way, so hydration matches.
-  const [view, setView] = useState<View>(() => ({
-    panel: panelFromSearch(new URLSearchParams(search)),
-    closing: false,
-    instant: false,
-    draft: 0,
-  }));
-  // The handlers below read the committed view; they are not new functions on every render.
-  const viewRef = useRef(view);
-  useLayoutEffect(() => {
-    viewRef.current = view;
-  });
-  // The last query read from `useSearchParams`, and the queries `go` wrote that it has not shown yet.
-  // Next applies a URL that `go` pushed in a transition, after the click: when two pushes are
-  // quicker than that, the first one shows up after the second one has already moved the panel.
-  const seen = useRef(search);
-  const written = useRef<string[]>([]);
-  // Where the focus was when the panel opened, and where it goes back to when the panel has left.
-  const opener = useRef<Element | null>(null);
-  const returnTo = useRef<Element | null>(null);
-  // The panel's column: a focus left in it is in a panel that is gone or hidden.
-  const side = useRef<HTMLDivElement>(null);
-
-  /** Before the panel opens or closes: keep the focus's way back. */
-  const track = useCallback((next: PanelState) => {
-    const shown = shownOf(viewRef.current);
-    if (shown.kind === 'none' && next.kind !== 'none') {
-      const active = document.activeElement;
-      opener.current = active === document.body ? null : active;
-      returnTo.current = null;
-    } else if (shown.kind !== 'none' && next.kind === 'none') {
-      returnTo.current =
-        opener.current?.isConnected === true
-          ? opener.current
-          : document.querySelector('#content a[aria-current="true"]');
-      opener.current = null;
-    }
-  }, []);
-
-  /** A URL this component did not write (a navigation, Back): the panel follows it, with no motion. */
-  const follow = useCallback(
-    (query: string) => {
-      const next = panelFromSearch(new URLSearchParams(query));
-      if (samePanel(next, shownOf(viewRef.current))) return;
-      track(next);
-      setView((current) =>
-        samePanel(next, shownOf(current))
-          ? current
-          : { panel: next, closing: false, instant: true, draft: draftAfter(current, next) },
-      );
-    },
-    [track],
-  );
-
-  // A new query in `useSearchParams`. One that `go` wrote and has since replaced is old: the panel
-  // is already past it. The last one `go` wrote is the panel on screen. Any other is a navigation.
-  useLayoutEffect(() => {
-    if (search === seen.current) return;
-    seen.current = search;
-    const mine = written.current.lastIndexOf(search);
-    if (mine === -1) {
-      written.current = [];
-      follow(search);
-    } else if (mine === written.current.length - 1) {
-      written.current = [];
-    } else {
-      written.current = written.current.slice(mine + 1);
-    }
-  }, [search, follow]);
-
-  // Back before Next has synced a pushed URL: `useSearchParams` may never change, the address bar does.
-  useEffect(() => {
-    const onPopState = () => {
-      if (window.location.pathname !== pathname) return;
-      const query = locationQuery();
-      seen.current = query;
-      written.current = [];
-      follow(query);
-    };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [follow, pathname]);
-
-  const go = useCallback(
-    (href: string, options: { replace?: boolean; instant?: boolean } = {}) => {
-      const here = locationQuery();
-      const next = panelOnlyChange({ pathname, search: new URLSearchParams(here) }, href);
+  const [draft, setDraft] = useState(0);
+  const { view, viewRef, go, side } = usePanelController<PanelState>({
+    parse: panelFromSearch,
+    same: samePanel,
+    isNone: (state) => state.kind === 'none',
+    none: NONE,
+    onlyChange: (current, href) => {
+      const next = panelOnlyChange(current, href);
       // The edit form is not on the page until the server renders it: that one stays a navigation.
-      if (next === null || next.kind === 'edit') return false;
-      const instant = options.instant === true;
-      track(next);
-      setView((current) => {
-        if (next.kind === 'none') {
-          return current.panel.kind === 'none' ? current : { ...current, closing: true, instant };
-        }
-        // «Nuova» again while its own exit plays takes the same draft back: the close is reversed.
-        return { panel: next, closing: false, instant, draft: draftAfter(current, next) };
-      });
-      // The selected row clicked again: the same URL is not a second history entry.
-      const target = searchOf(href);
-      if (target !== here) {
-        // Back where `useSearchParams` already is: Next may never report the round trip.
-        written.current = target === seen.current ? [] : [...written.current, target];
-        window.history[options.replace === true ? 'replaceState' : 'pushState'](null, '', href);
-      }
-      return true;
+      return next === null || next.kind === 'edit' ? null : next;
     },
-    [pathname, track],
-  );
-
-  // The exit has played: the panel leaves the screen, unless something opened again meanwhile.
-  useEffect(() => {
-    if (!view.closing) return;
-    const closed = view.panel;
-    const timer = setTimeout(
-      () =>
-        setView((current) =>
-          current.closing && current.panel === closed
-            ? { ...current, panel: NONE, closing: false, draft: draftAfter(current, NONE) }
-            : current,
-        ),
-      view.instant ? 0 : EXIT_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [view.closing, view.panel, view.instant]);
-
-  // The panel has left: the focus, which was in it, goes back where it came from. Not when the
-  // person has put it somewhere else meanwhile. A focus still in the side counts as lost: React
-  // hides the new form in a deferred (Offscreen) render, so in this commit the old form, with its
-  // focused input, is still in the DOM. The browser may also not have moved the focus out of a
-  // `display: none` input yet.
-  useEffect(() => {
-    if (view.panel.kind !== 'none') return;
-    const target = returnTo.current;
-    returnTo.current = null;
-    const active = document.activeElement;
-    // Never leave the focus on a hidden input, even with nowhere to send it back.
-    if (active instanceof HTMLElement && side.current?.contains(active) === true) active.blur();
-    if (!(target instanceof HTMLElement) || !target.isConnected) return;
-    if (active !== null && active !== document.body && side.current?.contains(active) !== true)
-      return;
-    target.focus();
-  }, [view.panel]);
+    onChange: (previous, next) => {
+      if (spendsDraft(previous, next)) setDraft((current) => current + 1);
+    },
+  });
 
   // The top bar's button, the FAB and N: on this page they open the form here.
   useEffect(() => {
@@ -264,7 +102,7 @@ export function TransactionsPanels(props: Props) {
     };
     window.addEventListener(NEW_TRANSACTION_EVENT, onNew);
     return () => window.removeEventListener(NEW_TRANSACTION_EVENT, onNew);
-  }, [go, baseHref, newForm]);
+  }, [go, viewRef, baseHref, newForm]);
 
   const { panel } = view;
   // The row whose panel is on screen, and the selected row: none while the exit plays.
@@ -310,7 +148,7 @@ export function TransactionsPanels(props: Props) {
           closing={creating && view.closing}
           instant={view.instant}
         >
-          <Fragment key={view.draft}>{newForm}</Fragment>
+          <Fragment key={draft}>{newForm}</Fragment>
         </Panel>
       </Activity>
     );

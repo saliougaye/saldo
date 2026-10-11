@@ -854,12 +854,14 @@ git commit -m "feat(web): pure helpers that name a panel from the query"
 
 This task changes no behaviour. It only moves code.
 
-- [ ] **Step 1: Run the end-to-end suite of Transazioni first**
+- [x] **Step 1: Run the end-to-end suite of Transazioni first**
 
 Run: `rtk proxy pnpm --filter web e2e transactions`
 Expected: PASS. If it fails on `main` already, stop and report. The move needs a green baseline.
 
-- [ ] **Step 2: Create `usePanelController.ts`**
+On 2026-10-11 the run `e2e transactions shell` on commit `46213201` gave 16 passed: the setup, 8 `shell` tests and 7 `transactions` tests.
+
+- [x] **Step 2: Create `usePanelController.ts`**
 
 Give it a generic `S` (the panel state) and this input:
 
@@ -889,16 +891,24 @@ The hook returns `{ view, go, shown, side, closeToList }`, where `shown = view.c
 
 For `draft`, accept an optional `onChange?: (previous: S, next: S) => void` in the config. `TransactionsPanels` uses it to increase its counter when `previous.kind === 'new'` and `next.kind !== 'new'`. The hook calls it from the places where `draftAfter` runs today: `follow`, `go` and the exit effect.
 
-- [ ] **Step 3: Write `TransactionsPanels` again on top of the hook**
+On 2026-10-11 the code differs from this step in three points:
+
+- The hook calls `onChange` before `setView`, not in the updater of `setView`. An updater must be pure, and React warns about a `setState` in an updater. `previous` is the committed view (`viewRef`). Both updates happen in the same event, so React renders them together.
+- The hook returns `{ view, viewRef, go, shown, side }`. `closeToList` stays in `TransactionsPanels`, because it needs `baseHref`, which the config does not have. `viewRef` is the committed view: the `NEW_TRANSACTION_EVENT` handler reads it.
+- The hook keeps the config in a ref, so `go` and `follow` keep their identity when a page gives a new config on each render.
+
+- [x] **Step 3: Write `TransactionsPanels` again on top of the hook**
 
 Keep these parts: the `Activity` for the new form, `ListKeys`, the `NEW_TRANSACTION_EVENT` effect, `PanelNavContext`, and the `content` and `editing` branches. Replace all the code that step 2 moved with `const controller = usePanelController<PanelState>({ parse: panelFromSearch, same: samePanel, isNone: (s) => s.kind === 'none', none: NONE, onlyChange: (cur, href) => { const next = panelOnlyChange(cur, href); return next === null || next.kind === 'edit' ? null : next; }, onChange: … })`. The `edit` exception moves into `onlyChange`.
 
-- [ ] **Step 4: Run the gates and the end-to-end suite**
+- [x] **Step 4: Run the gates and the end-to-end suite**
 
 Run: `rtk proxy pnpm lint && rtk proxy pnpm typecheck && rtk proxy pnpm --filter web test && rtk proxy pnpm --filter web e2e transactions`
 Expected: all pass, with the same numbers as step 1. `TransactionsPanels.tsx` is about 150 lines shorter.
 
-- [ ] **Step 5: Commit**
+On 2026-10-11 `e2e transactions shell` gave 16 passed again. `TransactionsPanels.tsx` went from 378 to 216 lines. No e2e test covers the draft of the new form. A temporary spec checked it on both builds, with the same result: a close by ✕ or Esc starts a new draft, an opening during the exit keeps the draft, Esc gives the focus back to «Nuova», and Back closes the form.
+
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A apps/web
