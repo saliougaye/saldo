@@ -88,9 +88,6 @@ export function MintInvite(props: Props) {
       if (result.ok) {
         setProblem(null);
         setMinted({ label: label.trim(), invite: result });
-        // The list behind the panel shows the new invite now: ✕ and Esc close in place, with no
-        // request. The code stays in this component's state; the refresh keeps it mounted.
-        router.refresh();
         return;
       }
       setProblem(strings.errors[result.error]);
