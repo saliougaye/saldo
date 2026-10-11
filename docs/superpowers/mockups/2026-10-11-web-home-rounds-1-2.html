@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo web — Home · rifinitura, 3 varianti</title>
+<!--
+  Scoping UI della Home web (2026-10-11), lenti better-ui + apple-design.
+  Variante 0 replica la Home di oggi (apps/web/app/(app)/home + src/ui/*), così le tre proposte si
+  confrontano nello stesso frame. Token, stringhe e sezioni restano quelli di @saldo/ui e it.ts.
+
+  Varianti:
+    0 · Attuale    la pagina com'è (0.3d, variante «C · Aperta» del 2026-09-27)
+    A · Vicina     stessa pagina, mappature corrette: Entrate/Uscite sotto la cifra, stepper accanto a «Ottobre»,
+                   barra 8px con «oggi», andamento del ciclo (§5.6) nella colonna destra della fascia
+    B · Materia    la fascia è un oggetto solo (superficie, nessuna linea), top bar traslucida con bordo-sfumatura,
+                   budget in evidenza riformulato su «rimasti», pressione 0,96 su righe e nav
+    C · Ritmo      la fascia è il ciclo: traccia dei 30 giorni con «oggi», le voci in arrivo sulla traccia,
+                   «al giorno» accanto alla cifra; la colonna sinistra tiene solo le ultime transazioni
+
+  Secondo giro (stesso giorno): «nessuna convince, cambiamo anche il layout, è un'app di budgeting».
+  Tre varianti con la pagina rifatta attorno ai budget:
+    D · Buste      una colonna sola. In alto il periodo e i tre numeri in riga; poi i budget come tabella:
+                   anello, nome, barra 8px con «oggi», speso · limite · rimasti · al giorno; in fondo la riga
+                   «Non a budget». Transazioni e «In arrivo» sotto, in due colonne.
+    E · Quadro     barra laterale a sinistra (nav verticale, «Nuova transazione» in basso); hero + andamento
+                   del ciclo in testa; i budget come griglia di schede 3×, cifra = rimasti; sotto le transazioni.
+    F · Flusso     la pagina è una frase: Entrate → budget → libero. Barra impilata a tutta larghezza con un
+                   segmento per budget (riempito dallo speso), «Non a budget» e «Libero»; sotto, hero a sinistra
+                   e la lista dei budget a destra; transazioni in fondo.
+
+  URL: ?variant=0|A|B|C|D|E|F|G&theme=dark|light (&full=1 = cornice alta quanto la pagina)
+  Dati: quelli dello screenshot del 2026-10-11 (Ottobre, giorno 15 di 30). Le righe 4–5 di «Ultime
+  transazioni», la serie «solito» del grafico e il saldo giornaliero sono campioni, segnalati nelle note.
+-->
+<style>
+@font-face{font-family:Geist;font-weight:400;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf")}
+@font-face{font-family:Geist;font-weight:500;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf")}
+@font-face{font-family:Geist;font-weight:600;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf")}
+
+/* ---------- tokens — the names tokensCss() emits (packages/ui/src/tokens.ts) ---------- */
+:root{
+  --font-family:Geist,"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+  --font-size-caption:11px;--font-size-footnote:13px;--font-size-body:15px;--font-size-headline:17px;--font-size-amount-lg:32px;--font-size-title:24px;--font-size-display:34px;--font-size-hero-web:56px;
+  --font-weight-regular:400;--font-weight-medium:500;--font-weight-semibold:600;
+  --tracking-tightest:-0.03em;--tracking-tighter:-0.02em;--tracking-tight:-0.01em;
+  --radius-icon-box:8px;--radius-chip-small:9px;--radius-input:10px;--radius-button:12px;--radius-card:14px;--radius-dialog:16px;--radius-pill:999px;
+  --layout-topbar-height:64px;--layout-content-wide:1120px;--layout-page-padding-web:48px;--layout-nav-item-height:36px;--layout-header-button:34px;
+  --layout-icon-box:32px;--layout-min-hit-target:44px;--layout-section-gap-web:56px;--layout-column-gap-web:72px;
+  --layout-progress-height:4px;--layout-progress-height-thick:8px;--layout-pace-tick-overhang:3px;--layout-pace-tick-overhang-thick:4px;
+  --motion-press:120ms;--motion-easing:cubic-bezier(0.2,0,0,1);--motion-fade:200ms;
+  --category-0:#C57B4E;--category-9:#8A8A8A;--category-21:#B35878;--category-5:#5A82A6;--category-14:#4A8560;
+  --chrome:#17171a;--chrome-text:#d6d6d6;--chrome-dim:#8a8a8a;
+}
+[data-theme="dark"]{color-scheme:dark;
+  --color-page:#050505;--color-bg:#0A0A0A;--color-surface:#121212;--color-raised:#1A1A1A;
+  --color-border:rgba(255,255,255,0.07);--color-border-strong:rgba(255,255,255,0.12);
+  --color-text:#EDEDED;--color-text-muted:#8C8C8C;--color-text-faint:#5C5C5C;
+  --color-accent:#C7C7C7;--color-positive:#5FBF7F;--color-on-accent:#0A0A0A;--color-bar-grey:#3A3A3A;--color-track:#1E1E1E;--color-shadow:rgba(0,0,0,0.5);
+  --bg-glass:rgba(10,10,10,0.72);}
+[data-theme="light"]{color-scheme:light;
+  --color-page:#E9E9E7;--color-bg:#FFFFFF;--color-surface:#FAFAF9;--color-raised:#F1F1EF;
+  --color-border:rgba(0,0,0,0.08);--color-border-strong:rgba(0,0,0,0.18);
+  --color-text:#171717;--color-text-muted:#6E6E6E;--color-text-faint:#9A9A9A;
+  --color-accent:#4A4A46;--color-positive:#2E8A50;--color-on-accent:#FFFFFF;--color-bar-grey:#C9C9C6;--color-track:#EDEDEB;--color-shadow:rgba(0,0,0,0.12);
+  --bg-glass:rgba(255,255,255,0.72);}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0e0e10;color:var(--chrome-text);font-family:var(--font-family);font-size:13px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input,kbd{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none;cursor:pointer}
+
+/* ---------- harness chrome ---------- */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:10px 16px;background:var(--chrome);border-bottom:1px solid #2a2a2e;position:sticky;top:0;z-index:5}
+.toolbar .grp{display:flex;align-items:center;gap:6px}
+.toolbar .label{color:var(--chrome-dim);margin-right:2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.seg{display:flex;background:#232327;border-radius:8px;padding:2px}
+.seg button{padding:5px 10px;border-radius:6px;color:var(--chrome-dim);font-size:12.5px}
+.seg button[aria-pressed="true"]{background:#3a3a40;color:#fff}
+.toolbar .caption{flex:1 1 100%;color:var(--chrome-dim);font-size:12.5px;line-height:1.45;max-width:1180px}
+.toolbar .caption b{color:#e6e6e6;font-weight:500}
+.stage{display:flex;gap:24px;padding:24px;align-items:flex-start;justify-content:center}
+.frame{border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45);border:1px solid #2a2a2e;background:var(--color-bg);display:flex;flex-direction:column;width:1280px;height:860px;flex:none}
+.urlbar{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;background:#1b1b1f;color:#9a9a9a;font-size:12px;border-bottom:1px solid #2a2a2e;flex:none}
+.urlbar .dots{display:flex;gap:5px}.urlbar .dots i{width:10px;height:10px;border-radius:50%;background:#3a3a40}
+.urlbar .u{flex:1;text-align:center;font-family:ui-monospace,Menlo,monospace}
+.notes{max-width:1280px;margin:8px auto 64px;padding:0 24px;color:var(--chrome-dim);font-size:13px;line-height:1.55}
+.notes h2{color:#e6e6e6;font-size:17px;font-weight:600;margin:32px 0 8px}
+.notes p{max-width:900px;text-wrap:pretty;margin-bottom:8px}
+.notes table{border-collapse:collapse;margin-top:8px;width:100%}
+.notes td,.notes th{border-top:1px solid #2a2a2e;padding:8px 16px 8px 0;text-align:left;vertical-align:top}
+.notes th{color:#e6e6e6;font-weight:500}
+.notes code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#c9c9c9}
+.notes .sev{display:inline-block;padding:1px 6px;border-radius:5px;font-size:11px;font-weight:500;background:#2a2a2e;color:#fff}
+.notes .sev.h{background:#5a2d2d}.notes .sev.m{background:#4a3f22}
+
+/* ---------- app (reads only token variables) ---------- */
+.app{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-size:var(--font-size-body);overflow:auto;position:relative;scrollbar-width:thin}
+/* ?full=1: the frame grows with the page (for full-page screenshots) */
+html.full .frame{height:auto}html.full .app{overflow:visible}html.full .mainE{overflow:visible}
+.app :focus-visible{outline:2px solid var(--color-text);outline-offset:2px;border-radius:var(--radius-input)}
+.press{transition-property:scale,background-color,color;transition-duration:var(--motion-press);transition-timing-function:var(--motion-easing)}
+.app[data-v]:not([data-v="0"]) .press:active{scale:.96}
+@media (prefers-reduced-motion:reduce){.press:active{scale:1!important}}
+.ico{width:1em;height:1em;font-size:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:var(--tracking-tighter)}
+.num .dec{opacity:.5}
+.pos{color:var(--color-positive)}
+
+/* ---- top bar (TopBar.module.css) ---- */
+.topbar{position:sticky;top:0;z-index:10;height:var(--layout-topbar-height);flex:none;background:var(--color-bg);border-bottom:1px solid var(--color-border)}
+.topbar .inner{height:100%;max-width:calc(var(--layout-content-wide) + 2*var(--layout-page-padding-web));margin:0 auto;padding:0 var(--layout-page-padding-web);display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:var(--font-weight-semibold);font-size:var(--font-size-headline);letter-spacing:var(--tracking-tight)}
+.brand .mark{width:28px;height:28px;border-radius:var(--radius-icon-box);background:var(--color-raised);display:grid;place-items:center;font-size:var(--font-size-footnote)}
+.nav{display:flex;gap:4px}
+.nav a{display:inline-flex;align-items:center;gap:8px;height:var(--layout-nav-item-height);padding:0 12px;border-radius:var(--radius-input);color:var(--color-text-muted);letter-spacing:var(--tracking-tight)}
+.nav a:hover{color:var(--color-text)}
+.nav a[aria-current="page"]{color:var(--color-text);background:var(--color-raised)}
+.actions{margin-inline-start:auto;display:flex;align-items:center;gap:12px}
+.iconbtn{width:var(--layout-header-button);height:var(--layout-header-button);display:grid;place-items:center;border-radius:var(--radius-input);color:var(--color-text-muted)}
+.iconbtn:hover{color:var(--color-text)}
+.new{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:var(--radius-button);background:var(--color-accent);color:var(--color-on-accent);font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium);white-space:nowrap}
+.app[data-v="0"] .new:active{scale:.98}
+.new kbd{font-size:var(--font-size-caption);border:1px solid currentColor;border-radius:var(--radius-icon-box);padding:0 5px;opacity:.55;line-height:1.5}
+.avatar{width:34px;height:34px;border-radius:var(--radius-pill);background:var(--color-raised);display:grid;place-items:center;font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium)}
+
+/* B and C: the bar is a material; the content scrolls under it; the edge is a fade, not a line (apple-design §12). */
+.app[data-v="B"] .topbar,.app[data-v="C"] .topbar{background:var(--bg-glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-bottom:0}
+.app[data-v="B"] .topbar::after,.app[data-v="C"] .topbar::after{content:"";position:absolute;inset:100% 0 auto;height:24px;pointer-events:none;background:linear-gradient(var(--color-bg),transparent);opacity:0;transition:opacity var(--motion-fade) var(--motion-easing)}
+.app.scrolled[data-v="B"] .topbar::after,.app.scrolled[data-v="C"] .topbar::after{opacity:1}
+@media (prefers-reduced-transparency:reduce){.app .topbar{background:var(--color-bg)!important;backdrop-filter:none!important}}
+
+/* ---- content ---- */
+.content{width:100%;max-width:calc(var(--layout-content-wide) + 2*var(--layout-page-padding-web));margin:0 auto;padding:48px var(--layout-page-padding-web) 64px}
+.columns{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:var(--layout-section-gap-web)}
+.col{display:flex;flex-direction:column;gap:var(--layout-section-gap-web);min-width:0}
+
+/* ---- period header (PeriodHeader.module.css) ---- */
+.period{display:flex;align-items:center;gap:16px}
+.period .what{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.period .title{font-size:var(--font-size-title);font-weight:var(--font-weight-semibold);letter-spacing:var(--tracking-tighter)}
+.period .sub{font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.stepper{display:flex;block-size:var(--layout-header-button);border-radius:var(--radius-chip-small);background:var(--color-raised);border:1px solid var(--color-border);overflow:hidden;flex:none}
+.stepper a{display:grid;place-items:center;inline-size:36px;color:var(--color-text-muted)}
+.stepper a+a{border-inline-start:1px solid var(--color-border)}
+.stepper a:hover{color:var(--color-text)}
+/* A, B, C: the stepper sits beside the word it changes (apple-design §16, mapping). */
+.period.inline .what{flex:0 1 auto}
+.period.inline .titleRow{display:flex;align-items:center;gap:12px}
+.period.inline .sub{margin-top:2px}
+
+/* ---- hero figures (HeroBand.module.css) ---- */
+.figure{display:flex;flex-direction:column;gap:4px}
+.figure .label{font-size:var(--font-size-footnote);color:var(--color-text-faint)}
+.hero .label{color:var(--color-text-muted)}
+.hero .num{font-size:var(--font-size-hero-web);font-weight:var(--font-weight-semibold);letter-spacing:var(--tracking-tightest);line-height:1.1}
+.stat .num{font-size:var(--font-size-headline)}
+.stats{display:flex;gap:48px}
+
+/* 0 · Attuale: the band as built — 1fr auto, stats at the far end, 4px bar, 11px legend. */
+.band0{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px 64px;align-items:end;margin-bottom:64px}
+.band0 .period,.band0 .bar,.band0 .legend{grid-column:1/-1}
+.band0 .period{margin-bottom:8px}
+.band0 .stats{padding-bottom:10px}
+.band0 .legend{margin-top:-12px;display:flex;justify-content:space-between;font-size:var(--font-size-caption);color:var(--color-text-faint)}
+
+/* ---- progress bar (ProgressBar.module.css) ---- */
+.track{position:relative;block-size:var(--layout-progress-height);border-radius:var(--radius-pill);background:var(--color-track)}
+.track.thick{block-size:var(--layout-progress-height-thick)}
+.track .fill{block-size:100%;border-radius:var(--radius-pill);background:var(--color-bar-grey)}
+.track .fill.over{background:var(--color-accent)}
+.track .tick{position:absolute;inset-block:calc(-1*var(--layout-pace-tick-overhang));inline-size:1px;background:var(--color-text-muted)}
+.track.thick .tick{inset-block:calc(-1*var(--layout-pace-tick-overhang-thick))}
+.ends{position:relative;height:16px;margin-top:8px;font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.ends span{position:absolute;white-space:nowrap}
+.ends .s{inset-inline-start:0}.ends .e{inset-inline-end:0}
+.ends .t{text-align:center;color:var(--color-text-muted);inline-size:64px;margin-inline-start:-32px}
+
+/* ---- A · Vicina: the band aligned on the 7/5 grid of the columns ---- */
+.bandA{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:32px;align-items:end;margin-bottom:var(--layout-section-gap-web)}
+.bandA .period{grid-column:1/-1}
+.bandA .heroGroup{display:flex;flex-direction:column;gap:20px}
+.bandA .barRow{grid-column:1/-1}
+.bandA .barRow .ends{margin-top:10px}
+
+/* ---- B · Materia: one surface holds the whole band; no hairline inside it ---- */
+.bandB{background:var(--color-surface);border-radius:var(--radius-dialog);padding:32px 36px 28px;display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:28px;align-items:end;margin-bottom:var(--layout-section-gap-web);box-shadow:0 0 0 1px var(--color-border) inset}
+.bandB .period{grid-column:1/-1}
+.bandB .heroGroup{display:flex;flex-direction:column;gap:20px}
+.bandB .barRow{grid-column:1/-1}
+.bandB .barRow .ends{margin-top:10px}
+
+/* ---- chart §5.6 (A, B) ---- */
+.chart{display:flex;flex-direction:column;gap:8px;min-width:0}
+.chart .head{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.chart .head .num{color:var(--color-text);letter-spacing:var(--tracking-tight)}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .foot{display:flex;justify-content:space-between;font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.chart .delta{font-size:var(--font-size-footnote);color:var(--color-accent);font-variant-numeric:tabular-nums}
+
+/* ---- C · Ritmo: the cycle as a track ---- */
+.bandC{display:flex;flex-direction:column;gap:28px;margin-bottom:var(--layout-section-gap-web)}
+.bandC .top{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);align-items:end}
+.bandC .heroGroup{display:flex;flex-direction:column;gap:16px}
+.bandC .perDay{font-size:var(--font-size-body);color:var(--color-text-muted);letter-spacing:var(--tracking-tight)}
+.bandC .perDay b{color:var(--color-text);font-weight:var(--font-weight-medium)}
+.bandC .stats{justify-self:end;align-self:end}
+.cycle{position:relative;padding-top:34px}
+.cycle .days{position:absolute;inset:0 0 auto;height:34px}
+.cycle .day{position:absolute;top:26px;width:1px;height:4px;background:var(--color-border-strong)}
+.cycle .day.week{height:8px;top:22px}
+.cycle .mark{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--color-text-muted);font-size:var(--font-size-footnote);white-space:nowrap}
+.cycle .mark .box{width:26px;height:26px;border-radius:var(--radius-icon-box);background:var(--color-raised);display:grid;place-items:center;color:var(--category-21)}
+.cycle .mark .box .ico{font-size:14px}
+.cycle .mark .pin{width:1px;height:14px;background:var(--color-border-strong)}
+.cycle .mark .tip{position:absolute;top:-30px;padding:4px 8px;border-radius:var(--radius-icon-box);background:var(--color-raised);color:var(--color-text);box-shadow:0 0 0 1px var(--color-border),0 8px 24px var(--color-shadow);opacity:0;scale:.96;transition-property:opacity,scale;transition-duration:var(--motion-fade);transition-timing-function:var(--motion-easing);pointer-events:none}
+.cycle .mark:hover .tip,.cycle .mark:focus-visible .tip{opacity:1;scale:1}
+.cycle .mark .tip .num{font-weight:var(--font-weight-medium)}
+.cycle .ends{margin-top:10px}
+.cycle .ends .t{color:var(--color-text);font-weight:var(--font-weight-medium)}
+
+/* ---- sections (Section.module.css, open) ---- */
+.section{display:flex;flex-direction:column;gap:12px}
+.section .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--color-border)}
+.section .title{font-size:var(--font-size-headline);font-weight:var(--font-weight-medium);letter-spacing:var(--tracking-tight)}
+.section .trailing{font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.section .trailing.attn{color:var(--color-accent)}
+.app[data-v]:not([data-v="0"]) .section .trailing{color:var(--color-text-muted)}
+.rows{display:flex;flex-direction:column}
+.more{display:flex;align-items:center;justify-content:space-between;min-height:var(--layout-min-hit-target);font-size:var(--font-size-footnote);color:var(--color-text-muted);border-radius:var(--radius-input)}
+.more:hover{color:var(--color-text)}
+.emptyNote{padding-block:4px;font-size:var(--font-size-footnote);color:var(--color-text-muted);text-wrap:pretty;max-width:52ch;line-height:1.5}
+
+/* ---- rows (ListRow.module.css, open) ---- */
+.row{position:relative;display:flex;align-items:center;gap:14px;min-height:var(--layout-min-hit-target);padding:12px 0;border-radius:var(--radius-input);color:var(--color-text)}
+.row:hover{background:color-mix(in srgb,var(--color-raised) 60%,transparent);box-shadow:0 0 0 8px color-mix(in srgb,var(--color-raised) 60%,transparent)}
+.row .text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.row .t{font-size:var(--font-size-body);letter-spacing:var(--tracking-tight);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .s{font-size:var(--font-size-footnote);color:var(--color-text-faint);margin-top:1px}
+.row .amt{margin-inline-start:auto;font-size:var(--font-size-body)}
+.row .amt.muted{color:var(--color-text-muted)}
+.ibox{position:relative;flex:none;width:var(--layout-icon-box);height:var(--layout-icon-box);border-radius:var(--radius-icon-box);background:var(--color-raised);display:grid;place-items:center}
+.ibox .badge{position:absolute;inset-block-end:-2px;inset-inline-end:-2px;width:14px;height:14px;border-radius:var(--radius-pill);background:var(--color-bg);color:var(--color-text-muted);display:grid;place-items:center}
+.ibox .badge .ico{font-size:10px}
+/* B and C: a hovered row lifts a hair (shadow, not border) and presses to .96. */
+.app[data-v="B"] .row:hover,.app[data-v="C"] .row:hover{box-shadow:0 0 0 8px color-mix(in srgb,var(--color-raised) 60%,transparent),0 1px 2px var(--color-shadow)}
+
+/* ---- featured target (home.module.css) ---- */
+.featured{position:relative;display:flex;flex-direction:column;margin-top:20px;text-align:start}
+.featured .fhead{display:flex;align-items:center;gap:10px;min-width:0}
+.featured .fname{font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium);white-space:nowrap}
+.featured .fmeta{flex:1;min-width:0;font-size:var(--font-size-footnote);color:var(--color-text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.featured .famount{margin-top:14px}
+.featured .famount .num{font-size:var(--font-size-amount-lg);font-weight:var(--font-weight-semibold);line-height:1.1}
+.featured .fof{margin-top:4px;font-size:var(--font-size-footnote);color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.featured .fbar{margin-top:16px}
+.featured .ends{font-size:var(--font-size-caption);height:14px}
+.featured .sentence{margin-top:16px;max-width:52ch;font-size:var(--font-size-footnote);color:var(--color-text-muted);line-height:1.5;text-wrap:pretty}
+.featured .sentence b{font-weight:var(--font-weight-medium);color:var(--color-text)}
+/* B, C: the featured figure is what is left, as the hero above it; spent and limit under it. */
+.featured.remaining .famount .num{color:var(--color-text)}
+.featured.remaining .fmeta{color:var(--color-text-muted)}
+
+/* =================== second round: budget-first layouts =================== */
+/* ---- rings (§5.13): progress on the circle, pace tick, icon in the centre ---- */
+.ring{position:relative;flex:none;display:grid;place-items:center}
+.ring>svg:not(.ico){position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring .ico{position:relative}
+.ring.attn svg .prog{stroke:var(--color-accent)}
+.status{font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.status.attn{color:var(--color-accent)}
+.label{font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+
+/* ---- D · Buste: one column, the budgets as a table ---- */
+.layD .dhead{display:flex;align-items:flex-end;justify-content:space-between;gap:48px;margin-bottom:48px}
+.layD .figures{display:flex;gap:40px;align-items:flex-end}
+.layD .figures .hero .num{font-size:var(--font-size-display)}
+.layD .figures .stat{padding-bottom:4px}
+.layD .figures .figure{gap:6px}
+.btable{display:grid;grid-template-columns:minmax(260px,1.2fr) minmax(220px,2fr) 110px 110px 120px 110px;column-gap:24px;align-items:center}
+.btable .th{font-size:var(--font-size-footnote);color:var(--color-text-faint);padding-bottom:10px;border-bottom:1px solid var(--color-border);white-space:nowrap}
+.btable .th.r,.btable .td.r{text-align:end}
+.btable .td{padding:14px 0;border-bottom:1px solid var(--color-border);min-width:0}
+.btable .td.r{font-variant-numeric:tabular-nums}
+.btable .td.r .num{font-size:var(--font-size-body)}
+.btable .td.r.dim{color:var(--color-text-muted)}
+.btable .who{display:flex;align-items:center;gap:12px;min-width:0}
+.btable .who .text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.btable .who .t{font-size:var(--font-size-body);letter-spacing:var(--tracking-tight);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btable .brow{display:contents}
+.btable .brow:hover .td{background:color-mix(in srgb,var(--color-raised) 60%,transparent)}
+.btable .brow .td:first-child{border-radius:var(--radius-input) 0 0 var(--radius-input);padding-inline-start:10px;margin-inline-start:-10px}
+.btable .brow .td:last-child{border-radius:0 var(--radius-input) var(--radius-input) 0;padding-inline-end:10px;margin-inline-end:-10px}
+.btable .brow.ghost .td{border-bottom:0;color:var(--color-text-muted)}
+.btable .brow.ghost .t{color:var(--color-text-muted)}
+.btable .barcell{display:flex;flex-direction:column;gap:6px}
+.btable .barcell .ends{height:14px;margin-top:0;font-size:var(--font-size-caption)}
+.layD .bottom{display:grid;grid-template-columns:1fr 1fr;column-gap:var(--layout-column-gap-web);row-gap:var(--layout-section-gap-web);margin-top:var(--layout-section-gap-web)}
+.layD .section .head{align-items:center}
+.layD .headrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px}
+.layD .headrow .title{font-size:var(--font-size-headline);font-weight:var(--font-weight-medium);letter-spacing:var(--tracking-tight)}
+.layD .headrow .right{display:flex;gap:16px;align-items:baseline}
+.layD .headrow .more{min-height:0;gap:4px}
+
+/* ---- E · Quadro: sidebar + cards ---- */
+.app[data-v="E"]{flex-direction:row;overflow:hidden}
+.side{flex:none;width:232px;display:flex;flex-direction:column;gap:24px;padding:20px 16px;border-inline-end:1px solid var(--color-border);background:var(--color-surface)}
+.side .brand{padding:6px 10px}
+.side .nav{flex-direction:column;gap:2px}
+.side .nav a{height:var(--layout-nav-item-height);padding:0 10px}
+.side .bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.side .new{justify-content:center;height:40px}
+.side .me{display:flex;align-items:center;gap:10px;padding:6px 6px;font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.side .me .avatar{width:28px;height:28px;font-size:var(--font-size-caption)}
+.mainE{flex:1;min-width:0;overflow:auto;scrollbar-width:thin}
+.mainE .content{max-width:1120px;padding:40px 48px 64px}
+.layE .top{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);align-items:end;margin-bottom:var(--layout-section-gap-web)}
+.layE .top .heroGroup{display:flex;flex-direction:column;gap:20px}
+.layE .top .period{margin-bottom:28px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{display:flex;flex-direction:column;gap:14px;padding:20px 22px;border-radius:var(--radius-card);background:var(--color-surface);box-shadow:0 0 0 1px var(--color-border) inset;color:var(--color-text);text-align:start}
+.card:hover{box-shadow:0 0 0 1px var(--color-border-strong) inset,0 1px 2px var(--color-shadow)}
+.card .chead{display:flex;align-items:center;gap:10px;min-width:0}
+.card .cname{font-size:var(--font-size-body);font-weight:var(--font-weight-medium);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.card .cpct{font-size:var(--font-size-footnote);color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.card .cpct.attn{color:var(--color-accent)}
+.card .cfig .num{font-size:var(--font-size-amount-lg);font-weight:var(--font-weight-semibold);line-height:1.1}
+.card .cof{font-size:var(--font-size-footnote);color:var(--color-text-muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.card .ends{height:14px;margin-top:6px;font-size:var(--font-size-caption)}
+.card .csent{font-size:var(--font-size-footnote);color:var(--color-text-muted);line-height:1.45;text-wrap:pretty}
+.card .csent b{color:var(--color-text);font-weight:var(--font-weight-medium)}
+.card.ghost{box-shadow:0 0 0 1px var(--color-border) inset;background:transparent;color:var(--color-text-muted);justify-content:center;align-items:flex-start}
+.card.ghost .num{font-size:var(--font-size-headline);color:var(--color-text)}
+.layE .bottom{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:var(--layout-section-gap-web);margin-top:var(--layout-section-gap-web)}
+
+/* ---- G · Quadro II: E, as three sections in a column (Budget · Obiettivi · Transazioni) ---- */
+.app[data-v="G"]{flex-direction:row;overflow:hidden}
+.layG .section+.section{margin-top:var(--layout-section-gap-web)}
+.layG .section .head{align-items:center}
+.layG .txcols{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);align-items:start}
+.layG .glabel{display:block;padding:6px 0 2px;font-size:var(--font-size-footnote);color:var(--color-text-muted);letter-spacing:var(--tracking-tight)}
+.layG .glabel .num{font-variant-numeric:tabular-nums}
+.layG .card.ghost p{margin:0;font-size:var(--font-size-footnote);line-height:1.45;text-wrap:pretty}
+
+/* ---- F · Flusso: income → budgets → free, as one stacked bar ---- */
+.layF .period{margin-bottom:36px}
+.alloc{display:flex;flex-direction:column;gap:12px;margin-bottom:var(--layout-section-gap-web)}
+.alloc .barwrap{display:flex;height:28px;gap:3px}
+.alloc .segm{position:relative;height:100%;border-radius:6px;background:var(--color-track);overflow:hidden;color:var(--color-text);display:block}
+.alloc .segm .fillc{position:absolute;inset:0 auto 0 0;background:var(--seg-colour,var(--color-bar-grey));opacity:.85}
+.alloc .segm.attn .fillc{background:var(--color-accent);opacity:1}
+.alloc .segm.spentout .fillc{background:var(--color-bar-grey)}
+.alloc .segm.free{background:transparent;box-shadow:0 0 0 1px var(--color-border-strong) inset}
+.alloc .segm .ptick{position:absolute;inset-block:-4px;inline-size:1px;background:var(--color-text-muted)}
+.alloc .labels{display:flex;gap:3px}
+.alloc .lab{min-width:0;display:flex;flex-direction:column;gap:2px;font-size:var(--font-size-footnote);color:var(--color-text-muted);padding-inline-start:2px;border-inline-start:2px solid var(--seg-colour,var(--color-border-strong));padding-inline-start:8px}
+.alloc .lab.attn{border-color:var(--color-accent)}
+.alloc .lab.free{border-color:var(--color-border-strong)}
+.alloc .lab .n{color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alloc .lab .num{font-size:var(--font-size-footnote)}
+.alloc .lab.hidden{visibility:hidden}
+.alloc .cap{display:flex;justify-content:space-between;font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.layF .mid{display:grid;grid-template-columns:5fr 7fr;column-gap:var(--layout-column-gap-web);align-items:start;margin-bottom:var(--layout-section-gap-web)}
+.layF .mid .heroGroup{display:flex;flex-direction:column;gap:24px}
+.layF .freebox{display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1px solid var(--color-border)}
+.layF .freebox .num{font-size:var(--font-size-headline)}
+.layF .freebox .label b{color:var(--color-text);font-weight:var(--font-weight-medium)}
+.blist{display:flex;flex-direction:column}
+.blist .brow{display:grid;grid-template-columns:36px minmax(0,1fr) 150px 120px;column-gap:16px;align-items:center;padding:12px 0;border-radius:var(--radius-input);color:var(--color-text)}
+.blist .brow:hover{background:color-mix(in srgb,var(--color-raised) 60%,transparent);box-shadow:0 0 0 8px color-mix(in srgb,var(--color-raised) 60%,transparent)}
+.blist .brow .text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.blist .brow .t{font-size:var(--font-size-body);letter-spacing:var(--tracking-tight)}
+.blist .brow .mini{display:flex;flex-direction:column;gap:6px}
+.blist .brow .mini .ends{height:12px;margin-top:0;font-size:var(--font-size-caption)}
+.blist .brow .left{text-align:end;display:flex;flex-direction:column;gap:2px}
+.blist .brow .left .num{font-size:var(--font-size-body)}
+.blist .brow .left .label{font-size:var(--font-size-caption)}
+.blist .brow.ghost{color:var(--color-text-muted)}
+.layF .bottom{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:var(--layout-section-gap-web)}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <div class="grp"><span class="label">Variante</span><div class="seg" id="segV"></div></div>
+  <div class="grp"><span class="label">Tema</span><div class="seg" id="segT"></div></div>
+  <p class="caption" id="caption"></p>
+</div>
+<div class="stage">
+  <div class="frame">
+    <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="u">saldo.local/home</span></div>
+    <div class="app" id="app" data-theme="dark"></div>
+  </div>
+</div>
+
+<section class="notes">
+<h2>Lettura della Home di oggi (better-ui · apple-design)</h2>
+<p>Quattro cose pesano più delle altre. Ogni riga sotto dice dove sta nel codice, cosa fa oggi e cosa cambia nelle varianti.</p>
+<table>
+<tr><th>Gravità</th><th>Dove</th><th>Oggi</th><th>Dopo</th><th>Perché</th></tr>
+<tr><td><span class="sev h">Alta</span></td><td><code>HeroBand.module.css:44-48</code></td><td>Griglia <code>1fr auto</code>: «Rimasto da spendere» a sinistra, Entrate e Uscite a 900px, sul bordo destro.</td><td>Entrate e Uscite sotto la cifra, nello stesso gruppo (A, B, C).</td><td>Mappatura (apple §16, «grouping &amp; mapping»): tre numeri che si spiegano a vicenda stanno vicini. Oggi l'occhio attraversa la pagina per leggere la sottrazione.</td></tr>
+<tr><td><span class="sev h">Alta</span></td><td><code>HeroBand.module.css:28-33</code> · <code>tokens.progressHeight</code></td><td>Barra 4px su 1120px, tacca del ritmo 1px, legenda 11px in <code>textFaint</code> (#5C5C5C su #0A0A0A ≈ 2,9:1).</td><td>Barra 8px (<code>progressHeightThick</code>), «27 set · oggi · 26 ott» a 13px in <code>textMuted</code>, legenda sopra la barra (A, B); traccia dei giorni (C).</td><td>È il solo segnale «sei avanti o indietro» della pagina ed è un capello. La legenda non passa AA.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>PeriodHeader.module.css:3-11</code></td><td>Lo stepper ‹ › è a 1000px dalla parola «Ottobre» che cambia.</td><td>Stepper accanto al titolo (A, B, C).</td><td>Apple §16: il controllo vicino a ciò che cambia. Niente etichetta serve se la mappa è giusta.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>home/page.tsx</code> Featured, <code>amount={featuredBudget.spent}</code></td><td>La cifra grande del budget è lo <b>speso</b> (485,61 €); l'hero sopra è il <b>rimasto</b>. Due «grandi numeri» con verso opposto; «214,39 € rimasti» finisce in 13px faint.</td><td>Cifra grande = rimasti (214,39 €); sotto «485,61 € spesi di 700,00 € · 69%» (B, C). A lo lascia com'è, per confronto.</td><td>Un modello mentale solo: la pagina risponde a «quanto mi resta». Da verificare con §5.13 sul telefono.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>NavLink.module.css</code> · <code>ListRow.module.css</code> · <code>TopBar.module.css:66</code></td><td>Nessun <code>:active</code> su nav e righe; «Nuova transazione» preme a 0,98.</td><td><code>scale(.96)</code> su pressione, 120ms, <code>cubic-bezier(.2,0,0,1)</code>, anche su nav e righe (A, B, C).</td><td>better-ui «Scale on press»: 0,96 sempre, risposta al pointer-down (apple §1).</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>TopBar.module.css:5-8</code></td><td>Top bar opaca con riga 1px sotto, anche a scroll 0.</td><td>Materiale traslucido (<code>backdrop-filter</code> 20px), bordo-sfumatura che appare solo quando il contenuto passa sotto (B, C).</td><td>Apple §12: «scroll edge effects, not hard dividers». Rispetta <code>prefers-reduced-transparency</code>.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td>spec §5.6</td><td>«Andamento del ciclo» esiste sul telefono, non sul web: la Home web non ha nessuna forma oltre le barre.</td><td>Sparkline attuale/solito nella colonna destra della fascia (A, B); traccia del ciclo (C).</td><td>Senza una forma il «ritmo» resta una frase. Serie «solito» = campione nel mockup.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td><code>Section.module.css:47</code></td><td>«2 voci», «Nessun obiettivo» in <code>textFaint</code>.</td><td><code>textMuted</code> (A, B, C).</td><td>Contrasto: 13px faint su bg non passa AA.</td></tr>
+</table>
+<p>Tengono già: tabular-nums e decimali a metà opacità, sezioni aperte con una sola linea, hover delle righe dipinto 8px oltre la riga, titolo/hero in rapporto 1:3,3 (squint test ok), icone 1,5px accanto a testo 400.</p>
+
+<h2>Le tre varianti</h2>
+<table>
+<tr><th>Variante</th><th>Aria</th><th>Scommette su</th><th>Costo</th></tr>
+<tr><td><b>A · Vicina</b></td><td>stessa pagina; fascia sulla griglia 7/5 delle colonne</td><td>Correggere le mappature basta: cifra + Entrate/Uscite come un gruppo, stepper al titolo, barra 8px con «oggi», grafico §5.6 a destra.</td><td>Il minimo: CSS di HeroBand e PeriodHeader, un componente chart in DOM. Nessun token nuovo.</td></tr>
+<tr><td><b>B · Materia</b></td><td>la fascia è un oggetto, le sezioni restano aperte</td><td>Un solo «peso» in pagina: la superficie tiene cifra, grafico e barra; sotto, lo spazio. Top bar traslucida con bordo-sfumatura. Budget riformulato su «rimasti».</td><td>Riapre una scatola che il 2026-09-27 avevamo tolto (una, non cinque). <code>backdrop-filter</code> sulla top bar; stringa nuova per «spesi di».</td></tr>
+<tr><td><b>C · Ritmo</b></td><td>la fascia è il ciclo</td><td>I 30 giorni come traccia: «oggi», lo speso, le voci in arrivo al loro giorno con tooltip. «120,93 € al giorno per 15 giorni» accanto alla cifra. «In arrivo» esce dalla colonna sinistra.</td><td>Più lavoro e due stringhe nuove (<code>home.perDay</code>, <code>home.committed</code>). Con molte voci in arrivo i marcatori si sovrappongono: serve una regola di raggruppamento. Niente grafico §5.6.</td></tr>
+</table>
+
+<h2>Da decidere</h2>
+<p>1 · Budget in evidenza: cifra grande = speso (oggi, §5.13) o = rimasti (B, C)? Vale anche per il telefono.<br>
+2 · Grafico §5.6 sul web: sì (A, B) o lo sostituisce la traccia (C)?<br>
+3 · La scatola della fascia (B) o fascia aperta (A, C)?<br>
+4 · In C, «In arrivo» resta anche come lista o solo sulla traccia?</p>
+<p>Dati di campione nel mockup: righe «Spotify» e «Esselunga» nelle ultime transazioni, la serie «solito» del grafico, il saldo al giorno (1.813,96 € / 15 giorni).</p>
+
+<h2>Secondo giro · la Home di un'app di budgeting</h2>
+<p>Primo giro bocciato: «nessuna convince, cambiamo anche il layout». Le tre varianti sotto tolgono il budget dalla colonna destra e lo mettono al centro: la domanda della pagina diventa «come stanno i miei budget, oggi», e «Rimasto da spendere» resta ma non è più l'unico protagonista. Tutte e tre tengono le correzioni del primo giro (stepper al titolo, Entrate/Uscite vicino alla cifra, barre 8px con «oggi», pressione 0,96, stato in <code>textMuted</code>).</p>
+<table>
+<tr><th>Variante</th><th>Struttura</th><th>Scommette su</th><th>Costo e rischi</th></tr>
+<tr><td><b>D · Buste</b></td><td>una colonna; periodo + tre numeri in riga; tabella dei budget; transazioni sotto in 2 colonne</td><td>Il budget è una tabella: una riga per busta, colonne allineate (speso · limite · rimasti · al giorno), si legge in verticale come un estratto conto. Densa, da desktop.</td><td>Componente nuovo (tabella) e anelli §5.13 sul web. Con 1 solo budget la tabella è una riga: serve lo stato vuoto «Crea un budget». Sotto 1024px la tabella deve collassare (colonne → sottotitolo).</td></tr>
+<tr><td><b>E · Quadro</b></td><td>barra laterale 232px (nav + «Nuova transazione»); hero + grafico §5.6; griglia di schede 3×; transazioni sotto</td><td>Cruscotto: ogni budget è una scheda con la cifra = rimasti, la barra e «al giorno». Una scheda in più, «Non a budget», è la via per crearne uno. La sidebar libera la top bar e dà altezza alla pagina.</td><td>Cambia la shell (§17.1.7 aveva scelto la top bar): tocca <code>shell.module.css</code>, TopBar, NavLink. Riapre le schede che il 2026-09-27 avevamo tolto. Con 1 budget la griglia è mezza vuota.</td></tr>
+<tr><td><b>F · Flusso</b></td><td>periodo; barra impilata a tutta larghezza; 5/7: hero + «Libero» a sinistra, lista dei budget a destra; transazioni sotto</td><td>Entrate → budget → libero come una frase sola: un segmento per budget largo quanto il limite e pieno quanto lo speso, poi «Non a budget» e «Libero». Risponde a «dove vanno i soldi e quanto non ho promesso a nessuno».</td><td>Concetto nuovo, «Libero» = entrate − somma dei limiti: non è nella spec, va definito (§5.8). Segmenti stretti perdono l'etichetta (sotto l'8%: Trasporti, Abbonamenti). Con 0 budget la barra è un rettangolo vuoto.</td></tr>
+</table>
+
+<h2>Terzo giro · G, da E</h2>
+<p>Feedback su E: «mi convince la sidebar e la divisione in sezioni; ma dividerei in sezioni anche gli obiettivi, e unirei ultime transazioni e in arrivo». G lo fa: stessa shell e stessa testa di E, poi tre sezioni uguali in colonna. <b>Budget</b> = schede 3×. <b>Obiettivi</b> = stessa griglia; oggi non ci sono obiettivi, la sezione mostra una scheda vuota con «Crea un obiettivo» (stessa forma di «Non a budget»). <b>Transazioni</b> = una sezione sola, «Ultime» a sinistra (7) e «In arrivo» a destra (5), un solo «Tutte le transazioni»; nel titolo «2 in arrivo · 14,98 €».</p>
+<p>Aperto per G: quando ci sono obiettivi, la scheda obiettivo è il target card §5.13 (anello, cifra, barra) come il budget; con 1 budget e 0 obiettivi la pagina è corta ma ogni sezione dice cosa fare. Sotto 1024px le griglie passano a 2 e poi 1 colonna e «Transazioni» torna una colonna.</p>
+
+<h2>Da decidere · secondo giro</h2>
+<p>1 · Il budget al centro: tabella (D), schede (E) o barra impilata + lista (F)?<br>
+2 · Shell: top bar (D, F) o barra laterale (E)? Cambia §17.1.7.<br>
+3 · «Non a budget» (spese in categorie senza budget) e «Libero» (entrate − limiti): li mostriamo? Vanno in spec, non esistono oggi in <code>@saldo/core</code>.<br>
+4 · Le transazioni («In arrivo», «Ultime») restano in Home sotto la piega, o passano solo nella tab Transazioni?<br>
+5 · La cifra del budget: in D e F la colonna è «rimasti», in E la cifra grande è «rimasti». Stessa domanda 1 del primo giro: §5.13 oggi dice speso.</p>
+<p>Dati di campione: i budget «Spesa», «Trasporti», «Abbonamenti» (segnati «campione»); «Non a budget» e «Libero» sono calcolati da quei campioni. Solo «Family & Personal» è reale. <code>daysLeft</code> = 16 (oggi + fino al 26 ott), «al giorno» arrotondato per difetto come in §5.13.</p>
+</section>
+
+<script>
+const ICONS = {"house":"<path d=\"M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z\"/><path d=\"M9.5 21.5v-7h5v7\"/>","list":"<path d=\"M8 6h13M8 12h13M8 18h9M3.5 6h.01M3.5 12h.01M3.5 18h.01\"/>","trend":"<path d=\"m22 7-8.5 8.5-5-5L2 17\"/><path d=\"M16 7h6v6\"/>","wallet":"<path d=\"M3 8.5A2.5 2.5 0 0 1 5.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 16.5z\"/><path d=\"M3 8.5V7a2 2 0 0 1 2-2h11\"/><path d=\"M16.5 12.5h.01\"/>","settings":"<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M4 7l2.6 1.5M17.4 15.5 20 17M4 17l2.6-1.5M17.4 8.5 20 7\"/>","shield":"<path d=\"M12 21.5s7.5-3.8 7.5-9.5V5.2L12 2.5 4.5 5.2V12c0 5.7 7.5 9.5 7.5 9.5z\"/>","plus":"<path d=\"M12 5v14M5 12h14\"/>","chevL":"<path d=\"m14.5 18-6-6 6-6\"/>","chevR":"<path d=\"m9.5 18 6-6-6-6\"/>","chevD":"<path d=\"m6 9.5 6 6 6-6\"/>","cart":"<circle cx=\"9\" cy=\"20\" r=\"1.2\"/><circle cx=\"18\" cy=\"20\" r=\"1.2\"/><path d=\"M2 3h2.2l2.4 11.2A1.8 1.8 0 0 0 8.4 15.6h9.4a1.8 1.8 0 0 0 1.8-1.4L21 7H5\"/>","utensils":"<path d=\"M3.5 2.5v6a3 3 0 0 0 6 0v-6M6.5 11.5v10M17 2.5c-1.4 1.2-2 3-2 5s.6 3.2 2 4.2v9.8\"/>","zap":"<path d=\"M13.5 2 4 13.5h6l-1.5 8.5L20 10.5h-6z\"/>","train":"<rect x=\"4.5\" y=\"3\" width=\"15\" height=\"13.5\" rx=\"2.5\"/><path d=\"M4.5 10.5h15M9 21l-1.5-2.5M15 21l1.5-2.5M9.5 7h5\"/>","film":"<rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"2\"/><path d=\"M8 3.5v17M16 3.5v17M3.5 9h17M3.5 15h17\"/>","piggy":"<path d=\"M17.5 9.2a6.5 6.5 0 0 1 2.4 3.3h1.6v3.5h-2a6.6 6.6 0 0 1-2 2.1v2.4h-3.4v-1.3H10v1.3H6.6v-2.6A6.5 6.5 0 0 1 4 12.6C4 8.9 7.3 6 11.3 6h3.3l3.4-2.5v3.9z\"/><path d=\"M15.6 10.6h.01\"/>","car":"<path d=\"M3.5 16.5v-4l2-5.5h13l2 5.5v4z\"/><path d=\"M6 16.5V19H3.8v-2.5M20.2 16.5V19H18v-2.5M5.5 12.5h13\"/><circle cx=\"7.6\" cy=\"14.4\" r=\".9\"/><circle cx=\"16.4\" cy=\"14.4\" r=\".9\"/>","repeat":"<path d=\"m17 2.5 4 4-4 4M21 6.5H7a4 4 0 0 0-4 4v1.5M7 21.5l-4-4 4-4M3 17.5h14a4 4 0 0 0 4-4V12\"/>","search":"<circle cx=\"10.5\" cy=\"10.5\" r=\"7.5\"/><path d=\"m21 21-4.3-4.3\"/>","landmark":"<path d=\"M3 21.5h18M5 21.5V10M19 21.5V10M9.5 21.5V10M14.5 21.5V10M2.5 9.5 12 3l9.5 6.5z\"/>","card":"<rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"2.5\"/><path d=\"M2.5 10h19\"/>","plane":"<path d=\"M12 2.2c.8 0 1.4.9 1.4 2v5.4l7.6 4.2v2l-7.6-2.3v4l2.4 1.8v1.7L12 20l-3.8.9v-1.7l2.4-1.8v-4L3 15.8v-2l7.6-4.2V4.2c0-1.1.6-2 1.4-2z\"/>","coffee":"<path d=\"M3.5 8h13v5.5a5.5 5.5 0 0 1-5.5 5.5H9a5.5 5.5 0 0 1-5.5-5.5z\"/><path d=\"M16.5 9.5H19a2.6 2.6 0 0 1 0 5.2h-2.5M6 3v2.2M9.8 2.6v2.2M13.6 3v2.2\"/>","gift":"<rect x=\"2.8\" y=\"8.4\" width=\"18.4\" height=\"4.6\" rx=\"1.2\"/><path d=\"M4.6 13v7.3a1.2 1.2 0 0 0 1.2 1.2h12.4a1.2 1.2 0 0 0 1.2-1.2V13M12 8.4v13.1\"/><path d=\"M12 8.4S10.6 3 8.1 3a2.7 2.7 0 0 0 0 5.4zM12 8.4S13.4 3 15.9 3a2.7 2.7 0 0 1 0 5.4z\"/>","briefcase":"<rect x=\"2.5\" y=\"7\" width=\"19\" height=\"13\" rx=\"2.2\"/><path d=\"M8.5 7V5.2A1.7 1.7 0 0 1 10.2 3.5h3.6A1.7 1.7 0 0 1 15.5 5.2V7M2.5 12.6h19\"/>","key":"<circle cx=\"7.5\" cy=\"15.5\" r=\"4\"/><path d=\"m10.6 12.4 8.2-8.2M15.8 7.2l2.3 2.3M18.8 4.2 21.2 6.6\"/>","x":"<path d=\"M18 6 6 18M6 6l12 12\"/>","check":"<path d=\"M20 6.5 9 17.5l-5-5\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5.2l3.2 2\"/>","cal":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"16\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4M3.5 10.5h17\"/>","arrowDL":"<path d=\"M17 7 7 17\"/><path d=\"M17 17H7V7\"/>","arrowUR":"<path d=\"M7 17 17 7\"/><path d=\"M7 7h10v10\"/>","swap":"<path d=\"m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16\"/>","info":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5.6M12 7.6h.01\"/>","drop":"<path d=\"M12 2.7 6.9 8a7.2 7.2 0 1 0 10.2 0z\"/>","activity":"<path d=\"M3 12h4l2.5-6 4 12 2.5-6H21\"/>"};
+
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] ?? ''}</svg>`;
+/** "1.813,96" → integer, then fraction and symbol at half strength (§13). */
+const money = (value, sign = '') => { const [int, dec] = value.split(','); return `<span class="num">${sign}${int}<span class="dec">,${dec} €</span></span>`; };
+const cat = (i) => `var(--category-${i})`;
+const ibox = (name, colour, badge) => `<span class="ibox" style="color:${colour === null ? 'var(--color-text-muted)' : cat(colour)}">${icon(name)}${badge ? `<span class="badge">${icon(badge)}</span>` : ''}</span>`;
+
+/* ---------------- data (screenshot of 2026-10-11; sample rows are marked) ---------------- */
+const D = {
+  month: 'Ottobre', range: '27 set – 26 ott', day: 15, len: 30,
+  remaining: '1.813,96', income: '2.803,00', spent: '989,04', spentRatio: .35, pace: .5,
+  upcoming: [
+    { icon: 'film', colour: 21, title: 'iCloud', date: '24 ott', sub: 'Subscriptions', amt: '0,99', dayIndex: 28 },
+    { icon: 'film', colour: 21, title: 'Netflix', date: '15 ott', sub: 'Subscriptions', amt: '13,99', dayIndex: 19 },
+  ],
+  recent: [
+    { icon: 'briefcase', colour: 9, title: 'Elly', date: '10 ott', sub: 'Extra Income', amt: '50,00', pos: true },
+    { icon: 'utensils', colour: 0, title: 'Food for elly', date: '10 ott', sub: 'Food & Drink', amt: '2,00' },
+    { icon: 'drop', colour: 0, title: 'Water', date: '10 ott', sub: 'Food & Drink', amt: '1,50' },
+    { icon: 'film', colour: 21, title: 'Spotify', date: '9 ott', sub: 'Subscriptions', amt: '10,99', sample: true },
+    { icon: 'cart', colour: 0, title: 'Esselunga', date: '8 ott', sub: 'Food & Drink', amt: '64,30', sample: true },
+  ],
+  budget: { name: 'Family & Personal', left: '214,39', spent: '485,61', limit: '700,00', pct: 69, ratio: .69, pace: .5, perDay: '13,39', over: '135,61' },
+  perDay: '120,93', committed: '14,98',
+  /* Second round. Only «Family & Personal» is real; the other three budgets are samples. daysLeft = 16 (today + 26 ott). */
+  budgets: [
+    { name: 'Family & Personal', icon: 'house', colour: null, limit: 70000, spent: 48561 },
+    { name: 'Spesa', icon: 'cart', colour: 0, limit: 40000, spent: 18040, sample: true },
+    { name: 'Trasporti', icon: 'train', colour: 5, limit: 12000, spent: 4210, sample: true },
+    { name: 'Abbonamenti', icon: 'film', colour: 21, limit: 6000, spent: 2597, sample: true },
+  ],
+  incomeMinor: 280300, spentMinor: 98904, daysLeft: 16,
+};
+/** integer minor units → "1.813,96" (it-IT), formatting only at the edge. */
+const fmt = (minor) => { const neg = minor < 0, abs = Math.abs(minor); const int = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return `${neg ? '−' : ''}${int},${String(abs % 100).padStart(2, '0')}`; };
+const m = (minor, sign = '') => money(fmt(minor), sign);
+const sumBudgetLimit = D.budgets.reduce((a, b) => a + b.limit, 0);
+const sumBudgetSpent = D.budgets.reduce((a, b) => a + b.spent, 0);
+const outsideSpent = D.spentMinor - sumBudgetSpent;      // «Non a budget»
+const freeMinor = D.incomeMinor - sumBudgetLimit;          // «Libero», not promised to a budget
+const bstate = (b) => { const ratio = b.spent / b.limit; const left = b.limit - b.spent; return { ratio, left, pct: Math.round(ratio * 100), overPace: ratio > D.pace, overLimit: ratio > 1, perDay: Math.floor(left / D.daysLeft) }; };
+const overPaceCount = D.budgets.filter((b) => bstate(b).overPace).length;
+
+/* ---------------- pieces ---------------- */
+const topbar = () => `<header class="topbar"><div class="inner">
+  <a class="brand press" href="#"><span class="mark">S</span>Saldo</a>
+  <nav class="nav"><a class="press" aria-current="page">${icon('house')}Home</a><a class="press">${icon('list')}Transazioni</a><a class="press">${icon('activity')}Statistiche</a><a class="press">${icon('wallet')}Conti</a></nav>
+  <div class="actions"><a class="iconbtn press" aria-label="Admin">${icon('shield')}</a><a class="new press">${icon('plus')}Nuova transazione <kbd>N</kbd></a><span class="avatar">SA</span></div>
+</div></header>`;
+
+const stepper = () => `<span class="stepper"><a aria-label="Periodo precedente" class="press">${icon('chevL')}</a><a aria-label="Periodo successivo" class="press">${icon('chevR')}</a></span>`;
+const period = (inline) => inline
+  ? `<div class="period inline"><div class="what"><div class="titleRow"><span class="title">${D.month}</span>${stepper()}</div><span class="sub">${D.range} · giorno ${D.day} di ${D.len}</span></div></div>`
+  : `<div class="period"><div class="what"><span class="title">${D.month}</span><span class="sub">${D.range} · giorno ${D.day} di ${D.len}</span></div>${stepper()}</div>`;
+
+const hero = () => `<div class="figure hero"><span class="label">Rimasto da spendere</span>${money(D.remaining)}</div>`;
+const stats = () => `<div class="stats"><div class="figure stat"><span class="label">Entrate</span><span class="pos">${money(D.income)}</span></div><div class="figure stat"><span class="label">Uscite</span>${money(D.spent)}</div></div>`;
+
+const bar = (thick, ratio, pace, tone = '') => `<div class="track${thick ? ' thick' : ''}"><div class="fill ${tone}" style="inline-size:${ratio * 100}%"></div>${pace === null ? '' : `<span class="tick" style="inset-inline-start:${pace * 100}%"></span>`}</div>`;
+const ends = (start, end, pace, today = 'oggi') => `<div class="ends"><span class="s">${start}</span>${pace === null ? '' : `<span class="t" style="inset-inline-start:${pace * 100}%">${today}</span>`}<span class="e">${end}</span></div>`;
+
+/** §5.6: current cumulative (accent, 2px) over the mean of the 3 previous cycles (grey, 1.5px). Sample series. */
+function chart() {
+  const W = 440, H = 96, len = D.len, elapsed = D.day;
+  const usual = Array.from({ length: len }, (_, i) => 1900 * Math.pow((i + 1) / len, 1.15));
+  const current = Array.from({ length: elapsed }, (_, i) => 989.04 * Math.pow((i + 1) / elapsed, .9) * (1 + .06 * Math.sin(i * 1.7)));
+  current[elapsed - 1] = 989.04;
+  const max = Math.max(usual[len - 1], ...current) * 1.05;
+  const x = (i) => (i / (len - 1)) * W, y = (v) => H - (v / max) * H;
+  const pts = (s) => s.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const lx = x(elapsed - 1), ly = y(989.04);
+  return `<div class="chart"><div class="head"><span>Andamento del ciclo</span>${money(D.spent)}</div>
+  <svg viewBox="0 -14 ${W} ${H + 14}" role="img" aria-label="Andamento del ciclo: 989,04 € spesi, +136,00 € rispetto al solito">
+    <polyline points="${pts(usual)}" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5" stroke-linejoin="round"/>
+    <polyline points="${pts(current)}" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lx}" cy="${ly}" r="3" fill="var(--color-accent)"/>
+    <text x="${lx}" y="${ly - 10}" text-anchor="end" font-size="13" fill="var(--color-accent)" font-family="var(--font-family)" style="font-variant-numeric:tabular-nums">+136,00 € rispetto al solito</text>
+  </svg>
+  <div class="foot"><span>Giorno ${D.day} di ${D.len}</span><span>media dei 3 cicli precedenti in grigio</span></div></div>`;
+}
+
+/** C: the cycle as a track with day ticks, «oggi» and the upcoming items pinned to their day. */
+function cycleTrack() {
+  const days = Array.from({ length: D.len + 1 }, (_, i) => `<span class="day${i % 7 === 0 ? ' week' : ''}" style="inset-inline-start:${(i / D.len) * 100}%"></span>`).join('');
+  const marks = D.upcoming.map((u) => `<a class="mark press" tabindex="0" style="inset-inline-start:${(u.dayIndex / D.len) * 100}%" aria-label="${u.title}, ${u.date}, −${u.amt} €">
+    <span class="tip">${u.title} · ${money(u.amt, '−')}</span><span class="box">${icon(u.icon)}</span><span class="pin"></span></a>`).join('');
+  return `<div class="cycle"><div class="days">${days}${marks}</div>${bar(true, D.spentRatio, D.pace)}${ends('27 set', '26 ott', D.pace)}</div>`;
+}
+
+const row = (r, upcoming) => `<a class="row press" href="#">${ibox(r.icon, r.colour, upcoming ? 'repeat' : null)}<span class="text"><span class="t">${r.title}</span><span class="s">${r.date} · ${r.sub}</span></span><span class="amt${upcoming ? ' muted' : ''}${r.pos ? ' pos' : ''}">${money(r.amt, r.pos ? '+' : '−')}</span></a>`;
+const section = (title, trailing, body, more, attn) => `<section class="section"><div class="head"><span class="title">${title}</span><span class="trailing${attn ? ' attn' : ''}">${trailing}</span></div><div class="rows">${body}</div>${more ? `<a class="more press">${more}${icon('chevR')}</a>` : ''}</section>`;
+
+const upcomingSection = () => section('In arrivo', `${D.upcoming.length} voci`, D.upcoming.map((r) => row(r, true)).join(''));
+const recentSection = () => section('Ultime transazioni', '', D.recent.map((r) => row(r, false)).join(''), 'Tutte le transazioni');
+
+function featured(mode) {
+  const b = D.budget;
+  const figure = mode === 'remaining'
+    ? `<div class="famount">${money(b.left)}</div><span class="fof">rimasti · ${b.spent} € spesi di ${b.limit} € · ${b.pct}%</span>`
+    : `<div class="famount">${money(b.spent)}</div><span class="fof">di ${b.limit} € · ${b.pct}%</span>`;
+  const meta = mode === 'remaining' ? `${b.pct}% del limite` : `${b.left} € rimasti`;
+  return `<div class="featured${mode === 'remaining' ? ' remaining' : ''}">
+    <div class="fhead">${ibox('house', null)}<span class="fname">${b.name}</span><span class="fmeta">${meta}</span></div>
+    ${figure}
+    <div class="fbar">${bar(true, b.ratio, b.pace, 'over')}</div>
+    ${ends('27 set', '26 ott', b.pace)}
+    <p class="sentence">Puoi spendere ancora <b>${b.perDay} € al giorno</b> fino al 26 ott. <span>Sei ${b.over} € oltre il ritmo.</span></p>
+  </div>`;
+}
+const budgetSection = (mode) => section('Budget', '1 oltre il ritmo', featured(mode), 'Tutti i budget', true);
+const goalsSection = () => section('Obiettivi', 'Nessun obiettivo', `<p class="emptyNote">Un obiettivo mette da parte soldi in uno dei tuoi conti, verso una cifra e, se vuoi, una data.</p>`);
+
+/* ---------------- second round pieces ---------------- */
+/** §5.13 ring: progress (clamped), pace tick on the circle, icon in the item's colour. Decorative for AT. */
+function ring(size, b, iconName, colour) {
+  const s = bstate(b), r = (size - 3) / 2, c = 2 * Math.PI * r, p = Math.min(1, s.ratio);
+  const a = -Math.PI / 2 + D.pace * 2 * Math.PI, cx = size / 2, cy = size / 2;
+  const tx1 = cx + Math.cos(a) * (r - 4), ty1 = cy + Math.sin(a) * (r - 4), tx2 = cx + Math.cos(a) * (r + 4), ty2 = cy + Math.sin(a) * (r + 4);
+  return `<span class="ring${s.overPace ? ' attn' : ''}" style="width:${size}px;height:${size}px;color:${colour === null ? 'var(--color-text-muted)' : cat(colour)}" aria-hidden="true">
+    <svg viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--color-border-strong)" stroke-width="2"/>
+    <circle class="prog" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--color-text-muted)" stroke-width="2" stroke-linecap="round" stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>
+    <line x1="${tx1.toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="var(--color-text-muted)" stroke-width="1"/></svg>${icon(iconName)}</span>`;
+}
+const budgetStatus = (b) => { const s = bstate(b); if (s.overLimit) return { text: `${fmt(b.spent - b.limit)} € oltre il limite`, attn: true }; if (s.overPace) return { text: `${fmt(Math.round(b.spent - b.limit * D.pace))} € oltre il ritmo`, attn: true }; return { text: 'in linea', attn: false }; };
+const cardStatus = () => overPaceCount ? { text: `${overPaceCount} oltre il ritmo`, attn: true } : { text: 'nei limiti', attn: false };
+
+/** D: the budgets as a table. */
+function budgetTable() {
+  const head = `<span class="th">Budget</span><span class="th">Ciclo · 27 set – 26 ott</span><span class="th r">Speso</span><span class="th r">Limite</span><span class="th r">Rimasti</span><span class="th r">Al giorno</span>`;
+  const rows = D.budgets.map((b) => { const s = bstate(b), st = budgetStatus(b); return `<a class="brow press" href="#" aria-label="${b.name}, ${fmt(b.spent)} € di ${fmt(b.limit)} €, ${st.text}">
+    <span class="td"><span class="who">${ring(32, b, b.icon, b.colour)}<span class="text"><span class="t">${b.name}${b.sample ? ' <span class="status">· campione</span>' : ''}</span><span class="status${st.attn ? ' attn' : ''}">${s.pct}% · ${st.text}</span></span></span></span>
+    <span class="td"><span class="barcell">${bar(true, Math.min(1, s.ratio), D.pace, s.overPace ? 'over' : '')}${ends('', '', D.pace)}</span></span>
+    <span class="td r">${m(b.spent)}</span><span class="td r dim">${m(b.limit)}</span><span class="td r">${m(s.left)}</span><span class="td r dim">${m(s.perDay)}</span></a>`; }).join('');
+  const ghost = `<span class="brow ghost"><span class="td"><span class="who"><span class="ibox">${icon('swap')}</span><span class="text"><span class="t">Non a budget</span><span class="status">spese in categorie senza budget</span></span></span></span><span class="td"></span><span class="td r">${m(outsideSpent)}</span><span class="td r dim">—</span><span class="td r dim">—</span><span class="td r dim">—</span></span>`;
+  return `<div class="btable">${head}${rows}${ghost}</div>`;
+}
+
+/** E: one card per budget; figure = what is left (the hero's model). */
+function budgetCards() {
+  const cards = D.budgets.map((b) => { const s = bstate(b), st = budgetStatus(b); return `<a class="card press" href="#" aria-label="${b.name}, ${fmt(b.spent)} € di ${fmt(b.limit)} €, ${st.text}">
+    <div class="chead">${ring(32, b, b.icon, b.colour)}<span class="cname">${b.name}</span><span class="cpct${st.attn ? ' attn' : ''}">${s.pct}%</span></div>
+    <div><div class="cfig">${m(s.left)}</div><div class="cof">rimasti · ${fmt(b.spent)} € spesi di ${fmt(b.limit)} €</div></div>
+    <div>${bar(true, Math.min(1, s.ratio), D.pace, s.overPace ? 'over' : '')}${ends('27 set', '26 ott', D.pace)}</div>
+    <p class="csent"><b>${fmt(s.perDay)} € al giorno</b> fino al 26 ott. ${st.attn ? `Sei ${st.text}.` : 'Sei in linea con il ritmo.'}${b.sample ? ' <span class="status">(campione)</span>' : ''}</p></a>`; }).join('');
+  const ghost = `<a class="card ghost press" href="#"><span class="label">Non a budget</span>${m(outsideSpent)}<span class="label">spesi in categorie senza budget · <b style="color:var(--color-text);font-weight:500">Crea un budget</b></span></a>`;
+  return `<div class="cards">${cards}${ghost}</div>`;
+}
+
+/** F: income as one bar — a segment per budget limit (filled by spent), spending outside budgets, and what is free. */
+function allocation() {
+  const segs = [
+    ...D.budgets.map((b) => { const s = bstate(b); return { w: b.limit / D.incomeMinor, fill: Math.min(1, s.ratio), name: b.name, amt: `${fmt(b.spent)} di ${fmt(b.limit)} €`, colour: b.colour === null ? 'var(--color-text-muted)' : cat(b.colour), attn: s.overPace, cls: '' }; }),
+    { w: outsideSpent / D.incomeMinor, fill: 1, name: 'Non a budget', amt: `${fmt(outsideSpent)} € spesi`, colour: 'var(--color-bar-grey)', cls: 'spentout' },
+    { w: freeMinor / D.incomeMinor, fill: 0, name: 'Libero', amt: `${fmt(freeMinor)} € senza budget`, colour: '', cls: 'free' },
+  ];
+  const bars = segs.map((s) => `<a class="segm press ${s.cls}${s.attn ? ' attn' : ''}" href="#" style="flex:${s.w} 0 0;--seg-colour:${s.colour}" aria-label="${s.name}, ${s.amt}"><span class="fillc" style="inline-size:${(s.fill * 100).toFixed(1)}%"></span>${s.cls === '' ? `<span class="ptick" style="inset-inline-start:${D.pace * 100}%"></span>` : ''}</a>`).join('');
+  /* a label needs ~90px: with 1120px for 100% a segment under 8% drops its label (rule to write in the spec) */
+  const labels = segs.map((s) => `<span class="lab ${s.cls}${s.attn ? ' attn' : ''}${s.w < .08 ? ' hidden' : ''}" style="flex:${s.w} 0 0;--seg-colour:${s.colour}"><span class="n">${s.name}</span><span class="num">${s.amt}</span></span>`).join('');
+  return `<div class="alloc"><div class="barwrap">${bars}</div><div class="labels">${labels}</div><div class="cap"><span>Entrate ${fmt(D.incomeMinor)} € = ${fmt(sumBudgetLimit)} € di limiti + ${fmt(outsideSpent)} € non a budget + ${fmt(freeMinor)} € liberi</span><span>la tacca è oggi, giorno ${D.day} di ${D.len}</span></div></div>`;
+}
+function budgetList() {
+  const rows = D.budgets.map((b) => { const s = bstate(b), st = budgetStatus(b); return `<a class="brow press" href="#" aria-label="${b.name}, ${fmt(b.spent)} € di ${fmt(b.limit)} €, ${st.text}">${ring(36, b, b.icon, b.colour)}
+    <span class="text"><span class="t">${b.name}${b.sample ? ' <span class="status">· campione</span>' : ''}</span><span class="status${st.attn ? ' attn' : ''}">${fmt(b.spent)} di ${fmt(b.limit)} € · ${st.text}</span></span>
+    <span class="mini">${bar(true, Math.min(1, s.ratio), D.pace, s.overPace ? 'over' : '')}</span>
+    <span class="left">${m(s.left)}<span class="label">${fmt(s.perDay)} € al giorno</span></span></a>`; }).join('');
+  const ghost = `<span class="brow ghost"><span class="ibox">${icon('swap')}</span><span class="text"><span class="t">Non a budget</span><span class="status">spese in categorie senza budget</span></span><span></span><span class="left">${m(outsideSpent)}<span class="label">spesi</span></span></span>`;
+  return `<div class="blist">${rows}${ghost}</div>`;
+}
+const sideNav = () => `<aside class="side">
+  <a class="brand press" href="#"><span class="mark">S</span>Saldo</a>
+  <nav class="nav"><a class="press" aria-current="page">${icon('house')}Home</a><a class="press">${icon('list')}Transazioni</a><a class="press">${icon('activity')}Statistiche</a><a class="press">${icon('wallet')}Conti</a><a class="press">${icon('shield')}Admin</a></nav>
+  <div class="bottom"><a class="new press">${icon('plus')}Nuova transazione <kbd>N</kbd></a><span class="me"><span class="avatar">SA</span>Saliou</span></div></aside>`;
+const goalsLine = () => section('Obiettivi', 'Nessun obiettivo', `<p class="emptyNote">Un obiettivo mette da parte soldi in uno dei tuoi conti, verso una cifra e, se vuoi, una data.</p>`, 'Crea un obiettivo');
+
+/* G: Obiettivi as a section with the same grid as Budget; today empty, so one ghost card that is the way to create one. */
+const goalsCards = () => `<div class="cards"><a class="card ghost press" href="#"><span class="label">Nessun obiettivo</span><p>Un obiettivo mette da parte soldi in uno dei tuoi conti, verso una cifra e, se vuoi, una data.</p><span class="label"><b style="color:var(--color-text);font-weight:500">Crea un obiettivo</b></span></a></div>`;
+/* G: one section «Transazioni»: the last ones on the left, what is coming on the right; one footer link. */
+const txSection = () => `<section class="section"><div class="head"><span class="title">Transazioni</span><span class="trailing">${D.upcoming.length} in arrivo · ${D.committed} €</span></div>
+  <div class="txcols"><div><span class="glabel">Ultime</span><div class="rows">${D.recent.map((r) => row(r, false)).join('')}</div></div>
+  <div><span class="glabel">In arrivo · <span class="num">entro il 26 ott</span></span><div class="rows">${D.upcoming.map((r) => row(r, true)).join('')}</div></div></div>
+  <a class="more press">Tutte le transazioni${icon('chevR')}</a></section>`;
+
+/* ---------------- variants ---------------- */
+const V = {
+  '0': {
+    caption: '<b>0 · Attuale.</b> La Home com’è oggi, nello stesso frame delle proposte: fascia <code>1fr auto</code>, barra 4px, legenda 11px, stepper a destra.',
+    render: () => `${period(false)}` && `<div class="band0">${period(false)}${hero()}${stats()}<div class="bar">${bar(false, D.spentRatio, D.pace)}</div><div class="legend"><span>speso il 35% delle entrate</span><span>oggi è il 50% del periodo</span></div></div>
+      <div class="columns"><div class="col">${upcomingSection()}${recentSection()}</div><div class="col">${budgetSection('spent')}${goalsSection()}</div></div>`,
+  },
+  'A': {
+    caption: '<b>A · Vicina.</b> Stessa pagina, mappature corrette: Entrate e Uscite sotto la cifra, ‹ › accanto a «Ottobre», barra 8px con «oggi», andamento del ciclo (§5.6) nella colonna destra della fascia, sulla griglia 7/5 delle sezioni. Pressione 0,96 ovunque.',
+    render: () => `<div class="bandA">${period(true)}<div class="heroGroup">${hero()}${stats()}</div>${chart()}
+      <div class="barRow">${bar(true, D.spentRatio, D.pace)}${ends('27 set · speso il 35% delle entrate', '26 ott', D.pace)}</div></div>
+      <div class="columns"><div class="col">${upcomingSection()}${recentSection()}</div><div class="col">${budgetSection('spent')}${goalsSection()}</div></div>`,
+  },
+  'B': {
+    caption: '<b>B · Materia.</b> La fascia è un oggetto solo: superficie, nessuna linea dentro, cifra e grafico e barra insieme. Top bar traslucida; il bordo è una sfumatura che compare solo scorrendo. Budget in evidenza riformulato: la cifra grande è quanto resta, come l’hero.',
+    render: () => `<div class="bandB">${period(true)}<div class="heroGroup">${hero()}${stats()}</div>${chart()}
+      <div class="barRow">${bar(true, D.spentRatio, D.pace)}${ends('27 set · speso il 35% delle entrate', '26 ott', D.pace)}</div></div>
+      <div class="columns"><div class="col">${upcomingSection()}${recentSection()}</div><div class="col">${budgetSection('remaining')}${goalsSection()}</div></div>`,
+  },
+  'C': {
+    caption: '<b>C · Ritmo.</b> La fascia è il ciclo: i 30 giorni come traccia, «oggi» sulla tacca, le voci in arrivo appese al loro giorno (hover: importo). Accanto alla cifra, quanto puoi spendere al giorno. «In arrivo» esce dalla colonna sinistra, che tiene solo le ultime transazioni.',
+    render: () => `<div class="bandC">${period(true)}<div class="top"><div class="heroGroup">${hero()}<p class="perDay"><b>${D.perDay} € al giorno</b> per 15 giorni · ${D.committed} € già impegnati</p></div>${stats()}</div>${cycleTrack()}</div>
+      <div class="columns"><div class="col">${recentSection()}</div><div class="col">${budgetSection('remaining')}${goalsSection()}</div></div>`,
+  },
+  'D': {
+    caption: '<b>D · Buste.</b> Una colonna sola, i budget al centro come tabella: anello, nome e stato, barra 8px con «oggi», poi speso · limite · rimasti · al giorno in colonne allineate. In fondo «Non a budget». I tre numeri del ciclo stanno in testa, in riga col periodo. Transazioni e «In arrivo» sotto, in due colonne.',
+    render: () => { const st = cardStatus(); return `<div class="layD">
+      <div class="dhead">${period(true)}<div class="figures">${stats()}${hero()}</div></div>
+      <div class="headrow"><span class="title">Budget</span><span class="right"><span class="status${st.attn ? ' attn' : ''}">${st.text}</span><a class="more press">Tutti i budget · ${D.budgets.length}${icon('chevR')}</a></span></div>
+      ${budgetTable()}
+      <div class="bottom"><div class="col">${recentSection()}</div><div class="col">${upcomingSection()}${goalsLine()}</div></div></div>`; },
+  },
+  'E': {
+    caption: '<b>E · Quadro.</b> Barra laterale a sinistra con la nav e «Nuova transazione»; la pagina perde la top bar e guadagna larghezza. In testa hero con Entrate/Uscite e l’andamento del ciclo (§5.6). I budget sono una griglia di schede 3×: la cifra è quanto resta, poi «al giorno»; l’ultima scheda è «Non a budget» con «Crea un budget». Sotto, transazioni e obiettivi.',
+    shell: true,
+    render: () => { const st = cardStatus(); return `${sideNav()}<div class="mainE"><main class="content layE">
+      <div class="top"><div>${period(true)}<div class="heroGroup">${hero()}${stats()}</div></div>${chart()}</div>
+      <section class="section"><div class="head"><span class="title">Budget</span><span class="trailing${st.attn ? ' attn' : ''}">${st.text}</span></div>${budgetCards()}</section>
+      <div class="bottom"><div class="col">${recentSection()}</div><div class="col">${upcomingSection()}${goalsLine()}</div></div></main></div>`; },
+  },
+  'G': {
+    caption: '<b>G · Quadro II.</b> E con la pagina divisa in tre sezioni uguali, una sotto l’altra: <b>Budget</b> (schede 3×, come E), <b>Obiettivi</b> (stessa griglia; oggi una scheda vuota che è la via per crearne uno) e <b>Transazioni</b> (una sezione sola: «Ultime» a sinistra, «In arrivo» a destra, un solo «Tutte le transazioni»). Sidebar e testa come E.',
+    shell: true,
+    render: () => { const st = cardStatus(); return `${sideNav()}<div class="mainE"><main class="content layE layG">
+      <div class="top"><div>${period(true)}<div class="heroGroup">${hero()}${stats()}</div></div>${chart()}</div>
+      <section class="section"><div class="head"><span class="title">Budget</span><span class="trailing${st.attn ? ' attn' : ''}">${st.text}</span></div>${budgetCards()}</section>
+      <section class="section"><div class="head"><span class="title">Obiettivi</span><span class="trailing">Nessun obiettivo</span></div>${goalsCards()}</section>
+      ${txSection()}</main></div>`; },
+  },
+  'F': {
+    caption: '<b>F · Flusso.</b> La Home è una frase: Entrate → budget → libero. Una barra impilata a tutta larghezza divide le entrate in un segmento per budget (riempito dallo speso, tacca = oggi), «Non a budget» e «Libero». Sotto, a sinistra la cifra e cosa resta libero; a destra la lista dei budget con rimasti e «al giorno». Transazioni in fondo.',
+    render: () => { const st = cardStatus(); return `<div class="layF">
+      ${period(true)}${allocation()}
+      <div class="mid"><div class="heroGroup">${hero()}${stats()}<div class="freebox"><span class="label"><b>Libero</b> · entrate non promesse a un budget</span>${m(freeMinor)}</div></div>
+      <section class="section"><div class="head"><span class="title">Budget</span><span class="trailing${st.attn ? ' attn' : ''}">${st.text}</span></div>${budgetList()}<a class="more press">Tutti i budget · ${D.budgets.length}${icon('chevR')}</a></section></div>
+      <div class="bottom"><div class="col">${recentSection()}</div><div class="col">${upcomingSection()}${goalsLine()}</div></div></div>`; },
+  },
+};
+
+/* ---------------- harness ---------------- */
+const app = document.getElementById('app');
+const params = new URLSearchParams(location.search);
+let variant = V[params.get('variant')] ? params.get('variant') : 'G';
+let theme = params.get('theme') === 'light' ? 'light' : 'dark';
+if (params.get('full')) document.documentElement.classList.add('full');
+
+function seg(el, items, current, onPick) {
+  el.innerHTML = items.map((i) => `<button aria-pressed="${i.id === current}" data-id="${i.id}">${i.label}</button>`).join('');
+  el.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => onPick(b.dataset.id)));
+}
+function render() {
+  app.dataset.v = variant; app.dataset.theme = theme;
+  app.innerHTML = V[variant].shell ? V[variant].render() : `${topbar()}<main class="content">${V[variant].render()}</main>`;
+  app.scrollTop = 0; app.classList.remove('scrolled');
+  document.getElementById('caption').innerHTML = V[variant].caption;
+  seg(document.getElementById('segV'), [{ id: '0', label: '0 · Attuale' }, { id: 'A', label: 'A · Vicina' }, { id: 'B', label: 'B · Materia' }, { id: 'C', label: 'C · Ritmo' }, { id: 'D', label: 'D · Buste' }, { id: 'E', label: 'E · Quadro' }, { id: 'F', label: 'F · Flusso' }, { id: 'G', label: 'G · Quadro II' }], variant, (id) => { variant = id; sync(); });
+  seg(document.getElementById('segT'), [{ id: 'dark', label: 'Scuro' }, { id: 'light', label: 'Chiaro' }], theme, (id) => { theme = id; sync(); });
+}
+function sync() { const u = new URL(location.href); u.searchParams.set('variant', variant); u.searchParams.set('theme', theme); history.replaceState(null, '', u); render(); }
+app.addEventListener('scroll', () => app.classList.toggle('scrolled', app.scrollTop > 2), { passive: true });
+render();
+</script>
+</body>
+</html>

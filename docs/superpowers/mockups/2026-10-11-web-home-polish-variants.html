@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo web — Home · G · Quadro II</title>
+<!--
+  Scoping UI della Home web (2026-10-11). Un file, una variante viva: G · Quadro II, in due stati.
+
+  Percorso (le varianti scartate sono in 2026-10-11-web-home-rounds-1-2.html):
+    giro 1  0 Attuale · A Vicina · B Materia · C Ritmo  → «nessuna convince»
+    giro 2  D Buste · E Quadro · F Flusso               → «la sidebar e le sezioni di E convincono;
+                                                            sezione anche per Obiettivi; Ultime + In arrivo insieme»
+    giro 3  G · Quadro II = E con tre sezioni in colonna: Transazioni · Budget · Obiettivi (2026-10-11: «le transazioni devono essere le prime da vedere»)
+    giro 4  G2 = G dopo la passata better-ui (tabella in fondo: focus concentrico, transizioni
+            interrompibili, legende 13px, bordo fermo + ombra all'hover, azione nelle schede vuote, tratti)
+
+  URL: ?variant=G|G2&theme=dark|light (&full=1 = cornice alta quanto la pagina)
+  Dati: screenshot del 2026-10-11 (Ottobre, giorno 15 di 30). Solo «Family & Personal» è un budget reale;
+  Spesa, Trasporti, Abbonamenti sono campioni (segnati). «Non a budget» è calcolato dai campioni.
+-->
+<style>
+@font-face{font-family:Geist;font-weight:400;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf")}
+@font-face{font-family:Geist;font-weight:500;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf")}
+@font-face{font-family:Geist;font-weight:600;src:url("../../../node_modules/.pnpm/@expo-google-fonts+geist@0.4.2/node_modules/@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf")}
+
+/* ---------- tokens — the names tokensCss() emits (packages/ui/src/tokens.ts) ---------- */
+:root{
+  --font-family:Geist,"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+  --font-size-caption:11px;--font-size-footnote:13px;--font-size-body:15px;--font-size-headline:17px;--font-size-amount-lg:32px;--font-size-title:24px;--font-size-display:34px;--font-size-hero-web:56px;
+  --font-weight-regular:400;--font-weight-medium:500;--font-weight-semibold:600;
+  --tracking-tightest:-0.03em;--tracking-tighter:-0.02em;--tracking-tight:-0.01em;
+  --radius-icon-box:8px;--radius-chip-small:9px;--radius-input:10px;--radius-button:12px;--radius-card:14px;--radius-dialog:16px;--radius-pill:999px;
+  --layout-topbar-height:64px;--layout-content-wide:1120px;--layout-page-padding-web:48px;--layout-nav-item-height:36px;--layout-header-button:34px;
+  --layout-icon-box:32px;--layout-min-hit-target:44px;--layout-section-gap-web:56px;--layout-column-gap-web:72px;
+  --layout-progress-height:4px;--layout-progress-height-thick:8px;--layout-pace-tick-overhang:3px;--layout-pace-tick-overhang-thick:4px;
+  --motion-press:120ms;--motion-easing:cubic-bezier(0.2,0,0,1);--motion-fade:200ms;
+  --category-0:#C57B4E;--category-9:#8A8A8A;--category-21:#B35878;--category-5:#5A82A6;--category-14:#4A8560;
+  --chrome:#17171a;--chrome-text:#d6d6d6;--chrome-dim:#8a8a8a;
+}
+[data-theme="dark"]{color-scheme:dark;
+  --color-page:#050505;--color-bg:#0A0A0A;--color-surface:#121212;--color-raised:#1A1A1A;
+  --color-border:rgba(255,255,255,0.07);--color-border-strong:rgba(255,255,255,0.12);
+  --color-text:#EDEDED;--color-text-muted:#8C8C8C;--color-text-faint:#5C5C5C;
+  --color-accent:#C7C7C7;--color-positive:#5FBF7F;--color-on-accent:#0A0A0A;--color-bar-grey:#3A3A3A;--color-track:#1E1E1E;--color-shadow:rgba(0,0,0,0.5);
+  --bg-glass:rgba(10,10,10,0.72);}
+[data-theme="light"]{color-scheme:light;
+  --color-page:#E9E9E7;--color-bg:#FFFFFF;--color-surface:#FAFAF9;--color-raised:#F1F1EF;
+  --color-border:rgba(0,0,0,0.08);--color-border-strong:rgba(0,0,0,0.18);
+  --color-text:#171717;--color-text-muted:#6E6E6E;--color-text-faint:#9A9A9A;
+  --color-accent:#4A4A46;--color-positive:#2E8A50;--color-on-accent:#FFFFFF;--color-bar-grey:#C9C9C6;--color-track:#EDEDEB;--color-shadow:rgba(0,0,0,0.12);
+  --bg-glass:rgba(255,255,255,0.72);}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0e0e10;color:var(--chrome-text);font-family:var(--font-family);font-size:13px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input,kbd{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none;cursor:pointer}
+
+/* ---------- harness chrome ---------- */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:10px 16px;background:var(--chrome);border-bottom:1px solid #2a2a2e;position:sticky;top:0;z-index:5}
+.toolbar .grp{display:flex;align-items:center;gap:6px}
+.toolbar .label{color:var(--chrome-dim);margin-right:2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.seg{display:flex;background:#232327;border-radius:8px;padding:2px}
+.seg button{padding:5px 10px;border-radius:6px;color:var(--chrome-dim);font-size:12.5px}
+.seg button[aria-pressed="true"]{background:#3a3a40;color:#fff}
+.toolbar .caption{flex:1 1 100%;color:var(--chrome-dim);font-size:12.5px;line-height:1.45;max-width:1180px}
+.toolbar .caption b{color:#e6e6e6;font-weight:500}
+.stage{display:flex;gap:24px;padding:24px;align-items:flex-start;justify-content:center}
+.frame{border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45);border:1px solid #2a2a2e;background:var(--color-bg);display:flex;flex-direction:column;width:1280px;height:860px;flex:none}
+.urlbar{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;background:#1b1b1f;color:#9a9a9a;font-size:12px;border-bottom:1px solid #2a2a2e;flex:none}
+.urlbar .dots{display:flex;gap:5px}.urlbar .dots i{width:10px;height:10px;border-radius:50%;background:#3a3a40}
+.urlbar .u{flex:1;text-align:center;font-family:ui-monospace,Menlo,monospace}
+.notes{max-width:1280px;margin:8px auto 64px;padding:0 24px;color:var(--chrome-dim);font-size:13px;line-height:1.55}
+.notes h2{color:#e6e6e6;font-size:17px;font-weight:600;margin:32px 0 8px}
+.notes p{max-width:900px;text-wrap:pretty;margin-bottom:8px}
+.notes table{border-collapse:collapse;margin-top:8px;width:100%}
+.notes td,.notes th{border-top:1px solid #2a2a2e;padding:8px 16px 8px 0;text-align:left;vertical-align:top}
+.notes th{color:#e6e6e6;font-weight:500}
+.notes code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#c9c9c9}
+.notes .sev{display:inline-block;padding:1px 6px;border-radius:5px;font-size:11px;font-weight:500;background:#2a2a2e;color:#fff}
+.notes .sev.h{background:#5a2d2d}.notes .sev.m{background:#4a3f22}
+
+/* ---------- app (reads only token variables) ---------- */
+.app{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-size:var(--font-size-body);overflow:auto;position:relative;scrollbar-width:thin}
+/* ?full=1: the frame grows with the page (for full-page screenshots) */
+html.full .frame{height:auto}html.full .app{overflow:visible}html.full .mainE{overflow:visible}
+.app :focus-visible{outline:2px solid var(--color-text);outline-offset:2px;border-radius:var(--radius-input)}
+.press{transition-property:scale,background-color,color;transition-duration:var(--motion-press);transition-timing-function:var(--motion-easing)}
+.press:active{scale:.96}
+@media (prefers-reduced-motion:reduce){.press:active{scale:1!important}}
+.ico{width:1em;height:1em;font-size:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:var(--tracking-tighter)}
+.num .dec{opacity:.5}
+.pos{color:var(--color-positive)}
+
+/* ---- shell pieces shared with the sidebar (TopBar.module.css, NavLink.module.css) ---- */
+.brand{display:flex;align-items:center;gap:10px;font-weight:var(--font-weight-semibold);font-size:var(--font-size-headline);letter-spacing:var(--tracking-tight)}
+.brand .mark{width:28px;height:28px;border-radius:var(--radius-icon-box);background:var(--color-raised);display:grid;place-items:center;font-size:var(--font-size-footnote)}
+.nav{display:flex;gap:4px}
+.nav a{display:inline-flex;align-items:center;gap:8px;height:var(--layout-nav-item-height);padding:0 12px;border-radius:var(--radius-input);color:var(--color-text-muted);letter-spacing:var(--tracking-tight)}
+.nav a:hover{color:var(--color-text)}
+.nav a[aria-current="page"]{color:var(--color-text);background:var(--color-raised)}
+.new{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:var(--radius-button);background:var(--color-accent);color:var(--color-on-accent);font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium);white-space:nowrap}
+.new kbd{font-size:var(--font-size-caption);border:1px solid currentColor;border-radius:var(--radius-icon-box);padding:0 5px;opacity:.55;line-height:1.5}
+.avatar{width:34px;height:34px;border-radius:var(--radius-pill);background:var(--color-raised);display:grid;place-items:center;font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium)}
+
+
+
+/* ---- period header (PeriodHeader.module.css) ---- */
+.period{display:flex;align-items:center;gap:16px}
+.period .what{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.period .title{font-size:var(--font-size-title);font-weight:var(--font-weight-semibold);letter-spacing:var(--tracking-tighter)}
+.period .sub{font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.stepper{display:flex;block-size:var(--layout-header-button);border-radius:var(--radius-chip-small);background:var(--color-raised);border:1px solid var(--color-border);overflow:hidden;flex:none}
+.stepper a{display:grid;place-items:center;inline-size:36px;color:var(--color-text-muted)}
+.stepper a+a{border-inline-start:1px solid var(--color-border)}
+.stepper a:hover{color:var(--color-text)}
+.period.inline .what{flex:0 1 auto}
+.period.inline .titleRow{display:flex;align-items:center;gap:12px}
+.period.inline .sub{margin-top:2px}
+
+/* ---- hero figures (HeroBand.module.css) ---- */
+.figure{display:flex;flex-direction:column;gap:4px}
+.figure .label{font-size:var(--font-size-footnote);color:var(--color-text-faint)}
+.hero .label{color:var(--color-text-muted)}
+.hero .num{font-size:var(--font-size-hero-web);font-weight:var(--font-weight-semibold);letter-spacing:var(--tracking-tightest);line-height:1.1}
+.stat .num{font-size:var(--font-size-headline)}
+.stats{display:flex;gap:48px}
+
+/* ---- progress bar (ProgressBar.module.css) ---- */
+.track{position:relative;block-size:var(--layout-progress-height);border-radius:var(--radius-pill);background:var(--color-track)}
+.track.thick{block-size:var(--layout-progress-height-thick)}
+.track .fill{block-size:100%;border-radius:var(--radius-pill);background:var(--color-bar-grey)}
+.track .fill.over{background:var(--color-accent)}
+.track .tick{position:absolute;inset-block:calc(-1*var(--layout-pace-tick-overhang));inline-size:1px;background:var(--color-text-muted)}
+.track.thick .tick{inset-block:calc(-1*var(--layout-pace-tick-overhang-thick))}
+.ends{position:relative;height:16px;margin-top:8px;font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.ends span{position:absolute;white-space:nowrap}
+.ends .s{inset-inline-start:0}.ends .e{inset-inline-end:0}
+.ends .t{text-align:center;color:var(--color-text-muted);inline-size:64px;margin-inline-start:-32px}
+
+/* ---- chart §5.6 ---- */
+.chart{display:flex;flex-direction:column;gap:8px;min-width:0}
+.chart .head{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.chart .head .num{color:var(--color-text);letter-spacing:var(--tracking-tight)}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .foot{display:flex;justify-content:space-between;font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.chart .delta{font-size:var(--font-size-footnote);color:var(--color-accent);font-variant-numeric:tabular-nums}
+
+/* ---- sections (Section.module.css, open) ---- */
+.section{display:flex;flex-direction:column;gap:12px}
+.section .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--color-border)}
+.section .title{font-size:var(--font-size-headline);font-weight:var(--font-weight-medium);letter-spacing:var(--tracking-tight)}
+.section .trailing{font-size:var(--font-size-footnote);color:var(--color-text-faint);font-variant-numeric:tabular-nums}
+.section .trailing.attn{color:var(--color-accent)}
+.section .trailing{color:var(--color-text-muted)}
+.rows{display:flex;flex-direction:column}
+.more{display:flex;align-items:center;justify-content:space-between;min-height:var(--layout-min-hit-target);font-size:var(--font-size-footnote);color:var(--color-text-muted);border-radius:var(--radius-input)}
+.more:hover{color:var(--color-text)}
+.emptyNote{padding-block:4px;font-size:var(--font-size-footnote);color:var(--color-text-muted);text-wrap:pretty;max-width:52ch;line-height:1.5}
+
+/* ---- rows (ListRow.module.css, open) ---- */
+.row{position:relative;display:flex;align-items:center;gap:14px;min-height:var(--layout-min-hit-target);padding:12px 0;border-radius:var(--radius-input);color:var(--color-text)}
+.row:hover{background:color-mix(in srgb,var(--color-raised) 60%,transparent);box-shadow:0 0 0 8px color-mix(in srgb,var(--color-raised) 60%,transparent)}
+.row .text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.row .t{font-size:var(--font-size-body);letter-spacing:var(--tracking-tight);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .s{font-size:var(--font-size-footnote);color:var(--color-text-faint);margin-top:1px}
+.row .amt{margin-inline-start:auto;font-size:var(--font-size-body)}
+.row .amt.muted{color:var(--color-text-muted)}
+.ibox{position:relative;flex:none;width:var(--layout-icon-box);height:var(--layout-icon-box);border-radius:var(--radius-icon-box);background:var(--color-raised);display:grid;place-items:center}
+.ibox .badge{position:absolute;inset-block-end:-2px;inset-inline-end:-2px;width:14px;height:14px;border-radius:var(--radius-pill);background:var(--color-bg);color:var(--color-text-muted);display:grid;place-items:center}
+.ibox .badge .ico{font-size:10px}
+
+/* ---- rings (§5.13): progress on the circle, pace tick, icon in the centre ---- */
+.ring{position:relative;flex:none;display:grid;place-items:center}
+.ring>svg:not(.ico){position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring .ico{position:relative}
+.ring.attn svg .prog{stroke:var(--color-accent)}
+.status{font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.status.attn{color:var(--color-accent)}
+.label{font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+
+/* ---- G · Quadro II: sidebar + cards (from E) ---- */
+.side{flex:none;width:232px;display:flex;flex-direction:column;gap:24px;padding:20px 16px;border-inline-end:1px solid var(--color-border);background:var(--color-surface)}
+.side .brand{padding:6px 10px}
+.side .nav{flex-direction:column;gap:2px}
+.side .nav a{height:var(--layout-nav-item-height);padding:0 10px}
+.side .bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.side .new{justify-content:center;height:40px}
+.side .me{display:flex;align-items:center;gap:10px;padding:6px 6px;font-size:var(--font-size-footnote);color:var(--color-text-muted)}
+.side .me .avatar{width:28px;height:28px;font-size:var(--font-size-caption)}
+.mainE{flex:1;min-width:0;overflow:auto;scrollbar-width:thin}
+.mainE .content{max-width:1120px;padding:40px 48px 64px}
+.layE .top{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);align-items:end;margin-bottom:var(--layout-section-gap-web)}
+.layE .top .heroGroup{display:flex;flex-direction:column;gap:20px}
+.layE .top .period{margin-bottom:28px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{display:flex;flex-direction:column;gap:14px;padding:20px 22px;border-radius:var(--radius-card);background:var(--color-surface);box-shadow:0 0 0 1px var(--color-border) inset;color:var(--color-text);text-align:start}
+.card:hover{box-shadow:0 0 0 1px var(--color-border-strong) inset,0 1px 2px var(--color-shadow)}
+.card .chead{display:flex;align-items:center;gap:10px;min-width:0}
+.card .cname{font-size:var(--font-size-body);font-weight:var(--font-weight-medium);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.card .cpct{font-size:var(--font-size-footnote);color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.card .cpct.attn{color:var(--color-accent)}
+.card .cfig .num{font-size:var(--font-size-amount-lg);font-weight:var(--font-weight-semibold);line-height:1.1}
+.card .cof{font-size:var(--font-size-footnote);color:var(--color-text-muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.card .ends{height:14px;margin-top:6px;font-size:var(--font-size-caption)}
+.card .csent{font-size:var(--font-size-footnote);color:var(--color-text-muted);line-height:1.45;text-wrap:pretty}
+.card .csent b{color:var(--color-text);font-weight:var(--font-weight-medium)}
+.card.ghost{box-shadow:0 0 0 1px var(--color-border) inset;background:transparent;color:var(--color-text-muted);justify-content:center;align-items:flex-start}
+.card.ghost .num{font-size:var(--font-size-headline);color:var(--color-text)}
+.layE .bottom{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);row-gap:var(--layout-section-gap-web);margin-top:var(--layout-section-gap-web)}
+
+/* ---- G: three sections in a column (Transazioni · Budget · Obiettivi) ---- */
+.app{flex-direction:row;overflow:hidden}
+.layG .section+.section{margin-top:var(--layout-section-gap-web)}
+.layG .section .head{align-items:center}
+.layG .txcols{display:grid;grid-template-columns:7fr 5fr;column-gap:var(--layout-column-gap-web);align-items:start}
+.layG .glabel{display:block;padding:6px 0 2px;font-size:var(--font-size-footnote);color:var(--color-text-muted);letter-spacing:var(--tracking-tight)}
+.layG .glabel .num{font-variant-numeric:tabular-nums}
+.layG .card.ghost p{margin:0;font-size:var(--font-size-footnote);line-height:1.45;text-wrap:pretty}
+.card .act{display:inline-flex;align-items:center;gap:4px;color:var(--color-text);font-size:var(--font-size-footnote);font-weight:var(--font-weight-medium);min-height:24px}
+.app[data-v="G"] .card .act .ico{display:none}
+
+/* ---- G2 · better-ui pass (each rule names the principle it serves) ---- */
+/* concentric: the focus ring follows the element's own radius (+2px offset); the harness rule above forces 10px on everything */
+.app[data-v="G2"] .card:focus-visible{border-radius:var(--radius-card)}
+.app[data-v="G2"] .new:focus-visible{border-radius:var(--radius-button)}
+.app[data-v="G2"] .stepper a:focus-visible{outline-offset:-2px;border-radius:calc(var(--radius-chip-small) - 1px)}
+/* interruptible, only what changes: the hover halo/shadow moves with scale and colour, 120ms, same curve */
+.app[data-v="G2"] .card,.app[data-v="G2"] .row{transition-property:scale,background-color,color,box-shadow}
+/* shadows for elevation, borders for structure: the border stays; depth comes from the shadow */
+.app[data-v="G2"] .card:hover{box-shadow:0 0 0 1px var(--color-border) inset,0 1px 2px var(--color-shadow),0 4px 12px color-mix(in srgb,var(--color-shadow) 40%,transparent)}
+/* consistency: the first round moved every legend to 13px; the cards had slipped back to 11px */
+.app[data-v="G2"] .card .ends{font-size:var(--font-size-footnote);height:16px;margin-top:8px}
+/* stroke weights: the pace tick matches the 1.5px icon stroke inside the same 32px glyph */
+.app[data-v="G2"] .ring line{stroke-width:1.5}
+/* optical alignment: a chevron's visual centre sits inside its bounding box; nudge outward */
+.app[data-v="G2"] .stepper a:first-child .ico{translate:-.5px 0}
+.app[data-v="G2"] .stepper a:last-child .ico{translate:.5px 0}
+/* hover ≠ selected: hover paints 60% of the raised surface, the current page 100% */
+.app[data-v="G2"] .side .nav a:hover:not([aria-current]){background:color-mix(in srgb,var(--color-raised) 60%,transparent)}
+
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <div class="grp"><span class="label">Variante</span><div class="seg" id="segV"></div></div>
+  <div class="grp"><span class="label">Tema</span><div class="seg" id="segT"></div></div>
+  <p class="caption" id="caption"></p>
+</div>
+<div class="stage">
+  <div class="frame">
+    <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="u">saldo.local/home</span></div>
+    <div class="app" id="app" data-theme="dark"></div>
+  </div>
+</div>
+
+<section class="notes">
+<h2>Lettura della Home di oggi (better-ui · apple-design)</h2>
+<p>Quattro cose pesano più delle altre. Ogni riga sotto dice dove sta nel codice, cosa fa oggi e cosa cambia nelle varianti.</p>
+<table>
+<tr><th>Gravità</th><th>Dove</th><th>Oggi</th><th>Dopo</th><th>Perché</th></tr>
+<tr><td><span class="sev h">Alta</span></td><td><code>HeroBand.module.css:44-48</code></td><td>Griglia <code>1fr auto</code>: «Rimasto da spendere» a sinistra, Entrate e Uscite a 900px, sul bordo destro.</td><td>Entrate e Uscite sotto la cifra, nello stesso gruppo (A, B, C).</td><td>Mappatura (apple §16, «grouping &amp; mapping»): tre numeri che si spiegano a vicenda stanno vicini. Oggi l'occhio attraversa la pagina per leggere la sottrazione.</td></tr>
+<tr><td><span class="sev h">Alta</span></td><td><code>HeroBand.module.css:28-33</code> · <code>tokens.progressHeight</code></td><td>Barra 4px su 1120px, tacca del ritmo 1px, legenda 11px in <code>textFaint</code> (#5C5C5C su #0A0A0A ≈ 2,9:1).</td><td>Barra 8px (<code>progressHeightThick</code>), «27 set · oggi · 26 ott» a 13px in <code>textMuted</code>, legenda sopra la barra (A, B); traccia dei giorni (C).</td><td>È il solo segnale «sei avanti o indietro» della pagina ed è un capello. La legenda non passa AA.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>PeriodHeader.module.css:3-11</code></td><td>Lo stepper ‹ › è a 1000px dalla parola «Ottobre» che cambia.</td><td>Stepper accanto al titolo (A, B, C).</td><td>Apple §16: il controllo vicino a ciò che cambia. Niente etichetta serve se la mappa è giusta.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>home/page.tsx</code> Featured, <code>amount={featuredBudget.spent}</code></td><td>La cifra grande del budget è lo <b>speso</b> (485,61 €); l'hero sopra è il <b>rimasto</b>. Due «grandi numeri» con verso opposto; «214,39 € rimasti» finisce in 13px faint.</td><td>Cifra grande = rimasti (214,39 €); sotto «485,61 € spesi di 700,00 € · 69%» (B, C). A lo lascia com'è, per confronto.</td><td>Un modello mentale solo: la pagina risponde a «quanto mi resta». Da verificare con §5.13 sul telefono.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>NavLink.module.css</code> · <code>ListRow.module.css</code> · <code>TopBar.module.css:66</code></td><td>Nessun <code>:active</code> su nav e righe; «Nuova transazione» preme a 0,98.</td><td><code>scale(.96)</code> su pressione, 120ms, <code>cubic-bezier(.2,0,0,1)</code>, anche su nav e righe (A, B, C).</td><td>better-ui «Scale on press»: 0,96 sempre, risposta al pointer-down (apple §1).</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>TopBar.module.css:5-8</code></td><td>Top bar opaca con riga 1px sotto, anche a scroll 0.</td><td>Materiale traslucido (<code>backdrop-filter</code> 20px), bordo-sfumatura che appare solo quando il contenuto passa sotto (B, C).</td><td>Apple §12: «scroll edge effects, not hard dividers». Rispetta <code>prefers-reduced-transparency</code>.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td>spec §5.6</td><td>«Andamento del ciclo» esiste sul telefono, non sul web: la Home web non ha nessuna forma oltre le barre.</td><td>Sparkline attuale/solito nella colonna destra della fascia (A, B); traccia del ciclo (C).</td><td>Senza una forma il «ritmo» resta una frase. Serie «solito» = campione nel mockup.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td><code>Section.module.css:47</code></td><td>«2 voci», «Nessun obiettivo» in <code>textFaint</code>.</td><td><code>textMuted</code> (A, B, C).</td><td>Contrasto: 13px faint su bg non passa AA.</td></tr>
+</table>
+<p>Tengono già: tabular-nums e decimali a metà opacità, sezioni aperte con una sola linea, hover delle righe dipinto 8px oltre la riga, titolo/hero in rapporto 1:3,3 (squint test ok), icone 1,5px accanto a testo 400.</p>
+
+<h2>Percorso fino a G</h2>
+<p>Giro 1 (A Vicina, B Materia, C Ritmo): stessa pagina rifinita, «nessuna convince». Giro 2 (D Buste, E Quadro, F Flusso): layout rifatto attorno ai budget; di E convincono la barra laterale e la divisione in sezioni. Giro 3: G · Quadro II = E con tre sezioni uguali in colonna, Transazioni · Budget · Obiettivi («Ultime» e «In arrivo» unite; le transazioni sono la prima sezione sotto la testa). Le varianti scartate restano in <code>2026-10-11-web-home-rounds-1-2.html</code>.</p>
+<p><b>G in breve.</b> Barra laterale 232px (nav verticale, «Nuova transazione» in basso, utente). Testa: periodo con stepper accanto a «Ottobre», hero «Rimasto da spendere» con Entrate/Uscite sotto, «Andamento del ciclo» §5.6 a destra. <b>Budget</b>: griglia 3× di schede §5.13 (anello con tacca, cifra = rimasti, «spesi di», barra 8px con «oggi», frase «al giorno»); l'ultima scheda è «Non a budget → Crea un budget». <b>Obiettivi</b>: stessa griglia; senza obiettivi, una scheda vuota con «Crea un obiettivo»; con obiettivi, la scheda è il target card §5.13. <b>Transazioni</b>: «Ultime» 7/12 a sinistra, «In arrivo · entro il 26 ott» 5/12 a destra, un solo «Tutte le transazioni»; nel titolo «2 in arrivo · 14,98 €».</p>
+
+<h2>Giro 4 · passata better-ui su G (→ G2)</h2>
+<p>Verifica: ogni stato definito dal CSS (hover, focus, active, vuoto) letto dal codice, screenshot a 1440px nei due temi. <b>Non verificato</b>: il replay a 10% nel pannello Animations, il focus da tastiera reale (letto solo dal CSS), il cambio tema nell'app (il mockup rigenera il DOM; nell'app serve la ricetta «sopprimi le transizioni, reflow, ripristina al frame dopo»). Nessuna <span class="sev h">Alta</span>: <b>Approve</b>, con il resto come lavoro da fare.</p>
+<table>
+<tr><th>Gravità</th><th>Dove</th><th>Prima (G)</th><th>Dopo (G2)</th><th>Perché</th></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>.app :focus-visible</code> → <code>globals.css</code> dell'app</td><td>La regola impone <code>border-radius:10px</code> all'elemento a fuoco: una scheda (14) o «Nuova transazione» (12) cambiano forma quando ricevono il focus; lo stepper ha <code>overflow:hidden</code> e taglia l'anello.</td><td>L'anello segue il raggio dell'elemento con <code>outline-offset:2px</code> (esterno = interno + 2); dentro lo stepper offset −2px e raggio 8.</td><td>Raggi concentrici: un anello con raggio diverso dall'elemento è il dettaglio che «stona» senza che si capisca perché.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>.card:hover</code>, <code>.row:hover</code></td><td><code>box-shadow</code> cambia di colpo mentre scala e colore hanno 120ms: l'alone della riga e l'ombra della scheda scattano.</td><td><code>transition-property: scale, background-color, color, box-shadow</code>, 120ms, <code>cubic-bezier(.2,0,0,1)</code>.</td><td>Transizioni interrompibili e «solo ciò che cambia»: un hover che entra ed esce a metà non deve saltare.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>.card .ends</code></td><td>Legenda «27 set · oggi · 26 ott» a 11px (caption) sotto le barre delle schede; il giro 1 aveva portato tutte le legende a 13px.</td><td>13px (footnote), altezza 16, margine 8.</td><td>Coerenza: due misure per lo stesso elemento nella stessa pagina; 11px su sfondo scuro non passa AA.</td></tr>
+<tr><td><span class="sev m">Media</span></td><td><code>.card:hover</code></td><td>All'hover il bordo passa a <code>borderStrong</code>: un bordo usato per dare profondità.</td><td>Bordo fermo (struttura); profondità da due ombre, <code>0 1px 2px</code> + <code>0 4px 12px</code> al 40%.</td><td>Ombre per l'elevazione, bordi per la struttura.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td>schede «Non a budget», «Nessun obiettivo»</td><td>«Crea un budget» è testo in grassetto in fondo alla scheda: l'unico segnale che si può premere è il peso.</td><td>Riga-azione <code>.act</code> con chevron, come «Tutte le transazioni»; stessa forma nelle due schede.</td><td>Segnale statico oltre al movimento: l'azione si riconosce anche senza hover.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td><code>ring()</code> <code>&lt;line&gt;</code></td><td>Tacca del ritmo 1px dentro un anello da 2px con icona a 1,5px: tre pesi in 32px.</td><td>Tacca 1,5px = tratto dell'icona.</td><td>Un peso di tratto per glifo.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td><code>.stepper .ico</code></td><td>Chevron centrati geometricamente nelle celle da 36px: ‹ pende a destra, › a sinistra.</td><td><code>translate</code> 0,5px verso l'esterno.</td><td>Allineamento ottico sopra quello geometrico.</td></tr>
+<tr><td><span class="sev">Bassa</span></td><td><code>.side .nav a:hover</code></td><td>Hover = solo il colore del testo; «pagina corrente» = sfondo <code>raised</code>.</td><td>Hover = <code>raised</code> al 60%, corrente = 100%: due stati, due intensità, stessa famiglia.</td><td>Feedback a frequenza alta, 120ms, senza animazione dedicata.</td></tr>
+</table>
+<p>Tengono: pressione <code>scale(.96)</code> su schede, righe, nav e stepper; icone <code>currentColor</code> a 1,5px accanto a testo regolare; tabular-nums e decimali a metà opacità; linea di sezione come struttura; <code>prefers-reduced-motion</code> azzera la scala. Per l'app, non per il mockup: sopprimere le transizioni al cambio tema; <code>initial={false}</code> se arriva <code>AnimatePresence</code>; nessun <code>transition: all</code>.</p>
+
+<h2>Da decidere per fissare G</h2>
+<p>1 · Shell: la barra laterale sostituisce la top bar scelta il 2026-09-27 (§17.1.7). Tocca <code>shell.module.css</code>, TopBar → SideBar, NavLink.<br>
+2 · «Non a budget» (spese in categorie senza budget): lo mostriamo? Va in spec §5.8 e in <code>@saldo/core</code>.<br>
+3 · Cifra della scheda budget = rimasti; §5.13 oggi dice speso. Vale anche per il telefono.<br>
+4 · Sotto 1024px: griglie 3 → 2 → 1 colonna, «Transazioni» torna una colonna, la barra laterale diventa una barra in basso o un cassetto?</p>
+<p>Dati di campione: budget «Spesa», «Trasporti», «Abbonamenti» (segnati «campione»); «Non a budget» è calcolato da quei campioni; righe «Spotify» ed «Esselunga»; serie «solito» del grafico. Solo «Family & Personal» è reale. <code>daysLeft</code> = 16 (oggi + fino al 26 ott), «al giorno» arrotondato per difetto come in §5.13.</p>
+</section>
+
+<script>
+const ICONS = {"house":"<path d=\"M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z\"/><path d=\"M9.5 21.5v-7h5v7\"/>","list":"<path d=\"M8 6h13M8 12h13M8 18h9M3.5 6h.01M3.5 12h.01M3.5 18h.01\"/>","trend":"<path d=\"m22 7-8.5 8.5-5-5L2 17\"/><path d=\"M16 7h6v6\"/>","wallet":"<path d=\"M3 8.5A2.5 2.5 0 0 1 5.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 16.5z\"/><path d=\"M3 8.5V7a2 2 0 0 1 2-2h11\"/><path d=\"M16.5 12.5h.01\"/>","settings":"<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M4 7l2.6 1.5M17.4 15.5 20 17M4 17l2.6-1.5M17.4 8.5 20 7\"/>","shield":"<path d=\"M12 21.5s7.5-3.8 7.5-9.5V5.2L12 2.5 4.5 5.2V12c0 5.7 7.5 9.5 7.5 9.5z\"/>","plus":"<path d=\"M12 5v14M5 12h14\"/>","chevL":"<path d=\"m14.5 18-6-6 6-6\"/>","chevR":"<path d=\"m9.5 18 6-6-6-6\"/>","chevD":"<path d=\"m6 9.5 6 6 6-6\"/>","cart":"<circle cx=\"9\" cy=\"20\" r=\"1.2\"/><circle cx=\"18\" cy=\"20\" r=\"1.2\"/><path d=\"M2 3h2.2l2.4 11.2A1.8 1.8 0 0 0 8.4 15.6h9.4a1.8 1.8 0 0 0 1.8-1.4L21 7H5\"/>","utensils":"<path d=\"M3.5 2.5v6a3 3 0 0 0 6 0v-6M6.5 11.5v10M17 2.5c-1.4 1.2-2 3-2 5s.6 3.2 2 4.2v9.8\"/>","zap":"<path d=\"M13.5 2 4 13.5h6l-1.5 8.5L20 10.5h-6z\"/>","train":"<rect x=\"4.5\" y=\"3\" width=\"15\" height=\"13.5\" rx=\"2.5\"/><path d=\"M4.5 10.5h15M9 21l-1.5-2.5M15 21l1.5-2.5M9.5 7h5\"/>","film":"<rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"2\"/><path d=\"M8 3.5v17M16 3.5v17M3.5 9h17M3.5 15h17\"/>","piggy":"<path d=\"M17.5 9.2a6.5 6.5 0 0 1 2.4 3.3h1.6v3.5h-2a6.6 6.6 0 0 1-2 2.1v2.4h-3.4v-1.3H10v1.3H6.6v-2.6A6.5 6.5 0 0 1 4 12.6C4 8.9 7.3 6 11.3 6h3.3l3.4-2.5v3.9z\"/><path d=\"M15.6 10.6h.01\"/>","car":"<path d=\"M3.5 16.5v-4l2-5.5h13l2 5.5v4z\"/><path d=\"M6 16.5V19H3.8v-2.5M20.2 16.5V19H18v-2.5M5.5 12.5h13\"/><circle cx=\"7.6\" cy=\"14.4\" r=\".9\"/><circle cx=\"16.4\" cy=\"14.4\" r=\".9\"/>","repeat":"<path d=\"m17 2.5 4 4-4 4M21 6.5H7a4 4 0 0 0-4 4v1.5M7 21.5l-4-4 4-4M3 17.5h14a4 4 0 0 0 4-4V12\"/>","search":"<circle cx=\"10.5\" cy=\"10.5\" r=\"7.5\"/><path d=\"m21 21-4.3-4.3\"/>","landmark":"<path d=\"M3 21.5h18M5 21.5V10M19 21.5V10M9.5 21.5V10M14.5 21.5V10M2.5 9.5 12 3l9.5 6.5z\"/>","card":"<rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"2.5\"/><path d=\"M2.5 10h19\"/>","plane":"<path d=\"M12 2.2c.8 0 1.4.9 1.4 2v5.4l7.6 4.2v2l-7.6-2.3v4l2.4 1.8v1.7L12 20l-3.8.9v-1.7l2.4-1.8v-4L3 15.8v-2l7.6-4.2V4.2c0-1.1.6-2 1.4-2z\"/>","coffee":"<path d=\"M3.5 8h13v5.5a5.5 5.5 0 0 1-5.5 5.5H9a5.5 5.5 0 0 1-5.5-5.5z\"/><path d=\"M16.5 9.5H19a2.6 2.6 0 0 1 0 5.2h-2.5M6 3v2.2M9.8 2.6v2.2M13.6 3v2.2\"/>","gift":"<rect x=\"2.8\" y=\"8.4\" width=\"18.4\" height=\"4.6\" rx=\"1.2\"/><path d=\"M4.6 13v7.3a1.2 1.2 0 0 0 1.2 1.2h12.4a1.2 1.2 0 0 0 1.2-1.2V13M12 8.4v13.1\"/><path d=\"M12 8.4S10.6 3 8.1 3a2.7 2.7 0 0 0 0 5.4zM12 8.4S13.4 3 15.9 3a2.7 2.7 0 0 1 0 5.4z\"/>","briefcase":"<rect x=\"2.5\" y=\"7\" width=\"19\" height=\"13\" rx=\"2.2\"/><path d=\"M8.5 7V5.2A1.7 1.7 0 0 1 10.2 3.5h3.6A1.7 1.7 0 0 1 15.5 5.2V7M2.5 12.6h19\"/>","key":"<circle cx=\"7.5\" cy=\"15.5\" r=\"4\"/><path d=\"m10.6 12.4 8.2-8.2M15.8 7.2l2.3 2.3M18.8 4.2 21.2 6.6\"/>","x":"<path d=\"M18 6 6 18M6 6l12 12\"/>","check":"<path d=\"M20 6.5 9 17.5l-5-5\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5.2l3.2 2\"/>","cal":"<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"16\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4M3.5 10.5h17\"/>","arrowDL":"<path d=\"M17 7 7 17\"/><path d=\"M17 17H7V7\"/>","arrowUR":"<path d=\"M7 17 17 7\"/><path d=\"M7 7h10v10\"/>","swap":"<path d=\"m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16\"/>","info":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5.6M12 7.6h.01\"/>","drop":"<path d=\"M12 2.7 6.9 8a7.2 7.2 0 1 0 10.2 0z\"/>","activity":"<path d=\"M3 12h4l2.5-6 4 12 2.5-6H21\"/>"};
+
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] ?? ''}</svg>`;
+/** "1.813,96" → integer, then fraction and symbol at half strength (§13). */
+const money = (value, sign = '') => { const [int, dec] = value.split(','); return `<span class="num">${sign}${int}<span class="dec">,${dec} €</span></span>`; };
+const cat = (i) => `var(--category-${i})`;
+const ibox = (name, colour, badge) => `<span class="ibox" style="color:${colour === null ? 'var(--color-text-muted)' : cat(colour)}">${icon(name)}${badge ? `<span class="badge">${icon(badge)}</span>` : ''}</span>`;
+
+/* ---------------- data (screenshot of 2026-10-11; sample rows are marked) ---------------- */
+const D = {
+  month: 'Ottobre', range: '27 set – 26 ott', day: 15, len: 30,
+  remaining: '1.813,96', income: '2.803,00', spent: '989,04', spentRatio: .35, pace: .5,
+  upcoming: [
+    { icon: 'film', colour: 21, title: 'iCloud', date: '24 ott', sub: 'Subscriptions', amt: '0,99', dayIndex: 28 },
+    { icon: 'film', colour: 21, title: 'Netflix', date: '15 ott', sub: 'Subscriptions', amt: '13,99', dayIndex: 19 },
+  ],
+  recent: [
+    { icon: 'briefcase', colour: 9, title: 'Elly', date: '10 ott', sub: 'Extra Income', amt: '50,00', pos: true },
+    { icon: 'utensils', colour: 0, title: 'Food for elly', date: '10 ott', sub: 'Food & Drink', amt: '2,00' },
+    { icon: 'drop', colour: 0, title: 'Water', date: '10 ott', sub: 'Food & Drink', amt: '1,50' },
+    { icon: 'film', colour: 21, title: 'Spotify', date: '9 ott', sub: 'Subscriptions', amt: '10,99', sample: true },
+    { icon: 'cart', colour: 0, title: 'Esselunga', date: '8 ott', sub: 'Food & Drink', amt: '64,30', sample: true },
+  ],
+  perDay: '120,93', committed: '14,98',
+  /* Second round. Only «Family & Personal» is real; the other three budgets are samples. daysLeft = 16 (today + 26 ott). */
+  budgets: [
+    { name: 'Family & Personal', icon: 'house', colour: null, limit: 70000, spent: 48561 },
+    { name: 'Spesa', icon: 'cart', colour: 0, limit: 40000, spent: 18040, sample: true },
+    { name: 'Trasporti', icon: 'train', colour: 5, limit: 12000, spent: 4210, sample: true },
+    { name: 'Abbonamenti', icon: 'film', colour: 21, limit: 6000, spent: 2597, sample: true },
+  ],
+  incomeMinor: 280300, spentMinor: 98904, daysLeft: 16,
+};
+/** integer minor units → "1.813,96" (it-IT), formatting only at the edge. */
+const fmt = (minor) => { const neg = minor < 0, abs = Math.abs(minor); const int = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return `${neg ? '−' : ''}${int},${String(abs % 100).padStart(2, '0')}`; };
+const m = (minor, sign = '') => money(fmt(minor), sign);
+const sumBudgetLimit = D.budgets.reduce((a, b) => a + b.limit, 0);
+const sumBudgetSpent = D.budgets.reduce((a, b) => a + b.spent, 0);
+const outsideSpent = D.spentMinor - sumBudgetSpent;      // «Non a budget»
+const bstate = (b) => { const ratio = b.spent / b.limit; const left = b.limit - b.spent; return { ratio, left, pct: Math.round(ratio * 100), overPace: ratio > D.pace, overLimit: ratio > 1, perDay: Math.floor(left / D.daysLeft) }; };
+const overPaceCount = D.budgets.filter((b) => bstate(b).overPace).length;
+
+/* ---------------- pieces ---------------- */
+const stepper = () => `<span class="stepper"><a aria-label="Periodo precedente" class="press">${icon('chevL')}</a><a aria-label="Periodo successivo" class="press">${icon('chevR')}</a></span>`;
+const period = (inline) => inline
+  ? `<div class="period inline"><div class="what"><div class="titleRow"><span class="title">${D.month}</span>${stepper()}</div><span class="sub">${D.range} · giorno ${D.day} di ${D.len}</span></div></div>`
+  : `<div class="period"><div class="what"><span class="title">${D.month}</span><span class="sub">${D.range} · giorno ${D.day} di ${D.len}</span></div>${stepper()}</div>`;
+
+const hero = () => `<div class="figure hero"><span class="label">Rimasto da spendere</span>${money(D.remaining)}</div>`;
+const stats = () => `<div class="stats"><div class="figure stat"><span class="label">Entrate</span><span class="pos">${money(D.income)}</span></div><div class="figure stat"><span class="label">Uscite</span>${money(D.spent)}</div></div>`;
+
+const bar = (thick, ratio, pace, tone = '') => `<div class="track${thick ? ' thick' : ''}"><div class="fill ${tone}" style="inline-size:${ratio * 100}%"></div>${pace === null ? '' : `<span class="tick" style="inset-inline-start:${pace * 100}%"></span>`}</div>`;
+const ends = (start, end, pace, today = 'oggi') => `<div class="ends"><span class="s">${start}</span>${pace === null ? '' : `<span class="t" style="inset-inline-start:${pace * 100}%">${today}</span>`}<span class="e">${end}</span></div>`;
+
+/** §5.6: current cumulative (accent, 2px) over the mean of the 3 previous cycles (grey, 1.5px). Sample series. */
+function chart() {
+  const W = 440, H = 96, len = D.len, elapsed = D.day;
+  const usual = Array.from({ length: len }, (_, i) => 1900 * Math.pow((i + 1) / len, 1.15));
+  const current = Array.from({ length: elapsed }, (_, i) => 989.04 * Math.pow((i + 1) / elapsed, .9) * (1 + .06 * Math.sin(i * 1.7)));
+  current[elapsed - 1] = 989.04;
+  const max = Math.max(usual[len - 1], ...current) * 1.05;
+  const x = (i) => (i / (len - 1)) * W, y = (v) => H - (v / max) * H;
+  const pts = (s) => s.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const lx = x(elapsed - 1), ly = y(989.04);
+  return `<div class="chart"><div class="head"><span>Andamento del ciclo</span>${money(D.spent)}</div>
+  <svg viewBox="0 -14 ${W} ${H + 14}" role="img" aria-label="Andamento del ciclo: 989,04 € spesi, +136,00 € rispetto al solito">
+    <polyline points="${pts(usual)}" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5" stroke-linejoin="round"/>
+    <polyline points="${pts(current)}" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lx}" cy="${ly}" r="3" fill="var(--color-accent)"/>
+    <text x="${lx}" y="${ly - 10}" text-anchor="end" font-size="13" fill="var(--color-accent)" font-family="var(--font-family)" style="font-variant-numeric:tabular-nums">+136,00 € rispetto al solito</text>
+  </svg>
+  <div class="foot"><span>Giorno ${D.day} di ${D.len}</span><span>media dei 3 cicli precedenti in grigio</span></div></div>`;
+}
+
+const row = (r, upcoming) => `<a class="row press" href="#">${ibox(r.icon, r.colour, upcoming ? 'repeat' : null)}<span class="text"><span class="t">${r.title}</span><span class="s">${r.date} · ${r.sub}</span></span><span class="amt${upcoming ? ' muted' : ''}${r.pos ? ' pos' : ''}">${money(r.amt, r.pos ? '+' : '−')}</span></a>`;
+const section = (title, trailing, body, more, attn) => `<section class="section"><div class="head"><span class="title">${title}</span><span class="trailing${attn ? ' attn' : ''}">${trailing}</span></div><div class="rows">${body}</div>${more ? `<a class="more press">${more}${icon('chevR')}</a>` : ''}</section>`;
+
+/** §5.13 ring: progress (clamped), pace tick on the circle, icon in the item's colour. Decorative for AT. */
+function ring(size, b, iconName, colour) {
+  const s = bstate(b), r = (size - 3) / 2, c = 2 * Math.PI * r, p = Math.min(1, s.ratio);
+  const a = -Math.PI / 2 + D.pace * 2 * Math.PI, cx = size / 2, cy = size / 2;
+  const tx1 = cx + Math.cos(a) * (r - 4), ty1 = cy + Math.sin(a) * (r - 4), tx2 = cx + Math.cos(a) * (r + 4), ty2 = cy + Math.sin(a) * (r + 4);
+  return `<span class="ring${s.overPace ? ' attn' : ''}" style="width:${size}px;height:${size}px;color:${colour === null ? 'var(--color-text-muted)' : cat(colour)}" aria-hidden="true">
+    <svg viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--color-border-strong)" stroke-width="2"/>
+    <circle class="prog" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--color-text-muted)" stroke-width="2" stroke-linecap="round" stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>
+    <line x1="${tx1.toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="var(--color-text-muted)" stroke-width="1"/></svg>${icon(iconName)}</span>`;
+}
+const budgetStatus = (b) => { const s = bstate(b); if (s.overLimit) return { text: `${fmt(b.spent - b.limit)} € oltre il limite`, attn: true }; if (s.overPace) return { text: `${fmt(Math.round(b.spent - b.limit * D.pace))} € oltre il ritmo`, attn: true }; return { text: 'in linea', attn: false }; };
+const cardStatus = () => overPaceCount ? { text: `${overPaceCount} oltre il ritmo`, attn: true } : { text: 'nei limiti', attn: false };
+
+/** E: one card per budget; figure = what is left (the hero's model). */
+function budgetCards() {
+  const cards = D.budgets.map((b) => { const s = bstate(b), st = budgetStatus(b); return `<a class="card press" href="#" aria-label="${b.name}, ${fmt(b.spent)} € di ${fmt(b.limit)} €, ${st.text}">
+    <div class="chead">${ring(32, b, b.icon, b.colour)}<span class="cname">${b.name}</span><span class="cpct${st.attn ? ' attn' : ''}">${s.pct}%</span></div>
+    <div><div class="cfig">${m(s.left)}</div><div class="cof">rimasti · ${fmt(b.spent)} € spesi di ${fmt(b.limit)} €</div></div>
+    <div>${bar(true, Math.min(1, s.ratio), D.pace, s.overPace ? 'over' : '')}${ends('27 set', '26 ott', D.pace)}</div>
+    <p class="csent"><b>${fmt(s.perDay)} € al giorno</b> fino al 26 ott. ${st.attn ? `Sei ${st.text}.` : 'Sei in linea con il ritmo.'}${b.sample ? ' <span class="status">(campione)</span>' : ''}</p></a>`; }).join('');
+  const ghost = `<a class="card ghost press" href="#"><span class="label">Non a budget</span>${m(outsideSpent)}<span class="label">spesi in categorie senza budget</span><span class="act">Crea un budget${icon('chevR')}</span></a>`;
+  return `<div class="cards">${cards}${ghost}</div>`;
+}
+
+const sideNav = () => `<aside class="side">
+  <a class="brand press" href="#"><span class="mark">S</span>Saldo</a>
+  <nav class="nav"><a class="press" aria-current="page">${icon('house')}Home</a><a class="press">${icon('list')}Transazioni</a><a class="press">${icon('activity')}Statistiche</a><a class="press">${icon('wallet')}Conti</a><a class="press">${icon('shield')}Admin</a></nav>
+  <div class="bottom"><a class="new press">${icon('plus')}Nuova transazione <kbd>N</kbd></a><span class="me"><span class="avatar">SA</span>Saliou</span></div></aside>`;
+
+/* G: Obiettivi as a section with the same grid as Budget; today empty, so one ghost card that is the way to create one. */
+const goalsCards = () => `<div class="cards"><a class="card ghost press" href="#"><span class="label">Nessun obiettivo</span><p>Un obiettivo mette da parte soldi in uno dei tuoi conti, verso una cifra e, se vuoi, una data.</p><span class="act">Crea un obiettivo${icon('chevR')}</span></a></div>`;
+/* G: one section «Transazioni»: the last ones on the left, what is coming on the right; one footer link. */
+const txSection = () => `<section class="section"><div class="head"><span class="title">Transazioni</span><span class="trailing">${D.upcoming.length} in arrivo · ${D.committed} €</span></div>
+  <div class="txcols"><div><span class="glabel">Ultime</span><div class="rows">${D.recent.map((r) => row(r, false)).join('')}</div></div>
+  <div><span class="glabel">In arrivo · <span class="num">entro il 26 ott</span></span><div class="rows">${D.upcoming.map((r) => row(r, true)).join('')}</div></div></div>
+  <a class="more press">Tutte le transazioni${icon('chevR')}</a></section>`;
+
+/* ---------------- variants ---------------- */
+const V = {
+  'G': {
+    caption: '<b>G · Quadro II.</b> E con la pagina divisa in tre sezioni uguali, una sotto l’altra: <b>Transazioni</b> per prime (una sezione sola: «Ultime» a sinistra, «In arrivo» a destra, un solo «Tutte le transazioni»), poi <b>Budget</b> (schede 3×, come E) e <b>Obiettivi</b> (stessa griglia dei budget; oggi una scheda vuota che è la via per crearne uno). Sidebar e testa come E.',
+    shell: true,
+    render: () => { const st = cardStatus(); return `${sideNav()}<div class="mainE"><main class="content layE layG">
+      <div class="top"><div>${period(true)}<div class="heroGroup">${hero()}${stats()}</div></div>${chart()}</div>
+      ${txSection()}
+      <section class="section"><div class="head"><span class="title">Budget</span><span class="trailing${st.attn ? ' attn' : ''}">${st.text}</span></div>${budgetCards()}</section>
+      <section class="section"><div class="head"><span class="title">Obiettivi</span><span class="trailing">Nessun obiettivo</span></div>${goalsCards()}</section></main></div>`; },
+  },
+};
+V.G2 = { ...V.G, caption: '<b>G2 · better-ui.</b> Stessa pagina di G dopo la passata better-ui: l’anello di focus segue il raggio dell’elemento (schede 14, bottone 12, righe 10) e non viene tagliato dallo stepper; hover di schede e righe con <code>box-shadow</code> nella stessa transizione 120ms di scala e colore; legende «27 set · oggi · 26 ott» a 13px anche nelle schede; all’hover la scheda tiene il bordo e aggiunge un’ombra; «Crea un budget» e «Crea un obiettivo» sono una riga-azione con chevron; tacca dell’anello 1,5px come il tratto dell’icona; chevron dello stepper spostati di 0,5px verso l’esterno; hover della nav con sfondo al 60%.' };
+
+/* ---------------- harness ---------------- */
+const app = document.getElementById('app');
+const params = new URLSearchParams(location.search);
+let variant = V[params.get('variant')] ? params.get('variant') : 'G2';
+let theme = params.get('theme') === 'light' ? 'light' : 'dark';
+if (params.get('full')) document.documentElement.classList.add('full');
+
+function seg(el, items, current, onPick) {
+  el.innerHTML = items.map((i) => `<button aria-pressed="${i.id === current}" data-id="${i.id}">${i.label}</button>`).join('');
+  el.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => onPick(b.dataset.id)));
+}
+function render() {
+  app.dataset.v = variant; app.dataset.theme = theme;
+  app.innerHTML = V[variant].render();
+  app.scrollTop = 0; app.classList.remove('scrolled');
+  document.getElementById('caption').innerHTML = V[variant].caption;
+  seg(document.getElementById('segV'), [{ id: 'G', label: 'G · Quadro II' }, { id: 'G2', label: 'G2 · better-ui' }], variant, (id) => { variant = id; sync(); });
+  seg(document.getElementById('segT'), [{ id: 'dark', label: 'Scuro' }, { id: 'light', label: 'Chiaro' }], theme, (id) => { theme = id; sync(); });
+}
+function sync() { const u = new URL(location.href); u.searchParams.set('variant', variant); u.searchParams.set('theme', theme); history.replaceState(null, '', u); render(); }
+app.addEventListener('scroll', () => app.classList.toggle('scrolled', app.scrollTop > 2), { passive: true });
+render();
+</script>
+</body>
+</html>
