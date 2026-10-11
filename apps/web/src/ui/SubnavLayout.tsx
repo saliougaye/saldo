@@ -4,8 +4,9 @@ import styles from './SubnavLayout.module.css';
 
 /**
  * A sub-navigation on the leading side, the section in the middle, and the slot on the trailing
- * side that a `SlotPanel` portals into: the shell of Profilo and of the admin panel. A page that
- * is a `PanelSwitch` with `slot` puts its panel in that column itself, with no portal.
+ * side: the shell of Profilo and of the admin panel. A page that is a `PanelSwitch` with `slot`
+ * puts its panel in that column itself, with no portal. `PasskeyList` portals its panel into the
+ * slot.
  */
 export function SubnavLayout({
   navLabel,
