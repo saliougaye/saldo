@@ -34,7 +34,10 @@ Transazioni, Conti, Profilo and Admin open in place. Still open:
   removed some of them. `router.refresh` after a save prefetches every visible link again, and the ✕ and the
   scrim of `Panel` still prefetch their close URL. Check if the `router.refresh` after `router.replace` in the
   forms is needed;
-- the motion the phone has that the web lacks.
+- the motion the phone has that the web lacks;
+- two known costs of the panels in place. Do not fix them now. Conti runs `accountDetail` once for each listed
+  account and goal: the work is O(accounts × transactions) in each request. If a user has many accounts, compute
+  `accountBalances` once. Admin → Account counts `sync_rows` for every user on each load. This is fine at household scale.
 
 ## Features
 

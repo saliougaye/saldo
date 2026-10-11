@@ -2046,7 +2046,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   Dati.
   **Built in 0.3e-2b (2026-09-30): Categorie, Budget and Obiettivi.** The sub-navigation gains the three links after
   Preferenze and before Passkey; each section renders its form through `ProfilePanel`, which portals the panel into the
-  layout's `#profile-panel` slot. `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
+  layout's `#profile-panel` slot. The 2026-10-11 spec replaces this portal design for the pages that use `PanelSwitch`.
+  `/profile/categories` follows §5.11: Uscite and Entrate, children indented, «N voci»
   rolled up, up/down buttons to reorder within a sibling group (drag is the phone's), no delete; «Nuova categoria» and
   the edit form (`?new`, `?c={id}`) with name, direction (locked once the category has a parent or children), parent,
   appearance and «Budget mensile»; archiving asks with the usage count and an optional «Sposta le transazioni in»
@@ -2106,7 +2107,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
   has a handful of accounts, and one settings pattern across Profilo and Admin matters more.
   **Built in 0.3f-1 (2026-09-30): Account, Inviti and Istanza.** `/admin` redirects to `/admin/accounts`; the head is
   «Admin» over «{instance name} · {N} account», and the sub-navigation (Account, Inviti with the count of *active*
-  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). Every page and every Server Action starts with
+  invites, Istanza) is Profilo's shell (`SubnavLayout`, `SlotPanel`). The 2026-10-11 spec replaces this portal design
+  for the pages that use `PanelSwitch`. Every page and every Server Action starts with
   `requireWebAdmin()`: a member gets a 404, nobody signed in goes to `/login`; an admin who has not onboarded still
   gets in, in the default time zone. **Account** (`?u={id}`; an id that names nothing opens nothing): the facts (role,
   state and reason, email verified or not, created and the invite's label, last sign-in, passkeys, synced rows), and

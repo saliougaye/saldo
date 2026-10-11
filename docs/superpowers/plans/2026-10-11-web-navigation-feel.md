@@ -1264,7 +1264,7 @@ On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave
 
 - A click on a row shows the panel in the next frame, with the parameter in the URL and no RSC request. A click on a second row keeps the same `aside` element, and the row has `aria-current="true"`.
 - ✕ and Esc close with no RSC request, and the focus goes back to the row. Back closes the panel.
-- A load with the parameter opens the page with the panel. The server HTML holds the `aside`, also with JavaScript off.
+- A load with the parameter opens the page with the panel. The server HTML holds the `aside`. The app needs JavaScript (spec §08).
 - On Connectors, «Revoca accesso» goes to `/profile/connectors` with no panel, and the list has one row less.
 - On Preferences, the row of the time zone sends one RSC request and opens its panel. A save of the theme, the language or the zone keeps the panel open, and the row shows the new value.
 - The screenshots of the two lists and of `?edit=theme` are the same, pixel for pixel, before and after (1440px and 500px, light and dark). So is `?connector=ID` at 1440px. At 500px the page under the full-screen panel of a connector is 24px shorter: the empty slot of the layout has no row in the grid now. The pixels above that are the same.
@@ -1300,7 +1300,7 @@ On 2026-10-11 the work on Conti found these points. The code in `apps/web/app/(a
 - The page renders `a:ID` for each listed account and `g:ID` for each listed goal. The panel of a transaction links to the account of each side with `?a=ID`. That account can be a pocket or an archived account, which the list does not show. An MCP link can also name any account or goal. Thus the page also renders the panel of the id in `?a=` or `?g=` when the list does not show it, as Preferences does for the time zone.
 - `ArchiveAccountShared` and `CloseGoalShared` give the strings and `afterHref` once. A body gives only the id, the version, and the strings with the name or the amount.
 - `PanelSwitch` without `slot` renders its panel column after the list, in the grid of the page (`minmax(0, 1fr) auto`). With no panel the column is empty and takes no cell (`.slot:empty`). The screenshots of the list, `?a=ID`, `?g=ID`, `?archived`, `?new` and `?a=ID&edit` are the same, pixel for pixel, before and after (1440px and 500px, light and dark).
-- A temporary Playwright spec on a production build (port 3100) gave these results. A click on an account shows the panel in the next frame, with `?a=ID` and no RSC request for `/accounts`. A click on a second account keeps the same `aside` element, with no running animation. A goal row, the archived row and «Nuovo conto» open in place. The goal row is selected and the account row that holds it is not. ✕ and Esc close with no RSC request, and the focus goes back to the row. Back closes. «Modifica» sends one RSC request and shows the form with the name of the account. ✕, Esc and «Annulla» of the edit form go to `?a=ID`. A save of the edit form and of «Nuovo conto» goes to `?a=ID`. A load of each panel URL has the `aside` in the server HTML, also with JavaScript off.
+- A temporary Playwright spec on a production build (port 3100) gave these results. A click on an account shows the panel in the next frame, with `?a=ID` and no RSC request for `/accounts`. A click on a second account keeps the same `aside` element, with no running animation. A goal row, the archived row and «Nuovo conto» open in place. The goal row is selected and the account row that holds it is not. ✕ and Esc close with no RSC request, and the focus goes back to the row. Back closes. «Modifica» sends one RSC request and shows the form with the name of the account. ✕, Esc and «Annulla» of the edit form go to `?a=ID`. A save of the edit form and of «Nuovo conto» goes to `?a=ID`. A load of each panel URL has the `aside` in the server HTML.
 - The size of the response. With the seed (3 accounts, 2 goals) the RSC response of `/accounts` was 35 KB before and 86 KB after (6.3 KB and 12.6 KB with gzip). With 17 more accounts, each with 3 transactions, it was 67 KB before and 248 KB after (7.5 KB and 18.9 KB with gzip). An account panel is about 8 KB. Most of it is the list of the last 6 movements: each row has an inline SVG icon and an amount in parts.
 - The e2e test of the archive in `accounts-goals.spec.ts` now also opens «Modifica» and closes it back to the detail.
 - After the change, `e2e accounts-goals home-stats profile transactions shell` gave 33 passed.
@@ -1317,7 +1317,7 @@ These URLs open something else now:
 - Modify: `apps/web/app/(app)/admin/accounts/page.tsx`, `admin/invites/page.tsx`, `admin/settings/page.tsx`
 - Test: `apps/web/e2e/admin.spec.ts`
 
-Admin uses `SlotPanel` in a `SubnavLayout`, as Profilo does. Thus set `slot`. The Admin pages do not use `readPage`. Each page awaits `searchParams` in its own `Promise.all`.
+History: when this task started, Admin used `SlotPanel` in a `SubnavLayout`, as Profilo did. `SlotPanel` is deleted now. The Admin pages do not use `readPage`. Each page awaits `searchParams` in its own `Promise.all`.
 
 On 2026-10-11 every Admin section with a panel uses `PanelSwitch`. Task 14 is complete.
 
@@ -1327,8 +1327,8 @@ On 2026-10-11 every Admin section with a panel uses `PanelSwitch`. Task 14 is co
 
 - [x] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page. Each row gives its whole key as `selectId` (for example `u:${id}`):
   - `admin/accounts`: no flags, values `u`. The detail comes from `accountDetail(db, id)`, one database read for each account. Render all the details only if this is cheap. If it is not cheap, keep the detail a navigation.
-  - `admin/invites`: flags `new`, values `i` (see `invitePanel`).
-  - `admin/settings`: no flags, values `edit`. The keys are `edit:name`, `edit:registration` and `edit:smtp` (see `settingsPanel`).
+  - `admin/invites`: flags `new`, values `i` (history: the old `invitePanel` had the same keys).
+  - `admin/settings`: no flags, values `edit`. The keys are `edit:name`, `edit:registration` and `edit:smtp` (history: the old `settingsPanel` had the same keys).
 
   A panel can confirm a destructive action, for example «delete an account» or «revoke an invite». That panel is in place only if its body needs nothing from the server except the row. The `settings` panels (`NamePanel`, `RegistrationPanel`, `SmtpPanel`) have client forms that call `router.push(closeHref)` on save. A save stays a navigation.
 - [x] **Step 3: Run the e2e flow and commit** one page at a time: `feat(web): Admin → <page> opens its panel in place`.
@@ -1339,7 +1339,7 @@ The parameter names of step 2 are correct. The pages read `params.u`, `params.ne
 
 - An account panel holds the row of the list, the state of the email, the reason of a ban, the dates of creation and of the last sign-in, the counts of passkeys and of synced rows, and the label of the invite. It holds no token, no session id and no IP address. The delete dialog compares the typed text with the address (or the name, for a synthetic address). The row already shows the address.
 - An invite panel holds the label, the dates, the status and the address of the person who used it. No response of the page holds an invite code. The database keeps only the hash, and `listInvites` does not read it. The code exists only in the answer of `mintInviteAction`, in the state of `MintInvite`. Thus `?new` is in place too. «Fatto» stays a navigation (`router.replace`).
-- The SMTP panel gets the result of `smtpView` only: host, port, user, sender, and whether a password is set and still reads. A locked SMTP panel names the variables and shows no value. Thus the three settings panels are in place.
+- The SMTP panel gets the result of `smtpView` only: host, port, user, sender, and whether a password is set and still reads. The password never goes to the panel. A locked SMTP panel (the environment sets the values) gets the host, port, user and sender of the environment in `initial`. It shows them in disabled fields. Thus every `/admin/settings` response holds these four values. Only an admin reads this page, and the values are not secret. Thus the three settings panels are in place.
 - No shared provider holds a secret. The providers hold strings and `afterHref`.
 - `requireWebAdmin` in the layout and in each page, and the check in each Server Action, did not change.
 
@@ -1358,7 +1358,7 @@ On 2026-10-11 the work found these points:
 - A revoke or a restore of an account calls `router.refresh()`, and the panel stays open with the new state. A delete goes to `/admin/accounts`, and the controller closes the panel.
 - The plan said that every settings panel goes to the list on save. `SmtpPanel` does not: a save of the mail calls `router.refresh()`, and the panel stays open. This did not change.
 - The first version of the Invites commit called `router.refresh()` in `MintInvite` after a mint. A ✕ or an Esc just after the mint closed the panel with `history.pushState`, and then the refresh was lost: the list did not show the new invite. The e2e guard failed once in this way. Commit `fix(web): the mint of an invite brings the new list in its own answer` moves the refresh into the action: `mintInviteAction` calls `revalidatePath('/admin', 'layout')`, as the settings actions do. The answer brings the list with the code. Before the change, ✕ was a navigation, so the list was new after it.
-- `invitePanel` and `settingsPanel` are deleted. `inviteStatusKey` gives the word of a status to the row and to the panel.
+- History: `invitePanel` and `settingsPanel` are deleted. `inviteStatusKey` gives the word of a status to the row and to the panel.
 - No page uses `SlotPanel` now. Commit `refactor(web): delete SlotPanel, which no page uses now` deletes it. `PasskeyList` still uses a portal into the slot, so the slot stays.
 - `admin/instance` and `admin/mcp` have no panel. They do not change.
 
@@ -1368,7 +1368,7 @@ On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave
 
 - A click on a row shows the panel in the next frame, with the parameter in the URL and no RSC request. A click on a second row keeps the same `aside` element, with no running animation, and the row has `aria-current="true"`.
 - ✕ and Esc close with no RSC request, and the focus goes back to the row. On a settings panel the first Esc leaves the field and the second Esc closes, as before. Back closes the panel.
-- A load with the parameter has the `aside` and its body in the server HTML, also with JavaScript off.
+- A load with the parameter has the `aside` and its body in the server HTML.
 - «Nuovo invito» opens in place, and the focus is in the label field. After a mint the code stays on the screen, and ✕ closes with no RSC request. The list then has the new invite. The only requests after the mint are prefetches of the links that the revalidation cleared.
 - A save of the instance name goes to `/admin/settings`, and the row shows the new name. A revoke and a restore in an account panel keep the panel open, and it shows the new state.
 - The screenshots of the three lists and of `?edit=name` and `?edit=smtp` are the same, pixel for pixel, before and after (1440px and 500px, light and dark). So are `?u=ID`, `?i=ID` and `?new` at 1440px. At 500px the page under the full-screen panel is 24px shorter, as on Connectors. The pixels above that are the same.
