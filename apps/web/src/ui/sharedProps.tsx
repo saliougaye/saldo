@@ -10,10 +10,13 @@ import { createContext, type ReactNode, useContext } from 'react';
  */
 export function sharedProps<T>(component: string) {
   const Context = createContext<T | null>(null);
+  // React DevTools names both after the component, not «Context» and «Provider» for every page.
+  Context.displayName = `${component}Shared`;
 
   function Provider({ value, children }: { value: T; children: ReactNode }) {
     return <Context value={value}>{children}</Context>;
   }
+  Provider.displayName = `${component}Shared`;
 
   function useShared(): T {
     const value = useContext(Context);

@@ -1,7 +1,6 @@
 import { catalogs, formatMoneyParts } from '@saldo/i18n';
 import { plural } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
-import { archiveCategoryView } from '../../../../src/features/categories/archiveView';
 import {
   type CategoryRowView,
   categoriesView,
@@ -81,27 +80,26 @@ export default async function ProfileCategoriesPage({
     archive: archiveStrings,
   };
 
-  const formBody = (form: CategoryFormView) => {
-    const archive = form.id === null ? null : archiveCategoryView(page.data, form.id);
-    return (
-      <CategoryForm
-        view={form}
-        closeHref={PATH}
-        afterSave={PATH}
-        archive={
-          archive === null ? undefined : (
-            <ArchiveCategory
-              id={archive.id}
-              updatedAt={archive.updatedAt}
-              afterHref={PATH}
-              uses={archive.uses}
-              body={plural(t, locale, 'categories.archiveBody', archive.uses)}
-            />
-          )
-        }
-      />
-    );
-  };
+  // `uses` is the row's count (`categoriesView`), not a scan of the transactions for each form. The
+  // dialog sends the version the form loaded.
+  const formBody = (form: CategoryFormView, uses = 0) => (
+    <CategoryForm
+      view={form}
+      closeHref={PATH}
+      afterSave={PATH}
+      archive={
+        form.id === null || form.updatedAt === null ? undefined : (
+          <ArchiveCategory
+            id={form.id}
+            updatedAt={form.updatedAt}
+            afterHref={PATH}
+            uses={uses}
+            body={plural(t, locale, 'categories.archiveBody', uses)}
+          />
+        )
+      }
+    />
+  );
 
   // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`). A save,
   // a reorder, an archive and a restore stay navigations, so the list shows what the server holds.
@@ -115,17 +113,18 @@ export default async function ProfileCategoriesPage({
       body: formBody(fresh),
     };
   }
-  for (const section of view.sections) {
-    for (const item of section.rows) {
-      const form = categoryFormView({ data: page.data, currency, mode: 'edit', id: item.id });
-      if (form === null) continue;
-      panels[`c:${item.id}`] = {
-        title: t('categories.editCategory'),
-        sheet: true,
-        bare: true,
-        body: formBody(form),
-      };
-    }
+  // Every live category has a form, also a child whose parent is archived: it has no row, but
+  // `?c=ID` (a link from MCP, say) opens it, as before the panel was in place.
+  for (const category of page.data.categories) {
+    if (category.archivedAt !== null) continue;
+    const form = categoryFormView({ data: page.data, currency, mode: 'edit', id: category.id });
+    if (form === null) continue;
+    panels[`c:${category.id}`] = {
+      title: t('categories.editCategory'),
+      sheet: true,
+      bare: true,
+      body: formBody(form, view.usage.get(category.id) ?? 0),
+    };
   }
   panels.archived = {
     title: t('categories.archived'),

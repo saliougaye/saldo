@@ -39,6 +39,11 @@ export interface ArchivedCategoryRow {
 export interface CategoriesView {
   sections: CategorySectionView[];
   archived: ArchivedCategoryRow[];
+  /**
+   * The transactions that use each category, its children's folded in: the count of a row, and
+   * also of a live child whose parent is archived, which has no row but has an edit form.
+   */
+  usage: ReadonlyMap<string, number>;
 }
 
 /**
@@ -101,5 +106,5 @@ export function categoriesView(data: UserData): CategoriesView {
       };
     });
 
-  return { sections, archived };
+  return { sections, archived, usage };
 }

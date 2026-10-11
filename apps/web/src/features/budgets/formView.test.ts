@@ -1,7 +1,7 @@
-import { type Budget, budgetSchema } from '@saldo/core';
+import { type Budget, budgetSchema, categorySchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { CATEGORY, CATEGORY_2, CATEGORY_CHILD, dataWith, tx } from '../test/fixtures';
-import { budgetFormShared } from './formView';
+import { budgetCategoryTiles, budgetFormShared } from './formView';
 
 const BUDGET: Budget = budgetSchema.parse({
   id: 'b1',
@@ -17,6 +17,17 @@ const BUDGET: Budget = budgetSchema.parse({
   updatedAt: '2026-09-01T00:00:00.000Z-0000-web',
   deletedAt: null,
 });
+
+const PERIOD = {
+  today: '2026-09-20',
+  def: { kind: 'month', startDay: 1 },
+  period: {
+    range: { start: '2026-09-01', end: '2026-09-30' },
+    isCurrent: true,
+    elapsed: 20,
+    length: 30,
+  },
+} as const;
 
 describe('budgetFormShared', () => {
   it('hands over the past periods as plain records, parent-level, newest first', () => {
@@ -41,5 +52,28 @@ describe('budgetFormShared', () => {
     });
     expect(shared.history).toEqual([{ c1: 3500 }, { c2: 700 }]);
     expect(JSON.parse(JSON.stringify(shared))).toEqual(shared);
+  });
+});
+
+describe('budgetCategoryTiles', () => {
+  const archived = (id: string) =>
+    categorySchema.parse({ ...CATEGORY_2, id, archivedAt: '2026-09-01T00:00:00.000Z' });
+
+  it('keeps an archived category the budget holds, and does not mark its own as taken', () => {
+    const held = budgetSchema.parse({ ...BUDGET, categoryIds: [CATEGORY.id, 'x1'] });
+    const other = budgetSchema.parse({ ...BUDGET, id: 'b2', categoryIds: [CATEGORY_2.id] });
+    const shared = budgetFormShared({
+      ...PERIOD,
+      data: dataWith([], {
+        budgets: [held, other],
+        categories: [CATEGORY, CATEGORY_2, archived('x1'), archived('x2')],
+      }),
+    });
+    const tiles = budgetCategoryTiles(shared, { id: held.id, heldIds: held.categoryIds });
+    expect(tiles.map((tile) => [tile.id, tile.taken, tile.archived])).toEqual([
+      [CATEGORY.id, false, false],
+      [CATEGORY_2.id, true, false],
+      ['x1', false, true],
+    ]);
   });
 });

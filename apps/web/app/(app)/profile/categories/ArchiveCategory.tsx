@@ -3,7 +3,7 @@
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { archiveTargets } from '../../../../src/features/categories/archiveView';
+import { archiveMoveTargets } from '../../../../src/features/categories/archiveView';
 import type { CategoryWriteError } from '../../../../src/server/write/categories';
 import { ConfirmDialog } from '../../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../../src/ui/Icon';
@@ -33,7 +33,10 @@ interface Props {
   updatedAt: string;
   /** Where the page goes once the category is archived: `/profile/categories`. */
   afterHref: string;
-  /** How many transactions use it; «Sposta le transazioni in» is offered only when some do. */
+  /**
+   * How many transactions use it. «Sposta le transazioni in» is offered only when some do and
+   * another category can take them (`archiveMoveTargets`).
+   */
   uses: number;
   /** `categories.archiveBody` with the count. */
   body: string;
@@ -45,6 +48,7 @@ interface Props {
  */
 export function ArchiveCategory({ id, updatedAt, afterHref, uses, body }: Props) {
   const { categories, archive: strings } = useCategoryFormShared();
+  const targets = archiveMoveTargets(categories, id, uses);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState('');
@@ -104,13 +108,13 @@ export function ArchiveCategory({ id, updatedAt, afterHref, uses, body }: Props)
         busyLabel={strings.busy}
         onConfirm={confirm}
       >
-        {uses === 0 ? null : (
+        {targets === null ? null : (
           <Select
             label={strings.moveTo}
             value={target}
             options={[
               { value: '', label: strings.noMove },
-              ...archiveTargets(categories, id).map((row) => ({
+              ...targets.map((row) => ({
                 value: row.id,
                 label: row.name,
                 icon: row.icon as IconName,
