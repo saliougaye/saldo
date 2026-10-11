@@ -93,7 +93,6 @@ export interface ConnectorRowView {
   calls: number;
   /** The same page with this connector in the panel. */
   href: string;
-  selected: boolean;
 }
 
 const usedAt = (connector: Connector): number | null =>
@@ -102,7 +101,6 @@ const usedAt = (connector: Connector): number | null =>
 /** One row per consent: the most recently used first, then the never used, newest authorization first. */
 export function connectorRows(
   connectors: readonly Connector[],
-  selectedId: string | null,
   now: Date,
   timeZone: string,
 ): ConnectorRowView[] {
@@ -127,7 +125,6 @@ export function connectorRows(
       lastUsed: lastUsed(connector.lastUsedAt, now, timeZone),
       calls: connector.calls,
       href: `${CONNECTORS_PATH}?${CONNECTOR_PARAM}=${encodeURIComponent(connector.clientId)}`,
-      selected: connector.clientId === selectedId,
     }));
 }
 
