@@ -1,9 +1,12 @@
 import styles from './PageSkeleton.module.css';
 
-/** The shape of a page while the server works: a title line, then blocks. It says nothing about the content. */
+/**
+ * The shape of a page while the server works: a title line, then blocks. It says nothing about the content.
+ * `data-skeleton` is the marker that `scripts/measure-nav.ts` looks for to tell a skeleton from content.
+ */
 export function PageSkeleton({ blocks = 4 }: { blocks?: number }) {
   return (
-    <div className={styles.page} aria-hidden="true">
+    <div className={styles.page} aria-hidden="true" data-skeleton="">
       <div className={`${styles.line} ${styles.title}`} />
       {Array.from({ length: blocks }, (_, index) => (
         // The blocks never change order: the index is the identity.
