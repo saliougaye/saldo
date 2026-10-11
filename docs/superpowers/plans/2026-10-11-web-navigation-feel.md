@@ -724,7 +724,7 @@ git commit -m "perf(web): readPage starts the session and the query together"
 
 A **panel key** is the string that names what the URL opens: `new`, `tag:ID`, `account:ID`, `archived`. A page declares which parameters carry the key.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -765,12 +765,12 @@ describe('panelHrefFor', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test panelUrl`
 Expected: FAIL, because `panelUrl` does not exist.
 
-- [ ] **Step 3: Write `panelUrl.ts`**
+- [x] **Step 3: Write `panelUrl.ts`**
 
 ```ts
 /** Which query parameters choose a panel: a flag (`?new`) or a value (`?tag=ID`). Flags win. */
@@ -833,7 +833,9 @@ export function panelHrefFor(base: string, key: string | null, params: PanelPara
 }
 ```
 
-- [ ] **Step 4: Run the tests, then commit**
+On 2026-10-11 the code got one more field: `PanelParams.order`. Conti and Categories let a value win over the flag `archived`. A fixed rule «flags first» cannot keep that meaning. `order` lists the names, first the one that wins. Names that `order` does not list come after it, flags first. The test file has one more test for `order`, with the parameters of Conti. Each page gives `order` only when its own precedence is not «flags first». The code in `apps/web/src/ui/panelUrl.ts` is the reference.
+
+- [x] **Step 4: Run the tests, then commit**
 
 Run: `rtk proxy pnpm --filter web test panelUrl`
 Expected: PASS.
@@ -1132,7 +1134,7 @@ The table gives the parameters that each page reads on 2026-10-11.
 
 The first version of this plan named the values of Categories and Budgets `category` and `budget`. The pages read `c` and `b`.
 
-On Categories, the page lets `?c=` win over `?archived`. `panelKeyFromSearch` lets a flag win over a value. No link on the page writes both parameters. Thus the difference shows only for a URL that a person wrote by hand.
+On Categories, the page lets `?new` win over `?c=`, and `?c=` win over `?archived`. Give `order: ['new', 'c', 'archived']` in `PANEL_PARAMS` to keep this precedence. Without `order`, `panelKeyFromSearch` lets every flag win over a value.
 
 - [ ] **Step 1: For each page, read how it uses `searchParams`** (`params.new`, `params.<name>`). Write the `PANEL_PARAMS` constant from it. Use exactly the names that the page reads. A link that a person bookmarked must keep working.
 - [ ] **Step 2: Make the `panels` map** as Task 11 does. A panel can need costly data that exists only for one selected row, for example a long list. Keep that panel a navigation: do not put its key in `panels`. Then `panelOnlyChange` gives `null`, and the link navigates. Write the reason in the commit message.
@@ -1151,7 +1153,7 @@ Conti has four panels: the account form (`?new`, `?a=ID&edit`), the archived lis
 
 - [ ] **Step 1: Run the e2e flow first**, `rtk proxy pnpm --filter web e2e accounts-goals`. Expected: PASS.
 - [ ] **Step 2: Decide what is in place.** Read `accountDetail` and the form views at the top of the page. A **detail** needs `accountDetail({ data, today, def, id })` for each account. Render it for each listed account (there are few). An **edit form** that needs the balances of one account stays a navigation, as for a transaction. `edit` is not a panel parameter. Thus `?a=ID&edit` and `?a=ID` differ in the other parameters, and the link navigates. «Nuovo conto» needs no row, so it is in place.
-- [ ] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `archived`, `a:ID` (account detail) and `g:ID` (goal detail). Use `PANEL_PARAMS = { flags: ['new', 'archived'], values: ['g', 'a'] }`. These are the names that the page reads: `params.new`, `params.archived`, `params.a`, `params.g`. Put `g` first, because the page lets `?g=` win over `?a=`. The first version of this plan had a `newGoal` flag. The page reads no such parameter.
+- [ ] **Step 3: Move the panels into a `panels` map** with these keys: `new` (account form), `archived`, `a:ID` (account detail) and `g:ID` (goal detail). Use `PANEL_PARAMS = { flags: ['new', 'archived'], values: ['g', 'a'], order: ['new', 'g', 'a', 'archived'] }`. These are the names that the page reads: `params.new`, `params.archived`, `params.a`, `params.g`. The `order` is the precedence of the page: `?new` wins, then `?g=` over `?a=`, and a detail wins over `?archived`. The first version of this plan had a `newGoal` flag. The page reads no such parameter.
 
   > **Caution:** `panelKeyFromSearch` reads `?a=ID&edit` as `a:ID`. For that URL, make sure that the page shows the edit form, not the detail.
 
