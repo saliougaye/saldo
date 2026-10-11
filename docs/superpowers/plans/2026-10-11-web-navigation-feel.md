@@ -1040,7 +1040,7 @@ On 2026-10-11 the review found a problem with the portal in `PanelSwitch`. A por
 - At 1024px and more, the panel's column has `align-self: stretch`, as on Transazioni. Thus the panel stays sticky beside a long list. Below 1024px the column is `display: contents`, so it adds no row to the grid. The column is an element also without `slot`, because the controller reads it to give the focus back.
 - `Panel.module.css` gave a sheet `inset: auto` at 1024px and more, and that removed its `top`. Thus no form was sticky, also on Transazioni. The rule now sets `top` again.
 - When a refresh removes the open key from `panels` and the URL keeps it, an effect replaces the URL with the URL of the close.
-- The pages that still use `SlotPanel` keep the portal. Nothing matches the new rule on these pages, so they do not change.
+- The pages that still use `SlotPanel` keep the portal. Nothing matches the new rule on these pages, so they do not change. After Task 14 no page uses `SlotPanel`, and it is deleted.
 
 - [x] **Step 3: Run the gates and commit**
 
@@ -1319,14 +1319,61 @@ These URLs open something else now:
 
 Admin uses `SlotPanel` in a `SubnavLayout`, as Profilo does. Thus set `slot`. The Admin pages do not use `readPage`. Each page awaits `searchParams` in its own `Promise.all`.
 
-- [ ] **Step 1: Run `rtk proxy pnpm --filter web e2e admin` first.** Expected: PASS. The `fixme` test stays.
-- [ ] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page. Each row gives its whole key as `selectId` (for example `u:${id}`):
+On 2026-10-11 every Admin section with a panel uses `PanelSwitch`. Task 14 is complete.
+
+- [x] **Step 1: Run `rtk proxy pnpm --filter web e2e admin` first.** Expected: PASS. The `fixme` test stays.
+
+  On 2026-10-11 the run `e2e admin shell profile` on commit `70c3cc2c` gave 34 passed and 1 skipped (the `fixme`).
+
+- [x] **Step 2: For each of the three pages**, do Task 11 again with the parameters of the page. Each row gives its whole key as `selectId` (for example `u:${id}`):
   - `admin/accounts`: no flags, values `u`. The detail comes from `accountDetail(db, id)`, one database read for each account. Render all the details only if this is cheap. If it is not cheap, keep the detail a navigation.
   - `admin/invites`: flags `new`, values `i` (see `invitePanel`).
   - `admin/settings`: no flags, values `edit`. The keys are `edit:name`, `edit:registration` and `edit:smtp` (see `settingsPanel`).
 
   A panel can confirm a destructive action, for example «delete an account» or «revoke an invite». That panel is in place only if its body needs nothing from the server except the row. The `settings` panels (`NamePanel`, `RegistrationPanel`, `SmtpPanel`) have client forms that call `router.push(closeHref)` on save. A save stays a navigation.
-- [ ] **Step 3: Run the e2e flow and commit** one page at a time: `feat(web): Admin → <page> opens its panel in place`.
+- [x] **Step 3: Run the e2e flow and commit** one page at a time: `feat(web): Admin → <page> opens its panel in place`.
+
+The parameter names of step 2 are correct. The pages read `params.u`, `params.new` and `params.i` (`?new` wins), and `params.edit`. The pages do not read `searchParams` now. `PanelSwitch` reads the query.
+
+**Security.** A page now sends the panel of every row in each response, also the rows that the admin does not open. Thus a panel can hold only what an admin can read about every row. The work checked each panel:
+
+- An account panel holds the row of the list, the state of the email, the reason of a ban, the dates of creation and of the last sign-in, the counts of passkeys and of synced rows, and the label of the invite. It holds no token, no session id and no IP address. The delete dialog compares the typed text with the address (or the name, for a synthetic address). The row already shows the address.
+- An invite panel holds the label, the dates, the status and the address of the person who used it. No response of the page holds an invite code. The database keeps only the hash, and `listInvites` does not read it. The code exists only in the answer of `mintInviteAction`, in the state of `MintInvite`. Thus `?new` is in place too. «Fatto» stays a navigation (`router.replace`).
+- The SMTP panel gets the result of `smtpView` only: host, port, user, sender, and whether a password is set and still reads. A locked SMTP panel names the variables and shows no value. Thus the three settings panels are in place.
+- No shared provider holds a secret. The providers hold strings and `afterHref`.
+- `requireWebAdmin` in the layout and in each page, and the check in each Server Action, did not change.
+
+`admin.spec.ts` has three new SECURITY GUARD tests:
+
+- A member who asks for `/admin/accounts?u=ID`, as a document or as an RSC request, gets the not-found page. The body has no fact of the panel. Next.js answers the RSC request of a `notFound()` with status 200 and `NEXT_HTTP_ERROR_FALLBACK;404` in the body. The test reads the body, not the status, for that request.
+- The list, an invite panel and `?new` hold no invite code, as documents and as RSC requests, also after a mint.
+- After a save of the mail with a password, the list and `?edit=smtp` do not hold the password.
+
+These tests fetch from the page (`fetchIn`). `context.request` sends no `Accept-Language`, so the page renders in English, and a check of an Italian string passes for the wrong reason.
+
+On 2026-10-11 the work found these points:
+
+- `accountDetails(db)` reads the details of every account in five queries: the users, the newest session of each user, the passkeys, the synced rows and the used invites. The page uses it in place of `listAccounts` and `accountDetail`. `admin.test.ts` proves that it gives every account what `accountDetail` gives it. `accountDetail` stays for `deleteAccount`.
+- `AccountActionsShared`, `DeleteAccountShared` and `RevokeInviteShared` give the strings and `afterHref` once. A body gives only the id and the strings with the name or the label.
+- A revoke or a restore of an account calls `router.refresh()`, and the panel stays open with the new state. A delete goes to `/admin/accounts`, and the controller closes the panel.
+- The plan said that every settings panel goes to the list on save. `SmtpPanel` does not: a save of the mail calls `router.refresh()`, and the panel stays open. This did not change.
+- The first version of the Invites commit called `router.refresh()` in `MintInvite` after a mint. A ✕ or an Esc just after the mint closed the panel with `history.pushState`, and then the refresh was lost: the list did not show the new invite. The e2e guard failed once in this way. Commit `fix(web): the mint of an invite brings the new list in its own answer` moves the refresh into the action: `mintInviteAction` calls `revalidatePath('/admin', 'layout')`, as the settings actions do. The answer brings the list with the code. Before the change, ✕ was a navigation, so the list was new after it.
+- `invitePanel` and `settingsPanel` are deleted. `inviteStatusKey` gives the word of a status to the row and to the panel.
+- No page uses `SlotPanel` now. Commit `refactor(web): delete SlotPanel, which no page uses now` deletes it. `PasskeyList` still uses a portal into the slot, so the slot stays.
+- `admin/instance` and `admin/mcp` have no panel. They do not change.
+
+These URLs behave as before: `?u=`, `?i=` and `?edit=` with a value that names nothing open nothing, and `?new&i=ID` opens «Nuovo invito».
+
+On 2026-10-11 a temporary Playwright spec on a production build (port 3100) gave these results on the three pages, with 20 accounts and 25 invites (19 used, 6 active):
+
+- A click on a row shows the panel in the next frame, with the parameter in the URL and no RSC request. A click on a second row keeps the same `aside` element, with no running animation, and the row has `aria-current="true"`.
+- ✕ and Esc close with no RSC request, and the focus goes back to the row. On a settings panel the first Esc leaves the field and the second Esc closes, as before. Back closes the panel.
+- A load with the parameter has the `aside` and its body in the server HTML, also with JavaScript off.
+- «Nuovo invito» opens in place, and the focus is in the label field. After a mint the code stays on the screen, and ✕ closes with no RSC request. The list then has the new invite. The only requests after the mint are prefetches of the links that the revalidation cleared.
+- A save of the instance name goes to `/admin/settings`, and the row shows the new name. A revoke and a restore in an account panel keep the panel open, and it shows the new state.
+- The screenshots of the three lists and of `?edit=name` and `?edit=smtp` are the same, pixel for pixel, before and after (1440px and 500px, light and dark). So are `?u=ID`, `?i=ID` and `?new` at 1440px. At 500px the page under the full-screen panel is 24px shorter, as on Connectors. The pixels above that are the same.
+- The size of the RSC response: `/admin/accounts` was 40 KB before and 92 KB after (6.2 KB and 9.2 KB with gzip). `/admin/invites` was 55 KB and 99 KB (6.8 KB and 9.5 KB). `/admin/settings` was 27 KB and 32 KB (5.5 KB and 6.7 KB).
+- After the change, `e2e admin shell profile` gave 37 passed and 1 skipped: the 34 of step 1 and the three guard tests.
 
 ### Task 15: Close the work
 
@@ -1378,11 +1425,11 @@ Each cell is the median of five runs. In the After columns it is the median of t
 - Task 5 expected «feedback» of about 150 ms for the chip and the period arrow. The real values are 60 ms and 20 ms. The bar shows earlier than expected.
 - After C is empty. Part C fills it.
 
-Queries per request on `/transactions`: before 5, after A not measured, after B 3 (measured in Task 6). The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times.
+Queries per request on `/transactions`: before 5, after A not measured, after B 3 (measured in Task 6). The list of the five queries is in Task 6 step 1. After Task 6, the three queries are the session row, the user row and the `sync_rows` of the user. `/profile/tags` also runs three. `/admin/accounts` runs nine: `requireWebAdmin` reads `role, banned` in the layout and in the page, and `listAccounts` runs two times. After Task 14 the page runs the five queries of `accountDetails` in place of `listAccounts`, and an open panel adds no query.
 
 ## Risks
 
 - **`useLinkStatus` and prefetch.** `useLinkStatus` can stay `false` when Next.js prefetched the link and the navigation is quick. This is correct: nothing waits.
 - **`banned` on `session.user`.** The types come from the admin plugin. `betterAuth` infers them only when the plugins are a tuple, so `auth.ts` uses `pluginTuple` (Task 6 step 3). If `getSession` gets a cookie cache, `banned` can be late. A comment at the `getSession` call says this. In `session.test.ts`, the test of the settings fails when `auth.ts` gets a `cookieCache` or a `secondaryStorage`. The ban tests with live session rows prove the ban check itself.
-- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. Connectors with 10 rows went from 48 KB to 85 KB. Preferences went from 27 KB to 41 KB, with the time zone as a navigation. Conti with 20 accounts went from 67 KB to 248 KB (7.5 KB to 18.9 KB with gzip). If a page becomes too large, keep that panel a navigation (Task 12 step 2).
+- **The size of the response.** Part C renders every panel of a page in one response. Transazioni sends a detail for each row (47 KB for 12 rows). A Profilo page sends a form for each row, and a form has more props than a detail. Thus a body gets only the props of its row, and the props that all the forms share go once through `sharedProps` (Task 12). With 50 more rows, the RSC response was 227 KB on Categories, 218 KB on Budgets and 204 KB on Goals. With the panels as navigations it was 148 KB, 159 KB and 147 KB. Connectors with 10 rows went from 48 KB to 85 KB. Preferences went from 27 KB to 41 KB, with the time zone as a navigation. Conti with 20 accounts went from 67 KB to 248 KB (7.5 KB to 18.9 KB with gzip). Admin → Account with 20 accounts went from 40 KB to 92 KB, and Admin → Inviti with 25 invites from 55 KB to 99 KB. If a page becomes too large, keep that panel a navigation (Task 12 step 2).
 - **A form with state in a hidden panel.** `PanelSwitch` mounts only the open panel. The new form of Transazioni is different: it uses `<Activity>`. A change from one key to another key starts a new form, because the panel key is the `key` of the body. The `key` of `Panel` is only its shape, so the panel does not play its entrance again.
