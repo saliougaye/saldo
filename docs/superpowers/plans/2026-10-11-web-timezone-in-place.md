@@ -346,7 +346,7 @@ git commit -m "feat(web): Preferenze → the time zone list opens in place, with
 
 The test covers the flow of the screen (AGENTS.md «Tests»): a click on the row opens the panel with no RSC request, the hours are the browser's, Esc closes, and the focus returns.
 
-- [ ] **Step 1: Write the test.** Add it after «the time zone is searched by city…»:
+- [x] **Step 1: Write the test.** Add it after «the time zone is searched by city…»:
 
 ```ts
 test('the time zone row opens its list in place, with the hours of this browser', async ({
@@ -399,11 +399,20 @@ A minute can change between the read of `hour` and the check. `toContainText` re
 
 The focus after Esc goes to the row only if the search field does not keep it. `TextField` is the first field of the panel. Check where the focus is after the click: if Esc first leaves the field (as on the settings panels of Admin), press Esc two times and write why.
 
-- [ ] **Step 2: Run it.** Run: `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS.
+On 2026-10-11 the code differs from the sketch in two points. The code in `apps/web/e2e/profile.spec.ts` is the reference.
 
-- [ ] **Step 3: Make sure that it fails on the old code.** On `main` the click sends one RSC request (see «Measurements»). Thus `expect(requests).toEqual([])` fails there. Write the result in this plan.
+- The test reads the hour of Tokyo again on each try, in an `expect.poll`. Thus a new minute during the check does not fail it.
+- One Esc closes the panel, and the focus goes back to the row. The search field does not keep the Esc.
 
-- [ ] **Step 4: Commit.**
+- [x] **Step 2: Run it.** Run: `E2E_PORT=3105 E2E_DB_PORT=54335 rtk proxy pnpm --filter web e2e profile`. Expected: PASS.
+
+  On 2026-10-11: 10 passed (the setup, the 8 tests of before and the new test).
+
+- [x] **Step 3: Make sure that it fails on the old code.** On `main` the click sends one RSC request (see «Measurements»). Thus `expect(requests).toEqual([])` fails there.
+
+  On 2026-10-11 the measurement of `main` gave 1 RSC request for each of 7 clicks. Thus the test fails on `main` at the first `expect(requests).toEqual([])`.
+
+- [x] **Step 4: Commit.**
 
 ```bash
 git add apps/web/e2e/profile.spec.ts
