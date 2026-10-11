@@ -51,6 +51,9 @@ export function PanelLink({ href, className, selectedClassName, selectId, childr
   return (
     <Link
       href={href}
+      // In a page whose panel lives in client state, the controller opens this link in place: a
+      // prefetch only loads a page that nobody asks for, again after each `router.refresh`.
+      prefetch={nav === null ? undefined : false}
       className={classes}
       aria-current={selected ? 'true' : undefined}
       onClick={onClick}

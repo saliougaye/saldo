@@ -325,7 +325,7 @@ table.wrap1 td:first-child { white-space: normal; min-width: 9em; }
       <table>
         <thead><tr><th scope="col">Decision</th><th scope="col">Reason</th></tr></thead>
         <tbody>
-          <tr><td>Keep <code>next/link</code></td><td>A plain <code>&lt;a&gt;</code> loads the whole page again and removes the mounted shell. Today there is no large prefetch to remove: with no <code>loading.tsx</code>, Next.js has almost nothing to prefetch.</td></tr>
+          <tr><td>Keep <code>next/link</code></td><td>A plain <code>&lt;a&gt;</code> loads the whole page again and removes the mounted shell. Next.js prefetches each visible link, and it prefetches them again after each <code>router.refresh</code>. With a <code>loading.tsx</code>, each prefetch is larger. A <code>PanelLink</code> in a page with a panel in client state does not prefetch, because the controller opens it in place. On <code>/profile/tags</code> with 3 tags, a save then starts 14 prefetches, not 18.</td></tr>
           <tr><td>No dialogs</td><td>The panel beside the list is decision §17.1.7 of the POC spec. A dialog does not remove the wait for the server. Keep dialogs for short confirmations only.</td></tr>
           <tr><td>Server components</td><td>Pages stay server components. A client fetch adds a round trip after the JavaScript loads, and it repeats the query. Use streaming: first the shell and a skeleton, then the data.</td></tr>
           <tr><td>Filters stay navigations</td><td>A filter, the period and the search go to the server. They show a pending state. Only a panel changes in place.</td></tr>

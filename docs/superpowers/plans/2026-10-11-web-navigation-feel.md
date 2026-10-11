@@ -1133,6 +1133,7 @@ On 2026-10-11 the work found these points. Tasks 12 to 14 use the same rules.
 - The `TagForm` elements have no `key`. `PanelSwitch` puts the panel key on the body, so each tag already gets a new form.
 - `MergeTag` and `DeleteTag` stay navigations: `router.push(afterHref)` and `router.refresh()`, with `afterHref` equal to `PATH`. The URL then has no panel parameter, so the controller closes the panel. The e2e tests of merge and delete pass from the panel in place.
 - The page does not read `params` now. `PanelSwitch` reads the query.
+- A `PanelLink` in a `PanelNavContext` gives `prefetch={false}` to its link. The controller opens it in place, so a prefetch loads a page that nobody asks for. Next.js prefetches each visible link again after each `router.refresh`. On 2026-10-11 a production build gave these counts of `next-router-prefetch` requests: after a save on `/profile/tags` (3 tags), 18 before and 14 after; on a load of `/profile/categories`, 32 before and 28 after. The other prefetches are the links of the top bar and the subnav. A click on a row of Transazioni still opens in place, and «Modifica» still navigates.
 
 - [x] **Step 3: Run the e2e suite and check by hand**
 
