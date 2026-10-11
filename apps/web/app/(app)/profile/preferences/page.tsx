@@ -18,7 +18,7 @@ import { CurrencyPanel } from './CurrencyPanel';
 import { CyclePanel } from './CyclePanel';
 import { LanguagePanel } from './LanguagePanel';
 import { ThemePanel } from './ThemePanel';
-import { TimeZonePanel } from './TimeZonePanel';
+import { TimeZonePanel, TimeZoneWarmup } from './TimeZonePanel';
 import { type SettingErrors, SettingErrorsShared } from './useSaveSetting';
 
 export const runtime = 'nodejs';
@@ -42,6 +42,8 @@ export default async function ProfilePreferencesPage({
   const page = await readPage(searchParams);
   const { t, locale, settings, today } = page;
   const rows = preferenceRows(settings, locale);
+  // Under the id the time zone list holds it.
+  const savedZone = settings.timeZone == null ? null : canonicalTimeZone(settings.timeZone);
 
   const errors: SettingErrors = {
     invalid: t('web.preferences.error_invalid'),
@@ -104,10 +106,9 @@ export default async function ProfilePreferencesPage({
           />
         );
       case 'timeZone': {
-        const saved = settings.timeZone ?? null;
         return (
           <TimeZonePanel
-            saved={saved === null ? null : canonicalTimeZone(saved)}
+            saved={savedZone}
             locale={locale}
             renderedAt={minuteOf(new Date())}
             strings={{
@@ -162,6 +163,8 @@ export default async function ProfilePreferencesPage({
               }
             />
           ))}
+          {/* Renders nothing: it makes the time zone list in idle time, so its row opens at once. */}
+          <TimeZoneWarmup locale={locale} saved={savedZone} />
         </Section>
       </PanelSwitch>
     </SettingErrorsShared>

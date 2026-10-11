@@ -32,6 +32,7 @@
 | `apps/web/src/ui/clientImports.test.ts` | Modify | The subpath loads without the catalogs. |
 | `apps/web/src/features/profile/timeZoneRows.ts` + `.test.ts` | Create | Pure: the rows of the list and the hour of each row. |
 | `apps/web/src/features/profile/useMinute.ts` | Create | The current minute, with the minute of the render for the hydration. |
+| `apps/web/src/features/profile/zoneCache.ts` + `.test.ts` | Create (Task 5) | The rows and the hours of one minute, kept between renders, for the warm-up. |
 | `apps/web/src/features/profile/deviceZone.ts` | Modify | Read the aliases from the static table. |
 | `apps/web/src/features/profile/preferenceOptions.ts` | Modify | Delete `timeZoneOptions`, `ZoneOption` and `TimeZoneOptions`. |
 | `apps/web/app/(app)/profile/preferences/TimeZonePanel.tsx` | Modify | Make the rows in the browser. |
@@ -421,15 +422,25 @@ git commit -m "test(web): the time zone list opens in place, with the browser's 
 
 ### Task 5: Measure, check by hand, and decide the warm-up
 
-- [ ] **Step 1: Build and start.** `cd apps/web && PUBLIC_URL=http://localhost:3101 pnpm exec next build`, then `PUBLIC_URL=http://localhost:3101 pnpm exec next start -p 3101`.
+- [x] **Step 1: Build and start.** `cd apps/web && PUBLIC_URL=http://localhost:3101 pnpm exec next build`, then `PUBLIC_URL=http://localhost:3101 pnpm exec next start -p 3101`.
 
-- [ ] **Step 2: Run the temporary script** `apps/web/scripts/tmp-tz-measure.ts` (not committed): `pnpm exec tsx --env-file=.env scripts/tmp-tz-measure.ts http://localhost:3101 after`. It records the click time (CPU 4×, 1440px, median of 7), the RSC requests, the sizes, the text of the 418 rows, the console of a load of `?edit=timeZone`, and the screenshots.
+- [x] **Step 2: Run the temporary script** `apps/web/scripts/tmp-tz-measure.ts` (not committed): `pnpm exec tsx --env-file=.env scripts/tmp-tz-measure.ts http://localhost:3101 after`. It records the click time (CPU 4×, 1440px, median of 7), the RSC requests, the sizes, the text of the 418 rows, the console of a load of `?edit=timeZone`, and the screenshots.
 
-- [ ] **Step 3: Compare with main.** The text of the rows must be the same as `tz-text-main.json`, apart from the hours. The screenshots of the list and of `?edit=timeZone` must be the same, pixel for pixel, with the hours hidden (1440px and 500px, light and dark). The console must have no error.
+- [x] **Step 3: Compare with main.** The text of the rows must be the same as `tz-text-main.json`, apart from the hours. The screenshots of the list and of `?edit=timeZone` must be the same, pixel for pixel, with the hours hidden (1440px and 500px, light and dark). The console must have no error.
 
-- [ ] **Step 4: Decide the warm-up.** If the first open is slow, try a warm-up: the page calls `zoneTimes(TIME_ZONES, new Date())` in `requestIdleCallback` after it mounts, which fills the formatter cache of `wallClock`. Measure again. Keep the warm-up only if the median is shorter by more than 20 ms. Write the numbers here.
+- [x] **Step 4: Decide the warm-up.** If the first open is slow, try a warm-up: the page calls `zoneTimes(TIME_ZONES, new Date())` in `requestIdleCallback` after it mounts, which fills the formatter cache of `wallClock`. Measure again. Keep the warm-up only if the median is shorter by more than 20 ms. Write the numbers here.
 
-- [ ] **Step 5: Check by hand** with the script or a browser: a click shows the list in the next frame with no RSC request; ✕ and Esc close in place and the focus returns to the row; Back closes; a reload of `?edit=timeZone` opens with the list in the HTML; a choice saves, the row shows the new zone, and the panel stays open.
+  On 2026-10-11, without a warm-up, the click took 315 ms (346, 315, 309, 334, 344, 314, 292), with no RSC request. That is only 33 ms shorter than the navigation. A trace gave about 300 ms of script in the click and about 80 ms of style, layout and paint. A CPU profile put most of the script in `Intl`: 418 formatters, `formatToParts` for each zone, and the collator. The work kept a warm-up, with these parts:
+
+  - `src/features/profile/zoneCache.ts` keeps the rows (`cachedTimeZoneRows`, one entry for a language and a saved zone) and the hours of one minute (`cachedZoneTimes`, zone by zone). A new minute starts an empty map. `zoneCache.test.ts` proves that the hours of a part and of a new minute are those of `zoneTimes`.
+  - `TimeZoneWarmup` renders nothing. The page puts it in the list of Preferences. After the mount it makes the rows in one idle task, then the hours in idle tasks of 40 zones. Safari has no `requestIdleCallback`, so it gets a `setTimeout` of 50 ms.
+  - `TimeZonePanel` reads the two caches. A zone that the warm-up did not reach gets its hour at the render.
+
+  With the warm-up the click took 87 ms (83, 93, 85, 87, 88, 81, 93), with no RSC request. The warm-up is kept: it is 228 ms shorter.
+
+- [x] **Step 5: Check by hand** with the script or a browser: a click shows the list in the next frame with no RSC request; ✕ and Esc close in place and the focus returns to the row; Back closes; a reload of `?edit=timeZone` opens with the list in the HTML; a choice saves, the row shows the new zone, and the panel stays open.
+
+  On 2026-10-11 a temporary script on the build with the warm-up gave these results. ✕ closes with no RSC request, the URL is `/profile/preferences`, and the focus is on the row. Back closes with no RSC request. A choice of Tokyo saves: the URL keeps `?edit=timeZone`, the row shows «Tokyo», the panel stays open and Tokyo is checked. A load of `?edit=timeZone` shows 418 rows, and its HTML holds the list. The console has no error, also on a load of `?edit=timeZone` (no hydration mismatch). The text of the 418 rows, with the hours removed, is the same as on `main`, row for row. The 8 screenshots (the list and `?edit=timeZone`, 1440px and 500px, light and dark, hours hidden) are the same bytes as on `main`.
 
 - [ ] **Step 6: Copy the numbers** into section 06 of the spec. Delete the temporary scripts.
 
@@ -454,10 +465,15 @@ The «Before» column is commit `526e23a0` (main) on port 3101. The script runs 
 
 | Value (1440px, CPU 4×) | Before | After |
 | --- | --- | --- |
-| Click on «Time zone» to a visible row | 348 ms (348, 293, 399, 326, 374, 366, 325) | Task 5 |
-| RSC requests for the click (no prefetch) | 1 | Task 5 |
-| RSC response, `/profile/preferences` | 41.1 KB (9.0 KB gzip) | Task 5 |
-| RSC response, `?edit=timeZone` | 79.0 KB (15.8 KB gzip) | Task 5 |
-| HTML, `?edit=timeZone` | 391.8 KB (28.8 KB gzip) | Task 5 |
-| 418 `Intl.DateTimeFormat`, first time, in the page | 70 ms | — |
-| `@saldo/i18n/timeZones` minified (esbuild) | — | 52 KB (12.8 KB gzip) |
+| Click on «Time zone» to a visible row | 348 ms (348, 293, 399, 326, 374, 366, 325) | 87 ms (83, 93, 85, 87, 88, 81, 93) |
+| The same, without the warm-up | — | 315 ms (346, 315, 309, 334, 344, 314, 292) |
+| RSC requests for the click (no prefetch) | 1 | 0 |
+| RSC response, `/profile/preferences` | 41.1 KB (9.0 KB gzip) | 42.9 KB (9.2 KB gzip) |
+| RSC response, `?edit=timeZone`, also after each save | 79.0 KB (15.8 KB gzip) | 42.9 KB (9.2 KB gzip) |
+| HTML, `?edit=timeZone` | 391.8 KB (28.8 KB gzip) | 349.1 KB (22.3 KB gzip) |
+| 418 `Intl.DateTimeFormat`, first time, in the page | 70 ms | 72 ms |
+| The client chunk with the zone tables, once, cached | — | 59.0 KB (16.3 KB gzip, 13.3 KB brotli) |
+
+- «After» is the build of the branch with the warm-up, on port 3101, with the same database. Each click time is the median of 7 clicks, each in a new browser context, 1.5 s after the load.
+- The RSC response of the list is 1.8 KB larger: the props of `TimeZonePanel`, its client reference and `TimeZoneWarmup`.
+- The chunk holds the zone tables and the cities in seven languages. The browser loads it once for each deployment. Only the Preferences page imports it.

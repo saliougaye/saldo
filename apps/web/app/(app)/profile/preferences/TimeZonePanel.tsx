@@ -4,8 +4,9 @@ import { groupTimeZones } from '@saldo/core';
 import type { AppLocale } from '@saldo/i18n/format';
 import { useEffect, useMemo, useState } from 'react';
 import { listedZone } from '../../../../src/features/profile/deviceZone';
-import { timeZoneRows, zoneTimes } from '../../../../src/features/profile/timeZoneRows';
+import { minuteOf } from '../../../../src/features/profile/timeZoneRows';
 import { useMinute } from '../../../../src/features/profile/useMinute';
+import { cachedTimeZoneRows, cachedZoneTimes } from '../../../../src/features/profile/zoneCache';
 import { Alert } from '../../../../src/ui/Alert';
 import { type ListOption, OptionList } from '../../../../src/ui/OptionList';
 import { TextField } from '../../../../src/ui/TextField';
@@ -43,11 +44,11 @@ interface Props {
 export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
   const { shown, error, save } = useSaveSetting(saved);
   const [query, setQuery] = useState('');
-  const zones = useMemo(() => timeZoneRows(locale, saved), [locale, saved]);
+  const zones = useMemo(() => cachedTimeZoneRows(locale, saved), [locale, saved]);
   const ids = useMemo(() => zones.map((row) => row.zone), [zones]);
   const byZone = useMemo(() => new Map(zones.map((row) => [row.zone, row])), [zones]);
   const minute = useMinute(renderedAt);
-  const times = useMemo(() => zoneTimes(ids, new Date(minute * 60_000)), [ids, minute]);
+  const times = useMemo(() => cachedZoneTimes(ids, minute), [ids, minute]);
 
   // The browser's zone is only known here, after the mount: the server renders for any browser.
   const [device, setDevice] = useState<string | null>(null);
@@ -114,4 +115,42 @@ export function TimeZonePanel({ saved, locale, renderedAt, strings }: Props) {
       />
     </>
   );
+}
+
+/** How many zones get their hour in one idle task: about 10 ms of a slow phone's time. */
+const WARM_BATCH = 40;
+
+/** A task for when the browser is idle; Safari has no `requestIdleCallback`. */
+function whenIdle(run: () => void): () => void {
+  if (typeof window.requestIdleCallback === 'function') {
+    const handle = window.requestIdleCallback(run);
+    return () => window.cancelIdleCallback(handle);
+  }
+  const handle = window.setTimeout(run, 50);
+  return () => window.clearTimeout(handle);
+}
+
+/**
+ * Renders nothing. After the Preferences page mounts, it makes the time zone list and the hours of
+ * this minute in small idle tasks (`zoneCache`), so a click on «Fuso orario» does not wait for
+ * `Intl`. A minute that changes before the click only costs the new hours.
+ */
+export function TimeZoneWarmup({ locale, saved }: { locale: AppLocale; saved: string | null }) {
+  useEffect(() => {
+    let ids: string[] | null = null;
+    let next = 0;
+    let cancel = () => {};
+    const step = () => {
+      if (ids === null) {
+        ids = cachedTimeZoneRows(locale, saved).map((row) => row.zone);
+      } else {
+        cachedZoneTimes(ids.slice(next, next + WARM_BATCH), minuteOf(new Date()));
+        next += WARM_BATCH;
+      }
+      if (next < ids.length) cancel = whenIdle(step);
+    };
+    cancel = whenIdle(step);
+    return () => cancel();
+  }, [locale, saved]);
+  return null;
 }
