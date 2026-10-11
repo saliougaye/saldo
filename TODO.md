@@ -25,8 +25,15 @@ Transazioni, Conti, Profilo and Admin open in place. The time zone list of Prefe
 (`docs/superpowers/plans/2026-10-11-web-timezone-in-place.md`). Still open:
 
 - the production region (`fra1::iad1`: the function runs in Washington, Neon in Frankfurt);
-- the edit form of a transaction and of an account (`?a=ID&edit`) stays a navigation, because it needs the balances
-  of one row, which only the server calculates;
+- the edit form of a transaction and of an account (`?t=ID&edit`, `?a=ID&edit`) stays a navigation by choice. The
+  balances it needs are already on the page or can be derived with pure `@saldo/core` functions. Measured on
+  2026-10-11: the form shows after about 0.6 to 0.7 s at production latency, with the navigation bar visible after
+  0.2 s. Editing is a rare action. Open it again only if editing still feels slow after the region change. Then
+  split the form view into a shared part and a small part for each row, and open it with `go()`. Do not prefetch the
+  edit link on hover: on Conti it left the main area blank;
+- `actionApplied()` waits one tick so that Next applies the answer of a Server Action before the form navigates.
+  This holds in Next 16.3.4. The e2e test «a save in a panel opened in place … prefetches no visible link again»
+  fails if a Next upgrade changes the order;
 - «settled» is longer on the pages that have a skeleton. Home → Transazioni took 156 ms before the work, 397 ms
   after the skeletons, 202 ms after the shorter query chain and 188 ms at the end of the work. The `loading.tsx`
   boundary seems to add wall-clock time. The cause is not investigated;
