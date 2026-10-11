@@ -45,7 +45,6 @@ export interface GoalFormView {
    */
   updatedAt: string | null;
   initial: GoalFormValues;
-  parents: { id: string; name: string; icon: string; colorIndex: number }[];
   minorDigits: MinorDigits;
   today: LocalDate;
 }
@@ -108,15 +107,29 @@ export function goalFormView(input: Input): GoalFormView | null {
     id: editing?.id ?? null,
     updatedAt: editing?.updatedAt ?? null,
     initial: editing === undefined ? emptyGoalForm() : goalFormFrom(editing, minorDigits),
-    parents: pocketParentCandidates(data.accounts).map((account) => ({
-      id: account.id,
-      name: account.name,
-      icon: account.icon,
-      colorIndex: account.colorIndex,
-    })),
     minorDigits,
     today: input.today,
   };
+}
+
+export interface GoalParentOption {
+  id: string;
+  name: string;
+  icon: string;
+  colorIndex: number;
+}
+
+/**
+ * The accounts a new goal can sit in (§5.14), the same for every goal form of a page: the page gives
+ * them once (`sharedProps`), not once for each goal.
+ */
+export function goalParentOptions(data: UserData): GoalParentOption[] {
+  return pocketParentCandidates(data.accounts).map((account) => ({
+    id: account.id,
+    name: account.name,
+    icon: account.icon,
+    colorIndex: account.colorIndex,
+  }));
 }
 
 /**

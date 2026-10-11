@@ -1209,6 +1209,13 @@ On 2026-10-11 the work on Budgets found these points:
 - `budgetRowFor` takes `selectId`, so the rows are `PanelLink`s. Home does not give it.
 - With 50 more budgets the RSC response was 159 KB before, 916 KB with the approach of Task 11, and 218 KB with the shared props.
 
+On 2026-10-11 the work on Goals found these points:
+
+- `GoalFormView` has no `parents` now. `goalParentOptions` gives them once, through `GoalFormProvider`, with the messages and the money format. `GoalForm` is used only on this page.
+- A save goes to `?g=ID`. The panel of the saved goal stays open, and the list shows the new figures.
+- A URL with `?new` and `?g=` opens nothing when no account can hold a goal: `?new` wins, and it has no panel then. Before, `?g=` then opened the goal.
+- With 50 more goals the RSC response was 147 KB before, 228 KB with the approach of Task 11, and 204 KB with the shared props. The approach of Task 11 sent the messages only once on this page. React could name the path of the first copy, under the key `new`, which has no colon.
+
 `profile/passkeys` has no panel of its own: `PasskeyList` uses client state. `profile/account` and `profile/data` have no panel. Do not change these three pages.
 
 ### Task 13: Conti
