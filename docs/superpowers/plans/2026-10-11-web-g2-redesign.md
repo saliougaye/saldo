@@ -101,7 +101,7 @@ Both are replaced by decision D3 below. Task 24 records the decisions in a new H
 **Files:**
 - Modify: `packages/ui/src/tokens.ts` (the `layout` object, after `subnavWidth`)
 
-- [ ] **Step 1: Add the token**
+- [x] **Step 1: Add the token**
 
 In `packages/ui/src/tokens.ts`, after the line `subnavWidth: 200,` add:
 
@@ -112,13 +112,13 @@ In `packages/ui/src/tokens.ts`, after the line `subnavWidth: 200,` add:
 
 `tokensCss()` emits it as `--layout-sidebar-width`.
 
-- [ ] **Step 2: Check that the variable is emitted**
+- [x] **Step 2: Check that the variable is emitted**
 
 Run: `cd packages/ui && node --input-type=module -e "import('./src/css.ts').then(m=>console.log(m.tokensCss().includes('--layout-sidebar-width: 232px')))"`
 
 If Node cannot load TypeScript directly, run `rtk proxy pnpm --filter @saldo/ui test` instead and then `grep -rn "sidebar-width" apps/web/.next 2>/dev/null | head -1` after the next build. Expected: `true`, or one match.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts
@@ -132,7 +132,7 @@ git commit -m "feat(ui): sidebar width token for the web shell"
 
 Add every key below to **both** files, in the namespace that the key names. Keep the order of the keys around them. The parity test fails if one file misses a key.
 
-- [ ] **Step 1: Add the Italian strings**
+- [x] **Step 1: Add the Italian strings**
 
 In `it.ts`:
 
@@ -164,7 +164,7 @@ In `it.ts`:
     newAccountBody: 'Un conto corrente, una carta, un deposito o i contanti.',
 ```
 
-- [ ] **Step 2: Add the English strings**
+- [x] **Step 2: Add the English strings**
 
 In `en.ts`, in the same places:
 
@@ -198,12 +198,12 @@ In `en.ts`, in the same places:
 
 The comments above only say where each block goes. Do not paste them.
 
-- [ ] **Step 3: Run the i18n tests**
+- [x] **Step 3: Run the i18n tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS (the parity test included).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/i18n/src/locales/it.ts packages/i18n/src/locales/en.ts
@@ -216,7 +216,7 @@ git commit -m "feat(i18n): strings for the G2 web pages"
 - Create: `apps/web/public/brand/rocky-mark.png`
 - Modify: `apps/web/src/ui/Brand.tsx`, `apps/web/src/ui/Brand.module.css`
 
-- [ ] **Step 1: Cut the mark from the app icon**
+- [x] **Step 1: Cut the mark from the app icon**
 
 The source is `apps/mobile/assets/ios-icon-dark.png` (1024×1024, transparent). The box below is the one the mockup shows in its 32px tile. Run from the repository root:
 
@@ -235,11 +235,11 @@ EOF
 
 Expected output: `(284, 128, 740, 583)`. The file is 64×64 (2× for a 32px tile) and smaller than 10 KB. If Pillow is not installed, run `python3 -m pip install --user pillow` first.
 
-- [ ] **Step 2: Look at it**
+- [x] **Step 2: Look at it**
 
 Open `apps/web/public/brand/rocky-mark.png`. Expected: Rocky's ears, coin, mask and muzzle; the bottom edge cuts his body; no part of the tail shows.
 
-- [ ] **Step 3: Use it in `Brand`**
+- [x] **Step 3: Use it in `Brand`**
 
 In `apps/web/src/ui/Brand.tsx`, replace `<span className={styles.mark}>S</span>` with:
 
@@ -261,11 +261,11 @@ In `apps/web/src/ui/Brand.module.css`, replace the whole `.mark` rule with:
 }
 ```
 
-- [ ] **Step 4: Check the sign-in page**
+- [x] **Step 4: Check the sign-in page**
 
 `Brand` is also on `/login`. Start the dev server (see «Rules») and open `http://localhost:3100/login`. Expected: Rocky in a 32px tile, then «Saldo». The 96px Rocky above it stays.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/public/brand/rocky-mark.png apps/web/src/ui/Brand.tsx apps/web/src/ui/Brand.module.css
@@ -278,7 +278,7 @@ git commit -m "feat(web): Rocky is the brand mark"
 - Create: `apps/web/src/ui/ProfileLink.tsx`, `apps/web/src/ui/ProfileLink.module.css`
 - Modify: `apps/web/src/ui/NavLink.module.css`
 
-- [ ] **Step 1: Write `ProfileLink`**
+- [x] **Step 1: Write `ProfileLink`**
 
 `apps/web/src/ui/ProfileLink.tsx`:
 
@@ -378,7 +378,7 @@ export function ProfileLink({ name, label }: { name: string; label: string }) {
 }
 ```
 
-- [ ] **Step 2: Give `NavLink` the G2 states (D11)**
+- [x] **Step 2: Give `NavLink` the G2 states (D11)**
 
 In `apps/web/src/ui/NavLink.module.css`, replace the `.link`, `.link:hover` and `.link[aria-current="page"]` rules with:
 
@@ -426,12 +426,12 @@ In `apps/web/src/ui/NavLink.module.css`, replace the `.link`, `.link:hover` and 
 
 Keep `.icon` and `.count`. Change the colour of `.count` from `--color-text-faint` to `--color-text-muted` (a 13px faint label does not pass AA).
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/src/ui/ProfileLink.tsx apps/web/src/ui/ProfileLink.module.css apps/web/src/ui/NavLink.module.css
@@ -443,7 +443,7 @@ git commit -m "feat(web): profile link and the G2 states of a nav link"
 **Files:**
 - Create: `apps/web/src/ui/SideBar.tsx`, `apps/web/src/ui/SideBar.module.css`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 `apps/web/src/ui/SideBar.tsx`:
 
@@ -603,12 +603,12 @@ export function SideBar({ items, user, strings }: Props) {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/ui/SideBar.tsx apps/web/src/ui/SideBar.module.css
@@ -620,7 +620,7 @@ git commit -m "feat(web): the sidebar of the wide screen"
 **Files:**
 - Modify: `apps/web/app/(app)/layout.tsx`, `apps/web/app/(app)/shell.module.css`, `apps/web/src/ui/TopBar.module.css`
 
-- [ ] **Step 1: Render the sidebar beside the content**
+- [x] **Step 1: Render the sidebar beside the content**
 
 In `apps/web/app/(app)/layout.tsx`, import `SideBar` (`import { SideBar } from '../../src/ui/SideBar';`). Replace the JSX inside `<div className={styles.shell}>` with:
 
@@ -661,7 +661,7 @@ In `apps/web/app/(app)/layout.tsx`, import `SideBar` (`import { SideBar } from '
 
 Change the doc comment of `AppLayout` to: `§17.1.7 and D1 (2026-10-11): a sidebar on wide screens; the top bar and the phone's tab bar on narrow ones. All are rendered; CSS picks.`
 
-- [ ] **Step 2: Lay out the shell**
+- [x] **Step 2: Lay out the shell**
 
 Replace the whole `apps/web/app/(app)/shell.module.css` with:
 
@@ -722,7 +722,7 @@ Replace the whole `apps/web/app/(app)/shell.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Hide the top bar on wide screens**
+- [x] **Step 3: Hide the top bar on wide screens**
 
 In `apps/web/src/ui/TopBar.module.css`, replace the whole `@media (min-width: 1024px)` block at the end with:
 
@@ -737,16 +737,16 @@ In `apps/web/src/ui/TopBar.module.css`, replace the whole `@media (min-width: 10
 
 Then delete the rules that only the wide screen used: `.sections`, `.new`, `.new:active` and `.kbd`. In `TopBar.tsx`, delete the `<ul className={styles.sections}>…</ul>` block and the `<NewTransactionLink …>…</NewTransactionLink>` block, and the imports that are no longer used (`Icon`, `NewTransactionLink`). Change the comment of `TopBar` to: `Narrow screens only (D1): the brand, Admin as an icon and the avatar. The tab bar carries the sections and the FAB.`
 
-- [ ] **Step 4: Run the gates**
+- [x] **Step 4: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`
 Expected: no errors; no `lint/…` lines.
 
-- [ ] **Step 5: Look at it**
+- [x] **Step 5: Look at it**
 
 Start the dev server. Open `/home` at 1440×900 and at 390×844, in both themes. Expected at 1440: the sidebar on the left (Rocky, «Saldo», five links, the button, the person), no top bar. Expected at 390: the top bar and the tab bar as before, no sidebar.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/layout.tsx" "apps/web/app/(app)/shell.module.css" apps/web/src/ui/TopBar.tsx apps/web/src/ui/TopBar.module.css
