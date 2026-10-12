@@ -1211,7 +1211,7 @@ git commit -m "test(web): panels are dialogs in the end-to-end tests"
 **Files:**
 - Create: `apps/web/src/ui/Card.tsx`, `apps/web/src/ui/Card.module.css`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 `apps/web/src/ui/Card.tsx`:
 
@@ -1455,12 +1455,12 @@ a.card:focus-visible {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/ui/Card.tsx apps/web/src/ui/Card.module.css
@@ -1473,7 +1473,7 @@ git commit -m "feat(web): the target card of G2 and its grid"
 - Create: `apps/web/src/ui/PageHead.tsx`, `apps/web/src/ui/PageHead.module.css`, `apps/web/src/ui/charts/ChartFrame.tsx`, `apps/web/src/ui/charts/ChartFrame.module.css`
 - Modify: `apps/web/src/ui/charts/TrendChart.tsx`, `apps/web/src/ui/charts/Sparkline.tsx`
 
-- [ ] **Step 1: `PageHead`**
+- [x] **Step 1: `PageHead`**
 
 `apps/web/src/ui/PageHead.tsx`:
 
@@ -1550,7 +1550,7 @@ export function PageHead({ title, hero, stats, aside }: Props) {
 }
 ```
 
-- [ ] **Step 2: `ChartFrame`**
+- [x] **Step 2: `ChartFrame`**
 
 `apps/web/src/ui/charts/ChartFrame.tsx`:
 
@@ -1605,7 +1605,7 @@ export function ChartFrame({
 }
 ```
 
-- [ ] **Step 3: A height for `TrendChart` and `Sparkline`**
+- [x] **Step 3: A height for `TrendChart` and `Sparkline`**
 
 In `TrendChart.tsx`, add to `Props`:
 
@@ -1618,7 +1618,7 @@ Change the signature to `export function TrendChart({ current, usual, height = W
 
 In `Sparkline.tsx`, add `style={{ blockSize: `${height}px` }}` to the `<svg>`. The CSS module's fixed `block-size: 48px` then only applies when no height is given: change `.chart` in `Sparkline.module.css` to `inline-size: 100%;` only, and keep the default `height = 48` in the props.
 
-- [ ] **Step 4: Typecheck and commit**
+- [x] **Step 4: Typecheck and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
@@ -1633,7 +1633,7 @@ git commit -m "feat(web): page head and chart frame for the G2 pages"
 **Files:**
 - Modify: `apps/web/src/ui/PeriodHeader.tsx`, `apps/web/src/ui/PeriodHeader.module.css`, `apps/web/src/ui/ListRow.module.css`
 
-- [ ] **Step 1: Move the stepper**
+- [x] **Step 1: Move the stepper**
 
 In `PeriodHeader.tsx`, replace the returned JSX with:
 
@@ -1663,7 +1663,7 @@ In `PeriodHeader.tsx`, replace the returned JSX with:
 
 Check that `Icon` accepts `className`: run `grep -n "className" apps/web/src/ui/Icon.tsx`. It does (`NavLink` passes one).
 
-- [ ] **Step 2: The CSS**
+- [x] **Step 2: The CSS**
 
 In `PeriodHeader.module.css`, replace `.header` and `.what` with:
 
@@ -1700,7 +1700,7 @@ Change `.sub`'s colour to `var(--color-text-muted)` and add `margin-top: 2px;`. 
 }
 ```
 
-- [ ] **Step 3: Open rows press**
+- [x] **Step 3: Open rows press**
 
 In `ListRow.module.css`, change `.row` to add:
 
@@ -1726,11 +1726,11 @@ a.open:active {
 
 Change `.open .subtitle`'s colour from `--color-text-faint` to `--color-text-muted` (AA at 13px).
 
-- [ ] **Step 4: Look at every page with a period**
+- [x] **Step 4: Look at every page with a period**
 
 Open `/home`, `/transactions` and `/stats`. Expected: «Ottobre» with ‹ › right after it; the range under both.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/ui/PeriodHeader.tsx apps/web/src/ui/PeriodHeader.module.css apps/web/src/ui/ListRow.module.css
