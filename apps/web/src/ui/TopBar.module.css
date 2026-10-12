@@ -26,15 +26,6 @@
   text-decoration: none;
 }
 
-/* The tab bar carries these below the breakpoint; two copies of one list is one too many. */
-.sections {
-  display: none;
-  gap: 4px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
 .actions {
   margin-inline-start: auto;
   display: flex;
@@ -49,48 +40,9 @@
   gap: 12px;
 }
 
-/* The mockup's `.btn-primary`. Below the breakpoint the tab bar's FAB is the same link. */
-.new {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: var(--radius-button);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  font-size: var(--font-size-footnote);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-  text-decoration: none;
-  transition: scale var(--motion-press) var(--motion-easing);
-}
-
-.new:active {
-  scale: 0.98;
-}
-
-.kbd {
-  font: inherit;
-  font-size: var(--font-size-caption);
-  border: 1px solid currentColor;
-  border-radius: var(--radius-icon-box);
-  padding: 0 5px;
-  opacity: 0.55;
-  line-height: 1.5;
-}
-
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+/* `--layout-wide-breakpoint` (1024): the sidebar navigates there (D1), so the bar is not drawn. */
 @media (min-width: 1024px) {
-  .inner {
-    padding: 0 var(--layout-page-padding-web);
-  }
-
-  .sections {
-    display: flex;
-  }
-
-  .new {
-    display: inline-flex;
+  .bar {
+    display: none;
   }
 }

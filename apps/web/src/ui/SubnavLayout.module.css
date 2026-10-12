@@ -10,37 +10,18 @@
   gap: 4px;
 }
 
+/* Narrow: the links alone. The way back is the tab bar; the title is the page's own head. */
+.back,
+.sideTitle {
+  display: none;
+}
+
 .separator {
   display: none;
   height: 1px;
   margin: 10px 12px;
   border: 0;
   background: var(--color-border);
-}
-
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .layout {
-    grid-template-columns: var(--layout-subnav-width) minmax(0, 1fr) auto;
-    column-gap: 48px;
-    align-items: start;
-  }
-
-  .subnav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    position: sticky;
-    top: calc(var(--layout-topbar-height) + 32px);
-  }
-
-  .subnav a {
-    width: 100%;
-  }
-
-  .separator {
-    display: block;
-  }
 }
 
 .section {
@@ -51,14 +32,88 @@
 }
 
 /*
- * A `PanelSwitch` page (`slot`): its list and its panel take the section's column and the slot's,
- * so the server renders the panel in place of a portal.
+ * A `PanelSwitch` page (`slot`): its list and its panel take the section's place, so the server
+ * renders the panel in place of a portal.
  */
 .section:has(> [data-panel-switch]) {
   display: contents;
 }
 
-/* An empty slot takes no column and no gap. */
-.slot:empty {
-  display: none;
+/* D3: a panel in the slot is fixed over the page, so the slot takes no place at any width. */
+.slot {
+  display: contents;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  /*
+   * D10: the sub-navigation is the sidebar. It sits exactly over the shell's sidebar, which the
+   * shell hides (`data-section-nav`), so the section does not move when you enter Profilo.
+   */
+  .subnav {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 11;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 2px;
+    inline-size: var(--layout-sidebar-width);
+    padding: 20px 16px;
+    border-inline-end: 1px solid var(--color-border);
+    background: var(--color-surface);
+    transition-property: translate, opacity;
+    transition-duration: var(--motion-fade);
+    transition-timing-function: var(--motion-easing);
+  }
+
+  /* A rare change of place: the links arrive 8px from the trailing side, once, on entering. */
+  @starting-style {
+    .subnav {
+      translate: 8px 0;
+      opacity: 0;
+    }
+  }
+
+  .subnav a {
+    width: 100%;
+  }
+
+  .back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--layout-nav-item-height);
+    padding: 0 8px;
+    border-radius: var(--radius-input);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-footnote);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  }
+
+  .sideTitle {
+    display: block;
+    margin: 16px 0 14px;
+    padding: 0 10px;
+  }
+
+  /* «Esci» and what follows the rule sit at the foot of the column. */
+  .separator {
+    display: block;
+    margin-top: auto;
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  @starting-style {
+    .subnav {
+      translate: 0 0;
+    }
+  }
 }

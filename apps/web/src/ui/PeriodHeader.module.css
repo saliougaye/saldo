@@ -1,16 +1,14 @@
 /* Title and days leading, the two steps as one joined control trailing (§5.4). Both steps are links, so the period survives a reload and a new tab. */
 .header {
   display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.what {
-  flex: 1;
-  min-width: 0;
-  display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .title {
@@ -21,11 +19,13 @@
 
 .sub {
   font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
+  margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
 
 .stepper {
+  flex: none;
   display: flex;
   block-size: var(--layout-header-button);
   border-radius: var(--radius-chip-small);
@@ -51,4 +51,19 @@ a.step:hover {
 
 .disabled {
   color: var(--color-text-faint);
+}
+
+/* Optical alignment: a chevron's visual centre is inside its box; nudge it outward by half a pixel. */
+.chevL {
+  translate: -0.5px 0;
+}
+
+.chevR {
+  translate: 0.5px 0;
+}
+
+/* The stepper clips its children: the ring goes inside, at the inner radius. */
+.step:focus-visible {
+  outline-offset: -2px;
+  border-radius: inherit;
 }

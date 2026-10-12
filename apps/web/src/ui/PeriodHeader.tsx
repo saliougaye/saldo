@@ -51,24 +51,25 @@ export function PeriodHeader({
   const sub = title === range ? status : [range, status].filter(Boolean).join(' · ');
   return (
     <div className={styles.header}>
-      <div className={styles.what}>
+      {/* G: the ‹ › sit beside the word they change, not at the far edge of the page. */}
+      <div className={styles.titleRow}>
         <span className={styles.title}>{title}</span>
-        {sub === undefined || sub === '' ? null : <span className={styles.sub}>{sub}</span>}
-      </div>
-      <div className={styles.stepper}>
-        <Link className={styles.step} href={steps.previous} aria-label={strings.previous}>
-          <Icon name="chevL" size={18} />
-        </Link>
-        {steps.next === null ? (
-          <span className={`${styles.step} ${styles.disabled}`} aria-hidden="true">
-            <Icon name="chevR" size={18} />
-          </span>
-        ) : (
-          <Link className={styles.step} href={steps.next} aria-label={strings.next}>
-            <Icon name="chevR" size={18} />
+        <div className={styles.stepper}>
+          <Link className={styles.step} href={steps.previous} aria-label={strings.previous}>
+            <Icon name="chevL" size={18} className={styles.chevL} />
           </Link>
-        )}
+          {steps.next === null ? (
+            <span className={`${styles.step} ${styles.disabled}`} aria-hidden="true">
+              <Icon name="chevR" size={18} className={styles.chevR} />
+            </span>
+          ) : (
+            <Link className={styles.step} href={steps.next} aria-label={strings.next}>
+              <Icon name="chevR" size={18} className={styles.chevR} />
+            </Link>
+          )}
+        </div>
       </div>
+      {sub === undefined || sub === '' ? null : <span className={styles.sub}>{sub}</span>}
     </div>
   );
 }

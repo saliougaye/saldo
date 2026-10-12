@@ -4,17 +4,15 @@
   gap: 10px;
 }
 
+/* The app icon's Rocky on transparent, over `raised`: it reads in both themes (D2). */
 .mark {
-  width: 28px;
-  height: 28px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-icon-box);
-  background: var(--color-text);
-  color: var(--color-bg);
-  display: grid;
-  place-items: center;
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-footnote);
-  letter-spacing: var(--tracking-tighter);
+  background:
+    url("/brand/rocky-mark.png") center / 100% 100% no-repeat,
+    var(--color-raised);
 }
 
 .name {

@@ -37,6 +37,9 @@ test.describe('navigation', () => {
     const nav = page.getByRole('navigation', { name: t('web.shell.mainNav') });
     await nav.getByRole('link', { name: t('admin.title'), exact: true }).click();
     await expect(page).toHaveURL(/\/admin/);
+    // D10: Admin's sub-navigation takes the sidebar's place; «‹ Saldo» brings it back.
+    await page.getByRole('link', { name: t('web.shell.backLabel') }).click();
+    await expect(page).toHaveURL(/\/home$/);
     for (const [key, path] of [
       ['tabs.transactions', '/transactions'],
       ['tabs.stats', '/stats'],
@@ -61,7 +64,7 @@ test.describe('navigation', () => {
     const { page } = member;
     await page.goto('/budgets?new&x=y');
     await expect(page).toHaveURL(/\/profile\/budgets\?new=?&x=y$/);
-    await expect(page.getByRole('complementary', { name: t('budgets.newBudget') })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: t('budgets.newBudget') })).toBeVisible();
     await member.context.close();
   });
 });

@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The G2 layout of the web app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── G2 spec: window illustrations (HTML, shipped English strings, Saldo tokens) ─ */
+.win { display: grid; grid-template-columns: 150px minmax(0, 1fr); background: var(--bg); border-radius: var(--r-card); box-shadow: var(--shadow); overflow: hidden; font-size: 12.5px; line-height: 1.4; margin: 0 0 8px; }
+.win .sb { background: var(--surface); border-right: 1px solid var(--border); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.win .sb .br { display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 2px 6px 12px; font-size: 13px; }
+.win .sb .br i { width: 20px; height: 20px; border-radius: 6px; background: var(--text); display: inline-block; flex: none; }
+.win .sb .it { padding: 6px 8px; border-radius: 8px; color: var(--text-muted); }
+.win .sb .it.on { background: var(--raised); color: var(--text); }
+.win .sb .it.hv { background: color-mix(in oklch, var(--raised) 60%, transparent); color: var(--text); }
+.win .sb .foot { margin-top: auto; padding-top: 24px; display: grid; gap: 8px; }
+.win .sb .nw { background: var(--text); color: var(--bg); border-radius: 10px; padding: 8px 10px; text-align: center; font-weight: 500; }
+.win .sb .me { color: var(--text-muted); padding: 0 6px; }
+.win .pg { position: relative; padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 14px; min-height: 360px; }
+.win .ttl { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+.win .ttl span.st { color: var(--text-muted); font-weight: 400; letter-spacing: .2em; }
+.win .hd { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; align-items: start; }
+.win .big { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.win .big small { font-size: .5em; opacity: .5; font-weight: 500; }
+.win .lab { color: var(--text-muted); font-size: 12px; }
+.win .pair { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.win .pair b { font-weight: 600; }
+.win .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.win .tl { background: var(--surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--border); padding: 10px 12px; min-width: 0; }
+.win .tl.dash { background: none; box-shadow: none; border: 1.5px dashed var(--border-strong); color: var(--text-muted); display: grid; place-items: center; min-height: 64px; text-align: center; }
+.win .tl b { display: block; font-size: 17px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.win .tl .nm { font-weight: 500; margin-bottom: 4px; }
+.win .tl.sel { background: var(--raised); }
+.win .track { height: 8px; border-radius: 4px; background: var(--raised); margin: 8px 0 4px; position: relative; overflow: hidden; }
+.win .track i { position: absolute; inset: 0 auto 0 0; background: var(--text); border-radius: 4px; }
+.win .track i.ok { background: var(--ok); }
+.win .track i.bad { background: var(--bad); }
+.win .sec > .sh { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.win .sec > .sh span { color: var(--text-muted); font-weight: 400; }
+.win .cols { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+.win .rw { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.win .rw .ic { width: 24px; height: 24px; border-radius: 7px; background: var(--raised); flex: none; }
+.win .rw .g { flex: 1; min-width: 0; }
+.win .rw .g span { display: block; color: var(--text-muted); font-size: 11.5px; }
+.win .rw .am { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.win .rw .am.p { color: var(--ok); }
+.win .chips2 { display: flex; flex-wrap: wrap; gap: 6px; }
+.win .chips2 span { background: var(--raised); border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+.win .search { background: var(--raised); border-radius: 10px; padding: 7px 10px; color: var(--text-muted); }
+.win .spark { width: 100%; height: 56px; display: block; }
+.win .spark path { fill: none; stroke: var(--text); stroke-width: 2; }
+.win .spark path.u { stroke: var(--text-faint); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.win .scr { position: absolute; inset: 0; background: color-mix(in oklch, var(--text) 40%, transparent); }
+.win .dlg { position: absolute; top: 8px; bottom: 8px; right: 8px; width: min(210px, 62%); background: var(--surface); border-radius: 14px; box-shadow: 0 0 0 1px var(--border-strong), 0 12px 32px rgba(0,0,0,.25); padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.win .dlg .dh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; }
+.win .dlg .dh span { color: var(--text-muted); font-weight: 400; }
+.win .dlg .big { font-size: 24px; }
+.win .dlg .bars { display: flex; align-items: flex-end; gap: 4px; height: 44px; }
+.win .dlg .bars i { flex: 1; background: var(--raised); border-radius: 3px 3px 0 0; display: block; }
+.win .dlg .bars i.cur { background: var(--text); }
+.win-cap { font-size: 13px; color: var(--text-muted); margin: 6px 0 24px; text-align: center; }
+.keys { white-space: nowrap; font: 500 12px var(--mono); background: var(--raised); border-radius: 6px; padding: 1px 6px; }
+@media (max-width: 700px) {
+  .win { grid-template-columns: minmax(0, 1fr); }
+  .win .sb { display: none; }
+  .win .hd, .win .cols { grid-template-columns: minmax(0, 1fr); }
+  .win .pg { padding: 14px; }
+}
+
+/* Long identifiers and paths wrap instead of widening the column. */
+:not(pre) > code { white-space: normal; overflow-wrap: anywhere; }
+.tablewrap td:first-child { white-space: normal; }
+.tablewrap td, .tablewrap th { overflow-wrap: anywhere; }
+
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#scope"><span>01</span>Scope</a></li>
+    <li><a href="#shell"><span>02</span>The shell</a></li>
+    <li><a href="#panel"><span>03</span>The dialog panel</a></li>
+    <li><a href="#home"><span>04</span>Home</a></li>
+    <li><a href="#pages"><span>05</span>Other pages</a></li>
+    <li><a href="#polish"><span>06</span>Polish</a></li>
+    <li><a href="#replaces"><span>07</span>What it replaces</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo web · Layout · Spec</span>
+    <h1>The G2 layout of the web app</h1>
+    <p>On a wide screen, a sidebar replaces the top bar. A detail panel is a dialog over the page. Home and the other pages follow the approved mockups.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> Spec §17.1.7 · decisions D1–D13</span>
+    <span><b>Plan</b> <code>2026-10-11-web-g2-redesign.md</code></span>
+    <span><b>Date</b> 2026-10-11</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="scope" aria-labelledby="h-scope">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-scope">Scope</h2>
+      <p class="lead">This spec covers the web layout at and above 1024px. Below 1024px, §17.1.7 of the POC spec stays as it is.</p>
+    </div>
+    <div class="prose">
+      <p>The user approved these decisions on 2026-10-11. Two of them come from the plan, not from the user. They are marked “plan”.</p>
+      <p>All decisions are for the web only. The phone does not change. D5 is the one that could affect the phone, and it does not: the phone keeps §5.13.</p>
+      <p>On the topics below, this spec wins over §17.1.7. It also replaces two earlier decisions. Section 07 lists them.</p>
+      <div class="callout"><span class="meta">Designs</span><p>Home: <code>mockups/2026-10-11-web-home-polish-variants.html?variant=G2</code>. The other pages: <code>mockups/2026-10-11-web-pages-g2-variants.html?variant=K</code>. Where the code and a mockup differ, this spec describes the code.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Decision</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><td>D1</td><td>At and above 1024px, a sidebar of 232px replaces the top bar. It holds the logo, the destinations, “New transaction” and the profile link. Below 1024px, the top bar and the tab bar stay.</td></tr>
+          <tr><td>D2</td><td>The brand mark is Rocky, the app icon, cut to his head and coin. The tile is 32px, <code>raised</code>, radius <code>icon-box</code>. The cut edge is on purpose.</td></tr>
+          <tr><td>D3</td><td>A detail panel is a dialog over the page, with a scrim under it. The page does not move. This applies to Transactions, Statistics, Accounts, Profile and Admin.</td></tr>
+          <tr><td>D4</td><td>Home is “G2”: a head, then three sections in a column. Transactions, Budget and Goals.</td></tr>
+          <tr><td>D5</td><td>The big figure of a budget card is what is left. The line under it says what is spent of the limit. Web only.</td></tr>
+          <tr><td>D6</td><td>Home shows a “Not budgeted” card. <code>@saldo/core</code> computes it (<code>unbudgetedSpend</code>).</td></tr>
+          <tr><td>D7</td><td>Transactions opens with three cards: Expenses, Income and Upcoming.</td></tr>
+          <tr><td>D8</td><td>Statistics has the head of Home, then Cashflow across the page, then the breakdown as cards. A category card opens a panel.</td></tr>
+          <tr><td>D9</td><td>Accounts has the head of Home, then accounts and goals as cards. A card opens a panel.</td></tr>
+          <tr><td>D10</td><td>Profile and Admin: their sub-navigation takes the place of the sidebar. There is never a second sidebar.</td></tr>
+          <tr><td>D11</td><td>Polish from the review: press, hover, focus and legend values. Section 06 lists them.</td></tr>
+          <tr><td>D12 (plan)</td><td>Transactions keeps the “Upcoming” disclosure in the list. The Upcoming card shows the count, the total and the next three rows.</td></tr>
+          <tr><td>D13 (plan)</td><td>The panel is <code>role="dialog"</code> with <code>aria-modal="true"</code>. The focus goes into it. Tab stays inside it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="shell" aria-labelledby="h-shell">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-shell">The shell</h2>
+      <p class="lead">One sidebar on the leading side. In Profile and Admin, the sub-navigation takes its place.</p>
+    </div>
+    <div class="prose">
+      <p><b>The sidebar (D1).</b> It is 232px wide (<code>layout.sidebarWidth</code>) and as high as the window. It sticks to the top when the page scrolls. It has three parts, from top to bottom.</p>
+      <ol class="steps">
+        <li>The brand: the Rocky tile (D2) and the name.</li>
+        <li>The destinations in one column: Home, Transactions, Statistics, Accounts, and Admin for the admin role.</li>
+        <li>At the foot: “New transaction” with the key <span class="keys">N</span>, then the profile link with the avatar and the name.</li>
+      </ol>
+      <p>The sidebar is a <code>display: none</code> block below 1024px. There, the top bar and the tab bar navigate.</p>
+      <p><b>The section sidebar (D10).</b> Profile and Admin have their own sub-navigation. At and above 1024px, it is fixed over the sidebar, with the same width. The shell hides the sidebar (<code>data-section-nav</code>), so the page does not move when you enter Profile.</p>
+      <p>The sub-navigation starts with “‹ Saldo”. It goes back to Home. The links follow. “Sign out” and the items after the rule sit at the foot of the column. Below 1024px, the sub-navigation is a row of links.</p>
+      <p>The sub-navigation enters with <code>@starting-style</code>: it moves 8px from the trailing side and fades in, in 200ms. It plays on each mount of the layout, which means each time you enter Profile or Admin from another section. A move between two Profile pages does not play it. With <code>prefers-reduced-motion</code>, only the fade plays.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 500" role="img" aria-labelledby="f1t">
+        <title id="f1t">Two wide-screen windows. On the left, the main sidebar of 232 pixels with the brand, four destinations and Admin, the New transaction button and the profile link. On the right, the Profile section sidebar that takes its place, with a back link to Saldo, the Profile links and Sign out.</title>
+        <!-- A · main sidebar -->
+        <rect class="bx-r" x="10" y="50" width="450" height="440" rx="18"/>
+        <path class="bx" d="M28 50 H182 V490 H28 A18 18 0 0 1 10 472 V68 A18 18 0 0 1 28 50 Z"/>
+        <line class="ln" x1="10" y1="32" x2="182" y2="32" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text x="96" y="22" text-anchor="middle" font-size="18" class="mono b">232px</text>
+        <rect class="bx-ink" x="26" y="66" width="30" height="30" rx="8"/>
+        <text x="68" y="88" font-size="19" class="b">Saldo</text>
+        <rect class="bx-r" x="22" y="112" width="150" height="36" rx="10"/>
+        <text x="36" y="136" font-size="18" class="b">Home</text>
+        <text x="36" y="174" font-size="18" class="tm">Transactions</text>
+        <text x="36" y="210" font-size="18" class="tm">Statistics</text>
+        <text x="36" y="246" font-size="18" class="tm">Accounts</text>
+        <text x="36" y="282" font-size="18" class="tf">Admin</text>
+        <text x="100" y="282" font-size="14" class="tf">(admin role)</text>
+        <rect class="bx-ink" x="22" y="400" width="150" height="40" rx="12"/>
+        <text x="56" y="426" font-size="17" class="ti b">New transaction</text>
+        <circle class="bx-r" cx="38" cy="466" r="12"/>
+        <text x="58" y="472" font-size="17" class="tm">Mario</text>
+        <text x="320" y="260" text-anchor="middle" font-size="19" class="tm">The page</text>
+        <text x="320" y="288" text-anchor="middle" font-size="15" class="tf">does not change</text>
+        <!-- arrow -->
+        <line class="ln-ink" x1="476" y1="250" x2="564" y2="250" marker-end="url(#ah-ink)"/>
+        <text x="520" y="222" text-anchor="middle" font-size="16" class="b">Enter</text>
+        <text x="520" y="242" text-anchor="middle" font-size="16" class="b">Profile</text>
+        <text x="520" y="284" text-anchor="middle" font-size="14" class="tm">8px · 200ms</text>
+        <!-- B · section sidebar -->
+        <rect class="bx-r" x="580" y="50" width="450" height="440" rx="18"/>
+        <path class="bx" d="M598 50 H752 V490 H598 A18 18 0 0 1 580 472 V68 A18 18 0 0 1 598 50 Z"/>
+        <text x="596" y="82" font-size="17" class="tm">‹ Saldo</text>
+        <text x="596" y="116" font-size="20" class="b">Profile</text>
+        <rect class="bx-r" x="592" y="130" width="150" height="30" rx="9"/>
+        <g font-size="16">
+          <text x="606" y="151" class="b">Profile</text>
+          <text x="606" y="183" class="tm">Preferences</text>
+          <text x="606" y="213" class="tm">Categories</text>
+          <text x="606" y="243" class="tm">Tags</text>
+          <text x="606" y="273" class="tm">Budgets</text>
+          <text x="606" y="303" class="tm">Goals</text>
+          <text x="606" y="333" class="tm">Passkeys</text>
+          <text x="606" y="363" class="tm">Connectors</text>
+          <text x="606" y="393" class="tm">Data</text>
+        </g>
+        <line class="lane" x1="596" y1="430" x2="738" y2="430"/>
+        <text x="606" y="465" font-size="16" class="tm">Sign out</text>
+        <text x="890" y="260" text-anchor="middle" font-size="19" class="tm">The page</text>
+        <text x="890" y="288" text-anchor="middle" font-size="15" class="tf">does not move</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> The main sidebar (left) and the section sidebar of Profile (right). They have the same width and the same place. There is never a second sidebar.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="panel" aria-labelledby="h-panel">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-panel">The panel is a dialog</h2>
+      <p class="lead">A detail opens over the page, with a scrim under it. The page does not move or change its layout.</p>
+    </div>
+    <div class="prose">
+      <p><b>Shape (D3).</b> At and above 1024px, the panel is 420px wide (<code>--layout-panel-width</code>). It has 16px of margin at the top, the bottom and the trailing edge. Its radius is <code>--radius-dialog</code>. The scrim is <code>--color-scrim</code>. Below 1024px, nothing changes: the panel is the whole screen, or a bottom sheet for a form.</p>
+      <p><b>Markup (D13).</b> The panel is <code>&lt;div role="dialog" aria-modal="true" data-panel&gt;</code> with an <code>aria-label</code>. The scrim is a link with <code>aria-hidden="true"</code> and <code>tabindex="-1"</code>. It is not a second control.</p>
+      <p><b>Close.</b> Three actions close the panel: the ✕, a click on the scrim, and <span class="keys">Esc</span>. The ✕ and the scrim are plain links to the same page without the selection. Thus a reload keeps the panel open, and a modified click opens the list in a new tab.</p>
+      <p><b>The keyboard.</b> <span class="keys">Esc</span> does nothing while the focus is in a field: the field uses the key. Opening and closing from the keyboard play no motion. The keys <span class="keys">N</span>, <span class="keys">E</span>, <span class="keys">↑</span> and <span class="keys">↓</span> still work while a detail is open. <code>isEditable</code> and <code>ignoresShortcut</code> do not treat a <code>[data-panel]</code> dialog as a dialog that owns the keys. Its forms own the keys themselves.</p>
+      <p><b>The pointer.</b> The scrim covers the page. A click on another row first closes the dialog. On Transactions, <span class="keys">↑</span> and <span class="keys">↓</span> move through the rows while the dialog is open.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 470" role="img" aria-labelledby="f2t">
+        <title id="f2t">A wide-screen window with the sidebar on the left, a list in the middle and a dark scrim over both. The dialog of 420 pixels, with 16 pixels of margin, sits at the trailing edge, above the scrim. Notes on the right give the sizes and the layers.</title>
+        <rect class="bx-r" x="10" y="10" width="720" height="450" rx="18"/>
+        <path class="bx" d="M28 10 H126 V460 H28 A18 18 0 0 1 10 442 V28 A18 18 0 0 1 28 10 Z"/>
+        <text x="68" y="40" text-anchor="middle" font-size="15" class="b">Sidebar</text>
+        <g>
+          <rect class="bx" x="146" y="30" width="360" height="52" rx="12"/>
+          <rect class="bx" x="146" y="96" width="360" height="52" rx="12"/>
+          <rect class="bx" x="146" y="162" width="360" height="52" rx="12"/>
+          <rect class="bx" x="146" y="228" width="360" height="52" rx="12"/>
+          <rect class="bx" x="146" y="294" width="360" height="52" rx="12"/>
+          <rect class="bx" x="146" y="360" width="360" height="52" rx="12"/>
+        </g>
+        <text x="326" y="62" text-anchor="middle" font-size="16" class="tm">The page: rows</text>
+        <rect x="10" y="10" width="720" height="450" rx="18" fill="var(--text)" opacity=".38"/>
+        <text x="130" y="440" font-size="15" class="ti b">scrim</text>
+        <rect class="bx" x="514" y="26" width="204" height="418" rx="14" style="filter:drop-shadow(0 6px 14px rgba(0,0,0,.25))"/>
+        <text x="530" y="58" font-size="17" class="b">Water</text>
+        <text x="700" y="58" text-anchor="end" font-size="16" class="tm">✕</text>
+        <line class="lane" x1="526" y1="72" x2="706" y2="72"/>
+        <rect class="bx-r" x="530" y="92" width="172" height="34" rx="8"/>
+        <rect class="bx-r" x="530" y="140" width="172" height="34" rx="8"/>
+        <rect class="bx-r" x="530" y="188" width="172" height="34" rx="8"/>
+        <text x="616" y="430" text-anchor="middle" font-size="14" class="tm">dialog</text>
+        <!-- notes -->
+        <line class="ln" x1="514" y1="470" x2="718" y2="470" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text x="616" y="492" text-anchor="middle" font-size="17" class="mono b">420px</text>
+        <g font-size="18">
+          <text x="760" y="60" class="b">16px of margin</text>
+          <text x="760" y="86" class="tm" font-size="16">top, bottom, trailing edge</text>
+          <text x="760" y="140" class="b">Two layers</text>
+          <text x="760" y="166" class="tm" font-size="16">scrim: z-index 20</text>
+          <text x="760" y="190" class="tm" font-size="16">dialog: z-index 21</text>
+          <text x="760" y="244" class="b">The page below</text>
+          <text x="760" y="270" class="tm" font-size="16">does not move, does not</text>
+          <text x="760" y="294" class="tm" font-size="16">resize, keeps its scroll</text>
+          <text x="760" y="348" class="b">Close</text>
+          <text x="760" y="374" class="tm" font-size="16">✕ · click on the scrim · Esc</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 2.</b> The page, the scrim and the dialog. The dialog is 420px wide and has 16px of margin.</figcaption>
+    </figure>
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f3t">
+        <title id="f3t">State diagram of the panel. Closed goes to opening, which takes 200 milliseconds, then to open. Open goes to closing, which takes 150 milliseconds, then to closed. From the keyboard, opening and closing take no time: Escape goes from open straight to closed.</title>
+        <g font-size="20" text-anchor="middle">
+          <rect class="bx" x="10" y="100" width="170" height="80" rx="40"/>
+          <text x="95" y="148" class="b">closed</text>
+          <rect class="bx-r" x="270" y="100" width="190" height="80" rx="40"/>
+          <text x="365" y="136" class="b">opening</text>
+          <text x="365" y="162" font-size="16" class="tm">200ms</text>
+          <rect class="bx-ink" x="550" y="100" width="170" height="80" rx="40"/>
+          <text x="635" y="148" class="b ti">open</text>
+          <rect class="bx-r" x="810" y="100" width="190" height="80" rx="40"/>
+          <text x="905" y="136" class="b">closing</text>
+          <text x="905" y="162" font-size="16" class="tm">150ms</text>
+        </g>
+        <g font-size="16" text-anchor="middle">
+          <line class="ln-ink" x1="184" y1="140" x2="264" y2="140" marker-end="url(#ah-ink)"/>
+          <text x="224" y="124" class="tm">click</text>
+          <line class="ln-ink" x1="464" y1="140" x2="544" y2="140" marker-end="url(#ah-ink)"/>
+          <line class="ln-ink" x1="724" y1="140" x2="804" y2="140" marker-end="url(#ah-ink)"/>
+          <text x="764" y="124" class="tm">✕ · scrim</text>
+          <path class="ln-ink" d="M905 184 V270 H95 V186" marker-end="url(#ah-ink)"/>
+          <text x="500" y="260" class="tm">done</text>
+          <path class="ln-ok dash" d="M95 96 V40 H635 V96" marker-end="url(#ah-ok)"/>
+          <text x="365" y="28" class="tok b">N · ↑ ↓ from the keyboard: open with no motion</text>
+          <path class="ln-bad dash" d="M635 184 V310 H95" />
+          <text x="500" y="324" class="tbad b">Esc: closed on the next frame, no motion</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 3.</b> The states. The exit is shorter than the entrance. The entrance moves 12px from the trailing edge. The exit goes back the same way. With <code>prefers-reduced-motion</code>, only the opacity changes.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Moment</th><th scope="col">Focus</th></tr></thead>
+        <tbody>
+          <tr><td>The panel opens</td><td>The focus goes to the heading of the panel. If a form inside already took the focus (its first field), the form keeps it.</td></tr>
+          <tr><td>The panel is open</td><td><span class="keys">Tab</span> and <span class="keys">Shift+Tab</span> stay inside the dialog. From outside, they go to the first or the last control.</td></tr>
+          <tr><td>The panel closes</td><td>The panel unmounts. The focus goes back to the element that had it before the panel opened, for example the row. If the person moved the focus elsewhere meanwhile, it stays there.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="home" aria-labelledby="h-home">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-home">Home</h2>
+      <p class="lead">A head, then three sections in a column: Transactions, Budget and Goals.</p>
+    </div>
+    <div class="prose">
+      <p><b>The head (D4).</b> It has two columns, 7 and 5. On the left: the period with the stepper beside the title, “Left to spend” at 56px, then Income and Expenses under it. On the right: “Period trend”.</p>
+      <p><b>Transactions.</b> The section has two columns, 7 and 5. “Recent transactions” (the last 7) is on the left. “Upcoming” (5 rows) is on the right.</p>
+      <p><b>Budget.</b> The cards are in a grid of 3 columns. Each card shows a ring, the amount that is left, a line “of {limit} · {percent}”, a bar of 8px and the advice per day.</p>
+      <p><b>The big figure (D5).</b> The big figure of a budget card is what is left, not what is spent. This is for the web only. The phone keeps §5.13.</p>
+      <p><b>Not budgeted (D6).</b> The last card of the section shows the spend of the period in categories that no budget covers. If a budget covers every category with spend, the card shows no amount. <code>unbudgetedSpend</code> in <code>@saldo/core</code> computes the figure. It has tests.</p>
+      <p><b>Goals.</b> Goals are cards, in the same grid.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="win rv" role="img" aria-label="Illustration of Home at 1440 pixels: the sidebar, the head with Left to spend, Income and Expenses and the Period trend, then Transactions, Budget with three cards and Not budgeted, and Goals.">
+      <div class="sb">
+        <div class="br"><i></i>Saldo</div>
+        <div class="it on">Home</div><div class="it">Transactions</div><div class="it">Statistics</div><div class="it">Accounts</div>
+        <div class="foot"><div class="nw">New transaction</div><div class="me">Mario</div></div>
+      </div>
+      <div class="pg">
+        <div class="hd">
+          <div>
+            <div class="ttl"><span class="st">‹ ›</span> October</div>
+            <div class="lab" style="margin-top:12px">Left to spend</div>
+            <div class="big">€1,813<small>.96</small></div>
+            <div class="pair"><span>Income <b>€2,803.00</b></span><span>Expenses <b>€989.04</b></span></div>
+          </div>
+          <div>
+            <div class="lab">Period trend</div>
+            <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true"><path class="u" d="M0 48 C30 44 60 34 100 28 S170 14 200 8"/><path d="M0 50 C30 46 60 40 100 26 S140 22 150 22"/></svg>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Transactions <span>2 entries</span></div>
+          <div class="cols">
+            <div>
+              <div class="lab">Recent transactions</div>
+              <div class="rw"><span class="ic"></span><span class="g">Elly<span>Extra Income</span></span><span class="am p">+€50.00</span></div>
+              <div class="rw"><span class="ic"></span><span class="g">Food for elly<span>Food &amp; Drink</span></span><span class="am">−€2.00</span></div>
+              <div class="rw"><span class="ic"></span><span class="g">Water<span>Food &amp; Drink</span></span><span class="am">−€1.50</span></div>
+            </div>
+            <div>
+              <div class="lab">Upcoming</div>
+              <div class="rw"><span class="ic"></span><span class="g">Netflix<span>Subscriptions</span></span><span class="am">−€13.99</span></div>
+              <div class="rw"><span class="ic"></span><span class="g">iCloud<span>Subscriptions</span></span><span class="am">−€0.99</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Budget <span>3 budgets</span></div>
+          <div class="tiles">
+            <div class="tl"><div class="nm">Family &amp; Personal</div><b>€214.39 left</b><div class="track"><i style="width:69%"></i></div><div class="lab">of €700.00 · 69%</div></div>
+            <div class="tl"><div class="nm">Groceries</div><b>€120.00 left</b><div class="track"><i style="width:40%"></i></div><div class="lab">of €200.00 · 40%</div></div>
+            <div class="tl"><div class="nm">Not budgeted</div><b>€318.20</b><div class="lab" style="margin-top:6px">spent in categories with no budget</div></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Goals <span>1</span></div>
+          <div class="tiles"><div class="tl"><div class="nm">Holidays</div><b>€640.00</b><div class="track"><i class="ok" style="width:53%"></i></div><div class="lab">of €1,200.00 · 53%</div></div></div>
+        </div>
+      </div>
+    </div>
+    <p class="win-cap">Illustration · Home at 1440px. The names and amounts are samples.</p>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="pages" aria-labelledby="h-pages">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-pages">The other pages</h2>
+      <p class="lead">Transactions, Statistics and Accounts follow the variant “K · Scelta”. Each page takes the best part of each variant.</p>
+    </div>
+    <div class="prose">
+      <p><b>Transactions (D7, D12).</b> Three cards open the page. “Expenses” has the pace bar. “Income” has the total. “Upcoming” has the count, the total and the next three rows. Under the cards: the search, the chips and the days. The “Upcoming” disclosure stays in the list (§5.12), and <span class="keys">↑</span> <span class="keys">↓</span> walk through it. The mockup had no disclosure, because it had only two upcoming rows.</p>
+      <p><b>Statistics (D8).</b> The head is the head of Home: “Expenses” at 56px, then Income, Net and the projection. “Period trend” is on the right. Cashflow runs across the page. The breakdown follows, as category cards. A category card opens a panel. The panel shows the figure of the category, its last periods and its transactions. Tags come last.</p>
+      <p><b>Accounts (D9).</b> The head is the head of Home: “Net worth” at 56px, “Spendable total”, and a sparkline of the net worth on the right. Accounts and goals follow, as cards in a grid of 3 columns. A card opens the panel of the account or of the goal. “New account” is the last card.</p>
+      <p><b>Profile and Admin (D10).</b> Section 02 describes them.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="win rv" role="img" aria-label="Illustration of Transactions at 1440 pixels: three cards for Expenses, Income and Upcoming, then the search, the chips and a day of rows.">
+      <div class="sb">
+        <div class="br"><i></i>Saldo</div>
+        <div class="it">Home</div><div class="it on">Transactions</div><div class="it">Statistics</div><div class="it">Accounts</div>
+        <div class="foot"><div class="nw">New transaction</div><div class="me">Mario</div></div>
+      </div>
+      <div class="pg">
+        <div class="ttl"><span class="st">‹ ›</span> October</div>
+        <div class="tiles">
+          <div class="tl"><div class="lab">Expenses</div><b>€989.04</b><div class="track"><i style="width:35%"></i></div><div class="lab">today · day 15 of 30</div></div>
+          <div class="tl"><div class="lab">Income</div><b>€2,803.00</b><div class="lab" style="margin-top:8px">12 transactions</div></div>
+          <div class="tl"><div class="lab">Upcoming</div><b>€14.98</b><div class="lab" style="margin-top:8px">2 entries after today</div></div>
+        </div>
+        <div class="search">Search</div>
+        <div class="chips2"><span>All accounts</span><span>Category</span><span>Tags</span><span>Expenses only</span></div>
+        <div class="sec">
+          <div class="sh">10 Oct <span>€53.50</span></div>
+          <div class="rw"><span class="ic"></span><span class="g">Elly<span>Extra Income</span></span><span class="am p">+€50.00</span></div>
+          <div class="rw"><span class="ic"></span><span class="g">Food for elly<span>Food &amp; Drink</span></span><span class="am">−€2.00</span></div>
+          <div class="rw"><span class="ic"></span><span class="g">Water<span>Food &amp; Drink</span></span><span class="am">−€1.50</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="win-cap">Illustration · Transactions. A row opens the dialog of Figure 2.</p>
+
+    <div class="win rv" role="img" aria-label="Illustration of Statistics at 1440 pixels with a category panel open over a scrim: the head with Expenses, Income and Net, Cashflow, the breakdown cards, and the dialog with the figure, the last 6 periods and the transactions of one category.">
+      <div class="sb">
+        <div class="br"><i></i>Saldo</div>
+        <div class="it">Home</div><div class="it">Transactions</div><div class="it on">Statistics</div><div class="it">Accounts</div>
+        <div class="foot"><div class="nw">New transaction</div><div class="me">Mario</div></div>
+      </div>
+      <div class="pg">
+        <div class="hd">
+          <div>
+            <div class="ttl"><span class="st">‹ ›</span> October</div>
+            <div class="lab" style="margin-top:12px">Expenses</div>
+            <div class="big">€989<small>.04</small></div>
+            <div class="pair"><span>Income <b>€2,803.00</b></span><span>Net <b>€1,813.96</b></span></div>
+          </div>
+          <div>
+            <div class="lab">Period trend</div>
+            <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true"><path class="u" d="M0 48 C30 44 60 34 100 28 S170 14 200 8"/><path d="M0 50 C30 46 60 40 100 26 S140 22 150 22"/></svg>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Cashflow <span>Income · Expenses</span></div>
+          <svg class="spark" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"><path class="u" d="M0 40 L60 30 L120 36 L180 22 L240 28 L300 16 L400 20"/><path d="M0 46 L60 42 L120 44 L180 38 L240 40 L300 36 L400 34"/></svg>
+        </div>
+        <div class="sec">
+          <div class="sh">Breakdown <span>Expenses</span></div>
+          <div class="tiles">
+            <div class="tl sel"><div class="nm">Food &amp; Drink</div><b>€412.10</b><div class="lab">42% of total</div></div>
+            <div class="tl"><div class="nm">Subscriptions</div><b>€96.97</b><div class="lab">10% of total</div></div>
+          </div>
+        </div>
+        <div class="scr"></div>
+        <div class="dlg">
+          <div class="dh">Food &amp; Drink <span>✕</span></div>
+          <div class="big">€412<small>.10</small></div>
+          <div class="lab">Last 6 periods</div>
+          <div class="bars" aria-hidden="true"><i style="height:50%"></i><i style="height:64%"></i><i style="height:42%"></i><i style="height:72%"></i><i style="height:58%"></i><i class="cur" style="height:80%"></i></div>
+          <div class="lab">Transactions</div>
+          <div class="rw"><span class="ic"></span><span class="g">Food for elly</span><span class="am">−€2.00</span></div>
+          <div class="rw"><span class="ic"></span><span class="g">Water</span><span class="am">−€1.50</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="win-cap">Illustration · Statistics. A category card opens its panel.</p>
+
+    <div class="win rv" role="img" aria-label="Illustration of Accounts at 1440 pixels: the head with Net worth and Spendable total, the Net worth sparkline, account cards, a goal card, and a dashed New account card.">
+      <div class="sb">
+        <div class="br"><i></i>Saldo</div>
+        <div class="it">Home</div><div class="it">Transactions</div><div class="it">Statistics</div><div class="it on">Accounts</div>
+        <div class="foot"><div class="nw">New transaction</div><div class="me">Mario</div></div>
+      </div>
+      <div class="pg">
+        <div class="hd">
+          <div>
+            <div class="ttl">Accounts</div>
+            <div class="lab" style="margin-top:12px">Net worth</div>
+            <div class="big">€8,420<small>.50</small></div>
+            <div class="pair"><span>Spendable total <b>€3,120.50</b></span></div>
+          </div>
+          <div>
+            <div class="lab">Net worth · last 6 months</div>
+            <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true"><path d="M0 44 C40 40 60 36 100 30 S160 18 200 10"/></svg>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">To spend <span>2 accounts</span></div>
+          <div class="tiles">
+            <div class="tl"><div class="nm">Checking account</div><b>€2,870.50</b><div class="lab">+€310.00 this period</div></div>
+            <div class="tl"><div class="nm">Cash</div><b>€250.00</b><div class="lab">−€40.00 this period</div></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Savings and investments <span>1 account</span></div>
+          <div class="tiles">
+            <div class="tl"><div class="nm">Deposit</div><b>€5,300.00</b><div class="lab">not in the spendable total</div></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh">Goals <span>1</span></div>
+          <div class="tiles">
+            <div class="tl"><div class="nm">Holidays</div><b>€640.00</b><div class="track"><i class="ok" style="width:53%"></i></div><div class="lab">of €1,200.00 · 53%</div></div>
+            <div class="tl dash">New account</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="win-cap">Illustration · Accounts. A card opens the panel of the account or of the goal.</p>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="polish" aria-labelledby="h-polish">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-polish">Polish</h2>
+      <p class="lead">The review of G2 (D11) set these values. Each value is a token or comes from a token.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Where</th><th scope="col">Value</th><th scope="col">Why</th></tr></thead>
+        <tbody>
+          <tr><td>Press: cards, open rows, nav links, “New transaction”</td><td><code>scale(0.96)</code> in 120ms (<code>--motion-press</code>)</td><td>The user presses these many times a day. The answer must feel direct. With <code>prefers-reduced-motion</code>, the scale is 1.</td></tr>
+          <tr><td>Nav link, hover</td><td><code>raised</code> at 60%</td><td>Hover and current are two strengths of one surface.</td></tr>
+          <tr><td>Nav link, current</td><td><code>raised</code> at 100%</td><td>See above.</td></tr>
+          <tr><td>Card, hover</td><td>The border stays. A shadow of two layers is added.</td><td>Shadows give depth. Borders give structure.</td></tr>
+          <tr><td>Focus ring</td><td>2px, offset 2px, with the radius of the element</td><td>The ring must follow the shape: 14px on a card, 12px on a button.</td></tr>
+          <tr><td>Legend under a bar</td><td>13px, <code>text-muted</code></td><td>11px in <code>text-faint</code> did not pass the contrast check.</td></tr>
+          <tr><td>Panel and scrim, enter</td><td>200ms, 12px from the trailing edge, <code>cubic-bezier(0.2, 0, 0, 1)</code></td><td>The panel arrives from the edge where it will leave.</td></tr>
+          <tr><td>Panel and scrim, exit</td><td>150ms</td><td>The user has decided. The system answers faster.</td></tr>
+          <tr><td>Panel from the keyboard</td><td>No entrance and no exit</td><td>A keyboard action must not wait for an animation.</td></tr>
+          <tr><td>Section sidebar</td><td><code>@starting-style</code>, 8px, 200ms (<code>--motion-fade</code>), on each mount of the layout</td><td>A rare change of place. A spatial signal tells the user that they are inside Profile.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="replaces" aria-labelledby="h-replaces">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-replaces">What this replaces</h2>
+      <p class="lead">Two earlier decisions give way to D3. Do not follow them on the wide screen.</p>
+    </div>
+    <div class="prose">
+      <div class="callout caution"><span class="meta">Caution</span><p>The spec of 2026-10-07 and the plan of 2026-10-11 (navigation feel) say that the panel sits beside the list and that the web app has no dialogs. Both are old. Follow this spec.</p></div>
+      <p>The motion values of the 2026-10-07 spec still apply: the panel opens in the frame of the click, and the keyboard plays no motion.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Document</th><th scope="col">It said</th><th scope="col">Now</th></tr></thead>
+        <tbody>
+          <tr><td><code>2026-10-07-web-panel-feel.html</code></td><td>The panel sits beside the list. The list makes room with a transition on its grid track.</td><td>The panel is a dialog over the page (D3). The list does not move.</td></tr>
+          <tr><td><code>2026-10-11-web-navigation-feel.md</code></td><td>“Do not use dialogs.”</td><td>The panel is a dialog with <code>aria-modal="true"</code> (D13).</td></tr>
+          <tr><td>Spec §17.1.7, top bar</td><td>On a wide screen, navigation is a top bar.</td><td>At and above 1024px, it is a sidebar (D1). The top bar stays below 1024px.</td></tr>
+          <tr><td>Spec §17.1.7, Home</td><td>A band, then two columns (7 and 5): Upcoming and Recent on the leading side, Budget and Goals on the trailing side.</td><td>A head, then three sections in a column (D4).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · spec of the G2 layout of the web app · 2026-10-11</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>

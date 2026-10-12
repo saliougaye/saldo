@@ -1,4 +1,4 @@
-/* Flussi across the page, the period and its four figures, then the 7/5 pair — Home's shape. */
+/* The head, Flussi, Ripartizione, Tag — D8. */
 .page {
   display: flex;
   flex-direction: column;
@@ -70,15 +70,6 @@
   flex-wrap: wrap;
   gap: 8px;
   padding-bottom: 4px;
-}
-
-/* The category's colour in Ripartizione's bar, repeated beside its row so the two can be read
-   together — the bar has five colours and the list has every category. */
-.dot {
-  inline-size: 8px;
-  block-size: 8px;
-  border-radius: var(--radius-pill);
-  flex: none;
 }
 
 .tagAmounts {
@@ -153,9 +144,23 @@
 
   .sticky {
     position: sticky;
-    top: calc(var(--layout-topbar-height) + 24px);
+    top: 24px;
     display: flex;
     flex-direction: column;
     gap: var(--layout-section-gap-web);
   }
+}
+
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--layout-min-hit-target);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--color-text);
 }

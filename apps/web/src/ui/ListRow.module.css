@@ -9,6 +9,9 @@
   border-radius: var(--radius-input);
   color: var(--color-text);
   text-decoration: none;
+  transition-property: scale, background-color, box-shadow, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
 }
 
 a.row:hover {
@@ -61,12 +64,22 @@ a.open:hover {
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-raised) 60%, transparent);
 }
 
+a.open:active {
+  scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.open:active {
+    scale: 1;
+  }
+}
+
 .open .title {
   letter-spacing: var(--tracking-tight);
 }
 
 .open .subtitle {
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   margin-top: 1px;
 }
 

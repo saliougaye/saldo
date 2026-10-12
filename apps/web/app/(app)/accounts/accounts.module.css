@@ -1,15 +1,8 @@
+/* D3: the panel is a dialog over the page; the list is the page. */
 .layout {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--layout-section-gap-web);
-  align-items: start;
-}
-
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 24px;
-  }
 }
 
 .list {
@@ -22,7 +15,7 @@
 .titleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
 }
 
@@ -38,6 +31,11 @@
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.newAccount:active {
+  scale: 0.96;
 }
 
 .title {
@@ -49,7 +47,7 @@
 .note {
   max-width: 320px;
   font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   line-height: 1.45;
   text-wrap: pretty;
 }
@@ -63,11 +61,6 @@
   font-size: var(--font-size-body);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
-}
-
-/* A pocket, and «libero», read as continuations of the account above them (§5.14). */
-.pocketRow {
-  padding-inline-start: 46px;
 }
 
 .cardRows {

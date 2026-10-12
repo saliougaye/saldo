@@ -194,6 +194,12 @@ test.describe('passkeys in Profile', () => {
     await rows.first().click();
     await expect(page.getByRole('button', { name: t('common.delete') })).toBeDisabled();
     await expect(page.getByText(t('web.passkeys.lastOneNote'))).toBeVisible();
+    // D3: the panel is a dialog over the page; close it to reach «Aggiungi passkey».
+    await page
+      .getByRole('dialog')
+      .getByRole('link', { name: t('common.close') })
+      .click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     const { second, restore } = await withAnotherDevice(page, authenticator);
     await page.getByRole('button', { name: t('web.passkeys.add') }).click();

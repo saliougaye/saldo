@@ -101,7 +101,7 @@ Both are replaced by decision D3 below. Task 24 records the decisions in a new H
 **Files:**
 - Modify: `packages/ui/src/tokens.ts` (the `layout` object, after `subnavWidth`)
 
-- [ ] **Step 1: Add the token**
+- [x] **Step 1: Add the token**
 
 In `packages/ui/src/tokens.ts`, after the line `subnavWidth: 200,` add:
 
@@ -112,13 +112,13 @@ In `packages/ui/src/tokens.ts`, after the line `subnavWidth: 200,` add:
 
 `tokensCss()` emits it as `--layout-sidebar-width`.
 
-- [ ] **Step 2: Check that the variable is emitted**
+- [x] **Step 2: Check that the variable is emitted**
 
 Run: `cd packages/ui && node --input-type=module -e "import('./src/css.ts').then(m=>console.log(m.tokensCss().includes('--layout-sidebar-width: 232px')))"`
 
 If Node cannot load TypeScript directly, run `rtk proxy pnpm --filter @saldo/ui test` instead and then `grep -rn "sidebar-width" apps/web/.next 2>/dev/null | head -1` after the next build. Expected: `true`, or one match.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts
@@ -132,7 +132,7 @@ git commit -m "feat(ui): sidebar width token for the web shell"
 
 Add every key below to **both** files, in the namespace that the key names. Keep the order of the keys around them. The parity test fails if one file misses a key.
 
-- [ ] **Step 1: Add the Italian strings**
+- [x] **Step 1: Add the Italian strings**
 
 In `it.ts`:
 
@@ -164,7 +164,7 @@ In `it.ts`:
     newAccountBody: 'Un conto corrente, una carta, un deposito o i contanti.',
 ```
 
-- [ ] **Step 2: Add the English strings**
+- [x] **Step 2: Add the English strings**
 
 In `en.ts`, in the same places:
 
@@ -198,12 +198,12 @@ In `en.ts`, in the same places:
 
 The comments above only say where each block goes. Do not paste them.
 
-- [ ] **Step 3: Run the i18n tests**
+- [x] **Step 3: Run the i18n tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS (the parity test included).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/i18n/src/locales/it.ts packages/i18n/src/locales/en.ts
@@ -216,7 +216,7 @@ git commit -m "feat(i18n): strings for the G2 web pages"
 - Create: `apps/web/public/brand/rocky-mark.png`
 - Modify: `apps/web/src/ui/Brand.tsx`, `apps/web/src/ui/Brand.module.css`
 
-- [ ] **Step 1: Cut the mark from the app icon**
+- [x] **Step 1: Cut the mark from the app icon**
 
 The source is `apps/mobile/assets/ios-icon-dark.png` (1024×1024, transparent). The box below is the one the mockup shows in its 32px tile. Run from the repository root:
 
@@ -235,11 +235,11 @@ EOF
 
 Expected output: `(284, 128, 740, 583)`. The file is 64×64 (2× for a 32px tile) and smaller than 10 KB. If Pillow is not installed, run `python3 -m pip install --user pillow` first.
 
-- [ ] **Step 2: Look at it**
+- [x] **Step 2: Look at it**
 
 Open `apps/web/public/brand/rocky-mark.png`. Expected: Rocky's ears, coin, mask and muzzle; the bottom edge cuts his body; no part of the tail shows.
 
-- [ ] **Step 3: Use it in `Brand`**
+- [x] **Step 3: Use it in `Brand`**
 
 In `apps/web/src/ui/Brand.tsx`, replace `<span className={styles.mark}>S</span>` with:
 
@@ -261,11 +261,11 @@ In `apps/web/src/ui/Brand.module.css`, replace the whole `.mark` rule with:
 }
 ```
 
-- [ ] **Step 4: Check the sign-in page**
+- [x] **Step 4: Check the sign-in page**
 
 `Brand` is also on `/login`. Start the dev server (see «Rules») and open `http://localhost:3100/login`. Expected: Rocky in a 32px tile, then «Saldo». The 96px Rocky above it stays.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/public/brand/rocky-mark.png apps/web/src/ui/Brand.tsx apps/web/src/ui/Brand.module.css
@@ -278,7 +278,7 @@ git commit -m "feat(web): Rocky is the brand mark"
 - Create: `apps/web/src/ui/ProfileLink.tsx`, `apps/web/src/ui/ProfileLink.module.css`
 - Modify: `apps/web/src/ui/NavLink.module.css`
 
-- [ ] **Step 1: Write `ProfileLink`**
+- [x] **Step 1: Write `ProfileLink`**
 
 `apps/web/src/ui/ProfileLink.tsx`:
 
@@ -378,7 +378,7 @@ export function ProfileLink({ name, label }: { name: string; label: string }) {
 }
 ```
 
-- [ ] **Step 2: Give `NavLink` the G2 states (D11)**
+- [x] **Step 2: Give `NavLink` the G2 states (D11)**
 
 In `apps/web/src/ui/NavLink.module.css`, replace the `.link`, `.link:hover` and `.link[aria-current="page"]` rules with:
 
@@ -426,12 +426,12 @@ In `apps/web/src/ui/NavLink.module.css`, replace the `.link`, `.link:hover` and 
 
 Keep `.icon` and `.count`. Change the colour of `.count` from `--color-text-faint` to `--color-text-muted` (a 13px faint label does not pass AA).
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/src/ui/ProfileLink.tsx apps/web/src/ui/ProfileLink.module.css apps/web/src/ui/NavLink.module.css
@@ -443,7 +443,7 @@ git commit -m "feat(web): profile link and the G2 states of a nav link"
 **Files:**
 - Create: `apps/web/src/ui/SideBar.tsx`, `apps/web/src/ui/SideBar.module.css`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 `apps/web/src/ui/SideBar.tsx`:
 
@@ -603,12 +603,12 @@ export function SideBar({ items, user, strings }: Props) {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/ui/SideBar.tsx apps/web/src/ui/SideBar.module.css
@@ -620,7 +620,7 @@ git commit -m "feat(web): the sidebar of the wide screen"
 **Files:**
 - Modify: `apps/web/app/(app)/layout.tsx`, `apps/web/app/(app)/shell.module.css`, `apps/web/src/ui/TopBar.module.css`
 
-- [ ] **Step 1: Render the sidebar beside the content**
+- [x] **Step 1: Render the sidebar beside the content**
 
 In `apps/web/app/(app)/layout.tsx`, import `SideBar` (`import { SideBar } from '../../src/ui/SideBar';`). Replace the JSX inside `<div className={styles.shell}>` with:
 
@@ -661,7 +661,7 @@ In `apps/web/app/(app)/layout.tsx`, import `SideBar` (`import { SideBar } from '
 
 Change the doc comment of `AppLayout` to: `§17.1.7 and D1 (2026-10-11): a sidebar on wide screens; the top bar and the phone's tab bar on narrow ones. All are rendered; CSS picks.`
 
-- [ ] **Step 2: Lay out the shell**
+- [x] **Step 2: Lay out the shell**
 
 Replace the whole `apps/web/app/(app)/shell.module.css` with:
 
@@ -722,7 +722,7 @@ Replace the whole `apps/web/app/(app)/shell.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Hide the top bar on wide screens**
+- [x] **Step 3: Hide the top bar on wide screens**
 
 In `apps/web/src/ui/TopBar.module.css`, replace the whole `@media (min-width: 1024px)` block at the end with:
 
@@ -737,16 +737,16 @@ In `apps/web/src/ui/TopBar.module.css`, replace the whole `@media (min-width: 10
 
 Then delete the rules that only the wide screen used: `.sections`, `.new`, `.new:active` and `.kbd`. In `TopBar.tsx`, delete the `<ul className={styles.sections}>…</ul>` block and the `<NewTransactionLink …>…</NewTransactionLink>` block, and the imports that are no longer used (`Icon`, `NewTransactionLink`). Change the comment of `TopBar` to: `Narrow screens only (D1): the brand, Admin as an icon and the avatar. The tab bar carries the sections and the FAB.`
 
-- [ ] **Step 4: Run the gates**
+- [x] **Step 4: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`
 Expected: no errors; no `lint/…` lines.
 
-- [ ] **Step 5: Look at it**
+- [x] **Step 5: Look at it**
 
 Start the dev server. Open `/home` at 1440×900 and at 390×844, in both themes. Expected at 1440: the sidebar on the left (Rocky, «Saldo», five links, the button, the person), no top bar. Expected at 390: the top bar and the tab bar as before, no sidebar.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/layout.tsx" "apps/web/app/(app)/shell.module.css" apps/web/src/ui/TopBar.tsx apps/web/src/ui/TopBar.module.css
@@ -762,7 +762,7 @@ git commit -m "feat(web): the sidebar replaces the top bar on wide screens"
 **Files:**
 - Modify: `apps/web/src/ui/Panel.tsx`, `apps/web/src/ui/Panel.module.css`
 
-- [ ] **Step 1: Change the element, the scrim and the focus**
+- [x] **Step 1: Change the element, the scrim and the focus**
 
 In `apps/web/src/ui/Panel.tsx`:
 
@@ -833,7 +833,7 @@ and `</div>`.
 
 7. Update the doc comment of `Panel`: replace `420px beside the list on a wide screen, the whole screen on a narrow one` with `a 420px dialog over the page, with a scrim, on a wide screen (D3, 2026-10-11); the whole screen, or a bottom sheet for a form, on a narrow one`.
 
-- [ ] **Step 2: Replace the CSS**
+- [x] **Step 2: Replace the CSS**
 
 Replace the whole `apps/web/src/ui/Panel.module.css` with:
 
@@ -1071,17 +1071,17 @@ Replace the whole `apps/web/src/ui/Panel.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Find other code that looks for the `aside`**
+- [x] **Step 3: Find other code that looks for the `aside`**
 
 Run: `grep -rn "'aside'\|\"aside\"\|> aside\|aside\[" apps/web/src apps/web/app`
 For each match, use `[role="dialog"]` instead of `aside`. Known match: `transactions.module.css` has `.side > aside`. Task 8 deletes that rule.
 
-- [ ] **Step 4: Run the unit tests**
+- [x] **Step 4: Run the unit tests**
 
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS. If `panelView.test.ts` or `panelUrl.test.ts` fails, read the failure: they do not read the element type, so a failure is a real regression.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/ui/Panel.tsx apps/web/src/ui/Panel.module.css
@@ -1093,7 +1093,7 @@ git commit -m "feat(web): the panel is a dialog over the page with a scrim"
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`, `apps/web/app/(app)/transactions/TransactionsPanels.tsx`, `apps/web/app/(app)/accounts/accounts.module.css`, `apps/web/src/ui/PanelSwitch.module.css`, `apps/web/src/ui/SubnavLayout.module.css`, `apps/web/app/(app)/stats/stats.module.css`
 
-- [ ] **Step 1: Transazioni**
+- [x] **Step 1: Transazioni**
 
 In `transactions.module.css`:
 
@@ -1113,7 +1113,7 @@ In `transactions.module.css`:
 
 In `TransactionsPanels.tsx`, delete the attributes `data-panel=…` and `data-instant=…` from `<div className={styles.layout}>`. Then delete the now unused `const open = …` line if nothing else reads it.
 
-- [ ] **Step 2: Conti**
+- [x] **Step 2: Conti**
 
 In `accounts.module.css`, delete the `@media (min-width: 1024px)` block that sets `grid-template-columns: minmax(0, 1fr) auto`. Change `.layout` to:
 
@@ -1126,7 +1126,7 @@ In `accounts.module.css`, delete the `@media (min-width: 1024px)` block that set
 }
 ```
 
-- [ ] **Step 3: `PanelSwitch` and `SubnavLayout`**
+- [x] **Step 3: `PanelSwitch` and `SubnavLayout`**
 
 In `PanelSwitch.module.css`, delete the whole `@media (min-width: 1024px)` block. Change the comment of `.side` to `The panel's wrapper: the panel is fixed over the page at every width (D3), so it takes no place.`
 
@@ -1139,16 +1139,16 @@ In `SubnavLayout.module.css`, inside the `@media (min-width: 1024px)` block, cha
 }
 ```
 
-- [ ] **Step 4: The sticky offset of Statistiche**
+- [x] **Step 4: The sticky offset of Statistiche**
 
 In `stats.module.css`, in the last media block, change `top: calc(var(--layout-topbar-height) + 24px);` to `top: 24px;`. The wide screen has no top bar now (D1).
 
-- [ ] **Step 5: Run the gates and look**
+- [x] **Step 5: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Then open `/transactions`, click a row, and press Esc. Do the same on `/accounts` and `/profile/tags` at 1440×900. Expected: the dialog enters from the right over a scrim; the list does not move; Esc closes it with no motion; a click on the scrim closes it with the exit; Tab stays inside the dialog.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/transactions" "apps/web/app/(app)/accounts/accounts.module.css" apps/web/src/ui/PanelSwitch.module.css apps/web/src/ui/SubnavLayout.module.css "apps/web/app/(app)/stats/stats.module.css"
@@ -1160,7 +1160,7 @@ git commit -m "feat(web): no page makes room for the panel"
 **Files:**
 - Modify: `apps/web/e2e/*.spec.ts`
 
-- [ ] **Step 1: Change the role**
+- [x] **Step 1: Change the role**
 
 Run from `apps/web`:
 
@@ -1172,7 +1172,7 @@ grep -n "complementary\|aside\[" e2e/*.spec.ts
 
 Expected: the last command prints nothing.
 
-- [ ] **Step 2: Fix the test that checks the panel beside the list**
+- [x] **Step 2: Fix the test that checks the panel beside the list**
 
 In `e2e/budgets-categories-tags.spec.ts`, find the comment `// At 1440px the panel takes the slot column, to the right of the list.` Replace that comment and the five lines after the `toHaveValue('Vacanze')` line (from `const list = …` to `expect(side.x)…`) with:
 
@@ -1186,16 +1186,16 @@ In `e2e/budgets-categories-tags.spec.ts`, find the comment `// At 1440px the pan
 
 Keep the line `await expect(panel.getByLabel(…)).toHaveValue('Vacanze');` above it.
 
-- [ ] **Step 3: Check that the confirmation dialogs still resolve**
+- [x] **Step 3: Check that the confirmation dialogs still resolve**
 
 `ConfirmDialog` is a `dialog` too. Run: `grep -n "getByRole('dialog')" e2e/*.spec.ts`. Every match without a `name` can now match two dialogs. For each match, add the name of the dialog that the test means: `{ name: t('…') }`. Use the title key that the test opened.
 
-- [ ] **Step 4: Run the end-to-end suite**
+- [x] **Step 4: Run the end-to-end suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: PASS. If a test fails because the list moved before (a click on a row hidden by the panel), close the panel first or click the row that the scrim does not cover. Write the reason in the commit body.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/e2e
@@ -1211,7 +1211,7 @@ git commit -m "test(web): panels are dialogs in the end-to-end tests"
 **Files:**
 - Create: `apps/web/src/ui/Card.tsx`, `apps/web/src/ui/Card.module.css`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 `apps/web/src/ui/Card.tsx`:
 
@@ -1455,12 +1455,12 @@ a.card:focus-visible {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/ui/Card.tsx apps/web/src/ui/Card.module.css
@@ -1473,7 +1473,7 @@ git commit -m "feat(web): the target card of G2 and its grid"
 - Create: `apps/web/src/ui/PageHead.tsx`, `apps/web/src/ui/PageHead.module.css`, `apps/web/src/ui/charts/ChartFrame.tsx`, `apps/web/src/ui/charts/ChartFrame.module.css`
 - Modify: `apps/web/src/ui/charts/TrendChart.tsx`, `apps/web/src/ui/charts/Sparkline.tsx`
 
-- [ ] **Step 1: `PageHead`**
+- [x] **Step 1: `PageHead`**
 
 `apps/web/src/ui/PageHead.tsx`:
 
@@ -1550,7 +1550,7 @@ export function PageHead({ title, hero, stats, aside }: Props) {
 }
 ```
 
-- [ ] **Step 2: `ChartFrame`**
+- [x] **Step 2: `ChartFrame`**
 
 `apps/web/src/ui/charts/ChartFrame.tsx`:
 
@@ -1605,7 +1605,7 @@ export function ChartFrame({
 }
 ```
 
-- [ ] **Step 3: A height for `TrendChart` and `Sparkline`**
+- [x] **Step 3: A height for `TrendChart` and `Sparkline`**
 
 In `TrendChart.tsx`, add to `Props`:
 
@@ -1618,7 +1618,7 @@ Change the signature to `export function TrendChart({ current, usual, height = W
 
 In `Sparkline.tsx`, add `style={{ blockSize: `${height}px` }}` to the `<svg>`. The CSS module's fixed `block-size: 48px` then only applies when no height is given: change `.chart` in `Sparkline.module.css` to `inline-size: 100%;` only, and keep the default `height = 48` in the props.
 
-- [ ] **Step 4: Typecheck and commit**
+- [x] **Step 4: Typecheck and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
@@ -1633,7 +1633,7 @@ git commit -m "feat(web): page head and chart frame for the G2 pages"
 **Files:**
 - Modify: `apps/web/src/ui/PeriodHeader.tsx`, `apps/web/src/ui/PeriodHeader.module.css`, `apps/web/src/ui/ListRow.module.css`
 
-- [ ] **Step 1: Move the stepper**
+- [x] **Step 1: Move the stepper**
 
 In `PeriodHeader.tsx`, replace the returned JSX with:
 
@@ -1663,7 +1663,7 @@ In `PeriodHeader.tsx`, replace the returned JSX with:
 
 Check that `Icon` accepts `className`: run `grep -n "className" apps/web/src/ui/Icon.tsx`. It does (`NavLink` passes one).
 
-- [ ] **Step 2: The CSS**
+- [x] **Step 2: The CSS**
 
 In `PeriodHeader.module.css`, replace `.header` and `.what` with:
 
@@ -1700,7 +1700,7 @@ Change `.sub`'s colour to `var(--color-text-muted)` and add `margin-top: 2px;`. 
 }
 ```
 
-- [ ] **Step 3: Open rows press**
+- [x] **Step 3: Open rows press**
 
 In `ListRow.module.css`, change `.row` to add:
 
@@ -1726,11 +1726,11 @@ a.open:active {
 
 Change `.open .subtitle`'s colour from `--color-text-faint` to `--color-text-muted` (AA at 13px).
 
-- [ ] **Step 4: Look at every page with a period**
+- [x] **Step 4: Look at every page with a period**
 
 Open `/home`, `/transactions` and `/stats`. Expected: «Ottobre» with ‹ › right after it; the range under both.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/ui/PeriodHeader.tsx apps/web/src/ui/PeriodHeader.module.css apps/web/src/ui/ListRow.module.css
@@ -1746,7 +1746,7 @@ git commit -m "feat(web): stepper beside the period, open rows press"
 **Files:**
 - Modify: `packages/core/src/budgets.ts`, `packages/core/src/budgets.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/core/src/budgets.test.ts` (and add `unbudgetedSpend` to its import):
 
@@ -1779,12 +1779,12 @@ describe('unbudgetedSpend', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test budgets`
 Expected: FAIL, `unbudgetedSpend` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/budgets.ts`, after `takenCategoryIds`:
 
@@ -1806,12 +1806,12 @@ export function unbudgetedSpend(
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test budgets`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/budgets.ts packages/core/src/budgets.test.ts
@@ -1825,7 +1825,7 @@ git commit -m "feat(core): the spend that no budget covers"
 
 The Home chart draws «il solito» across the **whole** period, and the current line up to today. «+136,00 € rispetto al solito» compares the two on the same day. Statistiche keeps its own chart as it is.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/web/src/features/home/trend.test.ts`:
 
@@ -1875,12 +1875,12 @@ describe('homeTrend', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test trend`
 Expected: FAIL, the module does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/web/src/features/home/trend.ts`:
 
@@ -1935,12 +1935,12 @@ export function homeTrend(
 
 If `LedgerTx` is not exported from `@saldo/core`, use `Transaction` (it is what `statsView` passes).
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter web test trend`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/home/trend.ts apps/web/src/features/home/trend.test.ts
@@ -1952,7 +1952,7 @@ git commit -m "feat(web): Home's trend and its distance from the usual"
 **Files:**
 - Modify: `apps/web/src/features/home/homeView.ts`
 
-- [ ] **Step 1: Extend the view**
+- [x] **Step 1: Extend the view**
 
 In `homeView.ts`:
 
@@ -1998,12 +1998,12 @@ In `homeView.ts`:
     },
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `rtk proxy pnpm --filter web test homeView`
 Expected: PASS (the existing test does not read the new fields).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/features/home/homeView.ts
@@ -2017,7 +2017,7 @@ git commit -m "feat(web): Home's view gives the trend, the unbudgeted spend and 
 
 Open the mockup at `?variant=G2` beside your editor.
 
-- [ ] **Step 1: Imports and helpers**
+- [x] **Step 1: Imports and helpers**
 
 In `page.tsx`:
 
@@ -2070,7 +2070,7 @@ function TargetBar({
 }
 ```
 
-- [ ] **Step 2: The budget and goal cards**
+- [x] **Step 2: The budget and goal cards**
 
 Inside `HomePage`, after `budgetSentence`, add:
 
@@ -2165,7 +2165,7 @@ Delete `goalRow`, `featuredBudget`, `budgetEvents`, `budgetRest`, `featuredGoal`
 
 Check that `Rich` renders `<b>` with `styles.strong`. The card's `.sentence b` rule styles a plain `<b>` too, so both work.
 
-- [ ] **Step 3: The returned JSX**
+- [x] **Step 3: The returned JSX**
 
 Replace the whole `return (…)` of `HomePage` with:
 
@@ -2333,7 +2333,7 @@ Replace the whole `return (…)` of `HomePage` with:
   );
 ```
 
-- [ ] **Step 4: The CSS**
+- [x] **Step 4: The CSS**
 
 In `home.module.css`:
 
@@ -2386,16 +2386,16 @@ In `home.module.css`:
 }
 ```
 
-- [ ] **Step 5: Run the gates**
+- [x] **Step 5: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Expected: no errors, no `lint/…` lines, PASS. Fix unused imports that lint reports.
 
-- [ ] **Step 6: Compare with the mockup**
+- [x] **Step 6: Compare with the mockup**
 
 Open `/home` at 1440×900 in both themes, beside the mockup at `?variant=G2`. Check: the stepper is beside «Ottobre»; the chart is on the right of the hero; «Transazioni» comes first with two columns; budget cards show what is left in large type; «Non a budget» is the last budget card; with no goals, the «Obiettivi» section shows one ghost card. Write each difference that you keep in the commit body.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add "apps/web/app/(app)/home" apps/web/src/features/home/homeView.ts
@@ -2407,12 +2407,12 @@ git commit -m "feat(web): Home G2 — head with trend, transactions first, budge
 **Files:**
 - Modify: `apps/web/e2e/home-stats.spec.ts`
 
-- [ ] **Step 1: Run the Home tests**
+- [x] **Step 1: Run the Home tests**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: some tests fail where they looked for the old shape: the section «Ultime transazioni», a budget row, the featured item.
 
-- [ ] **Step 2: Fix each failure for the new shape**
+- [x] **Step 2: Fix each failure for the new shape**
 
 Use these rules:
 
@@ -2422,12 +2422,12 @@ Use these rules:
 
 Add one test that checks D6 with real data: create a budget on one category, record one expense in that category and one in another category, open `/home`, and expect the «Non a budget» card to show the second amount. Use the helpers that `home-stats.spec.ts` already uses to create budgets and transactions.
 
-- [ ] **Step 3: Run them**
+- [x] **Step 3: Run them**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/e2e/home-stats.spec.ts
@@ -2443,7 +2443,7 @@ git commit -m "test(web): Home G2 in the end-to-end tests"
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/page.tsx`, `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Compute the period summary**
+- [x] **Step 1: Compute the period summary**
 
 In `page.tsx`, add `summarizePeriod` to the `@saldo/core` import, and the card components to the imports: `import { Card, CardGrid, CardLabel, CardNote } from '../../../src/ui/Card';` and `import { ProgressBar } from '../../../src/ui/ProgressBar';`. After `const view = listView(…)`, add:
 
@@ -2453,7 +2453,7 @@ In `page.tsx`, add `summarizePeriod` to the `@saldo/core` import, and the card c
   const upcomingRows = view.upcomingDays.flatMap((day) => day.rows);
 ```
 
-- [ ] **Step 2: Render the cards**
+- [x] **Step 2: Render the cards**
 
 In the returned JSX, inside `<div className={styles.head}>`, after `<PeriodHeader … />`, add:
 
@@ -2530,7 +2530,7 @@ Check the names first:
 
 The rows in the card are `PanelLink`s (`selectId`). `TransactionsPanels` provides the context, because the head is inside its children. So a click opens the detail dialog in place.
 
-- [ ] **Step 3: The CSS**
+- [x] **Step 3: The CSS**
 
 In `transactions.module.css`, add:
 
@@ -2549,17 +2549,17 @@ In `transactions.module.css`, add:
 
 Change `.head`'s `gap` from `24px` to `32px`.
 
-- [ ] **Step 4: Run the gates and look**
+- [x] **Step 4: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`.
 Open `/transactions` at 1440×900. Compare with the mockup at `?variant=K&page=tx`. Click an In arrivo row in the card: the dialog opens with that row, over a scrim, and the cards do not move.
 
-- [ ] **Step 5: Run the Transazioni end-to-end tests**
+- [x] **Step 5: Run the Transazioni end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e transactions`
 Expected: PASS. A row name can now match twice (the card and the disclosure). If a test fails with «strict mode violation», scope it to the list: `page.locator('[data-days]')` does not exist yet, so add `data-days=""` to the wrapper of the days in `page.tsx` and use it in the test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/transactions" apps/web/e2e/transactions.spec.ts
@@ -2575,7 +2575,7 @@ git commit -m "feat(web): Transazioni opens with the period's three cards"
 **Files:**
 - Modify: `apps/web/src/features/stats/statsView.ts`, `apps/web/src/features/stats/statsView.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `statsView.test.ts`:
 
@@ -2597,12 +2597,12 @@ Add to `statsView.test.ts`:
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test statsView`
 Expected: FAIL, `history` is `undefined`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `statsView.ts`, add to `SplitRow`:
 
@@ -2621,12 +2621,12 @@ In the `.map(([categoryId, amount]) => { … })` that builds `rows`, add to the 
         history: [...history.map((cycle) => cycle.get(categoryId) ?? 0).reverse(), amount],
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter web test statsView`
 Expected: PASS. (`previousPeriods` walks back from the period, so `periodHistory` is most recent first, and `.reverse()` is needed.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/stats/statsView.ts apps/web/src/features/stats/statsView.test.ts
@@ -2638,7 +2638,7 @@ git commit -m "feat(web): each category's history in Statistiche's view"
 **Files:**
 - Modify: `apps/web/app/(app)/stats/page.tsx`, `apps/web/app/(app)/stats/stats.module.css`
 
-- [ ] **Step 1: Imports and the panel's keys**
+- [x] **Step 1: Imports and the panel's keys**
 
 In `page.tsx`, add:
 
@@ -2663,7 +2663,7 @@ const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
 const CATEGORY_ROWS = 5;
 ```
 
-- [ ] **Step 2: The head of a running or closed period**
+- [x] **Step 2: The head of a running or closed period**
 
 In the branch for a running or closed period (after `const view = statsView(…)`), replace the returned JSX with the layout below. Keep the helpers `Figure`, `segments`, `ranked`, `spentNote`, `projection`, `median` as they are.
 
@@ -2744,7 +2744,7 @@ Delete the last `<span className={styles.dot} …/>` line of the body if the des
 
 Use `AppLink` instead of `<a>` for the «Tutte le transazioni» link if lint asks for it (`import { AppLink as Link } from '../../../src/ui/AppLink';`). Add `.more` to `stats.module.css` with the same rule as Home's `.more`.
 
-- [ ] **Step 3: The returned JSX**
+- [x] **Step 3: The returned JSX**
 
 ```tsx
   return (
@@ -2865,25 +2865,25 @@ Use `AppLink` instead of `<a>` for the «Tutte le transazioni» link if lint ask
 
 Move the existing Tag section into the place the last comment marks, and delete the comment. Delete the `Columns` import if nothing else uses it (the forecast branch still does: keep it). Delete the old `Quota impegnata` section and the old `Andamento del periodo` section from this branch: both moved.
 
-- [ ] **Step 4: The forecast branch**
+- [x] **Step 4: The forecast branch**
 
 In the forecast branch, change the order inside `<div className={styles.top}>` to `{header}`, then `<div className={styles.figures}>…</div>`, then `{chart}`. The head comes first on every page (G).
 
-- [ ] **Step 5: The CSS**
+- [x] **Step 5: The CSS**
 
 In `stats.module.css`, change the `.page` comment to `The head, Flussi, Ripartizione, Tag — D8.` Add Home's `.more` rule. Delete `.sticky` if no element uses it any longer (`grep -n "styles.sticky" "apps/web/app/(app)/stats/page.tsx"`).
 
-- [ ] **Step 6: Run the gates and look**
+- [x] **Step 6: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Open `/stats` at 1440×900. Compare with `?variant=K&page=stats`. Click a category card: the dialog shows the category; the URL has `?c=…`; ✕ removes it; the period arrows keep `?c` out.
 
-- [ ] **Step 7: Run the Statistiche end-to-end tests**
+- [x] **Step 7: Run the Statistiche end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: PASS. The Ripartizione rows are cards now: change the locators from rows to `getByRole('link', { name: … })`. Add one test: click a category card, expect the dialog with the category's name, and expect a transaction of that category in it.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add "apps/web/app/(app)/stats" apps/web/e2e/home-stats.spec.ts
@@ -2899,7 +2899,7 @@ git commit -m "feat(web): Statistiche with Home's head and category cards that o
 **Files:**
 - Modify: `apps/web/app/(app)/accounts/page.tsx`, `apps/web/app/(app)/accounts/accounts.module.css`, `apps/web/src/ui/HeroBand.tsx`, `apps/web/src/ui/HeroBand.module.css`
 
-- [ ] **Step 1: The net worth series**
+- [x] **Step 1: The net worth series**
 
 In `page.tsx`, after `const detailOf = …`, add:
 
@@ -2917,7 +2917,7 @@ In `page.tsx`, after `const detailOf = …`, add:
 
 Check the claim of the comment before you rely on it. Run `grep -n "netWorth" apps/web/src/features/accounts/accountsView.ts`. If `netWorth` leaves pockets out, leave them out here too (`filter((account) => account.parentAccountId == null)`). Then check that the last point of `netWorthSeries` equals `view.netWorth` for the e2e seed (Step 6).
 
-- [ ] **Step 2: The cards**
+- [x] **Step 2: The cards**
 
 Add the imports of `Card`, `CardGrid`, `CardHead`, `CardLabel`, `CardNote`, `CardSentence`, `PageHead`, `ChartFrame` and `ProgressBar`. Replace `accountRow`, `pocketRow` and `group` with:
 
@@ -2992,7 +2992,7 @@ Add the imports of `Card`, `CardGrid`, `CardHead`, `CardLabel`, `CardNote`, `Car
 
 Check `formatMoney`'s fourth argument: `grep -n "export function formatMoney" -A6 packages/i18n/src/*.ts`. The stats page calls `formatMoney(column.net, currency, locale, 'always')`, so the sign display is the fourth argument.
 
-- [ ] **Step 3: The returned list**
+- [x] **Step 3: The returned list**
 
 Inside `<PanelSwitch …>`, replace the whole `<div className={styles.list}>…</div>` with:
 
@@ -3059,25 +3059,25 @@ Inside `<PanelSwitch …>`, replace the whole `<div className={styles.list}>…<
 
 Move the existing `archivedTotal === 0 ? … : …` block into the place the last comment marks, and delete the comment. The «Risparmi» section now shows even with no savings account, because the «Nuovo conto» card lives there. If the review prefers it under «Da spendere» in that case, move the ghost card there when `view.savings.length === 0`.
 
-- [ ] **Step 4: Delete `HeroBand`**
+- [x] **Step 4: Delete `HeroBand`**
 
 Run: `grep -rn "HeroBand\b" apps/web/app apps/web/src | grep -v "HeroFigure"`. Expected after Steps 2–3: only `HeroBand.tsx` itself. Delete the `HeroBand` function, its doc comment and the CSS rules only it used (`.band`, `.hero`, `.stats`, `.legend` and the `@media` block). Keep `HeroFigure`, `.figure` and `.label`. Change `.label`'s colour to `--color-text-muted` (AA at 13px).
 
-- [ ] **Step 5: The CSS**
+- [x] **Step 5: The CSS**
 
 In `accounts.module.css`, delete `.pocketRow`. Change `.titleRow`'s `justify-content` to `flex-start`. Change `.note`'s colour to `--color-text-muted`. Give `.newAccount` the press: `transition: scale var(--motion-press) var(--motion-easing);` and `.newAccount:active { scale: 0.96; }`.
 
-- [ ] **Step 6: Run the gates and look**
+- [x] **Step 6: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Open `/accounts` at 1440×900. Compare with `?variant=K&page=conti&open=1`. Click an account card, then a goal card, then «Nuovo conto»: each opens its dialog; the grid does not move.
 
-- [ ] **Step 7: Run the Conti end-to-end tests**
+- [x] **Step 7: Run the Conti end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e accounts-goals`
 Expected: PASS after you change the row locators to card links (`getByRole('link', { name: … })`). The card's accessible name is all of its text. Use a regular expression that starts with the account name: `{ name: new RegExp(`^${name}`) }`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add "apps/web/app/(app)/accounts" apps/web/src/ui/HeroBand.tsx apps/web/src/ui/HeroBand.module.css apps/web/e2e/accounts-goals.spec.ts
@@ -3093,7 +3093,7 @@ git commit -m "feat(web): Conti with Home's head, and accounts and goals as card
 **Files:**
 - Modify: `apps/web/src/ui/SubnavLayout.tsx`, `apps/web/src/ui/SubnavLayout.module.css`
 
-- [ ] **Step 1: The component**
+- [x] **Step 1: The component**
 
 Replace the `SubnavLayout` function in `SubnavLayout.tsx` with:
 
@@ -3134,7 +3134,7 @@ export function SubnavLayout({
 
 Add the imports: `import { AppLink as Link } from './AppLink';` and `import { Icon } from './Icon';`. Change the doc comment of the function: `A sub-navigation and the section. On a wide screen the sub-navigation is the sidebar itself (D10, 2026-10-11), with «‹ Saldo» and the section's title above the links; on a narrow one it is a row of links above the section.`
 
-- [ ] **Step 2: The CSS**
+- [x] **Step 2: The CSS**
 
 Replace the whole `SubnavLayout.module.css` with:
 
@@ -3260,19 +3260,19 @@ Replace the whole `SubnavLayout.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: two errors, in `profile/layout.tsx` and `admin/layout.tsx`: `title` and `back` are missing. Task 23 fixes them.
 
-- [ ] **Step 4: Commit with Task 23** (do not commit a failing typecheck).
+- [x] **Step 4: Commit with Task 23** (do not commit a failing typecheck).
 
 ### Task 23: Profilo and Admin pass their title and the way back
 
 **Files:**
 - Modify: `apps/web/app/(app)/profile/layout.tsx`, `apps/web/app/(app)/profile/profile.module.css`, `apps/web/app/(app)/admin/layout.tsx`, `apps/web/app/(app)/admin/admin.module.css`
 
-- [ ] **Step 1: Profilo**
+- [x] **Step 1: Profilo**
 
 In `profile/layout.tsx`, pass to `<SubnavLayout …>`:
 
@@ -3316,7 +3316,7 @@ In `profile.module.css`, add:
 
 In the existing `@media (min-width: 1024px)` block of `profile.module.css`, add `.head { display: none; }`. The sidebar now carries the person (D10).
 
-- [ ] **Step 2: Admin**
+- [x] **Step 2: Admin**
 
 In `admin/layout.tsx`, pass:
 
@@ -3352,21 +3352,21 @@ In `admin.module.css`, add:
 
 In its `@media (min-width: 1024px)` block, add `.head { display: none; }`.
 
-- [ ] **Step 3: Run the gates**
+- [x] **Step 3: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Expected: no errors.
 
-- [ ] **Step 4: Look at it**
+- [x] **Step 4: Look at it**
 
 Open `/profile/preferences` and `/admin/accounts` at 1440×900. Compare with `?variant=K&page=profilo` and `&page=admin`. Check: one sidebar only; «‹ Saldo» at its top goes to `/home`; the links slide in once when you enter, and not when you move between sections; «Esci» is at the foot; the section does not move sideways between `/home` and `/profile`. At 390×844 the row of links stays above the section.
 
-- [ ] **Step 5: Run the Profilo and Admin end-to-end tests**
+- [x] **Step 5: Run the Profilo and Admin end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e profile admin shell`
 Expected: PASS. The navigation landmark of the sections has the same name as before (`navLabel`). A test that clicks a main tab from inside Profilo must first click «‹ Saldo» (`getByRole('link', { name: t('web.shell.backLabel') })`), because the main sidebar is hidden there.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/ui/SubnavLayout.tsx apps/web/src/ui/SubnavLayout.module.css "apps/web/app/(app)/profile" "apps/web/app/(app)/admin" apps/web/e2e
@@ -3383,7 +3383,7 @@ git commit -m "feat(web): Profilo and Admin take the sidebar's place"
 - Create: `docs/superpowers/specs/2026-10-11-web-g2-layout.html`
 - Modify: `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md` (§17.1.7), `docs/superpowers/specs/2026-10-07-web-panel-feel.html` (the head)
 
-- [ ] **Step 1: Write the spec**
+- [x] **Step 1: Write the spec**
 
 Copy `docs/superpowers/templates/spec-template.html` to `docs/superpowers/specs/2026-10-11-web-g2-layout.html`. Follow «Writing docs» in AGENTS.md (STE, SVG figures with `role="img"` and a `<title>`, the real strings of `en.ts`, the `@saldo/ui` palette). Write these sections:
 
@@ -3397,12 +3397,12 @@ Copy `docs/superpowers/templates/spec-template.html` to `docs/superpowers/specs/
 
 Open the file at 1440px and 500px in both themes. Make sure that no text clips and that the console shows no errors.
 
-- [ ] **Step 2: Point the older docs at it**
+- [x] **Step 2: Point the older docs at it**
 
 In the POC spec §17.1.7, add one line at the top of the section: `On the wide-screen layout (sidebar, dialog panels, the G2 pages), docs/superpowers/specs/2026-10-11-web-g2-layout.html wins over this section.`
 At the top of `2026-10-07-web-panel-feel.html`, under the title, add a note in the template's note style: `Since 2026-10-11 the panel is a dialog over the page (2026-10-11-web-g2-layout.html, D3). The motion values below still apply.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/superpowers/specs
@@ -3414,7 +3414,7 @@ git commit -m "docs: the G2 web layout spec, and pointers from the older ones"
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Add the entry**
+- [x] **Step 1: Add the entry**
 
 Under the last web entry of the phase list, add a section in the style of the others:
 
@@ -3435,7 +3435,7 @@ Acceptance:
 
 Change `🚧 in progress` to `✅ done` in Task 26, when the acceptance is met.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/superpowers/plans/README.md
@@ -3444,7 +3444,7 @@ git commit -m "docs: roadmap entry for the G2 redesign"
 
 ### Task 26: Verification before completion
 
-- [ ] **Step 1: The gates**
+- [x] **Step 1: The gates**
 
 Run each one and read the output:
 
@@ -3457,7 +3457,7 @@ rtk proxy pnpm --filter web e2e
 
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no type errors; every test passes.
 
-- [ ] **Step 2: The screens**
+- [x] **Step 2: The screens**
 
 Build and start on port 3100 (see «Rules»). Sign in with the e2e seed user, or with a user that has budgets, goals, upcoming rows and two periods of history. For each of `/home`, `/transactions`, `/stats`, `/accounts`, `/profile/preferences`, `/admin/accounts`:
 

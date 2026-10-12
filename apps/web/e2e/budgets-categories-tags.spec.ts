@@ -22,7 +22,7 @@ test('a budget reads on track, over pace and over its limit as the spending grow
   await page.goto('/profile/budgets');
   await expect(page.getByText(t('budgets.empty'), { exact: true })).toBeVisible();
   await page.getByRole('link', { name: t('budgets.newBudget') }).click();
-  const form = page.getByRole('complementary', { name: t('budgets.newBudget') });
+  const form = page.getByRole('dialog', { name: t('budgets.newBudget') });
 
   // Both gaps are named at once, the category first.
   await form.getByRole('button', { name: t('budgets.create') }).click();
@@ -46,7 +46,7 @@ test('a budget reads on track, over pace and over its limit as the spending grow
 
   // A category belongs to one budget: its tile is off in a second one.
   await page.getByRole('link', { name: t('budgets.newBudget') }).click();
-  const second = page.getByRole('complementary', { name: t('budgets.newBudget') });
+  const second = page.getByRole('dialog', { name: t('budgets.newBudget') });
   await expect(second.getByRole('button', { name: SHOPPING, exact: true })).toBeDisabled();
 
   // The whole limit spent, early in the year: the ratio is ahead of the pace, still under the limit.
@@ -68,7 +68,7 @@ test('a budget reads on track, over pace and over its limit as the spending grow
 
   // Deleting asks first; the transactions stay.
   await row.click();
-  const edit = page.getByRole('complementary', { name: t('budgets.editBudget') });
+  const edit = page.getByRole('dialog', { name: t('budgets.editBudget') });
   await edit.getByRole('button', { name: t('budgets.deleteBudget') }).click();
   const dialog = page.getByRole('alertdialog');
   await expect(dialog).toContainText(t('budgets.deleteTitle', { name: SHOPPING }));
@@ -103,7 +103,7 @@ test('archiving a category moves its transactions to another one, and the archiv
   await expect(listRow(page, 'Salute')).not.toContainText(plural(t, 'it', 'categories.uses', 1));
 
   await listRow(page, 'Sport').click();
-  const form = page.getByRole('complementary', { name: t('categories.editCategory') });
+  const form = page.getByRole('dialog', { name: t('categories.editCategory') });
   await form.getByRole('button', { name: t('categories.archive'), exact: true }).click();
   const dialog = page.getByRole('alertdialog');
   await expect(dialog).toContainText(t('categories.archiveTitle'));
@@ -130,7 +130,7 @@ test('archiving a category moves its transactions to another one, and the archiv
   await page.goto('/profile/categories');
   await listRow(page, 'Formazione').click();
   await page
-    .getByRole('complementary', { name: t('categories.editCategory') })
+    .getByRole('dialog', { name: t('categories.editCategory') })
     .getByRole('button', { name: t('categories.archive'), exact: true })
     .click();
   const plain = page.getByRole('alertdialog');
@@ -141,7 +141,7 @@ test('archiving a category moves its transactions to another one, and the archiv
 
   // Both wait in the archived list; «Ripristina» returns one of them.
   await listRow(page, t('categories.archivedSection')).click();
-  const archived = page.getByRole('complementary', { name: t('categories.archived') });
+  const archived = page.getByRole('dialog', { name: t('categories.archived') });
   await expect(archived.getByText('Sport', { exact: true })).toBeVisible();
   await expect(archived.getByText('Formazione', { exact: true })).toBeVisible();
   await archived
@@ -169,7 +169,7 @@ test('a new category is listed under its parent and the arrows reorder it within
 
   await page.goto('/profile/categories');
   await page.getByRole('link', { name: t('categories.newCategory') }).click();
-  const form = page.getByRole('complementary', { name: t('categories.newCategory') });
+  const form = page.getByRole('dialog', { name: t('categories.newCategory') });
   await form.getByRole('button', { name: t('common.save') }).click();
   await expect(form.getByRole('alert')).toContainText(t('categories.missing_name'));
   await form.getByLabel(t('categories.name'), { exact: true }).fill('Animali');
@@ -236,7 +236,7 @@ test('a tag is created, refused when it exists, and renamed', async ({ browser, 
   await page.goto('/profile/tags');
   await expect(page.getByText(t('tags.empty'), { exact: true })).toBeVisible();
   await page.getByRole('link', { name: t('tags.newTag') }).click();
-  const form = page.getByRole('complementary', { name: t('tags.newTag') });
+  const form = page.getByRole('dialog', { name: t('tags.newTag') });
   await form.getByRole('button', { name: t('common.save') }).click();
   await expect(form.getByRole('alert')).toContainText(t('tags.missing_name'));
   await form.getByLabel(t('tags.name'), { exact: true }).fill('Viaggi');
@@ -246,14 +246,17 @@ test('a tag is created, refused when it exists, and renamed', async ({ browser, 
 
   // The same name twice is refused before anything is sent.
   await page.getByRole('link', { name: t('tags.newTag') }).click();
-  const again = page.getByRole('complementary', { name: t('tags.newTag') });
+  const again = page.getByRole('dialog', { name: t('tags.newTag') });
   await again.getByLabel(t('tags.name'), { exact: true }).fill('Viaggi');
   await again.getByRole('button', { name: t('common.save') }).click();
   await expect(again.getByRole('alert')).toContainText(t('tags.missing_taken'));
+  // D3: the panel is a dialog over the page; close it to reach the list.
+  await again.getByRole('link', { name: t('common.close') }).click();
+  await expect(again).toHaveCount(0);
 
   // Renaming keeps the tag and changes its name.
   await listRow(page, 'Viaggi').click();
-  const edit = page.getByRole('complementary', { name: t('tags.editTag') });
+  const edit = page.getByRole('dialog', { name: t('tags.editTag') });
   await edit.getByLabel(t('tags.name'), { exact: true }).fill('Trasferte');
   await edit.getByRole('button', { name: t('common.save') }).click();
   await expect(page).toHaveURL(/\/profile\/tags$/);
@@ -287,7 +290,7 @@ test('merging a tag moves its transactions into the other tag, which then carrie
   expect(vacanze).toBeGreaterThan(0);
 
   await listRow(page, 'Famiglia').click();
-  const edit = page.getByRole('complementary', { name: t('tags.editTag') });
+  const edit = page.getByRole('dialog', { name: t('tags.editTag') });
   await pickOption(page, t('tags.mergeInto'), 'Vacanze');
 
   // The question says what moves and that it cannot be undone; «Annulla» changes nothing.
@@ -337,7 +340,7 @@ test('deleting a tag removes it from its transactions and leaves them in place',
   await expect(listRow(page, 'Rimborso')).toContainText(plural(t, 'it', 'tags.uses', 1));
   await listRow(page, 'Rimborso').click();
   await page
-    .getByRole('complementary', { name: t('tags.editTag') })
+    .getByRole('dialog', { name: t('tags.editTag') })
     .getByRole('button', { name: t('tags.delete') })
     .click();
   const dialog = page.getByRole('alertdialog');
@@ -382,7 +385,7 @@ test('regression: a close in PanelSwitch is not a navigation, and the focus goes
   const href = await row.getAttribute('href');
   if (href === null) throw new Error('the row has no link');
   const sent = pageRequests(page);
-  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const panel = page.getByRole('dialog', { name: t('tags.editTag') });
   const closes: [string, () => Promise<void>][] = [
     ['✕', () => panel.getByRole('link', { name: t('common.close') }).click()],
     ['Esc', () => page.keyboard.press('Escape')],
@@ -424,7 +427,7 @@ test('regression: the panel stays mounted while the row changes', async ({ brows
 
   await page.goto('/profile/tags');
   const sent = pageRequests(page);
-  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const panel = page.getByRole('dialog', { name: t('tags.editTag') });
   const name = panel.getByLabel(t('tags.name'), { exact: true });
   await listRow(page, 'Vacanze').click();
   await expect(name).toHaveValue('Vacanze');
@@ -432,7 +435,9 @@ test('regression: the panel stays mounted while the row changes', async ({ brows
     element.setAttribute('data-e2e-mark', 'first');
   });
 
-  await listRow(page, 'Famiglia').click();
+  // D3: the scrim covers the rows, so a click cannot reach one. The link is clicked in the DOM, as
+  // the panel's own controller sees it: what is under test is that the panel stays mounted.
+  await listRow(page, 'Famiglia').dispatchEvent('click');
   // The body is a new form, in the same panel.
   await expect(name).toHaveValue('Famiglia');
   await expect(panel).toHaveAttribute('data-e2e-mark', 'first');
@@ -461,14 +466,14 @@ test('regression: a ?tag=ID load renders the panel beside the list in the server
   expect(href).toMatch(/\?tag=/);
   if (href === null) throw new Error('the row has no link');
 
-  // At 1440px the panel takes the slot column, to the right of the list.
+  // D3: at 1440px the panel is a dialog at the trailing edge, over the list.
   await page.goto(href);
-  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const panel = page.getByRole('dialog', { name: t('tags.editTag') });
   await expect(panel.getByLabel(t('tags.name'), { exact: true })).toHaveValue('Vacanze');
-  const list = await page.locator('[data-panel-switch]').boundingBox();
   const side = await panel.boundingBox();
-  if (list === null || side === null) throw new Error('the list or the panel has no box');
-  expect(side.x).toBeGreaterThanOrEqual(list.x + list.width);
+  if (side === null) throw new Error('the panel has no box');
+  expect(side.x + side.width).toBeGreaterThan(1440 - 32);
+  await expect(page.locator('[data-panel-switch]')).toBeVisible();
 
   // The server's HTML holds the panel and its form, before any script runs.
   const noScript = await browser.newContext({
@@ -478,7 +483,9 @@ test('regression: a ?tag=ID load renders the panel beside the list in the server
   });
   const raw = await noScript.newPage();
   await raw.goto(new URL(href, page.url()).toString());
-  const field = raw.locator(`aside[aria-label="${t('tags.editTag')}"] [data-field="name"] input`);
+  const field = raw.locator(
+    `[role="dialog"][aria-label="${t('tags.editTag')}"] [data-field="name"] input`,
+  );
   await expect(field).toHaveCount(1);
   await expect(field).toHaveValue('Vacanze');
   await noScript.close();
@@ -516,7 +523,7 @@ test('regression: a save in a panel opened in place updates the list and prefetc
 
   await page.goto('/profile/tags');
   await page.waitForLoadState('networkidle');
-  const panel = page.getByRole('complementary', { name: t('tags.editTag') });
+  const panel = page.getByRole('dialog', { name: t('tags.editTag') });
   await listRow(page, 'Vacanze').click();
   // A page that shows the tag: left now, and entered again with Forward after the save.
   await panel.locator('a[href^="/transactions?tag="]').click();

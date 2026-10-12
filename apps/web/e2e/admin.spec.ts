@@ -41,7 +41,7 @@ function accountRow(page: Page, name: string) {
 
 /** The panel an account's row opens: a landmark named after the person. */
 function accountPanel(page: Page, name: string) {
-  return page.getByRole('complementary', { name });
+  return page.getByRole('dialog', { name });
 }
 
 test.describe('accounts', () => {
@@ -57,6 +57,7 @@ test.describe('accounts', () => {
     const { page } = admin;
     await page.goto('/admin/accounts');
 
+    // Wide: the sidebar carries the title (D10) as the h1; the page's own head is hidden.
     await expect(page.getByRole('heading', { name: t('admin.title') })).toBeVisible();
     await expect(accountRow(page, ADMIN.name)).toContainText(t('admin.roleAdmin'));
     await expect(accountRow(page, member.name)).toContainText(member.email);
@@ -228,7 +229,7 @@ test.describe('invites', () => {
       .first()
       .click();
 
-    const form = page.getByRole('complementary', { name: t('admin.invites.new') });
+    const form = page.getByRole('dialog', { name: t('admin.invites.new') });
     await form.getByLabel(t('admin.invites.label')).fill(label);
     await form.getByRole('button', { name: t('admin.invites.create') }).click();
 
@@ -248,7 +249,7 @@ test.describe('invites', () => {
     await expect(page.getByText(code)).toHaveCount(0);
 
     await row.click();
-    const panel = page.getByRole('complementary', { name: label });
+    const panel = page.getByRole('dialog', { name: label });
     await expect(panel).toContainText(t('admin.invites.codeGone'));
     await panel.getByRole('button', { name: t('admin.invites.revoke') }).click();
     const dialog = page.getByRole('alertdialog', {
@@ -294,7 +295,7 @@ test.describe('invites', () => {
     await expect(row).toContainText(t('admin.invites.statusUsed'));
     await expect(row).toContainText(member.email);
     await row.click();
-    const panel = page.getByRole('complementary', { name: member.name });
+    const panel = page.getByRole('dialog', { name: member.name });
     await expect(panel).toContainText(member.email);
     await expect(panel.getByRole('button', { name: t('admin.invites.revoke') })).toHaveCount(0);
 
@@ -314,7 +315,7 @@ test.describe('invites', () => {
     const { page } = admin;
     await page.goto('/admin/invites?new');
     const field = page
-      .getByRole('complementary', { name: t('admin.invites.new') })
+      .getByRole('dialog', { name: t('admin.invites.new') })
       .getByLabel(t('admin.invites.label'));
     await field.fill('x'.repeat(200));
     const length = (await field.inputValue()).length;
@@ -338,7 +339,7 @@ test.describe('invites', () => {
       .getByRole('link', { name: t('admin.invites.new') })
       .first()
       .click();
-    const form = page.getByRole('complementary', { name: t('admin.invites.new') });
+    const form = page.getByRole('dialog', { name: t('admin.invites.new') });
     await form.getByLabel(t('admin.invites.label')).fill(label);
     await form.getByRole('button', { name: t('admin.invites.create') }).click();
     await expect(form.getByText(t('admin.invites.copyNow'))).toBeVisible();
@@ -390,21 +391,26 @@ test.describe('instance and settings', () => {
     await expect(page.getByRole('link', { name: new RegExp(ADMIN.instance) })).toBeVisible();
 
     await page.getByRole('link', { name: startsWith(t('admin.settings.name.title')) }).click();
-    const name = page.getByRole('complementary', { name: t('admin.settings.name.title') });
+    const name = page.getByRole('dialog', { name: t('admin.settings.name.title') });
     await expect(name.getByLabel(t('admin.settings.name.field'))).toHaveValue(ADMIN.instance);
     await expect(name.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
+    // D3: a dialog covers the rows, so each panel is closed before the next row.
+    await name.getByRole('link', { name: t('common.close') }).click();
+    await expect(name).toHaveCount(0);
 
     await page
       .getByRole('link', { name: startsWith(t('admin.settings.registration.title')) })
       .click();
-    const registration = page.getByRole('complementary', {
+    const registration = page.getByRole('dialog', {
       name: t('admin.settings.registration.title'),
     });
     await expect(registration.getByRole('radio', { name: /./ })).toHaveCount(4);
     await expect(registration.getByText(t('admin.settings.locked.title'))).toHaveCount(0);
+    await registration.getByRole('link', { name: t('common.close') }).click();
+    await expect(registration).toHaveCount(0);
 
     await page.getByRole('link', { name: startsWith(t('admin.settings.smtp.title')) }).click();
-    const smtp = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
+    const smtp = page.getByRole('dialog', { name: t('admin.settings.smtp.title') });
     await expect(smtp.getByLabel(t('admin.settings.smtp.host'))).toBeVisible();
     await admin.context.close();
   });
@@ -415,7 +421,7 @@ test.describe('instance and settings', () => {
     const { page } = admin;
     const rename = async (value: string) => {
       await page.goto('/admin/settings?edit=name');
-      const panel = page.getByRole('complementary', { name: t('admin.settings.name.title') });
+      const panel = page.getByRole('dialog', { name: t('admin.settings.name.title') });
       await panel.getByLabel(t('admin.settings.name.field')).fill(value);
       await panel.getByRole('button', { name: t('common.save') }).click();
       await expect(page).toHaveURL(/\/admin\/settings$/);
@@ -423,13 +429,19 @@ test.describe('instance and settings', () => {
     try {
       await rename(renamed);
       await expect(page.getByRole('link', { name: new RegExp(renamed) })).toBeVisible();
-      await expect(page.getByText(new RegExp(`^${renamed} ·`))).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+      ).toBeVisible();
       await page.reload();
-      await expect(page.getByText(new RegExp(`^${renamed} ·`))).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+      ).toBeVisible();
     } finally {
       await rename(ADMIN.instance);
     }
-    await expect(page.getByText(new RegExp(`^${ADMIN.instance} ·`))).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`^${ADMIN.instance} ·`)).locator('visible=true'),
+    ).toBeVisible();
     await admin.context.close();
   });
 
@@ -438,7 +450,7 @@ test.describe('instance and settings', () => {
     const { page } = admin;
     const choose = async (label: string, save: boolean) => {
       await page.goto('/admin/settings?edit=registration');
-      const panel = page.getByRole('complementary', {
+      const panel = page.getByRole('dialog', {
         name: t('admin.settings.registration.title'),
       });
       await panel.getByRole('radio', { name: startsWith(label) }).click();
@@ -480,7 +492,7 @@ test.describe('instance and settings', () => {
     const { page } = admin;
     const smtpRow = () =>
       page.getByRole('link', { name: startsWith(t('admin.settings.smtp.title')) });
-    const panel = page.getByRole('complementary', { name: t('admin.settings.smtp.title') });
+    const panel = page.getByRole('dialog', { name: t('admin.settings.smtp.title') });
     try {
       await page.goto('/admin/settings');
       await smtpRow().click();

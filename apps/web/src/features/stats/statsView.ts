@@ -63,6 +63,11 @@ export interface SplitRow {
   share: number;
   /** Against the median of the periods the category was spent in; `null` with no baseline. */
   delta: number | null;
+  /**
+   * The category's spend in each used previous period, oldest first, then this period's: the
+   * sparkline of its panel (D8). A used period with no spend in the category is a real zero.
+   */
+  history: number[];
 }
 
 export interface StatsSplit {
@@ -137,6 +142,8 @@ export function statsView(input: {
         amount,
         share: sharePercent(amount, total),
         delta: deltaPercent(amount, median(past)),
+        // `history` is most recent first (`periodHistory`); the chart reads left to right.
+        history: [...history.map((cycle) => cycle.get(categoryId) ?? 0).reverse(), amount],
       };
     });
 

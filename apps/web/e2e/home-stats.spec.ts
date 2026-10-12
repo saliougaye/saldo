@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { formatDayMonth, formatMonthLong, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
@@ -79,8 +80,22 @@ test.describe('Home', () => {
       .filter((tx) => tx.date > ledger.today && tx.date <= month.end)
       .sort((a, b) => b.date.localeCompare(a.date));
     expect(ahead.length).toBeGreaterThanOrEqual(2);
-    const upcoming = sectionOf(page, t('home.upcoming'));
-    await expect(upcoming).toContainText(plural(t, lang, 'home.upcomingCount', ahead.length));
+    // Transazioni holds both lists: the group label tells «In arrivo» from «Ultime». The summary
+    // beside the title says how many there are; its amount is left out (it adds the rows up).
+    const transactions = sectionOf(page, t('tabs.transactions'));
+    const marker = '\u0000';
+    const [summaryStart = ''] = plural(t, lang, 'home.upcomingSummary', ahead.length, {
+      amount: marker,
+    }).split(marker);
+    await expect(transactions).toContainText(summaryStart);
+    const upcoming = transactions
+      .locator('div')
+      .filter({
+        has: page.getByText(t('home.upcomingUntil', { date: formatDayMonth(month.end, lang) }), {
+          exact: true,
+        }),
+      })
+      .last();
     await expect(upcoming.getByRole('link')).toHaveCount(Math.min(5, ahead.length));
     for (const tx of ahead.slice(0, 5)) {
       await expect(upcoming.getByRole('link', { name: tx.description })).toContainText(
@@ -92,7 +107,10 @@ test.describe('Home', () => {
     const settled = ledger.transactions.filter(
       (tx) => tx.date <= ledger.today && inRange(tx.date, month),
     );
-    const recent = sectionOf(page, t('home.recent'));
+    const recent = transactions
+      .locator('div')
+      .filter({ has: page.getByText(t('home.latest'), { exact: true }) })
+      .last();
     await expect(recent.locator('a[href^="/transactions?t="]')).toHaveCount(
       Math.min(5, settled.length),
     );
@@ -104,12 +122,12 @@ test.describe('Home', () => {
       formatDayMonth(newest.date, lang),
     );
 
-    await recent.getByRole('link', { name: t('home.allTransactions') }).click();
+    await transactions.getByRole('link', { name: t('home.allTransactions') }).click();
     await expect(page).toHaveURL(/\/transactions$/);
     await member.context.close();
   });
 
-  test('the budgets and the goals carry the seeded figures, and one of each is featured', async ({
+  test('the budgets and the goals are cards that carry the seeded figures', async ({
     browser,
     t,
     locale,
@@ -135,7 +153,6 @@ test.describe('Home', () => {
 
     // Budgets: what each one has spent is the sum of its categories' expenses this month.
     expect(ledger.budgets).toHaveLength(3);
-    let featuredBudgets = 0;
     for (const budget of ledger.budgets) {
       const covered = new Set(budget.categoryIds.flatMap((id) => categoryFamily(ledger, id)));
       const spentSoFar = sum(
@@ -152,17 +169,20 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      featuredBudgets += await page
-        .getByText(ofLine(budget.amount, spentSoFar), { exact: true })
-        .count();
+      // D5: every budget is a card; the line under the figure says what is spent of the limit.
+      if (spentSoFar <= budget.amount) {
+        await expect(
+          page.getByText(
+            t('targets.leftDetail', { spent: money(spentSoFar), limit: money(budget.amount) }),
+            { exact: true },
+          ),
+        ).toHaveCount(1);
+      }
     }
-    // The card lifts one budget into view, with its bar and its advice; the others are rows.
-    expect(featuredBudgets).toBe(1);
 
     // Goals: a pocket's balance is the transfers into it.
     const goals = ledger.accounts.filter((account) => account.type === 'pocket');
     expect(goals).toHaveLength(2);
-    let featuredGoals = 0;
     for (const goal of goals) {
       const target = goal.goalTarget ?? 0;
       const put = saved(ledger, goal.id);
@@ -176,9 +196,47 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      featuredGoals += await page.getByText(ofLine(target, put), { exact: true }).count();
+      // Every goal is a card too, with the same «of» line under its figure.
+      await expect(page.getByText(ofLine(target, put), { exact: true })).toHaveCount(1);
     }
-    expect(featuredGoals).toBe(1);
+    await member.context.close();
+  });
+
+  test('«Non a budget» adds up the spend that no budget covers, and opens a new budget', async ({
+    browser,
+    t,
+    locale,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Fuori budget',
+      email: 'home-unbudgeted@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const lang = appLocale(locale);
+    const money = moneyFormatter(ledger, lang);
+    const month = monthOf(ledger.today);
+    const covered = new Set(
+      ledger.budgets.flatMap((budget) =>
+        budget.categoryIds.flatMap((id) => categoryFamily(ledger, id)),
+      ),
+    );
+    const outside = sum(
+      counted(ledger, month).filter(
+        (tx) => tx.kind === 'expense' && tx.categoryId !== null && !covered.has(tx.categoryId),
+      ),
+    );
+    // The seed must spend outside its budgets, or the test would pass on a zero.
+    expect(outside).toBeGreaterThan(0);
+
+    await page.goto('/home');
+    const card = page
+      .locator('a[href="/profile/budgets?new"]')
+      .filter({ hasText: t('home.unbudgeted') });
+    await expect(card).toHaveCount(1);
+    await expect(card).toContainText(money(outside));
+    await expect(card).toContainText(t('targets.createBudget'));
     await member.context.close();
   });
 
@@ -233,6 +291,13 @@ test.describe('Home', () => {
   });
 });
 
+/** A category card of Ripartizione: the link that holds the category's name. */
+function cardOf(scope: Locator, name: string): Locator {
+  return scope
+    .locator('a[class*="Card"]')
+    .filter({ has: scope.page().getByText(name, { exact: true }) });
+}
+
 test.describe('Statistiche', () => {
   test('Ripartizione and Tag add up to the rows of a closed month', async ({
     browser,
@@ -275,19 +340,18 @@ test.describe('Statistiche', () => {
     const income = split('income');
     // The figures above the split agree with it.
     await expect(statFigure(page, t('stats.expenses'))).toContainText(money(expenses.total));
-    await expect(section).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
-      const row = rowOf(section, name);
-      await expect(row).toContainText(money(amount));
-      await expect(row).toContainText(
-        t('stats.ofTotal', { pct: percentOf(amount, expenses.total) }),
+      const card = cardOf(section, name);
+      await expect(card).toContainText(money(amount));
+      await expect(card).toContainText(
+        t('targets.percent', { value: percentOf(amount, expenses.total) }),
       );
     }
     // Biggest first.
     const first = expenses.ranked[0];
-    await expect(rowOf(section, first?.name ?? '')).toBeVisible();
+    await expect(cardOf(section, first?.name ?? '')).toBeVisible();
     const order = await section
-      .locator('[class*="ListRow"][class*="title"]:not([class*="subtitle"])')
+      .locator('a[class*="Card"] [class*="Card"][class*="name"]')
       .allTextContents();
     expect(order).toEqual(expenses.ranked.map((row) => row.name));
 
@@ -295,9 +359,8 @@ test.describe('Statistiche', () => {
     await section.getByRole('link', { name: t('stats.income') }).click();
     await expect(page).toHaveURL(/direction=income/);
     for (const { name, amount } of income.ranked) {
-      await expect(rowOf(sectionOf(page, t('stats.split')), name)).toContainText(money(amount));
+      await expect(cardOf(sectionOf(page, t('stats.split')), name)).toContainText(money(amount));
     }
-    await expect(sectionOf(page, t('stats.split'))).toContainText(money(income.total));
 
     // Tag: every tag used by a counted row, with its spend, its income and how many rows carry it.
     const tagsSection = sectionOf(page, t('stats.tags'));
@@ -337,6 +400,45 @@ test.describe('Statistiche', () => {
         (tx) => inRange(tx.date, closed) && tx.tagIds.includes(family?.tag.id ?? ''),
       ).length,
     );
+    await member.context.close();
+  });
+
+  test('a category card opens a dialog with the category and one of its transactions', async ({
+    browser,
+    t,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Categoria',
+      email: 'stats-category@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const closed = previousMonth(monthOf(ledger.today));
+    const parentOf = new Map(ledger.categories.map((c) => [c.id, c.parentId ?? c.id]));
+    const nameOf = new Map(ledger.categories.map((c) => [c.id, c.name]));
+    const spent = new Map<string, number>();
+    for (const tx of counted(ledger, closed).filter((row) => row.kind === 'expense')) {
+      const id = parentOf.get(tx.categoryId ?? '') ?? '';
+      spent.set(id, (spent.get(id) ?? 0) + tx.amount);
+    }
+    const [topId] = [...spent.entries()].sort(([, a], [, b]) => b - a)[0] ?? [];
+    const name = nameOf.get(topId ?? '') ?? '';
+    const inside = counted(ledger, closed).find(
+      (tx) => tx.kind === 'expense' && parentOf.get(tx.categoryId ?? '') === topId,
+    );
+    expect(inside).toBeDefined();
+
+    await page.goto(`/stats?p=${closed.start}`);
+    await cardOf(sectionOf(page, t('stats.split')), name).click();
+    const dialog = page.getByRole('dialog', { name });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`c=${topId}`));
+    await expect(dialog.getByText(inside?.description ?? '').first()).toBeVisible();
+
+    await dialog.getByRole('link', { name: t('common.close') }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page).not.toHaveURL(/[?&]c=/);
     await member.context.close();
   });
 

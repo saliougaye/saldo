@@ -20,4 +20,22 @@ describe('homeView', () => {
     });
     expect(view.recent.map((row) => row.id)).toEqual(['inside']);
   });
+
+  it('nets «In arrivo»: income minus expense, not the two added as positives', () => {
+    const view = homeView({
+      data: dataWith([
+        tx({ id: 'rent', amount: 1000, date: '2026-09-20' }),
+        tx({ id: 'pay', amount: 300, kind: 'income', date: '2026-09-25' }),
+      ]),
+      today: '2026-09-15',
+      def: { kind: 'month', startDay: 1 },
+      period: {
+        range: { start: '2026-09-01', end: '2026-09-30' },
+        isCurrent: true,
+        elapsed: 15,
+        length: 30,
+      },
+    });
+    expect(view.upcoming.net).toBe(-700);
+  });
 });
