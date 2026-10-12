@@ -1,15 +1,8 @@
-/* The band (which brings its own 64px), then the 7/5 pair. Below the breakpoint both become the
-   phone's cards, so the gap is what separates them there. */
+/* G2: the head, then three sections in a column, 56px apart (D4). */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-@media (min-width: 1024px) {
-  .page {
-    gap: 0;
-  }
+  gap: var(--layout-section-gap-web);
 }
 
 .emptyNote {
@@ -44,62 +37,10 @@
   color: var(--color-text-muted);
 }
 
-/* The featured item of a target card (§5.13). */
-.featured {
-  /* The anchor of its `VisuallyHidden` label. */
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  text-align: start;
-}
-
-.featuredHead {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.featuredName {
-  flex: none;
-  min-width: 0;
-  font-size: var(--font-size-footnote);
-  font-weight: var(--font-weight-medium);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.featuredMeta {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.featuredAmount {
-  margin-top: 14px;
-}
-
-.featuredOf {
-  margin-top: 4px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.featuredBar {
-  margin-top: 16px;
-}
-
 /* The three labels under the bar: the ends anchored, «oggi» centred on the tick. */
 .ends {
   position: relative;
-  height: 14px;
+  height: 16px;
   margin-top: 8px;
 }
 
@@ -107,18 +48,18 @@
 .endToday,
 .endEnd {
   position: absolute;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-footnote);
   white-space: nowrap;
 }
 
 .endStart {
   inset-inline-start: 0;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
 .endEnd {
   inset-inline-end: 0;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
 .endToday {
@@ -126,40 +67,34 @@
   color: var(--color-text-muted);
 }
 
-.sentence {
-  margin-top: 16px;
-  max-width: 52ch;
+.txCols {
+  display: grid;
+  gap: 24px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .txCols {
+    grid-template-columns: 7fr 5fr;
+    column-gap: var(--layout-column-gap-web);
+    align-items: start;
+  }
+}
+
+.groupLabel {
+  display: block;
+  padding: 6px 0 2px;
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
-  line-height: 1.5;
-  text-wrap: pretty;
+  letter-spacing: var(--tracking-tight);
 }
 
-/* A budget's or a goal's row: the percentage over the state, then the ring. */
-.rowStatus {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-  text-align: end;
-}
-
-.rowPercent {
-  font-size: var(--font-size-body);
-  font-variant-numeric: tabular-nums;
-}
-
-.rowStatusMeta {
-  font-size: var(--font-size-caption);
-  color: var(--color-text-faint);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.rowOver .rowStatusMeta {
+.vsUsual {
   color: var(--color-accent);
 }
 
-.rowDone {
-  color: var(--color-positive);
+.ghostBody {
+  font-size: var(--font-size-footnote);
+  line-height: 1.45;
+  text-wrap: pretty;
 }

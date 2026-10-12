@@ -2017,7 +2017,7 @@ git commit -m "feat(web): Home's view gives the trend, the unbudgeted spend and 
 
 Open the mockup at `?variant=G2` beside your editor.
 
-- [ ] **Step 1: Imports and helpers**
+- [x] **Step 1: Imports and helpers**
 
 In `page.tsx`:
 
@@ -2070,7 +2070,7 @@ function TargetBar({
 }
 ```
 
-- [ ] **Step 2: The budget and goal cards**
+- [x] **Step 2: The budget and goal cards**
 
 Inside `HomePage`, after `budgetSentence`, add:
 
@@ -2165,7 +2165,7 @@ Delete `goalRow`, `featuredBudget`, `budgetEvents`, `budgetRest`, `featuredGoal`
 
 Check that `Rich` renders `<b>` with `styles.strong`. The card's `.sentence b` rule styles a plain `<b>` too, so both work.
 
-- [ ] **Step 3: The returned JSX**
+- [x] **Step 3: The returned JSX**
 
 Replace the whole `return (…)` of `HomePage` with:
 
@@ -2333,7 +2333,7 @@ Replace the whole `return (…)` of `HomePage` with:
   );
 ```
 
-- [ ] **Step 4: The CSS**
+- [x] **Step 4: The CSS**
 
 In `home.module.css`:
 
@@ -2386,16 +2386,16 @@ In `home.module.css`:
 }
 ```
 
-- [ ] **Step 5: Run the gates**
+- [x] **Step 5: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Expected: no errors, no `lint/…` lines, PASS. Fix unused imports that lint reports.
 
-- [ ] **Step 6: Compare with the mockup**
+- [x] **Step 6: Compare with the mockup**
 
 Open `/home` at 1440×900 in both themes, beside the mockup at `?variant=G2`. Check: the stepper is beside «Ottobre»; the chart is on the right of the hero; «Transazioni» comes first with two columns; budget cards show what is left in large type; «Non a budget» is the last budget card; with no goals, the «Obiettivi» section shows one ghost card. Write each difference that you keep in the commit body.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add "apps/web/app/(app)/home" apps/web/src/features/home/homeView.ts

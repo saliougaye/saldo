@@ -1,7 +1,6 @@
-import type { BudgetAdvice, BudgetView, CurrencyCode, GoalView } from '@saldo/core';
+import type { BudgetAdvice, BudgetView, GoalView } from '@saldo/core';
 import { endLabels, goalPace, goalTone, pocketParentCandidates } from '@saldo/core';
 import {
-  type AppLocale,
   budgetCardStatusText,
   formatDayMonth,
   formatMoney,
@@ -9,27 +8,35 @@ import {
   goalCardStatusText,
   goalEnds,
   goalLabel,
-  goalMeta,
   goalOf,
   goalSentence,
-  goalStatus,
   plural,
   richText,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { Fragment, type ReactNode } from 'react';
 import { NEW_GOAL_HREF } from '../../../src/features/accounts/goalLinks';
-import { budgetRowFor, ROW_RING } from '../../../src/features/budgets/budgetRow';
+import { budgetRowFor } from '../../../src/features/budgets/budgetRow';
 import { type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
-import { Columns } from '../../../src/ui/Columns';
+import {
+  Card,
+  CardAction,
+  CardGrid,
+  CardHead,
+  CardLabel,
+  CardNote,
+  CardSentence,
+} from '../../../src/ui/Card';
+import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
+import { TrendChart } from '../../../src/ui/charts/TrendChart';
 import { EmptyState } from '../../../src/ui/EmptyState';
-import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
+import { HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
-import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
+import { PageHead } from '../../../src/ui/PageHead';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { Section } from '../../../src/ui/Section';
@@ -39,9 +46,6 @@ import styles from './home.module.css';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-/** Wide enough for «oggi» in every locale, centred on the pace tick (the phone's `FeaturedTarget`). */
-const TODAY_WIDTH = 64;
 
 interface Segment {
   key: string;
@@ -73,83 +77,51 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-interface FeaturedProps {
-  icon: IconName;
-  colorIndex: number;
-  name: string;
-  /** Short, beside the name: «52 € rimasti», «limite superato». */
-  meta: string;
-  /** What fills the bar: spent for a budget, saved for a goal. */
-  amount: number;
-  currency: CurrencyCode;
-  locale: AppLocale;
-  /** «di 420,00 € · 88%». */
-  of: string;
+/** Wide enough for «oggi» in every locale, centred on the pace tick. */
+const TODAY_WIDTH = 64;
+
+/** The bar of a target card and the three labels under it (§5.13), at 13px (D11). */
+function TargetBar({
+  ratio,
+  pace,
+  tone,
+  start,
+  end,
+  today,
+}: {
   ratio: number;
   pace: number | null;
   tone: 'normal' | 'over' | 'done';
   start: string;
   end: string;
   today: string;
-  sentence: ReactNode;
-  /**
-   * The figures as one sentence for a screen reader — the phone's `accessibilityLabel`. The drawn
-   * figures are hidden from it; the sentence under them is not, since it says what to do.
-   */
-  label: string;
-}
-
-/**
- * The one item a target card lifts into view (§5.13): the figure that fills the bar, the bar with
- * its pace, and a sentence that says what to do. The phone's `FeaturedTarget`, in DOM.
- */
-function Featured(props: FeaturedProps) {
-  const labels = endLabels(props.pace);
+}) {
+  const labels = endLabels(pace);
   return (
-    <div className={styles.featured}>
-      <VisuallyHidden>{props.label}</VisuallyHidden>
-      <div className={styles.featuredHead} aria-hidden="true">
-        <IconBox name={props.icon} colorIndex={props.colorIndex} />
-        <span className={styles.featuredName}>{props.name}</span>
-        <span className={styles.featuredMeta}>{props.meta}</span>
-      </div>
-      <div className={styles.featuredAmount} aria-hidden="true">
-        <AmountText
-          minor={props.amount}
-          currency={props.currency}
-          locale={props.locale}
-          size="large"
-        />
-      </div>
-      <span className={styles.featuredOf} aria-hidden="true">
-        {props.of}
-      </span>
-      <div className={styles.featuredBar} aria-hidden="true">
-        <ProgressBar thick ratio={props.ratio} pace={props.pace} tone={props.tone} />
-      </div>
-      <div className={styles.ends} aria-hidden="true">
-        {labels.start ? <span className={styles.endStart}>{props.start}</span> : null}
-        {labels.today && props.pace !== null ? (
+    <div aria-hidden="true">
+      <ProgressBar thick ratio={ratio} pace={pace} tone={tone} />
+      <div className={styles.ends}>
+        {labels.start ? <span className={styles.endStart}>{start}</span> : null}
+        {labels.today && pace !== null ? (
           <span
             className={styles.endToday}
             style={{
-              insetInlineStart: `${props.pace * 100}%`,
+              insetInlineStart: `${pace * 100}%`,
               inlineSize: `${TODAY_WIDTH}px`,
               marginInlineStart: `${-TODAY_WIDTH / 2}px`,
             }}
           >
-            {props.today}
+            {today}
           </span>
         ) : null}
-        {labels.end ? <span className={styles.endEnd}>{props.end}</span> : null}
+        {labels.end ? <span className={styles.endEnd}>{end}</span> : null}
       </div>
-      <p className={styles.sentence}>{props.sentence}</p>
     </div>
   );
 }
 
 /**
- * Home on the web (§17.1.7): the band across the width, then the 7/5 pair. Every figure comes from
+ * Home on the web (§17.1.7, G2): the head with the trend, then Transazioni, Budget and Obiettivi. Every figure comes from
  * `homeView`, which is the same `@saldo/core` the phone calls — nothing is computed here.
  */
 export default async function HomePage({
@@ -247,17 +219,6 @@ export default async function HomePage({
     t,
     locale,
   );
-  const featuredBudget = view.budgets.items.find(
-    (item) => item.budget.id === view.budgets.featuredId,
-  );
-  const budgetEvents = view.budgets.eventIds.flatMap((id) =>
-    view.budgets.items.filter((item) => item.budget.id === id),
-  );
-  const budgetRest = view.budgets.items.filter(
-    (item) =>
-      item.budget.id !== view.budgets.featuredId && !view.budgets.eventIds.includes(item.budget.id),
-  );
-
   // ---- Obiettivi (§5.14) ----------------------------------------------------------------------
   // The strings are `@saldo/i18n`'s and the tone and pace `@saldo/core`'s: the phone's
   // `useGoalText` calls the same functions, so the two cannot drift apart.
@@ -282,53 +243,98 @@ export default async function HomePage({
       </>
     );
   };
-  const goalRow = (item: GoalView) => (
-    <ListRow
-      key={item.account.id}
-      open
-      label={goalLabel(item, goalDeps)}
-      href={`/accounts?g=${item.account.id}`}
-      leading={
-        <TargetRing
-          size={ROW_RING}
-          ratio={item.progress.ratio}
-          pace={goalPace(item.progress)}
-          tone={goalWebTone(item)}
-          icon={item.account.icon as IconName}
-          colorIndex={item.account.colorIndex}
+  const goalStatusLine = goalCardStatusText(view.goals.items.length, view.goals.status, t, locale);
+  const budgetCard = (item: BudgetView) => {
+    const advice = view.budgets.adviceById[item.budget.id];
+    return (
+      <Card key={item.budget.id} href={`/profile/budgets?b=${item.budget.id}`}>
+        <VisuallyHidden>{budgets.label(item)}</VisuallyHidden>
+        <div aria-hidden="true">
+          <CardHead
+            leading={
+              <TargetRing
+                size={32}
+                ratio={item.ratio}
+                pace={budgets.pace(item)}
+                tone={budgets.tone(item)}
+                icon={item.budget.icon as IconName}
+                colorIndex={budgets.colour(item)}
+              />
+            }
+            name={item.budget.name}
+            meta={percent(item.ratio)}
+            attention={budgets.tone(item) === 'over'}
+          />
+        </div>
+        <div aria-hidden="true">
+          {/* D5: the figure is what is left; the line under it is what is spent of the limit. */}
+          <AmountText
+            minor={Math.max(0, item.limit - item.spent)}
+            currency={currency}
+            locale={locale}
+            size="large"
+          />
+          <CardNote>
+            {item.overLimit
+              ? t('targets.overLimitBy', { amount: money(item.spent - item.limit) })
+              : t('targets.leftDetail', { spent: money(item.spent), limit: money(item.limit) })}
+          </CardNote>
+        </div>
+        <TargetBar
+          ratio={item.ratio}
+          pace={budgets.pace(item)}
+          tone={budgets.tone(item)}
+          start={formatDayMonth(item.range.start, locale)}
+          end={formatDayMonth(item.range.end, locale)}
+          today={t('targets.today')}
         />
-      }
-      title={item.account.name}
-      subtitle={goalMeta(item, goalDeps)}
-      trailing={
-        <span className={styles.rowStatus}>
-          <span className={styles.rowPercent}>{percent(item.progress.ratio)}</span>
-          <span
-            className={`${styles.rowStatusMeta} ${
-              goalWebTone(item) === 'done' ? styles.rowDone : ''
-            }`}
-          >
-            {goalStatus(item, goalDeps)}
-          </span>
-        </span>
-      }
-    />
+        {advice === undefined ? null : <CardSentence>{budgetSentence(advice, item)}</CardSentence>}
+      </Card>
+    );
+  };
+
+  const goalCard = (item: GoalView) => (
+    <Card key={item.account.id} href={`/accounts?g=${item.account.id}`}>
+      <VisuallyHidden>{goalLabel(item, goalDeps)}</VisuallyHidden>
+      <div aria-hidden="true">
+        <CardHead
+          leading={
+            <TargetRing
+              size={32}
+              ratio={item.progress.ratio}
+              pace={goalPace(item.progress)}
+              tone={goalWebTone(item)}
+              icon={item.account.icon as IconName}
+              colorIndex={item.account.colorIndex}
+            />
+          }
+          name={item.account.name}
+          meta={percent(item.progress.ratio)}
+          attention={goalWebTone(item) === 'over'}
+        />
+      </div>
+      <div aria-hidden="true">
+        <AmountText minor={item.progress.saved} currency={currency} locale={locale} size="large" />
+        <CardNote>{goalOf(item, goalDeps)}</CardNote>
+      </div>
+      <TargetBar
+        ratio={item.progress.ratio}
+        pace={goalPace(item.progress)}
+        tone={goalWebTone(item)}
+        start={goalEnds(item, goalDeps).start}
+        end={goalEnds(item, goalDeps).end}
+        today={t('targets.today')}
+      />
+      <CardSentence>{goalSentenceNode(item)}</CardSentence>
+    </Card>
   );
 
-  const goalStatusLine = goalCardStatusText(view.goals.items.length, view.goals.status, t, locale);
-  const featuredGoal = view.goals.items.find((item) => item.account.id === view.goals.featuredId);
-  const goalEvents = view.goals.eventIds.flatMap((id) =>
-    view.goals.items.filter((item) => item.account.id === id),
-  );
-  const goalRest = view.goals.items.filter(
-    (item) =>
-      item.account.id !== view.goals.featuredId && !view.goals.eventIds.includes(item.account.id),
-  );
+  const delta = view.trend.delta;
 
   return (
     <div className={styles.page}>
-      <HeroBand
-        period={
+      <PageHead
+        title={
           <PeriodHeader
             period={period}
             def={def}
@@ -374,155 +380,114 @@ export default async function HomePage({
             </HeroFigure>
           </>
         }
-        bar={
-          <ProgressBar
-            ratio={view.summary.ratio}
-            pace={period.isCurrent ? view.summary.pace : null}
-            tone={view.summary.overPace ? 'over' : 'normal'}
-          />
-        }
-        legend={
-          <>
-            <span>
-              {t('home.spentOfIncome', { percent: percent(Math.min(1, view.summary.ratio)) })}
-            </span>
-            {period.isCurrent ? (
-              <span>{t('home.todayOfPeriod', { percent: percent(view.summary.pace) })}</span>
-            ) : null}
-          </>
+        aside={
+          <ChartFrame
+            title={t('stats.cycleTrend')}
+            value={
+              <AmountText
+                minor={view.summary.spent}
+                currency={currency}
+                locale={locale}
+                size="footnote"
+              />
+            }
+            foot={
+              <>
+                <span>{t('home.dayOf', { elapsed: period.elapsed, length: period.length })}</span>
+                {delta === null ? null : (
+                  <span className={styles.vsUsual}>
+                    {t(delta >= 0 ? 'home.vsUsualAbove' : 'home.vsUsualBelow', {
+                      amount: money(Math.abs(delta)),
+                    })}
+                  </span>
+                )}
+              </>
+            }
+          >
+            <TrendChart current={view.trend.current} usual={view.trend.usual} height={96} />
+          </ChartFrame>
         }
       />
 
-      <Columns
-        lead={
-          <>
-            {/* The phone hides «In arrivo» at zero, and counts them all past the five shown. */}
-            {view.upcoming.count === 0 ? null : (
-              <Section
-                open
-                title={t('home.upcoming')}
-                trailing={plural(t, locale, 'home.upcomingCount', view.upcoming.count)}
-              >
-                {view.upcoming.rows.map((row) => txRow(row, true))}
-              </Section>
+      <Section
+        open
+        title={t('tabs.transactions')}
+        trailing={
+          view.upcoming.count === 0
+            ? undefined
+            : plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
+                amount: money(view.upcoming.total),
+              })
+        }
+        more={
+          <Link className={styles.more} href="/transactions">
+            <span>{t('home.allTransactions')}</span>
+            <Icon name="chevR" size={16} />
+          </Link>
+        }
+      >
+        <div className={styles.txCols}>
+          <div>
+            <span className={styles.groupLabel}>{t('home.latest')}</span>
+            {view.recent.length === 0 ? (
+              <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
+            ) : (
+              view.recent.map((row) => txRow(row, false))
             )}
+          </div>
+          {view.upcoming.count === 0 ? null : (
+            <div>
+              <span className={styles.groupLabel}>
+                {t('home.upcomingUntil', { date: formatDayMonth(period.range.end, locale) })}
+              </span>
+              {view.upcoming.rows.map((row) => txRow(row, true))}
+            </div>
+          )}
+        </div>
+      </Section>
 
-            <Section
-              open
-              title={t('home.recent')}
-              more={
-                <Link className={styles.more} href="/transactions">
-                  <span>{t('home.allTransactions')}</span>
-                  <Icon name="chevR" size={16} />
-                </Link>
-              }
-            >
-              {view.recent.length === 0 ? (
-                <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
-              ) : (
-                view.recent.map((row) => txRow(row, false))
-              )}
-            </Section>
-          </>
-        }
-        trail={
-          <>
-            <Section
-              open
-              title={t('home.budget')}
-              trailing={budgetStatusLine}
-              attention={
-                view.budgets.items.length > 0 && view.budgets.status.kind !== 'withinLimits'
-              }
-              more={
-                view.budgets.items.length === 0 ? undefined : (
-                  <Link className={styles.more} href="/profile/budgets">
-                    <span>{t('web.budgets.allBudgets')}</span>
-                    <Icon name="chevR" size={16} />
-                  </Link>
-                )
-              }
-            >
-              {view.budgets.items.length === 0 ? (
-                // The header already says «Nessun budget», as on the phone: the body says what one is.
-                <>
-                  <p className={styles.emptyNote}>{t('budgets.emptyBody')}</p>
-                  <ListRow
-                    open
-                    href="/profile/budgets?new"
-                    icon="plus"
-                    title={t('targets.createBudget')}
-                  />
-                </>
-              ) : (
-                <>
-                  {featuredBudget === undefined || view.budgets.advice === null ? null : (
-                    <Featured
-                      icon={featuredBudget.budget.icon as IconName}
-                      colorIndex={budgets.colour(featuredBudget)}
-                      name={featuredBudget.budget.name}
-                      meta={budgets.meta(featuredBudget)}
-                      amount={featuredBudget.spent}
-                      currency={currency}
-                      locale={locale}
-                      of={t('targets.ofLimit', {
-                        amount: money(featuredBudget.limit),
-                        percent: percent(featuredBudget.ratio),
-                      })}
-                      ratio={featuredBudget.ratio}
-                      pace={budgets.pace(featuredBudget)}
-                      tone={budgets.tone(featuredBudget)}
-                      start={formatDayMonth(featuredBudget.range.start, locale)}
-                      end={formatDayMonth(featuredBudget.range.end, locale)}
-                      today={t('targets.today')}
-                      sentence={budgetSentence(view.budgets.advice, featuredBudget)}
-                      label={budgets.label(featuredBudget)}
-                    />
-                  )}
-                  {budgetEvents.map(budgets.row)}
-                  {budgetRest.map(budgets.row)}
-                </>
-              )}
-            </Section>
+      <Section
+        open
+        title={t('home.budget')}
+        trailing={budgetStatusLine}
+        attention={view.budgets.items.length > 0 && view.budgets.status.kind !== 'withinLimits'}
+      >
+        <CardGrid>
+          {view.budgets.items.map(budgetCard)}
+          {/* D6: the last card, and the way to a new budget. */}
+          <Card ghost href="/profile/budgets?new">
+            <CardLabel>{t('home.unbudgeted')}</CardLabel>
+            <AmountText
+              minor={view.budgets.unbudgeted}
+              currency={currency}
+              locale={locale}
+              size="headline"
+            />
+            <CardLabel>
+              {view.budgets.items.length === 0 ? t('budgets.emptyBody') : t('home.unbudgetedNote')}
+            </CardLabel>
+            <CardAction>{t('targets.createBudget')}</CardAction>
+          </Card>
+        </CardGrid>
+      </Section>
 
-            <Section open title={t('goals.title')} trailing={goalStatusLine}>
-              {view.goals.items.length === 0 ? (
-                <>
-                  <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
-                  {pocketParentCandidates(page.data.accounts).length === 0 ? null : (
-                    <ListRow open href={NEW_GOAL_HREF} icon="plus" title={t('goals.create')} />
-                  )}
-                </>
-              ) : (
-                <>
-                  {featuredGoal === undefined ? null : (
-                    <Featured
-                      icon={featuredGoal.account.icon as IconName}
-                      colorIndex={featuredGoal.account.colorIndex}
-                      name={featuredGoal.account.name}
-                      meta={goalMeta(featuredGoal, goalDeps, true)}
-                      amount={featuredGoal.progress.saved}
-                      currency={currency}
-                      locale={locale}
-                      of={goalOf(featuredGoal, goalDeps)}
-                      ratio={featuredGoal.progress.ratio}
-                      pace={goalPace(featuredGoal.progress)}
-                      tone={goalWebTone(featuredGoal)}
-                      start={goalEnds(featuredGoal, goalDeps).start}
-                      end={goalEnds(featuredGoal, goalDeps).end}
-                      today={t('targets.today')}
-                      sentence={goalSentenceNode(featuredGoal)}
-                      label={goalLabel(featuredGoal, goalDeps)}
-                    />
-                  )}
-                  {goalEvents.map(goalRow)}
-                  {goalRest.map(goalRow)}
-                </>
-              )}
-            </Section>
-          </>
-        }
-      />
+      <Section open title={t('goals.title')} trailing={goalStatusLine}>
+        <CardGrid>
+          {view.goals.items.map(goalCard)}
+          {view.goals.items.length > 0 ||
+          pocketParentCandidates(page.data.accounts).length === 0 ? null : (
+            <Card ghost href={NEW_GOAL_HREF}>
+              <CardLabel>{goalStatusLine}</CardLabel>
+              <p className={styles.ghostBody}>{t('goals.emptyBody')}</p>
+              <CardAction>{t('goals.create')}</CardAction>
+            </Card>
+          )}
+        </CardGrid>
+        {view.goals.items.length === 0 &&
+        pocketParentCandidates(page.data.accounts).length === 0 ? (
+          <p className={styles.emptyNote}>{t('goals.emptyBody')}</p>
+        ) : null}
+      </Section>
     </div>
   );
 }
