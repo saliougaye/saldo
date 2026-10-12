@@ -24,6 +24,10 @@ export type CloseFrom = 'key' | 'pointer';
 const FOCUSABLE =
   'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
+/** Another overlay on top of the panel (confirm dialog, portalled menu or list): it owns the Tab key. */
+const OTHER_OVERLAY =
+  '[role="alertdialog"], [role="dialog"]:not([data-panel]), [role="listbox"], [role="menu"]';
+
 interface Props {
   title: string;
   /** Where the ✕ goes, and where Esc goes: the same page without the selection. */
@@ -137,7 +141,8 @@ export function Panel({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const root = dialog.current;
-      if (event.key !== 'Tab' || root === null) return;
+      if (event.key !== 'Tab' || event.defaultPrevented || root === null) return;
+      if (document.activeElement?.closest(OTHER_OVERLAY)) return;
       const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
         (element) => !element.hasAttribute('disabled') && element.getClientRects().length > 0,
       );
