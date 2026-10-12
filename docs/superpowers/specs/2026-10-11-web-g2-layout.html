@@ -519,7 +519,7 @@ figure { padding: 22px; }
         <tbody>
           <tr><td>The panel opens</td><td>The focus goes to the heading of the panel. If a form inside already took the focus (its first field), the form keeps it.</td></tr>
           <tr><td>The panel is open</td><td><span class="keys">Tab</span> and <span class="keys">Shift+Tab</span> stay inside the dialog. From outside, they go to the first or the last control.</td></tr>
-          <tr><td>The panel closes</td><td>The panel unmounts. It does not move the focus back to the row. The focus returns to the page. This is a known gap.</td></tr>
+          <tr><td>The panel closes</td><td>The panel unmounts. The focus goes back to the element that had it before the panel opened, for example the row. If the person moved the focus elsewhere meanwhile, it stays there.</td></tr>
         </tbody>
       </table>
     </div>
