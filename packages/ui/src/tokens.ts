@@ -270,6 +270,8 @@ export const layout = {
   topbarHeight: 64,
   /** Web: the widest a page's content grows, and its inline margin. */
   contentWide: 1120,
+  /** Web: the widest a page's content grows beside the sidebar, so a large screen has no empty band on the right. */
+  contentWideSidebar: 1600,
   pagePaddingWeb: 48,
   /** Web: a top-bar or sub-navigation item. */
   navItemHeight: 36,
