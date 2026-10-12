@@ -1952,7 +1952,7 @@ git commit -m "feat(web): Home's trend and its distance from the usual"
 **Files:**
 - Modify: `apps/web/src/features/home/homeView.ts`
 
-- [ ] **Step 1: Extend the view**
+- [x] **Step 1: Extend the view**
 
 In `homeView.ts`:
 
@@ -1998,12 +1998,12 @@ In `homeView.ts`:
     },
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `rtk proxy pnpm --filter web test homeView`
 Expected: PASS (the existing test does not read the new fields).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/features/home/homeView.ts

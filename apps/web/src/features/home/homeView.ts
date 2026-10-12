@@ -21,6 +21,7 @@ import {
   type PeriodView,
   rankBudget,
   rankGoal,
+  spendingByCategory,
   summarizePeriod,
   type Transaction,
   type TransactionKind,
@@ -28,8 +29,10 @@ import {
   type TransactionRowDeps,
   transactionRow,
   type UserData,
+  unbudgetedSpend,
 } from '@saldo/core';
 import { budgetsView } from '../budgets/budgetsView';
+import { type HomeTrend, homeTrend } from './trend';
 
 /** How many rows «In arrivo» and «Ultime transazioni» show before «Vedi tutte» (§6.2). */
 export const HOME_ROWS = 5;
@@ -56,6 +59,8 @@ export interface HomeUpcoming {
   rows: HomeRow[];
   /** Every row «In arrivo», not the five shown. */
   count: number;
+  /** What every upcoming row adds up to, not only the five shown: Transazioni's trailing (D4). */
+  total: number;
 }
 
 export interface HomeBudgets {
@@ -65,6 +70,10 @@ export interface HomeBudgets {
   eventIds: string[];
   status: BudgetCardStatus;
   advice: BudgetAdvice | null;
+  /** Each budget's own sentence (D4: every budget is a card now), by budget id. */
+  adviceById: Record<string, BudgetAdvice>;
+  /** D6: the spend of the period in categories no budget covers. */
+  unbudgeted: number;
 }
 
 export interface HomeGoals {
@@ -84,6 +93,7 @@ export interface HomeView {
   recent: HomeRow[];
   budgets: HomeBudgets;
   goals: HomeGoals;
+  trend: HomeTrend;
 }
 
 export interface HomeViewInput {
@@ -156,9 +166,26 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
   // Same `null`, same reason as the budgets above.
   const featuredGoalId = featuredTarget(goalInputs.map(rankGoal), null);
 
+  // As for the featured budget below: the budget's own range decides whether it is open, and
+  // `daysLeft` excludes today while the advice spends today too.
+  const adviceById: Record<string, BudgetAdvice> = {};
+  for (const view of budgetItems) {
+    adviceById[view.budget.id] = budgetAdvice(view, view.pace, view.open, view.daysLeft + 1);
+  }
+  const unbudgeted = unbudgetedSpend(
+    budgetItems.map((view) => view.budget),
+    spendingByCategory(txs, period.range, today),
+    data.categories,
+  );
+
   return {
     summary,
-    upcoming: { rows: upcomingAll.slice(0, HOME_ROWS).map(row), count: upcomingAll.length },
+    trend: homeTrend(txs, def, period, today),
+    upcoming: {
+      rows: upcomingAll.slice(0, HOME_ROWS).map(row),
+      count: upcomingAll.length,
+      total: upcomingAll.reduce((sum, tx) => sum + tx.amount, 0),
+    },
     recent,
     budgets: {
       items: budgetItems,
@@ -176,6 +203,8 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
               featuredBudget.open,
               featuredBudget.daysLeft + 1,
             ),
+      adviceById,
+      unbudgeted,
     },
     goals: {
       items: goalItems,
