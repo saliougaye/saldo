@@ -21,7 +21,7 @@
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: var(--layout-subnav-width) minmax(0, 1fr) auto;
+    grid-template-columns: var(--layout-subnav-width) minmax(0, 1fr);
     column-gap: 48px;
     align-items: start;
   }
@@ -55,6 +55,11 @@
  * so the server renders the panel in place of a portal.
  */
 .section:has(> [data-panel-switch]) {
+  display: contents;
+}
+
+/* D3: a panel in the slot is fixed over the page, so the slot takes no column at any width. */
+.slot {
   display: contents;
 }
 

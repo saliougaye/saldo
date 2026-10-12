@@ -172,14 +172,9 @@ export function TransactionsPanels(props: Props) {
   }
 
   const formOpen = creating || editing !== null;
-  const open = (creating && newPanel !== null) || content !== null;
   return (
     <PanelNavContext value={nav}>
-      <div
-        className={styles.layout}
-        data-panel={open && !view.closing ? '' : undefined}
-        data-instant={view.instant ? '' : undefined}
-      >
+      <div className={styles.layout}>
         <div className={styles.list}>{props.children}</div>
         <div className={styles.side} ref={side}>
           {newPanel}

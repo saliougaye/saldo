@@ -762,7 +762,7 @@ git commit -m "feat(web): the sidebar replaces the top bar on wide screens"
 **Files:**
 - Modify: `apps/web/src/ui/Panel.tsx`, `apps/web/src/ui/Panel.module.css`
 
-- [ ] **Step 1: Change the element, the scrim and the focus**
+- [x] **Step 1: Change the element, the scrim and the focus**
 
 In `apps/web/src/ui/Panel.tsx`:
 
@@ -833,7 +833,7 @@ and `</div>`.
 
 7. Update the doc comment of `Panel`: replace `420px beside the list on a wide screen, the whole screen on a narrow one` with `a 420px dialog over the page, with a scrim, on a wide screen (D3, 2026-10-11); the whole screen, or a bottom sheet for a form, on a narrow one`.
 
-- [ ] **Step 2: Replace the CSS**
+- [x] **Step 2: Replace the CSS**
 
 Replace the whole `apps/web/src/ui/Panel.module.css` with:
 
@@ -1071,17 +1071,17 @@ Replace the whole `apps/web/src/ui/Panel.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Find other code that looks for the `aside`**
+- [x] **Step 3: Find other code that looks for the `aside`**
 
 Run: `grep -rn "'aside'\|\"aside\"\|> aside\|aside\[" apps/web/src apps/web/app`
 For each match, use `[role="dialog"]` instead of `aside`. Known match: `transactions.module.css` has `.side > aside`. Task 8 deletes that rule.
 
-- [ ] **Step 4: Run the unit tests**
+- [x] **Step 4: Run the unit tests**
 
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS. If `panelView.test.ts` or `panelUrl.test.ts` fails, read the failure: they do not read the element type, so a failure is a real regression.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/ui/Panel.tsx apps/web/src/ui/Panel.module.css
@@ -1093,7 +1093,7 @@ git commit -m "feat(web): the panel is a dialog over the page with a scrim"
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`, `apps/web/app/(app)/transactions/TransactionsPanels.tsx`, `apps/web/app/(app)/accounts/accounts.module.css`, `apps/web/src/ui/PanelSwitch.module.css`, `apps/web/src/ui/SubnavLayout.module.css`, `apps/web/app/(app)/stats/stats.module.css`
 
-- [ ] **Step 1: Transazioni**
+- [x] **Step 1: Transazioni**
 
 In `transactions.module.css`:
 
@@ -1113,7 +1113,7 @@ In `transactions.module.css`:
 
 In `TransactionsPanels.tsx`, delete the attributes `data-panel=…` and `data-instant=…` from `<div className={styles.layout}>`. Then delete the now unused `const open = …` line if nothing else reads it.
 
-- [ ] **Step 2: Conti**
+- [x] **Step 2: Conti**
 
 In `accounts.module.css`, delete the `@media (min-width: 1024px)` block that sets `grid-template-columns: minmax(0, 1fr) auto`. Change `.layout` to:
 
@@ -1126,7 +1126,7 @@ In `accounts.module.css`, delete the `@media (min-width: 1024px)` block that set
 }
 ```
 
-- [ ] **Step 3: `PanelSwitch` and `SubnavLayout`**
+- [x] **Step 3: `PanelSwitch` and `SubnavLayout`**
 
 In `PanelSwitch.module.css`, delete the whole `@media (min-width: 1024px)` block. Change the comment of `.side` to `The panel's wrapper: the panel is fixed over the page at every width (D3), so it takes no place.`
 
@@ -1139,16 +1139,16 @@ In `SubnavLayout.module.css`, inside the `@media (min-width: 1024px)` block, cha
 }
 ```
 
-- [ ] **Step 4: The sticky offset of Statistiche**
+- [x] **Step 4: The sticky offset of Statistiche**
 
 In `stats.module.css`, in the last media block, change `top: calc(var(--layout-topbar-height) + 24px);` to `top: 24px;`. The wide screen has no top bar now (D1).
 
-- [ ] **Step 5: Run the gates and look**
+- [x] **Step 5: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Then open `/transactions`, click a row, and press Esc. Do the same on `/accounts` and `/profile/tags` at 1440×900. Expected: the dialog enters from the right over a scrim; the list does not move; Esc closes it with no motion; a click on the scrim closes it with the exit; Tab stays inside the dialog.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/transactions" "apps/web/app/(app)/accounts/accounts.module.css" apps/web/src/ui/PanelSwitch.module.css apps/web/src/ui/SubnavLayout.module.css "apps/web/app/(app)/stats/stats.module.css"

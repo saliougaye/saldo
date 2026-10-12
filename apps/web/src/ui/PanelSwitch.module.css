@@ -4,22 +4,9 @@
 }
 
 /*
- * The panel's column. With no panel it takes no column and no gap (`.slot:empty`). Below the
- * breakpoint the panel is fixed over the screen, so its wrapper takes no row of the grid.
+ * The panel's wrapper: the panel is fixed over the page at every width (D3), so it takes no place.
  */
 .side {
   composes: slot from "./SubnavLayout.module.css";
   display: contents;
-}
-
-/*
- * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The column spans
- * the list's height, so the panel stays sticky beside a long list, as on Transazioni.
- */
-@media (min-width: 1024px) {
-  .side {
-    display: block;
-    align-self: stretch;
-    min-width: 0;
-  }
 }
