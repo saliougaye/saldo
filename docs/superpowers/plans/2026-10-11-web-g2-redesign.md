@@ -1825,7 +1825,7 @@ git commit -m "feat(core): the spend that no budget covers"
 
 The Home chart draws «il solito» across the **whole** period, and the current line up to today. «+136,00 € rispetto al solito» compares the two on the same day. Statistiche keeps its own chart as it is.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `apps/web/src/features/home/trend.test.ts`:
 
@@ -1875,12 +1875,12 @@ describe('homeTrend', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test trend`
 Expected: FAIL, the module does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `apps/web/src/features/home/trend.ts`:
 
@@ -1935,12 +1935,12 @@ export function homeTrend(
 
 If `LedgerTx` is not exported from `@saldo/core`, use `Transaction` (it is what `statsView` passes).
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter web test trend`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/home/trend.ts apps/web/src/features/home/trend.test.ts
