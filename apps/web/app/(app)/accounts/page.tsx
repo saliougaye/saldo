@@ -37,14 +37,18 @@ import { accountMessages } from '../../../src/i18n/accountMessages';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
+import { Card, CardGrid, CardHead, CardLabel, CardNote, CardSentence } from '../../../src/ui/Card';
+import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { EmptyState } from '../../../src/ui/EmptyState';
-import { HeroBand, HeroFigure } from '../../../src/ui/HeroBand';
+import { HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
+import { PageHead } from '../../../src/ui/PageHead';
 import { PanelLink } from '../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
+import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
 import { AccountForm } from './AccountForm';
@@ -62,9 +66,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PATH = '/accounts';
-
-/** The ring beside a pocket row: the same 28px Home draws beside a goal or a budget. */
-const ROW_RING = 28;
 
 /** The ring on the goal panel: bigger, because there is nothing else in it to look at. */
 const GOAL_RING = 72;
@@ -165,59 +166,89 @@ export default async function AccountsPage({
   const archivedTotal = view.archivedCount + archived.goals.length;
   const writeErrors = accountWriteErrors(catalogs[locale].web.accounts);
 
-  const accountRow = (row: AccountRowView) => (
-    <ListRow
-      key={row.account.id}
-      open
-      href={`${PATH}?a=${row.account.id}`}
-      selectId={`a:${row.account.id}`}
-      icon={row.account.icon as IconName}
-      colorIndex={row.account.colorIndex}
-      title={row.account.name}
-      subtitle={row.account.institution ?? t(`accountTypes.${row.account.type}`)}
-      trailing={<AmountText minor={row.balance} currency={currency} locale={locale} />}
-    />
-  );
+  const accountCard = (row: AccountRowView) => {
+    const detail = detailOf(row.account.id);
+    const due = detail?.due ?? null;
+    const owes = due !== null && due > 0;
+    const change = detail === null ? 0 : detail.period.income - detail.period.spent;
+    return (
+      <Card
+        key={row.account.id}
+        href={`${PATH}?a=${row.account.id}`}
+        selectId={`a:${row.account.id}`}
+      >
+        <CardHead
+          leading={
+            <IconBox name={row.account.icon as IconName} colorIndex={row.account.colorIndex} />
+          }
+          name={row.account.name}
+        />
+        <div>
+          {owes ? <CardLabel>{t('accounts.toRepay')}</CardLabel> : null}
+          <AmountText
+            minor={owes ? due : row.balance}
+            currency={currency}
+            locale={locale}
+            size="large"
+          />
+          <CardNote>
+            {[
+              row.account.institution ?? t(`accountTypes.${row.account.type}`),
+              t('accounts.periodDelta', {
+                amount: formatMoney(change, currency, locale, 'always'),
+              }),
+              row.pockets.length === 0 ? null : `${money(row.free)} ${t('goals.free')}`,
+            ]
+              .filter((part) => part !== null)
+              .join(' · ')}
+          </CardNote>
+        </div>
+        {detail === null ? null : <Sparkline series={detail.series} height={40} />}
+      </Card>
+    );
+  };
 
-  const pocketRow = (pocket: AccountRowView['pockets'][number]) => (
-    <div key={pocket.account.id} className={styles.pocketRow}>
-      <ListRow
-        open
+  const goalCard = (pocket: AccountRowView['pockets'][number]) => {
+    const detail = detailOf(pocket.account.id);
+    const goal = detail?.goal ?? null;
+    if (goal === null) return null;
+    const subject: GoalTextSubject = { account: pocket.account, progress: goal };
+    const { action } = goalSentence(subject, goalDeps);
+    return (
+      <Card
+        key={pocket.account.id}
         href={`${PATH}?g=${pocket.account.id}`}
         selectId={`g:${pocket.account.id}`}
-        leading={
-          <TargetRing
-            size={ROW_RING}
-            ratio={pocket.ratio}
-            pace={null}
-            tone={pocket.ratio >= 1 ? 'done' : 'normal'}
-            icon={pocket.account.icon as IconName}
-            colorIndex={pocket.account.colorIndex}
-          />
-        }
-        title={pocket.account.name}
-        trailing={<AmountText minor={pocket.saved} currency={currency} locale={locale} />}
-      />
-    </div>
-  );
-
-  const group = (row: AccountRowView) => (
-    <Fragment key={row.account.id}>
-      {accountRow(row)}
-      {row.pockets.length === 0 ? null : (
-        <>
-          {row.pockets.map(pocketRow)}
-          <div className={styles.pocketRow}>
-            <ListRow
-              open
-              title={t('goals.free')}
-              trailing={<AmountText minor={row.free} currency={currency} locale={locale} muted />}
+      >
+        <CardHead
+          leading={
+            <TargetRing
+              size={32}
+              ratio={goal.ratio}
+              pace={goalPace(goal)}
+              tone={goalRingTone(goal)}
+              icon={pocket.account.icon as IconName}
+              colorIndex={pocket.account.colorIndex}
             />
-          </div>
-        </>
-      )}
-    </Fragment>
-  );
+          }
+          name={pocket.account.name}
+          meta={t('targets.percent', { value: Math.round(goal.ratio * 100) })}
+          attention={goalRingTone(goal) === 'over'}
+        />
+        <div>
+          <AmountText minor={goal.saved} currency={currency} locale={locale} size="large" />
+          <CardNote>{goalOf(subject, goalDeps)}</CardNote>
+        </div>
+        <ProgressBar thick ratio={goal.ratio} pace={goalPace(goal)} tone={goalRingTone(goal)} />
+        <CardSentence>
+          <Rich text={richText(action, t, locale)} />
+        </CardSentence>
+      </Card>
+    );
+  };
+
+  const cards = (rows: AccountRowView[]) =>
+    rows.flatMap((row) => [accountCard(row), ...row.pockets.map(goalCard)]);
 
   const empty = view.spending.length === 0 && view.savings.length === 0;
 
@@ -548,6 +579,14 @@ export default async function AccountsPage({
   if (params.g !== undefined && params.g !== '') goalIds.add(params.g);
   const detailOf = (id: string) => accountDetail({ data: page.data, id, today, def });
 
+  // The head's sparkline: every live account's month-end balances, added up month by month.
+  // `netWorth` sums every non-archived account, pockets included (each holds its own balance),
+  // so the series does the same.
+  const live = page.data.accounts.filter((account) => account.archivedAt === null);
+  const netWorthSeries = live
+    .map((account) => detailOf(account.id)?.series ?? [])
+    .reduce<number[]>((sum, series) => series.map((value, index) => value + (sum[index] ?? 0)), []);
+
   // `?a={id}&edit` opens «Modifica conto» under the key `a:{id}` when that key is the one the URL
   // opens. The form needs the account's own balance, so only that account gets one, and a link to
   // it navigates. ✕ and «Annulla» go back to the detail, `?a={id}`: a navigation too.
@@ -617,8 +656,8 @@ export default async function AccountsPage({
             closeLabel={t('common.close')}
           >
             <div className={styles.list}>
-              <HeroBand
-                period={
+              <PageHead
+                title={
                   <div className={styles.titleRow}>
                     <h1 className={styles.title}>{t('accounts.title')}</h1>
                     <PanelLink className={styles.newAccount} href={`${PATH}?new`}>
@@ -647,6 +686,23 @@ export default async function AccountsPage({
                     />
                   </Figure>
                 }
+                aside={
+                  netWorthSeries.length < 2 ? undefined : (
+                    <ChartFrame
+                      title={plural(t, locale, 'accounts.netWorthTrend', netWorthSeries.length)}
+                      value={
+                        <AmountText
+                          minor={view.netWorth}
+                          currency={currency}
+                          locale={locale}
+                          size="footnote"
+                        />
+                      }
+                    >
+                      <Sparkline series={netWorthSeries} height={96} />
+                    </ChartFrame>
+                  )
+                }
               />
 
               {empty ? (
@@ -658,18 +714,21 @@ export default async function AccountsPage({
                     title={t('accounts.spending')}
                     trailing={plural(t, locale, 'accounts.count', view.spending.length)}
                   >
-                    {view.spending.map(group)}
+                    <CardGrid>{cards(view.spending)}</CardGrid>
                   </Section>
-
-                  {view.savings.length === 0 ? null : (
-                    <Section
-                      open
-                      title={t('accounts.savings')}
-                      trailing={t('accounts.outsideSpendable')}
-                    >
-                      {view.savings.map(group)}
-                    </Section>
-                  )}
+                  <Section
+                    open
+                    title={t('accounts.savings')}
+                    trailing={t('accounts.outsideSpendable')}
+                  >
+                    <CardGrid>
+                      {cards(view.savings)}
+                      <Card ghost href={`${PATH}?new`} selectId="new">
+                        <CardLabel>{t('accounts.newAccount')}</CardLabel>
+                        <p className={styles.note}>{t('accounts.newAccountBody')}</p>
+                      </Card>
+                    </CardGrid>
+                  </Section>
                 </>
               )}
 

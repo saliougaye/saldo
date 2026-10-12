@@ -113,7 +113,7 @@ test('a credit card shows what it owes, its next charge and the statement once i
   const closeDay = todayOfMonth === 10 ? 11 : 10;
 
   await page.goto('/accounts');
-  await page.getByRole('link', { name: t('accounts.newAccount') }).click();
+  await page.getByRole('link', { name: t('accounts.newAccount'), exact: true }).click();
   const form = page.getByRole('dialog', { name: t('accounts.newAccount') });
 
   // The name is required.
@@ -229,7 +229,7 @@ test('a goal goes from creation through a top up to its close, and a closed goal
   await expect(listRow(page, goal)).toContainText(money(15000));
   await expect(listRow(page, MAIN)).toContainText(money(100000));
   await expect(page.getByRole('main')).toContainText(
-    new RegExp(`${escapeRegExp(t('goals.free'))}\\s*${escapeRegExp(money(85000))}`),
+    new RegExp(`${escapeRegExp(money(85000))}\\s*${escapeRegExp(t('goals.free'))}`),
   );
   await listRow(page, goal).click();
   const funded = page.getByRole('dialog', { name: goal });

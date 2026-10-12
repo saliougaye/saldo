@@ -2899,7 +2899,7 @@ git commit -m "feat(web): Statistiche with Home's head and category cards that o
 **Files:**
 - Modify: `apps/web/app/(app)/accounts/page.tsx`, `apps/web/app/(app)/accounts/accounts.module.css`, `apps/web/src/ui/HeroBand.tsx`, `apps/web/src/ui/HeroBand.module.css`
 
-- [ ] **Step 1: The net worth series**
+- [x] **Step 1: The net worth series**
 
 In `page.tsx`, after `const detailOf = …`, add:
 
@@ -2917,7 +2917,7 @@ In `page.tsx`, after `const detailOf = …`, add:
 
 Check the claim of the comment before you rely on it. Run `grep -n "netWorth" apps/web/src/features/accounts/accountsView.ts`. If `netWorth` leaves pockets out, leave them out here too (`filter((account) => account.parentAccountId == null)`). Then check that the last point of `netWorthSeries` equals `view.netWorth` for the e2e seed (Step 6).
 
-- [ ] **Step 2: The cards**
+- [x] **Step 2: The cards**
 
 Add the imports of `Card`, `CardGrid`, `CardHead`, `CardLabel`, `CardNote`, `CardSentence`, `PageHead`, `ChartFrame` and `ProgressBar`. Replace `accountRow`, `pocketRow` and `group` with:
 
@@ -2992,7 +2992,7 @@ Add the imports of `Card`, `CardGrid`, `CardHead`, `CardLabel`, `CardNote`, `Car
 
 Check `formatMoney`'s fourth argument: `grep -n "export function formatMoney" -A6 packages/i18n/src/*.ts`. The stats page calls `formatMoney(column.net, currency, locale, 'always')`, so the sign display is the fourth argument.
 
-- [ ] **Step 3: The returned list**
+- [x] **Step 3: The returned list**
 
 Inside `<PanelSwitch …>`, replace the whole `<div className={styles.list}>…</div>` with:
 
@@ -3059,25 +3059,25 @@ Inside `<PanelSwitch …>`, replace the whole `<div className={styles.list}>…<
 
 Move the existing `archivedTotal === 0 ? … : …` block into the place the last comment marks, and delete the comment. The «Risparmi» section now shows even with no savings account, because the «Nuovo conto» card lives there. If the review prefers it under «Da spendere» in that case, move the ghost card there when `view.savings.length === 0`.
 
-- [ ] **Step 4: Delete `HeroBand`**
+- [x] **Step 4: Delete `HeroBand`**
 
 Run: `grep -rn "HeroBand\b" apps/web/app apps/web/src | grep -v "HeroFigure"`. Expected after Steps 2–3: only `HeroBand.tsx` itself. Delete the `HeroBand` function, its doc comment and the CSS rules only it used (`.band`, `.hero`, `.stats`, `.legend` and the `@media` block). Keep `HeroFigure`, `.figure` and `.label`. Change `.label`'s colour to `--color-text-muted` (AA at 13px).
 
-- [ ] **Step 5: The CSS**
+- [x] **Step 5: The CSS**
 
 In `accounts.module.css`, delete `.pocketRow`. Change `.titleRow`'s `justify-content` to `flex-start`. Change `.note`'s colour to `--color-text-muted`. Give `.newAccount` the press: `transition: scale var(--motion-press) var(--motion-easing);` and `.newAccount:active { scale: 0.96; }`.
 
-- [ ] **Step 6: Run the gates and look**
+- [x] **Step 6: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Open `/accounts` at 1440×900. Compare with `?variant=K&page=conti&open=1`. Click an account card, then a goal card, then «Nuovo conto»: each opens its dialog; the grid does not move.
 
-- [ ] **Step 7: Run the Conti end-to-end tests**
+- [x] **Step 7: Run the Conti end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e accounts-goals`
 Expected: PASS after you change the row locators to card links (`getByRole('link', { name: … })`). The card's accessible name is all of its text. Use a regular expression that starts with the account name: `{ name: new RegExp(`^${name}`) }`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add "apps/web/app/(app)/accounts" apps/web/src/ui/HeroBand.tsx apps/web/src/ui/HeroBand.module.css apps/web/e2e/accounts-goals.spec.ts
