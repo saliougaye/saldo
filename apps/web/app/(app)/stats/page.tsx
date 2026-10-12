@@ -372,7 +372,7 @@ export default async function StatsPage({
 
   // Every category's panel, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {};
-  for (const { row, colour } of ranked) {
+  for (const { row } of ranked) {
     const rows = listView({
       data: page.data,
       filters: filtersFromSearch({ category: row.categoryId, direction }),
@@ -440,7 +440,6 @@ export default async function StatsPage({
               ))
             )}
           </Section>
-          <span className={styles.dot} style={{ background: colour }} aria-hidden="true" />
         </>
       ),
     };

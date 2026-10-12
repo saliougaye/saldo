@@ -72,15 +72,6 @@
   padding-bottom: 4px;
 }
 
-/* The category's colour in Ripartizione's bar, repeated beside its row so the two can be read
-   together — the bar has five colours and the list has every category. */
-.dot {
-  inline-size: 8px;
-  block-size: 8px;
-  border-radius: var(--radius-pill);
-  flex: none;
-}
-
 .tagAmounts {
   display: flex;
   flex-direction: column;
