@@ -9,15 +9,33 @@
   text-decoration: none;
   font-size: var(--font-size-body);
   letter-spacing: var(--tracking-tight);
+  transition-property: scale, background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
 }
 
 .link:hover {
   color: var(--color-text);
 }
 
+/* Hover ≠ current: the same surface at 60%, so the two states are one family at two strengths. */
+.link:hover:not([aria-current]) {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+}
+
 .link[aria-current="page"] {
   color: var(--color-text);
   background: var(--color-raised);
+}
+
+.link:active {
+  scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link:active {
+    scale: 1;
+  }
 }
 
 .icon {
@@ -28,6 +46,6 @@
   margin-inline-start: auto;
   padding-inline-start: 4px;
   font-size: var(--font-size-caption);
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }

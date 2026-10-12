@@ -1,0 +1,58 @@
+.link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  text-decoration: none;
+  transition-property: scale, background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+.link:hover:not([aria-current]) {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+  color: var(--color-text);
+}
+
+.link[aria-current="page"] {
+  background: var(--color-raised);
+  color: var(--color-text);
+}
+
+.link:active {
+  scale: 0.96;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+/* On the current page the link is `raised`: the avatar steps back to the page colour. */
+.link[aria-current="page"] .avatar {
+  background: var(--color-bg);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link:active {
+    scale: 1;
+  }
+}
