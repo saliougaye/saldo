@@ -2407,12 +2407,12 @@ git commit -m "feat(web): Home G2 — head with trend, transactions first, budge
 **Files:**
 - Modify: `apps/web/e2e/home-stats.spec.ts`
 
-- [ ] **Step 1: Run the Home tests**
+- [x] **Step 1: Run the Home tests**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: some tests fail where they looked for the old shape: the section «Ultime transazioni», a budget row, the featured item.
 
-- [ ] **Step 2: Fix each failure for the new shape**
+- [x] **Step 2: Fix each failure for the new shape**
 
 Use these rules:
 
@@ -2422,12 +2422,12 @@ Use these rules:
 
 Add one test that checks D6 with real data: create a budget on one category, record one expense in that category and one in another category, open `/home`, and expect the «Non a budget» card to show the second amount. Use the helpers that `home-stats.spec.ts` already uses to create budgets and transactions.
 
-- [ ] **Step 3: Run them**
+- [x] **Step 3: Run them**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/e2e/home-stats.spec.ts
