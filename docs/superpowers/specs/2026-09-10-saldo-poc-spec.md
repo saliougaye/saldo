@@ -1916,6 +1916,8 @@ device-local on the phone (hidden mode, the lock) does not exist on the web in 0
 
 #### 17.1.7 Interface
 
+On the wide-screen layout (sidebar, dialog panels, the G2 pages), `docs/superpowers/specs/2026-10-11-web-g2-layout.html` wins over this section.
+
 - DOM components styled with **CSS Modules**; dialogs, popovers, selects, menus and toasts are built on the
   headless primitives of **Base UI** (`@base-ui/react`), which bring focus management, keyboard handling and ARIA,
   and expose the enter/exit states (`data-starting-style`, `data-ending-style`, `--transform-origin`) the styles

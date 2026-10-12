@@ -3383,7 +3383,7 @@ git commit -m "feat(web): Profilo and Admin take the sidebar's place"
 - Create: `docs/superpowers/specs/2026-10-11-web-g2-layout.html`
 - Modify: `docs/superpowers/specs/2026-09-10-saldo-poc-spec.md` (§17.1.7), `docs/superpowers/specs/2026-10-07-web-panel-feel.html` (the head)
 
-- [ ] **Step 1: Write the spec**
+- [x] **Step 1: Write the spec**
 
 Copy `docs/superpowers/templates/spec-template.html` to `docs/superpowers/specs/2026-10-11-web-g2-layout.html`. Follow «Writing docs» in AGENTS.md (STE, SVG figures with `role="img"` and a `<title>`, the real strings of `en.ts`, the `@saldo/ui` palette). Write these sections:
 
@@ -3397,12 +3397,12 @@ Copy `docs/superpowers/templates/spec-template.html` to `docs/superpowers/specs/
 
 Open the file at 1440px and 500px in both themes. Make sure that no text clips and that the console shows no errors.
 
-- [ ] **Step 2: Point the older docs at it**
+- [x] **Step 2: Point the older docs at it**
 
 In the POC spec §17.1.7, add one line at the top of the section: `On the wide-screen layout (sidebar, dialog panels, the G2 pages), docs/superpowers/specs/2026-10-11-web-g2-layout.html wins over this section.`
 At the top of `2026-10-07-web-panel-feel.html`, under the title, add a note in the template's note style: `Since 2026-10-11 the panel is a dialog over the page (2026-10-11-web-g2-layout.html, D3). The motion values below still apply.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/superpowers/specs
