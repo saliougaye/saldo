@@ -18,6 +18,7 @@ export function Sparkline({
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className={styles.chart}
+      style={{ blockSize: `${height}px` }}
       preserveAspectRatio="none"
       aria-hidden="true"
     >

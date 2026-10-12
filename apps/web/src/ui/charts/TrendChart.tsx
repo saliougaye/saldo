@@ -16,6 +16,8 @@ interface Props {
   current: readonly number[];
   /** The average of the previous three periods, resampled to the current length. */
   usual: readonly number[];
+  /** The drawn height. 220 on Statistiche's own section; 96 in a page head. */
+  height?: number;
 }
 
 /**
@@ -23,13 +25,13 @@ interface Props {
  * border colour behind, `current` in the accent in front, a dot at its last point. The geometry is
  * `@saldo/ui`'s, shared with the phone.
  */
-export function TrendChart({ current, usual }: Props) {
-  const trend = trendGeometry(current, usual, VIEW_WIDTH, WEB_TREND_HEIGHT);
+export function TrendChart({ current, usual, height = WEB_TREND_HEIGHT }: Props) {
+  const trend = trendGeometry(current, usual, VIEW_WIDTH, height);
   return (
-    <div className={styles.chart} style={{ blockSize: `${WEB_TREND_HEIGHT}px` }} aria-hidden="true">
+    <div className={styles.chart} style={{ blockSize: `${height}px` }} aria-hidden="true">
       <svg
         className={styles.svg}
-        viewBox={`0 0 ${VIEW_WIDTH} ${WEB_TREND_HEIGHT}`}
+        viewBox={`0 0 ${VIEW_WIDTH} ${height}`}
         preserveAspectRatio="none"
         aria-hidden="true"
       >
@@ -55,7 +57,7 @@ export function TrendChart({ current, usual }: Props) {
           className={styles.dot}
           style={{
             insetInlineStart: `${(trend.last.x / VIEW_WIDTH) * 100}%`,
-            insetBlockStart: `${(trend.last.y / WEB_TREND_HEIGHT) * 100}%`,
+            insetBlockStart: `${(trend.last.y / height) * 100}%`,
             inlineSize: `${chartLine.dotRadius * 2}px`,
             blockSize: `${chartLine.dotRadius * 2}px`,
             margin: `${-chartLine.dotRadius}px 0 0 ${-chartLine.dotRadius}px`,

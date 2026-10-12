@@ -1,0 +1,35 @@
+.head {
+  display: grid;
+  gap: 32px;
+}
+
+.lead {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* The title row sits 8px further from the hero than the hero from its figures. */
+.lead > :first-child {
+  margin-bottom: 8px;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 48px;
+}
+
+.aside {
+  min-width: 0;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .head {
+    grid-template-columns: 7fr 5fr;
+    column-gap: var(--layout-column-gap-web);
+    align-items: end;
+  }
+}

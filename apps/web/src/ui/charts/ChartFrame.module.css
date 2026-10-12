@@ -1,0 +1,17 @@
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.head,
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
