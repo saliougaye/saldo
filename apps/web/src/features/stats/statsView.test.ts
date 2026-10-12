@@ -132,4 +132,20 @@ describe('statsView', () => {
     // April is five periods back: inside the medians' window, outside «il solito».
     expect(view.trend.usual.at(-1)).toBe(3000);
   });
+
+  it('gives each category its spend in the previous periods, oldest first, then this one', () => {
+    const view = statsView({
+      data: dataWith([
+        ...HISTORY,
+        tx({ id: 'now', amount: 20000, date: '2026-09-03', categoryId: CATEGORY.id }),
+      ]),
+      def: DEF,
+      today: TODAY,
+      period: SEPTEMBER,
+      direction: 'expense',
+    });
+    const row = view.split.rows.find((entry) => entry.categoryId === CATEGORY.id);
+    // June 40000, July nothing for this category (a used period, so a real zero), August 60000.
+    expect(row?.history).toEqual([40000, 0, 60000, 20000]);
+  });
 });

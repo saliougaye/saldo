@@ -2575,7 +2575,7 @@ git commit -m "feat(web): Transazioni opens with the period's three cards"
 **Files:**
 - Modify: `apps/web/src/features/stats/statsView.ts`, `apps/web/src/features/stats/statsView.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `statsView.test.ts`:
 
@@ -2597,12 +2597,12 @@ Add to `statsView.test.ts`:
   });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter web test statsView`
 Expected: FAIL, `history` is `undefined`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `statsView.ts`, add to `SplitRow`:
 
@@ -2621,12 +2621,12 @@ In the `.map(([categoryId, amount]) => { … })` that builds `rows`, add to the 
         history: [...history.map((cycle) => cycle.get(categoryId) ?? 0).reverse(), amount],
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter web test statsView`
 Expected: PASS. (`previousPeriods` walks back from the period, so `periodHistory` is most recent first, and `.reverse()` is needed.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/stats/statsView.ts apps/web/src/features/stats/statsView.test.ts
