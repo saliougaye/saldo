@@ -29,6 +29,7 @@
 
   /* Beside the sidebar the content starts at its edge, as in the mockup: not centred in the rest. */
   .content {
+    max-width: calc(var(--layout-content-wide-sidebar) + 2 * var(--layout-page-padding-web));
     margin: 0;
     padding: 40px var(--layout-page-padding-web) 64px;
   }
@@ -39,6 +40,11 @@
    */
   .shell:has([data-section-nav]) :global([data-sidebar]) {
     visibility: hidden;
+  }
+
+  /* Settings rows read as label and value: Profilo and Admin keep the narrower measure. */
+  .shell:has([data-section-nav]) .content {
+    max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
   }
 }
 
