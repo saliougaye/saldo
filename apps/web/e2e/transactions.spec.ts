@@ -93,15 +93,16 @@ test.describe('seeded account', () => {
     await expect(disclosure.locator('summary')).toContainText(
       plural(t, lang, 'transactions.upcomingCount', ahead.length),
     );
-    // Folded: nobody sees the rows, but the settled days are all there.
+    // Folded: the disclosure hides its rows. The In arrivo card above the list shows the next
+    // three, so the checks look inside the disclosure only.
     for (const tx of ahead) {
-      await expect(page.getByRole('link', { name: tx.description })).toBeHidden();
+      await expect(disclosure.getByRole('link', { name: tx.description })).toBeHidden();
     }
 
     await disclosure.locator('summary').click();
     await expect(disclosure).toHaveAttribute('open', '');
     for (const tx of ahead) {
-      const row = page.getByRole('link', { name: tx.description });
+      const row = disclosure.getByRole('link', { name: tx.description });
       await expect(row).toBeVisible();
       await expect(row).toContainText(money(-tx.amount));
     }

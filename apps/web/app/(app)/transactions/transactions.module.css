@@ -20,7 +20,7 @@
 .head {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
 
 /* The search and the chips share one wrapping row: the search leads, the chips follow at 8px. */
@@ -258,4 +258,15 @@
 /* The mockup's `.btn-danger`: the secondary button, in the accent ink. */
 .danger {
   color: var(--color-accent);
+}
+
+/* The rows of the In arrivo card: compact, and their hover stays inside the card's padding. */
+.cardRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardRows > a {
+  min-height: 36px;
+  padding-block: 6px;
 }

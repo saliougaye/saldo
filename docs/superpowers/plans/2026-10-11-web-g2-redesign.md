@@ -2443,7 +2443,7 @@ git commit -m "test(web): Home G2 in the end-to-end tests"
 **Files:**
 - Modify: `apps/web/app/(app)/transactions/page.tsx`, `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Compute the period summary**
+- [x] **Step 1: Compute the period summary**
 
 In `page.tsx`, add `summarizePeriod` to the `@saldo/core` import, and the card components to the imports: `import { Card, CardGrid, CardLabel, CardNote } from '../../../src/ui/Card';` and `import { ProgressBar } from '../../../src/ui/ProgressBar';`. After `const view = listView(…)`, add:
 
@@ -2453,7 +2453,7 @@ In `page.tsx`, add `summarizePeriod` to the `@saldo/core` import, and the card c
   const upcomingRows = view.upcomingDays.flatMap((day) => day.rows);
 ```
 
-- [ ] **Step 2: Render the cards**
+- [x] **Step 2: Render the cards**
 
 In the returned JSX, inside `<div className={styles.head}>`, after `<PeriodHeader … />`, add:
 
@@ -2530,7 +2530,7 @@ Check the names first:
 
 The rows in the card are `PanelLink`s (`selectId`). `TransactionsPanels` provides the context, because the head is inside its children. So a click opens the detail dialog in place.
 
-- [ ] **Step 3: The CSS**
+- [x] **Step 3: The CSS**
 
 In `transactions.module.css`, add:
 
@@ -2549,17 +2549,17 @@ In `transactions.module.css`, add:
 
 Change `.head`'s `gap` from `24px` to `32px`.
 
-- [ ] **Step 4: Run the gates and look**
+- [x] **Step 4: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`.
 Open `/transactions` at 1440×900. Compare with the mockup at `?variant=K&page=tx`. Click an In arrivo row in the card: the dialog opens with that row, over a scrim, and the cards do not move.
 
-- [ ] **Step 5: Run the Transazioni end-to-end tests**
+- [x] **Step 5: Run the Transazioni end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e transactions`
 Expected: PASS. A row name can now match twice (the card and the disclosure). If a test fails with «strict mode violation», scope it to the list: `page.locator('[data-days]')` does not exist yet, so add `data-days=""` to the wrapper of the days in `page.tsx` and use it in the test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add "apps/web/app/(app)/transactions" apps/web/e2e/transactions.spec.ts

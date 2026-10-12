@@ -1,4 +1,4 @@
-import { addDays } from '@saldo/core';
+import { addDays, summarizePeriod } from '@saldo/core';
 import {
   cadenceLabel,
   catalogs,
@@ -36,12 +36,14 @@ import { readPage } from '../../../src/server/page/context';
 import { loadRow } from '../../../src/server/userData/row';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
+import { Card, CardGrid, CardLabel, CardNote } from '../../../src/ui/Card';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
 import { ListRow } from '../../../src/ui/ListRow';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
+import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
@@ -92,6 +94,9 @@ export default async function TransactionsPage({
   const kindLabel = (kind: string) => t(`kinds.${kind}`);
   const view = listView({ data: page.data, filters, today, period, kindLabel });
   const choices = filterChoices(page.data);
+  // D7: the cards say what the period holds, whatever the filters; the list under them is filtered.
+  const summary = summarizePeriod(page.data.transactions, period.range, today);
+  const upcomingRows = view.upcomingDays.flatMap((day) => day.rows);
   // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
   // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.
   const selectedId = params[SELECTION_PARAM];
@@ -439,6 +444,69 @@ export default async function TransactionsPage({
             status={plural(t, locale, 'transactions.periodCount', view.totals.count)}
             strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
           />
+          <CardGrid>
+            <Card>
+              <CardLabel>{t('home.expenses')}</CardLabel>
+              <AmountText minor={summary.spent} currency={currency} locale={locale} size="title" />
+              <ProgressBar
+                thick
+                ratio={summary.ratio}
+                pace={period.isCurrent ? summary.pace : null}
+                tone={summary.overPace ? 'over' : 'normal'}
+              />
+              <CardNote>
+                {period.isCurrent
+                  ? t('home.dayOf', { elapsed: period.elapsed, length: period.length })
+                  : t('home.closedCycle')}
+              </CardNote>
+            </Card>
+            <Card>
+              <CardLabel>{t('home.income')}</CardLabel>
+              <AmountText
+                minor={summary.income}
+                currency={currency}
+                locale={locale}
+                size="title"
+                positive
+              />
+            </Card>
+            <Card>
+              <CardLabel>
+                {t('home.upcoming')} ·{' '}
+                {plural(t, locale, 'home.upcomingCount', view.upcoming.count)}
+              </CardLabel>
+              <AmountText
+                minor={view.upcoming.net}
+                currency={currency}
+                locale={locale}
+                size="title"
+                sign="always"
+              />
+              {/* D12: the next three; the disclosure in the list holds them all. */}
+              <div className={styles.cardRows}>
+                {upcomingRows.slice(0, 3).map((row) => (
+                  <ListRow
+                    key={row.id}
+                    open
+                    href={href({ [SELECTION_PARAM]: row.id })}
+                    selectId={row.id}
+                    title={row.title}
+                    subtitle={formatDayMonth(row.date, locale)}
+                    trailing={
+                      <AmountText
+                        minor={row.amount.minor}
+                        currency={currency}
+                        locale={locale}
+                        sign={row.amount.signDisplay}
+                        size="footnote"
+                        muted
+                      />
+                    }
+                  />
+                ))}
+              </div>
+            </Card>
+          </CardGrid>
           <div className={styles.filters}>
             <SearchField
               // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
