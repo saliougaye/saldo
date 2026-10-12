@@ -416,7 +416,7 @@ export default async function HomePage({
           view.upcoming.count === 0
             ? undefined
             : plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
-                amount: money(view.upcoming.total),
+                amount: formatMoney(view.upcoming.net, currency, locale, 'always'),
               })
         }
         more={

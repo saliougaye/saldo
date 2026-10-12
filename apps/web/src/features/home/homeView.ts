@@ -22,6 +22,7 @@ import {
   rankBudget,
   rankGoal,
   spendingByCategory,
+  splitUpcoming,
   summarizePeriod,
   type Transaction,
   type TransactionKind,
@@ -59,8 +60,11 @@ export interface HomeUpcoming {
   rows: HomeRow[];
   /** Every row «In arrivo», not the five shown. */
   count: number;
-  /** What every upcoming row adds up to, not only the five shown: Transazioni's trailing (D4). */
-  total: number;
+  /**
+   * Income minus expense of every upcoming row, not only the five shown: Transazioni's trailing
+   * (D4). The same sum as `listView`'s `upcoming.net`.
+   */
+  net: number;
 }
 
 export interface HomeBudgets {
@@ -184,7 +188,7 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
     upcoming: {
       rows: upcomingAll.slice(0, HOME_ROWS).map(row),
       count: upcomingAll.length,
-      total: upcomingAll.reduce((sum, tx) => sum + tx.amount, 0),
+      net: splitUpcoming(upcomingAll, today).upcomingNet,
     },
     recent,
     budgets: {
