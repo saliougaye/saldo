@@ -585,6 +585,7 @@ export default async function AccountsPage({
   const live = page.data.accounts.filter((account) => account.archivedAt === null);
   const netWorthSeries = live
     .map((account) => detailOf(account.id)?.series ?? [])
+    .filter((series) => series.length > 0)
     .reduce<number[]>((sum, series) => series.map((value, index) => value + (sum[index] ?? 0)), []);
 
   // `?a={id}&edit` opens «Modifica conto» under the key `a:{id}` when that key is the one the URL
