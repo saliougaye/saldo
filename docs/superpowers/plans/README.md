@@ -680,6 +680,19 @@ input for «New transaction» (before: 294 ms from the click), 17 ms for a row (
 (before: 228 ms), with 0 server requests. The ✕ takes 166 ms. The
 `/transactions` document grows from 99.7 KB to 156.7 KB (14.7 KB to 19.8 KB gzip). Lint, typecheck and tests are green.
 
+### Web G2 redesign — sidebar, dialog panels, the G2 pages 🚧 in progress
+
+Plan: `2026-10-11-web-g2-redesign.md`. Spec: `specs/2026-10-11-web-g2-layout.html`.
+Mockups: `mockups/2026-10-11-web-home-polish-variants.html?variant=G2`,
+`mockups/2026-10-11-web-pages-g2-variants.html?variant=K`.
+
+Acceptance:
+
+- At 1440×900, every page matches its mockup in both themes. The commit bodies list each kept difference.
+- No panel moves the page. Esc, ✕ and the scrim close it. Tab stays inside it.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` and the Playwright suite pass.
+- At 390×844, every page works as before (top bar, tab bar, full-screen panels, bottom-sheet forms).
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

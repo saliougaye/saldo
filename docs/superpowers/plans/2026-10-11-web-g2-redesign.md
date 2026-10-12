@@ -3414,7 +3414,7 @@ git commit -m "docs: the G2 web layout spec, and pointers from the older ones"
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Add the entry**
+- [x] **Step 1: Add the entry**
 
 Under the last web entry of the phase list, add a section in the style of the others:
 
@@ -3435,7 +3435,7 @@ Acceptance:
 
 Change `🚧 in progress` to `✅ done` in Task 26, when the acceptance is met.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/superpowers/plans/README.md
