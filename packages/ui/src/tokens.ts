@@ -281,6 +281,8 @@ export const layout = {
   searchWidth: 320,
   /** Web: the sub-navigation of Profilo and Admin. */
   subnavWidth: 200,
+  /** Web: the sidebar that replaces the top bar at and above `wideBreakpoint` (G2, 2026-10-11). */
+  sidebarWidth: 232,
   /** Web: the column of the sign-in and registration pages. */
   authWidth: 380,
   /** Web: a confirmation dialog. */
