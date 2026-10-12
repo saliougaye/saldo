@@ -5,7 +5,8 @@ import styles from './Brand.module.css';
 export function Brand({ instanceName }: { instanceName?: string }) {
   return (
     <div className={styles.brand}>
-      <span className={styles.mark}>S</span>
+      {/* Rocky, cut to his head (D2): a 64px PNG drawn at 32px. Decorative: «Saldo» follows. */}
+      <span className={styles.mark} aria-hidden="true" />
       <span className={styles.name}>Saldo</span>
       {instanceName === undefined ? null : (
         <span className={styles.instance}>· {instanceName}</span>
