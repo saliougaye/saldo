@@ -1746,7 +1746,7 @@ git commit -m "feat(web): stepper beside the period, open rows press"
 **Files:**
 - Modify: `packages/core/src/budgets.ts`, `packages/core/src/budgets.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/core/src/budgets.test.ts` (and add `unbudgetedSpend` to its import):
 
@@ -1779,12 +1779,12 @@ describe('unbudgetedSpend', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and see it fail**
+- [x] **Step 2: Run it and see it fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test budgets`
 Expected: FAIL, `unbudgetedSpend` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/core/src/budgets.ts`, after `takenCategoryIds`:
 
@@ -1806,12 +1806,12 @@ export function unbudgetedSpend(
 }
 ```
 
-- [ ] **Step 4: Run it and see it pass**
+- [x] **Step 4: Run it and see it pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test budgets`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/budgets.ts packages/core/src/budgets.test.ts

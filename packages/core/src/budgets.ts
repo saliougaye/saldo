@@ -77,6 +77,22 @@ export function takenCategoryIds(
   return expandCategoryIds(selected, categories);
 }
 
+/**
+ * D6 (web Home, 2026-10-11): the counted spend in categories that no budget covers — «Non a
+ * budget». `spending` is `spendingByCategory` for the period, leaf ids; a child of a budgeted
+ * parent is covered. Uncategorised spend is never covered.
+ */
+export function unbudgetedSpend(
+  budgets: readonly BudgetRef[],
+  spending: ReadonlyMap<string, number>,
+  categories: readonly CategoryRef[],
+): number {
+  const covered = takenCategoryIds(budgets, categories);
+  let total = 0;
+  for (const [id, amount] of spending) if (!covered.has(id)) total += amount;
+  return total;
+}
+
 /** Default budget name from category names: "A", "A e B", "A +2". */
 export function autoBudgetName(names: readonly string[], conjunction: string): string {
   const [first, second] = names;
