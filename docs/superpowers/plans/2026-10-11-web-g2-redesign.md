@@ -1160,7 +1160,7 @@ git commit -m "feat(web): no page makes room for the panel"
 **Files:**
 - Modify: `apps/web/e2e/*.spec.ts`
 
-- [ ] **Step 1: Change the role**
+- [x] **Step 1: Change the role**
 
 Run from `apps/web`:
 
@@ -1172,7 +1172,7 @@ grep -n "complementary\|aside\[" e2e/*.spec.ts
 
 Expected: the last command prints nothing.
 
-- [ ] **Step 2: Fix the test that checks the panel beside the list**
+- [x] **Step 2: Fix the test that checks the panel beside the list**
 
 In `e2e/budgets-categories-tags.spec.ts`, find the comment `// At 1440px the panel takes the slot column, to the right of the list.` Replace that comment and the five lines after the `toHaveValue('Vacanze')` line (from `const list = …` to `expect(side.x)…`) with:
 
@@ -1186,16 +1186,16 @@ In `e2e/budgets-categories-tags.spec.ts`, find the comment `// At 1440px the pan
 
 Keep the line `await expect(panel.getByLabel(…)).toHaveValue('Vacanze');` above it.
 
-- [ ] **Step 3: Check that the confirmation dialogs still resolve**
+- [x] **Step 3: Check that the confirmation dialogs still resolve**
 
 `ConfirmDialog` is a `dialog` too. Run: `grep -n "getByRole('dialog')" e2e/*.spec.ts`. Every match without a `name` can now match two dialogs. For each match, add the name of the dialog that the test means: `{ name: t('…') }`. Use the title key that the test opened.
 
-- [ ] **Step 4: Run the end-to-end suite**
+- [x] **Step 4: Run the end-to-end suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: PASS. If a test fails because the list moved before (a click on a row hidden by the panel), close the panel first or click the row that the scrim does not cover. Write the reason in the commit body.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/e2e

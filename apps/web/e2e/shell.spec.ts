@@ -61,7 +61,7 @@ test.describe('navigation', () => {
     const { page } = member;
     await page.goto('/budgets?new&x=y');
     await expect(page).toHaveURL(/\/profile\/budgets\?new=?&x=y$/);
-    await expect(page.getByRole('complementary', { name: t('budgets.newBudget') })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: t('budgets.newBudget') })).toBeVisible();
     await member.context.close();
   });
 });

@@ -49,24 +49,27 @@ test('accounts sit in their group, a goal sits under its account, and an account
 
   // An account that holds goals cannot be archived until they are closed.
   await listRow(page, 'Risparmi').click();
-  await expect(page.getByRole('complementary', { name: 'Risparmi' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Risparmi' })).toBeVisible();
   await expect(page.getByText(t('goals.closeFirst'))).toBeVisible();
   await expect(page.getByRole('button', { name: t('accounts.archive') })).toHaveCount(0);
 
   // The panel opens in place, but «Modifica» loads the account's own form (`?a=ID&edit`), and its
   // ✕ goes back to the detail of that account, not to the list.
-  const risparmi = page.getByRole('complementary', { name: 'Risparmi' });
+  const risparmi = page.getByRole('dialog', { name: 'Risparmi' });
   await risparmi.getByRole('link', { name: t('common.edit') }).click();
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+&edit$/);
-  const edit = page.getByRole('complementary', { name: t('accounts.editAccount') });
+  const edit = page.getByRole('dialog', { name: t('accounts.editAccount') });
   await expect(edit.getByLabel(t('accounts.name'), { exact: true })).toHaveValue('Risparmi');
   await edit.getByRole('link', { name: t('common.close') }).click();
   await expect(risparmi).toBeVisible();
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+$/);
+  // D3: the panel is a dialog over the page, so the list is out of reach until it is closed.
+  await risparmi.getByRole('link', { name: t('common.close') }).click();
+  await expect(risparmi).toHaveCount(0);
 
   // Archive «Contanti»: a question first, then the row leaves the list.
   await listRow(page, 'Contanti').click();
-  const detail = page.getByRole('complementary', { name: 'Contanti' });
+  const detail = page.getByRole('dialog', { name: 'Contanti' });
   await expect(detail).toBeVisible();
   await detail.getByRole('button', { name: t('accounts.archive') }).click();
   const dialog = page.getByRole('alertdialog');
@@ -85,7 +88,7 @@ test('accounts sit in their group, a goal sits under its account, and an account
 
   // It waits in the archived list, and «Ripristina» brings it back.
   await listRow(page, t('profile.archivedAccounts')).click();
-  const archived = page.getByRole('complementary', { name: t('web.accounts.archivedTitle') });
+  const archived = page.getByRole('dialog', { name: t('web.accounts.archivedTitle') });
   await expect(archived.getByText('Contanti')).toBeVisible();
   await archived.getByRole('button', { name: t('accounts.restore') }).click();
   await expect(archived.getByText(t('accounts.archivedEmpty'))).toBeVisible();
@@ -111,7 +114,7 @@ test('a credit card shows what it owes, its next charge and the statement once i
 
   await page.goto('/accounts');
   await page.getByRole('link', { name: t('accounts.newAccount') }).click();
-  const form = page.getByRole('complementary', { name: t('accounts.newAccount') });
+  const form = page.getByRole('dialog', { name: t('accounts.newAccount') });
 
   // The name is required.
   await form.getByRole('button', { name: t('common.save') }).click();
@@ -127,7 +130,7 @@ test('a credit card shows what it owes, its next charge and the statement once i
 
   // The saved card opens in its panel: it owes the 200 it started with.
   await expect(page).toHaveURL(/\/accounts\?a=/);
-  const detail = page.getByRole('complementary', { name: 'Visa' });
+  const detail = page.getByRole('dialog', { name: 'Visa' });
   await expect(detail.getByText(t('accounts.toRepay'))).toBeVisible();
   await expect(detail).toContainText(money(20000));
   await expect(detail.getByText(t('accounts.accruedInCycle'))).toBeVisible();
@@ -144,7 +147,7 @@ test('a credit card shows what it owes, its next charge and the statement once i
   });
   await page.goto('/accounts');
   await listRow(page, 'Visa').click();
-  const owing = page.getByRole('complementary', { name: 'Visa' });
+  const owing = page.getByRole('dialog', { name: 'Visa' });
   await expect(owing).toContainText(money(25000));
   await expect(owing.getByText(t('accounts.accruedInCycle'))).toBeVisible();
   await expect(owing).toContainText(money(5000));
@@ -158,7 +161,7 @@ test('a credit card shows what it owes, its next charge and the statement once i
   });
   await page.goto('/accounts');
   await listRow(page, 'Visa').click();
-  const settled = page.getByRole('complementary', { name: 'Visa' });
+  const settled = page.getByRole('dialog', { name: 'Visa' });
   await expect(settled.getByText(t('accounts.paidShort'))).toBeVisible();
   await expect(settled).toContainText(money(5000));
 
@@ -179,7 +182,7 @@ test('a goal goes from creation through a top up to its close, and a closed goal
   await page.goto('/profile/goals');
   await expect(page.getByText(t('goals.emptyBody'))).toBeVisible();
   await page.getByRole('link', { name: t('goals.newGoal') }).click();
-  const form = page.getByRole('complementary', { name: t('goals.newGoal') });
+  const form = page.getByRole('dialog', { name: t('goals.newGoal') });
 
   // Each gap is named in the order of the form: name, target, deadline, account.
   await form.getByRole('button', { name: t('goals.create') }).click();
@@ -204,7 +207,7 @@ test('a goal goes from creation through a top up to its close, and a closed goal
   // In Conti it sits under its account, with nothing in it yet.
   await page.goto('/accounts');
   await listRow(page, goal).click();
-  const panel = page.getByRole('complementary', { name: goal });
+  const panel = page.getByRole('dialog', { name: goal });
   await expect(panel.getByText(t('goals.noMovements'))).toBeVisible();
 
   // «Accantona» opens a transfer from the account to the goal; the amount is left to the person.
@@ -215,7 +218,7 @@ test('a goal goes from creation through a top up to its close, and a closed goal
   await page.goto('/accounts');
   await listRow(page, goal).click();
   await page
-    .getByRole('complementary', { name: goal })
+    .getByRole('dialog', { name: goal })
     .getByRole('link', { name: t('goals.withdraw') })
     .click();
   await fillTransaction(page, t, { kind: 'transfer', amount: '50' });
@@ -229,7 +232,7 @@ test('a goal goes from creation through a top up to its close, and a closed goal
     new RegExp(`${escapeRegExp(t('goals.free'))}\\s*${escapeRegExp(money(85000))}`),
   );
   await listRow(page, goal).click();
-  const funded = page.getByRole('complementary', { name: goal });
+  const funded = page.getByRole('dialog', { name: goal });
   await expect(funded).toContainText(money(15000));
   await expect(funded.getByText(t('goals.noMovements'))).toHaveCount(0);
 
@@ -269,7 +272,7 @@ test('closing a funded goal with «Registra la spesa» records the expense and c
   const goal = 'Bici';
 
   await page.goto('/profile/goals?new');
-  const form = page.getByRole('complementary', { name: t('goals.newGoal') });
+  const form = page.getByRole('dialog', { name: t('goals.newGoal') });
   await form.getByLabel(t('goals.name'), { exact: true }).fill(goal);
   await form.getByRole('textbox', { name: t('goals.target') }).fill('300');
   await pickOption(page, t('goals.parent'), MAIN);
@@ -282,7 +285,7 @@ test('closing a funded goal with «Registra la spesa» records the expense and c
   await expect(listRow(page, goal)).toContainText(money(12000));
   await listRow(page, goal).click();
   await page
-    .getByRole('complementary', { name: goal })
+    .getByRole('dialog', { name: goal })
     .getByRole('button', { name: t('goals.close') })
     .click();
   await page

@@ -195,6 +195,7 @@ export function Panel({
         ref={dialog}
         role="dialog"
         aria-modal="true"
+        data-panel=""
         className={styles.panel}
         aria-label={title}
         data-closing={closing ? '' : undefined}

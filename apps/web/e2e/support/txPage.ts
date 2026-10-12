@@ -60,7 +60,7 @@ interface NewExpense {
 /** Fills «Nuova transazione» as an expense and saves it. Returns the id the page lands on. */
 export async function createExpense(page: Page, t: Translate, input: NewExpense): Promise<string> {
   await page.getByRole('link', { name: t('web.shell.newTransaction') }).click();
-  const form = page.getByRole('complementary', { name: t('txForm.newTitle') });
+  const form = page.getByRole('dialog', { name: t('txForm.newTitle') });
   await form.getByLabel(t('txForm.amount')).fill(input.amount);
   await form.getByLabel(t('txForm.descriptionExpense')).fill(input.description);
   // The tiles only hold the categories used before; the full list is always there.

@@ -202,11 +202,11 @@ test.describe('seeded account', () => {
     const account = ledger.accounts.find((entry) => entry.id === target.accountId);
 
     await page.goto(`/transactions?p=${target.date}`);
-    await expect(page.getByRole('complementary')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Idraulico' }).click();
     await expect(page).toHaveURL(new RegExp(`[?&]t=${target.id}`));
-    const panel = page.getByRole('complementary', { name: 'Idraulico' });
+    const panel = page.getByRole('dialog', { name: 'Idraulico' });
     await expect(panel).toBeVisible();
     await expect(panel).toContainText(money(-target.amount));
     await expect(panel).toContainText(category?.name ?? '');
@@ -218,14 +218,14 @@ test.describe('seeded account', () => {
     );
 
     await panel.getByRole('link', { name: t('common.close') }).click();
-    await expect(page.getByRole('complementary')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page).not.toHaveURL(/[?&]t=/);
 
     // Esc closes it too.
     await page.getByRole('link', { name: 'Idraulico' }).click();
     await expect(panel).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('complementary')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await member.context.close();
   });
 });
@@ -252,7 +252,7 @@ test.describe('own rows', () => {
       description: 'Pranzo di prova',
       category: t('seed.restaurants'),
     });
-    const detail = page.getByRole('complementary', { name: 'Pranzo di prova' });
+    const detail = page.getByRole('dialog', { name: 'Pranzo di prova' });
     await expect(detail).toContainText(money(-1250));
     const today = ledger.today;
     const day = sectionOf(page, dayHeading(today, today, t, appLocale(locale)));
@@ -264,11 +264,11 @@ test.describe('own rows', () => {
     // Edit.
     await page.goto(`/transactions?t=${id}`);
     await page.getByRole('link', { name: t('common.edit'), exact: true }).click();
-    const form = page.getByRole('complementary', { name: t('txForm.editTitle') });
+    const form = page.getByRole('dialog', { name: t('txForm.editTitle') });
     await form.getByLabel(t('txForm.amount')).fill('20');
     await form.getByLabel(t('txForm.descriptionExpense')).fill('Cena di prova');
     await form.getByRole('button', { name: t('txForm.save') }).click();
-    const edited = page.getByRole('complementary', { name: 'Cena di prova' });
+    const edited = page.getByRole('dialog', { name: 'Cena di prova' });
     await expect(edited).toContainText(money(-2000));
     await expect(page.getByRole('link', { name: 'Pranzo di prova' })).toHaveCount(0);
     await page.goto('/home');
@@ -326,9 +326,7 @@ test.describe('own rows', () => {
     // The toast stays five seconds: «Annulla» writes the row back and selects it again.
     await page.getByRole('button', { name: t('common.undo') }).click();
     await expect(page).toHaveURL(new RegExp(`[?&]t=${id}`));
-    await expect(page.getByRole('complementary', { name: 'Caffè di prova' })).toContainText(
-      money(-800),
-    );
+    await expect(page.getByRole('dialog', { name: 'Caffè di prova' })).toContainText(money(-800));
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(800));
     await member.context.close();
@@ -353,14 +351,14 @@ test.describe('own rows', () => {
     const second = await member.context.newPage();
     await first.goto(`/transactions?t=${id}&edit`);
     await second.goto(`/transactions?t=${id}&edit`);
-    const firstForm = first.getByRole('complementary', { name: t('txForm.editTitle') });
-    const secondForm = second.getByRole('complementary', { name: t('txForm.editTitle') });
+    const firstForm = first.getByRole('dialog', { name: t('txForm.editTitle') });
+    const secondForm = second.getByRole('dialog', { name: t('txForm.editTitle') });
     await expect(firstForm).toBeVisible();
     await expect(secondForm).toBeVisible();
 
     await firstForm.getByLabel(t('txForm.descriptionExpense')).fill('Bolletta del primo');
     await firstForm.getByRole('button', { name: t('txForm.save') }).click();
-    await expect(first.getByRole('complementary', { name: 'Bolletta del primo' })).toBeVisible();
+    await expect(first.getByRole('dialog', { name: 'Bolletta del primo' })).toBeVisible();
 
     await secondForm.getByLabel(t('txForm.descriptionExpense')).fill('Bolletta del secondo');
     await secondForm.getByRole('button', { name: t('txForm.save') }).click();
@@ -368,7 +366,7 @@ test.describe('own rows', () => {
     // The form stays open with the draft, and the first save is what the server holds.
     await expect(secondForm).toBeVisible();
     await second.goto(`/transactions?t=${id}`);
-    await expect(second.getByRole('complementary', { name: 'Bolletta del primo' })).toBeVisible();
+    await expect(second.getByRole('dialog', { name: 'Bolletta del primo' })).toBeVisible();
     await expect(second.getByRole('link', { name: 'Bolletta del secondo' })).toHaveCount(0);
     await member.context.close();
   });

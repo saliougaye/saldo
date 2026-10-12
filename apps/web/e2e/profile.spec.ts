@@ -45,7 +45,7 @@ test('the preferences list shows the five rows, and a row opens its panel and cl
 
   await row(page, t('profile.theme')).click();
   await expect(page).toHaveURL(/edit=theme$/);
-  const panel = page.getByRole('complementary', { name: t('profile.theme') });
+  const panel = page.getByRole('dialog', { name: t('profile.theme') });
   await expect(panel).toBeVisible();
 
   await panel.getByRole('link', { name: t('common.close') }).click();
