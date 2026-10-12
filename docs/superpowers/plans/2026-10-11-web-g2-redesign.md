@@ -3444,7 +3444,7 @@ git commit -m "docs: roadmap entry for the G2 redesign"
 
 ### Task 26: Verification before completion
 
-- [ ] **Step 1: The gates**
+- [x] **Step 1: The gates**
 
 Run each one and read the output:
 
@@ -3457,7 +3457,7 @@ rtk proxy pnpm --filter web e2e
 
 Expected: no `lint/…` lines and no `× Some errors were emitted`; no type errors; every test passes.
 
-- [ ] **Step 2: The screens**
+- [x] **Step 2: The screens**
 
 Build and start on port 3100 (see «Rules»). Sign in with the e2e seed user, or with a user that has budgets, goals, upcoming rows and two periods of history. For each of `/home`, `/transactions`, `/stats`, `/accounts`, `/profile/preferences`, `/admin/accounts`:
 
