@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { formatDayMonth, formatMonthLong, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
@@ -290,6 +291,13 @@ test.describe('Home', () => {
   });
 });
 
+/** A category card of Ripartizione: the link that holds the category's name. */
+function cardOf(scope: Locator, name: string): Locator {
+  return scope
+    .locator('a[class*="Card"]')
+    .filter({ has: scope.page().getByText(name, { exact: true }) });
+}
+
 test.describe('Statistiche', () => {
   test('Ripartizione and Tag add up to the rows of a closed month', async ({
     browser,
@@ -332,19 +340,18 @@ test.describe('Statistiche', () => {
     const income = split('income');
     // The figures above the split agree with it.
     await expect(statFigure(page, t('stats.expenses'))).toContainText(money(expenses.total));
-    await expect(section).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
-      const row = rowOf(section, name);
-      await expect(row).toContainText(money(amount));
-      await expect(row).toContainText(
-        t('stats.ofTotal', { pct: percentOf(amount, expenses.total) }),
+      const card = cardOf(section, name);
+      await expect(card).toContainText(money(amount));
+      await expect(card).toContainText(
+        t('targets.percent', { value: percentOf(amount, expenses.total) }),
       );
     }
     // Biggest first.
     const first = expenses.ranked[0];
-    await expect(rowOf(section, first?.name ?? '')).toBeVisible();
+    await expect(cardOf(section, first?.name ?? '')).toBeVisible();
     const order = await section
-      .locator('[class*="ListRow"][class*="title"]:not([class*="subtitle"])')
+      .locator('a[class*="Card"] [class*="Card"][class*="name"]')
       .allTextContents();
     expect(order).toEqual(expenses.ranked.map((row) => row.name));
 
@@ -352,9 +359,8 @@ test.describe('Statistiche', () => {
     await section.getByRole('link', { name: t('stats.income') }).click();
     await expect(page).toHaveURL(/direction=income/);
     for (const { name, amount } of income.ranked) {
-      await expect(rowOf(sectionOf(page, t('stats.split')), name)).toContainText(money(amount));
+      await expect(cardOf(sectionOf(page, t('stats.split')), name)).toContainText(money(amount));
     }
-    await expect(sectionOf(page, t('stats.split'))).toContainText(money(income.total));
 
     // Tag: every tag used by a counted row, with its spend, its income and how many rows carry it.
     const tagsSection = sectionOf(page, t('stats.tags'));
@@ -394,6 +400,45 @@ test.describe('Statistiche', () => {
         (tx) => inRange(tx.date, closed) && tx.tagIds.includes(family?.tag.id ?? ''),
       ).length,
     );
+    await member.context.close();
+  });
+
+  test('a category card opens a dialog with the category and one of its transactions', async ({
+    browser,
+    t,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Categoria',
+      email: 'stats-category@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const closed = previousMonth(monthOf(ledger.today));
+    const parentOf = new Map(ledger.categories.map((c) => [c.id, c.parentId ?? c.id]));
+    const nameOf = new Map(ledger.categories.map((c) => [c.id, c.name]));
+    const spent = new Map<string, number>();
+    for (const tx of counted(ledger, closed).filter((row) => row.kind === 'expense')) {
+      const id = parentOf.get(tx.categoryId ?? '') ?? '';
+      spent.set(id, (spent.get(id) ?? 0) + tx.amount);
+    }
+    const [topId] = [...spent.entries()].sort(([, a], [, b]) => b - a)[0] ?? [];
+    const name = nameOf.get(topId ?? '') ?? '';
+    const inside = counted(ledger, closed).find(
+      (tx) => tx.kind === 'expense' && parentOf.get(tx.categoryId ?? '') === topId,
+    );
+    expect(inside).toBeDefined();
+
+    await page.goto(`/stats?p=${closed.start}`);
+    await cardOf(sectionOf(page, t('stats.split')), name).click();
+    const dialog = page.getByRole('dialog', { name });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`c=${topId}`));
+    await expect(dialog.getByText(inside?.description ?? '').first()).toBeVisible();
+
+    await dialog.getByRole('link', { name: t('common.close') }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page).not.toHaveURL(/[?&]c=/);
     await member.context.close();
   });
 

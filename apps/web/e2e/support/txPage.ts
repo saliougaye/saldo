@@ -18,7 +18,7 @@ export function moneyFormatter(ledger: Pick<Ledger, 'currency'>, locale: AppLoca
 /** A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the words. */
 export function statFigure(page: Page, label: string): Locator {
   return page
-    .locator('[class*="figures"] > div')
+    .locator('[class*="figures"] > div, [class*="HeroBand"][class*="figure"]')
     .filter({ has: page.getByText(label, { exact: true }) })
     .first();
 }

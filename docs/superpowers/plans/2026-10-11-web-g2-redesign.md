@@ -2638,7 +2638,7 @@ git commit -m "feat(web): each category's history in Statistiche's view"
 **Files:**
 - Modify: `apps/web/app/(app)/stats/page.tsx`, `apps/web/app/(app)/stats/stats.module.css`
 
-- [ ] **Step 1: Imports and the panel's keys**
+- [x] **Step 1: Imports and the panel's keys**
 
 In `page.tsx`, add:
 
@@ -2663,7 +2663,7 @@ const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
 const CATEGORY_ROWS = 5;
 ```
 
-- [ ] **Step 2: The head of a running or closed period**
+- [x] **Step 2: The head of a running or closed period**
 
 In the branch for a running or closed period (after `const view = statsView(…)`), replace the returned JSX with the layout below. Keep the helpers `Figure`, `segments`, `ranked`, `spentNote`, `projection`, `median` as they are.
 
@@ -2744,7 +2744,7 @@ Delete the last `<span className={styles.dot} …/>` line of the body if the des
 
 Use `AppLink` instead of `<a>` for the «Tutte le transazioni» link if lint asks for it (`import { AppLink as Link } from '../../../src/ui/AppLink';`). Add `.more` to `stats.module.css` with the same rule as Home's `.more`.
 
-- [ ] **Step 3: The returned JSX**
+- [x] **Step 3: The returned JSX**
 
 ```tsx
   return (
@@ -2865,25 +2865,25 @@ Use `AppLink` instead of `<a>` for the «Tutte le transazioni» link if lint ask
 
 Move the existing Tag section into the place the last comment marks, and delete the comment. Delete the `Columns` import if nothing else uses it (the forecast branch still does: keep it). Delete the old `Quota impegnata` section and the old `Andamento del periodo` section from this branch: both moved.
 
-- [ ] **Step 4: The forecast branch**
+- [x] **Step 4: The forecast branch**
 
 In the forecast branch, change the order inside `<div className={styles.top}>` to `{header}`, then `<div className={styles.figures}>…</div>`, then `{chart}`. The head comes first on every page (G).
 
-- [ ] **Step 5: The CSS**
+- [x] **Step 5: The CSS**
 
 In `stats.module.css`, change the `.page` comment to `The head, Flussi, Ripartizione, Tag — D8.` Add Home's `.more` rule. Delete `.sticky` if no element uses it any longer (`grep -n "styles.sticky" "apps/web/app/(app)/stats/page.tsx"`).
 
-- [ ] **Step 6: Run the gates and look**
+- [x] **Step 6: Run the gates and look**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Open `/stats` at 1440×900. Compare with `?variant=K&page=stats`. Click a category card: the dialog shows the category; the URL has `?c=…`; ✕ removes it; the period arrows keep `?c` out.
 
-- [ ] **Step 7: Run the Statistiche end-to-end tests**
+- [x] **Step 7: Run the Statistiche end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e home-stats`
 Expected: PASS. The Ripartizione rows are cards now: change the locators from rows to `getByRole('link', { name: … })`. Add one test: click a category card, expect the dialog with the category's name, and expect a transaction of that category in it.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add "apps/web/app/(app)/stats" apps/web/e2e/home-stats.spec.ts

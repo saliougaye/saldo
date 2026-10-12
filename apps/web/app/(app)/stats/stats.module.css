@@ -1,4 +1,4 @@
-/* Flussi across the page, the period and its four figures, then the 7/5 pair — Home's shape. */
+/* The head, Flussi, Ripartizione, Tag — D8. */
 .page {
   display: flex;
   flex-direction: column;
@@ -158,4 +158,18 @@
     flex-direction: column;
     gap: var(--layout-section-gap-web);
   }
+}
+
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--layout-min-hit-target);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--color-text);
 }

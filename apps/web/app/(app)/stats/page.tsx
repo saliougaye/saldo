@@ -21,16 +21,26 @@ import {
   navigatorView,
 } from '../../../src/features/stats/navigatorView';
 import { statsView } from '../../../src/features/stats/statsView';
+import { filtersFromSearch } from '../../../src/features/transactions/listParams';
+import { listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
+import { AppLink as Link } from '../../../src/ui/AppLink';
+import { Card, CardGrid, CardHead, CardLabel, CardNote } from '../../../src/ui/Card';
 import { Chip } from '../../../src/ui/Chip';
 import { Columns } from '../../../src/ui/Columns';
 import { CashflowChart } from '../../../src/ui/charts/CashflowChart';
+import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
+import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { SplitBar, type SplitSegment } from '../../../src/ui/charts/SplitBar';
 import { TrendChart } from '../../../src/ui/charts/TrendChart';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { HeroFigure } from '../../../src/ui/HeroBand';
+import { Icon } from '../../../src/ui/Icon';
+import { IconBox } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
+import { PageHead } from '../../../src/ui/PageHead';
+import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { Section } from '../../../src/ui/Section';
 import styles from './stats.module.css';
@@ -42,6 +52,12 @@ const PATH = '/stats';
 
 /** Which direction Ripartizione is reading; the phone's segmented control, as two chips. */
 const DIRECTION_PARAM = 'direction';
+
+/** D8: a category card opens its panel, `?c=`; the key is `c:{categoryId}`. */
+const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
+
+/** How many of a category's transactions its panel lists. */
+const CATEGORY_ROWS = 5;
 
 /** The name a category no longer in the list takes, as on the phone. */
 const MISSING = '—';
@@ -177,7 +193,6 @@ export default async function StatsPage({
     return (
       <div className={styles.page}>
         <div className={styles.top}>
-          {chart}
           {header}
           <div className={styles.figures}>
             <Figure label={t('stats.incomeAbout')} note={t('stats.fromRecurrences')}>
@@ -224,6 +239,7 @@ export default async function StatsPage({
               />
             </Figure>
           </div>
+          {chart}
         </div>
 
         <Columns
@@ -350,202 +366,302 @@ export default async function StatsPage({
           amount: formatMoney(Math.abs(view.figures.spent - median), currency, locale),
         });
 
+  const baseHref = periodHref(PATH, period.range, def, today, keep);
+  const categoryHref = (categoryId: string) =>
+    periodHref(PATH, period.range, def, today, { ...keep, c: categoryId });
+
+  // Every category's panel, rendered here: a click only chooses one (`PanelSwitch`).
+  const panels: Record<string, PanelSpec> = {};
+  for (const { row, colour } of ranked) {
+    const rows = listView({
+      data: page.data,
+      filters: filtersFromSearch({ category: row.categoryId, direction }),
+      today,
+      period,
+      kindLabel: (kind) => t(`kinds.${kind}`),
+    })
+      .days.flatMap((day) => day.rows)
+      .slice(0, CATEGORY_ROWS);
+    panels[`c:${row.categoryId}`] = {
+      title: row.category?.name ?? MISSING,
+      body: (
+        <>
+          <Figure
+            label={direction === 'income' ? t('stats.income') : t('stats.expenses')}
+            note={[
+              t('stats.ofTotal', { pct: row.share }),
+              row.delta === null
+                ? t('stats.newLabel')
+                : t('stats.vsUsual', { delta: formatSignedPercent(row.delta) }),
+            ].join(' · ')}
+          >
+            <AmountText
+              minor={row.amount}
+              currency={currency}
+              locale={locale}
+              size="large"
+              positive={direction === 'income'}
+            />
+          </Figure>
+          <ChartFrame title={plural(t, locale, 'stats.lastPeriods', row.history.length)}>
+            <Sparkline series={row.history} height={56} />
+          </ChartFrame>
+          <Section
+            open
+            title={t('tabs.transactions')}
+            more={
+              <Link className={styles.more} href={transactionsHref({ category: row.categoryId })}>
+                <span>{t('home.allTransactions')}</span>
+                <Icon name="chevR" size={16} />
+              </Link>
+            }
+          >
+            {rows.length === 0 ? (
+              <EmptyState title={t('stats.empty')} />
+            ) : (
+              rows.map((tx) => (
+                <ListRow
+                  key={tx.id}
+                  open
+                  href={`/transactions?t=${tx.id}`}
+                  icon={tx.icon as IconName}
+                  colorIndex={tx.colorIndex}
+                  title={tx.title}
+                  subtitle={tx.subtitle}
+                  trailing={
+                    <AmountText
+                      minor={tx.amount.minor}
+                      currency={currency}
+                      locale={locale}
+                      sign={tx.amount.signDisplay}
+                    />
+                  }
+                />
+              ))
+            )}
+          </Section>
+          <span className={styles.dot} style={{ background: colour }} aria-hidden="true" />
+        </>
+      ),
+    };
+  }
+
   return (
-    <div className={styles.page}>
-      <div className={styles.top}>
-        {chart}
-        {header}
-        <div className={styles.figures}>
-          <Figure label={t('stats.income')} note={period.isCurrent ? t('stats.soFar') : undefined}>
-            <AmountText
-              minor={view.figures.income}
-              currency={currency}
-              locale={locale}
-              size="large"
-              positive
-            />
-          </Figure>
-          <Figure label={t('stats.expenses')} note={spentNote}>
-            <AmountText
-              minor={view.figures.spent}
-              currency={currency}
-              locale={locale}
-              size="large"
-            />
-          </Figure>
-          <Figure label={t('stats.net')} note={period.isCurrent ? t('stats.soFar') : undefined}>
-            <AmountText
-              minor={view.figures.net}
-              currency={currency}
-              locale={locale}
-              size="large"
-              sign="always"
-            />
-          </Figure>
-          {projection === null ? (
-            <Figure
-              label={t('stats.committed')}
-              note={t('stats.committedDecided', {
-                amount: formatMoney(view.committed.amount, currency, locale),
-              })}
-            >
-              <span className={styles.percent}>
-                {t('targets.percent', { value: view.committed.share })}
-              </span>
-            </Figure>
-          ) : (
-            <Figure
-              label={t('stats.projection')}
-              note={t(
-                projection >= (median ?? 0) ? 'stats.projectionAbove' : 'stats.projectionBelow',
-                { amount: formatMoney(Math.abs(projection - (median ?? 0)), currency, locale) },
-              )}
-            >
-              <AmountText minor={projection} currency={currency} locale={locale} size="large" />
-            </Figure>
-          )}
-        </div>
-      </div>
-
-      <Columns
-        lead={
-          <div className={styles.sticky}>
-            <Section title={t('stats.cycleTrend')}>
-              <TrendChart current={view.trend.current} usual={view.trend.usual} />
-              <p className={styles.note}>
-                {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
-              </p>
-            </Section>
-
-            <Section title={t('stats.committed')}>
-              <SplitBar
-                segments={[
-                  {
-                    key: 'committed',
-                    amount: view.committed.amount,
-                    colour: 'var(--color-bar-grey)',
-                  },
-                  {
-                    key: 'discretionary',
-                    amount: view.committed.discretionary,
-                    colour: 'var(--color-accent)',
-                  },
-                ]}
+    <PanelSwitch
+      baseHref={baseHref}
+      params={PANEL_PARAMS}
+      panels={panels}
+      closeLabel={t('common.close')}
+    >
+      <div className={styles.page}>
+        <PageHead
+          title={header}
+          hero={
+            <Figure label={t('stats.expenses')} note={spentNote}>
+              <AmountText
+                minor={view.figures.spent}
+                currency={currency}
+                locale={locale}
+                size="hero"
               />
-              <p className={styles.note}>
-                {t('stats.committedLine', {
-                  pct: view.committed.share,
-                  amount: formatMoney(view.committed.amount, currency, locale),
-                })}
-              </p>
-            </Section>
-          </div>
-        }
-        trail={
-          <>
-            <Section title={t('stats.split')}>
-              <div className={styles.chips}>
-                <Chip
-                  label={t('stats.expenses')}
-                  href={directionHref('expense')}
-                  active={direction === 'expense'}
+            </Figure>
+          }
+          stats={
+            <>
+              <Figure label={t('stats.income')}>
+                <AmountText
+                  minor={view.figures.income}
+                  currency={currency}
+                  locale={locale}
+                  size="headline"
+                  positive
                 />
-                <Chip
-                  label={t('stats.income')}
-                  href={directionHref('income')}
-                  active={direction === 'income'}
+              </Figure>
+              <Figure label={t('stats.net')}>
+                <AmountText
+                  minor={view.figures.net}
+                  currency={currency}
+                  locale={locale}
+                  size="headline"
+                  sign="always"
                 />
-              </div>
-              {view.split.rows.length === 0 ? (
-                <EmptyState title={t('stats.empty')} />
-              ) : (
-                <>
+              </Figure>
+              {projection === null ? null : (
+                <Figure label={t('stats.projection')}>
                   <AmountText
-                    minor={view.split.total}
+                    minor={projection}
                     currency={currency}
                     locale={locale}
-                    size="title"
+                    size="headline"
                   />
-                  <SplitBar segments={segments} />
-                  {ranked.map(({ row, colour }) => (
-                    <ListRow
-                      key={row.categoryId}
-                      icon={row.category?.icon as IconName | undefined}
-                      colorIndex={row.category?.colorIndex}
-                      title={row.category?.name ?? MISSING}
-                      subtitle={`${
-                        row.delta === null ? t('stats.newLabel') : formatSignedPercent(row.delta)
-                      } · ${t('stats.ofTotal', { pct: row.share })}`}
-                      trailing={
-                        <>
-                          <span className={styles.dot} style={{ background: colour }} />
-                          <AmountText minor={row.amount} currency={currency} locale={locale} />
-                        </>
-                      }
-                    />
-                  ))}
-                </>
+                </Figure>
               )}
-              {view.split.excluded.count === 0 ? null : (
-                <p className={styles.note}>
-                  {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
-                    amount: formatMoney(view.split.excluded.amount, currency, locale),
-                  })}
-                </p>
-              )}
-            </Section>
-
-            <Section
-              title={t('stats.tags')}
-              trailing={
-                <span className={styles.status}>
-                  {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
+            </>
+          }
+          aside={
+            <ChartFrame
+              title={t('stats.cycleTrend')}
+              value={
+                <AmountText
+                  minor={view.figures.spent}
+                  currency={currency}
+                  locale={locale}
+                  size="footnote"
+                />
+              }
+              foot={
+                <span>
+                  {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
                 </span>
               }
             >
-              {view.tags.tags.length === 0 ? (
-                <EmptyState title={t('stats.tagsEmpty')} />
-              ) : (
-                view.tags.tags.map((row) => (
-                  <ListRow
-                    key={row.tagId}
-                    title={tagNames.get(row.tagId) ?? row.tagId}
-                    subtitle={plural(t, locale, 'tags.uses', row.count)}
-                    href={transactionsHref({ tag: row.tagId })}
-                    trailing={
-                      <span className={styles.tagAmounts}>
-                        {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
-                        {row.expense === 0 && row.income > 0 ? null : (
-                          <AmountText minor={row.expense} currency={currency} locale={locale} />
-                        )}
-                        {row.income === 0 ? null : (
-                          <AmountText
-                            minor={row.income}
-                            currency={currency}
-                            locale={locale}
-                            size="footnote"
-                            sign="always"
+              <TrendChart current={view.trend.current} usual={view.trend.usual} height={96} />
+            </ChartFrame>
+          }
+        />
+
+        {chart}
+
+        <Section
+          title={t('stats.split')}
+          trailing={
+            <span className={styles.chips}>
+              <Chip
+                label={t('stats.expenses')}
+                href={directionHref('expense')}
+                active={direction === 'expense'}
+              />
+              <Chip
+                label={t('stats.income')}
+                href={directionHref('income')}
+                active={direction === 'income'}
+              />
+            </span>
+          }
+        >
+          {view.split.rows.length === 0 ? (
+            <EmptyState title={t('stats.empty')} />
+          ) : (
+            <>
+              <SplitBar segments={segments} />
+              <CardGrid>
+                {ranked.map(({ row, colour }) => (
+                  <Card
+                    key={row.categoryId}
+                    href={categoryHref(row.categoryId)}
+                    selectId={`c:${row.categoryId}`}
+                  >
+                    <CardHead
+                      leading={
+                        row.category === undefined ? undefined : (
+                          <IconBox
+                            name={row.category.icon as IconName}
+                            colorIndex={row.category.colorIndex}
                           />
-                        )}
-                      </span>
-                    }
-                  />
-                ))
-              )}
-              {view.tags.untaggedCount === 0 ? null : (
-                <p className={styles.note}>
-                  {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
-                    amount: formatMoney(view.tags.untagged, currency, locale),
-                  })}
-                </p>
-              )}
-              {view.tags.tags.length < 2 ? null : (
-                <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
-              )}
-            </Section>
-          </>
-        }
-      />
-    </div>
+                        )
+                      }
+                      name={row.category?.name ?? MISSING}
+                      meta={t('targets.percent', { value: row.share })}
+                    />
+                    <div>
+                      <AmountText
+                        minor={row.amount}
+                        currency={currency}
+                        locale={locale}
+                        size="large"
+                      />
+                      <CardNote>
+                        {row.delta === null
+                          ? t('stats.newLabel')
+                          : t('stats.vsUsual', { delta: formatSignedPercent(row.delta) })}
+                      </CardNote>
+                    </div>
+                    <SplitBar
+                      segments={[
+                        { key: 'share', amount: row.amount, colour },
+                        {
+                          key: 'rest',
+                          amount: Math.max(0, view.split.total - row.amount),
+                          colour: 'var(--color-track)',
+                        },
+                      ]}
+                    />
+                  </Card>
+                ))}
+                {/* Quota impegnata leaves its section for a ghost card at the end of the grid (K). */}
+                <Card ghost>
+                  <CardLabel>{t('stats.committed')}</CardLabel>
+                  <span className={styles.percent}>
+                    {t('targets.percent', { value: view.committed.share })}
+                  </span>
+                  <p className={styles.note}>
+                    {t('stats.committedLine', {
+                      pct: view.committed.share,
+                      amount: formatMoney(view.committed.amount, currency, locale),
+                    })}
+                  </p>
+                </Card>
+              </CardGrid>
+            </>
+          )}
+          {view.split.excluded.count === 0 ? null : (
+            <p className={styles.note}>
+              {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
+                amount: formatMoney(view.split.excluded.amount, currency, locale),
+              })}
+            </p>
+          )}
+        </Section>
+
+        <Section
+          title={t('stats.tags')}
+          trailing={
+            <span className={styles.status}>
+              {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
+            </span>
+          }
+        >
+          {view.tags.tags.length === 0 ? (
+            <EmptyState title={t('stats.tagsEmpty')} />
+          ) : (
+            view.tags.tags.map((row) => (
+              <ListRow
+                key={row.tagId}
+                title={tagNames.get(row.tagId) ?? row.tagId}
+                subtitle={plural(t, locale, 'tags.uses', row.count)}
+                href={transactionsHref({ tag: row.tagId })}
+                trailing={
+                  <span className={styles.tagAmounts}>
+                    {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
+                    {row.expense === 0 && row.income > 0 ? null : (
+                      <AmountText minor={row.expense} currency={currency} locale={locale} />
+                    )}
+                    {row.income === 0 ? null : (
+                      <AmountText
+                        minor={row.income}
+                        currency={currency}
+                        locale={locale}
+                        size="footnote"
+                        sign="always"
+                      />
+                    )}
+                  </span>
+                }
+              />
+            ))
+          )}
+          {view.tags.untaggedCount === 0 ? null : (
+            <p className={styles.note}>
+              {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
+                amount: formatMoney(view.tags.untagged, currency, locale),
+              })}
+            </p>
+          )}
+          {view.tags.tags.length < 2 ? null : (
+            <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
+          )}
+        </Section>
+      </div>
+    </PanelSwitch>
   );
 }
