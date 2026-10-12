@@ -404,7 +404,12 @@ export default async function HomePage({
               </>
             }
           >
-            <TrendChart current={view.trend.current} usual={view.trend.usual} height={96} />
+            <TrendChart
+              current={view.trend.current}
+              usual={view.trend.usual}
+              height={96}
+              span={period.length}
+            />
           </ChartFrame>
         }
       />
