@@ -36,12 +36,12 @@ export default async function ProfileLayout({ children }: { children: ReactNode 
       <SubnavLayout
         navLabel={t('profile.title')}
         title={
-          <span className={styles.sideWho}>
+          <h1 className={styles.sideWho}>
             <span className={styles.sideAvatar} aria-hidden="true">
               {initials(user.displayName)}
             </span>
             {user.displayName}
-          </span>
+          </h1>
         }
         back={{ href: '/home', text: t('web.shell.back'), label: t('web.shell.backLabel') }}
         nav={

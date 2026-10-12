@@ -57,12 +57,8 @@ test.describe('accounts', () => {
     const { page } = admin;
     await page.goto('/admin/accounts');
 
-    // Wide: the sidebar carries the title (D10); the page's own head is hidden.
-    await expect(
-      page.getByRole('navigation', { name: t('admin.title') }).getByText(t('admin.title'), {
-        exact: true,
-      }),
-    ).toBeVisible();
+    // Wide: the sidebar carries the title (D10) as the h1; the page's own head is hidden.
+    await expect(page.getByRole('heading', { name: t('admin.title') })).toBeVisible();
     await expect(accountRow(page, ADMIN.name)).toContainText(t('admin.roleAdmin'));
     await expect(accountRow(page, member.name)).toContainText(member.email);
     await expect(accountRow(page, member.name)).toContainText(t('admin.roleMember'));

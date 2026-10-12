@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         navLabel={t('admin.title')}
         title={
           <span className={styles.sideTitle}>
-            <span className={styles.sideName}>{t('admin.title')}</span>
+            <h1 className={styles.sideName}>{t('admin.title')}</h1>
             <span className={styles.headCount}>
               {plural(t, locale, 'admin.headCount', accounts.length, { name: instance.name })}
             </span>
