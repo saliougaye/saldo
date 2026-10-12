@@ -29,6 +29,22 @@
   .page {
     gap: 56px;
   }
+
+  .head {
+    display: none;
+  }
+}
+
+.sideTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sideName {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
 }
 
 /* ---- Rows ---- */

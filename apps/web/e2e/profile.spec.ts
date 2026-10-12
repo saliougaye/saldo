@@ -313,8 +313,12 @@ test('the account shows the name and the email, and says the address stays unver
   });
   const { page } = member;
   await page.goto('/profile/account');
-  await expect(page.getByText(member.name, { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(member.email, { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByText(member.name, { exact: true }).locator('visible=true').first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText(member.email, { exact: true }).locator('visible=true').first(),
+  ).toBeVisible();
   // The harness configures no SMTP: the address cannot be confirmed, and the page says so instead
   // of offering a button that would fail.
   await expect(page.getByText(t('web.account.unverified'))).toBeVisible();

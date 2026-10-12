@@ -57,7 +57,12 @@ test.describe('accounts', () => {
     const { page } = admin;
     await page.goto('/admin/accounts');
 
-    await expect(page.getByRole('heading', { name: t('admin.title') })).toBeVisible();
+    // Wide: the sidebar carries the title (D10); the page's own head is hidden.
+    await expect(
+      page.getByRole('navigation', { name: t('admin.title') }).getByText(t('admin.title'), {
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(accountRow(page, ADMIN.name)).toContainText(t('admin.roleAdmin'));
     await expect(accountRow(page, member.name)).toContainText(member.email);
     await expect(accountRow(page, member.name)).toContainText(t('admin.roleMember'));
@@ -428,13 +433,19 @@ test.describe('instance and settings', () => {
     try {
       await rename(renamed);
       await expect(page.getByRole('link', { name: new RegExp(renamed) })).toBeVisible();
-      await expect(page.getByText(new RegExp(`^${renamed} ·`))).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+      ).toBeVisible();
       await page.reload();
-      await expect(page.getByText(new RegExp(`^${renamed} ·`))).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+      ).toBeVisible();
     } finally {
       await rename(ADMIN.instance);
     }
-    await expect(page.getByText(new RegExp(`^${ADMIN.instance} ·`))).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`^${ADMIN.instance} ·`)).locator('visible=true'),
+    ).toBeVisible();
     await admin.context.close();
   });
 

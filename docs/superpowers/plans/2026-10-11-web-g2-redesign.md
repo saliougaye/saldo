@@ -3093,7 +3093,7 @@ git commit -m "feat(web): Conti with Home's head, and accounts and goals as card
 **Files:**
 - Modify: `apps/web/src/ui/SubnavLayout.tsx`, `apps/web/src/ui/SubnavLayout.module.css`
 
-- [ ] **Step 1: The component**
+- [x] **Step 1: The component**
 
 Replace the `SubnavLayout` function in `SubnavLayout.tsx` with:
 
@@ -3134,7 +3134,7 @@ export function SubnavLayout({
 
 Add the imports: `import { AppLink as Link } from './AppLink';` and `import { Icon } from './Icon';`. Change the doc comment of the function: `A sub-navigation and the section. On a wide screen the sub-navigation is the sidebar itself (D10, 2026-10-11), with «‹ Saldo» and the section's title above the links; on a narrow one it is a row of links above the section.`
 
-- [ ] **Step 2: The CSS**
+- [x] **Step 2: The CSS**
 
 Replace the whole `SubnavLayout.module.css` with:
 
@@ -3260,19 +3260,19 @@ Replace the whole `SubnavLayout.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: two errors, in `profile/layout.tsx` and `admin/layout.tsx`: `title` and `back` are missing. Task 23 fixes them.
 
-- [ ] **Step 4: Commit with Task 23** (do not commit a failing typecheck).
+- [x] **Step 4: Commit with Task 23** (do not commit a failing typecheck).
 
 ### Task 23: Profilo and Admin pass their title and the way back
 
 **Files:**
 - Modify: `apps/web/app/(app)/profile/layout.tsx`, `apps/web/app/(app)/profile/profile.module.css`, `apps/web/app/(app)/admin/layout.tsx`, `apps/web/app/(app)/admin/admin.module.css`
 
-- [ ] **Step 1: Profilo**
+- [x] **Step 1: Profilo**
 
 In `profile/layout.tsx`, pass to `<SubnavLayout …>`:
 
@@ -3316,7 +3316,7 @@ In `profile.module.css`, add:
 
 In the existing `@media (min-width: 1024px)` block of `profile.module.css`, add `.head { display: none; }`. The sidebar now carries the person (D10).
 
-- [ ] **Step 2: Admin**
+- [x] **Step 2: Admin**
 
 In `admin/layout.tsx`, pass:
 
@@ -3352,21 +3352,21 @@ In `admin.module.css`, add:
 
 In its `@media (min-width: 1024px)` block, add `.head { display: none; }`.
 
-- [ ] **Step 3: Run the gates**
+- [x] **Step 3: Run the gates**
 
 Run: `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web test`.
 Expected: no errors.
 
-- [ ] **Step 4: Look at it**
+- [x] **Step 4: Look at it**
 
 Open `/profile/preferences` and `/admin/accounts` at 1440×900. Compare with `?variant=K&page=profilo` and `&page=admin`. Check: one sidebar only; «‹ Saldo» at its top goes to `/home`; the links slide in once when you enter, and not when you move between sections; «Esci» is at the foot; the section does not move sideways between `/home` and `/profile`. At 390×844 the row of links stays above the section.
 
-- [ ] **Step 5: Run the Profilo and Admin end-to-end tests**
+- [x] **Step 5: Run the Profilo and Admin end-to-end tests**
 
 Run: `rtk proxy pnpm --filter web e2e profile admin shell`
 Expected: PASS. The navigation landmark of the sections has the same name as before (`navLabel`). A test that clicks a main tab from inside Profilo must first click «‹ Saldo» (`getByRole('link', { name: t('web.shell.backLabel') })`), because the main sidebar is hidden there.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/ui/SubnavLayout.tsx apps/web/src/ui/SubnavLayout.module.css "apps/web/app/(app)/profile" "apps/web/app/(app)/admin" apps/web/e2e

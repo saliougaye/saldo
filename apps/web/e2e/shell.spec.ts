@@ -37,6 +37,9 @@ test.describe('navigation', () => {
     const nav = page.getByRole('navigation', { name: t('web.shell.mainNav') });
     await nav.getByRole('link', { name: t('admin.title'), exact: true }).click();
     await expect(page).toHaveURL(/\/admin/);
+    // D10: Admin's sub-navigation takes the sidebar's place; «‹ Saldo» brings it back.
+    await page.getByRole('link', { name: t('web.shell.backLabel') }).click();
+    await expect(page).toHaveURL(/\/home$/);
     for (const [key, path] of [
       ['tabs.transactions', '/transactions'],
       ['tabs.stats', '/stats'],

@@ -38,6 +38,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       </header>
       <SubnavLayout
         navLabel={t('admin.title')}
+        title={
+          <span className={styles.sideTitle}>
+            <span className={styles.sideName}>{t('admin.title')}</span>
+            <span className={styles.headCount}>
+              {plural(t, locale, 'admin.headCount', accounts.length, { name: instance.name })}
+            </span>
+          </span>
+        }
+        back={{ href: '/home', text: t('web.shell.back'), label: t('web.shell.backLabel') }}
         nav={
           <>
             <NavLink

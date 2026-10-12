@@ -1,25 +1,38 @@
 import type { ReactNode } from 'react';
+import { AppLink as Link } from './AppLink';
+import { Icon } from './Icon';
 import { PANEL_SLOT } from './panelSlot';
 import styles from './SubnavLayout.module.css';
 
 /**
- * A sub-navigation on the leading side, the section in the middle, and the slot on the trailing
- * side: the shell of Profilo and of the admin panel. A page that is a `PanelSwitch` with `slot`
- * puts its panel in that column itself, with no portal. `PasskeyList` portals its panel into the
- * slot.
+ * A sub-navigation and the section. On a wide screen the sub-navigation is the sidebar itself (D10,
+ * 2026-10-11), with «‹ Saldo» and the section's title above the links; on a narrow one it is a row
+ * of links above the section. `PasskeyList` portals its panel into the slot with `createPortal`.
  */
 export function SubnavLayout({
   navLabel,
   nav,
+  title,
+  back,
   children,
 }: {
   navLabel: string;
   nav: ReactNode;
+  /** Who or what the section is about: the person (Profilo), «Admin» and its count. Wide only. */
+  title: ReactNode;
+  /** «‹ Saldo»: the way back to the app. Wide only (D10). */
+  back: { href: string; text: string; label: string };
   children: ReactNode;
 }) {
   return (
     <div className={styles.layout}>
-      <nav className={styles.subnav} aria-label={navLabel}>
+      {/* `data-section-nav`: the shell hides its own sidebar while this one takes its place. */}
+      <nav className={styles.subnav} aria-label={navLabel} data-section-nav="">
+        <Link className={styles.back} href={back.href} aria-label={back.label}>
+          <Icon name="chevL" size={16} />
+          {back.text}
+        </Link>
+        <div className={styles.sideTitle}>{title}</div>
         {nav}
       </nav>
       <div className={styles.section}>{children}</div>
