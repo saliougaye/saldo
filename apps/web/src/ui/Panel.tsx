@@ -20,6 +20,10 @@ import { isPlainClick } from './PanelNav';
 /** How a close came: Esc is the keyboard; the ✕ and the scrim are the pointer. */
 export type CloseFrom = 'key' | 'pointer';
 
+/** What Tab can reach inside the dialog. */
+const FOCUSABLE =
+  'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
 interface Props {
   title: string;
   /** Where the ✕ goes, and where Esc goes: the same page without the selection. */
@@ -46,15 +50,12 @@ interface Props {
   children: ReactNode;
 }
 
-/** `--layout-wide-breakpoint` (1024) less one: below it the panel is the whole screen. */
-const NARROW = '(max-width: 1023px)';
-
 /** The exit is quicker than the entrance: the system answers fast where the user has already decided. */
 const EXIT_MS = 150;
 
 /**
- * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — 420px beside the list on a wide
- * screen, the whole screen on a narrow one. Rendered only when something is selected, so it mounts —
+ * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — a 420px dialog over the page, with a
+ * scrim, on a wide screen (D3, 2026-10-11); the whole screen, or a bottom sheet for a form, on a narrow one. Rendered only when something is selected, so it mounts —
  * and slides in — when the panel opens, and stays put while the selection moves between rows. A page
  * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
  *
@@ -77,6 +78,7 @@ export function Panel({
   const router = useRouter();
   const startNav = useNavTransition();
   const heading = useRef<HTMLHeadingElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Which `closeHref` the exit is playing for. A navigation that keeps this panel mounted (on Conti,
   // the form closing into the detail, in the same slot) brings a new `closeHref`, and the panel is open again.
@@ -123,14 +125,36 @@ export function Panel({
     [],
   );
 
-  // Full-screen, the panel covers the list the focus was left on: move it into the panel. Beside
-  // the list it stays where it was, so the next row is one Tab away.
-  // Unless something inside already took it: a form that opens on its first field (the form's focus
-  // effect, which runs first: child effects precede the parent's).
+  // D3: the panel is a modal dialog at every width, so the focus moves into it. Unless something
+  // inside already took it: a form that opens on its first field (the form's focus effect, which
+  // runs first: child effects precede the parent's).
   useEffect(() => {
-    const panel = heading.current?.closest('aside');
-    if (panel?.contains(document.activeElement) === true) return;
-    if (window.matchMedia(NARROW).matches) heading.current?.focus();
+    if (dialog.current?.contains(document.activeElement) === true) return;
+    heading.current?.focus();
+  }, []);
+
+  // D13: Tab and Shift+Tab stay inside the dialog while it is open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const root = dialog.current;
+      if (event.key !== 'Tab' || root === null) return;
+      const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (element) => !element.hasAttribute('disabled') && element.getClientRects().length > 0,
+      );
+      const first = items.at(0);
+      const last = items.at(-1);
+      if (first === undefined || last === undefined) return;
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !root.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !root.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -155,21 +179,22 @@ export function Panel({
 
   return (
     <>
-      {sheet ? (
-        // The scrim closes as the ✕ does; it is not a second control, so it stays out of the tab order.
-        <Link
-          className={styles.scrim}
-          href={closeHref}
-          prefetch={prefetch}
-          aria-hidden="true"
-          tabIndex={-1}
-          onClick={onLinkClick}
-          data-closing={closing ? '' : undefined}
-          data-instant={instant ? '' : undefined}
-          data-still={enteredInstantly ? '' : undefined}
-        />
-      ) : null}
-      <aside
+      {/* The scrim closes as the ✕ does; it is not a second control, so it stays out of the tab order. */}
+      <Link
+        className={styles.scrim}
+        href={closeHref}
+        prefetch={prefetch}
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onLinkClick}
+        data-closing={closing ? '' : undefined}
+        data-instant={instant ? '' : undefined}
+        data-still={enteredInstantly ? '' : undefined}
+      />
+      <div
+        ref={dialog}
+        role="dialog"
+        aria-modal="true"
         className={styles.panel}
         aria-label={title}
         data-closing={closing ? '' : undefined}
@@ -197,7 +222,7 @@ export function Panel({
           </Link>
         </div>
         <div className={styles.body}>{children}</div>
-      </aside>
+      </div>
     </>
   );
 }
