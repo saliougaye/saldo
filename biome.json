@@ -18,7 +18,9 @@
       "!apps/mobile/.seed-db.cjs",
       "!apps/web/drizzle",
       "!apps/web/.next",
-      "!apps/web/next-env.d.ts"
+      "!apps/web/next-env.d.ts",
+      "!apps/site/dist",
+      "!apps/site/.astro"
     ]
   },
   "formatter": {
@@ -45,5 +47,20 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "html": {
+    "experimentalFullSupportEnabled": true
+  },
+  "overrides": [
+    {
+      "includes": ["apps/site/src/styles/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDescendingSpecificity": "off"
+          }
+        }
+      }
+    }
+  ]
 }
