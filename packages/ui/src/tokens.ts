@@ -42,6 +42,8 @@ export interface Palette {
    */
   qrDark: string;
   qrLight: string;
+  /** The camera island in the status bar of a phone screen drawn on the marketing site (D48): black in both themes. */
+  deviceIsland: string;
 }
 
 export const palettes: Record<ThemeName, Palette> = {
@@ -73,6 +75,7 @@ export const palettes: Record<ThemeName, Palette> = {
     shadow: 'rgba(0,0,0,0.5)',
     qrDark: '#000000',
     qrLight: '#FFFFFF',
+    deviceIsland: '#000000',
   },
   light: {
     page: '#E9E9E7',
@@ -101,6 +104,7 @@ export const palettes: Record<ThemeName, Palette> = {
     shadow: 'rgba(0,0,0,0.5)',
     qrDark: '#000000',
     qrLight: '#FFFFFF',
+    deviceIsland: '#000000',
   },
 };
 
@@ -208,6 +212,8 @@ export const fontSize = {
   hero: 44,
   /** The one figure a wide web page leads with: «Rimasto da spendere», Patrimonio (§17.1.7). */
   heroWeb: 56,
+  /** The marketing site's headline at full width (spec 0.8a, D48). Never in the app. */
+  siteDisplay: 72,
 } as const;
 
 export const fontWeight = {
