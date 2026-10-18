@@ -349,7 +349,7 @@ td:first-child { white-space: normal; }
         <title id="f1t">The landing page from top to bottom: navigation, hero with the web app and a phone, what it is, features, screens with the carousel and the web row, self-hosting, questions, final call to action, footer.</title>
         <rect class="bx" x="20" y="10" width="1000" height="740" rx="22"/>
         <rect class="bx-r" x="40" y="30" width="960" height="44" rx="12"/>
-        <text x="60" y="58" font-size="17" class="b">Nav</text><text x="140" y="58" font-size="15" class="tm">Brand · Features · Self-hosting · Screens · FAQ · Guide · GitHub · Theme</text>
+        <text x="60" y="58" font-size="17" class="b">Nav</text><text x="140" y="58" font-size="15" class="tm">Brand · Features · Screens · Self-hosting · FAQ · Guide · GitHub · Theme</text>
         <rect class="bx" x="40" y="88" width="960" height="150" rx="14"/>
         <text x="60" y="118" font-size="17" class="b">Hero</text>
         <text x="60" y="144" font-size="15" class="tm">Pill · headline (siteDisplay 72) · lede · two CTAs · three facts</text>
@@ -717,6 +717,7 @@ td:first-child { white-space: normal; }
           <tr><td>CSS</td><td>≤ 20&nbsp;KB gzip, in one file that Astro writes.</td></tr>
           <tr><td>Fonts</td><td>Latin subset, woff2: Geist Sans 400, 500, 600 and Geist Mono 400.</td></tr>
           <tr><td>Images</td><td>The Rocky mark (PNG, 64&nbsp;px) and Rocky (WebP, 240&nbsp;px). No screenshots.</td></tr>
+          <tr><td>Tool telemetry</td><td>None. Every Astro script runs with <code>ASTRO_TELEMETRY_DISABLED=1</code>.</td></tr>
           <tr><td>Lighthouse, mobile</td><td>Performance, Accessibility, Best practices and SEO each ≥ 95. The plan measures them before release.</td></tr>
         </tbody>
       </table>
@@ -919,7 +920,7 @@ td:first-child { white-space: normal; }
           <tr><td>D46</td><td>Client JavaScript is three small scripts: theme, carousel, copy buttons. There is no scroll reveal.</td><td>A static page needs no framework. Content that waits for a script can stay hidden when the script fails.</td></tr>
           <tr><td>D47</td><td>The theme follows the system. A toggle forces light or dark and stores the choice. An inline script sets it before the first paint.</td><td>No flash, and no server is needed to know the choice.</td></tr>
           <tr><td>D48</td><td>Two new tokens in <code>@saldo/ui</code>: <code>fontSize.siteDisplay</code> (72) and <code>palettes.*.deviceIsland</code> (<code>#000000</code>).</td><td>AGENTS.md forbids font sizes and colours in apps. The marketing headline and the phone status bar need one value each.</td></tr>
-          <tr><td>D49</td><td>Biome lints <code>.astro</code> files with <code>html.experimentalFullSupportEnabled</code>. The client scripts are <code>.ts</code> files.</td><td>Without the option, Biome 2.5 reports template variables as unused and skips <code>&lt;script&gt;</code>. With it, the repository lint stays clean. A <code>.ts</code> file gets the full lint even if the option changes.</td></tr>
+          <tr><td>D49</td><td>Biome lints <code>.astro</code> files with <code>html.experimentalFullSupportEnabled</code>. The client scripts are <code>.ts</code> files.</td><td>Without the option, Biome 2.5 reports template variables as unused and skips <code>&lt;script&gt;</code>. With it, the repository lint stays clean. A <code>.ts</code> file gets the full lint even if the option changes. One style rule, <code>noDescendingSpecificity</code>, is off for <code>apps/site/src/styles/**</code> only: the two stylesheets are a flat port of the mockup, and their cascade order is intended.</td></tr>
           <tr><td>D50</td><td>The two calls to action go to the repository and to the self-hosting guide on GitHub. The URLs live in one module.</td><td>The docs library does not exist yet. One module makes the later change one line.</td></tr>
           <tr><td>D51</td><td><code>apps/site</code> uses TypeScript 6 for <code>astro check</code>. The rest of the repository keeps TypeScript 7.</td><td><code>@astrojs/check</code> 0.9.10 accepts TypeScript 5 or 6 only. pnpm installs a separate version for the one package.</td></tr>
         </tbody>

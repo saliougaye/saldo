@@ -697,6 +697,23 @@ Acceptance:
 1440×900 in both themes and at 390×844 match the mockups. The translations in es, pt, fr, de and sv need a review by a
 native speaker.
 
+### 0.8a — Marketing site: the landing page 🚧 planned
+
+Plan: `2026-10-18-0.8a-site-landing.md`. Spec: `specs/2026-10-18-marketing-site.html` (D41–D51).
+Mockup: `mockups/2026-10-18-marketing-site-product.html`.
+
+A new static app, `apps/site` (Astro), with one English page. The phone screens are drawn from the `@saldo/ui`
+tokens, and their strings come from `@saldo/i18n`. The site is its own Vercel project; `SITE_URL` gives the domain.
+
+Acceptance:
+
+- The page matches the mockup at 1440 and 390, in both themes. No text clips. The console has no errors.
+- Without JavaScript, all content shows and the carousel scrolls.
+- The theme toggle sets light and dark. After a reload there is no flash.
+- Every call to action goes to the repository or the self-hosting guide.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm --filter site e2e` pass.
+- Lighthouse, mobile: Performance, Accessibility, Best practices and SEO each ≥ 95 (spec §07).
+
 ## Future (not POC)
 
 - Web app UI (spec §17.1)

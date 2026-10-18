@@ -667,7 +667,9 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
 - [x] Spec for the landing page, with the design pass on `@saldo/ui` tokens (2026-10-18):
       `docs/superpowers/specs/2026-10-18-marketing-site.html`. Mockup:
       `docs/superpowers/mockups/2026-10-18-marketing-site-product.html`.
-- [ ] Plan for the landing page (0.8a), then the docs library (0.8b).
+- [x] Plan for the landing page (0.8a, 2026-10-18): `docs/superpowers/plans/2026-10-18-0.8a-site-landing.md`.
+- [ ] Build the landing page (0.8a).
+- [ ] Spec and plan for the docs library (0.8b).
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
 the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no user data.
