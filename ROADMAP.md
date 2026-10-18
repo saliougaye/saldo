@@ -616,8 +616,8 @@ note, a Spendee forum post or a self-hosting list links to, so it is live before
 
 Asked for on 2026-09-24. A public repository is not a visible one: today a stranger's only way in is the
 README, and the only page Saldo serves is the fifteen-line landing page every instance shows
-(`apps/web/app/page.tsx`). Two things give the project a face, and both live in `apps/web` so there is one
-Next.js app, one deploy and one set of design tokens:
+(`apps/web/app/page.tsx`). Two things give the project a face. They share one set of design tokens,
+`@saldo/ui`:
 
 - **Marketing site.** What Saldo is, who it is for (people leaving Spendee's paid tier, self-hosters), the
   screenshots from `docs/screenshots/`, the local-first / own-your-data pitch, and the two calls to action:
@@ -631,20 +631,43 @@ Next.js app, one deploy and one set of design tokens:
 deploy. The instance root is the web app of 0.3, and an instance build carries no marketing and needs no flag.
 The paragraphs below keep the original reasoning; where they say `apps/web`, read `apps/site`.
 
+**Decided 2026-10-18 (D41–D51, spec `docs/superpowers/specs/2026-10-18-marketing-site.html`):**
+
+- The first release is the landing page only. The docs library is a separate plan, 0.8b.
+- `apps/site` is an Astro app with static output. It is not a Next.js app. The earlier text chose Next.js,
+  but nobody compared it with Astro. The reasons for Astro:
+  - Astro sends no JavaScript by default. The page needs scripts only for the carousel, the copy buttons and
+    the theme toggle. Each one is a small script, with no UI framework.
+  - Astro imports TypeScript from the workspace packages. The build reads the `@saldo/ui` tokens and the
+    keys of `en.ts`.
+  - Starlight, the Astro docs framework, can fit the docs library. A glob loader may read the Markdown in
+    `docs/` in place. This is to verify in the docs plan.
+  - Next.js adds a React runtime and hydration to a page that is almost all static. It gives no advantage for
+    docs.
+- English only at the start. The site copy is in one object for each locale, in `apps/site`, so Italian is one
+  more object later. The app strings on the phone screens come from `@saldo/i18n`, and a test fails when a key
+  that the site uses leaves `en.ts`.
+- The site is its own Vercel project, with the root directory `apps/site`. The domain comes later, through the
+  environment variable `SITE_URL`. The code contains no domain.
+- The phone screens are HTML from the tokens, not screenshots. They follow the theme and can change language.
+
 - [ ] Decide before planning:
   - ~~**Instance vs. public site.**~~ Settled by D35. Every self-hosted instance serves `apps/web`, so its `/` must not become an
     advert for the project. Either the marketing routes are a route group switched on by an env flag (off in a
     self-hosted build, on for the public deploy), or the public site is its own build target of the same app.
     The instance's root stays the small status/landing page it is now, or the web app of 0.3.
-  - Where the public site is hosted (Vercel is already ignored in `.gitignore`) and on what domain.
-  - Docs tooling: MDX in Next.js by hand, or a docs framework (Fumadocs, Nextra) — pick by whether it reads
-    the existing Markdown in place without copying it.
-  - Languages: Italian and English like the app, or English first. If both, the copy goes through
-    `@saldo/i18n` like every other user-visible string.
+  - ~~**Hosting.**~~ Settled on 2026-10-18: Vercel, its own project. The domain is still open; the build
+    reads it from `SITE_URL`.
+  - **Docs tooling** (0.8b): Starlight, if its glob loader reads the existing Markdown in place without a copy.
+    To verify in the docs plan.
+  - ~~**Languages.**~~ Settled on 2026-10-18: English first. The site copy is a site-local object for each
+    locale, not part of `@saldo/i18n` (D43).
   - Whether the docs carry a version selector once 0.9 has tags, so a self-hoster reads the guide that
     matches the release they run.
-- [ ] Spec section, a design pass on `@saldo/ui` tokens (no hard-coded colours, radii or font sizes), then the
-      plan.
+- [x] Spec for the landing page, with the design pass on `@saldo/ui` tokens (2026-10-18):
+      `docs/superpowers/specs/2026-10-18-marketing-site.html`. Mockup:
+      `docs/superpowers/mockups/2026-10-18-marketing-site-product.html`.
+- [ ] Plan for the landing page (0.8a), then the docs library (0.8b).
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
 the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no user data.
