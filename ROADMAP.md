@@ -570,9 +570,9 @@ public either way.
       `**<!-- SECURITY CONTACT: set this before publishing -->**`, which renders as bold nothing. Put a real
       address there, and turn on GitHub's private vulnerability reporting once the repo exists — the file
       already says that is the better channel.
-- [ ] **The repository slug.** `apps/web/app/page.tsx:11`, `docs/building-android.md:107`,
-      `docs/building-ios.md:60` and `docs/self-hosting.md:44` name `github.com/saldo-app/saldo`, which does
-      not exist; the first is on the landing page every server instance serves. All become `saliougaye/saldo`.
+- [x] **The repository slug.** `docs/building-android.md`, `docs/building-ios.md` and `docs/self-hosting.md` named
+      `github.com/saldo-app/saldo`, which does not exist. They name `saliougaye/saldo` since 2026-10-18.
+      `apps/web/app/page.tsx` no longer names a slug.
 - [ ] **References to a prototype that is not published.** `docs/design/` is gitignored and stays that way,
       but `AGENTS.md:11` sends every implementing agent to `docs/design/README.md` and the line ranges of
       `Spese.dc.html`, `CONTRIBUTING.md:11` links the same README, and source comments cite its line numbers

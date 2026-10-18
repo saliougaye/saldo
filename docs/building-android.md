@@ -103,7 +103,7 @@ check the signature rather than trusting that you read the log:
 ## Build it
 
 ```bash
-git clone https://github.com/saldo-app/saldo.git
+git clone https://github.com/saliougaye/saldo.git
 cd saldo
 pnpm install
 

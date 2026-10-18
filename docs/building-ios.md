@@ -56,7 +56,7 @@ None of them is a server address: that is typed in the app.
 ## Generate the Xcode project
 
 ```bash
-git clone https://github.com/saldo-app/saldo.git
+git clone https://github.com/saliougaye/saldo.git
 cd saldo
 pnpm install
 
