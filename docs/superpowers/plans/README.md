@@ -721,9 +721,15 @@ timed out at 5 s on the first run after the `@saldo/ui` change, because the Jest
 Performance run of 87 showed a Speed Index of 12.8 s. Twelve more runs did not repeat it. A scripted browser load
 showed the page final within 1.5 s.
 
-**Budget miss.** The first load is 164 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
-it, and they do not compress. HTML is 19 KB, CSS 23 KB, the script 2 KB and `rocky-mark.png` 6 KB. The budget stays as it
-is. The decision is for the user: cut a font weight, or raise the budget.
+After the code review, on 2026-10-19, fourteen fixes changed the site (high contrast, the carousel drag and focus, the
+copy buttons, 44 px hit areas, Latin-only fonts, `theme-color`, the CI build and the Vercel files). The gates pass
+again: `pnpm lint` is clean, `site` has 0 type errors and 13 passed tests. One Lighthouse mobile run: Performance 98,
+Accessibility 100, Best practices 100, SEO 100.
+
+**Budget miss.** The first load is 146 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
+it, and they do not compress. HTML is 19 KB, CSS 8.5 KB (23 KB before the fonts were limited to Latin), the script 2 KB
+and `rocky-mark.png` 6 KB. The budget stays as it is. The decision is for the user: cut a font weight, or raise the
+budget.
 
 Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool.
 
