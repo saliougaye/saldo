@@ -1506,18 +1506,18 @@ img {
   --ico: 18px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .iconbtn:hover:not(:disabled) {
+  .iconbtn:hover:not([aria-disabled="true"]) {
     background: var(--color-raised);
   }
 }
 .iconbtn:focus-visible {
   border-radius: var(--radius-pill);
 }
-.iconbtn:disabled {
+.iconbtn[aria-disabled="true"] {
   opacity: 0.35;
   cursor: default;
 }
-.iconbtn:disabled:active {
+.iconbtn[aria-disabled="true"]:active {
   scale: 1;
 }
 

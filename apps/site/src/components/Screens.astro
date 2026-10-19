@@ -35,7 +35,7 @@ const total = s.shots.length;
   <div class="wrap car-ctl">
     <div class="car-prog"><span class="car-count" aria-live="polite" aria-atomic="true" data-carousel-count><b>01</b> / {String(total).padStart(2, '0')}</span><span class="car-bar" aria-hidden="true"><i data-carousel-bar></i></span><span class="car-name" data-carousel-name>{s.shots[0]?.name}</span></div>
     <div class="car-btns">
-      <button class="iconbtn press" type="button" aria-label={ui.previous} data-carousel-prev disabled><Icon name="chevL" /></button>
+      <button class="iconbtn press" type="button" aria-label={ui.previous} data-carousel-prev aria-disabled="true"><Icon name="chevL" /></button>
       <button class="iconbtn press" type="button" aria-label={ui.next} data-carousel-next><Icon name="chevR" /></button>
     </div>
   </div>

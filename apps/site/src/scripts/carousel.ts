@@ -70,8 +70,10 @@ function init({ root, scroller, track, prev, next, count, bar, name }: Parts): v
     frame = 0;
     const x = scroller.scrollLeft;
     const end = max();
-    prev.disabled = x <= 1;
-    next.disabled = x >= end - 1;
+    // `aria-disabled`, not `disabled`: a disabled button that has focus drops it, and the keyboard
+    // user lands on the body at the end of the strip.
+    prev.setAttribute('aria-disabled', String(x <= 1));
+    next.setAttribute('aria-disabled', String(x >= end - 1));
     root.classList.toggle('fl', x > 1);
     root.classList.toggle('fr', x < end - 1);
     let index = 0;
@@ -127,8 +129,13 @@ function init({ root, scroller, track, prev, next, count, bar, name }: Parts): v
     if (target !== null) settleTo(target);
   };
 
-  prev.addEventListener('click', () => go(-1));
-  next.addEventListener('click', () => go(1));
+  const off = (button: HTMLButtonElement) => button.getAttribute('aria-disabled') === 'true';
+  prev.addEventListener('click', () => {
+    if (!off(prev)) go(-1);
+  });
+  next.addEventListener('click', () => {
+    if (!off(next)) go(1);
+  });
   scroller.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowRight') go(1);
     else if (event.key === 'ArrowLeft') go(-1);
@@ -177,6 +184,12 @@ function init({ root, scroller, track, prev, next, count, bar, name }: Parts): v
   });
   scroller.addEventListener('pointermove', (event) => {
     if (drag === null || event.pointerId !== drag.id) return;
+    // The button went up where `pointerup` could not reach the scroller (a press that left the box
+    // before the capture started). Close the drag; do not start a new one with no button held.
+    if ((event.buttons & 1) === 0) {
+      end(event);
+      return;
+    }
     const dx = event.clientX - drag.x0;
     if (!drag.active) {
       if (Math.abs(dx) < DRAG_START_PX) return;
