@@ -699,7 +699,7 @@ native speaker.
 
 ### 0.8a — Marketing site: the landing page ✅ done
 
-Plan: `2026-10-18-0.8a-site-landing.md`. Spec: `specs/2026-10-18-marketing-site.html` (D41–D51).
+Plan: `2026-10-18-0.8a-site-landing.md`. Spec: `specs/2026-10-18-marketing-site.html` (D41–D52).
 Mockup: `mockups/2026-10-18-marketing-site-product.html`.
 
 A new static app, `apps/site` (Astro), with one English page. The phone screens are drawn from the `@saldo/ui`
@@ -711,27 +711,37 @@ Acceptance:
 - Without JavaScript, all content shows and the carousel scrolls.
 - The theme toggle sets light and dark. After a reload there is no flash.
 - Every call to action goes to the repository or the self-hosting guide.
-- `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. The site has no end-to-end suite (the user decided so on 2026-10-19).
+- `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. The site has no automated tests and no carousel physics: the user
+  decided so on 2026-10-19 (D52). The carousel is native scroll with CSS scroll-snap, plus the buttons, the keys and the
+  progress.
+- A misspelt app string key fails `astro check`. A key that a catalog lacks fails the build.
 - Lighthouse, mobile: Performance, Accessibility, Best practices and SEO each ≥ 95 (spec §07).
 
 **Status:** met, with one budget miss. On 2026-10-19: `pnpm lint` is clean, `pnpm typecheck` passes in all six packages
-(`site`: 0 errors, 0 warnings, 0 hints), and `pnpm test` passes in all six (`site`: 13 passed). Three mobile suites
+(`site`: 0 errors, 0 warnings, 0 hints), and `pnpm test` passed in all six (`site`: 13 passed; the site lost its tests later, see below). Three mobile suites
 timed out at 5 s on the first run after the `@saldo/ui` change, because the Jest cache was cold. They pass on the next run
 (37 suites, 208 tests). Lighthouse, mobile: Performance 97 to 99, Accessibility 100, Best practices 100, SEO 100. One
 Performance run of 87 showed a Speed Index of 12.8 s. Twelve more runs did not repeat it. A scripted browser load
 showed the page final within 1.5 s.
 
-After the code review, on 2026-10-19, fourteen fixes changed the site (high contrast, the carousel drag and focus, the
-copy buttons, 44 px hit areas, Latin-only fonts, `theme-color`, the CI build and the Vercel files). The gates pass
-again: `pnpm lint` is clean, `site` has 0 type errors and 13 passed tests. One Lighthouse mobile run: Performance 98,
-Accessibility 100, Best practices 100, SEO 100.
+After the code review, on 2026-10-19, fourteen fixes changed the site (high contrast, the carousel focus, the copy buttons,
+44 px hit areas, Latin-only fonts, `theme-color`, the CI build and the Vercel files).
+
+**Simplification, 2026-10-19.** The user asked for less code: «it is a simple marketing site». The site lost its tests
+(13 tests, Vitest, the `test` script), the carousel physics (mouse drag, momentum, rubber band, spring) and the helper
+files that served them. `scripts/carousel.ts` went from 249 to 63 lines. The theme logic has one source: the inline
+script in `Base.astro`. `pnpm lint` is clean, `pnpm typecheck` passes in all six packages (`site`: 0 errors), and
+`pnpm test` passes in the five packages that have tests. Turbo skips `site`. One Lighthouse mobile run: Performance 98,
+Accessibility 100, Best practices 100, SEO 100. A scripted browser at 1440 and 390, in both themes, showed no console
+error and no horizontal overflow. The buttons, the arrow keys, Home, End and a native scroll each land on a snapped card.
 
 **Budget miss.** The first load is 146 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
 it, and they do not compress. HTML is 19 KB, CSS 8.5 KB (23 KB before the fonts were limited to Latin), the script 2 KB
 and `rocky-mark.png` 6 KB. The budget stays as it is. The decision is for the user: cut a font weight, or raise the
 budget.
 
-Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool.
+Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool. A mouse can no
+longer drag the carousel. It uses the buttons, the keys, the wheel with Shift, or a trackpad.
 
 ## Future (not POC)
 

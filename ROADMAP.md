@@ -631,7 +631,7 @@ README, and the only page Saldo serves is the fifteen-line landing page every in
 deploy. The instance root is the web app of 0.3, and an instance build carries no marketing and needs no flag.
 The paragraphs below keep the original reasoning; where they say `apps/web`, read `apps/site`.
 
-**Decided 2026-10-18 (D41–D51, spec `docs/superpowers/specs/2026-10-18-marketing-site.html`):**
+**Decided 2026-10-18 (D41–D52, spec `docs/superpowers/specs/2026-10-18-marketing-site.html`):**
 
 - The first release is the landing page only. The docs library is a separate plan, 0.8b.
 - `apps/site` is an Astro app with static output. It is not a Next.js app. The earlier text chose Next.js,
@@ -645,11 +645,13 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
   - Next.js adds a React runtime and hydration to a page that is almost all static. It gives no advantage for
     docs.
 - English only at the start. The site copy is in one object for each locale, in `apps/site`, so Italian is one
-  more object later. The app strings on the phone screens come from `@saldo/i18n`, and a test fails when a key
+  more object later. The app strings on the phone screens come from `@saldo/i18n`, and the build fails when a key
   that the site uses leaves `en.ts`.
 - The site is its own Vercel project, with the root directory `apps/site`. The domain comes later, through the
   environment variable `SITE_URL`. The code contains no domain.
 - The phone screens are HTML from the tokens, not screenshots. They follow the theme and can change language.
+- The site has no automated tests and no carousel physics (D52, 2026-10-19). The carousel is native scroll with CSS
+  scroll-snap.
 
 - [ ] Decide before planning:
   - ~~**Instance vs. public site.**~~ Settled by D35. Every self-hosted instance serves `apps/web`, so its `/` must not become an

@@ -35,7 +35,7 @@ Spendee's paid features. You are implementing the POC.
   **and** `en.ts` (the parity test enforces this).
 - **The marketing site is the one exception** (`apps/site`, spec 0.8a D43). Its own copy lives in
   `apps/site/src/content/<locale>.ts`, one object for each locale. The app strings on its phone screens come from
-  `@saldo/i18n` through `appText`, and `apps/site/src/lib/appText.test.ts` checks every key.
+  `@saldo/i18n` through `appText`. `astro check` stops a misspelt key, and the build fails when a catalog lacks a key. The site has no automated tests (spec 0.8a D52).
 - **When you change a screen that the site shows** (the table in spec 0.8a §04), change the matching component in
   `apps/site/src/components/phone/screens/` in the same pull request.
 - **No hard-coded colours, radii or font sizes** in apps. Use `@saldo/ui` tokens. New screens reuse existing primitives.

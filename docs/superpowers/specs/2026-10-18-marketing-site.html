@@ -307,7 +307,7 @@ td:first-child { white-space: normal; }
     <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
     <span><b>Design</b> <code>mockups/2026-10-18-marketing-site-product.html</code></span>
     <span><b>Roadmap</b> 0.8</span>
-    <span><b>Decisions</b> D41–D51</span>
+    <span><b>Decisions</b> D41–D52</span>
     <span><b>Date</b> 2026-10-18</span>
   </div>
 </header>
@@ -596,17 +596,17 @@ td:first-child { white-space: normal; }
     <div class="ch-head">
       <span class="ch-num">05</span>
       <h2 id="h-carousel">The carousel</h2>
-      <p class="lead">The browser scrolls the carousel. A small script adds mouse drag, the buttons, the keys and the progress. Every action stops on a card.</p>
+      <p class="lead">The browser scrolls the carousel and stops it on a card. A small script adds the buttons, the keys and the progress.</p>
     </div>
     <div class="prose">
-      <p>The scroller is a native horizontal scroll box with <code>scroll-snap-type: x mandatory</code>. Touch and trackpads use the scrolling of the browser. The script never handles a vertical movement, so the page always scrolls up and down.</p>
-      <p>The pure rules are in <code>src/lib/carousel.ts</code>. The script <code>src/scripts/carousel.ts</code> only reads the DOM and calls them. Unit tests in the plan cover the rules.</p>
+      <p>The scroller is a native horizontal scroll box with <code>scroll-snap-type: x mandatory</code>. Touch, trackpad and wheel use the scrolling of the browser. The script has no pointer code, so the page always scrolls up and down.</p>
+      <p>The script <code>src/scripts/carousel.ts</code> is about 60 lines. There is no mouse drag, no rubber band and no spring. The user decided so on 2026-10-19 (D52).</p>
     </div>
   </div>
   <div class="visual">
     <figure class="rv">
       <svg viewBox="0 0 1040 380" role="img" aria-labelledby="f5t">
-        <title id="f5t">The scroller is as wide as the page. The track has a padding equal to the page edge. Each card has a stop at its left edge minus the scroll padding. A flick projects a rest position, and the carousel animates to the nearest stop.</title>
+        <title id="f5t">The scroller is as wide as the page. The track has a padding equal to the page edge. Each card has a snap point at its left edge minus the scroll padding. The browser stops the scroll on a snap point. A button or a key scrolls to the adjacent card.</title>
         <rect class="bx-dash" x="20" y="40" width="1000" height="200" rx="16"/>
         <text x="30" y="30" font-size="14" class="tm mono">scroller · overflow-x: auto · scroll-snap-type: x mandatory</text>
         <line class="lane" x1="160" y1="40" x2="160" y2="270"/>
@@ -619,34 +619,28 @@ td:first-child { white-space: normal; }
         <rect x="940" y="40" width="80" height="200" fill="url(#fadeR)"/>
         <defs><linearGradient id="fadeR" x1="0" x2="1"><stop offset="0" stop-color="var(--bg)" stop-opacity="0"/><stop offset="1" stop-color="var(--bg)" stop-opacity="1"/></linearGradient></defs>
         <g font-size="14" class="tm">
-          <line class="ln-ok" x1="235" y1="320" x2="620" y2="320" marker-end="url(#ah-ok)"/>
-          <circle cx="235" cy="320" r="5" class="ah-ok"/>
-          <text x="235" y="350" text-anchor="middle">release, v = 1 400 px/s</text>
-          <text x="620" y="350" text-anchor="middle" class="tok b">projected rest</text>
-          <line class="ln-ink" x1="575" y1="232" x2="575" y2="306" marker-end="url(#ah-ink)"/>
-          <text x="660" y="268" class="b">nearest stop: card 3</text>
+          <line class="ln-ok" x1="160" y1="320" x2="326" y2="320" marker-end="url(#ah-ok)"/>
+          <circle cx="160" cy="320" r="5" class="ah-ok"/>
+          <text x="160" y="350" text-anchor="middle">snap point of card 1</text>
+          <text x="330" y="350" text-anchor="middle" class="tok b">snap point of card 2</text>
+          <line class="ln-ink" x1="405" y1="232" x2="405" y2="306" marker-end="url(#ah-ink)"/>
+          <text x="440" y="268" class="b">«Next screen» or → scrolls here</text>
         </g>
       </svg>
-      <figcaption><b>Figure 5.</b> A flick does not stop where the pointer stops. The script projects the rest position from the speed, then goes to the nearest card.</figcaption>
+      <figcaption><b>Figure 5.</b> Each card is a snap point. A swipe or a wheel stops on one. A button or a key scrolls to the adjacent one.</figcaption>
     </figure>
     <div class="tablewrap rv">
       <table>
         <thead><tr><th scope="col">Rule</th><th scope="col">Value</th></tr></thead>
         <tbody>
-          <tr><td>Stops</td><td>For each card: <code>offsetLeft − scroll-padding-left</code>, clamped to 0 … max. A stop within <span class="num">32</span>&nbsp;px of the end becomes the end. Equal stops merge.</td></tr>
+          <tr><td>Stops</td><td>For each card: <code>scroll-snap-align: start</code>, with the scroll padding of the alignment rule. The last cards stop at the end of the scroll box.</td></tr>
           <tr><td>Alignment</td><td>The track padding and the scroll padding are <code>max(pagePaddingWeb, (100cqi − contentWide) / 2)</code>, and 20&nbsp;px below 760&nbsp;px. The first and the last card align with the page grid.</td></tr>
           <tr><td>Card width</td><td>264&nbsp;px, gap 24&nbsp;px. Below 760&nbsp;px: 232&nbsp;px, gap 16&nbsp;px, so about one and a half cards show.</td></tr>
-          <tr><td>Drag start</td><td>Mouse only, main button. The drag starts after <span class="num">5</span>&nbsp;px of horizontal movement. Then the script captures the pointer and turns snap off.</td></tr>
-          <tr><td>Rubber band</td><td>Past an end: <code>sign(o) · |o|·d·0.55 / (d + 0.55·|o|)</code>, <code>d</code> = scroller width. It moves the track with <code>transform</code>.</td></tr>
-          <tr><td>Speed</td><td>From the pointer samples of the last <span class="num">100</span>&nbsp;ms. Limit ±<span class="num">6 000</span>&nbsp;px/s.</td></tr>
-          <tr><td>Projection</td><td><code>(v / 1000) · 0.99 / (1 − 0.99)</code>. The rate 0.99 makes a flick go about two cards.</td></tr>
-          <tr><td>Settle</td><td>A critically damped spring, response <span class="num">0.42</span>&nbsp;s, from the live position and the release speed. It stops when the distance is below 0.5&nbsp;px and the speed below 12&nbsp;px/s. Snap comes back on at the end.</td></tr>
-          <tr><td>Interrupt</td><td>A wheel event, a touch or a new press stops the spring at once.</td></tr>
-          <tr><td>Buttons</td><td>Previous and next go to the adjacent stop. Each button is disabled at its end.</td></tr>
-          <tr><td>Keys</td><td>With focus on the scroller: ← and → go one stop. Home and End go to the first and the last stop. No other key changes.</td></tr>
-          <tr><td>Progress</td><td>A counter «03 / 10», a bar that shows the seen part, and the name of the current screen.</td></tr>
+          <tr><td>Buttons</td><td>Previous and next scroll to the adjacent card. Each button has <code>aria-disabled="true"</code> at its end, so it keeps the focus. They are not <code>disabled</code>.</td></tr>
+          <tr><td>Keys</td><td>With focus on the scroller: ← and → go one card. Home and End go to the first and the last card. No other key changes.</td></tr>
+          <tr><td>Progress</td><td>A counter «03 / 10», a bar that shows the seen part, and the name of the current screen. The script changes the counter and the name only when the card changes.</td></tr>
           <tr><td>Edge fades</td><td>A gradient of <code>--color-bg</code> on each side. It shows only when there is more content on that side.</td></tr>
-          <tr><td>Reduced motion</td><td>No spring and no rubber band. Each action jumps to its stop.</td></tr>
+          <tr><td>Reduced motion</td><td>The buttons and the keys jump to the card with no smooth scroll.</td></tr>
         </tbody>
       </table>
     </div>
@@ -851,20 +845,20 @@ td:first-child { white-space: normal; }
     <div class="ch-head">
       <span class="ch-num">12</span>
       <h2 id="h-sync">Stay in step with the app</h2>
-      <p class="lead">The screens must look like the app and say what the app says. Three checks keep them in step: types, one unit test, and a review rule.</p>
+      <p class="lead">The screens must look like the app and say what the app says. Three checks keep them in step: types and the build, the tokens, and a review rule.</p>
     </div>
   </div>
   <div class="visual">
     <figure class="rv">
       <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f9t">
-        <title id="f9t">Three things can drift. Strings: a test fails when a key the site uses leaves en.ts. Values: tokens come from @saldo/ui, so a change shows up on the site at the next build. Layout and numbers: a pull request that changes a shown screen updates the site screen too.</title>
+        <title id="f9t">Three things can drift. Strings: a misspelt key fails the type check, and a key that leaves en.ts fails the build. Values: tokens come from @saldo/ui, so a change shows up on the site at the next build. Layout and numbers: a pull request that changes a shown screen updates the site screen too.</title>
         <rect class="bx-ok" x="20" y="30" width="320" height="270" rx="18"/>
         <text x="40" y="66" font-size="19" class="b tok">Strings</text>
-        <text x="40" y="100" font-size="15">appText reads en.ts.</text>
-        <text x="40" y="128" font-size="15">APP_KEYS lists every key used.</text>
-        <text x="40" y="168" font-size="15" class="b">appText.test.ts fails when</text>
-        <text x="40" y="194" font-size="15" class="b">a key leaves en.ts.</text>
-        <text x="40" y="236" font-size="14" class="tm">pnpm test · CI on every push</text>
+        <text x="40" y="100" font-size="15">appText reads en.ts. Its key</text>
+        <text x="40" y="128" font-size="15">type comes from the catalog.</text>
+        <text x="40" y="168" font-size="15" class="b">A misspelt key fails the type</text>
+        <text x="40" y="194" font-size="15" class="b">check. A missing key fails the build.</text>
+        <text x="40" y="236" font-size="14" class="tm">pnpm typecheck · CI build on every push</text>
         <rect class="bx" x="360" y="30" width="320" height="270" rx="18"/>
         <text x="380" y="66" font-size="19" class="b">Values</text>
         <text x="380" y="100" font-size="15">Colours, radii, sizes and chart</text>
@@ -878,15 +872,15 @@ td:first-child { white-space: normal; }
         <text x="720" y="126" font-size="15">in the table below also updates</text>
         <text x="720" y="152" font-size="15">its component in apps/site.</text>
         <text x="720" y="194" font-size="15" class="b">Review rule in AGENTS.md.</text>
-        <text x="720" y="236" font-size="14" class="tm">no end-to-end suite (decision)</text>
+        <text x="720" y="236" font-size="14" class="tm">no automated tests (decision)</text>
       </svg>
-      <figcaption><b>Figure 9.</b> Green is automatic and fails the build. The dashed part is a rule for people and agents. The site has no end-to-end suite: the user decided so on 2026-10-19. A person looks at the built page.</figcaption>
+      <figcaption><b>Figure 9.</b> Green is automatic and fails the build. The dashed part is a rule for people and agents. The site has no automated tests: the user decided so on 2026-10-19 (D52). A person looks at the built page.</figcaption>
     </figure>
     <div class="tablewrap rv">
       <table>
         <thead><tr><th scope="col">What</th><th scope="col">Owner</th><th scope="col">Check</th></tr></thead>
         <tbody>
-          <tr><td>App strings on the screens</td><td><code>packages/i18n/src/locales/en.ts</code></td><td><code>apps/site/src/lib/appText.test.ts</code>: each key in <code>APP_KEYS</code> resolves to a non-empty string in <code>en</code>.</td></tr>
+          <tr><td>App strings on the screens</td><td><code>packages/i18n/src/locales/en.ts</code></td><td><code>apps/site/src/lib/appText.ts</code>: the key type comes from the catalog, so the type checker stops a misspelt key. <code>appText</code> throws when the catalog lacks a key, so the build fails.</td></tr>
           <tr><td>Sample numbers</td><td><code>apps/site/src/content/en.ts</code></td><td>Derived totals: «Left to spend», net worth, spendable total and «To repay» are sums of the data, not typed values.</td></tr>
           <tr><td>Screen layout</td><td>The author of the app change</td><td>Review rule: a change to a route in section 04 updates the matching component in <code>apps/site/src/components/phone/</code>.</td></tr>
           <tr><td>Tokens</td><td><code>packages/ui/src/tokens.ts</code></td><td>The type checker: the site reads tokens by name.</td></tr>
@@ -923,6 +917,7 @@ td:first-child { white-space: normal; }
           <tr><td>D49</td><td>Biome lints <code>.astro</code> files with <code>html.experimentalFullSupportEnabled</code>. The client scripts are <code>.ts</code> files.</td><td>Without the option, Biome 2.5 reports template variables as unused and skips <code>&lt;script&gt;</code>. With it, the repository lint stays clean. A <code>.ts</code> file gets the full lint even if the option changes. One style rule, <code>noDescendingSpecificity</code>, is off for <code>apps/site/src/styles/**</code> only: the two stylesheets are a flat port of the mockup, and their cascade order is intended.</td></tr>
           <tr><td>D50</td><td>The two calls to action go to the repository and to the self-hosting guide on GitHub. The URLs live in one module.</td><td>The docs library does not exist yet. One module makes the later change one line.</td></tr>
           <tr><td>D51</td><td><code>apps/site</code> uses TypeScript 6 for <code>astro check</code>. The rest of the repository keeps TypeScript 7.</td><td><code>@astrojs/check</code> 0.9.10 accepts TypeScript 5 or 6 only. pnpm installs a separate version for the one package.</td></tr>
+          <tr><td>D52</td><td>The site has no automated tests and no carousel physics. The carousel is a native scroll box with CSS scroll-snap.</td><td>The user decided on 2026-10-19: this is a simple marketing site. The type checker, the build and a look at the page are enough. Mouse drag with momentum is not worth hundreds of lines of script and tests.</td></tr>
         </tbody>
       </table>
     </div>

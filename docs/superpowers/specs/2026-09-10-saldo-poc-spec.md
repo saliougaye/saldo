@@ -97,7 +97,7 @@ cycle, and am I going faster than I should?*
 | D40 | **MCP ships reads and writes, under two scopes (`read`, `write`)** (decided 2026-10-03, §17.4.2) | An assistant that can only read answers questions; one that can also write saves the typing, which is the point of talking to it. The write perimeter is exactly the web's (§17.1.3) and goes through the same server write functions, rules and `basis` check, so there is nothing new to defend; what is new is the consent, hence the two scopes the user sees and can halve. Reads ship first (0.4a) and writes second (0.4b), on the same catalogue. |
 | D41 | **The first release of 0.8 is the landing page only** (decided 2026-10-18) | The docs library is a separate plan, 0.8b. See `specs/2026-10-18-marketing-site.html`. |
 | D42 | **`apps/site` is an Astro app with static output, not Next.js** (decided 2026-10-18) | Astro sends no JavaScript by default and imports TypeScript from the workspace packages. Next.js adds a React runtime to a static page. The earlier choice of Next.js did not compare Astro. Details in `specs/2026-10-18-marketing-site.html`. |
-| D43–D51 | **The landing page: copy, screens, URL, scripts, theme, tokens, lint, links, TypeScript** (decided 2026-10-18) | Listed with their reasons in `specs/2026-10-18-marketing-site.html` §13. |
+| D43–D52 | **The landing page: copy, screens, URL, scripts, theme, tokens, lint, links, TypeScript, no tests and no carousel physics** (decided 2026-10-18; D52 on 2026-10-19) | Listed with their reasons in `specs/2026-10-18-marketing-site.html` §13. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -1614,7 +1614,7 @@ public. The decisions behind this section are D30–D36.
   certificate, a shared cookie domain and a parent-domain RP id.
 - `/admin/**` is the admin panel (§17.1.8). The public marketing site and docs library are **not** here: they are
   their own app, `apps/site`, with their own deploy (D35, roadmap 0.8).
-  On the landing page, `docs/superpowers/specs/2026-10-18-marketing-site.html` wins over this spec (D41–D51).
+  On the landing page, `docs/superpowers/specs/2026-10-18-marketing-site.html` wins over this spec (D41–D52).
 - Routes in 0.3: `/login`, `/register`, `/recover`, `/recover/confirm`, `/email-verified`, `/onboarding`, `/home`,
   `/transactions`, `/stats`, `/profile`, `/admin/**`, `/setup` (0.3h, only while the instance has no account).
 
