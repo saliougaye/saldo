@@ -34,7 +34,7 @@ export function periodDay(sample: Sample): {
   return { elapsed, length, pace: elapsed / length, daysLeft: length - elapsed };
 }
 
-export interface BudgetState {
+interface BudgetState {
   category: CategoryKey;
   spent: number;
   limit: number;
@@ -69,7 +69,7 @@ export function cardDue(sample: Sample): number {
   return sample.card.accrued + sample.card.statement;
 }
 
-export interface GoalState {
+interface GoalState {
   ratio: number;
   /** elapsed / length from the start to the deadline; null without a deadline. */
   pace: number | null;

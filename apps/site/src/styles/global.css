@@ -546,19 +546,6 @@ img {
 .chip {
   --ico: 12px;
 }
-.ring {
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.ring svg.r {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-card);
@@ -715,9 +702,6 @@ img {
 .term .pr {
   color: var(--color-text-muted);
   user-select: none;
-}
-.term .ok {
-  color: var(--color-positive);
 }
 .copy {
   position: relative;
@@ -1374,19 +1358,6 @@ img {
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
 }
-.a-mock {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.a-mock .term pre {
-  padding-bottom: 52px;
-}
-.a-mock .consent {
-  position: relative;
-  margin: -36px -12px 0 auto;
-  width: min(372px, 88%);
-}
 .consent {
   padding: 18px;
   display: flex;
@@ -1498,18 +1469,6 @@ img {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@container site (max-width: 760px) {
-  .a-mock {
-    gap: 12px;
-  }
-  .a-mock .term pre {
-    padding-bottom: 16px;
-  }
-  .a-mock .consent {
-    margin: 0;
-    width: 100%;
-  }
-}
 
 .iconbtn {
   display: inline-grid;
@@ -1576,7 +1535,7 @@ img {
 }
 
 /* =====================================================================
-   Carousel: native scroll + snap, mouse drag with momentum, buttons, keys
+   Carousel: native scroll + snap, buttons, keys
    ===================================================================== */
 .car {
   position: relative;
@@ -1590,18 +1549,10 @@ img {
   scroll-padding-inline: var(--edge);
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  cursor: grab;
   outline: none;
 }
 .car-sc::-webkit-scrollbar {
   display: none;
-}
-.car-sc.drag {
-  cursor: grabbing;
-  scroll-snap-type: none;
-}
-.car-sc.anim {
-  scroll-snap-type: none;
 }
 .car-sc:focus-visible {
   box-shadow: inset 0 0 0 2px var(--color-text);
@@ -1612,7 +1563,6 @@ img {
   gap: 24px;
   width: max-content;
   padding: 12px var(--edge) 28px;
-  will-change: transform;
 }
 .car-it {
   flex: none;
@@ -1635,9 +1585,6 @@ img {
 .car-it figcaption b {
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
-}
-.car-it img {
-  -webkit-user-drag: none;
 }
 .car::before,
 .car::after {

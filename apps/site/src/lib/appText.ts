@@ -1,6 +1,7 @@
 import {
   type AppLocale,
   catalogs,
+  type Messages,
   makeTranslator,
   plural,
   type TranslationVars,
@@ -8,170 +9,29 @@ import {
 
 /**
  * The app strings the phone screens show (spec 0.8a §12). They come from the catalogs of
- * `@saldo/i18n`, so a screen says what the app says. Every key is listed here, and
- * `appText.test.ts` fails when one of them leaves a catalog of a site locale.
+ * `@saldo/i18n`, so a screen says what the app says. A misspelt key fails at typecheck. A key that
+ * a catalog lacks throws, so the build fails and the site never ships the raw key.
  */
-export const APP_KEYS = [
-  'tabs.home',
-  'tabs.transactions',
-  'tabs.stats',
-  'tabs.accounts',
-  'admin.title',
-  'common.search',
-  'kinds.expense',
-  'kinds.income',
-  'kinds.transfer',
-  'period.dayOf',
-  'home.remaining',
-  'home.income',
-  'home.expenses',
-  'home.upcoming',
-  'home.budget',
-  'home.allTransactions',
-  'transactions.title',
-  'transactions.searchPlaceholder',
-  'transactions.onlyExpenses',
-  'transactions.onlyIncome',
-  'transactions.onlyTransfers',
-  'transactions.upcoming',
-  'transactions.excludedFromTotals',
-  'transactions.detailCategory',
-  'transactions.detailAccount',
-  'transactions.detailDate',
-  'txForm.newTitle',
-  'txForm.amount',
-  'txForm.account',
-  'txForm.date',
-  'txForm.today',
-  'txForm.yesterday',
-  'txForm.category',
-  'txForm.categoryMostUsed',
-  'txForm.otherCategory',
-  'txForm.description',
-  'txForm.create',
-  'stats.cashflow',
-  'stats.lastAndForecast',
-  'stats.legendIncome',
-  'stats.legendExpenses',
-  'stats.legendCurrent',
-  'stats.legendForecast',
-  'stats.legendRange',
-  'stats.forecastEndLabel',
-  'stats.expenses',
-  'stats.income',
-  'stats.ofTotal',
-  'budgets.title',
-  'budgets.ofLimit',
-  'accounts.title',
-  'accounts.netWorth',
-  'accounts.spendable',
-  'accounts.spendableNote',
-  'accounts.savings',
-  'accounts.toRepay',
-  'accounts.monthsDelta',
-  'accounts.accruedInCycle',
-  'accounts.nextCharge',
-  'accounts.statementShort',
-  'accounts.settleCard',
-  'accounts.creditNote',
-  'accounts.lastTransactions',
-  'targets.today',
-  'targets.ofLimit',
-  'targets.percent',
-  'targets.leftDetail',
-  'goals.title',
-  'goals.by',
-  'goals.reachedOnMeta',
-  'goals.perPeriod_month',
-  'goals.stateBehind',
-  'goals.stateAhead',
-  'goals.reachedSentence',
-  'goals.reachedState',
-  'recurrence.title',
-  'recurrence.monthlyAverage',
-  'recurrence.shareOfIncome',
-  'recurrence.next',
-  'recurrenceScope.title',
-  'recurrenceScope.onlyThis',
-  'recurrenceScope.thisAndFollowing',
-  'recurrenceScope.all',
-  'period.kind_month',
-  'period.kind_week',
-  'period.kind_cycle',
-  'period.kind_year',
-  'period.custom',
-  'period.kindBody_cycle',
-  'onboarding.cycleTimeline',
-  'csvImport.title',
-  'csvImport.detected',
-  'csvImport.preset_spendee',
-  'csvImport.summary',
-  'csvImport.field_date',
-  'csvImport.field_account',
-  'csvImport.field_category',
-  'csvImport.field_tags',
-  'io.backupJson',
-  'io.backupJsonHint',
-  'io.backupZip',
-  'io.backupZipHint',
-  'io.csvAll',
-  'recap.title_month',
-  'recap.net_month',
-  'recap.previous_month',
-  'recap.usual',
-  'recap.income',
-  'recap.expenses',
-  'recap.delta_month',
-  'recap.categories',
-  'recap.aboveUsual',
-  'recap.budgets',
-  'recap.of',
-  'recap.within',
-  'recap.withinCarry',
-  'recap.over',
-  'recap.other',
-  'recap.biggest',
-  'recap.netWorth',
-  'recap.start_month',
-  'web.shell.newTransaction',
-  'web.consent.title',
-  'web.consent.returnsTo',
-  'web.consent.registeredNow',
-  'web.consent.readTitle',
-  'web.consent.readBody',
-  'web.consent.required',
-  'web.consent.writeTitle',
-  'web.consent.writeBody',
-  'web.consent.authorize',
-  'web.consent.authorizeReadOnly',
-] as const;
+type Path<T, P extends string = ''> = {
+  [K in keyof T & string]: T[K] extends string ? `${P}${K}` : Path<T[K], `${P}${K}.`>;
+}[keyof T & string];
 
+type AppKey = Path<Messages>;
 /** Counted strings: the catalog has `<key>_one` and `<key>_other`. */
-export const APP_COUNT_KEYS = [
-  'home.upcomingCount',
-  'home.overPace',
-  'transactions.upcomingCount',
-  'stats.seeAll',
-  'stats.excludedRow',
-  'budgets.daysLeft',
-  'recurrence.count',
-  'recurrence.every_weekly',
-  'recurrence.every_monthly',
-  'recap.otherCategories',
-] as const;
+type AppCountKey = Extract<AppKey, `${string}_one`> extends `${infer Key}_one` ? Key : never;
 
-export type AppKey = (typeof APP_KEYS)[number];
-export type AppCountKey = (typeof APP_COUNT_KEYS)[number];
-
-export function appText(locale: AppLocale, key: AppKey, vars?: TranslationVars): string {
-  return makeTranslator(catalogs[locale])(key, vars);
+function translate(locale: AppLocale, key: string, vars?: TranslationVars): string {
+  const text = makeTranslator(catalogs[locale])(key, vars);
+  if (text === key) throw new Error(`Missing app string "${key}" in the "${locale}" catalog.`);
+  return text;
 }
 
-export function appCount(
+export const appText = (locale: AppLocale, key: AppKey, vars?: TranslationVars): string =>
+  translate(locale, key, vars);
+
+export const appCount = (
   locale: AppLocale,
   key: AppCountKey,
   count: number,
   vars?: TranslationVars,
-): string {
-  return plural(makeTranslator(catalogs[locale]), locale, key, count, vars);
-}
+): string => plural((name, values) => translate(locale, name, values), locale, key, count, vars);

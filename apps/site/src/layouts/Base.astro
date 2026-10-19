@@ -7,7 +7,6 @@ import '../styles/global.css';
 import '../styles/phone.css';
 import { palettes, tokensCss } from '@saldo/ui';
 import type { SiteContent } from '../content/index';
-import { THEME_INIT } from '../lib/theme';
 
 /**
  * Spec 0.8a §03, §08, §09. The tokens go into one `<style>` from `tokensCss()`. The theme script runs
@@ -42,7 +41,22 @@ const tokens = `${tokensCss()}
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" media="(prefers-color-scheme: light)" content={palettes.light.bg} data-scheme="light" data-color={palettes.light.bg} />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content={palettes.dark.bg} data-scheme="dark" data-color={palettes.dark.bg} />
-    <script is:inline set:html={THEME_INIT} />
+    <script is:inline>
+      // Plain script, no module: a module is deferred, runs after the first paint, and the page flashes.
+      // The `theme-color` metas follow the system only, so a forced theme sets them by hand.
+      window.paintTheme = (theme) => {
+        const forced = theme === 'light' || theme === 'dark';
+        if (forced) document.documentElement.setAttribute('data-theme', theme);
+        else document.documentElement.removeAttribute('data-theme');
+        for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+          const source = forced ? document.querySelector(`meta[data-scheme="${theme}"]`) : meta;
+          meta.setAttribute('content', source.getAttribute('data-color'));
+        }
+      };
+      try {
+        window.paintTheme(localStorage.getItem('saldo-site-theme'));
+      } catch {}
+    </script>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />

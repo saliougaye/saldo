@@ -11,7 +11,6 @@
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "typecheck": "ASTRO_TELEMETRY_DISABLED=1 astro check",
-    "test": "vitest run",
     "og:install": "playwright install chromium",
     "og": "ASTRO_TELEMETRY_DISABLED=1 node scripts/og.mjs"
   },
@@ -27,7 +26,6 @@
     "@astrojs/check": "^0.9.10",
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.5",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }
