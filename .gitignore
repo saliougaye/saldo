@@ -65,7 +65,5 @@ skills-lock.json
 # Playwright output
 apps/web/test-results/
 
-# apps/site (spec 0.8a): Astro types, Playwright output
+# apps/site (spec 0.8a): Astro types
 apps/site/.astro/
-apps/site/test-results/
-apps/site/playwright-report/

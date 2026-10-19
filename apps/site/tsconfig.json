@@ -5,5 +5,5 @@
     "noImplicitOverride": true
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "test-results", "playwright-report"]
+  "exclude": ["dist"]
 }

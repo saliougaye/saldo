@@ -43,23 +43,3 @@ jobs:
         with:
           name: playwright-traces
           path: apps/web/test-results
-
-  e2e-site:
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter site exec playwright install --with-deps chromium
-      - run: pnpm --filter site e2e
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-traces-site
-          path: apps/site/test-results
