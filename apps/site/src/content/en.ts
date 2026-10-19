@@ -110,8 +110,10 @@ export const en = {
     guideShort: 'Guide',
     github: 'GitHub',
     themeLabel: { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' },
-    copy: 'Copy',
+    copyDocker: 'Copy the Docker commands',
+    copyMcp: 'Copy the MCP command',
     copied: 'Copied',
+    copyFailed: 'Copy failed. The text is selected.',
     previous: 'Previous screen',
     next: 'Next screen',
     carousel: 'App screens',
@@ -256,6 +258,7 @@ export const en = {
         'The same data in a browser on your own server: the list, with the detail beside it.',
     },
     mcp: {
+      terminalPath: 'terminal',
       name: 'MCP',
       caption:
         'Claude Code, Cursor or any MCP client: you sign in with your passkey and choose what it may do.',

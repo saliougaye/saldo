@@ -679,6 +679,10 @@ img {
   text-align: center;
   font-family: var(--font-mono);
 }
+.term-bar .copy-status {
+  white-space: nowrap;
+  color: var(--color-text);
+}
 .term pre {
   margin: 0;
   padding: 16px 18px;

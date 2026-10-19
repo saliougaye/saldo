@@ -43,7 +43,7 @@ const total = s.shots.length;
     <h3 class="h3 web-title">{s.webTitle}</h3>
     <div class="wrow">
       <figure><WebTransactions content={content} /><figcaption><b>{s.web.name}</b><span>{s.web.caption}</span></figcaption></figure>
-      <figure><div class="wmcp"><Terminal lines={content.selfHost.mcpCommands} path="terminal" copyLabel={ui.copy} copiedLabel={ui.copied} /><Consent content={content} /></div><figcaption><b>{s.mcp.name}</b><span>{s.mcp.caption}</span></figcaption></figure>
+      <figure><div class="wmcp"><Terminal lines={content.selfHost.mcpCommands} path={s.mcp.terminalPath} copyLabel={ui.copyMcp} copiedLabel={ui.copied} failedLabel={ui.copyFailed} /><Consent content={content} /></div><figcaption><b>{s.mcp.name}</b><span>{s.mcp.caption}</span></figcaption></figure>
     </div>
   </div>
 </section>

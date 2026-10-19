@@ -20,7 +20,7 @@ const h = content.selfHost;
         <ul class="checks">{h.checks.map((check) => <li><Icon name="check" /><span><b>{check.lead}</b> {check.rest}</span></li>)}</ul>
         <Ctas content={content} only="guide" style="margin-top:8px" />
       </div>
-      <Terminal lines={h.commands} path={h.terminalPath} copyLabel={content.ui.copy} copiedLabel={content.ui.copied} />
+      <Terminal lines={h.commands} path={h.terminalPath} copyLabel={content.ui.copyDocker} copiedLabel={content.ui.copied} failedLabel={content.ui.copyFailed} />
     </div>
     <ol class="steps">{h.steps.map((step) => <li><b>{step.title}</b><span>{step.body}</span></li>)}</ol>
   </div>
