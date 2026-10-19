@@ -69,7 +69,7 @@ Do not write tests for these:
 
 End-to-end tests cover the screens: Playwright for the web app (`apps/web/e2e/`, `pnpm --filter web e2e`), Maestro for the
 phone (`apps/mobile/maestro/`, run with `maestro/run.sh`). CI runs the Playwright suite only on a pull request that has
-the `e2e` label. CI does not run the Maestro flows. See `TODO.md` for the flows that do not have a test yet.
+the `e2e` label. CI does not run the Maestro flows.
 
 ## Writing docs
 

@@ -1,11 +1,11 @@
 # Roadmap
 
 Where Saldo goes after the proof of concept, in the order the work has to happen. Each milestone is a
-coherent release a self-hoster can update to. Milestone numbers are an order, not version numbers. The
-product milestones come first; going public and releasing come last, once the feature set is what the
-repository will be judged on.
+coherent release a self-hoster can update to. Milestone numbers are names, not version numbers and, since
+2026-10-19, not an order either: the diagram below gives the order, and the sections follow it. Going public
+and the marketing site come right after the MCP server; AI and shared finances follow; releasing comes last.
 
-This file holds the big directions. Bugs, small features and ideas that fit in one plan live in
+This file holds the big directions. Small features that fit in one plan live in
 [`TODO.md`](TODO.md); the POC phases that are already built, with their plans and acceptance criteria, live
 in [`docs/superpowers/plans/README.md`](docs/superpowers/plans/README.md). When a milestone is picked up
 it gets a spec section and a plan under `docs/superpowers/plans/` like any other piece of work, and this
@@ -18,7 +18,7 @@ milestone bends one of them, the bend is written down here before it is built.
 ## The order, and what actually constrains it
 
 ```
-0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.5 AI on the server ──> 0.6 Shared finances ──> 0.7 Public ──> 0.8 Marketing site ──> 0.9 Releases
+0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.7 Public ──> 0.8 Marketing site ──> 0.5 AI on the server ──> 0.6 Shared finances ──> 0.9 Releases
 ```
 
 Only five things in this order are dependencies; everything else is preference and can move.
@@ -26,10 +26,16 @@ Only five things in this order are dependencies; everything else is preference a
 | Before | After | Why |
 |---|---|---|
 | Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
-| Shared finances (0.6) | Public (0.7) → Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
+| Shared finances (0.6) | Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
-| Everything | Public (0.7) → Releases (0.9) | a decision, taken 2026-09-22 |
+| Everything | Releases (0.9) | a decision, taken 2026-09-22 |
 | Public (0.7) | Marketing site (0.8) → Releases (0.9) | the site links to the public repository, and is live before a release is announced (decided 2026-09-26) |
+
+**Moved on 2026-10-19:** Public (0.7) and the marketing site (0.8) now come before AI (0.5) and shared finances
+(0.6). The 2026-09-22 decision put everything before going public, and the 2026-09-26 one put shared finances
+before it. Both give way to getting the project seen sooner. The cost is small: the repository goes public
+before the `sync_rows` key changes, so the README must say that `main` is pre-release and that no migration is
+promised until 0.9 (a checklist item in 0.7).
 
 Two decisions taken on 2026-09-22 shape the whole list:
 
@@ -230,6 +236,47 @@ until they save.
 - [x] Spec line in §6.16 and the plan (`docs/superpowers/plans/2026-09-25-transfer-fill-balance.md`);
       `transferFillAmounts` in `@saldo/core`, the chips in `TransactionForm`.
 
+### Profile: the period row shows the period, not only the cycle day ✅ done
+
+Picked up from `TODO.md` on 2026-10-19 (plan `docs/superpowers/plans/2026-10-19-profile-period-row.md`). Profile's first row reads
+«Periodo» with «Mese solare» or «Ciclo di stipendio · dal 27», and opens a screen with the four kinds and the day grid under the
+cycle only. The web Profilo gets the same panel (`?edit=period`); before, it could not change the kind at all.
+
+### Notifications for future transactions & the period recap 🚧 planned
+
+Moved here from `docs/superpowers/plans/README.md` on 2026-10-19. Not built yet. Card charge-day reminders (§5.3) and
+budget alerts (§5.8) already use `expo-notifications`; these three reuse that same permission flow and scheduling
+pattern (`{kind}:{id}` notification ids, rescheduled on write, none when the thing they warn about no longer applies).
+
+- [ ] **Reminder ahead of a future (scheduled) transaction.** A per-transaction lead time (e.g. "1 giorno prima" /
+      "il giorno stesso") so a user with `date > today` (§5.3, "In arrivo") gets warned before it lands, not just on
+      the day. Needs a field on the transaction (or a global default) for how far ahead to notify.
+- [ ] **Notification when a scheduled transaction reaches its date.** Distinct from the reminder above: fires *on* the
+      day a transaction moves from "In arrivo" into the counted totals, so the user learns balances changed without
+      opening the app. One per transaction (`transaction-due:{id}`), cancelled if the transaction is edited to a later
+      date or deleted before firing.
+- [x] **Notification when the period recap is ready.** Already built with the recap: `PeriodRecapGate` schedules a
+      09:00 notification on the first day of the new period (`period-recap:` ids, `recapSchedule.ts`). The old note
+      said it was missing; it was stale.
+
+### Fees on transfers between accounts
+
+Moved here from `TODO.md` on 2026-10-19. Not asked for as work yet; most of it reopens a product decision.
+
+A transfer can cost money: PayPal charges to move a balance to a bank account, a card withdrawal has a fee, a foreign
+transfer loses something on the exchange. Today a transfer moves the same amount out of one account and into the other,
+so the fee has to be entered by hand as a separate expense — or it just disappears, and the destination balance no
+longer matches the real one.
+
+Open questions before this can be planned:
+
+- [ ] Is the fee a field on the transfer (`feeMinor`, charged to the source account), or a separate expense
+      transaction linked to the transfer?
+- [ ] Which account pays it, and in which currency, when the two accounts differ?
+- [ ] Does the fee show up in the expense totals and in the category breakdown (a "Commissioni" category?), or does it
+      stay outside them like the transfer itself?
+- [ ] Does it belong in the recurring transfers too (a monthly transfer with a fixed fee)?
+
 ### Tag detail: the total ignores income ✅ done
 
 Noticed on 2026-09-25. `apps/mobile/app/tag/[id].tsx` computes its hero figure as
@@ -390,6 +437,7 @@ calls. No calculation is written twice; if the web app shows a number the phone 
 | 0.3g | **Done 2026-10-01.** PWA: a manifest named after the instance, icons from the mascot (192, 512, maskable, apple-touch, favicon), a hand-written service worker that serves a localized offline page to a navigation with no network and caches nothing else, registered in production only; the Docker image now ships `public/`; plan `docs/superpowers/plans/2026-10-01-0.3g-pwa.md` | d |
 | 0.3h | **Done 2026-10-03.** First-run setup: while the instance has no account, `/`, `/login` and `/register` send to `/setup`, a four-step wizard — **Benvenuto** (version, database reached, no account yet), **Il tuo server** (instance name, registration mode; a value set by `INSTANCE_NAME` or `REGISTRATION` shows locked), **Il tuo account** (name, email, passkey: the first account, with the `admin` role), **Pronto** (summary; the email line reads «configurata dall'ambiente» under `SMTP_HOST`, «configurata» for a stored configuration that still reads, otherwise «non configurata» with a link to `/admin/settings?edit=smtp`; an optional first invite when the mode is `invite`) → `/home`. Writes the name and the mode to `server_settings` only where the environment does not set them. Once an account exists `/setup` is gone, so `first-user` loses its reason on a fresh instance; the CLI stays for the day no admin can sign in. No SMTP step (see the decision above). The policy lets the first account in under every mode and with no code (decided while planning, 2026-10-03): what `first-user` did for one mode the wizard now does for all, and the window closes with the first account. Mockup `docs/superpowers/mockups/2026-10-01-first-run-setup-variants.html`, variant A; plan `docs/superpowers/plans/2026-10-03-0.3h-first-run-setup.md` | b, f |
 | 0.3i | **Done 2026-10-03.** Docs only: how to send mail through a provider. A «Provider via SMTP» section in `docs/self-hosting.md` with one worked example per provider (Resend, Postmark, Amazon SES, Mailgun, Brevo), each as the five `SMTP_*` lines and as the same values typed into `/admin/settings?edit=smtp`; the domain verification (SPF, DKIM; DMARC where the provider requires it) the provider asks for before it accepts a sender; which ports pass `transportSecurity` (465 implicit TLS, any other port STARTTLS, plain only to `localhost`; Resend and SES also 2465 and 2587, the others 2525, for hosts that block the usual ones); the test email as the check. The same example, shortened, in `apps/web/.env.example` and the compose file's comments. No code, no spec change; plan `docs/superpowers/plans/2026-10-03-0.3i-mail-provider-docs.md` | f |
+| 0.3j | **Done 2026-10-19.** Change of a real email address, with verification: the new address gets a link, and the swap happens only when the link is opened; the old verified address gets a notice. **Decided:** Better Auth's own `/change-email` is not used — its link is a replayable JWT keyed by the old address, opening it creates a session, it has no hook for the old address and it stores nothing. The change is a row in `email_changes` (migration `0007`), and the library endpoint stays disabled; a test pins it. Needs SMTP; without it nothing changes. The phone is unchanged. Plan `docs/superpowers/plans/2026-10-19-change-email.md` | f |
 
 **Done when:** a user registers on the web or signs in with the phone's passkey, sees Home, transactions and
 Statistics matching the phone to the cent, adds a transaction that reaches the phone on its next sync, and
@@ -466,95 +514,10 @@ an admin switches the whole thing off from `/admin/mcp`.
 
 ---
 
-## 0.5 — AI on the server, bring your own key (spec §17.2, §17.3)
-
-Spec §17.2 stored the provider key in the phone's `expo-secure-store`, never synced, never sent to the Saldo
-server; the phone would call the model directly. **Decided 2026-09-22: the key lives on the server.** Saldo is
-self-hosted, the server is the user's; one key, one place, every client — phone, web app — uses it without the
-user typing it twice. The server calls the provider; the app keeps talking only to its own server, so §18's
-«no third-party network calls from the app» stays literally true and gains a sibling line about the server.
-
-**What it stands on.** The projection of 0.3 for aggregates; phase 09b for receipts (capture, compression,
-the local file store, the viewer, the category list the prompt needs). The `ReceiptAnalyzer` and
-`InsightsProvider` interfaces stay in `@saldo/core/ai` as the spec says; their drivers move server-side, behind
-routes the phone calls with its session.
-
-**The thing to settle before building either half:** this is the first time the user's data leaves the
-user's machines to a host they do not run. The consent has to be explicit — a screen that says what is sent,
-to whom, and when — rather than a settings toggle nobody reads. Worth a spike first: the interface, one
-driver, the settings screen. Then the full build.
-
-### Receipt analysis (§17.2)
-
-«Allega foto» → «Analizza scontrino» → the phone uploads the image to its server → the server asks the model
-→ a prefilled transaction sheet the user always confirms. Provider: Anthropic or an OpenAI-compatible base
-URL, model id configurable.
-
-### Spending insights (§17.3)
-
-Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.2 — never raw
-descriptions unless the user opts in; results cached per cycle. **Ships beside 0.4, not instead of it**
-(decided 2026-10-01, D38): the user with an MCP client gets the same answers from their own assistant, the user
-without one gets them in the app. The prompt is built from the output of the MCP tool functions of 0.4, called
-in-process, so the two never describe the user's finances differently.
-
-**To decide before planning:**
-
-- [x] Key **per instance** (decided 2026-09-26, D36): the admin sets it in `/admin` (server settings of 0.3,
-      encrypted at rest), everyone on the instance uses it, the admin pays.
-- [x] Insights ship, beside 0.4 (decided 2026-10-01, D38; see 0.4). Their input is the 0.4 tool output.
-- [ ] The wording of the §18 change and of the consent screen.
-- [ ] The local-only mode (0.1, «A first run with no server») has no AI. Write that down where that
-      idea is planned.
-- [ ] Spike, then spec update (§17.2, §17.3, §18), then the plan.
-
-**Done when:** a user on an instance with a key scans a receipt into a prefilled sheet, an instance without a
-key never contacts a provider, and §18 says exactly what leaves the server and when.
----
-
-## 0.6 — Shared finances
-
-Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
-households from the POC; this is the note that it is the next non-goal to fall.
-
-**Before the release, decided when it starts** (changed 2026-09-26). It was meant to be decided before 0.3 so
-the web app would not be rewritten. It ships before 0.7, 0.8 and 0.9 instead, while there are still no production
-rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
-not of anybody's real data. 0.3 and 0.4 do not prepare for it.
-
-Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
-local rows) was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two
-shapes are already written there and are kept apart on purpose:
-
-- **Two people, one account.** Each registers a passkey on the same user. The server already works this
-  way; what is missing is adding a passkey to an existing account — `resolveUser` always mints a new user
-  and `addPasskey` wants a session. No local scoping needed. Cheap, and it covers a couple.
-- **Two accounts, shared data.** An owning entity (space, household), a membership table, the pull scoped
-  to the spaces a user belongs to (`sync_rows` is keyed `(user_id, entity, id)` and the pull is
-  `where user_id = ?`), and a rule for rows when somebody leaves. The LWW merge already tolerates more
-  writers.
-
-The first shape is a weekend; the second is a phase. They are not exclusive — the first can ship as a
-step towards the second, or the second can make the first unnecessary. With no end-to-end encryption (see
-below) there is no shared key to distribute, which is the part that made «spaces» hard.
-
-**To decide before planning:**
-
-- [ ] Which shape, or which first. Spendee's **shared wallet** (share one wallet, not the whole account) is
-      the lead candidate. Accounts carry a real email from 0.3 (D32), which is how a member would be invited.
-- [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
-      server are not served. Shared finances either keep that line or have to earn its removal.
-- [ ] Spec section (`§5.x Shared finances`), then the plan.
-
-**Done when:** two phones with two passkeys see the same transactions, budgets and accounts, and the
-10b stopgap label comes off.
-
----
-
 ## 0.7 — Public repository
 
 What stands between this repository and its first public push. Audited on 2026-09-18. The repository has
-no remote yet, so the first push publishes all 316 commits at once.
+no remote yet, so the first push publishes the whole history at once: 1,220 commits on 2026-10-20.
 
 **Verified clean and needing nothing:** no `.env`, keystore, `.p12` or personal CSV was ever added in
 history; no `sk-`/`ghp_`/`AKIA`/private-key patterns in tracked files; `.env*`, `.vercel`, `.screenshots`
@@ -564,16 +527,25 @@ copyleft trap (`node-forge` is dual BSD-3/GPL-2, `@img/sharp-libvips-*` is an LG
 in). The commit author address stays as it is: the repository will be `saliougaye/saldo`, so the name is
 public either way.
 
+**History rewritten on 2026-10-20, before the first push.** The Claude `Co-Authored-By` and «Generated with Claude
+Code» trailers are removed from every commit. The commits of the tool «T3 Code» now carry the author
+`Saliou Gaye <gayesaliou29@gmail.com>`, so the history has one identity. The tree is unchanged. The old refs are in
+`~/saldo-pre-rewrite-2026-10-20.bundle`. Two commit bodies still use the word «Claude» in prose. They are not trailers.
+Push only `main`: never `--all`, `--mirror` or `--tags`, because the local repository also holds `refs/t3/*`, `refs/stash`
+and old branches with the old history.
+
 ### Blockers — none of these survive the first push
 
-- [ ] **A security contact.** `SECURITY.md` still says
-      `**<!-- SECURITY CONTACT: set this before publishing -->**`, which renders as bold nothing. Put a real
-      address there, and turn on GitHub's private vulnerability reporting once the repo exists — the file
-      already says that is the better channel.
+- [x] **A security contact.** `SECURITY.md` points to GitHub's private vulnerability reporting only, with a fallback:
+      a public issue titled «Security report» that holds no details. No email address is published (decided
+      2026-10-20). **Still open, needs the user:** turn the reporting on after the repository exists; the link in
+      the file shows nothing until then.
 - [x] **The repository slug.** `docs/building-android.md`, `docs/building-ios.md` and `docs/self-hosting.md` named
       `github.com/saldo-app/saldo`, which does not exist. They name `saliougaye/saldo` since 2026-10-18.
       `apps/web/app/page.tsx` no longer names a slug.
-- [ ] **References to a prototype that is not published.** `docs/design/` is gitignored and stays that way,
+- [x] **References to a prototype that is not published.** Done on 2026-10-20: `AGENTS.md` keeps the prototype as an
+      optional step, `CONTRIBUTING.md`, the POC spec header and the source comments say that it is not part of the
+      repository. Older plans still quote `docs/design` in code listings; they stay as they are. Original note: `docs/design/` is gitignored and stays that way,
       but `AGENTS.md:11` sends every implementing agent to `docs/design/README.md` and the line ranges of
       `Spese.dc.html`, `CONTRIBUTING.md:11` links the same README, and source comments cite its line numbers
       (`packages/ui/src/icons.ts:3`, `packages/ui/src/tokens.ts:1`, `packages/i18n/src/locales/it.ts:1`,
@@ -583,25 +555,39 @@ public either way.
 
 ### Worth doing in the same pass
 
-- [ ] **Community health files.** No `CODE_OF_CONDUCT.md`, no `.github/ISSUE_TEMPLATE/`, no
+- [x] **Community health files.** Done on 2026-10-20: `CODE_OF_CONDUCT.md`, issue forms, a pull request template and `dependabot.yml`. Original note: No `CODE_OF_CONDUCT.md`, no `.github/ISSUE_TEMPLATE/`, no
       `PULL_REQUEST_TEMPLATE.md`, no `dependabot.yml`. `CONTRIBUTING.md` tells people to open an issue
       describing the behaviour before sending a fix, and gives them no template to shape it.
-- [ ] **Decide what happens to `.claude/`, `.agents/` and `skills-lock.json`.** All three are untracked
+- [x] **Decide what happens to `.claude/`, `.agents/` and `skills-lock.json`.** Ignored in `.gitignore` (2026-10-20). Original note: All three are untracked
       *and* un-ignored, so a `git add .` before the first push commits them. Either ignore them or commit
       them on purpose.
-- [ ] **Local paths and a first name in tracked files.** `/Users/saliougaye/…` and `rtk proxy` (a private
+- [x] **Local paths and a first name in tracked files.** Done on 2026-10-20: the paths are `<repo>`, the display name in `admin.test.ts` is «Dora». Older plans still use the `rtk` prefix; `AGENTS.md` says it is a private wrapper. Original note: `/Users/saliougaye/…` and `rtk proxy` (a private
       local wrapper) appear in `docs/superpowers/plans/2026-09-13-11-release-and-hardening.md:978,1076,1250`
       and `2026-09-19-more-colors-icons.md`, and `apps/web/src/server/auth/admin.test.ts:88` uses `'Saliou'`
       as a display name. Cosmetic, but the paths read as an accident rather than a choice.
-- [ ] **A dependency gate in CI.** `.github/workflows/ci.yml` runs lint, typecheck and test only. A public
+- [x] **A dependency gate in CI.** Done on 2026-10-20: `security.yml` runs `pnpm audit --prod --audit-level critical` when
+      a lockfile or a `package.json` changes, on `main`, weekly and on demand; `codeql.yml` scans JS and TS. The level is
+      `critical` because 11 `high` advisories remain, all in build tooling (Expo CLI, Jest, Astro). The audit also found
+      3 critical and 14 high advisories in production dependencies. They are fixed: `next` 16.3.4 to 16.4.2 and a root
+      override `shell-quote ^1.11.0`. Original note: `.github/workflows/ci.yml` runs lint, typecheck and test only. A public
       repo gets Dependabot, CodeQL and secret-scanning push protection for free; `pnpm audit` is one more
       step.
-- [ ] **The phase index understates what works.** The passkey ceremony was run on a real phone on
-      2026-09-18 and it works. Six phases still end with a sentence saying it has never been driven — 06,
-      06b, 07, 08, 10 and 11 in `docs/superpowers/plans/README.md`, and with it the `SALDO_SCHEME` round
-      trip, the invite burn in `afterVerification`, the first-account-becomes-admin rule and the connected
-      state of §6.30. That index is the first thing a visitor reads, so correct it before the repository is
-      public: record what was actually exercised on the device, and leave the rest listed as still open.
+- [x] **The phase index understates what works.** The passkey ceremony was run on a real phone on
+      2026-09-18 and it works; the user confirmed it again on 2026-10-19. Six phases ended with a sentence saying
+      it had never been driven — 06, 06b, 07, 08, 10 and 11 in `docs/superpowers/plans/README.md`. They now say
+      that the sign-in works on a phone and list what is still not exercised. Done on 2026-10-19.
+- [x] **Say that `main` is pre-release.** Done on 2026-10-20 in the README. Original note: Shared finances (0.6) changes the key of `sync_rows` after the
+      repository is public. The README states that no migration is promised before the first release (0.9), and
+      that a self-hoster who runs `main` with real data does so at their own risk.
+
+**Still needs the user, on GitHub (2026-10-20):**
+
+- [ ] Create the empty repository `saliougaye/saldo` (no README, licence or `.gitignore`), add the remote and push `main`.
+- [ ] Turn on private vulnerability reporting, secret scanning with push protection, and Dependabot alerts.
+- [ ] Protect `main`: require the `check` job of CI and `analyze` of CodeQL, and require pull requests. Create the `e2e` label.
+- [ ] Do not turn on the CodeQL «default setup»: it conflicts with `codeql.yml`. Run the Security workflow once.
+- [ ] Look at `packages/core/src/io/__fixtures__/spendee.csv` once (12 rows, anonymised).
+- [ ] Check Settings → Community Standards.
 
 **Done when:** the repository is public at `github.com/saliougaye/saldo`, private vulnerability reporting
 is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
@@ -647,8 +633,10 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
 - English only at the start. The site copy is in one object for each locale, in `apps/site`, so Italian is one
   more object later. The app strings on the phone screens come from `@saldo/i18n`, and the build fails when a key
   that the site uses leaves `en.ts`.
-- The site is its own Vercel project, with the root directory `apps/site`. The domain comes later, through the
-  environment variable `SITE_URL`. The code contains no domain.
+- The site is its own Vercel project, with the root directory `apps/site`. The domain is
+  `getsaldo.bysali.com` (decided 2026-10-19; `saldo.bysali.com` is the author's own instance). It reaches the build
+  through the environment variable `SITE_URL`, set to `https://getsaldo.bysali.com` in the Production environment of
+  the Vercel project. The code contains no domain.
 - The phone screens are HTML from the tokens, not screenshots. They follow the theme and can change language.
 - The site has no automated tests and no carousel physics (D52, 2026-10-19). The carousel is native scroll with CSS
   scroll-snap.
@@ -658,8 +646,8 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
     advert for the project. Either the marketing routes are a route group switched on by an env flag (off in a
     self-hosted build, on for the public deploy), or the public site is its own build target of the same app.
     The instance's root stays the small status/landing page it is now, or the web app of 0.3.
-  - ~~**Hosting.**~~ Settled on 2026-10-18: Vercel, its own project. The domain is still open; the build
-    reads it from `SITE_URL`.
+  - ~~**Hosting.**~~ Settled on 2026-10-18: Vercel, its own project. The domain is `getsaldo.bysali.com`
+    (2026-10-19); the build reads it from `SITE_URL`.
   - **Docs tooling** (0.8b): Starlight, if its glob loader reads the existing Markdown in place without a copy.
     To verify in the docs plan.
   - ~~**Languages.**~~ Settled on 2026-10-18: English first. The site copy is a site-local object for each
@@ -679,6 +667,92 @@ the phase-index fix included. It does **not** depend on 0.3: the marketing route
 **Done when:** the marketing site and the docs library are live on the public domain, every call to action
 reaches the public repository or a guide, and each docs page renders from the Markdown file in `docs/` it
 claims to show.
+
+---
+
+## 0.5 — AI on the server, bring your own key (spec §17.2, §17.3)
+
+Spec §17.2 stored the provider key in the phone's `expo-secure-store`, never synced, never sent to the Saldo
+server; the phone would call the model directly. **Decided 2026-09-22: the key lives on the server.** Saldo is
+self-hosted, the server is the user's; one key, one place, every client — phone, web app — uses it without the
+user typing it twice. The server calls the provider; the app keeps talking only to its own server, so §18's
+«no third-party network calls from the app» stays literally true and gains a sibling line about the server.
+
+**What it stands on.** The projection of 0.3 for aggregates; phase 09b for receipts (capture, compression,
+the local file store, the viewer, the category list the prompt needs). The `ReceiptAnalyzer` and
+`InsightsProvider` interfaces stay in `@saldo/core/ai` as the spec says; their drivers move server-side, behind
+routes the phone calls with its session.
+
+**The thing to settle before building either half:** this is the first time the user's data leaves the
+user's machines to a host they do not run. The consent has to be explicit — a screen that says what is sent,
+to whom, and when — rather than a settings toggle nobody reads. Worth a spike first: the interface, one
+driver, the settings screen. Then the full build.
+
+### Receipt analysis (§17.2)
+
+«Allega foto» → «Analizza scontrino» → the phone uploads the image to its server → the server asks the model
+→ a prefilled transaction sheet the user always confirms. Provider: Anthropic or an OpenAI-compatible base
+URL, model id configurable.
+
+### Spending insights (§17.3)
+
+Fed **aggregates only** — per-cycle category totals, budgets, trends, the forecast of 0.2 — never raw
+descriptions unless the user opts in; results cached per cycle. **Ships beside 0.4, not instead of it**
+(decided 2026-10-01, D38): the user with an MCP client gets the same answers from their own assistant, the user
+without one gets them in the app. The prompt is built from the output of the MCP tool functions of 0.4, called
+in-process, so the two never describe the user's finances differently.
+
+**To decide before planning:**
+
+- [x] Key **per instance** (decided 2026-09-26, D36): the admin sets it in `/admin` (server settings of 0.3,
+      encrypted at rest), everyone on the instance uses it, the admin pays.
+- [x] Insights ship, beside 0.4 (decided 2026-10-01, D38; see 0.4). Their input is the 0.4 tool output.
+- [ ] The wording of the §18 change and of the consent screen.
+- [ ] The local-only mode (0.1, «A first run with no server») has no AI. Write that down where that
+      idea is planned.
+- [ ] Spike, then spec update (§17.2, §17.3, §18), then the plan.
+
+**Done when:** a user on an instance with a key scans a receipt into a prefilled sheet, an instance without a
+key never contacts a provider, and §18 says exactly what leaves the server and when.
+
+---
+
+## 0.6 — Shared finances
+
+Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
+households from the POC; this is the note that it is the next non-goal to fall.
+
+**Before the release, decided when it starts** (changed 2026-09-26, and again 2026-10-19). It was meant to be
+decided before 0.3 so the web app would not be rewritten. It ships before 0.9 instead (0.7 and 0.8 moved ahead of
+it on 2026-10-19), while there are still no production rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
+not of anybody's real data. 0.3 and 0.4 do not prepare for it.
+
+Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
+local rows) was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two
+shapes are already written there and are kept apart on purpose:
+
+- **Two people, one account.** Each registers a passkey on the same user. The server already works this
+  way; what is missing is adding a passkey to an existing account — `resolveUser` always mints a new user
+  and `addPasskey` wants a session. No local scoping needed. Cheap, and it covers a couple.
+- **Two accounts, shared data.** An owning entity (space, household), a membership table, the pull scoped
+  to the spaces a user belongs to (`sync_rows` is keyed `(user_id, entity, id)` and the pull is
+  `where user_id = ?`), and a rule for rows when somebody leaves. The LWW merge already tolerates more
+  writers.
+
+The first shape is a weekend; the second is a phase. They are not exclusive — the first can ship as a
+step towards the second, or the second can make the first unnecessary. With no end-to-end encryption (see
+below) there is no shared key to distribute, which is the part that made «spaces» hard.
+
+**To decide before planning:**
+
+- [ ] Which shape, or which first. Spendee's **shared wallet** (share one wallet, not the whole account) is
+      the lead candidate. Accounts carry a real email from 0.3 (D32), which is how a member would be invited.
+- [ ] Trust between members: `SECURITY.md` says today that two people who do not trust each other on one
+      server are not served. Shared finances either keep that line or have to earn its removal.
+- [ ] Spec section (`§5.x Shared finances`), then the plan.
+
+**Done when:** two phones with two passkeys see the same transactions, budgets and accounts, and the
+10b stopgap label comes off.
 
 ---
 

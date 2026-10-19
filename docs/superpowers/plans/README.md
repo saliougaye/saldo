@@ -1,7 +1,7 @@
 # Saldo POC — Roadmap & plan index
 
 Spec: [`docs/superpowers/specs/2026-09-10-saldo-poc-spec.md`](../specs/2026-09-10-saldo-poc-spec.md)
-Design: [`docs/design/`](../../design/README.md)
+Design: the prototype in `docs/design/` (not part of the repository; the spec and `@saldo/ui` carry its values)
 
 The POC is split into **9 phases**. Each phase produces working, tested software on its own and gets its own
 implementation plan in this folder.
@@ -182,9 +182,8 @@ client-supplied, so anyone could rotate the header and reset their own bucket; i
 **Superseded in part by 06b:** the hand-rolled auth described above was replaced by Better Auth at the user's
 request; the sync protocol, the screens and the health probe survive unchanged.
 
-**Not verified:** the manual browser passkey ceremony. It needs a real platform authenticator (Touch ID / Windows
-Hello) and there is no browser automation on this machine, so it is the one acceptance criterion left to the user;
-`docs/self-hosting.md` has the steps. Deviations from the spec, both deliberate: `webauthn_challenges` gained a
+**Verified on a phone, 2026-10-19:** the passkey ceremony works on a real phone, through the app's sign-in. A run in a
+desktop browser is not recorded. Deviations from the spec, both deliberate: `webauthn_challenges` gained a
 `display_name` column so the register-verify step need not trust a second client-supplied copy of the name, and
 `/api/health` reports `registrationAllowed` so the app can hide "create account".
 
@@ -209,8 +208,7 @@ exists in `first-user` mode — refuse outright (403) while `/api/health` flips 
 handoff is covered by tests: single use, unknown token refused, no session refused, and the token is not stored in
 the clear.
 
-**Not verified:** the browser ceremony itself, which needs a real platform authenticator (Touch ID) — still the
-user's to run. **Accepted risk, recorded in §9.3:** the handoff token travels in a `saldo://` URL.
+**Verified on a phone, 2026-10-19:** the passkey ceremony works on a real phone. **Accepted risk, recorded in §9.3:** the handoff token travels in a `saldo://` URL.
 
 ### 07 — Sync engine ✅ done
 
@@ -251,9 +249,9 @@ the two parts that matter: `nextval('sync_seq')` and the upsert's `setWhere` HLC
 came back `stale` and left the stored row untouched, the sequence stayed monotonic, and a second user's pull returned
 nothing.
 
-**Not verified:** signing in for real, which needs the browser passkey ceremony (§9.3) and therefore a platform
-authenticator; and with it the connected state of §6.30, the scheduler against a real server, and two devices over
-the network. The logic behind all of them is covered by the tests above.
+**Verified on a phone, 2026-10-19:** signing in for real works. **Not recorded:** the connected state of §6.30, the
+scheduler against a real server, and two devices over the network. The logic behind all of them is covered by the
+tests above.
 
 ### 08 — Generic periods, and one mandatory sign-in
 
@@ -298,8 +296,8 @@ out of their own offline data, the exact opposite of the comment two lines above
 answer *with no session and no error* signs out; no answer at all, or an answer carrying an error, keeps the cached
 session.
 
-**Not verified:** signing in for real (the passkey ceremony needs a platform authenticator), so the screenshots above
-were taken with the sign-in gate bypassed by a temporary probe that was then reverted.
+The screenshots above were taken with the sign-in gate bypassed by a temporary probe that was then reverted. Signing
+in for real works on a phone (2026-10-19).
 
 ### 08b — The server comes from the build, not from the user ✅
 
@@ -402,10 +400,9 @@ afterwards**, which is the abandoned-ceremony invariant; and the CLI walks
 `invite new --label … --days 3` → `list` (`active`) → `revoke` → `list` (`revoked`), plus
 `user list`. Flags reach the scripts without a `--` separator.
 
-**Not verified:** the ceremony itself — `afterVerification`, and with it the burn, the release on
-failure and the first-account-becomes-admin rule — needs a signed attestation from a real platform
-authenticator (Touch ID), which no phase since 06 has been able to drive. Those paths rest on the
-unit tests for `burnInvite`, `releaseInvite` and `roleForNewUser`.
+**Verified on a phone, 2026-10-19:** the passkey ceremony runs end to end. **Not recorded separately:** the burn of an
+invite in `afterVerification`, the release on failure and the first-account-becomes-admin rule. Those paths rest on
+the unit tests for `burnInvite`, `releaseInvite` and `roleForNewUser`.
 
 **Review findings, both fixed here.** The first-account-is-the-admin rule was a read-then-write:
 two ceremonies finishing together both saw an empty `user` table and both became admin. Moving the
@@ -485,7 +482,7 @@ token), and the server address is a build input, not something typed on the phon
 real key, but nobody has installed one on a phone. Outstanding, all needing hardware or hands:
 
 - installing the APK on a device, and the iOS path in full — Xcode signing, a Personal Team, Developer Mode
-- the passkey ceremony, still undriven since phase 06; with it, the `SALDO_SCHEME` round trip
+- ✅ the passkey ceremony, run on a real phone and working (2026-10-19). The `SALDO_SCHEME` round trip is part of it
 - VoiceOver over the app, and the largest Dynamic Type setting
 - the app-switcher cover as the OS actually photographs it
 - the two Maestro flows, never executed. Their author's own estimate of first-run success is ~50% and ~35%; the
@@ -529,25 +526,9 @@ Asked for by the user on 2026-09-11 as three **investigations**. All three ended
   grid, and `CustomRangeSheet` uses the same component in range mode, so there is one calendar.
   "Oggi" and "Ieri" stay chips on the form, so the common case opens no sheet at all.
 
-### Notifications for future transactions & the period recap 🚧 planned
+### Notifications for future transactions
 
-Not built yet. Card charge-day reminders (§5.3) and budget alerts (§5.8) already use
-`expo-notifications`; these three reuse that same permission flow and scheduling pattern
-(`{kind}:{id}` notification ids, rescheduled on write, none when the thing they warn about no
-longer applies).
-
-- **Reminder ahead of a future (scheduled) transaction.** A per-transaction lead time (e.g. "1
-  giorno prima" / "il giorno stesso") so a user with `date > today` (§5.3, "In arrivo") gets warned
-  before it lands, not just on the day. Needs a field on the transaction (or a global default) for
-  how far ahead to notify.
-- **Notification when a scheduled transaction reaches its date.** Distinct from the reminder above:
-  fires *on* the day a transaction moves from "In arrivo" into the counted totals, so the user
-  learns balances changed without opening the app. One per transaction (`transaction-due:{id}`),
-  cancelled if the transaction is edited to a later date or deleted before firing.
-- **Notification when the period recap is ready.** Today §5.15's recap only ever surfaces on the
-  first app open after a period closes — there is no push telling the user it is waiting. Add a
-  local notification the moment a period closes (same "seen once" / `lastRecapPeriod` bookkeeping),
-  tapping it opens the recap sheet directly.
+Moved to `ROADMAP.md` (0.1) on 2026-10-19.
 
 ### Backlog from hands-on use 🚧 planned
 
@@ -735,13 +716,29 @@ script in `Base.astro`. `pnpm lint` is clean, `pnpm typecheck` passes in all six
 Accessibility 100, Best practices 100, SEO 100. A scripted browser at 1440 and 390, in both themes, showed no console
 error and no horizontal overflow. The buttons, the arrow keys, Home, End and a native scroll each land on a snapped card.
 
-**Budget miss.** The first load is 146 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
+**Budget miss, resolved.** The first load is 146 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
 it, and they do not compress. HTML is 19 KB, CSS 8.5 KB (23 KB before the fonts were limited to Latin), the script 2 KB
-and `rocky-mark.png` 6 KB. The budget stays as it is. The decision is for the user: cut a font weight, or raise the
-budget.
+and `rocky-mark.png` 6 KB. On 2026-10-19 the user chose to raise the budget to 150 KB gzip (spec §07) and keep the
+four font weights.
 
 Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool. A mouse can no
 longer drag the carousel. It uses the buttons, the keys, the wheel with Shift, or a trackpad.
+
+### Picked up from `TODO.md` on 2026-10-19 ✅ done
+
+**Plan:** `2026-10-19-profile-period-row.md` · **Spec:** §6.8
+
+- ✅ **Profile: the period row.** The first row of Profile reads «Periodo» with the kind, or the cycle day for a pay cycle,
+  and opens a screen with the four kinds. The web Profilo has the same panel, so it can change the period kind. Not run: the
+  Maestro flows and a simulator check.
+
+### Picked up from `TODO.md` on 2026-10-19 ✅ done
+
+**Plan:** `2026-10-19-change-email.md` · **Spec:** §9, ROADMAP 0.3j
+
+- ✅ **Change of a real email address.** The new address gets a link; the swap happens when it is opened; the old address
+  gets a notice. The change is a row in `email_changes` (migration `0007`). Run `pnpm --filter web db:migrate` on a dev
+  database. Better Auth's `/change-email` stays disabled.
 
 ## Future (not POC)
 

@@ -9,7 +9,7 @@ function nextCommand(): string {
 }
 
 /**
- * End-to-end tests of the web app (TODO.md). One database and one server for the whole run: the
+ * End-to-end tests of the web app (`docs/superpowers/plans/2026-10-06-e2e-tests.md`). One database and one server for the whole run: the
  * `setup` project walks the first-run wizard, and every other spec starts from the instance it leaves.
  */
 export default defineConfig({
