@@ -1,0 +1,16 @@
+---
+import { LOCALES } from '../content/index';
+import Base from '../layouts/Base.astro';
+
+/** Spec 0.8a §09: the page that `scripts/og.mjs` photographs into `public/og.png`. Not indexed. */
+const content = LOCALES.en;
+---
+
+<Base content={content} path="/og/" noindex>
+  <div class="og" data-theme="dark">
+    <div class="og-brand"><span class="mark"><img src="/brand/rocky-mark.png" alt="" width="56" height="56" /></span>Saldo</div>
+    <h1 class="display og-title">{content.hero.title}</h1>
+    <p class="og-facts">{content.hero.facts.join(' · ')}</p>
+    <img class="og-rocky" src="/brand/rocky.png" alt="" width="300" height="300" />
+  </div>
+</Base>
