@@ -346,6 +346,9 @@ change it: edit it where the server runs and restart, or remove it and choose in
   back in for a lost passkey is an admin (`pnpm --filter web user …`). Each address is sent at most one message of
   a kind a minute and five an hour; that counter, like the rate limiter, lives in the process, so several replicas
   multiply it. `PUBLIC_URL` must be the site's origin with no path prefix: the confirmation link is built from it.
+  Profilo → Account also gains a form, **«Nuovo indirizzo email»**: the new address gets a link and the address changes only when the link
+  is used (24 hours, single use). The old address, if verified, gets a notice. Without SMTP the form is not shown and
+  `POST /api/me/email` still answers `email_already_set` for a real address.
 - **Testing mail locally.** Run [Mailpit](https://mailpit.axllent.org) — `docker run --rm -d -p 1025:1025
   -p 8025:8025 axllent/mailpit` — and set SMTP host `localhost`, port `1025`, no user, any sender, in `/admin/settings`
   (a plain connection is allowed to `localhost`). Every message the server sends appears at <http://localhost:8025>.

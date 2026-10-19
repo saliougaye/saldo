@@ -1,7 +1,7 @@
 # Change of a real email address, with verification
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** an account that has a real email address can replace it with another one. The new address gets a link. The
 address changes only when somebody opens that link and presses a button. The old address is told. Until then the old
@@ -64,13 +64,15 @@ Depends on 0.3f-3 (`sendMail`, `mailEnabled`, `mailThrottle`, `inBackground`, th
    silence the notice. The notice is bounded by the number of confirmed changes. *Not built:* a one-click undo. A
    thief of a session can still change the address; the notice, and the admin's `pnpm --filter web user …`, are the
    remedy. `SECURITY.md` says it.
-7. **Limits.** The mail to the new address uses the 0.3f-3 per-address throttle (new kind `emailChange`). A request
-   also counts against a per-account limit of 10 an hour (`createFixedWindowLimiter`, in memory, per process, like
-   the other limiters) → `429 rate_limited`. A mail that the throttle holds is not sent. The row has already been
-   replaced, so the earlier link is dead; the Profilo form is locked for 60 s after a send to make this rare.
+7. **Limits.** The mail to the new address uses the 0.3f-3 per-address throttle (new kind `emailChange`). It is
+   spent **before** the row changes, for a taken address too: a held request answers `429 rate_limited` and leaves the
+   pending row, and so the link already mailed, as it was. (The first version replaced the row first. The browser run
+   found that a second request inside a minute then killed the link in the inbox and sent no new one. Asking the
+   throttle for a taken address as well stops a 429 from telling it from a free one.) A request also counts against a
+   per-account limit of 10 an hour (`createFixedWindowLimiter`, in memory, per process, like the other limiters).
 8. **Surfaces.**
-   - Web: `/profile/account` gains a «Change email» form (only when mail is on and the address is real), the
-     pending line «Waiting for the link sent to {email}» with «Cancel the change», both through server actions that
+   - Web: `/profile/account` gains a form (only when mail is on and the address is real). With a change pending, the
+     form gives way to «Waiting for you to confirm {email}» and «Cancel the change». Both go through server actions that
      call the same module. The link lands on `/email-change?token=…` in the `(auth)` group: a page that asks, with a
      button; the button posts to `POST /api/email-change/confirm`.
    - API: `POST /api/me/email` as in decision 3, and `DELETE /api/me/email` (cancel, `204`).
@@ -112,7 +114,7 @@ integration tests on PGlite through the real routes (`POST`/`DELETE` of `app/api
 **Files:** `apps/web/src/server/db/schema.ts`, `apps/web/drizzle/0007_*.sql`, `src/server/mail/throttle.ts`,
 `src/server/mail/messages.ts`, `src/server/mail/messages.test.ts`, the seven catalogs.
 
-- [ ] **Step 1: the table.** Add to `schema.ts` (before `schema`), and `emailChanges` to the `schema` object:
+- [x] **Step 1: the table.** Add to `schema.ts` (before `schema`), and `emailChanges` to the `schema` object:
 
 ```ts
 /**
@@ -137,12 +139,12 @@ export const emailChanges = pgTable(
 );
 ```
 
-- [ ] **Step 2: generate the migration.** Run `pnpm --filter web db:generate`. Expected: a new
+- [x] **Step 2: generate the migration.** Run `pnpm --filter web db:generate`. Expected: a new
   `drizzle/0007_*.sql` with `CREATE TABLE "email_changes"` and the foreign key with `ON DELETE cascade`, and an updated
   `drizzle/meta/_journal.json`. Read the SQL; commit it.
-- [ ] **Step 3: throttle kinds.** In `throttle.ts` change `MailKind` to
+- [x] **Step 3: throttle kinds.** In `throttle.ts` change `MailKind` to
   `'verification' | 'recovery' | 'emailChange'`.
-- [ ] **Step 4: strings.** Add to every catalog, under `mail` (English shown; Italian is the source, the other five
+- [x] **Step 4: strings.** Add to every catalog, under `mail` (English shown; Italian is the source, the other five
   follow it):
 
 ```ts
@@ -162,7 +164,7 @@ export const emailChanges = pgTable(
     },
 ```
 
-- [ ] **Step 5: messages.** In `messages.ts` add:
+- [x] **Step 5: messages.** In `messages.ts` add:
 
 ```ts
 export const emailChangeMessage = (t: Translate, details: MessageDetails): Message =>
@@ -182,7 +184,7 @@ export function emailChangedMessage(
 ```
 
   and widen `compose`'s `kind` to `'verification' | 'recovery' | 'emailChange'`.
-- [ ] **Step 6: gates, commit.** `rtk proxy pnpm --filter @saldo/i18n test`, `rtk proxy pnpm --filter web typecheck`.
+- [x] **Step 6: gates, commit.** `rtk proxy pnpm --filter @saldo/i18n test`, `rtk proxy pnpm --filter web typecheck`.
   Commit: `feat(web): email_changes table and the two mail texts`.
 
 ### Task 2: the module, test first
@@ -191,7 +193,7 @@ export function emailChangedMessage(
 modify `app/api/me/email/route.ts`, `src/server/auth/mailCallbacks.ts`; tests in `app/api/me/email/route.test.ts` and
 `app/api/email-change/confirm/route.test.ts`.
 
-- [ ] **Step 1: tests first.** In `app/api/me/email/route.test.ts` add a `describe('changing a real address')`
+- [x] **Step 1: tests first.** In `app/api/me/email/route.test.ts` add a `describe('changing a real address')`
   (with `enableMail` and a session whose row has `email: 'ada@old.example'`, `emailVerified: true`). Cases, each seen
   red before the code:
   1. mail off → `409 email_already_set` (the existing test stays and passes).
@@ -217,9 +219,9 @@ modify `app/api/me/email/route.ts`, `src/server/auth/mailCallbacks.ts`; tests in
   17. garbled token, empty token, a token of 64 `a` → `410`; body without `token` → `400`.
   18. a failing SMTP (`failWith`) → the request still answers `202` and the swap still works for a row created
       before; the notice failure does not undo the swap.
-- [ ] **Step 2: see them fail.** `rtk proxy pnpm --filter web exec vitest run app/api/me/email app/api/email-change`.
+- [x] **Step 2: see them fail.** `rtk proxy pnpm --filter web exec vitest run app/api/me/email app/api/email-change`.
   Expected: the new cases FAIL (module and route not found, or 409).
-- [ ] **Step 3: generalise `deliver` in `mailCallbacks.ts`.** `deliver` becomes exported and takes a builder and a
+- [x] **Step 3: generalise `deliver` in `mailCallbacks.ts`.** `deliver` becomes exported and takes a builder and a
   throttle flag, and `messageFor` returns the translator and the instance:
 
 ```ts
@@ -249,7 +251,7 @@ export async function deliver(
 
   The three existing callers pass `(t, d) => verificationMessage(t, { ...d, url })` and the recovery equivalent.
   `import type { Translate } from '@saldo/i18n'`. Existing `mailCallbacks.test.ts` must stay green.
-- [ ] **Step 4: `emailChange.ts`.**
+- [x] **Step 4: `emailChange.ts`.**
 
 ```ts
 import { createHash, randomBytes } from 'node:crypto';
@@ -416,7 +418,7 @@ export async function confirmEmailChange(
 
   (`sql` is not needed; drop the import if unused. `user.updatedAt` is a column of the Better Auth schema — check
   `authSchema.ts` and drop the field if it is absent.)
-- [ ] **Step 5: the routes.** `app/api/me/email/route.ts`: after the synthetic check, replace the 409 by
+- [x] **Step 5: the routes.** `app/api/me/email/route.ts`: after the synthetic check, replace the 409 by
 
 ```ts
     if (!isSyntheticEmail(account.email)) {
@@ -445,15 +447,15 @@ export async function confirmEmailChange(
   `new ApiError(410, 'link_invalid', 'This link no longer works')`. No `requireUser`: the token is the proof.
   Export `runtime = 'nodejs'` and `dynamic = 'force-dynamic'` as the neighbours do. Call
   `resetEmailChangeLimitForTests()` in the test `afterEach`.
-- [ ] **Step 6: run the tests.** Same command as step 2. Expected: all PASS. Read the output.
-- [ ] **Step 7: commit.** `feat(web): change a real email address with a link to the new one`.
+- [x] **Step 6: run the tests.** Same command as step 2. Expected: all PASS. Read the output.
+- [x] **Step 7: commit.** `feat(web): change a real email address with a link to the new one`.
 
 ### Task 3: the web pages
 
 **Files:** `apps/web/app/(auth)/email-change/page.tsx`, `ConfirmForm.tsx`;
 `apps/web/app/(app)/profile/account/{page.tsx,ChangeEmailForm.tsx,actions.ts}`; the seven catalogs.
 
-- [ ] **Step 1: strings** (`web.account.*`, `web.auth.*`; grep both first so no key is repeated), English shown:
+- [x] **Step 1: strings** (`web.account.*`, `web.auth.*`; grep both first so no key is repeated), English shown:
 
 ```ts
 // web.account
@@ -475,35 +477,35 @@ emailChangeDoneBody: 'Your account now uses this address. You can close this pag
 ```
 
   A failed link reuses `web.auth.emailLinkInvalidTitle` and `emailLinkInvalidBody`.
-- [ ] **Step 2: `/email-change`.** A server component like `app/(auth)/recover/confirm/page.tsx`: reads `?token=`,
+- [x] **Step 2: `/email-change`.** A server component like `app/(auth)/recover/confirm/page.tsx`: reads `?token=`,
   redirects nothing, shows `Brand`, title, lede and `ConfirmForm`. It consumes nothing. `ConfirmForm` (client) posts
   `{ token }` to `/api/email-change/confirm` with `fetch`; `200` → the done state (check icon, title, body, link to
   `/home`); anything else → `Alert` with the invalid-link strings. Strings are props.
-- [ ] **Step 3: server actions** (`actions.ts`, `'use server'`): `requestEmailChangeAction(email)` and
+- [x] **Step 3: server actions** (`actions.ts`, `'use server'`): `requestEmailChangeAction(email)` and
   `cancelEmailChangeAction()`. Both start with `requireWebUser()`. The first normalises (`normaliseEmail`), checks
   `mailEnabled`, returns `{ ok: false, reason: 'invalid' | 'same' | 'failed' }` or `{ ok: true }`, calls
   `requestEmailChange`, then `revalidatePath('/profile/account')`. The rules are the route's; the module is shared.
-- [ ] **Step 4: `/profile/account`.** Read `pendingEmailChange`. Below the email row, when `state` is `verified` or
+- [x] **Step 4: `/profile/account`.** Read `pendingEmailChange`. Below the email row, when `state` is `verified` or
   `canVerify` (a real address and mail on): the pending line with a cancel button, or `ChangeEmailForm` (input,
   button, 60 s lock after a send, the `changeSent` line). Reuse `Button` and the `.verify` / `.meta` classes already in
   `app.module.css`; add no colour, radius or size.
-- [ ] **Step 5: gates, commit.** `feat(web): Profilo › Account changes the email, and /email-change confirms it`.
+- [x] **Step 5: gates, commit.** `feat(web): Profilo › Account changes the email, and /email-change confirms it`.
 
 ### Task 4: look at it, docs, close
 
-- [ ] **Step 1: key check.** `rtk proxy pnpm --filter web test` includes `keysResolve.test.ts`: every new key is in
+- [x] **Step 1: key check.** `rtk proxy pnpm --filter web test` includes `keysResolve.test.ts`: every new key is in
   Italian. The i18n parity test checks the other six.
-- [ ] **Step 2: browser run** on an own port, both widths (1280, 390), light and dark, Mailpit as in 0.3f-3: request
+- [x] **Step 2: browser run** on an own port, both widths (1280, 390), light and dark, Mailpit as in 0.3f-3: request
   from Profilo → the mail arrives → the link shows the confirm page → «Confirm» → Profilo shows the new address,
   verified; the old mailbox has the notice; the same link again → the invalid-link alert; a request for an address of
   another account → the same sentence and no mail; cancel. Record under «As built». If a browser cannot be run in this
   environment, say so in the record; do not claim it was done.
-- [ ] **Step 3: docs.** Spec §9.1 and §17.1.4 «As built»; `SECURITY.md` (the change of address: what bounds it, and that
+- [x] **Step 3: docs.** Spec §9.1 and §17.1.4 «As built»; `SECURITY.md` (the change of address: what bounds it, and that
   a stolen session can still change it — the notice is the remedy); `docs/self-hosting.md` if it lists the mails.
   Write in STE. Do **not** touch `TODO.md`, `ROADMAP.md` or `plans/README.md`: the parent thread does.
-- [ ] **Step 4: gates** through `rtk proxy`: `pnpm lint` (no `lint/` line, no «Some errors»), `pnpm typecheck`,
+- [x] **Step 4: gates** through `rtk proxy`: `pnpm lint` (no `lint/` line, no «Some errors»), `pnpm typecheck`,
   `pnpm test`. Read the output.
-- [ ] **Step 5: review** (`requesting-code-review`, security first): enumeration, replay, session creation, the
+- [x] **Step 5: review** (`requesting-code-review`, security first): enumeration, replay, session creation, the
   throttle bypass of the notice, secrets in logs. Fix Important+ test first.
 
 ## Self-review
@@ -513,3 +515,24 @@ emailChangeDoneBody: 'Your account now uses this address. You can close this pag
   throttle), no SMTP unchanged (1), phone (decision 8), i18n in all locales (T1, T3).
 - Names used across tasks: `requestEmailChange`, `confirmEmailChange`, `cancelEmailChange`, `pendingEmailChange`,
   `maskEmail`, `deliver`, `emailChangeMessage`, `emailChangedMessage`, `EMAIL_CHANGE_PATH`, `emailChanges`.
+
+## As built
+
+- **Task 1** `feat(web): email_changes table and the two mail texts`. Migration `0007_bizarre_impossible_man.sql`.
+- **Task 2** `feat(web): change a real email address with a link to the new one`. `deliver` in `mailCallbacks.ts`
+  now takes a message builder and a `throttled` flag (default true). `startEmailChange` is the shared rule set
+  (mail off → `mail_off`, same address → `unchanged`), used by the route and by the Profilo server action. 26 route
+  tests; four mutations of `confirmEmailChange` (the throttle flag of the notice, the `from_email` check, the
+  revocation check) each turn at least one red. Removing the explicit «taken» check does **not**: the unique index on
+  `user.email` catches the race and the `catch` returns the same refusal. Both guards stay.
+- **Task 3** `feat(web): Profilo › Account changes the email, and /email-change confirms it`. `noValidate` on the form,
+  so the page's own line shows for a bad address and not the browser's tooltip. A throwaway Playwright run (the e2e
+  server with `SMTP_*` set and a 30-line SMTP sink in the test process; not committed) drove the whole flow at 1280
+  and 390, light theme: form, bad address, pending, cancel, a held repeat («Aspetta un minuto…»), the confirm page
+  with no session (no cookie set), the done state, the same link again (the invalid-link alert), and Profilo showing
+  the new address as «verificata». Dark theme was not looked at: the change adds no colour.
+- **Fix** `fix(web): a held change request keeps the link already mailed` (found in that run, test first).
+- **Layout:** the first form put a narrow field beside a full-width button; the new `.change` class in
+  `app.module.css` stacks them.
+- **Not done:** an e2e spec in `apps/web/e2e/` for this flow. The suite starts the server with `SMTP_HOST` blank and
+  has no mail sink. See the note for the coordinator.
