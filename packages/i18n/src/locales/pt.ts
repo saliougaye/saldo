@@ -1565,6 +1565,12 @@ export const pt: Messages = {
       emailVerifiedOpen: 'Abrir o Saldo',
       emailLinkInvalidTitle: 'O link expirou ou não é válido',
       emailLinkInvalidBody: 'Abre Perfil › Conta e pede um novo.',
+      emailChangeTitle: 'Confirme o novo endereço',
+      emailChangeBody:
+        'Prima o botão para usar este endereço na sua conta. Até o fazer, nada muda.',
+      emailChangeButton: 'Confirmar',
+      emailChangeDoneTitle: 'E-mail alterado',
+      emailChangeDoneBody: 'A sua conta usa agora este endereço. Pode fechar esta página.',
     },
     offline: {
       title: 'Estás offline',
@@ -1619,6 +1625,14 @@ export const pt: Messages = {
       verify: 'Enviar o link de verificação',
       verifySent: 'Link enviado para {{email}}',
       mailOff: 'Este servidor não envia e-mails: o endereço continua por verificar.',
+      changeLabel: 'Novo endereço de e-mail',
+      changeSend: 'Enviar a ligação de confirmação',
+      changeSent:
+        'Se {{email}} puder ser usado nesta conta, enviámos-lhe uma ligação. O endereço só muda quando a abrir.',
+      changePending: 'À espera da sua confirmação de {{email}}',
+      changeCancel: 'Cancelar a alteração',
+      changeInvalid: 'Isso não é um endereço de e-mail.',
+      changeSame: 'Este já é o seu endereço.',
     },
     accounts: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',

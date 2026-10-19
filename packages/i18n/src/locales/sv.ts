@@ -1558,6 +1558,12 @@ export const sv: Messages = {
       emailVerifiedOpen: 'Öppna Saldo',
       emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
       emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
+      emailChangeTitle: 'Bekräfta den nya adressen',
+      emailChangeBody:
+        'Tryck på knappen för att använda den här adressen för ditt konto. Tills du gör det ändras ingenting.',
+      emailChangeButton: 'Bekräfta',
+      emailChangeDoneTitle: 'E-postadressen har ändrats',
+      emailChangeDoneBody: 'Ditt konto använder nu den här adressen. Du kan stänga den här sidan.',
     },
     offline: {
       title: 'Du är offline',
@@ -1612,6 +1618,14 @@ export const sv: Messages = {
       verify: 'Skicka verifieringslänken',
       verifySent: 'Länk skickad till {{email}}',
       mailOff: 'Den här servern skickar inte e-post: adressen förblir overifierad.',
+      changeLabel: 'Ny e-postadress',
+      changeSend: 'Skicka bekräftelselänken',
+      changeSent:
+        'Om {{email}} kan användas för det här kontot har vi skickat en länk dit. Adressen ändras först när du öppnar den.',
+      changePending: 'Väntar på din bekräftelse av {{email}}',
+      changeCancel: 'Avbryt ändringen',
+      changeInvalid: 'Det där är ingen e-postadress.',
+      changeSame: 'Det här är redan din adress.',
     },
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',

@@ -1558,6 +1558,12 @@ export const en: Messages = {
       emailVerifiedOpen: 'Open Saldo',
       emailLinkInvalidTitle: 'The link has expired or is not valid',
       emailLinkInvalidBody: 'Open Profile › Account and ask for a new one.',
+      emailChangeTitle: 'Confirm the new address',
+      emailChangeBody:
+        'Press the button to use this address for your account. Until you do, nothing changes.',
+      emailChangeButton: 'Confirm',
+      emailChangeDoneTitle: 'Email changed',
+      emailChangeDoneBody: 'Your account now uses this address. You can close this page.',
     },
     offline: {
       title: 'You are offline',
@@ -1612,6 +1618,14 @@ export const en: Messages = {
       verify: 'Send the verification link',
       verifySent: 'Link sent to {{email}}',
       mailOff: 'This server does not send email: the address stays unverified.',
+      changeLabel: 'New email address',
+      changeSend: 'Send the confirmation link',
+      changeSent:
+        'If {{email}} can be used for this account, we sent a link to it. Your address changes only when you open it.',
+      changePending: 'Waiting for you to confirm {{email}}',
+      changeCancel: 'Cancel the change',
+      changeInvalid: 'That is not an email address.',
+      changeSame: 'This is already your address.',
     },
     accounts: {
       error_invalid: 'Couldn’t save: check the fields and try again.',

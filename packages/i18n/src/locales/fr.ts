@@ -1580,6 +1580,13 @@ export const fr: Messages = {
       emailVerifiedOpen: 'Ouvrir Saldo',
       emailLinkInvalidTitle: 'Le lien a expiré ou n’est pas valide',
       emailLinkInvalidBody: 'Ouvrez Profil › Compte et demandez-en un nouveau.',
+      emailChangeTitle: 'Confirmez la nouvelle adresse',
+      emailChangeBody:
+        'Appuyez sur le bouton pour utiliser cette adresse pour votre compte. Tant que vous ne le faites pas, rien ne change.',
+      emailChangeButton: 'Confirmer',
+      emailChangeDoneTitle: 'Adresse e-mail modifiée',
+      emailChangeDoneBody:
+        'Votre compte utilise désormais cette adresse. Vous pouvez fermer cette page.',
     },
     offline: {
       title: 'Vous êtes hors ligne',
@@ -1634,6 +1641,14 @@ export const fr: Messages = {
       verify: 'Envoyer le lien de vérification',
       verifySent: 'Lien envoyé à {{email}}',
       mailOff: 'Ce serveur n’envoie pas d’e-mails : l’adresse reste non vérifiée.',
+      changeLabel: 'Nouvelle adresse e-mail',
+      changeSend: 'Envoyer le lien de confirmation',
+      changeSent:
+        'Si {{email}} peut être utilisée pour ce compte, nous lui avons envoyé un lien. L’adresse ne change que lorsque vous l’ouvrez.',
+      changePending: 'En attente de votre confirmation pour {{email}}',
+      changeCancel: 'Annuler le changement',
+      changeInvalid: 'Ceci n’est pas une adresse e-mail.',
+      changeSame: 'C’est déjà votre adresse.',
     },
     accounts: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',

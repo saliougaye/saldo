@@ -1567,6 +1567,12 @@ export const es: Messages = {
       emailVerifiedOpen: 'Abrir Saldo',
       emailLinkInvalidTitle: 'El enlace ha caducado o no es válido',
       emailLinkInvalidBody: 'Abre Perfil › Cuenta y pide uno nuevo.',
+      emailChangeTitle: 'Confirma la nueva dirección',
+      emailChangeBody:
+        'Pulsa el botón para usar esta dirección en tu cuenta. Hasta entonces, no cambia nada.',
+      emailChangeButton: 'Confirmar',
+      emailChangeDoneTitle: 'Correo cambiado',
+      emailChangeDoneBody: 'Tu cuenta ahora usa esta dirección. Puedes cerrar esta página.',
     },
     offline: {
       title: 'Estás sin conexión',
@@ -1621,6 +1627,14 @@ export const es: Messages = {
       verify: 'Enviar el enlace de verificación',
       verifySent: 'Enlace enviado a {{email}}',
       mailOff: 'Este servidor no envía correos: la dirección sigue sin verificar.',
+      changeLabel: 'Nueva dirección de correo',
+      changeSend: 'Enviar el enlace de confirmación',
+      changeSent:
+        'Si {{email}} se puede usar para esta cuenta, le hemos enviado un enlace. La dirección cambia solo cuando lo abras.',
+      changePending: 'Esperando tu confirmación de {{email}}',
+      changeCancel: 'Cancelar el cambio',
+      changeInvalid: 'Eso no es una dirección de correo.',
+      changeSame: 'Esta ya es tu dirección.',
     },
     accounts: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',

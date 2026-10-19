@@ -1563,6 +1563,12 @@ export const it = {
       emailVerifiedOpen: 'Apri Saldo',
       emailLinkInvalidTitle: 'Il link è scaduto o non è valido',
       emailLinkInvalidBody: 'Apri Profilo › Account e chiedine uno nuovo.',
+      emailChangeTitle: 'Conferma il nuovo indirizzo',
+      emailChangeBody:
+        'Premi il pulsante per usare questo indirizzo per il tuo account. Finché non lo fai, non cambia nulla.',
+      emailChangeButton: 'Conferma',
+      emailChangeDoneTitle: 'Email cambiata',
+      emailChangeDoneBody: 'Il tuo account ora usa questo indirizzo. Puoi chiudere questa pagina.',
     },
     offline: {
       title: 'Sei offline',
@@ -1617,6 +1623,14 @@ export const it = {
       verify: 'Invia il link di verifica',
       verifySent: 'Link inviato a {{email}}',
       mailOff: 'Questo server non invia email: l’indirizzo resta non verificato.',
+      changeLabel: 'Nuovo indirizzo email',
+      changeSend: 'Manda il link di conferma',
+      changeSent:
+        'Se {{email}} può essere usato per questo account, gli abbiamo mandato un link. L’indirizzo cambia solo quando lo apri.',
+      changePending: 'In attesa della tua conferma per {{email}}',
+      changeCancel: 'Annulla il cambio',
+      changeInvalid: 'Questo non è un indirizzo email.',
+      changeSame: 'Questo è già il tuo indirizzo.',
     },
     accounts: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',

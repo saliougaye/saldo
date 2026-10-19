@@ -7,14 +7,13 @@ import {
   MAX_EMAIL_LENGTH,
   normaliseEmail,
 } from '../../../../src/server/auth/email';
-import { cancelEmailChange, requestEmailChange } from '../../../../src/server/auth/emailChange';
+import { cancelEmailChange, startEmailChange } from '../../../../src/server/auth/emailChange';
 import { requestVerification } from '../../../../src/server/auth/mailCallbacks';
 import { getDb } from '../../../../src/server/db/client';
 import { user } from '../../../../src/server/db/schema';
 import { ApiError, handle } from '../../../../src/server/http/errors';
 import { readJson } from '../../../../src/server/http/json';
 import { requireUser } from '../../../../src/server/http/requireUser';
-import { mailEnabled } from '../../../../src/server/mail/mailer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,20 +41,22 @@ export function POST(request: Request): Promise<Response> {
     if (!isSyntheticEmail(account.email)) {
       // A real address is replaced only with proof that the new one is read by the person, which is a
       // mailed link, so a server without SMTP cannot do it.
-      if (!(await mailEnabled(db))) {
-        throw new ApiError(409, 'email_already_set', 'This account already has an email address');
-      }
-      if (email === account.email.toLowerCase()) {
-        throw new ApiError(400, 'email_unchanged', 'That is already the address of this account');
-      }
-      const result = await requestEmailChange(db, {
+      const result = await startEmailChange(db, {
         userId: account.id,
         currentEmail: account.email,
         newEmail: email,
         acceptLanguage: request.headers.get('accept-language'),
         now: new Date(),
       });
-      if (!result.ok) throw new ApiError(429, 'rate_limited', 'Too many requests: try again later');
+      if (!result.ok) {
+        if (result.reason === 'mail_off') {
+          throw new ApiError(409, 'email_already_set', 'This account already has an email address');
+        }
+        if (result.reason === 'unchanged') {
+          throw new ApiError(400, 'email_unchanged', 'That is already the address of this account');
+        }
+        throw new ApiError(429, 'rate_limited', 'Too many requests: try again later');
+      }
       // Not 200 and not an `email`: nothing has changed yet. The same answer whether or not another
       // account has the address.
       return Response.json({ pending: result.pending }, { status: 202 });

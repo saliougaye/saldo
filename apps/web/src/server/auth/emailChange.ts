@@ -45,9 +45,31 @@ export interface PendingChange {
   expiresAt: Date;
 }
 
-export type RequestResult =
+export type StartResult =
   | { ok: true; pending: PendingChange }
-  | { ok: false; reason: 'rate_limited' };
+  | { ok: false; reason: 'mail_off' | 'unchanged' | 'rate_limited' };
+
+/**
+ * The rules of a request, shared by `POST /api/me/email` and the Profilo form: a server without SMTP
+ * cannot prove the new address, and an address the account already has is no change. `newEmail` is
+ * normalised (`normaliseEmail`) and the account's address is real: the caller has checked both.
+ */
+export async function startEmailChange(
+  db: ServerDatabase,
+  input: {
+    userId: string;
+    currentEmail: string;
+    newEmail: string;
+    acceptLanguage: string | null;
+    now: Date;
+  },
+): Promise<StartResult> {
+  if (!(await mailEnabled(db))) return { ok: false, reason: 'mail_off' };
+  if (input.newEmail === input.currentEmail.toLowerCase()) {
+    return { ok: false, reason: 'unchanged' };
+  }
+  return requestEmailChange(db, input);
+}
 
 /**
  * Stores the pending change and mails the new address — unless another account has it, in which case
@@ -63,7 +85,7 @@ export async function requestEmailChange(
     acceptLanguage: string | null;
     now: Date;
   },
-): Promise<RequestResult> {
+): Promise<StartResult> {
   if (!requestLimiter.allow(input.userId, input.now.getTime()).allowed) {
     return { ok: false, reason: 'rate_limited' };
   }
