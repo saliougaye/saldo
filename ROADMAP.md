@@ -668,7 +668,7 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
       `docs/superpowers/specs/2026-10-18-marketing-site.html`. Mockup:
       `docs/superpowers/mockups/2026-10-18-marketing-site-product.html`.
 - [x] Plan for the landing page (0.8a, 2026-10-18): `docs/superpowers/plans/2026-10-18-0.8a-site-landing.md`.
-- [ ] Build the landing page (0.8a).
+- [x] Build the landing page (0.8a).
 - [ ] Spec and plan for the docs library (0.8b).
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,

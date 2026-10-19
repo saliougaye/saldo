@@ -697,7 +697,7 @@ Acceptance:
 1440×900 in both themes and at 390×844 match the mockups. The translations in es, pt, fr, de and sv need a review by a
 native speaker.
 
-### 0.8a — Marketing site: the landing page 🚧 planned
+### 0.8a — Marketing site: the landing page ✅ done
 
 Plan: `2026-10-18-0.8a-site-landing.md`. Spec: `specs/2026-10-18-marketing-site.html` (D41–D51).
 Mockup: `mockups/2026-10-18-marketing-site-product.html`.
@@ -713,6 +713,11 @@ Acceptance:
 - Every call to action goes to the repository or the self-hosting guide.
 - `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. The site has no end-to-end suite (the user decided so on 2026-10-19).
 - Lighthouse, mobile: Performance, Accessibility, Best practices and SEO each ≥ 95 (spec §07).
+
+**Status:** `astro check` (0 errors), `pnpm --filter site test` (13 passed), `astro build` and `pnpm lint` pass. Someone
+looked at the built page at 1440 and 390, in both themes. Task 14 must still record the repository-wide
+`pnpm typecheck` and `pnpm test`, and the Lighthouse scores. Nobody has checked the page in Safari or Firefox, or on a
+real phone.
 
 ## Future (not POC)
 
