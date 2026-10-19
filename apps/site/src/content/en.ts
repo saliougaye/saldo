@@ -196,7 +196,7 @@ export const en = {
   screens: {
     eyebrow: 'Screens',
     title: 'Every screen, as the app draws it.',
-    lede: 'Sample data for one September. Drag, swipe or use the arrows.',
+    lede: 'Sample data for one September. Swipe or use the arrows.',
     shots: [
       {
         key: 'home',
