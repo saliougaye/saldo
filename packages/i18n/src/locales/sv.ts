@@ -1105,9 +1105,8 @@ export const sv: Messages = {
   },
   profile: {
     title: 'Profil',
-    cycleStart: 'Cykelns start',
     systemFollows: '”System” följer telefonens inställningar.',
-    cyclePreview: 'Pågående cykel',
+    periodPreview: 'Pågående period',
     cycleDay: 'Dag {{day}}',
     currency: 'Valuta',
     language: 'Språk',

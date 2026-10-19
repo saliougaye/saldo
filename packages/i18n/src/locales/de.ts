@@ -1119,9 +1119,8 @@ export const de: Messages = {
   },
   profile: {
     title: 'Profil',
-    cycleStart: 'Zyklusbeginn',
     systemFollows: '„System“ folgt den Einstellungen des Handys.',
-    cyclePreview: 'Der laufende Zyklus',
+    periodPreview: 'Die laufende Periode',
     cycleDay: 'Tag {{day}}',
     currency: 'Währung',
     language: 'Sprache',

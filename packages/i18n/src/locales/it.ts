@@ -1109,9 +1109,8 @@ export const it = {
   },
   profile: {
     title: 'Profilo',
-    cycleStart: 'Inizio del ciclo',
     systemFollows: '«Sistema» segue le impostazioni del telefono.',
-    cyclePreview: 'Il ciclo in corso',
+    periodPreview: 'Il periodo in corso',
     cycleDay: 'Giorno {{day}}',
     currency: 'Valuta',
     language: 'Lingua',

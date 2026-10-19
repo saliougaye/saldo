@@ -1104,9 +1104,8 @@ export const en: Messages = {
   },
   profile: {
     title: 'Profile',
-    cycleStart: 'Cycle start',
     systemFollows: '“System” follows the phone settings.',
-    cyclePreview: 'The current cycle',
+    periodPreview: 'The current period',
     cycleDay: 'Day {{day}}',
     currency: 'Currency',
     language: 'Language',

@@ -1112,9 +1112,8 @@ export const pt: Messages = {
   },
   profile: {
     title: 'Perfil',
-    cycleStart: 'Início do ciclo',
     systemFollows: '«Sistema» segue as definições do telemóvel.',
-    cyclePreview: 'O ciclo em curso',
+    periodPreview: 'O período em curso',
     cycleDay: 'Dia {{day}}',
     currency: 'Moeda',
     language: 'Idioma',

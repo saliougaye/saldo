@@ -13,6 +13,7 @@ export * from './currencyNames';
 export * from './format';
 export * from './goalText';
 export * from './languageNames';
+export * from './periodText';
 export type { Messages } from './locales/it';
 export * from './recurrenceText';
 export * from './targetStatus';
