@@ -1,0 +1,30 @@
+---
+import Icon from './Icon.astro';
+
+/** A terminal block with a copy button (`src/scripts/copy.ts`). Lines starting with `#` are comments. */
+interface Props {
+  lines: readonly string[];
+  path: string;
+  copyLabel: string;
+  copiedLabel: string;
+  failedLabel: string;
+}
+
+const { lines, path, copyLabel, copiedLabel, failedLabel } = Astro.props;
+const commands = lines.filter((line) => !line.startsWith('#')).join('\n');
+---
+
+<div class="term">
+  <div class="term-bar">
+    <span class="dots"><i></i><i></i><i></i></span><span class="path">{path}</span>
+    <span class="copy-status vh" aria-live="polite" data-copy-status></span>
+    <button class="copy press" type="button" data-copy={commands} data-copied={copiedLabel} data-failed={failedLabel} aria-label={copyLabel}><Icon name="copy" class="a" /><Icon name="check" class="b" /></button>
+  </div>
+  <pre>{lines.map((line, index) => (
+    <Fragment>{index > 0 && '\n'}{line.startsWith('#') ? <span class="c">{line}</span> : line.startsWith('  ') ? line : <Fragment><span class="pr">$ </span>{line}</Fragment>}</Fragment>
+  ))}</pre>
+</div>
+
+<script>
+  import '../scripts/copy';
+</script>

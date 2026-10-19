@@ -58,16 +58,20 @@ Two things to know before you start:
 ## Run it with Docker
 
 ```bash
-git clone https://github.com/saldo-app/saldo.git
+git clone https://github.com/saliougaye/saldo.git
 cd saldo
 
 export PUBLIC_URL=https://saldo.example.com
 export WEBAUTHN_RP_ID=saldo.example.com
 export JWT_SECRET="$(openssl rand -base64 48)"
+export SETTINGS_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 export POSTGRES_PASSWORD="$(openssl rand -base64 24)"
 
 docker compose -f apps/web/docker/docker-compose.yml up -d --build
 ```
+
+Save `JWT_SECRET`, `SETTINGS_ENCRYPTION_KEY` and `POSTGRES_PASSWORD` in a password manager. Docker Compose needs the
+same values each time you start the stack again.
 
 The container applies the database migrations on start and then serves on port 3000. Put a reverse
 proxy in front of it for HTTPS — `apps/web/docker/Caddyfile.example` is a two-line Caddy

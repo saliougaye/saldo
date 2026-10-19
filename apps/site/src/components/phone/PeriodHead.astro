@@ -1,0 +1,25 @@
+---
+import { formatCycleRange } from '@saldo/i18n';
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { periodDay } from '../../lib/sample';
+import Icon from '../Icon.astro';
+
+/** The period header of Home, Transactions and Statistics. */
+interface Props {
+  content: SiteContent;
+  avatar?: boolean;
+}
+
+const { content, avatar = false } = Astro.props;
+const { sample, locale } = content;
+const { elapsed, length } = periodDay(sample);
+const title = formatCycleRange(sample.period, locale, sample.period.today);
+---
+
+<div class="phd">
+  {avatar && <span class="av">{sample.initials}</span>}
+  <div class="pt"><b>{title}<Icon name="chevUD" /></b><span>{appText(locale, 'period.dayOf', { elapsed, length })}</span></div>
+  <span class="rb"><Icon name="chevL" /></span>
+  <span class="rb"><Icon name="chevR" /></span>
+</div>

@@ -1,0 +1,21 @@
+---
+import type { SiteContent } from '../content/index';
+import { GUIDE_URL, REPO_URL } from '../lib/links';
+import GithubMark from './GithubMark.astro';
+import Icon from './Icon.astro';
+
+/** The two calls to action of the page (spec 0.8a §10). There are no others. */
+interface Props {
+  content: SiteContent;
+  only?: 'guide';
+  class?: string;
+  style?: string;
+}
+
+const { content, only, class: className, style } = Astro.props;
+---
+
+<div class:list={['ctas', className]} style={style}>
+  {only === undefined && <a class="btn btn-primary press" href={REPO_URL}><GithubMark /><span>{content.hero.ctaRepo}</span></a>}
+  <a class="btn btn-ghost press" href={GUIDE_URL}><span>{content.hero.ctaGuide}</span><Icon name="arrowUR" /></a>
+</div>

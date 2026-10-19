@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — Spec 0.8a: the marketing site landing page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+/* ── This spec: phone screens and carousel controls (palette of @saldo/ui) ── */
+:root { --accent: #4A4A46; --on-accent: #FFFFFF; --track: #EDEDEB; --bar-grey: #C9C9C6; --island: #000000; }
+@media (prefers-color-scheme: dark) { :root { --accent: #C7C7C7; --on-accent: #0A0A0A; --track: #1E1E1E; --bar-grey: #3A3A3A; } }
+.h3s { font-size: 19px; margin: 8px 0 10px; }
+.phones { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; background: var(--page); border-radius: var(--r-card); padding: 28px 16px; }
+.ph { --w: 292; position: relative; width: calc(var(--w) * 1px); height: calc(var(--w) * 844px / 390); border-radius: 16px; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px var(--border-strong), 0 16px 40px rgba(0,0,0,.12); flex: none; }
+.ph-s { position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform-origin: 0 0; transform: scale(calc(var(--w) / 390)); display: flex; flex-direction: column; font-size: 15px; line-height: 1.35; color: var(--text); }
+.ph .sb { flex: none; position: relative; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 36px; font-size: 17px; font-weight: 600; }
+.ph .isl { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; border-radius: 999px; background: var(--island); }
+.ph .bat { display: inline-block; width: 25px; height: 12px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--text-muted); position: relative; }
+.ph .bat::before { content: ""; position: absolute; inset: 2.5px 5px 2.5px 2.5px; border-radius: 2px; background: var(--text); }
+.ph .pc { flex: 1; min-height: 0; overflow: hidden; padding: 6px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+.ph .pc > * { flex-shrink: 0; }
+.ph .mc { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.ph .mc.np { padding: 4px 16px 8px; }
+.ph .mh { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 10px; }
+.ph .mh.hd { margin: 0; padding: 12px 0 4px; }
+.ph .mh .t { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+.ph .ml { font-size: 13px; color: var(--text-muted); }
+.ph .mf { font-size: 11px; color: var(--text-faint); }
+.ph .note { padding: 2px 0 6px; line-height: 1.45; margin: 0; }
+.ph .big { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin: 4px 0 14px; }
+.ph .dec { color: var(--text-muted); }
+.ph .mbar { position: relative; height: 4px; border-radius: 999px; background: var(--track); margin-bottom: 4px; }
+.ph .mbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--bar-grey); }
+.ph .mbar i.o { background: var(--accent); }
+.ph .mbar b { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text-muted); }
+.ph .mrow { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 0; }
+.ph .mrow.up { padding-left: 10px; box-shadow: inset 2px 0 0 var(--border-strong); }
+.ph .mrow.dv { border-top: 1px solid var(--border); }
+.ph .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ph .st { font-size: 13px; color: var(--text-muted); }
+.ph .ma { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ph .mib { flex: none; width: 32px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--c) 14%, transparent); box-shadow: inset 0 0 0 9px color-mix(in srgb, var(--c) 0%, transparent); position: relative; }
+.ph .mib::after { content: ""; position: absolute; inset: 10px; border-radius: 3px; border: 1.5px solid var(--c); }
+.ph .mib.sm { width: 26px; height: 26px; }
+.ph .mib.sm::after { inset: 8px; }
+.ph .mib.nt { --c: var(--text-muted); background: var(--raised); }
+.ph .phd { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.ph .av { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; font-size: 13px; color: var(--text-muted); box-shadow: inset 0 0 0 1px var(--border-strong); flex: none; }
+.ph .pt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ph .pt b { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.ph .pt span { font-size: 13px; color: var(--text-muted); }
+.ph .rb { width: 34px; height: 34px; border-radius: 999px; background: var(--raised); display: grid; place-items: center; color: var(--text-muted); font-size: 20px; flex: none; }
+.ph .spark { width: 100%; height: auto; color: var(--text-muted); display: block; }
+.ph .tb { flex: none; position: relative; height: 88px; display: grid; grid-template-columns: 1fr 1fr 76px 1fr 1fr; border-top: 1px solid var(--border); padding-top: 34px; font-size: 11px; color: var(--text-faint); text-align: center; }
+.ph .tb .on { color: var(--text); }
+.ph .fab { position: absolute; left: 50%; top: -24px; width: 56px; height: 56px; margin-left: -28px; border-radius: 18px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 28px; font-style: normal; }
+.ctl-demo { display: flex; align-items: center; gap: 14px; padding: 10px 4px; }
+.ctl-demo + .ctl-demo { border-top: 1px solid var(--border); }
+.ctl-demo .cnt { font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 5ch; }
+.ctl-demo .cnt b { color: var(--text); font-weight: 500; }
+.ctl-demo .bar { position: relative; flex: 0 1 160px; height: 2px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.ctl-demo .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); }
+.ctl-demo .nm { flex: 1; min-width: 0; font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctl-demo .btns { display: flex; gap: 8px; }
+.ctl-demo .ib { width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; box-shadow: inset 0 0 0 1px var(--border-strong); font-size: 20px; }
+.ctl-demo .ib.off { opacity: .35; }
+table.dec td:first-child { font-family: var(--mono); }
+table.dec td:nth-child(2) { white-space: normal; font-weight: 500; min-width: 220px; }
+@media (max-width: 640px) { .ph { --w: 260; } .ctl-demo .nm { display: none; } }
+td code, .facts code, .callout code, .card code { white-space: normal; overflow-wrap: anywhere; }
+td:first-child { white-space: normal; }
+.facts span { min-width: 0; overflow-wrap: anywhere; }
+.split2 > .card { min-width: 0; }
+@media (max-width: 640px) { .ph { --w: 260; } .ctl-demo .nm { display: none; } .split2 { grid-template-columns: minmax(0, 1fr); } }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#scope"><span>01</span>Scope</a></li>
+    <li><a href="#page"><span>02</span>The page</a></li>
+    <li><a href="#tokens"><span>03</span>Tokens</a></li>
+    <li><a href="#screens"><span>04</span>Phone screens</a></li>
+    <li><a href="#carousel"><span>05</span>Carousel</a></li>
+    <li><a href="#a11y"><span>06</span>Accessibility</a></li>
+    <li><a href="#perf"><span>07</span>Performance</a></li>
+    <li><a href="#theme"><span>08</span>Theme</a></li>
+    <li><a href="#seo"><span>09</span>Metadata</a></li>
+    <li><a href="#cta"><span>10</span>Calls to action</a></li>
+    <li><a href="#deploy"><span>11</span>Deploy</a></li>
+    <li><a href="#sync"><span>12</span>Sync with the app</a></li>
+    <li><a href="#decisions"><span>13</span>Decisions</a></li>
+    <li><a href="#open"><span>14</span>Open questions</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo 0.8a · apps/site · Spec</span>
+    <h1>The marketing site: the landing page</h1>
+    <p>One static page tells a visitor what Saldo is. It shows the app, and it sends the visitor to the code or to the self-hosting guide. It runs no server code and sends nothing to a third party.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Design</b> <code>mockups/2026-10-18-marketing-site-product.html</code></span>
+    <span><b>Roadmap</b> 0.8</span>
+    <span><b>Decisions</b> D41–D52</span>
+    <span><b>Date</b> 2026-10-18</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="scope" aria-labelledby="h-scope">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-scope">Scope</h2>
+      <p class="lead">This spec covers one landing page in English, in a new static app. The docs library comes in a later plan.</p>
+    </div>
+    <div class="prose">
+      <p>The page is for two groups of people. The first group leaves the paid tier of Spendee. The second group runs its own servers. The page gives both groups the same two actions: read the code, or read the self-hosting guide.</p>
+      <p>The page lives in <code>apps/site</code>. It is an Astro app with static output (D42). It is separate from <code>apps/web</code>, so an instance build has no marketing in it (D35).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="split2">
+      <div class="card rv"><h4>In scope</h4><p>The landing page at <code>/</code>. Its metadata, social image, <code>robots.txt</code> and <code>sitemap.xml</code>. The phone screens drawn from tokens. The carousel. The theme toggle. The Vercel project. The check that keeps the screens in step with the app strings.</p></div>
+      <div class="card rv"><h4>Not in scope</h4><p>The docs library (0.8b). Languages other than English (D43). A blog, a changelog page, a pricing page. Analytics of any kind. A form, a newsletter or a contact address. Any server code.</p></div>
+    </div>
+    <div class="callout"><span class="meta">Source of truth</span><p>On the landing page, this spec wins over the POC spec. Where this spec is silent, the mockup <code>docs/superpowers/mockups/2026-10-18-marketing-site-product.html</code> shows the look and the behaviour.</p></div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="page" aria-labelledby="h-page">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-page">The page, section by section</h2>
+      <p class="lead">The page has nine parts in a fixed order. Each part is one Astro component.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 760" role="img" aria-labelledby="f1t">
+        <title id="f1t">The landing page from top to bottom: navigation, hero with the web app and a phone, what it is, features, screens with the carousel and the web row, self-hosting, questions, final call to action, footer.</title>
+        <rect class="bx" x="20" y="10" width="1000" height="740" rx="22"/>
+        <rect class="bx-r" x="40" y="30" width="960" height="44" rx="12"/>
+        <text x="60" y="58" font-size="17" class="b">Nav</text><text x="140" y="58" font-size="15" class="tm">Brand · Features · Screens · Self-hosting · FAQ · Guide · GitHub · Theme</text>
+        <rect class="bx" x="40" y="88" width="960" height="150" rx="14"/>
+        <text x="60" y="118" font-size="17" class="b">Hero</text>
+        <text x="60" y="144" font-size="15" class="tm">Pill · headline (siteDisplay 72) · lede · two CTAs · three facts</text>
+        <rect class="bx-r" x="380" y="158" width="440" height="66" rx="10"/><text x="600" y="196" text-anchor="middle" font-size="14">Web app window (Home)</text>
+        <rect class="bx-ink" x="830" y="134" width="70" height="96" rx="10"/><text x="865" y="188" text-anchor="middle" font-size="13" class="ti">Phone</text>
+        <rect class="bx" x="40" y="252" width="960" height="60" rx="14"/>
+        <text x="60" y="288" font-size="17" class="b">What it is</text><text x="200" y="288" font-size="15" class="tm">Local-first · Your server, if you want one · Nothing reported</text>
+        <rect class="bx" x="40" y="326" width="960" height="112" rx="14"/>
+        <text x="60" y="356" font-size="17" class="b">Features</text><text x="160" y="356" font-size="15" class="tm">a grid of seven cells, each with a small mock</text>
+        <g class="tm" font-size="13">
+          <rect class="bx-r" x="60" y="370" width="290" height="54" rx="8"/><text x="205" y="402" text-anchor="middle">Budgets · pace</text>
+          <rect class="bx-r" x="360" y="370" width="140" height="54" rx="8"/><text x="430" y="402" text-anchor="middle">Goals</text>
+          <rect class="bx-r" x="510" y="370" width="140" height="54" rx="8"/><text x="580" y="402" text-anchor="middle">Forecast</text>
+          <rect class="bx-r" x="660" y="370" width="100" height="54" rx="8"/><text x="710" y="402" text-anchor="middle">Recurring</text>
+          <rect class="bx-r" x="770" y="370" width="70" height="54" rx="8"/><text x="805" y="402" text-anchor="middle">Periods</text>
+          <rect class="bx-r" x="850" y="370" width="70" height="54" rx="8"/><text x="885" y="402" text-anchor="middle">Import</text>
+          <rect class="bx-r" x="930" y="370" width="50" height="54" rx="8"/><text x="955" y="402" text-anchor="middle">Export</text>
+        </g>
+        <rect class="bx-ok" x="40" y="452" width="960" height="120" rx="14"/>
+        <text x="60" y="482" font-size="17" class="b tok">Screens</text><text x="150" y="482" font-size="15" class="tm">carousel of ten phone screens, then the web row</text>
+        <g>
+          <rect class="bx" x="60" y="494" width="58" height="64" rx="8"/><rect class="bx" x="128" y="494" width="58" height="64" rx="8"/><rect class="bx" x="196" y="494" width="58" height="64" rx="8"/><rect class="bx" x="264" y="494" width="58" height="64" rx="8"/><rect class="bx-dash" x="332" y="494" width="58" height="64" rx="8"/>
+          <rect class="bx" x="560" y="494" width="250" height="64" rx="8"/><text x="685" y="531" text-anchor="middle" font-size="13" class="tm">Web app: Transactions</text>
+          <rect class="bx" x="820" y="494" width="160" height="64" rx="8"/><text x="900" y="531" text-anchor="middle" font-size="13" class="tm">MCP consent</text>
+        </g>
+        <rect class="bx" x="40" y="586" width="960" height="44" rx="12"/>
+        <text x="60" y="614" font-size="17" class="b">Self-hosting</text><text x="180" y="614" font-size="15" class="tm">copy, checklist, guide CTA, terminal, three steps</text>
+        <rect class="bx" x="40" y="640" width="470" height="44" rx="12"/><text x="60" y="668" font-size="17" class="b">FAQ</text><text x="110" y="668" font-size="15" class="tm">six questions</text>
+        <rect class="bx" x="530" y="640" width="470" height="44" rx="12"/><text x="550" y="668" font-size="17" class="b">Final CTA</text><text x="650" y="668" font-size="15" class="tm">headline · two CTAs</text>
+        <rect class="bx-r" x="40" y="694" width="960" height="40" rx="12"/><text x="60" y="720" font-size="17" class="b">Footer</text><text x="140" y="720" font-size="15" class="tm">Brand · MIT licensed · links</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> The order of the parts. Green is the part that holds the carousel (section 05).</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Part</th><th scope="col">Content</th><th scope="col">Component</th></tr></thead>
+        <tbody>
+          <tr><td>Nav</td><td>Brand (Rocky mark and «Saldo»), four anchor links, «Guide», «GitHub», the theme toggle. Sticky. Glass background over content.</td><td><code>Nav.astro</code></td></tr>
+          <tr><td>Hero</td><td>«Personal finance that stays on your phone.» The lede, the two CTAs, three facts. The web app window shows Home. A phone shows Home in front of it. Below 760&nbsp;px: two phones, Home and Budgets.</td><td><code>Hero.astro</code></td></tr>
+          <tr><td>What it is</td><td>Three columns: Local-first, Your server if you want one, Nothing reported.</td><td><code>WhatItIs.astro</code></td></tr>
+          <tr><td>Features</td><td>«Budgets, goals and a forecast. Built in, not upsold.» Seven cells with mocks from the sample data.</td><td><code>Features.astro</code></td></tr>
+          <tr><td>Screens</td><td>«Every screen, as the app draws it.» The carousel of ten screens (section 04, 05). Then a row with the web app and the MCP consent.</td><td><code>Screens.astro</code></td></tr>
+          <tr><td>Self-hosting</td><td>«Run the server. Keep the keys.» A checklist, the guide CTA, the Docker commands, three steps.</td><td><code>SelfHost.astro</code></td></tr>
+          <tr><td>FAQ</td><td>Six questions in <code>&lt;details&gt;</code>. The first one is open.</td><td><code>Faq.astro</code></td></tr>
+          <tr><td>Final CTA</td><td>«Keep your spending history where you can see it.» The two CTAs.</td><td><code>FinalCta.astro</code></td></tr>
+          <tr><td>Footer</td><td>Brand, «MIT licensed · No telemetry», links to GitHub, Self-hosting, Security, Contributing, Licence.</td><td><code>Footer.astro</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Change from the mockup</span><p>The mockup reveals each section when it scrolls into view. The site does not do this. A reveal needs a script, and a section that waits for a script can stay empty (D46). The hero keeps its entrance, which is CSS only.</p></div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="tokens" aria-labelledby="h-tokens">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-tokens">Design tokens</h2>
+      <p class="lead">Every colour, radius and font size comes from <code>@saldo/ui</code>. The site adds two tokens there and none in its own code.</p>
+    </div>
+    <div class="prose">
+      <p>The layout calls <code>tokensCss()</code> at build time. The result goes into one <code>&lt;style&gt;</code> element in <code>&lt;head&gt;</code>. Components read the custom properties, for example <code>var(--color-surface)</code> and <code>var(--radius-card)</code>.</p>
+      <p>The site does not write a hex value, a radius or a font size in a component. Lengths for layout, such as a card width, are not tokens and stay in the component.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 300" role="img" aria-labelledby="f2t">
+        <title id="f2t">tokens.ts in @saldo/ui gives palettes, sizes and motion. tokensCss turns them into CSS custom properties at build time. The Base layout puts them in the head. Components and phone screens read the variables.</title>
+        <rect class="bx-ok" x="20" y="60" width="250" height="180" rx="18"/>
+        <text x="145" y="98" text-anchor="middle" font-size="20" class="b tok">@saldo/ui</text>
+        <text x="145" y="130" text-anchor="middle" font-size="15" class="mono">tokens.ts</text>
+        <text x="145" y="160" text-anchor="middle" font-size="15" class="tm">palettes · fontSize</text>
+        <text x="145" y="184" text-anchor="middle" font-size="15" class="tm">radii · layout · motion</text>
+        <text x="145" y="214" text-anchor="middle" font-size="14" class="tok b">+ siteDisplay · deviceIsland</text>
+        <line class="ln-ink" x1="280" y1="150" x2="380" y2="150" marker-end="url(#ah-ink)"/>
+        <text x="330" y="136" text-anchor="middle" font-size="14" class="tm">build</text>
+        <rect class="bx" x="390" y="90" width="230" height="120" rx="18"/>
+        <text x="505" y="130" text-anchor="middle" font-size="18" class="b mono">tokensCss()</text>
+        <text x="505" y="160" text-anchor="middle" font-size="15" class="tm">dark default</text>
+        <text x="505" y="184" text-anchor="middle" font-size="15" class="tm">[data-theme] wins</text>
+        <line class="ln-ink" x1="630" y1="150" x2="720" y2="150" marker-end="url(#ah-ink)"/>
+        <rect class="bx-ink" x="730" y="60" width="290" height="180" rx="18"/>
+        <text x="875" y="98" text-anchor="middle" font-size="18" class="b ti">Base.astro &lt;head&gt;</text>
+        <text x="875" y="132" text-anchor="middle" font-size="15" class="ti mono">--color-surface</text>
+        <text x="875" y="158" text-anchor="middle" font-size="15" class="ti mono">--radius-card</text>
+        <text x="875" y="184" text-anchor="middle" font-size="15" class="ti mono">--font-size-site-display</text>
+        <text x="875" y="214" text-anchor="middle" font-size="14" class="ti" opacity=".7">read by every component</text>
+      </svg>
+      <figcaption><b>Figure 2.</b> One source of values. The site, the web app and the phone read the same file.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Token</th><th scope="col">Value</th><th scope="col">Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>fontSize.siteDisplay</code> (new)</td><td><span class="num">72</span> (4.5&nbsp;rem)</td><td>The hero headline and the final CTA at full width. <code>clamp(hero, 7.2cqi, siteDisplay)</code>.</td></tr>
+          <tr><td><code>palettes.*.deviceIsland</code> (new)</td><td><code>#000000</code> in both themes</td><td>The camera island in the status bar of a phone screen.</td></tr>
+          <tr><td><code>fontSize.heroWeb</code>, <code>hero</code>, <code>amountMd</code></td><td><span class="num">56 · 44 · 28</span></td><td>Section titles: <code>clamp(amountMd, 4.4cqi, heroWeb)</code>.</td></tr>
+          <tr><td><code>layout.contentWide</code>, <code>pagePaddingWeb</code></td><td><span class="num">1120 · 48</span></td><td>The page grid. The carousel aligns its first card with it.</td></tr>
+          <tr><td><code>radii.*</code></td><td>8 to 18, pill</td><td>Cards 14, dialogs and phone frames 16, buttons 12, FAB 18.</td></tr>
+          <tr><td><code>categoryColors</code></td><td><code>--category-N</code>, <code>--category-N-tint</code></td><td>Icon boxes and split bars in the phone screens.</td></tr>
+          <tr><td><code>motion.*</code></td><td><code>--motion-press</code>, <code>--motion-swap-easing</code> …</td><td>Press feedback, the hero entrance, the copy icon swap.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Fonts</span><p>The site loads Geist from the <code>@fontsource/geist-sans</code> and <code>@fontsource/geist-mono</code> packages. The files are part of the build, so the page asks no other host for a font. The layout points <code>--font-family</code> at «Geist Sans», as the web app points it at its own font variable.</p></div>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="screens" aria-labelledby="h-screens">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-screens">Phone screens</h2>
+      <p class="lead">The site draws each phone screen in HTML and CSS from the tokens. It does not show a screenshot (D44).</p>
+    </div>
+    <div class="prose">
+      <p>A screen follows the theme of the page. A screen changes language when a second locale comes. A screenshot can do neither, and it gets old when the app changes.</p>
+      <p>Each screen is drawn at 390 × 844 points, the size of the phone. The <code>Phone</code> component then scales it with <code>transform: scale()</code> to the width of its slot. Thus a screen uses the same sizes as the app: card padding 16, row height 44, icon box 32.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <div class="phones">
+        <div class="ph" role="img" aria-label="Home: Left to spend €943.82, Upcoming with 20 entries, Budget with 2 over pace">
+          <div class="ph-s" aria-hidden="true">
+            <div class="sb"><span>9:41</span><i class="isl"></i><span class="sbr"><i class="bat"></i></span></div>
+            <div class="pc">
+              <div class="phd"><span class="av">AL</span><div class="pt"><b>Sep 1 – Sep 30</b><span>day 13 of 30</span></div><span class="rb">‹</span><span class="rb">›</span></div>
+              <div class="mc"><div class="ml">Left to spend</div><div class="big">€943<span class="dec">.82</span></div><div class="mbar"><i style="width:59%"></i><b style="left:43.3%"></b></div><div class="mh"><span class="ml">Income €2,310.00</span><span class="ml">Expenses €1,366.18</span></div></div>
+              <div class="mc np"><div class="mh hd"><span class="t">Upcoming</span><span class="ml">20 entries ›</span></div>
+                <div class="mrow up"><span class="mib" style="--c:#8F9152"></span><div class="tx"><span>Fuel stop</span><span class="st">Transport</span></div><span class="ma">−€45<span class="dec">.00</span></span></div>
+                <div class="mrow up"><span class="mib" style="--c:#4F8D8B"></span><div class="tx"><span>Corner Café</span><span class="st">Restaurants</span></div><span class="ma">−€4<span class="dec">.20</span></span></div>
+                <div class="mrow up"><span class="mib" style="--c:#C57B4E"></span><div class="tx"><span>Fresh Market</span><span class="st">Groceries</span></div><span class="ma">−€56<span class="dec">.30</span></span></div>
+                <div class="mrow up"><span class="mib" style="--c:#7A79AC"></span><div class="tx"><span>Language course</span><span class="st">Education</span></div><span class="ma">−€90<span class="dec">.00</span></span></div>
+              </div>
+              <div class="mc np"><div class="mh hd"><span class="t">Budget</span><span class="ml">2 over pace ›</span></div>
+                <div class="mrow"><span class="mib sm" style="--c:#8F9152"></span><div class="tx"><span>Transport</span></div><span class="ml">€117.80 of €250.00</span></div><div class="mbar"><i class="o" style="width:47%"></i></div>
+              </div>
+            </div>
+            <div class="tb"><span class="on">Home</span><span>Transactions</span><span></span><span>Statistics</span><span>Accounts</span><i class="fab">+</i></div>
+          </div>
+        </div>
+        <div class="ph" role="img" aria-label="Credit card: To repay €412.35, Accrued this statement €188.40, Next charge €223.95">
+          <div class="ph-s" aria-hidden="true">
+            <div class="sb"><span>9:41</span><i class="isl"></i><span class="sbr"><i class="bat"></i></span></div>
+            <div class="pc">
+              <div class="phd"><span class="rb">‹</span><span class="mib" style="--c:#B4894A"></span><div class="pt"><b>Amex Gold</b><span>Credit card</span></div></div>
+              <div class="mc"><div class="ml">To repay</div><div class="big">€412<span class="dec">.35</span></div>
+                <svg viewBox="0 0 324 44" class="spark" aria-hidden="true"><polyline points="0,32 46,18 93,44 139,4 185,24 231,31 278,13 324,22" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                <div class="mh"><span class="mf">Last 8 months</span><span class="mf">+8%</span></div></div>
+              <div class="mc np">
+                <div class="mrow"><div class="tx"><span>Accrued this statement</span></div><span class="ma">€188<span class="dec">.40</span></span></div>
+                <div class="mrow dv"><div class="tx"><span>Next charge</span><span class="st">October 1 · Statement</span></div><span class="ma">€223<span class="dec">.95</span></span></div>
+                <div class="mrow dv"><span class="mib nt"></span><div class="tx"><span>Pay off card</span></div><span class="ml">›</span></div>
+                <p class="mf note">The statement closes on day 25 of each month and is charged on day 1 to Everyday.</p>
+              </div>
+              <div class="mc np"><div class="mh hd"><span class="t">Recent transactions</span><span class="ml">All transactions ›</span></div>
+                <div class="mrow"><span class="mib" style="--c:#4F8D8B"></span><div class="tx"><span>Sushi Bar</span><span class="st">Sep 7 · Restaurants</span></div><span class="ma">−€22<span class="dec">.40</span></span></div>
+                <div class="mrow"><span class="mib" style="--c:#A06FA0"></span><div class="tx"><span>Online order</span><span class="st">Sep 6 · Shopping</span></div><span class="ma">−€39<span class="dec">.90</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Figure 3.</b> Two of the ten screens with the shipped English strings: Home and the credit card detail. The figure uses the light or dark palette of your system.</figcaption>
+    </figure>
+    <div class="prose">
+      <h3 class="h3s">One object for each language</h3>
+      <p>A screen reads two things. The first is the app strings, from the <code>en</code> catalog of <code>@saldo/i18n</code>. The second is the sample data, from <code>apps/site/src/content/en.ts</code>. The site copy is in the same file as the sample data.</p>
+      <p>The type <code>SiteContent</code> is the shape of the English object. Thus the type checker stops an Italian object with a missing field. The registry <code>LOCALES</code> maps a locale code to its object.</p>
+    </div>
+    <figure class="rv">
+      <svg viewBox="0 0 1040 360" role="img" aria-labelledby="f4t">
+        <title id="f4t">Two inputs feed every screen. The app strings come from en.ts in @saldo/i18n through appText. The sample data and site copy come from content/en.ts through LOCALES. Money goes through formatMoneyParts at the edge.</title>
+        <rect class="bx" x="20" y="30" width="300" height="120" rx="18"/>
+        <text x="40" y="66" font-size="19" class="b">@saldo/i18n</text>
+        <text x="40" y="96" font-size="15" class="mono tm">locales/en.ts</text>
+        <text x="40" y="124" font-size="15" class="tm">«Left to spend», «20 entries»</text>
+        <rect class="bx" x="20" y="200" width="300" height="130" rx="18"/>
+        <text x="40" y="236" font-size="19" class="b">apps/site</text>
+        <text x="40" y="266" font-size="15" class="mono tm">src/content/en.ts</text>
+        <text x="40" y="294" font-size="15" class="tm">sample data in cents · site copy</text>
+        <text x="40" y="318" font-size="15" class="tm">LocalDate strings</text>
+        <rect class="bx-r" x="380" y="54" width="220" height="70" rx="14"/>
+        <text x="490" y="86" text-anchor="middle" font-size="17" class="mono b">appText(key)</text>
+        <text x="490" y="110" text-anchor="middle" font-size="14" class="tm">makeTranslator + plural</text>
+        <rect class="bx-r" x="380" y="230" width="220" height="70" rx="14"/>
+        <text x="490" y="262" text-anchor="middle" font-size="17" class="mono b">LOCALES[locale]</text>
+        <text x="490" y="286" text-anchor="middle" font-size="14" class="tm">typed SiteContent</text>
+        <line class="ln" x1="320" y1="90" x2="374" y2="90" marker-end="url(#ah)"/>
+        <line class="ln" x1="320" y1="265" x2="374" y2="265" marker-end="url(#ah)"/>
+        <rect class="bx-ink" x="680" y="110" width="200" height="140" rx="18"/>
+        <text x="780" y="160" text-anchor="middle" font-size="19" class="b ti">10 screens</text>
+        <text x="780" y="190" text-anchor="middle" font-size="15" class="ti" opacity=".75">.astro components</text>
+        <text x="780" y="218" text-anchor="middle" font-size="15" class="ti" opacity=".75">no client JS</text>
+        <path class="ln" d="M600 90 C 640 90, 640 150, 674 150" marker-end="url(#ah)"/>
+        <path class="ln" d="M600 265 C 640 265, 640 210, 674 210" marker-end="url(#ah)"/>
+        <rect class="bx-ok" x="910" y="130" width="120" height="100" rx="16"/>
+        <text x="970" y="168" text-anchor="middle" font-size="15" class="tok b mono">format</text>
+        <text x="970" y="192" text-anchor="middle" font-size="13" class="tm">MoneyParts</text>
+        <text x="970" y="212" text-anchor="middle" font-size="13" class="tm">DayMonth</text>
+        <line class="ln-ok" x1="880" y1="180" x2="906" y2="180" marker-end="url(#ah-ok)"/>
+      </svg>
+      <figcaption><b>Figure 4.</b> Strings and data stay apart. Money is an integer of cents until the <code>Amount</code> component formats it.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Rule</th><th scope="col">How the site applies it</th></tr></thead>
+        <tbody>
+          <tr><td>Money in minor units</td><td>Every amount in <code>content/en.ts</code> is an integer of cents, for example <code>94382</code>. Totals that other screens show, such as «Left to spend», are calculated from the data. They are not typed twice.</td></tr>
+          <tr><td>Format at the edge</td><td><code>Amount.astro</code> calls <code>formatMoneyParts(minor, currency, locale)</code> from <code>@saldo/i18n</code>. It shows the fraction in the muted colour, as the app does.</td></tr>
+          <tr><td>Dates</td><td>Dates are <code>LocalDate</code> strings (<code>2026-09-14</code>). <code>formatDayMonth</code> and <code>formatLongDate</code> give «Sep 14» and the long form. The period title comes from <code>formatCycleRange</code>.</td></tr>
+          <tr><td>App strings</td><td><code>appText('home.remaining')</code> reads the <code>en</code> catalog. Counted strings use <code>plural</code>, for example <code>home.upcomingCount</code> with 20.</td></tr>
+          <tr><td>Chart geometry</td><td>The cashflow columns use <code>cashflowColumns</code> and <code>cashflowChart</code> from <code>@saldo/ui</code>, the same functions as the phone.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">#</th><th scope="col">Screen</th><th scope="col">App route</th><th scope="col">Caption</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Home</td><td><code>(tabs)/index.tsx</code></td><td>What is left to spend this period, what is coming up, and how each budget is doing.</td></tr>
+          <tr><td>2</td><td>Transactions</td><td><code>(tabs)/transactions.tsx</code></td><td>The period’s list, with search, filter chips and day totals.</td></tr>
+          <tr><td>3</td><td>New transaction</td><td><code>transaction/new.tsx</code></td><td>Expense, income or transfer: the amount, the account, the date and the categories you use most.</td></tr>
+          <tr><td>4</td><td>Statistics</td><td><code>(tabs)/stats.tsx</code></td><td>Cashflow for the last periods and three ahead, then where the money went.</td></tr>
+          <tr><td>5</td><td>Budgets</td><td><code>budgets.tsx</code></td><td>One card per budget: what you spent, the pace and the days left.</td></tr>
+          <tr><td>6</td><td>Goals</td><td><code>goals.tsx</code></td><td>Money set aside inside an account, towards a figure and, if you like, a date.</td></tr>
+          <tr><td>7</td><td>Accounts</td><td><code>(tabs)/accounts.tsx</code></td><td>Net worth, the spendable total, and savings and investments kept apart.</td></tr>
+          <tr><td>8</td><td>Credit card</td><td><code>account/[id].tsx</code></td><td>What you owe, the statement so far, and when the next charge comes.</td></tr>
+          <tr><td>9</td><td>Recurring</td><td><code>recurrences.tsx</code></td><td>Rent, salary and subscriptions, and what they cost per month.</td></tr>
+          <tr><td>10</td><td>Period recap</td><td><code>features/recap/PeriodRecapSheet.tsx</code></td><td>When a period ends: the net, the categories and how each budget closed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="carousel" aria-labelledby="h-carousel">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-carousel">The carousel</h2>
+      <p class="lead">The browser scrolls the carousel and stops it on a card. A small script adds the buttons, the keys and the progress.</p>
+    </div>
+    <div class="prose">
+      <p>The scroller is a native horizontal scroll box with <code>scroll-snap-type: x mandatory</code>. Touch, trackpad and wheel use the scrolling of the browser. The script has no pointer code, so the page always scrolls up and down.</p>
+      <p>The script <code>src/scripts/carousel.ts</code> is about 60 lines. There is no mouse drag, no rubber band and no spring. The user decided so on 2026-10-19 (D52).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 380" role="img" aria-labelledby="f5t">
+        <title id="f5t">The scroller is as wide as the page. The track has a padding equal to the page edge. Each card has a snap point at its left edge minus the scroll padding. The browser stops the scroll on a snap point. A button or a key scrolls to the adjacent card.</title>
+        <rect class="bx-dash" x="20" y="40" width="1000" height="200" rx="16"/>
+        <text x="30" y="30" font-size="14" class="tm mono">scroller · overflow-x: auto · scroll-snap-type: x mandatory</text>
+        <line class="lane" x1="160" y1="40" x2="160" y2="270"/>
+        <text x="160" y="290" text-anchor="middle" font-size="14" class="tm">page edge = scroll-padding</text>
+        <rect class="bx-ink" x="160" y="70" width="150" height="140" rx="14"/><text x="235" y="146" text-anchor="middle" font-size="16" class="ti b">card 1</text>
+        <rect class="bx" x="330" y="70" width="150" height="140" rx="14"/><text x="405" y="146" text-anchor="middle" font-size="16">card 2</text>
+        <rect class="bx" x="500" y="70" width="150" height="140" rx="14"/><text x="575" y="146" text-anchor="middle" font-size="16">card 3</text>
+        <rect class="bx" x="670" y="70" width="150" height="140" rx="14"/><text x="745" y="146" text-anchor="middle" font-size="16">card 4</text>
+        <rect class="bx-r" x="840" y="70" width="150" height="140" rx="14"/><text x="915" y="146" text-anchor="middle" font-size="16" class="tm">card 5</text>
+        <rect x="940" y="40" width="80" height="200" fill="url(#fadeR)"/>
+        <defs><linearGradient id="fadeR" x1="0" x2="1"><stop offset="0" stop-color="var(--bg)" stop-opacity="0"/><stop offset="1" stop-color="var(--bg)" stop-opacity="1"/></linearGradient></defs>
+        <g font-size="14" class="tm">
+          <line class="ln-ok" x1="160" y1="320" x2="326" y2="320" marker-end="url(#ah-ok)"/>
+          <circle cx="160" cy="320" r="5" class="ah-ok"/>
+          <text x="160" y="350" text-anchor="middle">snap point of card 1</text>
+          <text x="330" y="350" text-anchor="middle" class="tok b">snap point of card 2</text>
+          <line class="ln-ink" x1="405" y1="232" x2="405" y2="306" marker-end="url(#ah-ink)"/>
+          <text x="440" y="268" class="b">«Next screen» or → scrolls here</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 5.</b> Each card is a snap point. A swipe or a wheel stops on one. A button or a key scrolls to the adjacent one.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Rule</th><th scope="col">Value</th></tr></thead>
+        <tbody>
+          <tr><td>Stops</td><td>For each card: <code>scroll-snap-align: start</code>, with the scroll padding of the alignment rule. The last cards stop at the end of the scroll box.</td></tr>
+          <tr><td>Alignment</td><td>The track padding and the scroll padding are <code>max(pagePaddingWeb, (100cqi − contentWide) / 2)</code>, and 20&nbsp;px below 760&nbsp;px. The first and the last card align with the page grid.</td></tr>
+          <tr><td>Card width</td><td>264&nbsp;px, gap 24&nbsp;px. Below 760&nbsp;px: 232&nbsp;px, gap 16&nbsp;px, so about one and a half cards show.</td></tr>
+          <tr><td>Buttons</td><td>Previous and next scroll to the adjacent card. Each button has <code>aria-disabled="true"</code> at its end, so it keeps the focus. They are not <code>disabled</code>.</td></tr>
+          <tr><td>Keys</td><td>With focus on the scroller: ← and → go one card. Home and End go to the first and the last card. No other key changes.</td></tr>
+          <tr><td>Progress</td><td>A counter «03 / 10», a bar that shows the seen part, and the name of the current screen. The script changes the counter and the name only when the card changes.</td></tr>
+          <tr><td>Edge fades</td><td>A gradient of <code>--color-bg</code> on each side. It shows only when there is more content on that side.</td></tr>
+          <tr><td>Reduced motion</td><td>The buttons and the keys jump to the card with no smooth scroll.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="rv">
+      <div class="ctl-demo">
+        <div class="cnt"><b>03</b> / 10</div><div class="bar"><i style="width:44%"></i></div><div class="nm">New transaction</div>
+        <div class="btns"><span class="ib">‹</span><span class="ib">›</span></div>
+      </div>
+      <div class="ctl-demo">
+        <div class="cnt"><b>10</b> / 10</div><div class="bar"><i style="width:100%"></i></div><div class="nm">Period recap</div>
+        <div class="btns"><span class="ib">‹</span><span class="ib off">›</span></div>
+      </div>
+      <figcaption><b>Figure 6.</b> The controls under the carousel. At the last card, «Next screen» is disabled.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="a11y" aria-labelledby="h-a11y">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-a11y">Accessibility</h2>
+      <p class="lead">The page works with a keyboard, a screen reader and the reduced-motion, reduced-transparency and high-contrast settings.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Area</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><td>Structure</td><td>One <code>h1</code>. Each part has an <code>h2</code>. Landmarks: <code>header</code>, <code>nav</code>, <code>main</code>, <code>footer</code>. A skip link goes to <code>main</code>.</td></tr>
+          <tr><td>Phone screens</td><td>Each screen is <code>role="img"</code> with an <code>aria-label</code>: the title and the caption. Its content is <code>aria-hidden</code>.</td></tr>
+          <tr><td>Carousel</td><td>The scroller is <code>role="region"</code>, <code>aria-roledescription="carousel"</code>, <code>tabindex="0"</code>. Each card is a <code>figure</code> with <code>aria-roledescription="slide"</code> and «n / 10: name». The counter is <code>aria-live="polite"</code>.</td></tr>
+          <tr><td>Hit areas</td><td>Every control is at least 44 × 44&nbsp;px (<code>layout.minHitTarget</code>).</td></tr>
+          <tr><td>Focus</td><td>A visible ring on every control. The ring follows the radius of the control.</td></tr>
+          <tr><td>Reduced motion</td><td>The hero entrance becomes a fade. Press scale goes. The carousel jumps (section 05).</td></tr>
+          <tr><td>Reduced transparency</td><td>The nav gets a solid <code>--color-bg</code> and no blur.</td></tr>
+          <tr><td>High contrast</td><td><code>--color-border</code> takes the value of <code>--color-border-strong</code>. Muted text gets darker in light and lighter in dark.</td></tr>
+          <tr><td>Without JavaScript</td><td>All content shows. The carousel scrolls natively. The copy buttons and the theme toggle do nothing.</td></tr>
+          <tr><td>Language</td><td><code>&lt;html lang="en"&gt;</code>. Each locale page sets its own value.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="perf" aria-labelledby="h-perf">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-perf">Performance budget</h2>
+      <p class="lead">The build writes static files. The page loads three small scripts and no UI framework (D46).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="cards">
+      <div class="card rv"><div class="stat">0</div><h4>Server functions</h4><p><code>output: 'static'</code>. Vercel serves files from its CDN.</p></div>
+      <div class="card rv"><div class="stat">3</div><h4>Scripts</h4><p>Theme (inline in <code>&lt;head&gt;</code>, plus the toggle), carousel, copy buttons. Together at most 6&nbsp;KB gzip.</p></div>
+      <div class="card rv"><div class="stat num">≤ 120</div><h4>KB on first load</h4><p>HTML, CSS, scripts, Rocky and four font files, gzip, without the social image.</p></div>
+    </div>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Item</th><th scope="col">Budget</th></tr></thead>
+        <tbody>
+          <tr><td>HTML of <code>/</code></td><td>≤ 60&nbsp;KB gzip. The ten screens are HTML, so they are most of it.</td></tr>
+          <tr><td>CSS</td><td>≤ 20&nbsp;KB gzip, in one file that Astro writes.</td></tr>
+          <tr><td>Fonts</td><td>Latin subset, woff2: Geist Sans 400, 500, 600 and Geist Mono 400.</td></tr>
+          <tr><td>Images</td><td>The Rocky mark (PNG, 64&nbsp;px) and Rocky (WebP, 240&nbsp;px). No screenshots.</td></tr>
+          <tr><td>Tool telemetry</td><td>None. Every Astro script runs with <code>ASTRO_TELEMETRY_DISABLED=1</code>.</td></tr>
+          <tr><td>Lighthouse, mobile</td><td>Performance, Accessibility, Best practices and SEO each ≥ 95. The plan measures them before release.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="theme" aria-labelledby="h-theme">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-theme">Theme</h2>
+      <p class="lead">The page follows the system theme. A toggle can force light or dark. The first paint already has the right colours (D47).</p>
+    </div>
+    <div class="prose">
+      <p>The toggle has three states: System, Light, Dark. It stores the choice in <code>localStorage</code> under <code>saldo-site-theme</code>. System removes the key.</p>
+      <p>An inline script in <code>&lt;head&gt;</code> runs before the first paint. It reads the key and sets <code>data-theme</code> on <code>&lt;html&gt;</code>. <code>tokensCss()</code> already gives <code>[data-theme]</code> priority over <code>prefers-color-scheme</code>.</p>
+      <div class="callout caution"><span class="meta">Caution</span><p>Do not move the theme script to the end of <code>&lt;body&gt;</code> and do not make it a module. A deferred script runs after the first paint, and the page then flashes from dark to light.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 250" role="img" aria-labelledby="f7t">
+        <title id="f7t">The browser parses the head. The inline script reads saldo-site-theme and sets data-theme. Then the style with tokensCss applies. Then the first paint happens with the correct palette.</title>
+        <line class="lane" x1="40" y1="200" x2="1000" y2="200"/>
+        <rect class="bx" x="40" y="60" width="200" height="100" rx="16"/><text x="140" y="104" text-anchor="middle" font-size="17" class="b">Parse &lt;head&gt;</text><text x="140" y="132" text-anchor="middle" font-size="14" class="tm">HTML from the CDN</text>
+        <line class="ln" x1="244" y1="110" x2="290" y2="110" marker-end="url(#ah)"/>
+        <rect class="bx-ink" x="296" y="40" width="250" height="140" rx="16"/><text x="421" y="82" text-anchor="middle" font-size="17" class="b ti">Inline script</text><text x="421" y="112" text-anchor="middle" font-size="14" class="ti mono">saldo-site-theme</text><text x="421" y="140" text-anchor="middle" font-size="14" class="ti mono">html[data-theme]</text>
+        <line class="ln" x1="550" y1="110" x2="596" y2="110" marker-end="url(#ah)"/>
+        <rect class="bx" x="602" y="60" width="180" height="100" rx="16"/><text x="692" y="104" text-anchor="middle" font-size="17" class="b">tokensCss()</text><text x="692" y="132" text-anchor="middle" font-size="14" class="tm">palette applies</text>
+        <line class="ln-ok" x1="786" y1="110" x2="832" y2="110" marker-end="url(#ah-ok)"/>
+        <rect class="bx-ok" x="838" y="60" width="162" height="100" rx="16"/><text x="919" y="104" text-anchor="middle" font-size="17" class="b tok">First paint</text><text x="919" y="132" text-anchor="middle" font-size="14" class="tm">no flash</text>
+        <text x="40" y="228" font-size="14" class="tm">time →</text>
+      </svg>
+      <figcaption><b>Figure 7.</b> The theme is known before the first paint. The toggle script loads later and only handles clicks.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="seo" aria-labelledby="h-seo">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-seo">Metadata for search and social</h2>
+      <p class="lead">The page has a title, a description, a canonical URL and an Open Graph card. All absolute URLs come from the public URL of the build (section 11).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Item</th><th scope="col">Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>&lt;title&gt;</code></td><td>Saldo — personal finance that stays on your phone</td></tr>
+          <tr><td>Description</td><td>Open-source, local-first personal finance. Budgets, goals and a forecast that work offline, with no account. Sync through a server you run.</td></tr>
+          <tr><td>Canonical</td><td><code>new URL('/', site)</code></td></tr>
+          <tr><td>Open Graph</td><td><code>og:type</code> website, <code>og:title</code>, <code>og:description</code>, <code>og:url</code>, <code>og:image</code> 1200 × 630 (<code>/og.png</code>) with <code>og:image:alt</code>.</td></tr>
+          <tr><td>Twitter</td><td><code>twitter:card</code> summary_large_image, with the same title, description and image.</td></tr>
+          <tr><td>Icons</td><td><code>/favicon.png</code> (96&nbsp;px) and <code>/apple-touch-icon.png</code> (180&nbsp;px): the Rocky icons of <code>apps/web/app</code>.</td></tr>
+          <tr><td><code>theme-color</code></td><td>Two tags: <code>palettes.light.bg</code> for light, <code>palettes.dark.bg</code> for dark.</td></tr>
+          <tr><td><code>robots.txt</code></td><td>Allow all. A <code>Sitemap:</code> line with the absolute URL.</td></tr>
+          <tr><td><code>sitemap.xml</code></td><td>One URL: the page.</td></tr>
+          <tr><td>Social image</td><td>A committed PNG. A script makes it from the page <code>/og/</code> with Playwright. <code>/og/</code> has <code>noindex</code> and is not in the sitemap.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 10 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="cta" aria-labelledby="h-cta">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">10</span>
+      <h2 id="h-cta">The two calls to action</h2>
+      <p class="lead">The page has two calls to action and no others. Each one shows at the top and at the end of the page.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="split2">
+      <div class="card rv"><h4>View the code on GitHub</h4><p>Primary button, with the GitHub mark.</p><p><code>https://github.com/saliougaye/saldo</code></p></div>
+      <div class="card rv"><h4>Read the self-hosting guide</h4><p>Secondary button, with an arrow.</p><p><code>https://github.com/saliougaye/saldo/blob/main/docs/self-hosting.md</code></p></div>
+    </div>
+    <div class="callout"><span class="meta">When the docs library ships</span><p>The guide URL changes to the docs page of the site (0.8b). The URLs are in one module, <code>src/lib/links.ts</code>, so the change is one line (D50).</p></div>
+  </div>
+</section>
+
+<!-- 11 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="deploy" aria-labelledby="h-deploy">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">11</span>
+      <h2 id="h-deploy">Deploy</h2>
+      <p class="lead">The site is its own Vercel project with the root directory <code>apps/site</code>. The domain comes from an environment variable (D45).</p>
+    </div>
+    <div class="prose">
+      <ol class="steps">
+        <li>Create a Vercel project from the repository.</li>
+        <li>Set the root directory to <code>apps/site</code>. Keep «Include files outside the root directory» on, because the site imports <code>packages/*</code>.</li>
+        <li>Vercel reads <code>apps/site/vercel.json</code>: framework <code>astro</code>, output <code>dist</code>.</li>
+        <li>Set <code>SITE_URL</code> to the public URL, for example <code>https://saldo.example</code>, when the domain is known.</li>
+        <li>Add the domain to the project.</li>
+      </ol>
+      <p>Without <code>SITE_URL</code>, the build uses <code>https://</code> + <code>VERCEL_PROJECT_PRODUCTION_URL</code>, which Vercel sets. Outside Vercel, it uses <code>http://localhost:4321</code>.</p>
+      <div class="callout"><span class="meta">The other project</span><p>The root <code>vercel.json</code> stays for the web app. It builds <code>pnpm --filter web build</code>. The site project does not read it, because its root directory is <code>apps/site</code>.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 300" role="img" aria-labelledby="f8t">
+        <title id="f8t">A push to GitHub starts two Vercel projects. The web project uses the root vercel.json. The site project uses apps/site/vercel.json, builds with Astro and serves dist from the CDN under the domain in SITE_URL.</title>
+        <rect class="bx" x="20" y="100" width="180" height="100" rx="18"/><text x="110" y="144" text-anchor="middle" font-size="18" class="b">GitHub</text><text x="110" y="172" text-anchor="middle" font-size="14" class="tm">push to main</text>
+        <path class="ln" d="M204 130 C 250 130, 250 70, 300 70" marker-end="url(#ah)"/>
+        <path class="ln-ok" d="M204 170 C 250 170, 250 230, 300 230" marker-end="url(#ah-ok)"/>
+        <rect class="bx-r" x="306" y="30" width="330" height="80" rx="16"/><text x="326" y="64" font-size="17" class="b">Vercel project: web</text><text x="326" y="92" font-size="14" class="tm mono">vercel.json · --filter web build</text>
+        <rect class="bx-ok" x="306" y="190" width="330" height="80" rx="16"/><text x="326" y="224" font-size="17" class="b tok">Vercel project: site</text><text x="326" y="252" font-size="14" class="tm mono">apps/site/vercel.json · astro build</text>
+        <line class="ln-ok" x1="640" y1="230" x2="700" y2="230" marker-end="url(#ah-ok)"/>
+        <rect class="bx" x="706" y="190" width="150" height="80" rx="16"/><text x="781" y="224" text-anchor="middle" font-size="17" class="b">dist/</text><text x="781" y="252" text-anchor="middle" font-size="14" class="tm">static files</text>
+        <line class="ln-ok" x1="860" y1="230" x2="900" y2="230" marker-end="url(#ah-ok)"/>
+        <rect class="bx-ink" x="906" y="190" width="114" height="80" rx="16"/><text x="963" y="224" text-anchor="middle" font-size="16" class="b ti">CDN</text><text x="963" y="252" text-anchor="middle" font-size="13" class="ti mono">SITE_URL</text>
+      </svg>
+      <figcaption><b>Figure 8.</b> Two projects, one repository. The <code>ignoreCommand</code> of the site skips a build when none of these changed: <code>apps/site</code>, <code>packages</code>, the root <code>package.json</code>, <code>pnpm-lock.yaml</code>, <code>pnpm-workspace.yaml</code> and <code>.nvmrc</code>.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 12 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="sync" aria-labelledby="h-sync">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">12</span>
+      <h2 id="h-sync">Stay in step with the app</h2>
+      <p class="lead">The screens must look like the app and say what the app says. Three checks keep them in step: types and the build, the tokens, and a review rule.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f9t">
+        <title id="f9t">Three things can drift. Strings: a misspelt key fails the type check, and a key that leaves en.ts fails the build. Values: tokens come from @saldo/ui, so a change shows up on the site at the next build. Layout and numbers: a pull request that changes a shown screen updates the site screen too.</title>
+        <rect class="bx-ok" x="20" y="30" width="320" height="270" rx="18"/>
+        <text x="40" y="66" font-size="19" class="b tok">Strings</text>
+        <text x="40" y="100" font-size="15">appText reads en.ts. Its key</text>
+        <text x="40" y="128" font-size="15">type comes from the catalog.</text>
+        <text x="40" y="168" font-size="15" class="b">A misspelt key fails the type</text>
+        <text x="40" y="194" font-size="15" class="b">check. A missing key fails the build.</text>
+        <text x="40" y="236" font-size="14" class="tm">pnpm typecheck · CI build on every push</text>
+        <rect class="bx" x="360" y="30" width="320" height="270" rx="18"/>
+        <text x="380" y="66" font-size="19" class="b">Values</text>
+        <text x="380" y="100" font-size="15">Colours, radii, sizes and chart</text>
+        <text x="380" y="126" font-size="15">geometry come from @saldo/ui.</text>
+        <text x="380" y="168" font-size="15" class="b">A token change reaches the</text>
+        <text x="380" y="194" font-size="15" class="b">site at its next build.</text>
+        <text x="380" y="236" font-size="14" class="tm">no step needed</text>
+        <rect class="bx-dash" x="700" y="30" width="320" height="270" rx="18"/>
+        <text x="720" y="66" font-size="19" class="b">Layout and numbers</text>
+        <text x="720" y="100" font-size="15">The PR that changes a screen</text>
+        <text x="720" y="126" font-size="15">in the table below also updates</text>
+        <text x="720" y="152" font-size="15">its component in apps/site.</text>
+        <text x="720" y="194" font-size="15" class="b">Review rule in AGENTS.md.</text>
+        <text x="720" y="236" font-size="14" class="tm">no automated tests (decision)</text>
+      </svg>
+      <figcaption><b>Figure 9.</b> Green is automatic and fails the build. The dashed part is a rule for people and agents. The site has no automated tests: the user decided so on 2026-10-19 (D52). A person looks at the built page.</figcaption>
+    </figure>
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">What</th><th scope="col">Owner</th><th scope="col">Check</th></tr></thead>
+        <tbody>
+          <tr><td>App strings on the screens</td><td><code>packages/i18n/src/locales/en.ts</code></td><td><code>apps/site/src/lib/appText.ts</code>: the key type comes from the catalog, so the type checker stops a misspelt key. <code>appText</code> throws when the catalog lacks a key, so the build fails.</td></tr>
+          <tr><td>Sample numbers</td><td><code>apps/site/src/content/en.ts</code></td><td>Derived totals: «Left to spend», net worth, spendable total and «To repay» are sums of the data, not typed values.</td></tr>
+          <tr><td>Screen layout</td><td>The author of the app change</td><td>Review rule: a change to a route in section 04 updates the matching component in <code>apps/site/src/components/phone/</code>.</td></tr>
+          <tr><td>Tokens</td><td><code>packages/ui/src/tokens.ts</code></td><td>The type checker: the site reads tokens by name.</td></tr>
+          <tr><td>Site copy</td><td><code>apps/site/src/content/en.ts</code></td><td>The type <code>SiteContent</code>. A new locale object must have every field.</td></tr>
+          <tr><td>The ground truth</td><td><code>docs/screenshots/*.png</code></td><td>When the screenshots change, compare the site screens with them and update the numbers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 13 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="decisions" aria-labelledby="h-decisions">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">13</span>
+      <h2 id="h-decisions">Decisions</h2>
+      <p class="lead">The numbers continue from D40 in the POC spec. The POC spec lists them with a pointer to this file.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table class="dec">
+        <thead><tr><th scope="col">#</th><th scope="col">Decision</th><th scope="col">Reason</th></tr></thead>
+        <tbody>
+          <tr><td>D41</td><td>The first release of 0.8 is the landing page only. The docs library is a separate plan, 0.8b.</td><td>The page is what a release note or a forum post links to. The docs library needs its own tooling decision.</td></tr>
+          <tr><td>D42</td><td><code>apps/site</code> is an Astro app with static output, not a Next.js app.</td><td>Astro sends no JavaScript by default, and this page needs three small scripts only. Astro imports TypeScript from workspace packages, so the build reads the <code>@saldo/ui</code> tokens and the <code>en.ts</code> keys. Starlight, the Astro docs framework, can fit 0.8b: a glob loader may read the Markdown in <code>docs/</code> in place. This is to verify in the docs plan. Next.js adds a React runtime and hydration to a static page, with no advantage for docs. The earlier choice of Next.js did not compare Astro.</td></tr>
+          <tr><td>D43</td><td>English only at the start. The site copy is in a site-local object for each locale, not in <code>@saldo/i18n</code>. The app strings on the screens come from <code>@saldo/i18n</code>.</td><td>The parity test of <code>@saldo/i18n</code> needs every key in seven catalogs. Marketing copy there would need six translations before launch, and the phone and the web would carry it. The screens must say what the app says, so they read the app catalog.</td></tr>
+          <tr><td>D44</td><td>The phone screens are HTML from the tokens, not screenshots.</td><td>They follow the theme, they can change language, and they are small. Screenshots showed Italian demo data in English and stayed light in the dark theme.</td></tr>
+          <tr><td>D45</td><td>The public URL comes from <code>SITE_URL</code> at build time. The fallback is <code>VERCEL_PROJECT_PRODUCTION_URL</code>, then <code>http://localhost:4321</code>.</td><td>The domain is not known yet. No code changes when it is.</td></tr>
+          <tr><td>D46</td><td>Client JavaScript is three small scripts: theme, carousel, copy buttons. There is no scroll reveal.</td><td>A static page needs no framework. Content that waits for a script can stay hidden when the script fails.</td></tr>
+          <tr><td>D47</td><td>The theme follows the system. A toggle forces light or dark and stores the choice. An inline script sets it before the first paint.</td><td>No flash, and no server is needed to know the choice.</td></tr>
+          <tr><td>D48</td><td>Two new tokens in <code>@saldo/ui</code>: <code>fontSize.siteDisplay</code> (72) and <code>palettes.*.deviceIsland</code> (<code>#000000</code>).</td><td>AGENTS.md forbids font sizes and colours in apps. The marketing headline and the phone status bar need one value each.</td></tr>
+          <tr><td>D49</td><td>Biome lints <code>.astro</code> files with <code>html.experimentalFullSupportEnabled</code>. The client scripts are <code>.ts</code> files.</td><td>Without the option, Biome 2.5 reports template variables as unused and skips <code>&lt;script&gt;</code>. With it, the repository lint stays clean. A <code>.ts</code> file gets the full lint even if the option changes. One style rule, <code>noDescendingSpecificity</code>, is off for <code>apps/site/src/styles/**</code> only: the two stylesheets are a flat port of the mockup, and their cascade order is intended.</td></tr>
+          <tr><td>D50</td><td>The two calls to action go to the repository and to the self-hosting guide on GitHub. The URLs live in one module.</td><td>The docs library does not exist yet. One module makes the later change one line.</td></tr>
+          <tr><td>D51</td><td><code>apps/site</code> uses TypeScript 6 for <code>astro check</code>. The rest of the repository keeps TypeScript 7.</td><td><code>@astrojs/check</code> 0.9.10 accepts TypeScript 5 or 6 only. pnpm installs a separate version for the one package.</td></tr>
+          <tr><td>D52</td><td>The site has no automated tests and no carousel physics. The carousel is a native scroll box with CSS scroll-snap.</td><td>The user decided on 2026-10-19: this is a simple marketing site. The type checker, the build and a look at the page are enough. Mouse drag with momentum is not worth hundreds of lines of script and tests.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 14 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="open" aria-labelledby="h-open">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">14</span>
+      <h2 id="h-open">Open questions</h2>
+      <p class="lead">These questions do not stop the plan. Each one has an owner decision before the site goes live.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <ol class="steps">
+      <li><b>Domain.</b> Which domain, and who owns the Vercel project? The build only needs <code>SITE_URL</code>.</li>
+      <li><b>Italian and the other languages.</b> When does a second locale come, and who writes the copy? The app has seven catalogs; the site starts with one.</li>
+      <li><b>Docs tooling for 0.8b.</b> Can Starlight with a glob loader read <code>docs/*.md</code> in place, with the repository links intact? To verify in the docs plan.</li>
+      <li><b>Node version.</b> Astro 7 needs Node 22.22.0 or later. CI and Vercel use the latest Node 22. Pin <code>.nvmrc</code> to <code>22.22</code>?</li>
+      <li><b>TypeScript.</b> When <code>@astrojs/check</code> accepts TypeScript 7, remove the pin of D51.</li>
+      <li><b>Self-hosting guide.</b> Closed. Commit <code>d4903b86</code> fixed the clone URL and added <code>SETTINGS_ENCRYPTION_KEY</code> to the Docker block. The site shows the same commands, line for line.</li>
+      <li><b>Social image.</b> A committed PNG is simple. Should the build make it instead?</li>
+      <li><b>Biome option.</b> <code>html.experimentalFullSupportEnabled</code> is experimental. Keep it, or drop it and turn off two rules for <code>*.astro</code>?</li>
+      <li><b>Vercel analytics.</b> The page says «Nothing reported». Keep Vercel Web Analytics and Speed Insights off on the site project?</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · spec 0.8a · the marketing site landing page · 2026-10-18</footer>
+
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>

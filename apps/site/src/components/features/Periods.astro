@@ -1,0 +1,24 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { dayText } from '../../lib/format';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const locale = content.locale;
+const kinds = [
+  { text: appText(locale, 'period.kind_month'), on: false },
+  { text: appText(locale, 'period.kind_week'), on: false },
+  { text: appText(locale, 'period.kind_cycle'), on: true },
+  { text: appText(locale, 'period.kind_year'), on: false },
+  { text: appText(locale, 'period.custom'), on: false },
+];
+---
+
+<div>
+  <div class="kinds">{kinds.map((kind) => <span class:list={{ on: kind.on }}>{kind.text}</span>)}</div>
+  <p class="kinds-note"><b>{appText(locale, 'onboarding.cycleTimeline', { start: dayText(content, '2026-09-27'), end: dayText(content, '2026-10-26') })}</b><br />{appText(locale, 'period.kindBody_cycle')}</p>
+</div>

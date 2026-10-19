@@ -1,0 +1,18 @@
+---
+/** The phone's ProgressBar: fill, pace tick, over-pace in the accent, done in the positive colour. */
+interface Props {
+  ratio: number;
+  pace?: number | null;
+  over?: boolean;
+  done?: boolean;
+  thick?: boolean;
+}
+
+const { ratio, pace = null, over = false, done = false, thick = false } = Astro.props;
+const width = `width:${Math.min(100, ratio * 100).toFixed(1)}%`;
+---
+
+<div class:list={['mbar', { th: thick }]}>
+  <i class:list={{ o: over && !done, d: done }} style={width}></i>
+  {pace !== null && <b style={`left:${(pace * 100).toFixed(1)}%`}></b>}
+</div>

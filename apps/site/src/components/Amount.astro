@@ -1,0 +1,23 @@
+---
+import type { CurrencyCode } from '@saldo/core';
+import { type AppLocale, formatMoneyParts, type SignDisplay } from '@saldo/i18n';
+
+/** Integer cents in, the locale's format out (AGENTS.md: money is formatted only at the edge). */
+interface Props {
+  minor: number;
+  currency: CurrencyCode;
+  locale: AppLocale;
+  sign?: SignDisplay;
+  /** The fraction in the muted colour, as the app draws it. */
+  dim?: boolean;
+  class?: string;
+}
+
+const { minor, currency, locale, sign = 'negative', dim = true, class: className } = Astro.props;
+const parts = formatMoneyParts(minor, currency, locale, sign);
+const fraction = parts.fraction === '' ? '' : `${parts.decimalSeparator}${parts.fraction}`;
+const prefix = parts.symbolPosition === 'prefix' ? parts.symbol : '';
+const suffix = parts.symbolPosition === 'suffix' ? ` ${parts.symbol}` : '';
+---
+
+<span class:list={['amt', className]}>{parts.sign}{prefix}{parts.integer}{dim && fraction !== '' ? <span class="dec">{fraction}</span> : fraction}{suffix}</span>

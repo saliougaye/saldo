@@ -1,0 +1,32 @@
+---
+import type { SiteContent } from '../content/index';
+import Budgets from './features/Budgets.astro';
+import Export from './features/Export.astro';
+import Forecast from './features/Forecast.astro';
+import Goal from './features/Goal.astro';
+import Import from './features/Import.astro';
+import Periods from './features/Periods.astro';
+import Recurring from './features/Recurring.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const f = content.features;
+---
+
+<section class="sec bordered" id="features">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">{f.eyebrow}</p><h2 class="h2">{f.title}</h2><p class="lede">{f.lede}</p></div>
+    <div class="bento">
+      <article class="cell span2"><div class="cell-split"><div class="copy-b"><h3 class="h3">{f.budgets.title}</h3><p class="p">{f.budgets.body}</p></div><div class="mockbox"><Budgets content={content} /></div></div></article>
+      <article class="cell"><div class="copy-b"><h3 class="h3">{f.goals.title}</h3><p class="p">{f.goals.body}</p></div><div class="mockbox"><Goal content={content} /></div></article>
+      <article class="cell"><div class="copy-b"><h3 class="h3">{f.forecast.title}</h3><p class="p">{f.forecast.body}</p></div><div class="mockbox"><Forecast content={content} /></div></article>
+      <article class="cell"><div class="copy-b"><h3 class="h3">{f.recurring.title}</h3><p class="p">{f.recurring.body}</p></div><div class="mockbox"><Recurring content={content} /></div></article>
+      <article class="cell"><div class="copy-b"><h3 class="h3">{f.periods.title}</h3><p class="p">{f.periods.body}</p></div><div class="mockbox"><Periods content={content} /></div></article>
+      <article class="cell span2"><div class="cell-split"><div class="copy-b"><h3 class="h3">{f.import.title}</h3><p class="p">{f.import.body}</p></div><div class="mockbox"><Import content={content} /></div></div></article>
+      <article class="cell"><div class="copy-b"><h3 class="h3">{f.export.title}</h3><p class="p">{f.export.body}</p></div><div class="mockbox"><Export content={content} /></div></article>
+    </div>
+  </div>
+</section>

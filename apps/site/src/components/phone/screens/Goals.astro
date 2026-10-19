@@ -1,0 +1,53 @@
+---
+import type { SiteContent } from '../../../content/index';
+import { appText } from '../../../lib/appText';
+import { dayText, moneyText } from '../../../lib/format';
+import { goalState } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Bar from '../Bar.astro';
+import Mib from '../Mib.astro';
+import TitleHead from '../TitleHead.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const today = sample.period.today;
+const goals = sample.goals.map((goal) => {
+  const state = goalState(goal, today);
+  const reached = goal.reached ?? undefined;
+  const meta = reached !== undefined
+    ? appText(locale, 'goals.reachedOnMeta', { date: dayText(content, reached) })
+    : goal.deadline === null ? '' : appText(locale, 'goals.by', { date: dayText(content, goal.deadline) });
+  const action = reached !== undefined
+    ? appText(locale, 'goals.reachedSentence', { amount: moneyText(content, goal.saved) })
+    : appText(locale, 'goals.perPeriod_month', { amount: moneyText(content, goal.perMonth) });
+  const status = reached !== undefined
+    ? appText(locale, 'goals.reachedState')
+    : state.gap < 0
+      ? appText(locale, 'goals.stateBehind', { amount: moneyText(content, -state.gap) })
+      : appText(locale, 'goals.stateAhead', { amount: moneyText(content, state.gap) });
+  return { goal, state, reached, meta, action, status };
+});
+---
+
+<div class="pc">
+  <TitleHead title={appText(locale, 'goals.title')} back add />
+  {goals.map(({ goal, state, reached, meta, action, status }) => (
+    <div class:list={['goal-m', { reached: reached !== undefined }]}>
+      {reached !== undefined && <span class="cheer"><img src="/brand/rocky.png" alt="" width="76" height="76" loading="lazy" /></span>}
+      <div class="mc">
+        <div class="goal-h"><Mib icon={goal.icon} color={goal.color} /><span class="grow">{goal.name}</span><span class="ml">{meta}</span></div>
+        <div class="lg" style="margin-top:12px"><Amount class="ma" minor={goal.saved} currency={currency} locale={locale} /></div>
+        <div class="ml">{appText(locale, 'targets.ofLimit', { amount: moneyText(content, goal.target), percent: appText(locale, 'targets.percent', { value: Math.round(state.ratio * 100) }) })}</div>
+        <div style="margin-top:14px"><Bar ratio={state.ratio} pace={state.pace} thick over={state.pace !== null && state.ratio < state.pace} done={reached !== undefined} /></div>
+        {state.pace !== null && goal.deadline !== null && (
+          <div class="ends mf"><span>{dayText(content, goal.start)}</span><span class="today" style={`left:${state.pace * 100}%`}>{appText(locale, 'targets.today')}</span><span class="last">{dayText(content, goal.deadline)}</span></div>
+        )}
+        <p class="sentence"><Fragment set:html={action} /> <span class="muted-text">{status}</span></p>
+      </div>
+    </div>
+  ))}
+</div>

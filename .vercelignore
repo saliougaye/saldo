@@ -5,9 +5,9 @@
 # An allowlist at the root, so a new top-level file stays on your machine until somebody decides
 # the build needs it.
 #
-# turbo.json is left out on purpose. The build is `pnpm --filter web build` and uses no Turborepo,
-# and with that file in the upload the Vercel build breaks. It stays in the repository, where
-# `pnpm typecheck` and `pnpm test` need it.
+# turbo.json is left out on purpose. The Vercel builds (`pnpm --filter web build` for the web project,
+# `pnpm build` in apps/site for the site project) use no Turborepo, and with that file in the upload
+# the Vercel build breaks. It stays in the repository, where `pnpm typecheck` and `pnpm test` need it.
 /*
 !/apps
 !/packages
@@ -26,6 +26,8 @@
 /apps/mobile/.*.cjs
 **/.expo
 **/.next
+**/.astro
+**/dist
 **/.turbo
 **/node_modules
 **/*.tsbuildinfo

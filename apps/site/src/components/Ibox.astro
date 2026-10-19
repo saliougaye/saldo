@@ -1,0 +1,17 @@
+---
+import type { IconName } from '@saldo/ui';
+import Icon from './Icon.astro';
+
+/** The site-scale icon box: a category colour index, or neutral when there is none. */
+interface Props {
+  icon: IconName;
+  color?: number | null;
+  badge?: boolean;
+  class?: string;
+}
+
+const { icon, color = null, badge = false, class: className } = Astro.props;
+const style = color === null ? undefined : `--c:var(--category-${color});--t:var(--category-${color}-tint)`;
+---
+
+<span class:list={['ibox', className]} style={style}><Icon name={icon} />{badge && <span class="badge"><Icon name="repeat" /></span>}</span>

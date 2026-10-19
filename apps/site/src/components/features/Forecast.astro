@@ -1,0 +1,20 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { longDateText } from '../../lib/format';
+import Amount from '../Amount.astro';
+import Cashflow from '../phone/Cashflow.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+---
+
+<div class="fc">
+  <div class="end"><span>{appText(locale, 'stats.forecastEndLabel', { date: longDateText(content, sample.forecastEnd.date) })}</span><Amount minor={sample.forecastEnd.balance} currency={currency} locale={locale} /></div>
+  <Cashflow bars={sample.cashflow} locale={locale} id="cf-feature" width={300} half={40} nets={false} />
+  <div class="leg"><span><i class="inc"></i>{appText(locale, 'stats.legendIncome')}</span><span><i class="exp"></i>{appText(locale, 'stats.legendExpenses')}</span><span><i class="r"></i>{appText(locale, 'stats.legendRange')}</span></div>
+</div>

@@ -1,0 +1,29 @@
+---
+import Faq from '../components/Faq.astro';
+import Features from '../components/Features.astro';
+import FinalCta from '../components/FinalCta.astro';
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+import Nav from '../components/Nav.astro';
+import Screens from '../components/Screens.astro';
+import SelfHost from '../components/SelfHost.astro';
+import WhatItIs from '../components/WhatItIs.astro';
+import { LOCALES } from '../content/index';
+import Base from '../layouts/Base.astro';
+
+const content = LOCALES.en;
+---
+
+<Base content={content}>
+  <Nav content={content} />
+  <main id="top">
+    <Hero content={content} />
+    <WhatItIs content={content} />
+    <Features content={content} />
+    <Screens content={content} />
+    <SelfHost content={content} />
+    <Faq content={content} />
+    <FinalCta content={content} />
+  </main>
+  <Footer content={content} />
+</Base>

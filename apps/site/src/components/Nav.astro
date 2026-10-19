@@ -1,0 +1,27 @@
+---
+import type { SiteContent } from '../content/index';
+import { GUIDE_URL, REPO_URL } from '../lib/links';
+import GithubMark from './GithubMark.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const nav = content.ui.nav;
+---
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand press" href="#top"><span class="mark"><img src="/brand/rocky-mark.png" alt="" width="28" height="28" /></span><span>Saldo</span></a>
+    <nav class="nav-links" aria-label={content.ui.navLabel}>
+      <a href="#features">{nav.features}</a><a href="#screens">{nav.screens}</a><a href="#selfhost">{nav.selfHost}</a><a href="#faq">{nav.faq}</a>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-sm btn-text press hide-narrow" href={GUIDE_URL}>{content.ui.guideShort}</a>
+      <a class="btn btn-sm btn-ghost press" href={REPO_URL}><GithubMark /><span>{content.ui.github}</span></a>
+      <ThemeToggle content={content} />
+    </div>
+  </div>
+</header>

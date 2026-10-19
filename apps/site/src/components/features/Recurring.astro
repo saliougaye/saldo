@@ -1,0 +1,28 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appCount, appText } from '../../lib/appText';
+import { dayText } from '../../lib/format';
+import Amount from '../Amount.astro';
+import Ibox from '../Ibox.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const entry = sample.recurring.find((item) => item.title === 'Car insurance') ?? sample.recurring[0];
+const options = [
+  appText(locale, 'recurrenceScope.onlyThis'),
+  appText(locale, 'recurrenceScope.thisAndFollowing'),
+  appText(locale, 'recurrenceScope.all'),
+];
+---
+
+{entry && (
+  <div class="mock">
+    <div class="row first"><Ibox icon={sample.categories[entry.category].icon} color={sample.categories[entry.category].color} badge /><div class="txt"><span class="t">{entry.title}</span><span class="s">{appCount(locale, 'recurrence.every_monthly', 1)} · {dayText(content, entry.next)}</span></div><Amount minor={entry.amount} currency={currency} locale={locale} /></div>
+    <p class="label scope-title">{appText(locale, 'recurrenceScope.title')}</p>
+    <div class="opts">{options.map((text, index) => <div class:list={['opt', { on: index === 1 }]}><span class="radio"></span><div class="txt"><span class="t">{text}</span></div></div>)}</div>
+  </div>
+)}

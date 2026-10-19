@@ -1,0 +1,28 @@
+---
+import type { IconName } from '@saldo/ui';
+import type { SiteContent } from '../content/index';
+import { appText } from '../lib/appText';
+import Icon from './Icon.astro';
+
+/** The web app's sidebar (G2): the brand, five destinations, «New transaction». */
+interface Props {
+  content: SiteContent;
+  active: number;
+}
+
+const { content, active } = Astro.props;
+const locale = content.locale;
+const items: { icon: IconName; text: string }[] = [
+  { icon: 'house', text: appText(locale, 'tabs.home') },
+  { icon: 'list', text: appText(locale, 'tabs.transactions') },
+  { icon: 'activity', text: appText(locale, 'tabs.stats') },
+  { icon: 'wallet', text: appText(locale, 'tabs.accounts') },
+  { icon: 'shield', text: appText(locale, 'admin.title') },
+];
+---
+
+<div class="win-side">
+  <span class="brand"><span class="mark"><img src="/brand/rocky-mark.png" alt="" width="24" height="24" /></span>Saldo</span>
+  <div class="win-nav">{items.map((item, index) => <span aria-current={index === active ? 'page' : undefined}><Icon name={item.icon} />{item.text}</span>)}</div>
+  <span class="win-new"><Icon name="plus" />{appText(locale, 'web.shell.newTransaction')} <kbd>N</kbd></span>
+</div>

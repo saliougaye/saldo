@@ -33,6 +33,11 @@ Spendee's paid features. You are implementing the POC.
   for complex rules (see «Tests»). Screens and route handlers only load data, call core, and render or return results.
 - **No hard-coded UI strings.** Every user-visible string goes through i18n keys in `packages/i18n/src/locales/it.ts`
   **and** `en.ts` (the parity test enforces this).
+- **The marketing site is the one exception** (`apps/site`, spec 0.8a D43). Its own copy lives in
+  `apps/site/src/content/<locale>.ts`, one object for each locale. The app strings on its phone screens come from
+  `@saldo/i18n` through `appText`. `astro check` stops a misspelt key, and the build fails when a catalog lacks a key. The site has no automated tests (spec 0.8a D52).
+- **When you change a screen that the site shows** (the table in spec 0.8a §04), change the matching component in
+  `apps/site/src/components/phone/screens/` in the same pull request.
 - **No hard-coded colours, radii or font sizes** in apps. Use `@saldo/ui` tokens. New screens reuse existing primitives.
 - `packages/*` never import from `apps/*`; `@saldo/core` imports no React, React Native, Node or DOM APIs.
 - Install **current stable** library versions; never invent version numbers. If a library API differs from a plan,
@@ -108,6 +113,7 @@ pnpm lint             # biome check
 pnpm typecheck        # turbo: tsc --noEmit in every package/app
 pnpm test             # turbo: vitest / jest in every package/app
 pnpm --filter @saldo/core test -- --watch
+pnpm --filter site dev   # the marketing site (Astro), http://localhost:4321; needs Node >= 22.22
 ```
 
 **Reading the results.** Two false greens have already cost time in this repository, so check the

@@ -1,0 +1,15 @@
+---
+import type { SiteContent } from '../content/index';
+import Ctas from './Ctas.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section class="sec bordered">
+  <div class="a-grid" aria-hidden="true"></div>
+  <div class="wrap final"><h2 class="display">{content.final.title}</h2><p class="lede">{content.final.lede}</p><Ctas content={content} /></div>
+</section>

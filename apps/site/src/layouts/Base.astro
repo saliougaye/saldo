@@ -1,0 +1,81 @@
+---
+import '@fontsource/geist-sans/latin-400.css';
+import '@fontsource/geist-sans/latin-500.css';
+import '@fontsource/geist-sans/latin-600.css';
+import '@fontsource/geist-mono/latin-400.css';
+import '../styles/global.css';
+import '../styles/phone.css';
+import { palettes, tokensCss } from '@saldo/ui';
+import type { SiteContent } from '../content/index';
+
+/**
+ * Spec 0.8a §03, §08, §09. The tokens go into one `<style>` from `tokensCss()`. The theme script runs
+ * inline before the first paint. All absolute URLs come from `Astro.site` (D45).
+ */
+interface Props {
+  content: SiteContent;
+  path?: string;
+  noindex?: boolean;
+}
+
+const { content, path = '/', noindex = false } = Astro.props;
+const site = Astro.site ?? new URL('http://localhost:4321');
+const canonical = new URL(path, site).href;
+const image = new URL('/og.png', site).href;
+const meta = content.meta;
+const tokens = `${tokensCss()}
+:root {
+  --font-family: "Geist Sans", "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, Menlo, monospace;
+}`;
+---
+
+<!doctype html>
+<html lang={content.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{meta.title}</title>
+    <meta name="description" content={meta.description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content={palettes.light.bg} data-scheme="light" data-color={palettes.light.bg} />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content={palettes.dark.bg} data-scheme="dark" data-color={palettes.dark.bg} />
+    <script is:inline>
+      // Plain script, no module: a module is deferred, runs after the first paint, and the page flashes.
+      // The `theme-color` metas follow the system only, so a forced theme sets them by hand.
+      window.paintTheme = (theme) => {
+        const forced = theme === 'light' || theme === 'dark';
+        if (forced) document.documentElement.setAttribute('data-theme', theme);
+        else document.documentElement.removeAttribute('data-theme');
+        for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+          const source = forced ? document.querySelector(`meta[data-scheme="${theme}"]`) : meta;
+          meta.setAttribute('content', source.getAttribute('data-color'));
+        }
+      };
+      try {
+        window.paintTheme(localStorage.getItem('saldo-site-theme'));
+      } catch {}
+    </script>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Saldo" />
+    <meta property="og:title" content={meta.title} />
+    <meta property="og:description" content={meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={meta.ogAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={meta.title} />
+    <meta name="twitter:description" content={meta.description} />
+    <meta name="twitter:image" content={image} />
+    <style is:inline set:html={tokens}></style>
+  </head>
+  <body>
+    <a class="skip" href="#top">{content.ui.skip}</a>
+    <div class="site"><slot /></div>
+  </body>
+</html>

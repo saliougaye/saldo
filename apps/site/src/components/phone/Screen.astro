@@ -1,0 +1,36 @@
+---
+import type { SiteContent } from '../../content/index';
+import Phone from './Phone.astro';
+import Accounts from './screens/Accounts.astro';
+import Budgets from './screens/Budgets.astro';
+import Card from './screens/Card.astro';
+import Goals from './screens/Goals.astro';
+import Home from './screens/Home.astro';
+import NewTransaction from './screens/NewTransaction.astro';
+import Recap from './screens/Recap.astro';
+import Recurring from './screens/Recurring.astro';
+import Stats from './screens/Stats.astro';
+import Transactions from './screens/Transactions.astro';
+
+/** One screen of the carousel or the hero, by its key in `content.screens.shots`. */
+interface Props {
+  content: SiteContent;
+  shot: SiteContent['screens']['shots'][number]['key'];
+  label: string;
+  class?: string;
+}
+
+const { content, shot, label, class: className } = Astro.props;
+const locale = content.locale;
+---
+
+{shot === 'home' && <Phone label={label} locale={locale} tab="home" class={className}><Home content={content} /></Phone>}
+{shot === 'transactions' && <Phone label={label} locale={locale} tab="transactions" class={className}><Transactions content={content} /></Phone>}
+{shot === 'newTransaction' && <Phone label={label} locale={locale} sheet class={className}><NewTransaction content={content} /></Phone>}
+{shot === 'stats' && <Phone label={label} locale={locale} tab="stats" class={className}><Stats content={content} /></Phone>}
+{shot === 'budgets' && <Phone label={label} locale={locale} class={className}><Budgets content={content} /></Phone>}
+{shot === 'goals' && <Phone label={label} locale={locale} class={className}><Goals content={content} /></Phone>}
+{shot === 'accounts' && <Phone label={label} locale={locale} tab="accounts" class={className}><Accounts content={content} /></Phone>}
+{shot === 'card' && <Phone label={label} locale={locale} class={className}><Card content={content} /></Phone>}
+{shot === 'recurring' && <Phone label={label} locale={locale} class={className}><Recurring content={content} /></Phone>}
+{shot === 'recap' && <Phone label={label} locale={locale} sheet class={className}><Recap content={content} /></Phone>}

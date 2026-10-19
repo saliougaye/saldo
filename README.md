@@ -74,6 +74,7 @@ CSV. And there is no App Store or Play Store build: you build it and sideload it
 | --- | --- |
 | `apps/mobile` | Expo (React Native) app for Android and iOS |
 | `apps/web` | Next.js server: API, passkey auth, sync — see [self-hosting](docs/self-hosting.md) |
+| `apps/site` | The marketing site: one static page (Astro) — see [the spec](docs/superpowers/specs/2026-10-18-marketing-site.html) |
 | `packages/core` | Domain model and calculations (pure TypeScript) |
 | `packages/ui` | Design tokens and icon data |
 | `packages/i18n` | Italian and English catalogs, formatters |

@@ -1,0 +1,33 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appCount, appText } from '../../lib/appText';
+import { moneyText } from '../../lib/format';
+import { budgetStates, periodDay } from '../../lib/sample';
+import Amount from '../Amount.astro';
+import Ibox from '../Ibox.astro';
+import Track from '../Track.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const { pace, daysLeft } = periodDay(sample);
+---
+
+<div class="mock">
+  {budgetStates(sample).slice(0, 3).map((budget) => {
+    const category = sample.categories[budget.category];
+    return (
+      <div class="brow">
+        <div class="brow-top">
+          <Ibox icon={category.icon} color={category.color} />
+          <div class="brow-name"><span class="t">{category.name}</span><span class="s">{appCount(locale, 'budgets.daysLeft', daysLeft)}</span></div>
+          <div class="brow-amt"><span class="t"><Amount minor={budget.spent} currency={currency} locale={locale} /></span><span class="s">{appText(locale, 'budgets.ofLimit', { amount: moneyText(content, budget.limit) })}</span></div>
+        </div>
+        <Track ratio={budget.ratio} pace={pace} over={budget.overPace} />
+      </div>
+    );
+  })}
+</div>

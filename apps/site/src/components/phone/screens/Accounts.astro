@@ -1,0 +1,42 @@
+---
+import type { SiteContent } from '../../../content/index';
+import { appText } from '../../../lib/appText';
+import { netWorth, spendableTotal } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Mib from '../Mib.astro';
+import Row from '../Row.astro';
+import TitleHead from '../TitleHead.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const groups = [sample.accounts.spending, sample.accounts.savings];
+---
+
+<div class="pc">
+  <TitleHead title={appText(locale, 'accounts.title')} add />
+  <div class="mc">
+    <div class="ml">{appText(locale, 'accounts.netWorth')}</div>
+    <div class="big" style="margin:4px 0 14px"><Amount class="ma" minor={netWorth(sample)} currency={currency} locale={locale} /></div>
+    <div class="div" style="padding-top:12px">
+      <div class="mh" style="margin:0"><span class="ml body">{appText(locale, 'accounts.spendable')}</span><span class="strong"><Amount class="ma" minor={spendableTotal(sample)} currency={currency} locale={locale} /></span></div>
+      <div class="mf note">{appText(locale, 'accounts.spendableNote')}</div>
+    </div>
+  </div>
+  {groups.map((accounts, index) => (
+    <Fragment>
+      {index === 1 && <div class="sect">{appText(locale, 'accounts.savings')}</div>}
+      <div class="mc np">
+        {accounts.map((account) => (
+          <Row title={account.name} subtitle={account.subtitle}>
+            <Mib slot="leading" icon={account.icon} color={account.color} />
+            <Amount slot="trailing" class="ma" minor={account.balance} currency={currency} locale={locale} />
+          </Row>
+        ))}
+      </div>
+    </Fragment>
+  ))}
+</div>

@@ -1,0 +1,16 @@
+---
+/** The site-scale progress bar (web ProgressBar): fill, and the pace tick when there is one. */
+interface Props {
+  ratio: number;
+  pace?: number | null;
+  over?: boolean;
+  thick?: boolean;
+}
+
+const { ratio, pace = null, over = false, thick = false } = Astro.props;
+---
+
+<div class:list={['track', { thick }]} style={`--p:${Math.min(1, ratio).toFixed(4)};--t:${(pace ?? 0).toFixed(4)}`}>
+  <i class:list={['fill', { over }]}></i>
+  {pace !== null && <i class="tick"></i>}
+</div>
