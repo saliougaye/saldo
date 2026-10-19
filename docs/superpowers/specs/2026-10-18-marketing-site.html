@@ -840,7 +840,7 @@ td:first-child { white-space: normal; }
         <line class="ln-ok" x1="860" y1="230" x2="900" y2="230" marker-end="url(#ah-ok)"/>
         <rect class="bx-ink" x="906" y="190" width="114" height="80" rx="16"/><text x="963" y="224" text-anchor="middle" font-size="16" class="b ti">CDN</text><text x="963" y="252" text-anchor="middle" font-size="13" class="ti mono">SITE_URL</text>
       </svg>
-      <figcaption><b>Figure 8.</b> Two projects, one repository. The <code>ignoreCommand</code> of the site skips a build when <code>apps/site</code>, <code>packages</code> and the lockfile did not change.</figcaption>
+      <figcaption><b>Figure 8.</b> Two projects, one repository. The <code>ignoreCommand</code> of the site skips a build when none of these changed: <code>apps/site</code>, <code>packages</code>, the root <code>package.json</code>, <code>pnpm-lock.yaml</code>, <code>pnpm-workspace.yaml</code> and <code>.nvmrc</code>.</figcaption>
     </figure>
   </div>
 </section>
