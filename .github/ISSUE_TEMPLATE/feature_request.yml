@@ -1,0 +1,33 @@
+name: Feature request
+description: Ask for new behaviour, or a change to existing behaviour.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Saldo is built to a written spec. Read the [roadmap](https://github.com/saliougaye/saldo/blob/main/ROADMAP.md) first. The answer may be there.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What can you not do now, or what is hard to do? Describe the need, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: The behaviour that you want
+      description: What does Saldo do now? What do you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: How do you solve this today? Which other options did you consider?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I can send a pull request for this.

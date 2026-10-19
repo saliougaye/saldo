@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # pnpm workspace: one lockfile at the root covers every package and app.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One pull request for the minor and patch updates. A major update gets its own pull request.
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Expo, React Native and Next.js move together. Update them by hand with the Expo SDK.
+    ignore:
+      - dependency-name: expo
+        update-types: [version-update:semver-major]
+      - dependency-name: react-native
+        update-types: [version-update:semver-major, version-update:semver-minor]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,58 @@
+name: Bug report
+description: Saldo does something that it should not do, or does not do something that it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not post a security problem here. See [SECURITY.md](https://github.com/saliougaye/saldo/blob/main/SECURITY.md).
+        Do not post real financial data. Remove names, amounts and account details from logs and screenshots.
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: What happens now
+      description: Describe the behaviour that you see.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Mobile app
+        - Web app
+        - Server (sync, auth, API)
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: The commit of `main` that you run.
+  - type: input
+    id: platform
+    attributes:
+      label: Device and system
+      description: For example, «Pixel 8, Android 15» or «iPhone 15, iOS 18», or the browser for the web app.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Logs (without private data) and screenshots.

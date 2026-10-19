@@ -2,15 +2,16 @@
 
 Thanks for looking. The long version of everything below is [AGENTS.md](AGENTS.md) — it is the full
 set of conventions, for people and for coding agents alike, and it is the one that gets updated. This
-page is the short way in.
+page is the short way in. Everyone who takes part follows the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Status
 
 Saldo is a proof of concept, built to a written spec rather than feature by feature. The spec and the
 roadmap live in [`docs/superpowers/`](docs/superpowers/plans/README.md): read the phase you are about
-to touch before you touch it. There is also a design prototype under [`docs/design/`](docs/design/README.md);
-where it and the spec disagree, **the spec wins** — the prototype fakes its data and some of its
-behaviour.
+to touch before you touch it. The first screens came from a design prototype that is not part of this
+repository. Where the prototype and the spec disagree, **the spec wins** — the prototype faked its data and
+some of its behaviour. You do not need the prototype: the `@saldo/ui` tokens, icons and primitives carry what
+it defined.
 
 ## Getting set up
 
@@ -72,5 +73,6 @@ bump, so an unnecessary one costs everybody an evening. **Versions and compatibi
 ## What to open first
 
 Open an issue describing the behaviour — what it does now, what you expected — before you open a pull
-request that changes it. It is cheaper to agree on the behaviour than to review the wrong fix, and
+request that changes it. Choose the **Bug report** or **Feature request** form: each one asks for what a
+reviewer needs. For a security problem, do not open an issue; follow [SECURITY.md](SECURITY.md). It is cheaper to agree on the behaviour than to review the wrong fix, and
 for anything the spec already decided, the answer may be in `docs/superpowers/`.
