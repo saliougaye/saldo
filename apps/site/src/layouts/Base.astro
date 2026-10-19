@@ -36,13 +36,13 @@ const tokens = `${tokensCss()}
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script is:inline set:html={THEME_INIT} />
     <title>{meta.title}</title>
     <meta name="description" content={meta.description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content={palettes.light.bg} />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content={palettes.dark.bg} />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content={palettes.light.bg} data-scheme="light" data-color={palettes.light.bg} />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content={palettes.dark.bg} data-scheme="dark" data-color={palettes.dark.bg} />
+    <script is:inline set:html={THEME_INIT} />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
