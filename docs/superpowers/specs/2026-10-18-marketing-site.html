@@ -812,28 +812,28 @@ td:first-child { white-space: normal; }
       <ol class="steps">
         <li>Create a Vercel project from the repository.</li>
         <li>Set the root directory to <code>apps/site</code>. Keep «Include files outside the root directory» on, because the site imports <code>packages/*</code>.</li>
-        <li>Vercel finds Astro and <code>pnpm</code> by itself: build with the <code>build</code> script, output <code>dist</code>. The site has no <code>vercel.json</code>. Set the Node.js version to 22 or later in the project settings.</li>
+        <li>Vercel reads <code>apps/site/vercel.json</code>: framework <code>astro</code>, build <code>pnpm build</code>, output <code>dist</code>. Without this file, Vercel uses the root <code>vercel.json</code> of the web app, and the build fails with <code>NEXT_NO_VERSION</code>. Set the Node.js version to 22 or later in the project settings.</li>
         <li>Add the domain to the project. <code>SITE_URL</code> is optional: set it to the public URL, for example <code>https://saldo.example</code>, only when the canonical URL is wrong.</li>
       </ol>
       <p>Without <code>SITE_URL</code>, the build uses <code>https://</code> + <code>VERCEL_PROJECT_PRODUCTION_URL</code>, which Vercel sets. Outside Vercel, it uses <code>http://localhost:4321</code>.</p>
-      <div class="callout"><span class="meta">The other project</span><p>The root <code>vercel.json</code> stays for the web app. It builds <code>pnpm --filter web build</code>. The site project does not read it, because its root directory is <code>apps/site</code>.</p></div>
+      <div class="callout"><span class="meta">The other project</span><p>The root <code>vercel.json</code> stays for the web app. It builds <code>pnpm --filter web build</code>. The site project reads it too, if <code>apps/site/vercel.json</code> is missing. Keep both files.</p></div>
     </div>
   </div>
   <div class="visual">
     <figure class="rv">
       <svg viewBox="0 0 1040 300" role="img" aria-labelledby="f8t">
-        <title id="f8t">A push to GitHub starts two Vercel projects. The web project uses the root vercel.json. The site project has no vercel.json, builds with Astro and serves dist from the CDN under the domain in SITE_URL.</title>
+        <title id="f8t">A push to GitHub starts two Vercel projects. The web project uses the root vercel.json. The site project uses apps/site/vercel.json, builds with Astro and serves dist from the CDN under the domain in SITE_URL.</title>
         <rect class="bx" x="20" y="100" width="180" height="100" rx="18"/><text x="110" y="144" text-anchor="middle" font-size="18" class="b">GitHub</text><text x="110" y="172" text-anchor="middle" font-size="14" class="tm">push to main</text>
         <path class="ln" d="M204 130 C 250 130, 250 70, 300 70" marker-end="url(#ah)"/>
         <path class="ln-ok" d="M204 170 C 250 170, 250 230, 300 230" marker-end="url(#ah-ok)"/>
         <rect class="bx-r" x="306" y="30" width="330" height="80" rx="16"/><text x="326" y="64" font-size="17" class="b">Vercel project: web</text><text x="326" y="92" font-size="14" class="tm mono">vercel.json · --filter web build</text>
-        <rect class="bx-ok" x="306" y="190" width="330" height="80" rx="16"/><text x="326" y="224" font-size="17" class="b tok">Vercel project: site</text><text x="326" y="252" font-size="14" class="tm mono">astro build</text>
+        <rect class="bx-ok" x="306" y="190" width="330" height="80" rx="16"/><text x="326" y="224" font-size="17" class="b tok">Vercel project: site</text><text x="326" y="252" font-size="14" class="tm mono">apps/site/vercel.json · astro build</text>
         <line class="ln-ok" x1="640" y1="230" x2="700" y2="230" marker-end="url(#ah-ok)"/>
         <rect class="bx" x="706" y="190" width="150" height="80" rx="16"/><text x="781" y="224" text-anchor="middle" font-size="17" class="b">dist/</text><text x="781" y="252" text-anchor="middle" font-size="14" class="tm">static files</text>
         <line class="ln-ok" x1="860" y1="230" x2="900" y2="230" marker-end="url(#ah-ok)"/>
         <rect class="bx-ink" x="906" y="190" width="114" height="80" rx="16"/><text x="963" y="224" text-anchor="middle" font-size="16" class="b ti">CDN</text><text x="963" y="252" text-anchor="middle" font-size="13" class="ti mono">SITE_URL</text>
       </svg>
-      <figcaption><b>Figure 8.</b> Two projects, one repository. The site project builds on each push, or only when its files or its workspace dependencies change, if the project setting «Skip deployments when there are no changes to the root directory or its dependencies» is on. The site has no <code>ignoreCommand</code>: it ran <code>git diff</code>, which fails on a deploy from the command line, where there is no <code>.git</code> (2026-10-19).</figcaption>
+      <figcaption><b>Figure 8.</b> Two projects, one repository. The site project builds on each push, or only when its files or its workspace dependencies change, if the project setting «Skip deployments when there are no changes to the root directory or its dependencies» is on. The site has no <code>ignoreCommand</code> (removed on 2026-10-19): the setting does the same job and needs no <code>git diff</code>.</figcaption>
     </figure>
   </div>
 </section>
