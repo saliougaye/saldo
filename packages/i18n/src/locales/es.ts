@@ -1635,6 +1635,7 @@ export const es: Messages = {
       changeCancel: 'Cancelar el cambio',
       changeInvalid: 'Eso no es una dirección de correo.',
       changeSame: 'Esta ya es tu dirección.',
+      changeLater: 'Espera un minuto antes de volver a pedirlo.',
     },
     accounts: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',

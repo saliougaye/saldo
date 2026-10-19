@@ -7,7 +7,9 @@ import { normaliseEmail } from '../../../../src/server/auth/email';
 import { cancelEmailChange, startEmailChange } from '../../../../src/server/auth/emailChange';
 import { getDb } from '../../../../src/server/db/client';
 
-export type ChangeEmailResult = { ok: true } | { ok: false; reason: 'invalid' | 'same' | 'failed' };
+export type ChangeEmailResult =
+  | { ok: true }
+  | { ok: false; reason: 'invalid' | 'same' | 'later' | 'failed' };
 
 /**
  * Profilo → Account asks to change the address. The rules are `startEmailChange`'s, the same ones
@@ -24,7 +26,10 @@ export async function requestEmailChangeAction(address: string): Promise<ChangeE
     acceptLanguage: (await headers()).get('accept-language'),
     now: new Date(),
   });
-  if (!result.ok) return { ok: false, reason: result.reason === 'unchanged' ? 'same' : 'failed' };
+  if (!result.ok) {
+    if (result.reason === 'unchanged') return { ok: false, reason: 'same' };
+    return { ok: false, reason: result.reason === 'rate_limited' ? 'later' : 'failed' };
+  }
   revalidatePath('/profile/account');
   return { ok: true };
 }

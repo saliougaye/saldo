@@ -1649,6 +1649,7 @@ export const fr: Messages = {
       changeCancel: 'Annuler le changement',
       changeInvalid: 'Ceci n’est pas une adresse e-mail.',
       changeSame: 'C’est déjà votre adresse.',
+      changeLater: 'Attendez une minute avant de le redemander.',
     },
     accounts: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',

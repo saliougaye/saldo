@@ -1633,6 +1633,7 @@ export const pt: Messages = {
       changeCancel: 'Cancelar a alteração',
       changeInvalid: 'Isso não é um endereço de e-mail.',
       changeSame: 'Este já é o seu endereço.',
+      changeLater: 'Aguarde um minuto antes de pedir de novo.',
     },
     accounts: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',

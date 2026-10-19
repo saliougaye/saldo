@@ -1631,6 +1631,7 @@ export const it = {
       changeCancel: 'Annulla il cambio',
       changeInvalid: 'Questo non è un indirizzo email.',
       changeSame: 'Questo è già il tuo indirizzo.',
+      changeLater: 'Aspetta un minuto prima di chiederlo di nuovo.',
     },
     accounts: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',

@@ -1647,6 +1647,7 @@ export const de: Messages = {
       changeCancel: 'Änderung abbrechen',
       changeInvalid: 'Das ist keine E-Mail-Adresse.',
       changeSame: 'Das ist bereits deine Adresse.',
+      changeLater: 'Warte eine Minute, bevor du es noch einmal versuchst.',
     },
     accounts: {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',

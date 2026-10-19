@@ -1626,6 +1626,7 @@ export const sv: Messages = {
       changeCancel: 'Avbryt ändringen',
       changeInvalid: 'Det där är ingen e-postadress.',
       changeSame: 'Det här är redan din adress.',
+      changeLater: 'Vänta en minut innan du försöker igen.',
     },
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',

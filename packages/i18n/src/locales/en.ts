@@ -1626,6 +1626,7 @@ export const en: Messages = {
       changeCancel: 'Cancel the change',
       changeInvalid: 'That is not an email address.',
       changeSame: 'This is already your address.',
+      changeLater: 'Wait a minute before asking again.',
     },
     accounts: {
       error_invalid: 'Couldn’t save: check the fields and try again.',

@@ -18,6 +18,7 @@ export interface ChangeEmailStrings {
   cancel: string;
   invalid: string;
   same: string;
+  later: string;
   failed: string;
 }
 
@@ -29,7 +30,7 @@ export interface ChangeEmailStrings {
 export function ChangeEmailForm({ strings }: { strings: ChangeEmailStrings }) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<'invalid' | 'same' | 'failed' | null>(null);
+  const [problem, setProblem] = useState<'invalid' | 'same' | 'later' | 'failed' | null>(null);
 
   const run = async (call: () => ReturnType<typeof requestEmailChangeAction>) => {
     setBusy(true);
@@ -49,7 +50,7 @@ export function ChangeEmailForm({ strings }: { strings: ChangeEmailStrings }) {
 
   if (strings.pending !== null) {
     return (
-      <div className={styles.verify}>
+      <div className={styles.change}>
         <span className={styles.meta} role="status">
           {strings.pending}
         </span>
@@ -69,7 +70,8 @@ export function ChangeEmailForm({ strings }: { strings: ChangeEmailStrings }) {
 
   return (
     <form
-      className={styles.verify}
+      noValidate
+      className={styles.change}
       onSubmit={(event) => {
         event.preventDefault();
         if (email.trim() !== '') void run(() => requestEmailChangeAction(email));

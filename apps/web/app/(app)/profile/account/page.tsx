@@ -63,6 +63,7 @@ export default async function ProfileAccountPage() {
             cancel: t('web.account.changeCancel'),
             invalid: t('web.account.changeInvalid'),
             same: t('web.account.changeSame'),
+            later: t('web.account.changeLater'),
             failed: t('web.auth.genericError'),
           }}
         />

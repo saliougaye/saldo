@@ -7,6 +7,7 @@ import { env } from '../env';
 import { log, shortId } from '../log';
 import { mailEnabled } from '../mail/mailer';
 import { emailChangedMessage, emailChangeMessage } from '../mail/messages';
+import { mailThrottle } from '../mail/throttle';
 import { createFixedWindowLimiter } from '../mcp/rateLimit';
 import { isRevoked } from './admin';
 import { emailIsTaken, isSyntheticEmail } from './email';
@@ -89,6 +90,12 @@ export async function requestEmailChange(
   if (!requestLimiter.allow(input.userId, input.now.getTime()).allowed) {
     return { ok: false, reason: 'rate_limited' };
   }
+  // The mailbox's own limit is spent **first**, taken address or not, and a held request leaves the
+  // pending row alone: the link already in the inbox keeps working. A taken address spends it too,
+  // so a 429 cannot tell it from a free one. (The mail below is then sent unthrottled: it has paid.)
+  if (!mailThrottle.allow('emailChange', input.newEmail, input.now.getTime())) {
+    return { ok: false, reason: 'rate_limited' };
+  }
   const token = randomBytes(32).toString('base64url');
   const expiresAt = new Date(input.now.getTime() + VERIFICATION_TTL_SECONDS * 1000);
   const row = {
@@ -115,6 +122,7 @@ export async function requestEmailChange(
       { id: input.userId, email: input.newEmail },
       input.acceptLanguage,
       (t, instance) => emailChangeMessage(t, { ...instance, url: url.toString() }),
+      { throttled: false },
     );
   });
   return { ok: true, pending: { email: input.newEmail, expiresAt } };

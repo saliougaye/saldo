@@ -174,6 +174,31 @@ describe('changing a real address', () => {
     expect(await emailOf('other')).toEqual({ email: 'bob@new.example', verified: true });
   });
 
+  // Found in the browser run: a request whose mail the per-address throttle holds used to replace the
+  // pending row anyway, so the link already in the inbox died and no new one came.
+  it('keeps the link already mailed when the same address is asked for again within a minute', async () => {
+    const mail = catchMail();
+    await enableMail(harness.db);
+    const account = await sessionWithEmail(harness.db, OLD);
+    expect((await ask(account.bearer, NEW)).status).toBe(202);
+    const second = await ask(account.bearer, NEW);
+    expect(second.status).toBe(429);
+    expect(await second.json()).toMatchObject({ error: { code: 'rate_limited' } });
+    expect(mail.sent).toHaveLength(1);
+    expect(await spend(changeTokenIn(mail.sent[0]))).toBe(200);
+  });
+
+  it('holds a taken address the same way, so the 429 does not tell it from a free one', async () => {
+    catchMail();
+    await enableMail(harness.db);
+    await harness.db
+      .insert(user)
+      .values({ id: 'other', name: 'Other', email: 'bob@new.example', emailVerified: true });
+    const account = await sessionWithEmail(harness.db, OLD);
+    expect((await ask(account.bearer, 'bob@new.example')).status).toBe(202);
+    expect((await ask(account.bearer, 'bob@new.example')).status).toBe(429);
+  });
+
   it('kills the earlier link when a new address is asked for', async () => {
     const mail = catchMail();
     await enableMail(harness.db);
