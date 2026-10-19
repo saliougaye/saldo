@@ -1,0 +1,20 @@
+---
+import type { SiteContent } from '../content/index';
+import Icon from './Icon.astro';
+
+/** System → Light → Dark (spec 0.8a §08). The inline script in `Base.astro` applies the choice first. */
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const labels = content.ui.themeLabel;
+---
+
+<button class="iconbtn press theme-toggle" type="button" data-theme-toggle data-label-system={labels.system} data-label-light={labels.light} data-label-dark={labels.dark} aria-label={labels.system}>
+  <Icon name="monitor" class="t-system" /><Icon name="sun" class="t-light" /><Icon name="moon" class="t-dark" />
+</button>
+
+<script>
+  import '../scripts/theme';
+</script>

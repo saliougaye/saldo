@@ -1,0 +1,12 @@
+---
+import { type IconName, iconMarkup } from '@saldo/ui';
+
+interface Props {
+  name: IconName;
+  class?: string;
+}
+
+const { name, class: className } = Astro.props;
+---
+
+<svg class:list={['ico', className]} viewBox="0 0 24 24" aria-hidden="true" set:html={iconMarkup[name]} />
