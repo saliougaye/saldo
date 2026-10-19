@@ -1,0 +1,66 @@
+---
+import type { LocalDate } from '@saldo/core';
+import { type AppLocale, formatPeriodTick } from '@saldo/i18n';
+import { cashflowColumns } from '@saldo/ui';
+
+/**
+ * Cashflow (§5.7): income above the axis, expenses below, the running period hatched, forecast
+ * periods dimmed with their min–max band. Heights come from `cashflowColumns` of `@saldo/ui`,
+ * the function the phone and the web use.
+ */
+interface Bar {
+  start: LocalDate;
+  income: number;
+  expenses: number;
+  current?: boolean;
+  forecast?: { min: number; max: number };
+}
+
+interface Props {
+  bars: readonly Bar[];
+  locale: AppLocale;
+  /** Unique per page: the hatch patterns are referenced by id. */
+  id: string;
+  width?: number;
+  half?: number;
+  nets?: boolean;
+}
+
+const { bars, locale, id, width = 326, half = 64, nets = true } = Astro.props;
+const columns = cashflowColumns(bars, false, half);
+const gap = 10;
+const slot = (width - gap * (bars.length - 1)) / bars.length;
+const barWidth = Math.min(30, slot * 0.62);
+const top = nets ? 20 : 4;
+const axis = top + half;
+const height = axis + half + 28;
+const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+const netLabel = (bar: Bar) => {
+  const net = Math.round((bar.income - bar.expenses) / 100);
+  return `${net > 0 ? '+' : net < 0 ? '−' : ''}${whole.format(Math.abs(net))}`;
+};
+---
+
+<svg class="mchart" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+  <defs>
+    <pattern id={`${id}-a`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="var(--color-accent)"></rect></pattern>
+    <pattern id={`${id}-p`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="var(--color-positive)"></rect></pattern>
+  </defs>
+  <line x1="0" x2={width} y1={axis} y2={axis} stroke="var(--color-border-strong)"></line>
+  {columns.map((column, index) => {
+    const x = index * (slot + gap) + (slot - barWidth) / 2;
+    const hatched = column.bar.current === true || column.bar.forecast !== undefined;
+    const opacity = column.bar.forecast === undefined ? 1 : 0.45;
+    return (
+      <g>
+        {column.band && (
+          <rect x={x - 3} y={axis + column.band.top} width={barWidth + 6} height={column.band.height} rx="3" fill="var(--color-track)" fill-opacity=".55" stroke="var(--color-text-muted)" stroke-dasharray="2 2"></rect>
+        )}
+        <rect x={x} y={axis - column.income} width={barWidth} height={column.income} rx="4" fill={hatched ? `url(#${id}-p)` : 'var(--color-positive)'} stroke={hatched ? 'var(--color-positive)' : 'none'} opacity={opacity}></rect>
+        <rect x={x} y={axis + 1} width={barWidth} height={column.expenses} rx="4" fill={hatched ? `url(#${id}-a)` : 'var(--color-accent)'} stroke={hatched ? 'var(--color-accent)' : 'none'} opacity={opacity}></rect>
+        {nets && <text class="cf-n" x={x + barWidth / 2} y="11" text-anchor="middle">{netLabel(column.bar)}</text>}
+        <text class:list={['cf-l', { now: column.bar.current === true }]} x={x + barWidth / 2} y={axis + half + 22} text-anchor="middle">{formatPeriodTick(column.bar.start, 'month', locale)}</text>
+      </g>
+    );
+  })}
+</svg>

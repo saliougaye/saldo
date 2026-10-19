@@ -1,0 +1,49 @@
+---
+import type { AppLocale } from '@saldo/i18n';
+import { appText } from '../../lib/appText';
+import Icon from '../Icon.astro';
+
+/**
+ * Spec 0.8a §04: a phone screen at 390×844 pt, scaled to `--cw` px by its slot. The screen is an
+ * image to assistive technology: `label` names it, and its content is hidden.
+ */
+interface Props {
+  label: string;
+  locale: AppLocale;
+  tab?: 'home' | 'transactions' | 'stats' | 'accounts';
+  /** A sheet: the screen behind it shows in the page colour (New transaction, the recap). */
+  sheet?: boolean;
+  class?: string;
+}
+
+const { label, locale, tab, sheet = false, class: className } = Astro.props;
+const tabs = [
+  { key: 'home', icon: 'house', text: appText(locale, 'tabs.home') },
+  { key: 'transactions', icon: 'list', text: appText(locale, 'tabs.transactions') },
+  { key: 'stats', icon: 'trend', text: appText(locale, 'tabs.stats') },
+  { key: 'accounts', icon: 'wallet', text: appText(locale, 'tabs.accounts') },
+] as const;
+---
+
+<div class:list={['ph', className]} role="img" aria-label={label}>
+  <div class:list={['ph-s', { behind: sheet }]} aria-hidden="true">
+    <div class="sb">
+      <span class="sb-t">9:41</span>
+      <span class="sb-i"></span>
+      <span class="sb-r">
+        <svg width="17" height="11" viewBox="0 0 17 11" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"></rect><rect x="4.5" y="5" width="3" height="6" rx="1" fill="currentColor"></rect><rect x="9" y="3" width="3" height="8" rx="1" fill="currentColor"></rect><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"></rect></svg>
+        <Icon name="wifi" />
+        <svg width="27" height="12" viewBox="0 0 27 12" aria-hidden="true"><rect x="0.75" y="0.75" width="23" height="10.5" rx="3" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.5"></rect><rect x="3" y="3" width="16" height="6" rx="1.5" fill="currentColor"></rect><rect x="25" y="4" width="1.5" height="4" rx=".75" fill="currentColor" fill-opacity=".5"></rect></svg>
+      </span>
+    </div>
+    <slot />
+    {tab && (
+      <div class="tb">
+        {tabs.slice(0, 2).map((item) => <span class:list={{ on: item.key === tab }}><Icon name={item.icon} />{item.text}</span>)}
+        <span></span>
+        {tabs.slice(2).map((item) => <span class:list={{ on: item.key === tab }}><Icon name={item.icon} />{item.text}</span>)}
+        <span class="fab"><Icon name="plus" /></span>
+      </div>
+    )}
+  </div>
+</div>

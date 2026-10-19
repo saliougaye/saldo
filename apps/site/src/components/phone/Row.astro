@@ -1,0 +1,21 @@
+---
+import Icon from '../Icon.astro';
+
+/** The phone's ListRow: leading slot, title, subtitle, trailing slot, optional chevron. */
+interface Props {
+  title: string;
+  subtitle?: string;
+  upcoming?: boolean;
+  divider?: boolean;
+  chevron?: boolean;
+}
+
+const { title, subtitle, upcoming = false, divider = false, chevron = false } = Astro.props;
+---
+
+<div class:list={['mrow', { up: upcoming, div: divider }]}>
+  <slot name="leading" />
+  <div class="tx"><span class="tt">{title}</span>{subtitle && <span class="st">{subtitle}</span>}</div>
+  <slot name="trailing" />
+  {chevron && <Icon name="chevR" class="ch" />}
+</div>

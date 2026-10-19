@@ -1,0 +1,17 @@
+---
+import type { IconName } from '@saldo/ui';
+import Icon from '../Icon.astro';
+
+/** The phone's IconBox (mobile ListRow): 32pt, the category colour at the 14% tint. */
+interface Props {
+  icon: IconName;
+  color?: number | null;
+  small?: boolean;
+  badge?: boolean;
+}
+
+const { icon, color = null, small = false, badge = false } = Astro.props;
+const style = color === null ? undefined : `--c:var(--category-${color});--t:var(--category-${color}-tint)`;
+---
+
+<span class:list={['mib', { sm: small, nt: color === null }]} style={style}><Icon name={icon} />{badge && <span class="bdg"><Icon name="repeat" /></span>}</span>

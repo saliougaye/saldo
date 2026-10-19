@@ -1,0 +1,18 @@
+---
+import Icon from '../Icon.astro';
+
+/** A pushed screen's header: back, the large title, and an add button. */
+interface Props {
+  title: string;
+  back?: boolean;
+  add?: boolean;
+}
+
+const { title, back = false, add = false } = Astro.props;
+---
+
+<div class="ttl">
+  {back && <span class="rb"><Icon name="chevL" /></span>}
+  <h4>{title}</h4>
+  {add && <span class="sq"><Icon name="plus" /></span>}
+</div>
