@@ -52,6 +52,9 @@ module.exports = {
         '<rootDir>/src/theme/**/*.test.ts',
       ],
       setupFiles: ['<rootDir>/jest.setup.js'],
+      // The first render in a file compiles heavy modules. On a shared CI runner, with the whole
+      // suite running in parallel, that can pass the 5 s default (RecurrenceSheet.test.tsx did).
+      testTimeout: 30000,
       // Lets a component `import Animated` — see the file for why it is ours and not the one
       // Worklets ships.
       resolver: '<rootDir>/jest.resolver.js',
