@@ -1685,6 +1685,8 @@ img {
   width: 100%;
   border-radius: var(--radius-pill);
   background: var(--color-text);
+  /* The state without JavaScript: the first of ten cards. The script sets the real value. */
+  transform: scaleX(0.1);
   transform-origin: left center;
 }
 .car-name {
