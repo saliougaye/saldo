@@ -10,13 +10,13 @@ const shape = settingsSchema.shape;
 
 /**
  * One preference, as Profilo's panels send it (§6.8): the phone's `repos.settings.update` takes one
- * field at a time too. `periodKind` is not among them — it is chosen at onboarding and the phone
- * offers no way to change it afterwards.
+ * field at a time too.
  */
 export const settingInputSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('language'), value: shape.language }),
   z.object({ key: z.literal('theme'), value: shape.theme }),
   z.object({ key: z.literal('currency'), value: shape.currency }),
+  z.object({ key: z.literal('periodKind'), value: shape.periodKind }),
   // §5.2: the grid stops at 28, a day every month has. The entity's own schema allows up to 31
   // (a row an older build wrote), so the range is stated here.
   z.object({ key: z.literal('cycleStartDay'), value: z.number().int().min(1).max(28) }),
