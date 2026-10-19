@@ -714,10 +714,18 @@ Acceptance:
 - `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. The site has no end-to-end suite (the user decided so on 2026-10-19).
 - Lighthouse, mobile: Performance, Accessibility, Best practices and SEO each ≥ 95 (spec §07).
 
-**Status:** `astro check` (0 errors), `pnpm --filter site test` (13 passed), `astro build` and `pnpm lint` pass. Someone
-looked at the built page at 1440 and 390, in both themes. Task 14 must still record the repository-wide
-`pnpm typecheck` and `pnpm test`, and the Lighthouse scores. Nobody has checked the page in Safari or Firefox, or on a
-real phone.
+**Status:** met, with one budget miss. On 2026-10-19: `pnpm lint` is clean, `pnpm typecheck` passes in all six packages
+(`site`: 0 errors, 0 warnings, 0 hints), and `pnpm test` passes in all six (`site`: 13 passed). Three mobile suites
+timed out at 5 s on the first run after the `@saldo/ui` change, because the Jest cache was cold. They pass on the next run
+(37 suites, 208 tests). Lighthouse, mobile: Performance 97 to 99, Accessibility 100, Best practices 100, SEO 100. One
+Performance run of 87 showed a Speed Index of 12.8 s. Twelve more runs did not repeat it. A scripted browser load
+showed the page final within 1.5 s.
+
+**Budget miss.** The first load is 164 KB gzip, against the 120 KB of spec §07. The four Geist font files are 113 KB of
+it, and they do not compress. HTML is 19 KB, CSS 23 KB, the script 2 KB and `rocky-mark.png` 6 KB. The budget stays as it
+is. The decision is for the user: cut a font weight, or raise the budget.
+
+Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool.
 
 ## Future (not POC)
 
