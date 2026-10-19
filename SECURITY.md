@@ -6,15 +6,20 @@ its owner did not ask for, please tell us before you tell anyone else.
 
 ## Reporting a vulnerability
 
-**Do not open a public issue.** A public issue is a working exploit handed to everyone running the
+**Do not describe a vulnerability in a public issue.** A public issue is a working exploit handed to everyone running the
 server, and every Saldo server is somebody's own machine with their own money on it — there is no
 central instance to patch out from under the problem.
 
-Write to **<!-- SECURITY CONTACT: set this before publishing -->** instead. Once this project is on
-GitHub, private vulnerability reporting there is the better channel, because it keeps the report,
-the fix and the advisory in one place.
+Use GitHub's private vulnerability reporting instead. Open the
+[Security tab](https://github.com/saliougaye/saldo/security/advisories/new) of the repository and choose
+**Report a vulnerability**. The report stays private. It keeps the report, the fix and the advisory in one
+place.
 
-Please include what you need to make it reproducible: the version or commit you tested, how the
+If the button is not there, open a public issue with the title «Security report» and **no details**. Do not
+describe the problem, the affected route or a proof of concept. The maintainer will answer in the issue and
+will arrange a private channel.
+
+In the private report, include what you need to make it reproducible: the version or commit you tested, how the
 server is deployed, and the smallest sequence of requests that shows the problem. If you already
 have a fix in mind, say so — but send the report first.
 
