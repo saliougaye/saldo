@@ -18,7 +18,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@react-native/metro-config": "0.86.3"
+      "@react-native/metro-config": "0.86.3",
+      "shell-quote": "^1.11.0"
     },
     "onlyBuiltDependencies": [
       "better-sqlite3",
