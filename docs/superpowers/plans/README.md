@@ -721,6 +721,10 @@ it, and they do not compress. HTML is 19 KB, CSS 8.5 KB (23 KB before the fonts 
 and `rocky-mark.png` 6 KB. On 2026-10-19 the user chose to raise the budget to 150 KB gzip (spec §07) and keep the
 four font weights.
 
+**`apps/site/vercel.json` removed, 2026-10-19.** Its `ignoreCommand` (`git diff HEAD^ HEAD`) failed on a `vercel deploy` from the
+command line, because that upload has no `.git`. The other keys repeated what Vercel finds by itself. The project needs the
+root directory `apps/site` and Node.js 22 or later. `SITE_URL` is optional.
+
 Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool. A mouse can no
 longer drag the carousel. It uses the buttons, the keys, the wheel with Shift, or a trackpad.
 
