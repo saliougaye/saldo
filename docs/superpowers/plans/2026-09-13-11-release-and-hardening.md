@@ -67,7 +67,7 @@ ignored. Do **not** add these paths to `biome.json`'s ignore list: the same rule
 - [ ] **Step 1: See the failure**
 
 ```bash
-rtk proxy pnpm lint --max-diagnostics=40
+pnpm lint --max-diagnostics=40
 ```
 
 Expected: `Found 26 errors.`, `lint/a11y/noSvgWithoutTitle` on nine files at `4:1`, `lint/a11y/useAltText` seventeen
@@ -124,7 +124,7 @@ line numbers in the lint output are the checklist.
 - [ ] **Step 4: Verify lint is clean**
 
 ```bash
-rtk proxy pnpm lint
+pnpm lint
 ```
 
 Expected: no `lint/…` line and **no** `× Some errors were emitted while running checks.` `Checked N files … No fixes
@@ -133,8 +133,8 @@ applied.` on its own is not a pass — read for the absence of errors, per AGENT
 - [ ] **Step 5: Commit**
 
 ```bash
-rtk git add docs/brand/mascotte/generatori
-rtk git commit -m "fix(brand): the icon generators pass the accessibility rules they are checked by"
+git add docs/brand/mascotte/generatori
+git commit -m "fix(brand): the icon generators pass the accessibility rules they are checked by"
 ```
 
 ---
@@ -201,7 +201,7 @@ inventing new ones; if they are named differently in the file, use the existing 
 - [ ] **Step 2: Run the tests and watch them fail**
 
 ```bash
-rtk proxy pnpm --filter @saldo/core test -- --run src/io/csv.test.ts
+pnpm --filter @saldo/core test -- --run src/io/csv.test.ts
 ```
 
 Expected: FAIL — the first test reports `'=HYPERLINK…'` received without the leading apostrophe.
@@ -254,7 +254,7 @@ Then wrap the seven user-controlled cells in `csvRows`:
 - [ ] **Step 4: Run the tests and watch them pass**
 
 ```bash
-rtk proxy pnpm --filter @saldo/core test -- --run src/io
+pnpm --filter @saldo/core test -- --run src/io
 ```
 
 Expected: PASS, including the existing export → import round-trip test. If the round-trip now fails, the apostrophe is
@@ -264,8 +264,8 @@ test for it, because export and import are one feature.
 - [ ] **Step 5: Commit**
 
 ```bash
-rtk git add packages/core/src/io
-rtk git commit -m "fix(core): a description cannot become a spreadsheet formula"
+git add packages/core/src/io
+git commit -m "fix(core): a description cannot become a spreadsheet formula"
 ```
 
 ---
@@ -357,7 +357,7 @@ say so in the commit; if `AppState.emit` is not available under jest-expo, drive
 - [ ] **Step 2: Run it and watch it fail**
 
 ```bash
-rtk proxy pnpm --filter mobile test -- PrivacyOverlay
+pnpm --filter mobile test -- PrivacyOverlay
 ```
 
 Expected: FAIL — `Cannot find module './PrivacyOverlay'`.
@@ -423,7 +423,7 @@ export function PrivacyOverlay() {
 - [ ] **Step 4: Run the test and watch it pass**
 
 ```bash
-rtk proxy pnpm --filter mobile test -- PrivacyOverlay
+pnpm --filter mobile test -- PrivacyOverlay
 ```
 
 Expected: PASS, 3 tests.
@@ -453,7 +453,7 @@ with `import { PrivacyOverlay } from '../src/features/lock/PrivacyOverlay';` alo
 - [ ] **Step 6: Verify on a device, because a switcher snapshot cannot be unit-tested**
 
 ```bash
-rtk proxy pnpm --filter mobile ios
+pnpm --filter mobile ios
 ```
 
 Turn the app lock on in Impostazioni, go Home, and swipe up to the switcher: the Saldo card must be a flat panel in
@@ -462,8 +462,8 @@ the theme's page colour, not a screenshot of the balances. Repeat with the lock 
 - [ ] **Step 7: Commit**
 
 ```bash
-rtk git add apps/mobile/src/features/lock apps/mobile/app/_layout.tsx
-rtk git commit -m "feat(mobile): the app switcher shows a cover, not the balances"
+git add apps/mobile/src/features/lock apps/mobile/app/_layout.tsx
+git commit -m "feat(mobile): the app switcher shows a cover, not the balances"
 ```
 
 ---
@@ -489,8 +489,8 @@ design's spacing is not up for renegotiation here.
 - [ ] **Step 1: Produce the audit list**
 
 ```bash
-rtk grep -rn "<Pressable" apps/mobile/src apps/mobile/app | wc -l
-rtk grep -rln "<Pressable" apps/mobile/src apps/mobile/app
+grep -rn "<Pressable" apps/mobile/src apps/mobile/app | wc -l
+grep -rln "<Pressable" apps/mobile/src apps/mobile/app
 ```
 
 For every file in that list, open it and check each `Pressable`/`TouchableOpacity` against three questions, writing
@@ -560,7 +560,7 @@ belongs, and a per-screen test would pin the composition rather than the rule.
 - [ ] **Step 3: Run it and watch the gaps fail**
 
 ```bash
-rtk proxy pnpm --filter mobile test -- a11y
+pnpm --filter mobile test -- a11y
 ```
 
 Expected: FAIL on whichever primitive has no label or no `hitSlop`. If everything passes on the first run, the audit
@@ -600,8 +600,8 @@ The catalog parity test enforces that both files carry the same keys — run it 
 - [ ] **Step 5: Run the whole mobile suite**
 
 ```bash
-rtk proxy pnpm --filter mobile test
-rtk proxy pnpm --filter @saldo/i18n test
+pnpm --filter mobile test
+pnpm --filter @saldo/i18n test
 ```
 
 Expected: all green, including the it/en parity test.
@@ -609,7 +609,7 @@ Expected: all green, including the it/en parity test.
 - [ ] **Step 6: Verify with a screen reader on a device**
 
 ```bash
-rtk proxy pnpm --filter mobile ios
+pnpm --filter mobile ios
 ```
 
 Turn VoiceOver on (Settings → Accessibility → VoiceOver, or triple-click the side button). Swipe through Home: every
@@ -620,8 +620,8 @@ loses its number.
 - [ ] **Step 7: Commit**
 
 ```bash
-rtk git add apps/mobile packages/i18n
-rtk git commit -m "feat(mobile): every icon-only control says what it is"
+git add apps/mobile packages/i18n
+git commit -m "feat(mobile): every icon-only control says what it is"
 ```
 
 ---
@@ -751,9 +751,9 @@ and add `.measure-perf.cjs` to `apps/mobile/.gitignore`, next to the existing `.
 - [x] **Step 3: Run it at three sizes**
 
 ```bash
-rtk proxy pnpm --filter mobile measure:perf 5000
-rtk proxy pnpm --filter mobile measure:perf 20000
-rtk proxy pnpm --filter mobile measure:perf 50000
+pnpm --filter mobile measure:perf 5000
+pnpm --filter mobile measure:perf 20000
+pnpm --filter mobile measure:perf 50000
 ```
 
 Expected: three tables of three numbers. **Write them into this plan** under a "Result" heading — the point of the
@@ -775,8 +775,8 @@ running a server for a household who needs to know.
 - [x] **Step 5: Commit**
 
 ```bash
-rtk git add apps/mobile/scripts apps/mobile/package.json apps/mobile/.gitignore docs/self-hosting.md docs/superpowers/plans/2026-09-13-11-release-and-hardening.md
-rtk git commit -m "chore(mobile): measure what the in-memory aggregates cost at 20k rows"
+git add apps/mobile/scripts apps/mobile/package.json apps/mobile/.gitignore docs/self-hosting.md docs/superpowers/plans/2026-09-13-11-release-and-hardening.md
+git commit -m "chore(mobile): measure what the in-memory aggregates cost at 20k rows"
 ```
 
 
@@ -975,9 +975,9 @@ In `apps/mobile/package.json`:
 - [ ] **Step 4: Prove the plugin writes what it says**
 
 ```bash
-cd /Users/saliougaye/sandbox/saldo/apps/mobile && SALDO_SERVER_URL=saldo.example.com rtk proxy pnpm exec expo prebuild --platform android --clean
-rtk grep -n "SALDO_UPLOAD_STORE_FILE" apps/mobile/android/app/build.gradle
-rtk grep -n "signingConfig signingConfigs.release" apps/mobile/android/app/build.gradle
+cd <repo>/apps/mobile && SALDO_SERVER_URL=saldo.example.com pnpm exec expo prebuild --platform android --clean
+grep -n "SALDO_UPLOAD_STORE_FILE" apps/mobile/android/app/build.gradle
+grep -n "signingConfig signingConfigs.release" apps/mobile/android/app/build.gradle
 ```
 
 Expected: both greps match. If the second does not, the `buildTypes` regex missed — print the surrounding block with
@@ -991,14 +991,14 @@ writes into `docs/building-android.md` — write them there first if that is eas
 which is also how you find out whether it works).
 
 ```bash
-rtk proxy pnpm --filter mobile build:android
+pnpm --filter mobile build:android
 ```
 
 Expected: `BUILD SUCCESSFUL` and an APK at `apps/mobile/android/app/build/outputs/apk/release/app-release.apk`.
 Confirm it is signed with the release key, not the debug one:
 
 ```bash
-rtk proxy keytool -printcert -jarfile apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+keytool -printcert -jarfile apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
 Expected: the owner line is the one from your keystore, not `CN=Android Debug`.
@@ -1006,8 +1006,8 @@ Expected: the owner line is the one from your keystore, not `CN=Android Debug`.
 - [ ] **Step 6: Commit**
 
 ```bash
-rtk git add apps/mobile/plugins apps/mobile/app.config.ts apps/mobile/package.json
-rtk git commit -m "feat(mobile): a release build signs itself, and survives prebuild --clean"
+git add apps/mobile/plugins apps/mobile/app.config.ts apps/mobile/package.json
+git commit -m "feat(mobile): a release build signs itself, and survives prebuild --clean"
 ```
 
 ---
@@ -1073,7 +1073,7 @@ Once the server is up, build the app for your phone: [Android](building-android.
 - [ ] **Step 4: Follow your own Android document on a clean shell**
 
 ```bash
-env -i HOME="$HOME" PATH="$PATH" bash -lc 'cd /Users/saliougaye/sandbox/saldo && rtk proxy pnpm --filter mobile build:android'
+env -i HOME="$HOME" PATH="$PATH" bash -lc 'cd <repo> && pnpm --filter mobile build:android'
 ```
 
 The point is to catch a step that only works because your shell already has something exported. Anything that fails
@@ -1082,8 +1082,8 @@ here is a missing line in the document, not a thing to fix by hand and move on f
 - [ ] **Step 5: Commit**
 
 ```bash
-rtk git add docs/building-android.md docs/building-ios.md docs/self-hosting.md
-rtk git commit -m "docs: how to build and sideload Saldo on Android and iOS"
+git add docs/building-android.md docs/building-ios.md docs/self-hosting.md
+git commit -m "docs: how to build and sideload Saldo on Android and iOS"
 ```
 
 ---
@@ -1105,7 +1105,7 @@ Take fresh ones on a seeded simulator and commit them under `docs/screenshots/`.
 - [ ] **Step 1: Seed a simulator and take four screenshots**
 
 ```bash
-rtk proxy xcrun simctl get_app_container booted io.github.saldo.app data
+xcrun simctl get_app_container booted io.github.saldo.app data
 ```
 
 Seed that container's `Documents/SQLite/saldo.db` with the demo data (`pnpm --filter mobile seed:db <path> --reset`),
@@ -1151,7 +1151,7 @@ stale.
 - [ ] **Step 4: Check every link resolves**
 
 ```bash
-rtk proxy grep -o "](\([^)]*\))" README.md CONTRIBUTING.md docs/building-android.md docs/building-ios.md
+grep -o "](\([^)]*\))" README.md CONTRIBUTING.md docs/building-android.md docs/building-ios.md
 ```
 
 For each relative path in that output, confirm the file exists. A README whose screenshots 404 is worse than one
@@ -1160,8 +1160,8 @@ without screenshots.
 - [ ] **Step 5: Commit**
 
 ```bash
-rtk git add README.md CONTRIBUTING.md docs/screenshots
-rtk git commit -m "docs: a README that says what Saldo does, with pictures"
+git add README.md CONTRIBUTING.md docs/screenshots
+git commit -m "docs: a README that says what Saldo does, with pictures"
 ```
 
 ---
@@ -1180,8 +1180,8 @@ every other test in this repository cannot: that the screens are wired to each o
 - [ ] **Step 1: Install Maestro and confirm it sees the app**
 
 ```bash
-rtk proxy curl -Ls "https://get.maestro.mobile.dev" | bash
-rtk proxy maestro --version
+curl -Ls "https://get.maestro.mobile.dev" | bash
+maestro --version
 ```
 
 - [ ] **Step 2: Write the first flow**
@@ -1247,7 +1247,7 @@ the seeding command — put it in the comment header the way the first flow does
 - [ ] **Step 4: Run both**
 
 ```bash
-cd /Users/saliougaye/sandbox/saldo/apps/mobile && rtk proxy maestro test maestro/
+cd <repo>/apps/mobile && maestro test maestro/
 ```
 
 Expected: both flows pass. When a selector does not resolve, `maestro studio` shows the tree the flow is matching
@@ -1265,8 +1265,8 @@ End-to-end flows (needs a simulator with the app installed and [Maestro](https:/
 - [ ] **Step 6: Commit**
 
 ```bash
-rtk git add apps/mobile/maestro apps/mobile/src apps/mobile/app README.md
-rtk git commit -m "test(mobile): two Maestro flows over the paths every unit test misses"
+git add apps/mobile/maestro apps/mobile/src apps/mobile/app README.md
+git commit -m "test(mobile): two Maestro flows over the paths every unit test misses"
 ```
 
 ---
@@ -1276,9 +1276,9 @@ rtk git commit -m "test(mobile): two Maestro flows over the paths every unit tes
 - [ ] **Step 1: The three gates, read rather than trusted**
 
 ```bash
-rtk proxy pnpm lint
-rtk proxy pnpm typecheck
-rtk proxy pnpm test
+pnpm lint
+pnpm typecheck
+pnpm test
 ```
 
 Expected: `pnpm lint` prints no `lint/…` line and no `× Some errors were emitted while running checks.`; typecheck and
@@ -1290,7 +1290,7 @@ For each line of the security checklist, name the file that satisfies it or the 
 
 | Item | Where |
 | --- | --- |
-| No telemetry or third-party calls | audit: `rtk grep -rn "fetch(\|axios" apps/mobile/src` — every host is the configured server |
+| No telemetry or third-party calls | audit: `grep -rn "fetch(\|axios" apps/mobile/src` — every host is the configured server |
 | Tokens in the keychain | `apps/mobile/src/auth/tokenStore.ts` (`expo-secure-store`) |
 | Parameterised queries, Zod on every body, per-user scoping, body limits | `apps/web/src/server/**` |
 | Auth rate limiting, secure headers, no user enumeration | `apps/web/src/server/auth/auth.ts`, `apps/web/next.config.ts` |
@@ -1321,9 +1321,9 @@ Use the **requesting-code-review** skill over the whole phase branch, as AGENTS.
 - [ ] **Step 6: Commit and merge**
 
 ```bash
-rtk git add docs/superpowers/plans/README.md
-rtk git commit -m "docs(plans): record what phase 11 verified, and what it could not"
-rtk git checkout main && rtk git merge --no-ff phase/11-release-hardening
+git add docs/superpowers/plans/README.md
+git commit -m "docs(plans): record what phase 11 verified, and what it could not"
+git checkout main && git merge --no-ff phase/11-release-hardening
 ```
 
 ---

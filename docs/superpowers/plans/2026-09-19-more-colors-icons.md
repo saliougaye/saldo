@@ -25,7 +25,7 @@
 | `apps/mobile/src/components/appearanceCoverage.test.ts` | palette, names and groups stay in step |
 | `apps/mobile/src/features/budgets/*`, `apps/mobile/app/budget/*` | budget icon picker |
 
-Run every command from the worktree root `/Users/saliougaye/sandbox/saldo-more-colors-icons` (branch `feat/more-colors-icons`).
+Run every command from the worktree root `<repo>` (branch `feat/more-colors-icons`).
 
 ---
 
@@ -797,12 +797,12 @@ git commit -m "feat(mobile): a budget can pick its own icon"
 
 ### Task 8: Verify on the device and close out
 
-- [ ] **Step 1: Gates** (use `rtk proxy`, see AGENTS.md "Reading the results")
+- [ ] **Step 1: Gates** (unfiltered, see AGENTS.md "Reading the results")
 
 ```bash
-rtk proxy pnpm lint
-rtk proxy pnpm typecheck
-rtk proxy pnpm test
+pnpm lint
+pnpm typecheck
+pnpm test
 ```
 
 Expected: no `lint/…` lines and no trailing `× Some errors were emitted`; typecheck and tests green.

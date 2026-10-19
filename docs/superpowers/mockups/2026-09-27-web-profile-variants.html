@@ -590,7 +590,7 @@ const segs = (opts, on) => `<div class="segs">${opts.map((o) => `<button ${o ===
 
 function account() {
   return sec('Account', '', row('Nome', '', `<div class="input" style="min-width:320px">Saliou</div>`)
-    + row('Email', 'Serve all\'amministratore per riconoscerti. Non è una password: entri sempre con la passkey.', `<div class="input" style="min-width:320px">gayesaliou29@gmail.com</div><span class="badge-soft">non verificata</span>`));
+    + row('Email', 'Serve all\'amministratore per riconoscerti. Non è una password: entri sempre con la passkey.', `<div class="input" style="min-width:320px">saliou@example.com</div><span class="badge-soft">non verificata</span>`));
 }
 
 function prefs() {
@@ -647,7 +647,7 @@ function renderSummary(el, view) {
   const open = ['rename', 'delete', 'last'].includes(view) ? 'Passkey' : view === 'currency' ? 'Valuta' : null;
   const rowsFor = (items) => `<div class="sum-rows">${items.map(([n, v]) => `<button class="sum press" ${open === n ? 'aria-selected="true"' : ''}><span class="n">${n}</span><span class="v">${v}</span>${icon('chevR')}</button>`).join('')}</div>`;
   const list = `${header()}
-    ${sec('Account', '', rowsFor([['Nome', 'Saliou'], ['Email', 'gayesaliou29@gmail.com · non verificata']]))}
+    ${sec('Account', '', rowsFor([['Nome', 'Saliou'], ['Email', 'saliou@example.com · non verificata']]))}
     ${sec('Preferenze', 'valgono anche sul telefono', rowsFor([['Lingua', 'Italiano'], ['Valuta', 'Euro · EUR'], ['Periodo', 'Ciclo dal 27'], ['Tema', 'Scuro'], ['Fuso orario', 'Europa/Roma']]))}
     ${sec('Sicurezza', '', rowsFor([['Passkey', view === 'last' ? '1' : '3']]))}
     ${sec('Dati', '', rowsFor([['Categorie', '12 attive'], ['Tag', '6'], ['Esporta', 'JSON · CSV']]))}
@@ -707,7 +707,7 @@ function renderMix(el, view) {
 }
 
 function header() {
-  return `<div class="prof-head"><span class="big-avatar">SG</span><div class="who"><div class="n">Saliou</div><div class="e">gayesaliou29@gmail.com<span class="badge-soft">admin</span></div></div></div>`;
+  return `<div class="prof-head"><span class="big-avatar">SG</span><div class="who"><div class="n">Saliou</div><div class="e">saliou@example.com<span class="badge-soft">admin</span></div></div></div>`;
 }
 
 function dialogs(view) {
@@ -753,7 +753,7 @@ function renderDesktop() {
     body = `<div class="page">${header()}<div class="cols">
       <div class="stack compact">${prefs()}</div>
       <div class="stack side">${sec('Account', '', `<div class="field" style="margin-top:16px"><span class="label">Nome</span><div class="input">Saliou</div></div>
-        <div class="field" style="margin-top:12px"><span class="label">Email · non verificata</span><div class="input">gayesaliou29@gmail.com</div></div>`)}
+        <div class="field" style="margin-top:12px"><span class="label">Email · non verificata</span><div class="input">saliou@example.com</div></div>`)}
         ${sec('Passkey', view === 'last' ? '1 passkey' : '3 passkey', passkeyList(view) + `<button class="btn-secondary press" style="margin-top:12px">${icon('plus')}Aggiungi passkey</button>`)}
         ${sec('Dati', '', `<div class="link-rows" style="margin-top:8px"><button class="link-row press"><span class="n">Categorie</span><span class="m">12</span>${icon('chevR')}</button>
           <button class="link-row press"><span class="n">Tag</span><span class="m">6</span>${icon('chevR')}</button>
@@ -769,7 +769,7 @@ function renderNarrow() {
   const card = (t, rows) => `<div class="section-label" style="border:0;margin:16px 0 8px">${t}</div><section class="card" style="padding:4px 16px">${rows.map(([l, v]) => `<div class="link-row"><span class="n">${l}</span><span class="m">${v}</span>${icon('chevR')}</div>`).join('')}</section>`;
   el.innerHTML = `<main class="main"><div class="page" style="padding-top:54px">
     <div class="push-head" style="padding-top:0"><button class="icon-btn">${icon('chevL')}</button><span class="form-title">Profilo</span></div>
-    <div class="prof-head" style="margin-bottom:8px"><span class="big-avatar" style="width:48px;height:48px">SG</span><div class="who"><div class="n" style="font-size:var(--font-size-headline)">Saliou</div><div class="e">gayesaliou29@gmail.com</div></div></div>
+    <div class="prof-head" style="margin-bottom:8px"><span class="big-avatar" style="width:48px;height:48px">SG</span><div class="who"><div class="n" style="font-size:var(--font-size-headline)">Saliou</div><div class="e">saliou@example.com</div></div></div>
     ${card('Preferenze', [['Lingua', 'Italiano'], ['Valuta', 'EUR'], ['Periodo', 'Ciclo · 27'], ['Tema', 'Scuro'], ['Fuso orario', 'Europa/Roma']])}
     ${card('Account', [['Passkey', '3'], ['Categorie', '12'], ['Tag', '6'], ['Esporta i dati', '']])}
     <button class="btn-secondary btn-danger press" style="width:100%;margin-top:16px;height:44px">Esci</button></div></main>${state.view === 'delete' || state.view === 'currency' ? dialogs(state.view) : ''}`;

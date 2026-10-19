@@ -387,7 +387,7 @@ function topbar(admin) {
     <button class="btn-primary press">${icon('plus')}<span>Nuova transazione</span><span class="kbd">N</span></button><button class="avatar press" style="${admin ? '' : 'box-shadow:0 0 0 2px var(--color-text)'}">SG</button></div></header>`;
 }
 function profileHead() {
-  return `<div class="prof-head"><span class="big-avatar">SG</span><div class="who"><div class="n">Saliou Gaye</div><div class="e">gayesaliou29@gmail.com <span class="badge">admin</span></div></div></div>`;
+  return `<div class="prof-head"><span class="big-avatar">SG</span><div class="who"><div class="n">Saliou Gaye</div><div class="e">saliou@example.com <span class="badge">admin</span></div></div></div>`;
 }
 function subnav(cur, items, leave) {
   return `<nav class="subnav">${items.map(([n,i]) => `<button class="press" ${n === cur ? 'aria-current="page"' : ''}>${icon(i)}${n}</button>`).join('')}
@@ -483,7 +483,7 @@ function consentColumn() {
   const wantsWrite = state !== 'readonlyClient';
   const writeOn = wantsWrite && S.writeOn && state !== 'read';
   const brand = `<div class="brand"><span class="mark">S</span><span class="name">Saldo</span><span class="inst">· Casa Gaye</span></div>`;
-  const me = `<div class="me"><span class="avatar">SG</span><span>Accedi come <b style="color:var(--color-text);font-weight:500">gayesaliou29@gmail.com</b></span><a href="#">Non sei tu?</a></div>`;
+  const me = `<div class="me"><span class="avatar">SG</span><span>Accedi come <b style="color:var(--color-text);font-weight:500">saliou@example.com</b></span><a href="#">Non sei tu?</a></div>`;
   const hint = `<p class="hint" style="text-align:center">Potrai revocare l’accesso in qualsiasi momento da Profilo › Connettori. Il client non riceve mai la tua passkey.</p>`;
 
   if (state === 'off') {

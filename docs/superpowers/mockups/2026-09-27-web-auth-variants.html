@@ -595,7 +595,7 @@ function content(view) {
       ${view === 'emailTaken' ? alert('Questa email ha già un account', 'Accedi con la sua passkey. Se l\'hai persa, chiedi all\'amministratore del server.') : ''}
       <div class="fields">
         <div class="field"><label>Nome</label><div class="input">Saliou</div></div>
-        <div class="field"><label>Email</label><div class="input ${view === 'emailTaken' ? 'err' : ''}">gayesaliou29@gmail.com</div>
+        <div class="field"><label>Email</label><div class="input ${view === 'emailTaken' ? 'err' : ''}">saliou@example.com</div>
           <span class="field-hint">Serve per riconoscerti. Non è una password: entrerai sempre con la passkey.</span></div>
         ${withInvite ? `<div class="field"><label>Codice d'invito</label><div class="input mono ${view === 'badInvite' ? 'err' : 'focus'}">K7QM-2XRA-9DTE-4HW</div></div>` : ''}
       </div>
@@ -609,7 +609,7 @@ function content(view) {
     <p class="lede">${mobile ? 'L\'app Saldo ti ha mandato qui per usare la passkey. Finito, torni all\'app da sola.' : 'Con la passkey che hai creato su questo server, dal telefono o da qui.'}</p>
     ${view === 'cancelled' ? alert('Accesso annullato', 'La finestra della passkey è stata chiusa. Riprova quando vuoi.') : ''}
     <div class="fields"><div class="field autofill"><label>Email</label><div class="input ${view === 'autofill' ? 'focus' : ''}">${view === 'autofill' ? '' : '<span class="faint">nome@esempio.it</span>'}</div>
-      ${view === 'autofill' ? `<div class="pop"><div class="item">${icon('key')}<div class="who"><div>gayesaliou29@gmail.com</div><div>Passkey · iCloud Portachiavi</div></div></div>
+      ${view === 'autofill' ? `<div class="pop"><div class="item">${icon('key')}<div class="who"><div>saliou@example.com</div><div>Passkey · iCloud Portachiavi</div></div></div>
         <div class="item">${icon('phone')}<div class="who"><div>Usa un telefono o un tablet</div><div>Mostra un QR da inquadrare</div></div></div>
         <div class="foot">Proposto dal browser</div></div>` : ''}</div></div>
     <button class="btn-primary press">${icon('key')}Accedi con passkey</button>
@@ -632,7 +632,7 @@ function stepped(view) {
   if (passkey) {
     body = `<span class="pk-art">${icon('key')}</span><h1>Crea la tua passkey</h1>
       <p class="lede">Il browser ti chiederà impronta, volto o il PIN di questo dispositivo. La passkey resta qui; il server conserva solo la sua chiave pubblica.</p>
-      <div class="field-hint">Account per <b style="color:var(--color-text);font-weight:var(--font-weight-medium)">Saliou · gayesaliou29@gmail.com</b></div>
+      <div class="field-hint">Account per <b style="color:var(--color-text);font-weight:var(--font-weight-medium)">Saliou · saliou@example.com</b></div>
       <button class="btn-primary press">${icon('key')}Crea la passkey</button>
       <p class="field-hint" style="text-align:center">Vuoi usare il telefono? Nella finestra del browser scegli «Usa un telefono» e inquadra il QR.</p>`;
   } else if (invite) {
@@ -645,7 +645,7 @@ function stepped(view) {
     body = `<h1>Crea il tuo account</h1><p class="lede">Due cose su di te, poi la passkey. Niente password.</p>
       ${view === 'emailTaken' ? alert('Questa email ha già un account', 'Accedi con la sua passkey. Se l\'hai persa, chiedi all\'amministratore del server.') : ''}
       <div class="fields"><div class="field"><label>Nome</label><div class="input">Saliou</div></div>
-        <div class="field"><label>Email</label><div class="input ${view === 'emailTaken' ? 'err' : 'focus'}">gayesaliou29@gmail.com</div>
+        <div class="field"><label>Email</label><div class="input ${view === 'emailTaken' ? 'err' : 'focus'}">saliou@example.com</div>
         <span class="field-hint">Serve per riconoscerti. Non è una password.</span></div></div>
       <button class="btn-primary press">Continua</button>
       <div class="switch-line">Hai già un account? <button class="linkish press">Accedi</button></div>`;

@@ -73,7 +73,7 @@ describe('claimRoleForNewUser', () => {
   it('does not hand the server to a newcomer on an instance that predates roles', async () => {
     // Upgrading: the existing account carries NULL, so there is no admin — but the next person
     // invited is not the earliest account either, and must not inherit the place.
-    await accountWithNoRole('Saliou', new Date('2026-09-01T09:00:00.000Z'));
+    await accountWithNoRole('Dora', new Date('2026-09-01T09:00:00.000Z'));
     const newcomer = await accountWithNoRole('Marco', new Date('2026-09-12T09:00:00.000Z'));
     await expect(claimRoleForNewUser(harness.db, newcomer)).resolves.toBe(MEMBER_ROLE);
   });
