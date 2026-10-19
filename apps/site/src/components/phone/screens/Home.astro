@@ -1,0 +1,59 @@
+---
+import type { SiteContent } from '../../../content/index';
+import { appCount, appText } from '../../../lib/appText';
+import { moneyText } from '../../../lib/format';
+import { budgetStates, expensesTotal, incomeTotal, leftToSpend, periodDay } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Icon from '../../Icon.astro';
+import Bar from '../Bar.astro';
+import Mib from '../Mib.astro';
+import PeriodHead from '../PeriodHead.astro';
+import Row from '../Row.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const { pace } = periodDay(sample);
+const budgets = budgetStates(sample);
+const overPace = budgets.filter((budget) => budget.overPace).length;
+const shown = ['transport', 'groceries', 'shopping'].flatMap((key) => budgets.filter((budget) => budget.category === key));
+const cat = (key: keyof typeof sample.categories) => sample.categories[key];
+---
+
+<div class="pc">
+  <PeriodHead content={content} avatar />
+  <div class="mc">
+    <div class="ml">{appText(locale, 'home.remaining')}</div>
+    <div class="big" style="margin:4px 0 14px"><Amount class="ma" minor={leftToSpend(sample)} currency={currency} locale={locale} /></div>
+    <Bar ratio={expensesTotal(sample) / incomeTotal(sample)} pace={pace} />
+    <div class="mh" style="margin-top:10px">
+      <span class="ml">{appText(locale, 'home.income')} <Amount class="ma mut" minor={incomeTotal(sample)} currency={currency} locale={locale} /></span>
+      <span class="ml">{appText(locale, 'home.expenses')} <Amount class="ma mut" minor={expensesTotal(sample)} currency={currency} locale={locale} /></span>
+    </div>
+  </div>
+  <div class="mc np">
+    <div class="mh" style="padding:12px 0 4px"><span class="t">{appText(locale, 'home.upcoming')}</span><span class="s">{appCount(locale, 'home.upcomingCount', sample.upcoming.count)}<Icon name="chevR" /></span></div>
+    {sample.upcoming.first.map((entry) => (
+      <Row title={entry.title} subtitle={cat(entry.category).name} upcoming>
+        <Mib slot="leading" icon={cat(entry.category).icon} color={cat(entry.category).color} />
+        <Amount slot="trailing" class="ma" minor={entry.amount} currency={currency} locale={locale} />
+      </Row>
+    ))}
+    <div style="height:8px"></div>
+  </div>
+  <div class="mc np">
+    <div class="mh" style="padding:12px 0 4px"><span class="t">{appText(locale, 'home.budget')}</span><span class="s">{appCount(locale, 'home.overPace', overPace)}<Icon name="chevR" /></span></div>
+    {shown.map((budget) => (
+      <div style="padding:6px 0 10px">
+        <Row title={cat(budget.category).name}>
+          <Mib slot="leading" icon={cat(budget.category).icon} color={cat(budget.category).color} small />
+          <span slot="trailing" class="ml">{moneyText(content, budget.spent)} {appText(locale, 'budgets.ofLimit', { amount: moneyText(content, budget.limit) })}</span>
+        </Row>
+        <Bar ratio={budget.ratio} over={budget.overPace} />
+      </div>
+    ))}
+  </div>
+</div>

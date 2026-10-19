@@ -1,0 +1,47 @@
+---
+import { formatMoneyParts } from '@saldo/i18n';
+import type { SiteContent } from '../../../content/index';
+import { appText } from '../../../lib/appText';
+import { dayText } from '../../../lib/format';
+import Icon from '../../Icon.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const form = sample.newTransaction;
+const amount = formatMoneyParts(form.amount, currency, locale);
+const accounts = sample.accounts.spending.map((account) => account.name);
+---
+
+<div class="sheet">
+  <div class="grab"></div>
+  <div class="pc" style="padding-top:12px">
+    <div class="phd"><span class="rb"><Icon name="x" /></span><b class="sheet-title">{appText(locale, 'txForm.newTitle')}</b></div>
+    <div class="seg2"><span class="on">{appText(locale, 'kinds.expense')}</span><span>{appText(locale, 'kinds.income')}</span><span>{appText(locale, 'kinds.transfer')}</span></div>
+    <div class="mc">
+      <div class="ml">{appText(locale, 'txForm.amount')}</div>
+      <div class="big" style="margin-top:6px"><span class="muted">{amount.symbol}</span> {amount.integer}<span class="muted">{amount.decimalSeparator}{amount.fraction}</span></div>
+    </div>
+    <div class="mc">
+      <div class="ml" style="margin-bottom:10px">{appText(locale, 'txForm.account')}</div>
+      <div class="chips">{accounts.map((name, index) => <span class:list={['chp', { on: index === form.accountIndex }]}>{name}</span>)}</div>
+      <div class="ml" style="margin:16px 0 10px">{appText(locale, 'txForm.date')}</div>
+      <div class="chips"><span class="chp on">{appText(locale, 'txForm.today')}</span><span class="chp">{appText(locale, 'txForm.yesterday')}</span><span class="chp"><Icon name="cal" />{dayText(content, sample.period.today)}<Icon name="chevD" /></span></div>
+    </div>
+    <div class="mc">
+      <div class="mh" style="margin:0"><span class="ml">{appText(locale, 'txForm.category')}</span><span class="mf">{appText(locale, 'txForm.categoryMostUsed')}</span></div>
+      <div class="cgrid">
+        {form.mostUsed.map((key) => {
+          const category = sample.categories[key];
+          return <span class:list={{ on: key === form.category }} style={`--c:var(--category-${category.color});--t:var(--category-${category.color}-tint)`}><i><Icon name={category.icon} /></i>{category.name}</span>;
+        })}
+        <span class="ot"><i><Icon name="grip" /></i>{appText(locale, 'txForm.otherCategory')}</span>
+      </div>
+    </div>
+    <div class="mc"><div class="ml" style="margin-bottom:10px">{appText(locale, 'txForm.description')}</div><div class="inp v">{form.where}</div></div>
+  </div>
+  <div class="sheet-foot"><span class="pbtn2">{appText(locale, 'txForm.create')}</span></div>
+</div>

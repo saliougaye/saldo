@@ -1,0 +1,73 @@
+---
+import { formatCycleRange, formatMonthLong, formatSignedPercent } from '@saldo/i18n';
+import type { SiteContent } from '../../../content/index';
+import { appCount, appText } from '../../../lib/appText';
+import { moneyText } from '../../../lib/format';
+import { recapFigures } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Bar from '../Bar.astro';
+import Mib from '../Mib.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const recap = sample.recap;
+const figures = recapFigures(sample);
+const above = recap.aboveUsual as Partial<Record<string, number>>;
+const month = formatMonthLong(recap.period.start, locale);
+const title = appText(locale, 'recap.title_month', { month: month.charAt(0).toUpperCase() + month.slice(1) });
+const delta = (value: number) => appText(locale, 'recap.delta_month', { pct: formatSignedPercent(value) });
+---
+
+<div class="sheet">
+  <div class="grab"></div>
+  <div class="pc recap" style="padding-top:16px;gap:0">
+    <div class="mf">{formatCycleRange(recap.period, locale)}</div>
+    <div class="sheet-title" style="margin-top:4px">{title}</div>
+    <div class="mc" style="margin-top:16px">
+      <div class="ml">{appText(locale, 'recap.net_month')}</div>
+      <div class="big pos-text" style="margin-top:4px">{moneyText(content, figures.net, 'always')}</div>
+      <div class="ml small">{appText(locale, 'recap.previous_month', { amount: moneyText(content, recap.previousNet, 'always') })} · {appText(locale, 'recap.usual', { amount: moneyText(content, recap.usualNet, 'always') })}</div>
+      <div class="div figs">
+        <div><div class="ml">{appText(locale, 'recap.income')}</div><div class="strong"><Amount class="ma pos" minor={recap.income} currency={currency} locale={locale} /></div><div class="mf">{delta(recap.incomeChange)}</div></div>
+        <div><div class="ml">{appText(locale, 'recap.expenses')}</div><div class="strong"><Amount class="ma" minor={figures.expenses} currency={currency} locale={locale} /></div><div class="mf">{delta(recap.expensesChange)}</div></div>
+      </div>
+    </div>
+    <div class="recap-h">{appText(locale, 'recap.categories')}</div>
+    <div class="recap-list">
+      {figures.shown.map(([key, amount]) => (
+        <div>
+          <div class="mh" style="margin:0"><span class="cat"><Mib icon={sample.categories[key].icon} color={sample.categories[key].color} small />{sample.categories[key].name}</span><span class="fn"><Amount class="ma" minor={amount} currency={currency} locale={locale} /></span></div>
+          <div class="mf indent">{appText(locale, 'recap.aboveUsual', { pct: formatSignedPercent(above[key] ?? 0) })}</div>
+        </div>
+      ))}
+      <div class="mh" style="margin:0"><span class="ml">{appCount(locale, 'recap.otherCategories', figures.rest.count)}</span><span class="ml"><Amount class="ma" minor={figures.rest.amount} currency={currency} locale={locale} /></span></div>
+    </div>
+    <div class="recap-h">{appText(locale, 'recap.budgets')}</div>
+    <div class="recap-list">
+      {recap.budgets.map((budget) => {
+        const spent = (recap.spent as Partial<Record<string, number>>)[budget.category] ?? 0;
+        const over = spent > budget.limit;
+        const status = over
+          ? appText(locale, 'recap.over', { amount: moneyText(content, spent - budget.limit) })
+          : budget.carried > 0
+            ? appText(locale, 'recap.withinCarry', { amount: moneyText(content, budget.carried) })
+            : appText(locale, 'recap.within');
+        return (
+          <div>
+            <div class="mh" style="margin:0 0 8px"><span class="fn">{sample.categories[budget.category].name}</span><span class="fn"><Amount class="ma" minor={spent} currency={currency} locale={locale} /> <span class="mf">{appText(locale, 'recap.of', { amount: moneyText(content, budget.limit) })}</span></span></div>
+            <Bar ratio={spent / budget.limit} over={over} />
+            <div class:list={['mf', 'status', { attn: over }]}>{status}</div>
+          </div>
+        );
+      })}
+    </div>
+    <div class="recap-h">{appText(locale, 'recap.other')}</div>
+    <div class="mh" style="margin:0;padding:12px 0"><span class="ml">{appText(locale, 'recap.biggest')}</span><span class="fn">{recap.biggest.title} <Amount class="ma" minor={recap.biggest.amount} currency={currency} locale={locale} /></span></div>
+    <div class="mh div" style="margin:0;padding:12px 0"><span class="ml">{appText(locale, 'recap.netWorth')}</span><span class="fn"><Amount class="ma" minor={recap.netWorth} currency={currency} locale={locale} /></span></div>
+  </div>
+  <div class="sheet-foot"><span class="pbtn2">{appText(locale, 'recap.start_month')}</span></div>
+</div>

@@ -1,0 +1,51 @@
+---
+import type { SiteContent } from '../../../content/index';
+import { appCount, appText } from '../../../lib/appText';
+import { dayText } from '../../../lib/format';
+import Amount from '../../Amount.astro';
+import Icon from '../../Icon.astro';
+import Mib from '../Mib.astro';
+import PeriodHead from '../PeriodHead.astro';
+import Row from '../Row.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const cat = (key: keyof typeof sample.categories) => sample.categories[key];
+const spentOn = (entries: readonly { amount: number; excluded?: boolean }[]) =>
+  entries.filter((entry) => entry.amount < 0).reduce((total, entry) => total - entry.amount, 0);
+---
+
+<div class="pc">
+  <PeriodHead content={content} />
+  <div>
+    <div class="ml" style="margin-bottom:8px">{appText(locale, 'common.search')}</div>
+    <div class="inp">{appText(locale, 'transactions.searchPlaceholder')}</div>
+  </div>
+  <div class="chips">
+    <span class="chp"><Icon name="arrowUR" />{appText(locale, 'transactions.onlyExpenses')}</span>
+    <span class="chp"><Icon name="arrowDL" />{appText(locale, 'transactions.onlyIncome')}</span>
+    <span class="chp"><Icon name="swap" />{appText(locale, 'transactions.onlyTransfers')}</span>
+  </div>
+  <div class="mc np">
+    <Row title={appText(locale, 'transactions.upcoming')} subtitle={appCount(locale, 'transactions.upcomingCount', sample.upcoming.count)}>
+      <Mib slot="leading" icon="clock" />
+      <Amount slot="trailing" class="ma mut" minor={sample.upcoming.total} currency={currency} locale={locale} dim={false} />
+    </Row>
+  </div>
+  {sample.days.map((day) => (
+    <div class="mc np">
+      <div class="mh" style="padding:12px 0 2px"><span class="ml">{dayText(content, day.date)}</span><span class="ml"><Amount class="ma" minor={spentOn(day.entries)} currency={currency} locale={locale} dim={false} /></span></div>
+      {day.entries.map((entry) => (
+        <Row title={entry.title} subtitle={entry.excluded === true ? `${cat(entry.category).name} · ${appText(locale, 'transactions.excludedFromTotals')}` : cat(entry.category).name}>
+          <Mib slot="leading" icon={cat(entry.category).icon} color={cat(entry.category).color} />
+          <Amount slot="trailing" class={entry.excluded === true ? 'ma mut' : entry.amount > 0 ? 'ma pos' : 'ma'} minor={entry.amount} currency={currency} locale={locale} sign={entry.amount > 0 ? 'always' : 'negative'} />
+        </Row>
+      ))}
+      <div style="height:6px"></div>
+    </div>
+  ))}
+</div>

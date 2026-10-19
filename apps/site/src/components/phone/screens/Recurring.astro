@@ -1,0 +1,44 @@
+---
+import type { SiteContent } from '../../../content/index';
+import { appCount, appText } from '../../../lib/appText';
+import { dayText, moneyText } from '../../../lib/format';
+import { recurringPerMonth } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Bar from '../Bar.astro';
+import Mib from '../Mib.astro';
+import Row from '../Row.astro';
+import TitleHead from '../TitleHead.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const perMonth = recurringPerMonth(sample);
+const cadences = ['weekly', 'monthly'] as const;
+const cadenceText = (cadence: (typeof cadences)[number]) =>
+  appCount(locale, cadence === 'weekly' ? 'recurrence.every_weekly' : 'recurrence.every_monthly', 1);
+---
+
+<div class="pc">
+  <TitleHead title={appText(locale, 'recurrence.title')} back />
+  <div class="mc">
+    <div class="mh" style="margin:0"><span class="ml">{appText(locale, 'recurrence.monthlyAverage')}</span><span class="mf">{appCount(locale, 'recurrence.count', sample.recurring.length)}</span></div>
+    <div class="avg"><span class="md"><Amount class="ma" minor={perMonth.expenses} currency={currency} locale={locale} /></span><span class="ml pos-text">{moneyText(content, perMonth.income, 'always')}</span></div>
+    <div style="margin-top:12px"><Bar ratio={perMonth.share / 100} /></div>
+    <div class="mf" style="margin-top:6px">{appText(locale, 'recurrence.shareOfIncome', { percent: perMonth.share })}</div>
+  </div>
+  {cadences.map((cadence) => (
+    <div class="mc np">
+      <div class="ml" style="padding:12px 0 2px">{cadenceText(cadence)}</div>
+      {sample.recurring.filter((entry) => entry.cadence === cadence).map((entry) => (
+        <Row title={entry.title} subtitle={`${cadenceText(cadence)} · ${appText(locale, 'recurrence.next', { date: dayText(content, entry.next) })}`} chevron>
+          <Mib slot="leading" icon={sample.categories[entry.category].icon} color={sample.categories[entry.category].color} badge />
+          <Amount slot="trailing" class={entry.amount > 0 ? 'ma pos' : 'ma'} minor={entry.amount} currency={currency} locale={locale} sign="always" />
+        </Row>
+      ))}
+      <div style="height:4px"></div>
+    </div>
+  ))}
+</div>

@@ -1,0 +1,56 @@
+---
+import { formatSignedPercent } from '@saldo/i18n';
+import type { SiteContent } from '../../../content/index';
+import { appCount, appText } from '../../../lib/appText';
+import { longDateText, moneyText } from '../../../lib/format';
+import Amount from '../../Amount.astro';
+import Icon from '../../Icon.astro';
+import Cashflow from '../Cashflow.astro';
+import Mib from '../Mib.astro';
+import PeriodHead from '../PeriodHead.astro';
+import Row from '../Row.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const rows = Object.entries(sample.spent) as [keyof typeof sample.categories, number][];
+const total = rows.reduce((sum, [, amount]) => sum + amount, 0);
+const excluded = sample.days.flatMap((day) => day.entries).filter((entry) => entry.excluded === true);
+const excludedAmount = excluded.reduce((sum, entry) => sum - entry.amount, 0);
+const change = sample.spentChange as Partial<Record<string, number>>;
+const legend = [
+  { swatch: 'var(--color-positive)', text: appText(locale, 'stats.legendIncome') },
+  { swatch: 'var(--color-accent)', text: appText(locale, 'stats.legendExpenses') },
+  { swatch: 'repeating-linear-gradient(135deg,var(--color-text-muted) 0 1.5px,transparent 1.5px 3.5px)', text: appText(locale, 'stats.legendCurrent') },
+  { swatch: 'repeating-linear-gradient(135deg,var(--color-text-faint) 0 1.5px,transparent 1.5px 3.5px)', text: appText(locale, 'stats.legendForecast') },
+  { swatch: 'var(--color-track);box-shadow:inset 0 0 0 1px var(--color-text-muted)', text: appText(locale, 'stats.legendRange') },
+];
+---
+
+<div class="pc">
+  <PeriodHead content={content} />
+  <div class="mc">
+    <div class="mh" style="margin:0"><span class="t cf-title">{appText(locale, 'stats.cashflow')}</span><span class="mf">{appText(locale, 'stats.lastAndForecast')}</span></div>
+    <div style="margin-top:14px"><Cashflow bars={sample.cashflow} locale={locale} id="cf-stats" /></div>
+    <div class="mh" style="margin:8px 0 10px;align-items:center"><span class="ml">{appText(locale, 'stats.forecastEndLabel', { date: longDateText(content, sample.forecastEnd.date) })} <b class="strong">{moneyText(content, sample.forecastEnd.balance)}</b></span><Icon name="chevR" class="ch" /></div>
+    <div class="leg2">{legend.map((item) => <span><i style={`background:${item.swatch}`}></i>{item.text}</span>)}</div>
+  </div>
+  <div class="mc">
+    <div class="seg2"><span class="on">{appText(locale, 'stats.expenses')}</span><span>{appText(locale, 'stats.income')}</span></div>
+    <div class="lg" style="margin:14px 0 10px"><Amount class="ma" minor={total} currency={currency} locale={locale} /></div>
+    <div class="split">{rows.map(([key, amount]) => <i style={`flex:${amount};background:var(--category-${sample.categories[key].color})`}></i>)}</div>
+    <div style="margin-top:6px">
+      {rows.slice(0, 3).map(([key, amount]) => (
+        <Row title={sample.categories[key].name} subtitle={`${formatSignedPercent(change[key] ?? 0)} · ${appText(locale, 'stats.ofTotal', { pct: Math.round((amount / total) * 100) })}`}>
+          <Mib slot="leading" icon={sample.categories[key].icon} color={sample.categories[key].color} />
+          <Amount slot="trailing" class="ma" minor={amount} currency={currency} locale={locale} />
+        </Row>
+      ))}
+    </div>
+    <div class="mh" style="padding:10px 0 2px;align-items:center"><span>{appCount(locale, 'stats.seeAll', rows.length)}</span><Icon name="chevR" class="ch" /></div>
+    <div class="mf excl">{appCount(locale, 'stats.excludedRow', excluded.length, { amount: moneyText(content, excludedAmount) })}</div>
+  </div>
+</div>

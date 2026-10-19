@@ -1,0 +1,55 @@
+---
+import { formatSignedPercent } from '@saldo/i18n';
+import { sparklinePoints } from '@saldo/ui';
+import type { SiteContent } from '../../../content/index';
+import { appText } from '../../../lib/appText';
+import { dayText, longDateText } from '../../../lib/format';
+import { cardDue } from '../../../lib/sample';
+import Amount from '../../Amount.astro';
+import Icon from '../../Icon.astro';
+import Mib from '../Mib.astro';
+import Row from '../Row.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const card = sample.card;
+const account = sample.accounts.spending[card.accountIndex];
+const first = card.history[0] ?? 0;
+const last = card.history[card.history.length - 1] ?? 0;
+const change = first === 0 ? 0 : ((last - first) / first) * 100;
+// Month-end balances, as the app's sparkline draws them: a card's balance is negative.
+const points = sparklinePoints(card.history.map((owed) => -owed), 324, 40);
+---
+
+<div class="pc">
+  <div class="phd">
+    <span class="rb"><Icon name="chevL" /></span>
+    {account && <Mib icon={account.icon} color={account.color} />}
+    <div class="pt"><b>{account?.name}</b><span>{account?.subtitle}</span></div>
+  </div>
+  <div class="mc">
+    <div class="ml">{appText(locale, 'accounts.toRepay')}</div>
+    <div class="big" style="margin:4px 0 12px"><Amount class="ma" minor={cardDue(sample)} currency={currency} locale={locale} /></div>
+    <svg class="mchart spark" viewBox="0 0 324 44" aria-hidden="true"><polyline points={points} fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+    <div class="mh" style="margin-top:6px"><span class="mf">{appText(locale, 'accounts.monthsDelta')}</span><span class="mf">{formatSignedPercent(change)}</span></div>
+  </div>
+  <div class="mc np">
+    <Row title={appText(locale, 'accounts.accruedInCycle')}><Amount slot="trailing" class="ma" minor={card.accrued} currency={currency} locale={locale} /></Row>
+    <Row title={appText(locale, 'accounts.nextCharge')} subtitle={`${longDateText(content, card.chargeDate)} · ${appText(locale, 'accounts.statementShort')}`} divider><Amount slot="trailing" class="ma" minor={card.statement} currency={currency} locale={locale} /></Row>
+    <Row title={appText(locale, 'accounts.settleCard')} divider chevron><Mib slot="leading" icon="swap" /></Row>
+    <p class="mf note">{appText(locale, 'accounts.creditNote', { close: card.closeDay, charge: card.chargeDay, account: card.payFrom })}</p>
+  </div>
+  <div class="mc np">
+    <div class="mh" style="padding:12px 0 4px"><span class="t">{appText(locale, 'accounts.lastTransactions')}</span><span class="s">{appText(locale, 'home.allTransactions')}<Icon name="chevR" /></span></div>
+    {card.recent.map((entry) => (
+      <Row title={entry.title} subtitle={`${dayText(content, entry.date)} · ${sample.categories[entry.category].name}`}>
+        <Mib slot="leading" icon={sample.categories[entry.category].icon} color={sample.categories[entry.category].color} />
+        <Amount slot="trailing" class="ma" minor={entry.amount} currency={currency} locale={locale} />
+      </Row>
+    ))}
+  </div>
+</div>
