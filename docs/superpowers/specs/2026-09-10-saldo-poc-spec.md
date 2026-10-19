@@ -98,6 +98,7 @@ cycle, and am I going faster than I should?*
 | D41 | **The first release of 0.8 is the landing page only** (decided 2026-10-18) | The docs library is a separate plan, 0.8b. See `specs/2026-10-18-marketing-site.html`. |
 | D42 | **`apps/site` is an Astro app with static output, not Next.js** (decided 2026-10-18) | Astro sends no JavaScript by default and imports TypeScript from the workspace packages. Next.js adds a React runtime to a static page. The earlier choice of Next.js did not compare Astro. Details in `specs/2026-10-18-marketing-site.html`. |
 | D43–D52 | **The landing page: copy, screens, URL, scripts, theme, tokens, lint, links, TypeScript, no tests and no carousel physics** (decided 2026-10-18; D52 on 2026-10-19) | Listed with their reasons in `specs/2026-10-18-marketing-site.html` §13. |
+| D53–D60 | **The docs library: Starlight in `apps/site`, Markdown read in place, link plugin, Guide from the catalog, `/docs/`, shared theme, sitemap, Vercel, English headings** (decided 2026-10-20) | Listed with their reasons in `specs/2026-10-20-docs-library.html` §11. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
