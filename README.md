@@ -7,6 +7,12 @@ yourself, and it syncs across your devices when it can. Build it yourself, sidel
 > Status: proof of concept in progress. See the [phase index](docs/superpowers/plans/README.md) for what is
 > built and [`ROADMAP.md`](ROADMAP.md) for what comes next.
 
+> **`main` is pre-release.** The first release is milestone 0.9 in [`ROADMAP.md`](ROADMAP.md). Until then, no
+> migration is promised from one commit of `main` to the next. Shared finances (milestone 0.6) will change the
+> key of the `sync_rows` table, and an old database will not upgrade to it. If you run `main` with real data,
+> you do it at your own risk. Export your data first (see «Your data stays yours» below) and keep the
+> export.
+
 ## Screenshots
 
 | Home | Transactions | Statistics |
