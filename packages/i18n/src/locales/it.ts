@@ -1799,6 +1799,20 @@ export const it = {
         'Hai chiesto un link per rientrare in {{instance}} ({{host}}) senza la passkey. Apri il link qui sotto, poi aggiungi una nuova passkey:',
       expires: 'Il link vale 15 minuti e si può usare una volta sola.',
     },
+    emailChange: {
+      subject: 'Conferma il tuo nuovo indirizzo email su {{instance}}',
+      intro:
+        'Hai chiesto di usare questo indirizzo email per il tuo account su {{instance}} ({{host}}). Apri il link qui sotto per confermarlo:',
+      expires:
+        'Il link vale 24 ore e si può usare una volta sola. Finché non lo usi, l’account tiene l’indirizzo attuale.',
+    },
+    emailChanged: {
+      subject: 'L’indirizzo email del tuo account su {{instance}} è cambiato',
+      intro:
+        'L’indirizzo email del tuo account su {{instance}} ({{host}}) è stato cambiato in {{newEmail}}. Da ora questo indirizzo non riceve più messaggi dall’account.',
+      warning:
+        'Se non sei stato tu, avvisa subito chi gestisce {{host}}: può ripristinare l’account.',
+    },
     ignore:
       'Se non sei stato tu a chiederlo, ignora questo messaggio: senza il link nessuno entra.',
   },

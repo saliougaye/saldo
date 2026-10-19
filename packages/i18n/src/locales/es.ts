@@ -1802,6 +1802,20 @@ export const es: Messages = {
         'Has pedido un enlace para volver a entrar en {{instance}} ({{host}}) sin tu passkey. Abre el enlace de abajo y luego añade una nueva passkey:',
       expires: 'El enlace es válido durante 15 minutos y solo se puede usar una vez.',
     },
+    emailChange: {
+      subject: 'Confirma tu nueva dirección de correo en {{instance}}',
+      intro:
+        'Has pedido usar esta dirección de correo para tu cuenta en {{instance}} ({{host}}). Abre el enlace de abajo para confirmarla:',
+      expires:
+        'El enlace es válido durante 24 horas y solo se puede usar una vez. Hasta que lo uses, la cuenta conserva su dirección actual.',
+    },
+    emailChanged: {
+      subject: 'La dirección de correo de tu cuenta en {{instance}} ha cambiado',
+      intro:
+        'La dirección de correo de tu cuenta en {{instance}} ({{host}}) se ha cambiado a {{newEmail}}. A partir de ahora esta dirección ya no recibe mensajes de la cuenta.',
+      warning:
+        'Si no has sido tú, avisa cuanto antes a quien gestiona {{host}}: puede restaurar la cuenta.',
+    },
     ignore: 'Si no lo has pedido tú, ignora este mensaje: sin el enlace nadie entra.',
   },
 };

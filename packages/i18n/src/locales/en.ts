@@ -1791,6 +1791,20 @@ export const en: Messages = {
         'You asked for a link to get back into {{instance}} ({{host}}) without your passkey. Open the link below, then add a new passkey:',
       expires: 'The link is valid for 15 minutes and works once.',
     },
+    emailChange: {
+      subject: 'Confirm your new email address on {{instance}}',
+      intro:
+        'You asked to use this email address for your account on {{instance}} ({{host}}). Open the link below to confirm it:',
+      expires:
+        'The link is valid for 24 hours and works once. Until you use it, the account keeps its current address.',
+    },
+    emailChanged: {
+      subject: 'The email address of your account on {{instance}} has changed',
+      intro:
+        'The email address of your account on {{instance}} ({{host}}) was changed to {{newEmail}}. From now on this address gets no more messages from the account.',
+      warning:
+        'If this was not you, tell the person who runs {{host}} now: they can restore the account.',
+    },
     ignore: 'If you did not ask for this, ignore this message: nobody gets in without the link.',
   },
 };

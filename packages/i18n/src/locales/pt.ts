@@ -1800,6 +1800,19 @@ export const pt: Messages = {
         'Pediu uma ligação para voltar a entrar em {{instance}} ({{host}}) sem a sua passkey. Abra a ligação abaixo e depois adicione uma nova passkey:',
       expires: 'A ligação é válida durante 15 minutos e só pode ser usada uma vez.',
     },
+    emailChange: {
+      subject: 'Confirme o seu novo endereço de e-mail em {{instance}}',
+      intro:
+        'Pediu para usar este endereço de e-mail na sua conta em {{instance}} ({{host}}). Abra a ligação abaixo para o confirmar:',
+      expires:
+        'A ligação é válida durante 24 horas e só pode ser usada uma vez. Até a usar, a conta mantém o endereço atual.',
+    },
+    emailChanged: {
+      subject: 'O endereço de e-mail da sua conta em {{instance}} mudou',
+      intro:
+        'O endereço de e-mail da sua conta em {{instance}} ({{host}}) foi alterado para {{newEmail}}. Este endereço deixa de receber mensagens da conta.',
+      warning: 'Se não foi você, avise já quem gere {{host}}: essa pessoa pode restaurar a conta.',
+    },
     ignore: 'Se não foi você a pedir, ignore esta mensagem: sem a ligação ninguém entra.',
   },
 };
