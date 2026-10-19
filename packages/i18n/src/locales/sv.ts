@@ -1105,9 +1105,8 @@ export const sv: Messages = {
   },
   profile: {
     title: 'Profil',
-    cycleStart: 'Cykelns start',
     systemFollows: '”System” följer telefonens inställningar.',
-    cyclePreview: 'Pågående cykel',
+    periodPreview: 'Pågående period',
     cycleDay: 'Dag {{day}}',
     currency: 'Valuta',
     language: 'Språk',
@@ -1558,6 +1557,12 @@ export const sv: Messages = {
       emailVerifiedOpen: 'Öppna Saldo',
       emailLinkInvalidTitle: 'Länken har gått ut eller är ogiltig',
       emailLinkInvalidBody: 'Öppna Profil › Konto och be om en ny.',
+      emailChangeTitle: 'Bekräfta den nya adressen',
+      emailChangeBody:
+        'Tryck på knappen för att använda den här adressen för ditt konto. Tills du gör det ändras ingenting.',
+      emailChangeButton: 'Bekräfta',
+      emailChangeDoneTitle: 'E-postadressen har ändrats',
+      emailChangeDoneBody: 'Ditt konto använder nu den här adressen. Du kan stänga den här sidan.',
     },
     offline: {
       title: 'Du är offline',
@@ -1612,6 +1617,15 @@ export const sv: Messages = {
       verify: 'Skicka verifieringslänken',
       verifySent: 'Länk skickad till {{email}}',
       mailOff: 'Den här servern skickar inte e-post: adressen förblir overifierad.',
+      changeLabel: 'Ny e-postadress',
+      changeSend: 'Skicka bekräftelselänken',
+      changeSent:
+        'Om {{email}} kan användas för det här kontot har vi skickat en länk dit. Adressen ändras först när du öppnar den.',
+      changePending: 'Väntar på din bekräftelse av {{email}}',
+      changeCancel: 'Avbryt ändringen',
+      changeInvalid: 'Det där är ingen e-postadress.',
+      changeSame: 'Det här är redan din adress.',
+      changeLater: 'Vänta en minut innan du försöker igen.',
     },
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
@@ -1791,6 +1805,20 @@ export const sv: Messages = {
       intro:
         'Du har bett om en länk för att komma tillbaka till {{instance}} ({{host}}) utan din passkey. Öppna länken nedan och lägg sedan till en ny passkey:',
       expires: 'Länken gäller i 15 minuter och kan användas en gång.',
+    },
+    emailChange: {
+      subject: 'Bekräfta din nya e-postadress hos {{instance}}',
+      intro:
+        'Du har bett om att använda den här e-postadressen för ditt konto hos {{instance}} ({{host}}). Öppna länken nedan för att bekräfta den:',
+      expires:
+        'Länken gäller i 24 timmar och kan användas en gång. Tills du använder den behåller kontot sin nuvarande adress.',
+    },
+    emailChanged: {
+      subject: 'E-postadressen för ditt konto hos {{instance}} har ändrats',
+      intro:
+        'E-postadressen för ditt konto hos {{instance}} ({{host}}) har ändrats till {{newEmail}}. Den här adressen får inga fler meddelanden från kontot.',
+      warning:
+        'Om det inte var du, kontakta genast den som driver {{host}}: de kan återställa kontot.',
     },
     ignore:
       'Om det inte var du som bad om detta kan du ignorera meddelandet: ingen kommer in utan länken.',

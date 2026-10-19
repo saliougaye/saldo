@@ -787,7 +787,7 @@ the intro, the ⓘ and the Guida all read it.
 
 | Section | Concept | Icon | Intro | ⓘ next to |
 | --- | --- | --- | --- | --- |
-| Le basi | `period` — the period restarts Home, budgets and stats | cal | ✓ | Period sheet «Tipo di periodo»; Profile «Inizio del ciclo» screen |
+| Le basi | `period` — the period restarts Home, budgets and stats | cal | ✓ | Period sheet «Tipo di periodo»; Profile «Periodo» screen |
 | Le basi | `remaining` — «Rimasto da spendere» is income − spent, not a balance (§5.3) | wallet | ✓ | — (Home stays clean) |
 | Le basi | `transfers` — a transfer is neither an expense nor income, a card payment included | swap | ✓ | — |
 | Conti | `accountTypes` — the type decides Totale spendibile; a debit card is its own account | landmark | | «Tipo» in the account sheet and onboarding step 2 |
@@ -894,7 +894,7 @@ top radius 14, handle 36×4, and slide-up animation 280ms (300ms for tall form s
 indented under it (ring, name, balance) and a last «liberi» line for its own balance (§5.14) — Patrimonio complessivo, a **"Conti archiviati" row** with the count, opening `settings/archived-accounts` (the collapsible list of the prototype became that screen, so the Accounts tab and the Profile row lead to the same place). An archived account offers **Ripristina and nothing else**: its detail hides edit, transfer and archive, and `account/edit` refuses with the same restore button, since a deep link can still reach it. Header: settings gear, "+". |
 | 6.6 | **Transaction detail** | 471–536 | Amount (44px), title, rows Categoria (dot), Conto (transfer: "A → B"), Data (long format with year), Nota (note, or the cadence — "Ricorrente, ogni mese, il 18" — / "Registrata manualmente"), a **Ricorrenza** row (the end) that opens §6.34, Esclusa dai totali. Tag chips → Tag view. **Attachments:** "Scontrino"/"Allegati" horizontal list of 96×124 thumbnails, tap → full-screen viewer (pinch-zoom; PDFs open in the system viewer). "Modifica" → edit sheet. |
 | 6.7 | **Impostazioni** | 538–584 | **Not built as a separate screen.** Every row of it is already in 6.8 Profilo — categories, tags, the period, the currency — and in the prototype the two screens differ only in how you reach them. The gear on Accounts opens the Profile, and "Rivedi la configurazione iniziale" moved there. One list, one place to change a setting. |
-| 6.8 | **Profilo** | 586–669 | Inizio del ciclo, Valuta (row shows the **symbol** next to the code), Lingua, Tema, **Fuso orario** (D37; see below) — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; **Budget** (→ §6.4, the second way in now that the home card is not the only one), **Obiettivi** (→ §6.35), Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; **Elimina tutti i dati** (NEW → `profile/delete-data`, §8.6); Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. **Fuso orario** (`profile/timezone`, mockup `docs/superpowers/mockups/2026-09-26-timezone-variants.html`, variant «Viaggio + ora»): the row shows the saved zone's city. The screen has the line «Resta questo anche quando viaggi: il periodo si chiude a casa tua», a search field, then the saved zone (and the phone's, if different) on top and every zone A–Z, each row with city, generic zone name and the **local time now**, not the GMT offset. Selecting saves at once, with a check, as Lingua does. When the phone's zone differs from the saved one, the Profile row says «Il telefono è su {città}» under the title, and the screen opens with a notice («Il telefono è su New York, dove sono le 10:45. I conti restano su Roma finché non lo cambi.») and a «Usa {città}» button. City names: a short translated list for common cities, IANA's English name otherwise. |
+| 6.8 | **Profilo** | 586–669 | **Periodo** (changed 2026-10-19; it was «Inizio del ciclo»; see below), Valuta (row shows the **symbol** next to the code), Lingua, Tema, **Fuso orario** (D37; see below) — each one a **pushed screen** under `profile/`, not a bottom sheet: same place Categorie and Tag already went, and the only place the cycle footnote and the currency confirmation have room; **Budget** (→ §6.4, the second way in now that the home card is not the only one), **Obiettivi** (→ §6.35), Categorie, Tag, **Conti archiviati** (its own screen, `settings/archived-accounts`, with Ripristina per row — pushing the Accounts tab landed at the top with the archived accordion shut, which is not what the row promised; the accordion on the tab stays); **Server e sincronizzazione** (NEW row → `profile/server`); Importa transazioni (CSV) → import wizard; Esporta i dati (sheet: JSON backup, CSV transactions); **Ripristina backup** (NEW, JSON); Blocco con Face ID/biometria toggle; **Elimina tutti i dati** (NEW → `profile/delete-data`, §8.6); Esci (only when signed in: revoke refresh token, keep local data, stop sync); version from `expo-application`. **Periodo** (`profile/period`): the row shows the kind, and for the cycle the start day too («Mese solare», «Ciclo di stipendio · dal 27»). The screen lists the four kinds as onboarding step 1 does, then the current period, then the day grid under the cycle only. A change of kind or day makes the Home selection fall back to the current period (§5.2). The web Profilo has the same panel. **Fuso orario** (`profile/timezone`, mockup `docs/superpowers/mockups/2026-09-26-timezone-variants.html`, variant «Viaggio + ora»): the row shows the saved zone's city. The screen has the line «Resta questo anche quando viaggi: il periodo si chiude a casa tua», a search field, then the saved zone (and the phone's, if different) on top and every zone A–Z, each row with city, generic zone name and the **local time now**, not the GMT offset. Selecting saves at once, with a check, as Lingua does. When the phone's zone differs from the saved one, the Profile row says «Il telefono è su {città}» under the title, and the screen opens with a notice («Il telefono è su New York, dove sono le 10:45. I conti restano su Roma finché non lo cambi.») and a «Usa {città}» button. City names: a short translated list for common cities, IANA's English name otherwise. |
 | 6.9 | **Categorie** | 671–727 | §5.11. |
 | 6.10 | **Account detail** | 729–804 | Edit, archive (confirm toast), icon/name/kind, balance, delta over last 8 months, sparkline of month-end balances over 8 months (labels first/last month), credit card box (one list: Maturato; "Prossimo addebito" with the charge date as its subtitle — "5 ottobre · Estratto conto" and the amount due on the right while a statement is due, "✓ Saldato" once it is paid; the prototype's note naming the close and charge days and the payment account; a **Salda carta** row, which opens the new-transaction sheet as a transfer from the payment account to the card, for the statement due, dated on its charge day — or today if that has passed — with the description "Saldo {card} · {month}", every field editable and nothing written until saved), cycle income/expense tiles, "Trasferisci verso un altro conto" → new transfer sheet, last 6 transactions. |
 | 6.11 | **Tag view** | 807–857 | §5.10. |
@@ -1116,9 +1116,9 @@ Notes that follow from using the library:
   created before it keeps the synthetic address until the phone asks for a real one (onboarding, or Profile → server),
   which `POST /api/me/email` stores. That route only ever fills an empty seat — it answers `email_already_set` when the
   current address is not synthetic, because replacing a real one means proving the new one belongs to the person.
-  SMTP now exists (0.3f-2, 0.3f-3), so that proof is buildable — a verified change of a real address is a follow-up
-  in `TODO.md`; today a filled address stays as it is. `isSyntheticEmail` is the test, in
-  `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
+  SMTP now exists (0.3f-2, 0.3f-3), so that proof is built: with SMTP, the same route starts a **change of a real
+  address** (see «As built (change of address)» below); without SMTP it still answers `email_already_set`.
+  `isSyntheticEmail` is the test, in `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -2063,13 +2063,14 @@ On the wide-screen layout (sidebar, dialog panels, the G2 pages), `docs/superpow
   (Accantona, Preleva) and «Chiudi obiettivo» stay in Conti. Tag, Dati and the preference panels remain for 0.3e-3.
   **Built in 0.3e-3 (2026-09-30): the preference panels, Tag and Dati.** The sub-navigation is now Profilo,
   Preferenze, Categorie, Tag, Budget, Obiettivi, Passkey, Dati, «Esci». **Preferenze**: each of the five rows is a link
-  that opens its panel at `/profile/preferences?edit=cycle|currency|language|theme|timeZone` (anything else opens
+  that opens its panel at `/profile/preferences?edit=period|currency|language|theme|timeZone` (anything else opens
   none). A choice is **saved as it is made**, as on the phone, and the panel stays open on the new selection; after the
   write `router.refresh()` re-renders the root layout, so a language change re-renders the whole shell and a theme
   change flips `<html data-theme>` at once. Only the currency asks first, with the phone's «Cambiare valuta?» and, when
   the two currencies keep a different number of decimals, the before/after figure («€1,842.60 will read as ¥184,260»):
-  it reformats, never converts. «Inizio del ciclo» is the 1–28 grid over the preview range; the row shows whatever the
-  period kind is, and `periodKind` cannot be changed after onboarding, as on the phone. The time zone list is the
+  it reformats, never converts. «Periodo» lists the four kinds, then the preview range, then — under the cycle only —
+  the 1–28 grid. The row shows the kind, and the start day for the cycle («Ciclo di stipendio · dal 27»). `saveSetting`
+  accepts `periodKind`, as the phone does. The time zone list is the
   phone's (saved zone first, this browser's under it when they differ, then every zone, searchable); with no zone
   stored the browser's shows selected and choosing it is what stores it. Deviations from the plan: the option lists are
   radio groups with one tab stop where the arrows move the **focus only** and Space/Enter chooses (a selection that
@@ -2550,6 +2551,27 @@ switches the whole thing off from `/admin/mcp`.
   more than one replica multiplies them. `POST /sign-in/magic-link` writes a `verification` row for any address it
   is given, bounded by the plugin's rate limit and the 15-minute expiry. An admin who does not want recovery leaves
   SMTP unconfigured.
+- **Change of address (As built, change of address).** `POST /api/me/email` on an account with a real address, on a
+  server with SMTP, starts a change: it answers `202 { pending: { email, expiresAt } }`. The new address gets a link
+  to `/email-change?token=…`. The old address stays on the account, verified, until a person presses the button on
+  that page. The button posts the token to `POST /api/email-change/confirm`. Then `user.email` becomes the new address
+  and `emailVerified` becomes true. `DELETE /api/me/email` cancels a pending change. Profilo → Account on the web
+  has the form and the cancel button; the phone has neither, because it shows an email only to ask for a missing one.
+  - **Better Auth's `/change-email` is not used.** Its token is a JWT that anybody can replay. It finds the account
+    by the **old** address, so a person who registers that address next gets their address swapped. A link opened
+    with no session also creates a session. Nothing stores the pending change, and no hook sees the old address.
+    The change is a row in `email_changes` (one for each account; the token is stored as a sha-256 hash; it lives 24
+    hours and works once). Nothing reads or creates a session when the link is used.
+  - **Nobody learns which addresses have accounts.** An address that another account has gets the same `202`, the
+    same Profilo line, and no mail. The link is checked again when it is used.
+  - **The old address is told** (masked new address, no link) only if it was verified. This notice does not use the
+    per-address throttle: anybody can fill that throttle with recovery requests, and this would silence the notice.
+  - **Limits.** The new address spends the mail throttle (one message a minute, five an hour) **before** the pending
+    row changes. A held request answers `429 rate_limited` and leaves the link already mailed working. A taken
+    address spends it too, so a 429 does not reveal it. Each account may ask ten times an hour. Both limits are per
+    process.
+  - **Not built:** an undo link for the old mailbox, and a recent passkey ceremony before the change. A thief who
+    holds a session can change the address; the notice, and an admin with `pnpm --filter web user …`, are the remedy.
 - **Assistants and connected apps (0.4, §17.4).** An MCP client holds an OAuth 2.1 token the user granted on
   `/oauth/consent` after signing in with a passkey; nothing is pasted, nothing is shared out of band. Tokens are
   opaque and stored hashed, bound to `{PUBLIC_URL}/mcp` as audience, scoped `read` and/or `write`, accepted only in

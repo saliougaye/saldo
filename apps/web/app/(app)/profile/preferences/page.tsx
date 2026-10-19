@@ -1,4 +1,5 @@
-import { canonicalTimeZone } from '@saldo/i18n';
+import { PERIOD_KINDS } from '@saldo/core';
+import { canonicalTimeZone, periodSummary } from '@saldo/i18n';
 import {
   currencyOptions,
   languageOptions,
@@ -15,8 +16,8 @@ import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import { CurrencyPanel } from './CurrencyPanel';
-import { CyclePanel } from './CyclePanel';
 import { LanguagePanel } from './LanguagePanel';
+import { PeriodPanel } from './PeriodPanel';
 import { ThemePanel } from './ThemePanel';
 import { TimeZonePanel, TimeZoneWarmup } from './TimeZonePanel';
 import { type SettingErrors, SettingErrorsShared } from './useSaveSetting';
@@ -70,17 +71,24 @@ export default async function ProfilePreferencesPage({
             strings={{ title: t('profile.theme'), note: t('web.preferences.systemFollows') }}
           />
         );
-      case 'cycle':
+      case 'period':
         return (
-          <CyclePanel
-            value={settings.cycleStartDay}
+          <PeriodPanel
+            kind={settings.periodKind}
+            day={settings.cycleStartDay}
             locale={locale}
             today={today}
+            options={PERIOD_KINDS.map((value) => ({
+              value,
+              label: t(`period.kind_${value}`),
+              subtitle: t(`period.kindBody_${value}`),
+            }))}
             strings={{
-              title: t('profile.cycleStart'),
+              title: t('period.title'),
               note: t('settings.cycleFootnote'),
-              preview: t('profile.cyclePreview'),
+              preview: t('profile.periodPreview'),
               day: t('profile.cycleDay'),
+              dayGroup: t('period.cycleStartDay'),
             }}
           />
         );
@@ -153,8 +161,11 @@ export default async function ProfilePreferencesPage({
               selectId={`edit:${row.key}`}
               title={t(row.labelKey)}
               value={
-                row.key === 'cycle'
-                  ? t('settings.cycleValue', { day: row.value })
+                row.key === 'period'
+                  ? periodSummary(
+                      { kind: settings.periodKind, startDay: settings.cycleStartDay },
+                      t,
+                    )
                   : row.key === 'theme'
                     ? t(`profile.${row.value}`)
                     : row.value === ''

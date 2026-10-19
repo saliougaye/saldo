@@ -38,6 +38,8 @@ describe('saveSetting', () => {
     [{ key: 'language', value: 'it' }, { language: 'it' }],
     [{ key: 'theme', value: 'dark' }, { theme: 'dark' }],
     [{ key: 'currency', value: 'JPY' }, { currency: 'JPY' }],
+    [{ key: 'periodKind', value: 'week' }, { periodKind: 'week' }],
+    [{ key: 'periodKind', value: 'cycle' }, { periodKind: 'cycle' }],
     [{ key: 'cycleStartDay', value: 1 }, { cycleStartDay: 1 }],
     [{ key: 'cycleStartDay', value: 28 }, { cycleStartDay: 28 }],
     [{ key: 'timeZone', value: 'Europe/Stockholm' }, { timeZone: 'Europe/Stockholm' }],
@@ -59,7 +61,8 @@ describe('saveSetting', () => {
   });
 
   it.each([
-    ['an unknown key', { key: 'periodKind', value: 'week' }],
+    ['an unknown key', { key: 'weekStart', value: 'sunday' }],
+    ['an unknown period kind', { key: 'periodKind', value: 'fortnight' }],
     ['an unknown language', { key: 'language', value: 'xx' }],
     ['an unknown theme', { key: 'theme', value: 'sepia' }],
     ['an unknown currency', { key: 'currency', value: 'XXX_' }],
@@ -86,6 +89,7 @@ describe('saveSetting', () => {
     [{ key: 'language', value: 'system' }],
     [{ key: 'theme', value: 'system' }],
     [{ key: 'currency', value: 'EUR' }],
+    [{ key: 'periodKind', value: 'month' }],
     [{ key: 'cycleStartDay', value: 27 }],
     [{ key: 'timeZone', value: 'Europe/Rome' }],
   ])('does not write %o again when it is already so', async (input) => {

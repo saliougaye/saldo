@@ -1,5 +1,11 @@
 import { getCurrency } from '@saldo/core';
-import { canonicalTimeZone, LANGUAGE_NAMES, systemTimeZone, timeZoneCity } from '@saldo/i18n';
+import {
+  canonicalTimeZone,
+  LANGUAGE_NAMES,
+  periodSummary,
+  systemTimeZone,
+  timeZoneCity,
+} from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
@@ -72,14 +78,10 @@ export default function ProfileScreen() {
       <Card padded={false}>
         <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 8 }}>
           <ListRow
-            title={t('profile.cycleStart')}
+            title={t('period.title')}
             leading={lead('cal')}
-            trailing={
-              <Text color="textMuted">
-                {t('settings.cycleValue', { day: settings?.cycleStartDay ?? 27 })}
-              </Text>
-            }
-            onPress={() => router.push('/profile/cycle')}
+            trailing={<Text color="textMuted">{periodSummary(def, t)}</Text>}
+            onPress={() => router.push('/profile/period')}
             chevron
           />
           <ListRow

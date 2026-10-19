@@ -83,8 +83,22 @@ is a stolen account. What bounds it:
   caller. Both limits are per server process.
 - Recovery can only sign an existing account in; it never creates one.
 
-If that trade is not one you want, leave SMTP unconfigured: verification and recovery then do not exist, and nothing
-else changes.
+**With SMTP, an account can also change its verified address.** The new address is sent a link, and the address
+changes only when somebody opens that link and presses the button. A change does not sign anybody in. What bounds it:
+
+- The pending change is one row for each account. The link is single-use, stored hashed, and valid for 24 hours. A
+  new request replaces it.
+- The old address is told when it changes, if it was verified. The notice names the new address in masked form. It
+  has no link, and the per-address throttle does not hold it.
+- Nobody can learn from the answer whether the new address has an account.
+- The link is checked again when it is used: an address that another account took in the meantime is refused.
+
+What it does **not** do: a person who holds a signed-in session of the account (a stolen phone, an open browser) can
+start and finish a change, because the new mailbox is theirs. The notice to the old address is the only warning. The
+owner then asks the admin of the instance to restore the address (`pnpm --filter web user …`).
+
+If that trade is not one you want, leave SMTP unconfigured: verification, recovery and the change of address then do
+not exist, and nothing else changes.
 
 ## MCP e connettori (MCP and connectors)
 

@@ -1112,9 +1112,8 @@ export const pt: Messages = {
   },
   profile: {
     title: 'Perfil',
-    cycleStart: 'Início do ciclo',
     systemFollows: '«Sistema» segue as definições do telemóvel.',
-    cyclePreview: 'O ciclo em curso',
+    periodPreview: 'O período em curso',
     cycleDay: 'Dia {{day}}',
     currency: 'Moeda',
     language: 'Idioma',
@@ -1565,6 +1564,12 @@ export const pt: Messages = {
       emailVerifiedOpen: 'Abrir o Saldo',
       emailLinkInvalidTitle: 'O link expirou ou não é válido',
       emailLinkInvalidBody: 'Abre Perfil › Conta e pede um novo.',
+      emailChangeTitle: 'Confirme o novo endereço',
+      emailChangeBody:
+        'Prima o botão para usar este endereço na sua conta. Até o fazer, nada muda.',
+      emailChangeButton: 'Confirmar',
+      emailChangeDoneTitle: 'E-mail alterado',
+      emailChangeDoneBody: 'A sua conta usa agora este endereço. Pode fechar esta página.',
     },
     offline: {
       title: 'Estás offline',
@@ -1619,6 +1624,15 @@ export const pt: Messages = {
       verify: 'Enviar o link de verificação',
       verifySent: 'Link enviado para {{email}}',
       mailOff: 'Este servidor não envia e-mails: o endereço continua por verificar.',
+      changeLabel: 'Novo endereço de e-mail',
+      changeSend: 'Enviar a ligação de confirmação',
+      changeSent:
+        'Se {{email}} puder ser usado nesta conta, enviámos-lhe uma ligação. O endereço só muda quando a abrir.',
+      changePending: 'À espera da sua confirmação de {{email}}',
+      changeCancel: 'Cancelar a alteração',
+      changeInvalid: 'Isso não é um endereço de e-mail.',
+      changeSame: 'Este já é o seu endereço.',
+      changeLater: 'Aguarde um minuto antes de pedir de novo.',
     },
     accounts: {
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta novamente.',
@@ -1799,6 +1813,19 @@ export const pt: Messages = {
       intro:
         'Pediu uma ligação para voltar a entrar em {{instance}} ({{host}}) sem a sua passkey. Abra a ligação abaixo e depois adicione uma nova passkey:',
       expires: 'A ligação é válida durante 15 minutos e só pode ser usada uma vez.',
+    },
+    emailChange: {
+      subject: 'Confirme o seu novo endereço de e-mail em {{instance}}',
+      intro:
+        'Pediu para usar este endereço de e-mail na sua conta em {{instance}} ({{host}}). Abra a ligação abaixo para o confirmar:',
+      expires:
+        'A ligação é válida durante 24 horas e só pode ser usada uma vez. Até a usar, a conta mantém o endereço atual.',
+    },
+    emailChanged: {
+      subject: 'O endereço de e-mail da sua conta em {{instance}} mudou',
+      intro:
+        'O endereço de e-mail da sua conta em {{instance}} ({{host}}) foi alterado para {{newEmail}}. Este endereço deixa de receber mensagens da conta.',
+      warning: 'Se não foi você, avise já quem gere {{host}}: essa pessoa pode restaurar a conta.',
     },
     ignore: 'Se não foi você a pedir, ignore esta mensagem: sem a ligação ninguém entra.',
   },

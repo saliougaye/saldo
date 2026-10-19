@@ -177,6 +177,24 @@ export const mcpUsage = pgTable(
   ],
 );
 
+/**
+ * Change of a real email address (`auth/emailChange.ts`). At most one pending change for each account.
+ * The token is **never** stored, only its sha-256, so a database backup cannot be turned into an address.
+ * The row is deleted when the link is used, cancelled or replaced, and with its account.
+ */
+export const emailChanges = pgTable('email_changes', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  /** The address the person asked for. Lower case. */
+  newEmail: text('new_email').notNull(),
+  /** The account's address when the request was made; the change dies if it is not that any more. */
+  fromEmail: text('from_email').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+});
+
 export const schema = {
   user,
   session,
@@ -198,4 +216,5 @@ export const schema = {
   serverClock,
   serverSettings,
   mcpUsage,
+  emailChanges,
 };
