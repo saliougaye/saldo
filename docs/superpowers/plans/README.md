@@ -711,7 +711,7 @@ Acceptance:
 - Without JavaScript, all content shows and the carousel scrolls.
 - The theme toggle sets light and dark. After a reload there is no flash.
 - Every call to action goes to the repository or the self-hosting guide.
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm --filter site e2e` pass.
+- `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. The site has no end-to-end suite (the user decided so on 2026-10-19).
 - Lighthouse, mobile: Performance, Accessibility, Best practices and SEO each ≥ 95 (spec §07).
 
 ## Future (not POC)
