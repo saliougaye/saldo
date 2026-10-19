@@ -634,9 +634,9 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
   more object later. The app strings on the phone screens come from `@saldo/i18n`, and the build fails when a key
   that the site uses leaves `en.ts`.
 - The site is its own Vercel project, with the root directory `apps/site`. The domain is
-  `getsaldo.bysali.com` (decided 2026-10-19; `saldo.bysali.com` is the author's own instance). It reaches the build
-  through the environment variable `SITE_URL`, set to `https://getsaldo.bysali.com` in the Production environment of
-  the Vercel project. The code contains no domain.
+  `getsaldo.bysali.com` (decided 2026-10-19; `saldo.bysali.com` is the author's own instance). The build reads
+  it from `SITE_URL`, or, if that is unset, from the production domain that Vercel gives it. `SITE_URL` is optional: set
+  it to `https://getsaldo.bysali.com` only if the canonical URL is wrong. The code contains no domain.
 - The phone screens are HTML from the tokens, not screenshots. They follow the theme and can change language.
 - The site has no automated tests and no carousel physics (D52, 2026-10-19). The carousel is native scroll with CSS
   scroll-snap.
