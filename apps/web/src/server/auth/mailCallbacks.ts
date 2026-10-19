@@ -1,5 +1,5 @@
 import { readSettings } from '@saldo/core';
-import { catalogs, makeTranslator } from '@saldo/i18n';
+import { catalogs, makeTranslator, type Translate } from '@saldo/i18n';
 import { createEmailVerificationToken } from 'better-auth/api';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { RECOVERY_CONFIRM_PATH } from '../../features/auth/recoverView';
@@ -40,16 +40,21 @@ function ownLink(libraryUrl: string, path: string, params: Record<string, string
   return link.toString();
 }
 
+/** Builds the text once the recipient's language and the instance are known. */
+export type MessageBuilder = (
+  t: Translate,
+  instance: { instance: string; host: string },
+) => Message;
+
 /**
  * The recipient's own `settings.language` when they have settings and it is not `system`; otherwise
  * the `Accept-Language` of the request that triggered the send; otherwise English (`webLocale`).
  */
 async function messageFor(
   db: ServerDatabase,
-  kind: MailKind,
   userId: string,
   acceptLanguage: string | null,
-  url: string,
+  build: MessageBuilder,
 ): Promise<Message> {
   const [settings] = await db
     .select({ data: syncRows.data })
@@ -61,23 +66,27 @@ async function messageFor(
   const language = settings === undefined ? 'system' : readSettings(settings.data).language;
   const t = makeTranslator(catalogs[webLocale(language, acceptLanguage)]);
   const { name, host } = await instanceInfo(db);
-  const details = { instance: name, host, url };
-  return kind === 'recovery' ? recoveryMessage(t, details) : verificationMessage(t, details);
+  return build(t, { instance: name, host });
 }
 
-/** Throttles, builds and sends; a failure is logged without an address and never thrown. */
-async function deliver(
+/**
+ * Throttles (unless told not to), builds and sends; a failure is logged without an address and never
+ * thrown. Only a security notice goes out unthrottled: the throttle is shared by every kind, and
+ * anybody can fill it for an address by asking for recovery links.
+ */
+export async function deliver(
   db: ServerDatabase,
   kind: MailKind,
   recipient: { id: string; email: string },
-  url: string,
   acceptLanguage: string | null,
+  build: MessageBuilder,
+  options: { throttled?: boolean } = {},
 ): Promise<void> {
-  if (!mailThrottle.allow(kind, recipient.email, Date.now())) {
+  if ((options.throttled ?? true) && !mailThrottle.allow(kind, recipient.email, Date.now())) {
     log('mail', 'held by the per-address throttle', { kind });
     return;
   }
-  const message = await messageFor(db, kind, recipient.id, acceptLanguage, url);
+  const message = await messageFor(db, recipient.id, acceptLanguage, build);
   const result = await sendMail(db, { to: recipient.email, ...message });
   if (!result.ok) log('mail', 'a message was not sent', { kind, reason: result.error });
 }
@@ -107,7 +116,9 @@ export function sendRecoveryLink(
     // The throttle is asked only now, so addresses with no account never occupy it.
     // Not the library's `/magic-link/verify`: that GET signs in on sight. Ours asks first.
     const url = ownLink(input.url, RECOVERY_CONFIRM_PATH, {});
-    await deliver(db, 'recovery', account, url, input.acceptLanguage);
+    await deliver(db, 'recovery', account, input.acceptLanguage, (t, instance) =>
+      recoveryMessage(t, { ...instance, url }),
+    );
   });
 }
 
@@ -127,7 +138,9 @@ export function sendVerificationLink(
     const url = ownLink(input.url, new URL(input.url).pathname, {
       callbackURL: EMAIL_VERIFIED_PATH,
     });
-    await deliver(db, 'verification', input.user, url, input.acceptLanguage);
+    await deliver(db, 'verification', input.user, input.acceptLanguage, (t, instance) =>
+      verificationMessage(t, { ...instance, url }),
+    );
   });
 }
 
@@ -162,6 +175,8 @@ export function requestVerification(
     );
     const callback = encodeURIComponent(EMAIL_VERIFIED_PATH);
     const url = `${input.baseURL}/verify-email?token=${token}&callbackURL=${callback}`;
-    await deliver(db, 'verification', account, url, input.acceptLanguage);
+    await deliver(db, 'verification', account, input.acceptLanguage, (t, instance) =>
+      verificationMessage(t, { ...instance, url }),
+    );
   });
 }
