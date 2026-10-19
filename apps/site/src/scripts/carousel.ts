@@ -47,6 +47,13 @@ function init({ root, scroller, track, prev, next, count, bar, name }: Parts): v
     (item): item is HTMLElement => item instanceof HTMLElement,
   );
   const total = String(items.length).padStart(2, '0');
+  // The counter is a live region: the page already has `<b>01</b> / NN`, so change the text of the
+  // number only, and only when the card changes. Nothing is rebuilt on a scroll frame.
+  const position = count.querySelector('b') ?? document.createElement('b');
+  if (!count.contains(position)) {
+    count.replaceChildren(position, document.createTextNode(` / ${total}`));
+  }
+  let shown = -1;
 
   const max = () => scroller.scrollWidth - scroller.clientWidth;
   const padStart = () =>
@@ -74,8 +81,11 @@ function init({ root, scroller, track, prev, next, count, bar, name }: Parts): v
       if (here < best) index = at;
     });
     if (x >= end - 1) index = items.length - 1;
-    count.innerHTML = `<b>${String(index + 1).padStart(2, '0')}</b> / ${total}`;
-    name.textContent = items[index]?.dataset.name ?? '';
+    if (index !== shown) {
+      shown = index;
+      position.textContent = String(index + 1).padStart(2, '0');
+      name.textContent = items[index]?.dataset.name ?? '';
+    }
     bar.style.transform = `scaleX(${Math.min(1, (x + scroller.clientWidth) / scroller.scrollWidth).toFixed(4)})`;
   }
   const schedule = () => {
