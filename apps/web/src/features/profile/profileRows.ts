@@ -3,7 +3,7 @@ import { getCurrency, type Settings } from '@saldo/core';
 import { type AppLocale, canonicalTimeZone, LANGUAGE_NAMES, timeZoneCity } from '@saldo/i18n';
 
 /** The five preferences, in the phone's order; each is also the `?edit=` value that opens its panel. */
-export const PREFERENCE_KEYS = ['cycle', 'currency', 'language', 'theme', 'timeZone'] as const;
+export const PREFERENCE_KEYS = ['period', 'currency', 'language', 'theme', 'timeZone'] as const;
 export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
 
 export const PREFERENCES_PATH = '/profile/preferences';
@@ -24,13 +24,13 @@ export interface PreferenceRow {
 
 /**
  * Profilo's preferences (§6.28): the same five rows as the phone, reading the same synced `settings`,
- * so a change made on the phone is what the web shows on its next request. The cycle's row shows
- * whatever the period kind is, as on the phone: the day is kept for when the kind is the cycle.
+ * so a change made on the phone is what the web shows on its next request. The period's row shows
+ * the kind; the page adds the start day when the kind is the cycle, which is the only kind that has one.
  */
 export function preferenceRows(settings: Settings, locale: AppLocale): PreferenceRow[] {
   const zone = canonicalTimeZone(settings.timeZone ?? 'UTC');
   const values: Record<PreferenceKey, { labelKey: string; value: string }> = {
-    cycle: { labelKey: 'profile.cycleStart', value: String(settings.cycleStartDay) },
+    period: { labelKey: 'period.title', value: settings.periodKind },
     currency: {
       labelKey: 'profile.currency',
       value: `${getCurrency(settings.currency).symbol} ${settings.currency}`,

@@ -34,7 +34,7 @@ test('the preferences list shows the five rows, and a row opens its panel and cl
     .click();
   await expect(page).toHaveURL(new RegExp(`${PREFERENCES}$`));
   for (const label of [
-    'profile.cycleStart',
+    'period.title',
     'profile.currency',
     'profile.language',
     'profile.theme',
@@ -117,39 +117,55 @@ test('the language re-renders the whole shell in the chosen language and survive
   await member.context.close();
 });
 
-test('the cycle start day previews the cycle, is saved as chosen and survives a reload', async ({
+test('the period kind is saved as chosen, the day grid shows under the cycle only, and both survive a reload', async ({
   browser,
   t,
 }) => {
   const member = await createMember(browser, t, {
-    name: 'Prefs Ciclo',
-    email: 'prefs-cycle@e2e.test',
+    name: 'Prefs Periodo',
+    email: 'prefs-period@e2e.test',
   });
   const { page } = member;
-  await openEditor(page, 'cycle');
-  const days = page.getByRole('radiogroup', { name: t('profile.cycleStart') });
-  await expect(
-    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
-  ).not.toBeChecked();
+  const kinds = page.getByRole('radiogroup', { name: t('period.title'), exact: true });
+  const kind = (key: 'month' | 'cycle') =>
+    kinds.getByRole('radio', { name: new RegExp(`^${t(`period.kind_${key}`)}`) });
+  const days = page.getByRole('radiogroup', { name: t('period.cycleStartDay') });
+  const fifteenth = () =>
+    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true });
 
-  const preview = page
-    .getByText(t('profile.cyclePreview'))
-    .locator('xpath=following-sibling::*[1]');
-  const before = await preview.textContent();
-  await days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }).click();
-  await expect(
-    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
-  ).toBeChecked();
-  await expect(preview).not.toHaveText(before ?? '');
-  await expect(row(page, t('profile.cycleStart'))).toContainText(
+  // The default onboarding tracks by calendar month: no cycle, so no grid and no start day.
+  await openEditor(page, 'period');
+  await expect(kind('month')).toBeChecked();
+  await expect(days).toHaveCount(0);
+  await expect(row(page, t('period.title'))).toContainText(t('period.kind_month'));
+  await expect(row(page, t('period.title'))).not.toContainText(
     t('settings.cycleValue', { day: 15 }),
   );
 
+  const preview = page
+    .getByText(t('profile.periodPreview'))
+    .locator('xpath=following-sibling::*[1]');
+  const before = await preview.textContent();
+  await kind('cycle').click();
+  await expect(kind('cycle')).toBeChecked();
+  await expect(days).toBeVisible();
+  await expect(fifteenth()).not.toBeChecked();
+
+  await fifteenth().click();
+  await expect(fifteenth()).toBeChecked();
+  await expect(preview).not.toHaveText(before ?? '');
+  await expect(row(page, t('period.title'))).toContainText(t('period.kind_cycle'));
+  await expect(row(page, t('period.title'))).toContainText(t('settings.cycleValue', { day: 15 }));
+
   await page.reload();
-  await expect(
-    days.getByRole('radio', { name: t('profile.cycleDay', { day: 15 }), exact: true }),
-  ).toBeChecked();
-  await expect(row(page, t('profile.cycleStart'))).toContainText(
+  await expect(kind('cycle')).toBeChecked();
+  await expect(fifteenth()).toBeChecked();
+
+  // Back to the month: the grid goes, and the row stops naming a day.
+  await kind('month').click();
+  await expect(kind('month')).toBeChecked();
+  await expect(days).toHaveCount(0);
+  await expect(row(page, t('period.title'))).not.toContainText(
     t('settings.cycleValue', { day: 15 }),
   );
   await member.context.close();
