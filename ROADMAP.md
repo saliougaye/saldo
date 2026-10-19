@@ -514,7 +514,7 @@ an admin switches the whole thing off from `/admin/mcp`.
 
 ---
 
-## 0.7 — Public repository
+## 0.7 — Public repository ✅ done (2026-10-20)
 
 What stands between this repository and its first public push. Audited on 2026-09-18. The repository has
 no remote yet, so the first push publishes the whole history at once: 1,220 commits on 2026-10-20.
@@ -582,12 +582,12 @@ and old branches with the old history.
 
 **Still needs the user, on GitHub (2026-10-20):**
 
-- [ ] Create the empty repository `saliougaye/saldo` (no README, licence or `.gitignore`), add the remote and push `main`.
-- [ ] Turn on private vulnerability reporting, secret scanning with push protection, and Dependabot alerts.
-- [ ] Protect `main`: require the `check` job of CI and `analyze` of CodeQL, and require pull requests. Create the `e2e` label.
-- [ ] Do not turn on the CodeQL «default setup»: it conflicts with `codeql.yml`. Run the Security workflow once.
+- [x] Create the empty repository `saliougaye/saldo` (no README, licence or `.gitignore`), add the remote and push `main`.
+- [x] Turn on private vulnerability reporting, secret scanning with push protection, and Dependabot alerts.
+- [x] Protect `main`: require the `check` job of CI and `analyze` of CodeQL, and require pull requests. Create the `e2e` label. The ruleset requires 0 approvals, because there is one maintainer.
+- [x] Do not turn on the CodeQL «default setup»: it conflicts with `codeql.yml`. Run the Security workflow once.
 - [ ] Look at `packages/core/src/io/__fixtures__/spendee.csv` once (12 rows, anonymised).
-- [ ] Check Settings → Community Standards.
+- [x] Check Settings → Community Standards. The profile shows 100%.
 
 **Done when:** the repository is public at `github.com/saliougaye/saldo`, private vulnerability reporting
 is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
@@ -595,7 +595,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.8 — Marketing website & docs library, in `apps/site`
+## 0.8 — Marketing website & docs library, in `apps/site` ◐ landing live, docs library open
 
 Its own milestone since 2026-09-26, between going public and the first release: the site is the page a release
 note, a Spendee forum post or a self-hosting list links to, so it is live before there is a release to announce.
@@ -634,9 +634,9 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
   more object later. The app strings on the phone screens come from `@saldo/i18n`, and the build fails when a key
   that the site uses leaves `en.ts`.
 - The site is its own Vercel project, with the root directory `apps/site`. The domain is
-  `getsaldo.bysali.com` (decided 2026-10-19; `saldo.bysali.com` is the author's own instance). It reaches the build
-  through the environment variable `SITE_URL`, set to `https://getsaldo.bysali.com` in the Production environment of
-  the Vercel project. The code contains no domain.
+  `getsaldo.bysali.com` (decided 2026-10-19; `saldo.bysali.com` is the author's own instance). The build reads
+  it from `SITE_URL`, or, if that is unset, from the production domain that Vercel gives it. `SITE_URL` is optional: set
+  it to `https://getsaldo.bysali.com` only if the canonical URL is wrong. The code contains no domain.
 - The phone screens are HTML from the tokens, not screenshots. They follow the theme and can change language.
 - The site has no automated tests and no carousel physics (D52, 2026-10-19). The carousel is native scroll with CSS
   scroll-snap.
@@ -659,6 +659,10 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
       `docs/superpowers/mockups/2026-10-18-marketing-site-product.html`.
 - [x] Plan for the landing page (0.8a, 2026-10-18): `docs/superpowers/plans/2026-10-18-0.8a-site-landing.md`.
 - [x] Build the landing page (0.8a).
+- [x] The landing page is live at `https://getsaldo.bysali.com` (2026-10-20). The canonical URL, `og:url`, `robots.txt` and
+      the sitemap name that domain. The Vercel project has the root directory `apps/site` and keeps
+      `apps/site/vercel.json` (`framework`, `installCommand`, `buildCommand`, `outputDirectory`): without it Vercel falls
+      back to the root `vercel.json` of the web app and the build stops with `NEXT_NO_VERSION`.
 - [ ] Spec and plan for the docs library (0.8b).
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,

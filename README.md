@@ -4,6 +4,8 @@ Open-source, local-first personal finance app. Track spending period by period, 
 phone. It works on the phone alone, with no account and no server; or sign in with a passkey to a server you run
 yourself, and it syncs across your devices when it can. Build it yourself, sideload it, own your data.
 
+Website: [getsaldo.bysali.com](https://getsaldo.bysali.com).
+
 > Status: proof of concept in progress. See the [phase index](docs/superpowers/plans/README.md) for what is
 > built and [`ROADMAP.md`](ROADMAP.md) for what comes next.
 
