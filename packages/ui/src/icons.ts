@@ -1,10 +1,11 @@
 import { type IconNode, parseIconMarkup } from './iconNodes';
 
-// Copied verbatim from docs/design/Spese.dc.html lines 1726-1799 (object `P`), plus the icons
-// noted below, taken from Lucide — the same set the design's own icons come from (24×24, stroke
-// 1.5, round caps and joins), for affordances the prototype never drew. The block at the end comes
-// from lucide-static 1.47.0 with `line`/`polyline` rewritten as `path`, which is all
-// `parseIconMarkup` reads. Licences: THIRD-PARTY.md.
+// The first set of paths was copied verbatim from the object `P` of the design prototype
+// (`Spese.dc.html`). The prototype is not part of this repository, so this file is now the source
+// of truth for these icons. The other icons come from Lucide — the same set the prototype's own
+// icons come from (24×24, stroke 1.5, round caps and joins) — for affordances the prototype never
+// drew. The block at the end comes from lucide-static 1.47.0 with `line`/`polyline` rewritten as
+// `path`, which is all `parseIconMarkup` reads. Licences: THIRD-PARTY.md.
 export const iconMarkup = {
   house:
     '<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20z"/><path d="M9.5 21.5v-7h5v7"/>',

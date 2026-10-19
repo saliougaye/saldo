@@ -57,7 +57,7 @@ export default function PeriodStep() {
           <View style={{ paddingHorizontal: theme.layout.cardPadding, paddingVertical: 4 }}>
             {PERIOD_KINDS.map((value, index) => (
               <Fragment key={value}>
-                {/* A rule between choices, as the design draws them (1616–1717). */}
+                {/* A rule between choices, as the design draws them. */}
                 {index > 0 ? (
                   <View style={{ height: 1, backgroundColor: theme.palette.border }} />
                 ) : null}

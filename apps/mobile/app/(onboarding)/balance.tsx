@@ -79,7 +79,7 @@ export default function BalanceStep() {
                 onKeypadAction={goOn}
               />
             </View>
-            {/* The currency beside the amount, as in the design (1662–1665): one row asks one thing. */}
+            {/* The currency beside the amount, as in the design: one row asks one thing. */}
             <Pressable
               testID="onboarding-balance-currency"
               accessibilityRole="button"

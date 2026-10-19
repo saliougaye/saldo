@@ -125,7 +125,7 @@ export function PeriodHeader({ showProfile = false, hideAmounts = true }: Period
         </Text>
       </Pressable>
       {hideAmounts ? <HideAmountsButton /> : null}
-      {/* ‹ › as one control, the shape the design gives it (`Spese.dc.html` line 66): a 9px
+      {/* ‹ › as one control, the shape the design gives it: a 9px
           rounded square holding two buttons, not two circles. */}
       <View
         style={{

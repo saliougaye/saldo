@@ -1,4 +1,4 @@
-/** Design geometry (`docs/design/Spese.dc.html` lines 878-887). */
+/** Geometry taken from the design prototype (not in this repository). */
 const COLUMN_HEIGHT = 88;
 
 export const spendHistoryChart = {

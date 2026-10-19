@@ -1,4 +1,4 @@
-/** Design geometry (`docs/design/Spese.dc.html` lines 265-289): fixed-width bars in 54px halves. */
+/** Geometry taken from the design prototype (not in this repository): fixed-width bars in 54px halves. */
 const HALF_HEIGHT = 54;
 /** 45° stripes, 2px of ink every 5px, as in the prototype's `repeating-linear-gradient`. */
 const HATCH_PERIOD = 5;

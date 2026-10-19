@@ -1,4 +1,5 @@
-// Design tokens from docs/design/Spese.dc.html lines 14-41 and inline styles.
+// Design tokens taken from the design prototype and its inline styles. The prototype is not part of
+// this repository, so this file is the source of truth for the values.
 // Renderer-agnostic: plain values only, no React / React Native / CSS-in-JS.
 
 export type ThemeName = 'dark' | 'light';

@@ -1,4 +1,5 @@
-// Source catalog. Copy strings verbatim from docs/design/Spese.dc.html.
+// Source catalog. The first strings came verbatim from the design prototype, which is not part of
+// this repository. Write new strings in the same voice.
 // Every key added here must also be added to en.ts (enforced by locales.test.ts).
 export const it = {
   common: {

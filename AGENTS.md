@@ -10,7 +10,10 @@ Spendee's paid features. You are implementing the POC.
    topic it names, and on that topic it wins over the POC spec.
 2. `docs/superpowers/plans/README.md` — phases, dependencies, acceptance criteria.
 3. The plan for the phase you are working on (`docs/superpowers/plans/YYYY-MM-DD-NN-*.md`).
-4. `docs/design/README.md`, then the relevant line ranges of `docs/design/Spese.dc.html` for any screen you build.
+4. The design prototype, for any screen you build: `docs/design/README.md`, then the relevant line ranges of
+   `docs/design/Spese.dc.html`. The prototype is **not part of the repository** (`docs/design` is gitignored). If the
+   folder is missing on your machine, skip this step: the spec and the `@saldo/ui` tokens, icons and primitives
+   already carry the values that the prototype defined.
 
 ## Workflow per phase
 
@@ -123,8 +126,10 @@ output, not the exit code:
   `lint/…` lines and of the trailing `× Some errors were emitted while running checks.` Biome's
   `Checked N files … No fixes applied.` line only says nothing was auto-fixable — it is **not** a
   pass.
-- The same goes for the test and lint filters in the shell wrapper: run a gate through
-  `rtk proxy <command>` (or with `--json`) before believing it.
+- The same goes for the test and lint filters of a shell wrapper: run a gate unfiltered (or with `--json`) before
+  you believe it. The maintainer's machine uses a private wrapper, `rtk`, and `rtk proxy <command>` runs a command
+  without its filter. If you do not have `rtk`, ignore it: plans in `docs/superpowers/plans/` show commands with the
+  `rtk proxy` prefix, so drop the prefix and run the plain `pnpm` command.
 
 **After regenerating the mobile migrations**, restart Metro with `--clear` and delete the simulator's
 `Documents/SQLite/saldo.db`. The migrations reach the app through `babel-plugin-inline-import`, and Metro caches that
@@ -137,4 +142,4 @@ the one a hard-coded UDID points at.
 - Spec vs design prototype disagree → **the spec wins** (the prototype fakes data and some behaviours).
 - Spec silent → follow the design prototype's behaviour and note the decision in the plan.
 - Genuinely blocked on a product decision (e.g. the Spendee CSV format needs a real sample) → ask the user; don't guess.
-- Do **not** port or modify `docs/design/support.js` (design tool runtime, not app code).
+- Do **not** port or modify `docs/design/support.js` if you have the prototype (design tool runtime, not app code).
