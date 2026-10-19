@@ -20,6 +20,10 @@ const transformIgnorePatterns = [
 ];
 
 module.exports = {
+  // The first render in a file compiles heavy modules. On a shared CI runner, with the whole suite
+  // running in parallel, that can pass the 5 s default (RecurrenceSheet.test.tsx did). Jest reads
+  // `testTimeout` from the top level only: inside a project it is ignored.
+  testTimeout: 30000,
   projects: [
     {
       displayName: 'db',

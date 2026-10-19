@@ -812,12 +812,11 @@ td:first-child { white-space: normal; }
       <ol class="steps">
         <li>Create a Vercel project from the repository.</li>
         <li>Set the root directory to <code>apps/site</code>. Keep «Include files outside the root directory» on, because the site imports <code>packages/*</code>.</li>
-        <li>Vercel reads <code>apps/site/vercel.json</code>: framework <code>astro</code>, output <code>dist</code>.</li>
-        <li>Set <code>SITE_URL</code> to the public URL, for example <code>https://saldo.example</code>, when the domain is known.</li>
-        <li>Add the domain to the project.</li>
+        <li>Vercel reads <code>apps/site/vercel.json</code>: framework <code>astro</code>, build <code>pnpm build</code>, output <code>dist</code>. Without this file, Vercel uses the root <code>vercel.json</code> of the web app, and the build fails with <code>NEXT_NO_VERSION</code>. Set the Node.js version to 22 or later in the project settings.</li>
+        <li>Add the domain to the project. <code>SITE_URL</code> is optional: set it to the public URL, for example <code>https://saldo.example</code>, only when the canonical URL is wrong.</li>
       </ol>
       <p>Without <code>SITE_URL</code>, the build uses <code>https://</code> + <code>VERCEL_PROJECT_PRODUCTION_URL</code>, which Vercel sets. Outside Vercel, it uses <code>http://localhost:4321</code>.</p>
-      <div class="callout"><span class="meta">The other project</span><p>The root <code>vercel.json</code> stays for the web app. It builds <code>pnpm --filter web build</code>. The site project does not read it, because its root directory is <code>apps/site</code>.</p></div>
+      <div class="callout"><span class="meta">The other project</span><p>The root <code>vercel.json</code> stays for the web app. It builds <code>pnpm --filter web build</code>. The site project reads it too, if <code>apps/site/vercel.json</code> is missing. Keep both files.</p></div>
     </div>
   </div>
   <div class="visual">
@@ -834,7 +833,7 @@ td:first-child { white-space: normal; }
         <line class="ln-ok" x1="860" y1="230" x2="900" y2="230" marker-end="url(#ah-ok)"/>
         <rect class="bx-ink" x="906" y="190" width="114" height="80" rx="16"/><text x="963" y="224" text-anchor="middle" font-size="16" class="b ti">CDN</text><text x="963" y="252" text-anchor="middle" font-size="13" class="ti mono">SITE_URL</text>
       </svg>
-      <figcaption><b>Figure 8.</b> Two projects, one repository. The <code>ignoreCommand</code> of the site skips a build when none of these changed: <code>apps/site</code>, <code>packages</code>, the root <code>package.json</code>, <code>pnpm-lock.yaml</code>, <code>pnpm-workspace.yaml</code> and <code>.nvmrc</code>.</figcaption>
+      <figcaption><b>Figure 8.</b> Two projects, one repository. The site project builds on each push, or only when its files or its workspace dependencies change, if the project setting «Skip deployments when there are no changes to the root directory or its dependencies» is on. The site has no <code>ignoreCommand</code> (removed on 2026-10-19): the setting does the same job and needs no <code>git diff</code>.</figcaption>
     </figure>
   </div>
 </section>
