@@ -22,7 +22,7 @@ const total = s.shots.length;
   <div class="car" data-carousel>
     <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll box must take focus so the arrow keys reach it (spec 0.8a §05) -->
     <section class="car-sc" tabindex="0" aria-roledescription="carousel" aria-label={ui.carousel} data-carousel-scroller>
-      <div class="car-tr" data-carousel-track>
+      <div class="car-tr">
         {s.shots.map((shot, index) => (
           <figure class="car-it" aria-roledescription="slide" aria-label={ui.slide(index + 1, total, shot.name)} data-name={shot.name}>
             <Screen content={content} shot={shot.key} label={`${shot.name}: ${shot.caption}`} />
