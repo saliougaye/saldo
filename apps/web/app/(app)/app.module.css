@@ -35,6 +35,15 @@
   padding-bottom: 14px;
 }
 
+/* A change that needs a field or a few lines of explanation: one column, the field as wide as the row. */
+.change {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding-bottom: 14px;
+}
+
 .links {
   display: flex;
   gap: 16px;

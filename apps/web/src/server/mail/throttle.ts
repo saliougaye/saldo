@@ -11,7 +11,7 @@
  * (at most one a minute), and past `maxAddresses` the least recently mailed ones go first. The cap
  * is a backstop: the rate limiter already bounds how fast new addresses can arrive.
  */
-export type MailKind = 'verification' | 'recovery';
+export type MailKind = 'verification' | 'recovery' | 'emailChange';
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;

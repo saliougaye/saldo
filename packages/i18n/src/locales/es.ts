@@ -1566,6 +1566,12 @@ export const es: Messages = {
       emailVerifiedOpen: 'Abrir Saldo',
       emailLinkInvalidTitle: 'El enlace ha caducado o no es válido',
       emailLinkInvalidBody: 'Abre Perfil › Cuenta y pide uno nuevo.',
+      emailChangeTitle: 'Confirma la nueva dirección',
+      emailChangeBody:
+        'Pulsa el botón para usar esta dirección en tu cuenta. Hasta entonces, no cambia nada.',
+      emailChangeButton: 'Confirmar',
+      emailChangeDoneTitle: 'Correo cambiado',
+      emailChangeDoneBody: 'Tu cuenta ahora usa esta dirección. Puedes cerrar esta página.',
     },
     offline: {
       title: 'Estás sin conexión',
@@ -1620,6 +1626,15 @@ export const es: Messages = {
       verify: 'Enviar el enlace de verificación',
       verifySent: 'Enlace enviado a {{email}}',
       mailOff: 'Este servidor no envía correos: la dirección sigue sin verificar.',
+      changeLabel: 'Nueva dirección de correo',
+      changeSend: 'Enviar el enlace de confirmación',
+      changeSent:
+        'Si {{email}} se puede usar para esta cuenta, le hemos enviado un enlace. La dirección cambia solo cuando lo abras.',
+      changePending: 'Esperando tu confirmación de {{email}}',
+      changeCancel: 'Cancelar el cambio',
+      changeInvalid: 'Eso no es una dirección de correo.',
+      changeSame: 'Esta ya es tu dirección.',
+      changeLater: 'Espera un minuto antes de volver a pedirlo.',
     },
     accounts: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
@@ -1800,6 +1815,20 @@ export const es: Messages = {
       intro:
         'Has pedido un enlace para volver a entrar en {{instance}} ({{host}}) sin tu passkey. Abre el enlace de abajo y luego añade una nueva passkey:',
       expires: 'El enlace es válido durante 15 minutos y solo se puede usar una vez.',
+    },
+    emailChange: {
+      subject: 'Confirma tu nueva dirección de correo en {{instance}}',
+      intro:
+        'Has pedido usar esta dirección de correo para tu cuenta en {{instance}} ({{host}}). Abre el enlace de abajo para confirmarla:',
+      expires:
+        'El enlace es válido durante 24 horas y solo se puede usar una vez. Hasta que lo uses, la cuenta conserva su dirección actual.',
+    },
+    emailChanged: {
+      subject: 'La dirección de correo de tu cuenta en {{instance}} ha cambiado',
+      intro:
+        'La dirección de correo de tu cuenta en {{instance}} ({{host}}) se ha cambiado a {{newEmail}}. A partir de ahora esta dirección ya no recibe mensajes de la cuenta.',
+      warning:
+        'Si no has sido tú, avisa cuanto antes a quien gestiona {{host}}: puede restaurar la cuenta.',
     },
     ignore: 'Si no lo has pedido tú, ignora este mensaje: sin el enlace nadie entra.',
   },

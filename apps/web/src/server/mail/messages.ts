@@ -24,7 +24,7 @@ const oneLine = (value: string): string => value.replace(/\s+/g, ' ').trim();
 
 function compose(
   t: Translate,
-  kind: 'verification' | 'recovery',
+  kind: 'verification' | 'recovery' | 'emailChange',
   details: MessageDetails,
 ): Message {
   const vars = { instance: oneLine(details.instance), host: details.host };
@@ -47,3 +47,25 @@ export const verificationMessage = (t: Translate, details: MessageDetails): Mess
 
 export const recoveryMessage = (t: Translate, details: MessageDetails): Message =>
   compose(t, 'recovery', details);
+
+export const emailChangeMessage = (t: Translate, details: MessageDetails): Message =>
+  compose(t, 'emailChange', details);
+
+/**
+ * The notice to the address an account has just left (0.3f change of address). No link: nothing in
+ * it can be opened by somebody who is not the owner. The new address is shown masked.
+ */
+export function emailChangedMessage(
+  t: Translate,
+  details: { instance: string; host: string; newEmail: string },
+): Message {
+  const vars = {
+    instance: oneLine(details.instance),
+    host: details.host,
+    newEmail: details.newEmail,
+  };
+  return {
+    subject: t('mail.emailChanged.subject', vars),
+    text: [t('mail.emailChanged.intro', vars), '', t('mail.emailChanged.warning', vars)].join('\n'),
+  };
+}

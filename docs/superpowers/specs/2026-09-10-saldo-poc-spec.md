@@ -1116,9 +1116,9 @@ Notes that follow from using the library:
   created before it keeps the synthetic address until the phone asks for a real one (onboarding, or Profile → server),
   which `POST /api/me/email` stores. That route only ever fills an empty seat — it answers `email_already_set` when the
   current address is not synthetic, because replacing a real one means proving the new one belongs to the person.
-  SMTP now exists (0.3f-2, 0.3f-3), so that proof is buildable — a verified change of a real address is a follow-up
-  in `TODO.md`; today a filled address stays as it is. `isSyntheticEmail` is the test, in
-  `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
+  SMTP now exists (0.3f-2, 0.3f-3), so that proof is built: with SMTP, the same route starts a **change of a real
+  address** (see «As built (change of address)» below); without SMTP it still answers `email_already_set`.
+  `isSyntheticEmail` is the test, in `apps/web/src/server/auth/email.ts`; a synthetic address is never mailed.
 - The passkey plugin does **not** create users: it needs an id that already resolves. The account is therefore
   written in `registration.afterVerification`, after the ceremony has succeeded, using the id the ceremony used as
   its WebAuthn handle. A ceremony the user abandons leaves nothing behind.
@@ -2551,6 +2551,27 @@ switches the whole thing off from `/admin/mcp`.
   more than one replica multiplies them. `POST /sign-in/magic-link` writes a `verification` row for any address it
   is given, bounded by the plugin's rate limit and the 15-minute expiry. An admin who does not want recovery leaves
   SMTP unconfigured.
+- **Change of address (As built, change of address).** `POST /api/me/email` on an account with a real address, on a
+  server with SMTP, starts a change: it answers `202 { pending: { email, expiresAt } }`. The new address gets a link
+  to `/email-change?token=…`. The old address stays on the account, verified, until a person presses the button on
+  that page. The button posts the token to `POST /api/email-change/confirm`. Then `user.email` becomes the new address
+  and `emailVerified` becomes true. `DELETE /api/me/email` cancels a pending change. Profilo → Account on the web
+  has the form and the cancel button; the phone has neither, because it shows an email only to ask for a missing one.
+  - **Better Auth's `/change-email` is not used.** Its token is a JWT that anybody can replay. It finds the account
+    by the **old** address, so a person who registers that address next gets their address swapped. A link opened
+    with no session also creates a session. Nothing stores the pending change, and no hook sees the old address.
+    The change is a row in `email_changes` (one for each account; the token is stored as a sha-256 hash; it lives 24
+    hours and works once). Nothing reads or creates a session when the link is used.
+  - **Nobody learns which addresses have accounts.** An address that another account has gets the same `202`, the
+    same Profilo line, and no mail. The link is checked again when it is used.
+  - **The old address is told** (masked new address, no link) only if it was verified. This notice does not use the
+    per-address throttle: anybody can fill that throttle with recovery requests, and this would silence the notice.
+  - **Limits.** The new address spends the mail throttle (one message a minute, five an hour) **before** the pending
+    row changes. A held request answers `429 rate_limited` and leaves the link already mailed working. A taken
+    address spends it too, so a 429 does not reveal it. Each account may ask ten times an hour. Both limits are per
+    process.
+  - **Not built:** an undo link for the old mailbox, and a recent passkey ceremony before the change. A thief who
+    holds a session can change the address; the notice, and an admin with `pnpm --filter web user …`, are the remedy.
 - **Assistants and connected apps (0.4, §17.4).** An MCP client holds an OAuth 2.1 token the user granted on
   `/oauth/consent` after signing in with a passkey; nothing is pasted, nothing is shared out of band. Tokens are
   opaque and stored hashed, bound to `{PUBLIC_URL}/mcp` as audience, scoped `read` and/or `write`, accepted only in

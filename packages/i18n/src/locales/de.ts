@@ -1577,6 +1577,13 @@ export const de: Messages = {
       emailVerifiedOpen: 'Saldo öffnen',
       emailLinkInvalidTitle: 'Der Link ist abgelaufen oder ungültig',
       emailLinkInvalidBody: 'Öffne Profil › Konto und fordere einen neuen an.',
+      emailChangeTitle: 'Neue Adresse bestätigen',
+      emailChangeBody:
+        'Drücke die Schaltfläche, um diese Adresse für dein Konto zu verwenden. Bis dahin ändert sich nichts.',
+      emailChangeButton: 'Bestätigen',
+      emailChangeDoneTitle: 'E-Mail-Adresse geändert',
+      emailChangeDoneBody:
+        'Dein Konto verwendet jetzt diese Adresse. Du kannst diese Seite schließen.',
     },
     offline: {
       title: 'Du bist offline',
@@ -1631,6 +1638,15 @@ export const de: Messages = {
       verify: 'Bestätigungslink senden',
       verifySent: 'Link an {{email}} gesendet',
       mailOff: 'Dieser Server verschickt keine E-Mails: Die Adresse bleibt unbestätigt.',
+      changeLabel: 'Neue E-Mail-Adresse',
+      changeSend: 'Bestätigungslink senden',
+      changeSent:
+        'Wenn {{email}} für dieses Konto verwendet werden kann, haben wir einen Link dorthin geschickt. Die Adresse ändert sich erst, wenn du ihn öffnest.',
+      changePending: 'Warte auf deine Bestätigung für {{email}}',
+      changeCancel: 'Änderung abbrechen',
+      changeInvalid: 'Das ist keine E-Mail-Adresse.',
+      changeSame: 'Das ist bereits deine Adresse.',
+      changeLater: 'Warte eine Minute, bevor du es noch einmal versuchst.',
     },
     accounts: {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
@@ -1815,6 +1831,20 @@ export const de: Messages = {
       intro:
         'Du hast einen Link angefordert, um ohne deinen Passkey wieder in {{instance}} ({{host}}) zu kommen. Öffne den Link unten und füge dann einen neuen Passkey hinzu:',
       expires: 'Der Link ist 15 Minuten gültig und lässt sich nur einmal verwenden.',
+    },
+    emailChange: {
+      subject: 'Bestätige deine neue E-Mail-Adresse bei {{instance}}',
+      intro:
+        'Du hast darum gebeten, diese E-Mail-Adresse für dein Konto bei {{instance}} ({{host}}) zu verwenden. Öffne den Link unten, um sie zu bestätigen:',
+      expires:
+        'Der Link ist 24 Stunden gültig und lässt sich nur einmal verwenden. Bis du ihn öffnest, behält das Konto seine aktuelle Adresse.',
+    },
+    emailChanged: {
+      subject: 'Die E-Mail-Adresse deines Kontos bei {{instance}} hat sich geändert',
+      intro:
+        'Die E-Mail-Adresse deines Kontos bei {{instance}} ({{host}}) wurde in {{newEmail}} geändert. Diese Adresse erhält ab jetzt keine Nachrichten mehr vom Konto.',
+      warning:
+        'Wenn du das nicht warst, sag sofort der Person Bescheid, die {{host}} betreibt: Sie kann das Konto wiederherstellen.',
     },
     ignore:
       'Wenn du das nicht angefordert hast, ignoriere diese Nachricht: Ohne den Link kommt niemand hinein.',

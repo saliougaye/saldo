@@ -1579,6 +1579,13 @@ export const fr: Messages = {
       emailVerifiedOpen: 'Ouvrir Saldo',
       emailLinkInvalidTitle: 'Le lien a expiré ou n’est pas valide',
       emailLinkInvalidBody: 'Ouvrez Profil › Compte et demandez-en un nouveau.',
+      emailChangeTitle: 'Confirmez la nouvelle adresse',
+      emailChangeBody:
+        'Appuyez sur le bouton pour utiliser cette adresse pour votre compte. Tant que vous ne le faites pas, rien ne change.',
+      emailChangeButton: 'Confirmer',
+      emailChangeDoneTitle: 'Adresse e-mail modifiée',
+      emailChangeDoneBody:
+        'Votre compte utilise désormais cette adresse. Vous pouvez fermer cette page.',
     },
     offline: {
       title: 'Vous êtes hors ligne',
@@ -1633,6 +1640,15 @@ export const fr: Messages = {
       verify: 'Envoyer le lien de vérification',
       verifySent: 'Lien envoyé à {{email}}',
       mailOff: 'Ce serveur n’envoie pas d’e-mails : l’adresse reste non vérifiée.',
+      changeLabel: 'Nouvelle adresse e-mail',
+      changeSend: 'Envoyer le lien de confirmation',
+      changeSent:
+        'Si {{email}} peut être utilisée pour ce compte, nous lui avons envoyé un lien. L’adresse ne change que lorsque vous l’ouvrez.',
+      changePending: 'En attente de votre confirmation pour {{email}}',
+      changeCancel: 'Annuler le changement',
+      changeInvalid: 'Ceci n’est pas une adresse e-mail.',
+      changeSame: 'C’est déjà votre adresse.',
+      changeLater: 'Attendez une minute avant de le redemander.',
     },
     accounts: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',
@@ -1816,6 +1832,20 @@ export const fr: Messages = {
       intro:
         'Vous avez demandé un lien pour retrouver l’accès à {{instance}} ({{host}}) sans votre passkey. Ouvrez le lien ci-dessous, puis ajoutez une nouvelle passkey :',
       expires: 'Le lien est valable 15 minutes et ne fonctionne qu’une seule fois.',
+    },
+    emailChange: {
+      subject: 'Confirmez votre nouvelle adresse e-mail sur {{instance}}',
+      intro:
+        'Vous avez demandé à utiliser cette adresse e-mail pour votre compte sur {{instance}} ({{host}}). Ouvrez le lien ci-dessous pour la confirmer :',
+      expires:
+        'Le lien est valable 24 heures et ne fonctionne qu’une seule fois. Tant que vous ne l’avez pas utilisé, le compte garde son adresse actuelle.',
+    },
+    emailChanged: {
+      subject: 'L’adresse e-mail de votre compte sur {{instance}} a changé',
+      intro:
+        'L’adresse e-mail de votre compte sur {{instance}} ({{host}}) a été remplacée par {{newEmail}}. Cette adresse ne reçoit plus de messages du compte.',
+      warning:
+        'Si ce n’était pas vous, prévenez tout de suite la personne qui gère {{host}} : elle peut rétablir le compte.',
     },
     ignore:
       'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : sans le lien, personne ne peut entrer.',

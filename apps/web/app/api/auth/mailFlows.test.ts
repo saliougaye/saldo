@@ -437,3 +437,25 @@ describe('abusing the new endpoints', () => {
     },
   );
 });
+
+describe('Better Auth change-email', () => {
+  // Saldo changes a real address through `POST /api/me/email` (`auth/emailChange.ts`). The library's own
+  // `/change-email` mints a replayable JWT keyed by the old address and signs a browser in, so it
+  // must stay off: this fails the day somebody enables `user.changeEmail`.
+  it('is not available to a signed-in account', async () => {
+    const owner = await createTestSession(harness.db, 'Ada');
+    await harness.db
+      .update(user)
+      .set({ email: ADA, emailVerified: true })
+      .where(eq(user.id, owner.userId));
+    const response = await post(
+      '/change-email',
+      { newEmail: 'ada@new.example' },
+      { cookie: await sessionCookie(owner.token), origin: 'http://localhost:3000' },
+    );
+    await settleBackground();
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: 'CHANGE_EMAIL_DISABLED' });
+    expect(mail.sent).toHaveLength(0);
+  });
+});
