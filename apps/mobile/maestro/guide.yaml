@@ -77,12 +77,12 @@ name: Guide, intro and info buttons
 - tapOn:
     id: "back-button"
 
-# An ⓘ opens its topic in a sheet. Profile → Cycle start has the one for «The period».
-# The row label also holds its value («Cycle start, from the 27»), so the text is a pattern.
+# An ⓘ opens its topic in a sheet. Profile → Period has the one for «The period».
+# The row label also holds its value («Period, Pay cycle · from the 27»), so the text is a pattern.
 - extendedWaitUntil:
-    visible: "Cycle start.*"
+    visible: "Period.*"
     timeout: 10000
-- tapOn: "Cycle start.*"
+- tapOn: "Period.*"
 - tapOn:
     id: "info-period"
 - extendedWaitUntil:
