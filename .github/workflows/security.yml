@@ -1,0 +1,36 @@
+name: Security
+
+# The dependency audit does not run on every pull request. A new advisory for a package that nobody touched
+# would turn unrelated pull requests red. It runs when the lockfile changes, on `main`, and once a week.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - pnpm-lock.yaml
+      - '**/package.json'
+      - .github/workflows/security.yml
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Production dependencies only, and only a critical advisory fails the job. The high advisories
+      # that remain are in the build tooling of Expo, Jest and Astro, and some of them have no patched
+      # version. A gate at `high` would stay red and people would learn to ignore it.
+      # Lower the level when the high advisories are gone.
+      - run: pnpm audit --prod --audit-level critical

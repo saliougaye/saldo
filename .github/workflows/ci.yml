@@ -7,6 +7,9 @@ on:
     # `labeled` starts the run when someone adds the `e2e` label to a pull request.
     types: [opened, synchronize, reopened, labeled]
 
+permissions:
+  contents: read
+
 jobs:
   check:
     # Adding a label does not need a second run of the unit checks.
