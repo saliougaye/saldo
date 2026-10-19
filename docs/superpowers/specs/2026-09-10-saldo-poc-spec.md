@@ -3,7 +3,7 @@
 - **Status:** Approved for implementation
 - **Date:** 2026-09-10
 - **Audience:** implementing agents (LLMs) and human contributors
-- **Design source of truth:** `docs/design/Spese.dc.html` (see `docs/design/README.md` for the line map)
+- **Design reference:** the design prototype `docs/design/Spese.dc.html`. It is not part of the repository (gitignored). The `@saldo/ui` tokens, icons and primitives carry what it defined.
 - **Roadmap / plans:** `docs/superpowers/plans/README.md`
 
 ---
