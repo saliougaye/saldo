@@ -1,0 +1,27 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import Icon from '../Icon.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const locale = content.locale;
+const rows = content.features.importRows;
+const number = new Intl.NumberFormat(locale);
+const [date, wallet, category, labels] = content.features.spendeeColumns;
+const mapping = [
+  [date, appText(locale, 'csvImport.field_date')],
+  [wallet, appText(locale, 'csvImport.field_account')],
+  [category, appText(locale, 'csvImport.field_category')],
+  [labels, appText(locale, 'csvImport.field_tags')],
+];
+---
+
+<div class="mock import">
+  <div class="import-h"><b>{appText(locale, 'csvImport.title')}</b><span class="chip attn"><Icon name="check" />{appText(locale, 'csvImport.detected', { preset: appText(locale, 'csvImport.preset_spendee'), count: number.format(rows.total) })}</span></div>
+  <div class="map">{mapping.map(([from, to]) => <div><span class="from">{from}</span><Icon name="chevR" /><span class="to">{to}</span></div>)}</div>
+  <p class="sum">{appText(locale, 'csvImport.summary', { imported: number.format(rows.total - rows.duplicates), skipped: rows.duplicates, errors: rows.errors })}</p>
+</div>

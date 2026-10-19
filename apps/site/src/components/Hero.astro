@@ -1,0 +1,35 @@
+---
+import type { SiteContent } from '../content/index';
+import Ctas from './Ctas.astro';
+import Icon from './Icon.astro';
+import Screen from './phone/Screen.astro';
+import WebHome from './WebHome.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const hero = content.hero;
+const shot = (key: string) => content.screens.shots.find((item) => item.key === key);
+const home = shot('home');
+const budgets = shot('budgets');
+---
+
+<section class="a-hero">
+  <div class="a-grid" aria-hidden="true"></div>
+  <div class="wrap a-hero-in">
+    <p class="pill enter" style="--i:0"><span class="dot"></span>{hero.pill}</p>
+    <h1 class="display enter" style="--i:1">{hero.title}</h1>
+    <p class="lede enter" style="--i:2">{hero.lede}</p>
+    <Ctas content={content} class="enter" style="--i:3" />
+    <p class="micro enter" style="--i:4">{hero.facts.map((fact) => <span><Icon name="check" />{fact}</span>)}</p>
+  </div>
+  <div class="wrap a-stagewrap enter" style="--i:5">
+    <div class="a-stage">
+      <WebHome content={content} />
+      {home && <Screen content={content} shot="home" label={`${home.name}: ${home.caption}`} class="a-phone" />}
+      {budgets && <Screen content={content} shot="budgets" label={`${budgets.name}: ${budgets.caption}`} class="a-phone p2" />}
+    </div>
+  </div>
+</section>

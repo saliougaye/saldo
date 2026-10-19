@@ -1,0 +1,59 @@
+---
+import { formatCycleRange } from '@saldo/i18n';
+import type { SiteContent } from '../content/index';
+import { appCount, appText } from '../lib/appText';
+import { dayText, moneyText } from '../lib/format';
+import { budgetStates, expensesTotal, incomeTotal, leftToSpend, periodDay } from '../lib/sample';
+import Amount from './Amount.astro';
+import Ibox from './Ibox.astro';
+import Icon from './Icon.astro';
+import Track from './Track.astro';
+import WebSide from './WebSide.astro';
+
+/** The web app's Home (apps/web, G2), drawn behind the hero phone. Decorative: hidden from AT. */
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const { pace, elapsed, length } = periodDay(sample);
+const budgets = budgetStates(sample);
+const cat = (key: keyof typeof sample.categories) => sample.categories[key];
+---
+
+<div class="win" aria-hidden="true">
+  <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url"><span><Icon name="lock" />{content.screens.host}/home</span></span><span class="win-pad"></span></div>
+  <div class="win-body">
+    <WebSide content={content} active={0} />
+    <div class="win-main">
+      <div class="win-top">
+        <div class="hero-fig">
+          <div class="period"><div><div class="ttl">{formatCycleRange(sample.period, locale, sample.period.today)}</div><div class="sub">{appText(locale, 'period.dayOf', { elapsed, length })}</div></div><span class="stepper"><span><Icon name="chevL" /></span><span><Icon name="chevR" /></span></span></div>
+          <span class="label">{appText(locale, 'home.remaining')}</span>
+          <div class="big"><Amount minor={leftToSpend(sample)} currency={currency} locale={locale} /></div>
+          <Track ratio={expensesTotal(sample) / incomeTotal(sample)} pace={pace} />
+          <div class="ie"><span>{appText(locale, 'home.income')} <Amount minor={incomeTotal(sample)} currency={currency} locale={locale} /></span><span>{appText(locale, 'home.expenses')} <Amount minor={expensesTotal(sample)} currency={currency} locale={locale} /></span></div>
+        </div>
+        <div class="mini-sec">
+          <div class="hd"><span class="t">{appText(locale, 'home.upcoming')}</span><span class="s">{appCount(locale, 'home.upcomingCount', sample.upcoming.count)}</span></div>
+          {sample.upcoming.first.slice(0, 4).map((entry) => (
+            <div class="row"><Ibox icon={cat(entry.category).icon} color={cat(entry.category).color} badge /><div class="txt"><span class="t">{entry.title}</span><span class="s">{dayText(content, entry.date)} · {cat(entry.category).name}</span></div><Amount class="muted" minor={entry.amount} currency={currency} locale={locale} /></div>
+          ))}
+        </div>
+      </div>
+      <div class="mini-sec">
+        <div class="hd"><span class="t">{appText(locale, 'home.budget')}</span><span class="s attn">{appCount(locale, 'home.overPace', budgets.filter((budget) => budget.overPace).length)}</span></div>
+        <div class="wcards">
+          {budgets.slice(0, 3).map((budget) => (
+            <div class="card wcard">
+              <div class="h"><Ibox icon={cat(budget.category).icon} color={cat(budget.category).color} /><span class="n">{cat(budget.category).name}</span><span class:list={['pct', { attn: budget.overPace }]}>{appText(locale, 'targets.percent', { value: Math.round(budget.ratio * 100) })}</span></div>
+              <div><div class="fig"><Amount minor={budget.limit - budget.spent} currency={currency} locale={locale} /></div><div class="of">{appText(locale, 'targets.leftDetail', { spent: moneyText(content, budget.spent), limit: moneyText(content, budget.limit) })}</div></div>
+              <Track ratio={budget.ratio} pace={pace} over={budget.overPace} thick />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

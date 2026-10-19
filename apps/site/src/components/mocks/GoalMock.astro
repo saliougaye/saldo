@@ -1,0 +1,30 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { dayText, moneyText } from '../../lib/format';
+import { goalState } from '../../lib/sample';
+import Amount from '../Amount.astro';
+import Ibox from '../Ibox.astro';
+import Track from '../Track.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const goal = sample.goals[1];
+const state = goal ? goalState(goal, sample.period.today) : null;
+---
+
+{goal && state && (
+  <div class="goal">
+    <div class="top">
+      <Ibox icon={goal.icon} color={goal.color} />
+      <div class="txt"><b>{goal.name}</b><span><Amount minor={goal.saved} currency={currency} locale={locale} /> {appText(locale, 'targets.ofLimit', { amount: moneyText(content, goal.target), percent: appText(locale, 'targets.percent', { value: Math.round(state.ratio * 100) }) })}</span></div>
+      {goal.deadline !== null && <span class="chip">{appText(locale, 'goals.by', { date: dayText(content, goal.deadline) })}</span>}
+    </div>
+    <Track ratio={state.ratio} pace={state.pace} thick />
+    <p class="sent"><Fragment set:html={appText(locale, 'goals.perPeriod_month', { amount: moneyText(content, goal.perMonth) })} /> {appText(locale, 'goals.stateAhead', { amount: moneyText(content, state.gap) })}</p>
+  </div>
+)}

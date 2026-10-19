@@ -1,0 +1,20 @@
+---
+import type { SiteContent } from '../content/index';
+import { appText } from '../lib/appText';
+import Icon from './Icon.astro';
+
+/** The MCP consent page of the web app (`web.consent.*`), as a card. */
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const locale = content.locale;
+---
+
+<div class="card consent">
+  <div><div class="t">{appText(locale, 'web.consent.title')}</div><div class="s">{appText(locale, 'web.consent.returnsTo', { host: 'localhost' })} · {appText(locale, 'web.consent.registeredNow')}</div></div>
+  <div class="perm"><Icon name="list" /><div><b>{appText(locale, 'web.consent.readTitle')} · {appText(locale, 'web.consent.required')}</b><span>{appText(locale, 'web.consent.readBody')}</span></div></div>
+  <div class="perm"><Icon name="plus" /><div><b>{appText(locale, 'web.consent.writeTitle')}</b><span>{appText(locale, 'web.consent.writeBody')}</span></div></div>
+  <div class="btns"><span>{appText(locale, 'web.consent.authorizeReadOnly')}</span><span class="pri">{appText(locale, 'web.consent.authorize')}</span></div>
+</div>

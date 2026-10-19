@@ -1,0 +1,19 @@
+---
+import type { SiteContent } from '../content/index';
+import { CONTRIBUTING_URL, GUIDE_URL, LICENSE_URL, REPO_URL, SECURITY_URL } from '../lib/links';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const f = content.ui.footer;
+---
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <a class="brand press" href="#top"><span class="mark"><img src="/brand/rocky-mark.png" alt="" width="24" height="24" /></span><span>Saldo</span></a>
+    <span>{content.ui.footerLine}</span>
+    <nav class="foot-links" aria-label={content.ui.footerLabel}><a href={REPO_URL}>{f.github}</a><a href={GUIDE_URL}>{f.guide}</a><a href={SECURITY_URL}>{f.security}</a><a href={CONTRIBUTING_URL}>{f.contributing}</a><a href={LICENSE_URL}>{f.licence}</a></nav>
+  </div>
+</footer>

@@ -1,0 +1,22 @@
+---
+import type { SiteContent } from '../content/index';
+import Ibox from './Ibox.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const what = content.what;
+---
+
+<section class="sec" id="what">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">{what.eyebrow}</p><h2 class="h2">{what.title}</h2></div>
+    <div class="a-three">
+      {what.items.map((item) => (
+        <div><Ibox icon={item.icon} class="lg neutral" /><h3 class="h3">{item.title}</h3><p class="p">{item.body}</p></div>
+      ))}
+    </div>
+  </div>
+</section>

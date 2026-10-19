@@ -1,0 +1,53 @@
+---
+import type { SiteContent } from '../content/index';
+import Consent from './Consent.astro';
+import Icon from './Icon.astro';
+import Screen from './phone/Screen.astro';
+import Terminal from './Terminal.astro';
+import WebTransactions from './WebTransactions.astro';
+
+/** Spec 0.8a §05: the carousel of the ten screens, then the web row. */
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const s = content.screens;
+const ui = content.ui;
+const total = s.shots.length;
+---
+
+<section class="sec bordered" id="screens">
+  <div class="wrap"><div class="sec-head"><p class="eyebrow">{s.eyebrow}</p><h2 class="h2">{s.title}</h2><p class="lede">{s.lede}</p></div></div>
+  <div class="car" data-carousel>
+    <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll box must take focus so the arrow keys reach it (spec 0.8a §05) -->
+    <section class="car-sc" tabindex="0" aria-roledescription="carousel" aria-label={ui.carousel} data-carousel-scroller>
+      <div class="car-tr" data-carousel-track>
+        {s.shots.map((shot, index) => (
+          <figure class="car-it" aria-roledescription="slide" aria-label={ui.slide(index + 1, total, shot.name)} data-name={shot.name}>
+            <Screen content={content} shot={shot.key} label={`${shot.name}: ${shot.caption}`} />
+            <figcaption><b>{shot.name}</b><span>{shot.caption}</span></figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  </div>
+  <div class="wrap car-ctl">
+    <div class="car-prog"><span class="car-count" aria-live="polite" data-carousel-count><b>01</b> / {String(total).padStart(2, '0')}</span><span class="car-bar" aria-hidden="true"><i data-carousel-bar></i></span><span class="car-name" data-carousel-name>{s.shots[0]?.name}</span></div>
+    <div class="car-btns">
+      <button class="iconbtn press" type="button" aria-label={ui.previous} data-carousel-prev disabled><Icon name="chevL" /></button>
+      <button class="iconbtn press" type="button" aria-label={ui.next} data-carousel-next><Icon name="chevR" /></button>
+    </div>
+  </div>
+  <div class="wrap">
+    <h3 class="h3 web-title">{s.webTitle}</h3>
+    <div class="wrow">
+      <figure><WebTransactions content={content} /><figcaption><b>{s.web.name}</b><span>{s.web.caption}</span></figcaption></figure>
+      <figure><div class="wmcp"><Terminal lines={content.selfHost.mcpCommands} path="terminal" copyLabel={ui.copy} copiedLabel={ui.copied} /><Consent content={content} /></div><figcaption><b>{s.mcp.name}</b><span>{s.mcp.caption}</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/carousel';
+</script>

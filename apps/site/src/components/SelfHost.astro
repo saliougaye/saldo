@@ -1,0 +1,27 @@
+---
+import type { SiteContent } from '../content/index';
+import Ctas from './Ctas.astro';
+import Icon from './Icon.astro';
+import Terminal from './Terminal.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const h = content.selfHost;
+---
+
+<section class="sec bordered" id="selfhost">
+  <div class="wrap">
+    <div class="a-split">
+      <div class="copyc">
+        <p class="eyebrow">{h.eyebrow}</p><h2 class="h2">{h.title}</h2><p class="lede">{h.lede}</p>
+        <ul class="checks">{h.checks.map((check) => <li><Icon name="check" /><span><b>{check.lead}</b> {check.rest}</span></li>)}</ul>
+        <Ctas content={content} only="guide" style="margin-top:8px" />
+      </div>
+      <Terminal lines={h.commands} path={h.terminalPath} copyLabel={content.ui.copy} copiedLabel={content.ui.copied} />
+    </div>
+    <ol class="steps">{h.steps.map((step) => <li><b>{step.title}</b><span>{step.body}</span></li>)}</ol>
+  </div>
+</section>

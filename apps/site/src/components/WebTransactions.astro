@@ -1,0 +1,56 @@
+---
+import type { SiteContent } from '../content/index';
+import { appText } from '../lib/appText';
+import { dayText } from '../lib/format';
+import Amount from './Amount.astro';
+import Ibox from './Ibox.astro';
+import Icon from './Icon.astro';
+
+/** The web app's Transactions page with the detail panel open on one row. */
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const { sample, locale, currency } = content;
+const days = sample.days.slice(0, 3);
+const selectedDay = sample.days[1];
+const selected = selectedDay?.entries.find((entry) => entry.excluded === true);
+const label = `${content.screens.web.name}: ${content.screens.web.caption}`;
+const spentOn = (entries: readonly { amount: number }[]) =>
+  entries.filter((entry) => entry.amount < 0).reduce((total, entry) => total - entry.amount, 0);
+---
+
+<div class="win" role="img" aria-label={label}>
+  <div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url"><span><Icon name="lock" />{content.screens.host}/transactions</span></span><span class="win-pad"></span></div>
+  <div class="win-body" aria-hidden="true">
+    <div class="wt-main">
+      <div class="wt-head"><b>{appText(locale, 'transactions.title')}</b><span class="wt-search"><Icon name="search" />{appText(locale, 'transactions.searchPlaceholder')}</span></div>
+      <div class="wt-chips"><span><Icon name="arrowUR" />{appText(locale, 'transactions.onlyExpenses')}</span><span><Icon name="arrowDL" />{appText(locale, 'transactions.onlyIncome')}</span><span><Icon name="swap" />{appText(locale, 'transactions.onlyTransfers')}</span></div>
+      {days.map((day) => (
+        <div>
+          <div class="wt-day"><span>{dayText(content, day.date)}</span><Amount minor={spentOn(day.entries)} currency={currency} locale={locale} dim={false} /></div>
+          {day.entries.map((entry) => (
+            <div class:list={['wt-row', { sel: entry === selected }]}>
+              <Ibox icon={sample.categories[entry.category].icon} color={sample.categories[entry.category].color} />
+              <div class="tx">{entry.title}<span>{sample.categories[entry.category].name}{entry.excluded === true ? ` · ${appText(locale, 'transactions.excludedFromTotals')}` : ''}</span></div>
+              <Amount minor={entry.amount} currency={currency} locale={locale} sign={entry.amount > 0 ? 'always' : 'negative'} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+    {selected && selectedDay && (
+      <div class="wt-panel">
+        <div class="wt-sel"><Ibox icon={sample.categories[selected.category].icon} color={sample.categories[selected.category].color} /><b>{selected.title}</b></div>
+        <div class="md"><Amount minor={selected.amount} currency={currency} locale={locale} /></div>
+        <span class="chip wt-chip">{appText(locale, 'transactions.excludedFromTotals')}</span>
+        <dl class="wt-facts">
+          <div><dt>{appText(locale, 'transactions.detailCategory')}</dt><dd>{sample.categories[selected.category].name}</dd></div>
+          <div><dt>{appText(locale, 'transactions.detailAccount')}</dt><dd>{sample.accounts.spending[0]?.name}</dd></div>
+          <div><dt>{appText(locale, 'transactions.detailDate')}</dt><dd>{dayText(content, selectedDay.date)}</dd></div>
+        </dl>
+      </div>
+    )}
+  </div>
+</div>

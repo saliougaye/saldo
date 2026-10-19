@@ -1,0 +1,21 @@
+---
+import type { SiteContent } from '../../content/index';
+import { appText } from '../../lib/appText';
+import Icon from '../Icon.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const locale = content.locale;
+const rows = [
+  { title: appText(locale, 'io.backupJson'), hint: appText(locale, 'io.backupJsonHint') },
+  { title: appText(locale, 'io.backupZip'), hint: appText(locale, 'io.backupZipHint') },
+  { title: appText(locale, 'io.csvAll'), hint: '' },
+];
+---
+
+<div class="xrows">
+  {rows.map((row) => <div class="row"><span class="ibox neutral"><Icon name="arrowDL" /></span><div class="txt"><span class="t">{row.title}</span>{row.hint && <span class="s">{row.hint}</span>}</div></div>)}
+</div>

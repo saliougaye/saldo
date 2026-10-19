@@ -1,0 +1,18 @@
+---
+import type { SiteContent } from '../content/index';
+import Icon from './Icon.astro';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content } = Astro.props;
+const faq = content.faq;
+---
+
+<section class="sec bordered" id="faq">
+  <div class="wrap a-faq">
+    <div class="sec-head"><p class="eyebrow">{faq.eyebrow}</p><h2 class="h2">{faq.title}</h2></div>
+    <div class="faq">{faq.items.map((item, index) => <details open={index === 0}><summary>{item.q}<Icon name="chevD" /></summary><p class="ans">{item.a}</p></details>)}</div>
+  </div>
+</section>
