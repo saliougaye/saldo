@@ -22,6 +22,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm --filter site build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
       - run: pnpm test
   # The Playwright suite takes minutes: it runs only on a pull request that carries the `e2e` label.
   e2e-web:
