@@ -490,7 +490,7 @@ td:first-child { white-space: normal; }
     </div>
     <div class="prose">
       <p>Astro 7 renders Markdown with Sätteri by default. The remark plugin list of older versions needs another processor. So the site adds one Sätteri mdast plugin, <code>repoLinks</code>, in <code>apps/site/src/lib/repoLinks.ts</code>. It acts only on the five files of <code>lib/docs.ts</code>.</p>
-      <p>The plugin does two things. It removes the first level-1 heading, because Starlight shows the title as the page <code>h1</code>. It rewrites each link to a <code>.md</code> file, relative to the file that holds the link.</p>
+      <p>The plugin does two things. It removes the first level-1 heading, because Starlight shows the title as the page <code>h1</code>. It rewrites each relative link to a file, relative to the file that holds the link. A link to a file of the library goes to its page. A link to any other file, for example <code>../LICENSE</code>, goes to GitHub.</p>
       <p>Heading anchors need no change. Astro makes heading ids with the same rules as GitHub, so <code>#letting-people-in</code> points to the same heading in both places.</p>
     </div>
   </div>
@@ -511,13 +511,13 @@ td:first-child { white-space: normal; }
     </div>
     <figure class="rv">
       <svg viewBox="0 0 1040 250" role="img" aria-labelledby="f3t">
-        <title id="f3t">For each link: if it is not a relative link to a .md file, keep it. Otherwise resolve it against the folder of the current file. If the target is in the library list, link to its docs page with the same anchor. If not, link to the file on GitHub with the same anchor.</title>
+        <title id="f3t">For each link: if it is not a relative link to a file, keep it. Otherwise resolve it against the folder of the current file. If the target is in the library list, link to its docs page with the same anchor. If not, link to the file on GitHub with the same anchor.</title>
         <rect class="bx" x="20" y="90" width="190" height="70" rx="14"/>
         <text x="115" y="122" text-anchor="middle" font-size="16" class="b">Link in a page</text>
         <text x="115" y="144" text-anchor="middle" font-size="13" class="mono tm">./x.md#anchor</text>
         <line class="ln" x1="214" y1="125" x2="262" y2="125" marker-end="url(#ah)"/>
         <rect class="bx-r" x="268" y="80" width="210" height="90" rx="14"/>
-        <text x="373" y="114" text-anchor="middle" font-size="15" class="b">Relative .md?</text>
+        <text x="373" y="114" text-anchor="middle" font-size="15" class="b">Relative file?</text>
         <text x="373" y="140" text-anchor="middle" font-size="13" class="tm">resolve from the file’s folder</text>
         <line class="ln" x1="373" y1="174" x2="373" y2="206" marker-end="url(#ah)"/>
         <text x="390" y="198" font-size="13" class="tm">no</text>

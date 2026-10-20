@@ -24,7 +24,9 @@ const repoMarkdown: Loader = {
       parseData: async (props) => {
         const file = new URL(props.filePath ?? '', context.config.root);
         const path = Object.keys(DOC_FILES).find((each) => file.pathname.endsWith(`/${each}`));
-        const title = /^# (.+)$/m.exec(await readFile(file, 'utf8'))?.[1]?.trim();
+        // Skip fenced code first: a shell comment such as `# macOS` is not the title.
+        const text = (await readFile(file, 'utf8')).replace(/^(```|~~~)[\s\S]*?^\1/gm, '');
+        const title = /^# (.+)$/m.exec(text)?.[1]?.trim();
         if (!path || !title) throw new Error(`${file}: not in lib/docs.ts, or no "# " heading.`);
         return context.parseData({
           ...props,
