@@ -730,7 +730,7 @@ The project setting «Skip deployments when there are no changes» replaces the 
 Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool. A mouse can no
 longer drag the carousel. It uses the buttons, the keys, the wheel with Shift, or a trackpad.
 
-### 0.8b — Marketing site: the docs library ✅ done (not deployed)
+### 0.8b — Marketing site: the docs library ✅ done
 
 Plan: `2026-10-20-0.8b-docs-library.md`. Spec: `specs/2026-10-20-docs-library.html` (D53–D60).
 
@@ -759,8 +759,16 @@ missing code stylesheet, so the build runs with `--force`. A late font swap move
 docs head preloads Geist 400 and 600. The Guide section «Your data» and the concept «Your data» shared `#data`, so
 section anchors come from the section titles.
 
-Not checked: Safari, Firefox, a real phone, and the Vercel deploy. After the merge, push a commit that changes only a
-guide and make sure that Vercel deploys the site (D59).
+Deployed on 2026-10-21. The Vercel upload needed `docs/`, `SECURITY.md` and `CONTRIBUTING.md` in the `.vercelignore`
+allowlist: without them the docs collection was empty and the build failed. Each commit of PR #6 that changed only
+guides started a deploy (D59).
+
+Added on 2026-10-21: a clearer type scale for the docs pages (chosen from three variants), the guides rewritten in
+Simplified Technical English, and eleven SVG diagrams in `docs/diagrams/`. `lib/repoLinks.ts` puts a diagram inline
+and removes its `<style>`, so `styles/docs.css` colours it with the theme tokens. The guides now describe only what
+the code does today: no milestone numbers, no notes for instances older than the first user.
+
+Not checked: Safari, Firefox and a real phone.
 
 ### Picked up from `TODO.md` on 2026-10-19 ✅ done
 

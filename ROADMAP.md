@@ -595,7 +595,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.8 — Marketing website & docs library, in `apps/site` ◐ landing live, docs library built
+## 0.8 — Marketing website & docs library, in `apps/site` ✅ done (2026-10-21)
 
 Its own milestone since 2026-09-26, between going public and the first release: the site is the page a release
 note, a Spendee forum post or a self-hosting list links to, so it is live before there is a release to announce.
@@ -668,7 +668,10 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
 - [x] Plan for the docs library (0.8b, 2026-10-20): `docs/superpowers/plans/2026-10-20-0.8b-docs-library.md`.
 - [x] Build the docs library (0.8b): `/docs/` with the Guide, self-hosting, the two build guides, security and
       contributing, and search. The landing page links to it.
-- [ ] The docs library is live, and a commit that changes only a guide deploys the site (D59).
+- [x] The docs library is live at `https://getsaldo.bysali.com/docs/` (2026-10-21). A commit that changes only a
+      guide deploys the site (D59): the three docs-only commits of PR #6 each started a Vercel deploy.
+- [x] The guides are in Simplified Technical English, with SVG diagrams in `docs/diagrams/` (2026-10-21). GitHub
+      shows a diagram as an image; the site puts it inline and colours it with the theme tokens.
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
 the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no user data.
