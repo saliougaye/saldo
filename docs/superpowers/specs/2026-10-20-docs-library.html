@@ -592,7 +592,7 @@ td:first-child { white-space: normal; }
     <div class="prose">
       <p>A Starlight <code>Head</code> override adds the <code>tokensCss()</code> style and the Geist font files of 0.8a. The file <code>apps/site/src/styles/docs.css</code> maps the Starlight variables (<code>--sl-color-*</code>, <code>--sl-font</code>, <code>--sl-font-mono</code>) to the token variables. The site adds no colour.</p>
       <p>The site title is the Rocky mark and «Saldo». It links to the landing page. A GitHub icon links to the repository. Every Markdown page has «Edit page» at the end.</p>
-      <p>Code blocks keep the copy button of Starlight. Their frame uses the token surface and border. The syntax colours use the monochrome themes <code>min-light</code> and <code>min-dark</code>, close to the neutral accent of Saldo.</p>
+      <p>Code blocks keep the copy button of Starlight. Their frame uses the token surface and border. The code text is monochrome, in <code>--color-text</code>, as in the terminal of the landing page. Syntax colours are not in the palette.</p>
       <p>Starlight has its own theme select and its own storage key. Two overrides replace them. <code>ThemeProvider</code> reads <code>saldo-site-theme</code> before the first paint and sets <code>data-theme</code> to <code>light</code> or <code>dark</code>: Starlight needs one of the two values. <code>ThemeSelect</code> is a toggle with the three states of the landing page: System, Light, Dark.</p>
       <div class="callout caution"><span class="meta">Caution</span><p>Keep the <code>ThemeProvider</code> script inline. A module script runs after the first paint, and the page then flashes from dark to light.</p></div>
     </div>
@@ -697,6 +697,7 @@ td:first-child { white-space: normal; }
       <p>The project has «Skip deployments when there are no changes to the root directory or its dependencies» on. The Markdown files are outside <code>apps/site</code>. The Vercel docs say: «Changes that are not a part of the workspace definition will be considered global changes and deploy all applications in the repository.» <code>docs/</code> and the files at the root are not in <code>pnpm-workspace.yaml</code>. Thus a change to a guide deploys the site.</p>
       <p>Keep <code>apps/site/vercel.json</code> as it is: <code>framework</code>, <code>installCommand</code>, <code>buildCommand</code>, <code>outputDirectory</code>. Do not add an <code>ignoreCommand</code>: <code>git diff HEAD^ HEAD</code> fails on Vercel.</p>
       <p>Keep «Include files outside the root directory» on. The loader reads files outside <code>apps/site</code>.</p>
+      <p>The build script runs <code>astro build --force</code>. Astro keeps rendered Markdown in a cache in <code>node_modules/.astro</code>, and a build cache can bring it back. On 2026-10-20 a cached page pointed to a code-block stylesheet that the new build did not write. <code>--force</code> clears the cache on each build. The five pages make this cheap.</p>
     </div>
   </div>
   <div class="visual">
