@@ -53,6 +53,14 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
       APP_REDIRECT_SCHEMES: ${APP_REDIRECT_SCHEMES:-saldo}
+      # The reverse proxy in front of this container (Caddy), so the auth rate limit can find the real
+      # caller in X-Forwarded-For. Empty means no proxy. See apps/web/.env.example and Caddyfile.example.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      # The schema's own default applies only when the variable is missing, and an empty string is not a
+      # time zone, so the default is repeated here.
+      DEFAULT_TIME_ZONE: ${DEFAULT_TIME_ZONE:-UTC}
+      # Empty means «not set here»: /admin/mcp chooses (on until it does). Set, it locks the switch.
+      MCP_ENABLED: ${MCP_ENABLED:-}
     volumes:
       - attachments:/data/attachments
     ports:
