@@ -50,12 +50,9 @@ Read these points before you start:
 
 - **When you change `WEBAUTHN_RP_ID`, all existing passkeys stop working.** A passkey works only for the
   relying party that made it. Choose the hostname that you will keep.
-- **Before 0.3f-2, there was no `SETTINGS_ENCRYPTION_KEY`. If you update from that version, add the key
-  before you start the server.** Without it, the server does not start. Make a key
-  (`openssl rand -base64 32`), and **keep it** with your other secrets. The key is not in the database,
-  and not in a backup of the database. If you lose the key, you lose only the stored SMTP password. The
-  panel tells you that it cannot read the password. Then you enter it again. A new key has the same
-  result.
+- **Keep `SETTINGS_ENCRYPTION_KEY` with your other secrets.** Without it, the server does not start.
+  The key is not in the database, and not in a backup of the database. To know what a lost key costs,
+  see [Server settings](#server-settings).
 - Use `REGISTRATION=invite`. After your account exists, a new account needs a single-use code. Thus a
   stranger who finds your URL cannot register. The one exception is the **first** account: a new instance
   accepts the first person who opens `/setup`. Thus, open `/setup` immediately after the server starts.
@@ -338,14 +335,6 @@ pnpm --filter web user delete  <id>      # cannot be undone: deletes the synced 
 token. The phone keeps its local data, but it does not sync again. If you lose the phone with the only
 admin passkey, use `promote` on a second account that you control.
 
-**Updating an older instance.** An account made before invites existed has no role. Thus it is not an
-admin, and it cannot make invites from the app. Give it the role one time:
-
-```bash
-pnpm --filter web user list              # find the id
-pnpm --filter web user promote <id>
-```
-
 ### Server settings
 
 In `/admin/settings`, an admin changes three settings, with no file to edit and no restart:
@@ -392,7 +381,7 @@ server runs and restart, or remove the variable and choose in the panel.
   it, but you cannot read it. When you change the host or the user, you must type the password again.
   Thus a stolen session cannot send the stored password to a different server.
 - **The key.** `SETTINGS_ENCRYPTION_KEY` decrypts that password. Keep it with your other secrets. If you
-  lose or change the key, you lose only the stored SMTP password: enter it again in the panel. 0.3f has
+  lose or change the key, you lose only the stored SMTP password: enter it again in the panel. There is
   no key rotation. To change the key, change it, then enter the password again.
 
 #### Provider via SMTP
