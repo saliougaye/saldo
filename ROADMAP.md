@@ -492,7 +492,7 @@ units plus the currency.
       has a page of its own, `/admin/mcp`, with the switch (`mcp.enabled`; `MCP_ENABLED` wins and locks) and
       three aggregate numbers. The copy says «MCP», never «assistente» (spec §17.4.3).
 - [x] **Limits:** 120 requests per minute per token, 1 MB bodies, one registration per minute per IP; `SECURITY.md`
-      gains «MCP e connettori», `docs/self-hosting.md` «Collegare un client MCP» (`PUBLIC_URL` must be
+      gains «MCP and connectors», `docs/self-hosting.md` «Connecting an MCP client» (`PUBLIC_URL` must be
       `https`).
 - [x] **Out:** device authorization grant, client credentials, OIDC, DPoP, CIMD, resources/prompts/sampling —
       each the day a client needs it.
@@ -595,7 +595,7 @@ is on, and a stranger can follow every link in `README.md`, `CONTRIBUTING.md`, `
 
 ---
 
-## 0.8 — Marketing website & docs library, in `apps/site` ◐ landing live, docs library open
+## 0.8 — Marketing website & docs library, in `apps/site` ✅ done (2026-10-21)
 
 Its own milestone since 2026-09-26, between going public and the first release: the site is the page a release
 note, a Spendee forum post or a self-hosting list links to, so it is live before there is a release to announce.
@@ -648,12 +648,12 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
     The instance's root stays the small status/landing page it is now, or the web app of 0.3.
   - ~~**Hosting.**~~ Settled on 2026-10-18: Vercel, its own project. The domain is `getsaldo.bysali.com`
     (2026-10-19); the build reads it from `SITE_URL`.
-  - **Docs tooling** (0.8b): Starlight, if its glob loader reads the existing Markdown in place without a copy.
-    To verify in the docs plan.
+  - ~~**Docs tooling** (0.8b).~~ Settled on 2026-10-20 (D53): Starlight in `apps/site`. A `glob()` loader reads
+    the Markdown in place, from the repository root, with no copy. A spike proved it before the spec.
   - ~~**Languages.**~~ Settled on 2026-10-18: English first. The site copy is a site-local object for each
     locale, not part of `@saldo/i18n` (D43).
   - Whether the docs carry a version selector once 0.9 has tags, so a self-hoster reads the guide that
-    matches the release they run.
+    matches the release they run. Not before 0.9: there is one version to show (D56).
 - [x] Spec for the landing page, with the design pass on `@saldo/ui` tokens (2026-10-18):
       `docs/superpowers/specs/2026-10-18-marketing-site.html`. Mockup:
       `docs/superpowers/mockups/2026-10-18-marketing-site-product.html`.
@@ -663,7 +663,15 @@ The paragraphs below keep the original reasoning; where they say `apps/web`, rea
       the sitemap name that domain. The Vercel project has the root directory `apps/site` and keeps
       `apps/site/vercel.json` (`framework`, `installCommand`, `buildCommand`, `outputDirectory`): without it Vercel falls
       back to the root `vercel.json` of the web app and the build stops with `NEXT_NO_VERSION`.
-- [ ] Spec and plan for the docs library (0.8b).
+- [x] Spec for the docs library (0.8b, 2026-10-20): `docs/superpowers/specs/2026-10-20-docs-library.html`
+      (D53–D60).
+- [x] Plan for the docs library (0.8b, 2026-10-20): `docs/superpowers/plans/2026-10-20-0.8b-docs-library.md`.
+- [x] Build the docs library (0.8b): `/docs/` with the Guide, self-hosting, the two build guides, security and
+      contributing, and search. The landing page links to it.
+- [x] The docs library is live at `https://getsaldo.bysali.com/docs/` (2026-10-21). A commit that changes only a
+      guide deploys the site (D59): the three docs-only commits of PR #6 each started a Vercel deploy.
+- [x] The guides are in Simplified Technical English, with SVG diagrams in `docs/diagrams/` (2026-10-21). GitHub
+      shows a diagram as an image; the site puts it inline and colours it with the theme tokens.
 
 Depends on: 0.7 — the slug and dead-link fixes (the site links to the repository) and the docs being correct,
 the phase-index fix included. It does **not** depend on 0.3: the marketing routes read no user data.

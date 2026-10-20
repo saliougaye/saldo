@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" role="img" aria-labelledby="android-build-t android-build-d">
+  <title id="android-build-t">How the Android build works</title>
+  <desc id="android-build-d">The build inputs and your keystore go into one command. expo prebuild writes the android project, and the withReleaseSigning plugin connects your keystore. gradlew assembleRelease embeds the JavaScript and signs app-release.apk, and apksigner checks the key. Without the keystore properties, the build uses the debug key, which is for tests only.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="android-build-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="lane" x="196" y="14" width="378" height="300" rx="18"/>
+  <text class="m" x="212" y="38" text-anchor="start">One command: build:android</text>
+  <rect class="bx" x="12" y="54" width="164" height="96" rx="14"/>
+  <text class="b" x="28" y="84">Build inputs</text>
+  <text class="mono" x="28" y="108">SALDO_BUNDLE_ID</text>
+  <text class="mono" x="28" y="128">SALDO_SCHEME, …</text>
+  <rect class="bx-r" x="212" y="54" width="166" height="96" rx="14"/>
+  <text class="b" x="228" y="84">expo prebuild</text>
+  <text class="mono" x="228" y="108">--clean</text>
+  <text class="m" x="228" y="128">Writes android/</text>
+  <rect class="bx-r" x="392" y="54" width="166" height="96" rx="14"/>
+  <text class="b" x="408" y="84">gradlew</text>
+  <text class="mono" x="408" y="108">assembleRelease</text>
+  <text class="m" x="408" y="128">Embeds the JS</text>
+  <rect class="bx-ink" x="594" y="54" width="154" height="96" rx="14"/>
+  <text class="b ti" x="610" y="84">The APK</text>
+  <text class="mono ti" x="610" y="108">app-release.apk</text>
+  <text class="m ti" x="610" y="128">apksigner checks it</text>
+  <rect class="bx" x="12" y="206" width="164" height="96" rx="14"/>
+  <text class="b" x="28" y="236">Your keystore</text>
+  <text class="mono" x="28" y="260">~/.gradle/</text>
+  <text class="mono" x="28" y="280">gradle.properties</text>
+  <rect class="bx dash" x="392" y="206" width="166" height="96" rx="14"/>
+  <text class="b" x="408" y="236">No keystore found</text>
+  <text class="m" x="408" y="260">Debug key</text>
+  <text class="m" x="408" y="280">For tests only</text>
+  <path class="ln" d="M176 102 L210 102" marker-end="url(#android-build-a)"/>
+  <path class="ln" d="M378 102 L390 102" marker-end="url(#android-build-a)"/>
+  <path class="ln" d="M558 102 L592 102" marker-end="url(#android-build-a)"/>
+  <path class="ln" d="M176 254 C230 254 250 200 250 152" marker-end="url(#android-build-a)"/>
+  <text class="m" x="262" y="214" text-anchor="start">withReleaseSigning</text>
+  <path class="ln dash" d="M475 150 L475 204" marker-end="url(#android-build-a)"/>
+  <text class="m" x="484" y="184" text-anchor="start">If the properties are missing</text>
+  
+</svg>

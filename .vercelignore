@@ -18,6 +18,16 @@
 !/vercel.json
 !/.nvmrc
 
+# The docs library of the site (spec 0.8b) renders these files in place at build time.
+!/docs
+/docs/*
+!/docs/self-hosting.md
+!/docs/building-android.md
+!/docs/building-ios.md
+!/docs/diagrams
+!/SECURITY.md
+!/CONTRIBUTING.md
+
 # apps/mobile itself stays: the install runs with --frozen-lockfile, and the lockfile has an importer
 # for it. What it generates does not.
 /apps/mobile/ios

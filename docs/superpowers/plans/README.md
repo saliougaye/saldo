@@ -730,6 +730,46 @@ The project setting «Skip deployments when there are no changes» replaces the 
 Not checked: Safari, Firefox, a real phone, and hover and carousel states with an accessibility tool. A mouse can no
 longer drag the carousel. It uses the buttons, the keys, the wheel with Shift, or a trackpad.
 
+### 0.8b — Marketing site: the docs library ✅ done
+
+Plan: `2026-10-20-0.8b-docs-library.md`. Spec: `specs/2026-10-20-docs-library.html` (D53–D60).
+
+Starlight in `apps/site` shows five Markdown files in place (`docs/self-hosting.md`, `docs/building-android.md`,
+`docs/building-ios.md`, `SECURITY.md`, `CONTRIBUTING.md`) and the Guide of the app, from `guide.*` in the English
+catalog. The pages are under `/docs/`, in four groups, with Pagefind search. The Markdown files stay the source of truth.
+
+Acceptance:
+
+- Each docs page renders from the file that it claims to show. No page needs a copy or frontmatter in the file.
+- Relative links in the files work on GitHub and on the site. No link on the site ends in `.md`.
+- The Guide page lists the concepts of the app, in the order of the app.
+- The docs pages use the `@saldo/ui` tokens and share the theme choice with the landing page.
+- The landing page loads no new script, and its first load does not grow.
+- `pnpm lint`, `pnpm typecheck` and `pnpm test` pass. Lighthouse, mobile: each category ≥ 95 on the docs pages.
+
+**Status:** met on 2026-10-20. `pnpm lint` is clean. `pnpm typecheck` passes in all six packages (`site`: 0 errors,
+0 warnings). `pnpm test` passes in the five packages that have tests (mobile 37 suites, 208 tests). The build writes
+`/docs/`, `/docs/guide/` and the five Markdown pages. The link check found 300 internal links, all resolved, except
+`#top` in `/og/` (it was there before, and `/og/` is not public). Lighthouse, mobile: Performance 99 to 100,
+Accessibility, Best practices and SEO 100, on `/docs/`, the Guide, self-hosting, Android and security. The first load
+of `/` is 262 560 B against 262 610 B before (the same measure, `rocky.png` included); the three scripts are the same.
+
+Found during the build: Starlight turns on `prefetch` for every page, so `prefetch: false`. A cached render pointed to a
+missing code stylesheet, so the build runs with `--force`. A late font swap moved `/docs/self-hosting/` (CLS 0.171), so the
+docs head preloads Geist 400 and 600. The Guide section «Your data» and the concept «Your data» shared `#data`, so
+section anchors come from the section titles.
+
+Deployed on 2026-10-21. The Vercel upload needed `docs/`, `SECURITY.md` and `CONTRIBUTING.md` in the `.vercelignore`
+allowlist: without them the docs collection was empty and the build failed. Each commit of PR #6 that changed only
+guides started a deploy (D59).
+
+Added on 2026-10-21: a clearer type scale for the docs pages (chosen from three variants), the guides rewritten in
+Simplified Technical English, and eleven SVG diagrams in `docs/diagrams/`. `lib/repoLinks.ts` puts a diagram inline
+and removes its `<style>`, so `styles/docs.css` colours it with the theme tokens. The guides now describe only what
+the code does today: no milestone numbers, no notes for instances older than the first user.
+
+Not checked: Safari, Firefox and a real phone.
+
 ### Picked up from `TODO.md` on 2026-10-19 ✅ done
 
 **Plan:** `2026-10-19-profile-period-row.md` · **Spec:** §6.8

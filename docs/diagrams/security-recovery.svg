@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 140" width="760" height="140" role="img" aria-labelledby="security-recovery-t security-recovery-d">
+  <title id="security-recovery-t">Recovery by email, with SMTP</title>
+  <desc id="security-recovery-d">A person who lost a passkey asks at /recover. The server sends a link only to a verified address. The link is valid 15 minutes, works one time, and opens a page. The person presses Entra, so a mail scanner cannot use the link. Then the browser is signed in and asks for a new passkey.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="security-recovery-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="12" y="24" width="136" height="100" rx="14"/>
+  <text class="b" x="28" y="54">Lost passkey</text>
+  <text class="m" x="28" y="78">Ask at /recover</text>
+  <text class="m" x="28" y="98">with the address</text>
+  <path class="ln" d="M149 74 L161 74" marker-end="url(#security-recovery-a)"/>
+  <rect class="bx" x="162" y="24" width="136" height="100" rx="14"/>
+  <text class="b" x="178" y="54">Email</text>
+  <text class="m" x="178" y="78">Only to a verified</text>
+  <text class="m" x="178" y="98">address</text>
+  <path class="ln" d="M299 74 L311 74" marker-end="url(#security-recovery-a)"/>
+  <rect class="bx-r" x="312" y="24" width="136" height="100" rx="14"/>
+  <text class="b" x="328" y="54">The link</text>
+  <text class="m" x="328" y="78">15 minutes</text>
+  <text class="m" x="328" y="98">Works one time</text>
+  <path class="ln" d="M449 74 L461 74" marker-end="url(#security-recovery-a)"/>
+  <rect class="bx" x="462" y="24" width="136" height="100" rx="14"/>
+  <text class="b" x="478" y="54">Press «Entra»</text>
+  <text class="m" x="478" y="78">A scanner cannot</text>
+  <text class="m" x="478" y="98">use the link</text>
+  <path class="ln" d="M599 74 L611 74" marker-end="url(#security-recovery-a)"/>
+  <rect class="bx-ink" x="612" y="24" width="136" height="100" rx="14"/>
+  <text class="b ti" x="628" y="54">New passkey</text>
+  <text class="m ti" x="628" y="78">The browser is</text>
+  <text class="m ti" x="628" y="98">signed in</text>
+</svg>

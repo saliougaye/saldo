@@ -2,85 +2,93 @@
 
 ## What you get
 
-Saldo running on your own iPhone, built from this repository. There is no App Store listing, so this
-is the only route.
+You get Saldo on your own iPhone, built from this repository. Saldo is not on the App Store. Thus this
+is the only way.
 
-**Read this before you start, because it is the part people are not expecting.** Apple lets you
-install an app you built yourself, but with a free Apple ID it does so on a short lease:
+> **Caution:** Read this before you start. Apple lets you install an app that you built, but with a free
+> Apple ID, there are limits:
+>
+> - The app **stops working after seven days**. To start the seven days again, connect the phone and run
+>   the app from Xcode again. A tool can do this for you: see below.
+> - You can install a maximum of **three** self-signed apps at the same time.
+> - You need a Mac. There is no other way.
 
-- The app **stops working after seven days**. You reopen Xcode, plug the phone in and run it again,
-  and the clock restarts. There is a way to automate that, below.
-- You can have **three** self-signed apps installed at once.
-- You need a Mac. There is no way around that one.
-
-A paid Apple Developer account (99 USD/year) replaces the seven days with a year and the three apps
-with a hundred. Nothing else changes — you still build and install it yourself.
+A paid Apple Developer account (99 USD each year) changes seven days to one year, and three apps to one
+hundred. Nothing else changes: you still build and install the app yourself.
 
 **The recommended way to install it is [Sideloadly](https://sideloadly.io).** One command builds an
-`.ipa`, and Sideloadly signs it with your Apple ID as it installs it — nothing to set up in Xcode's
-signing screens — and, with its automatic refresh turned on, signs it again before the seven days
-run out. That route is [building an .ipa](#building-an-ipa-for-a-sideload-tool) below. Running
-from Xcode, which the rest of this page walks through, is for when you are changing the app itself.
+`.ipa`. Sideloadly signs it with your Apple ID when it installs it, so you do not use the signing screens
+of Xcode. With its automatic refresh on, Sideloadly signs the app again before the seven days end. See
+[Building an .ipa for a sideload tool](#building-an-ipa-for-a-sideload-tool). The Xcode procedure in the
+rest of this page is for when you change the app.
 
-The build does not need a server. The app works on the phone alone, and asks for a server's address
-only if you want one: on the first screen, or later from Profile → Server and sync. To run one, see
-[self-hosting Saldo](./self-hosting.md).
+![Two ways to install Saldo: build:ipa and Sideloadly, which signs the app again automatically, or Xcode, which you run again each week.](diagrams/ios-install.svg)
+
+The build does not need a server. The app works on the phone alone. It asks for the address of a server
+only if you want one: on the first screen, or later in Profile → Server and sync. To run a server, read
+[Self-hosting Saldo](./self-hosting.md).
 
 ## Before you start
 
-| Check | A right answer | A wrong answer |
+| Check | A correct answer | An incorrect answer |
 | --- | --- | --- |
-| `sw_vers -productName` | `macOS` | Anything else: iOS apps can only be signed on a Mac. |
-| `xcodebuild -version` | `Xcode 26.x` or whatever is current | `command not found`, or the licence prompt. Install Xcode from the App Store, open it once, accept the licence. |
-| `pod --version` | `1.16.x` or later | `command not found`. `brew install cocoapods`, or `sudo gem install cocoapods`. |
-| `node --version` | `v22.x` — the major is pinned in `.nvmrc` | A different major. `nvm use` in the checkout picks the right one up. |
-| `pnpm --version` | `10.x` | `command not found`. `corepack enable pnpm` installs it. |
+| `sw_vers -productName` | `macOS` | Any other answer: you can sign iOS apps only on a Mac. |
+| `xcodebuild -version` | `Xcode 26.x`, or the current version | `command not found`, or the licence prompt. Install Xcode from the App Store, open it one time, and accept the licence. |
+| `pod --version` | `1.16.x` or later | `command not found`. Run `brew install cocoapods` or `sudo gem install cocoapods`. |
+| `node --version` | `v22.x`: `.nvmrc` sets the major version | A different major version. Run `nvm use` in the checkout. |
+| `pnpm --version` | `10.x` | `command not found`. Run `corepack enable pnpm`. |
 
-You also need an Apple ID signed into Xcode: Xcode → Settings → Accounts → **+** → Apple ID. A
-plain, free Apple ID is enough; signing in there is what creates the "Personal Team" you will pick
-later.
+You also need an Apple ID in Xcode: Xcode → Settings → Accounts → **+** → Apple ID. A free Apple ID is
+sufficient. When you sign in there, Xcode makes the «Personal Team» that you choose later.
 
 ## The build inputs
 
-Three environment variables are read by `apps/mobile/app.config.ts` — once when you generate the
-Xcode project, and again when Xcode bundles the JavaScript. Both readings matter, and the second one
-happens inside Xcode, where your shell's environment does not reach. There is a step below for that.
-None of them is a server address: that is typed in the app.
+`apps/mobile/app.config.ts` reads three environment variables. It reads them two times: when you make the
+Xcode project, and when Xcode adds the JavaScript. The two readings are important. The second reading
+occurs in Xcode, and Xcode does not get the environment of your shell. A step below solves this. None of
+the variables is a server address: you type that in the app.
 
 | Variable | Default | What it is |
 | --- | --- | --- |
-| `SALDO_BUNDLE_ID` | `io.github.saldo.app` | The bundle identifier. **You have to change this** — see below. |
-| `SALDO_APP_NAME` | `Saldo` | The name under the home-screen icon, and the name of the generated Xcode project. |
-| `SALDO_SCHEME` | `saldo` | The URL scheme that carries the finished sign-in back from the browser to the app; the app asks to come back to `<scheme>://auth/callback`. **Changing it is two changes, not one:** the server refuses a redirect whose scheme is not in its `APP_REDIRECT_SCHEMES` (see [self-hosting](./self-hosting.md#configuration)), and the sign-in fails with `invalid_redirect_uri`. Worth changing when another app on the same phone already claims `saldo://`. |
+| `SALDO_BUNDLE_ID` | `io.github.saldo.app` | The bundle identifier. **You must change it**: see below. |
+| `SALDO_APP_NAME` | `Saldo` | The name under the home-screen icon, and the name of the Xcode project. |
+| `SALDO_SCHEME` | `saldo` | The URL scheme that brings the sign-in back from the browser to the app. The app asks to come back to `<scheme>://auth/callback`. **If you change it, change the server too:** the server refuses a scheme that is not in its `APP_REDIRECT_SCHEMES` (see [Configuration](./self-hosting.md#configuration)), and the sign-in fails with `invalid_redirect_uri`. Change it when a different app on the same phone uses `saldo://`. |
 
 ## Generate the Xcode project
 
-```bash
-git clone https://github.com/saliougaye/saldo.git
-cd saldo
-pnpm install
+1. Get the code, and install the dependencies:
 
-SALDO_BUNDLE_ID=com.example.saldo \
-  pnpm --filter mobile exec expo prebuild --platform ios --clean
-```
+   ```bash
+   git clone https://github.com/saliougaye/saldo.git
+   cd saldo
+   pnpm install
+   ```
 
-Put something of yours in place of `com.example.saldo` — reversed domain, or
-`com.<your-apple-id-name>.saldo`. **The default `io.github.saldo.app` will not sign.** A free
-Personal Team may only claim identifiers nobody else has registered, and that one belongs to this
-project.
+2. Make the Xcode project, with your own bundle identifier:
 
-This writes `apps/mobile/ios/` and runs `pod install` inside it. It takes a few minutes the first
-time. The directory is generated and git-ignored: `--clean` deletes and rewrites it on every run, so
-never keep anything of your own in there.
+   ```bash
+   SALDO_BUNDLE_ID=com.example.saldo \
+     pnpm --filter mobile exec expo prebuild --platform ios --clean
+   ```
+
+Replace `com.example.saldo` with an identifier of yours: a reversed domain, or
+`com.<your-apple-id-name>.saldo`.
+
+> **Caution:** **The default `io.github.saldo.app` does not sign.** A free Personal Team can use only
+> identifiers that nobody registered. This project has that identifier.
+
+The command writes `apps/mobile/ios/` and runs `pod install` in it. The first time, it takes some minutes.
+Git ignores the directory, and `--clean` deletes and writes it again at each run. Do not keep files of
+yours in it.
 
 ## Hand the variables to Xcode
 
-Xcode does not inherit the environment of the terminal you typed that command in, and it needs the
-same variables when it bundles the JavaScript: without them the bundle embeds the defaults, and with
-a `SALDO_SCHEME` of your own the sign-in then redirects to a scheme the app never registered.
+Xcode does not get the environment of your terminal. But it needs the same variables when it adds the
+JavaScript. Without them, the bundle uses the default values. With your own `SALDO_SCHEME`, the sign-in
+then goes to a scheme that the app does not have.
 
-The build phase that does the bundling sources `apps/mobile/ios/.xcode.env.local` first, so put them
-there:
+The build phase that adds the JavaScript first reads `apps/mobile/ios/.xcode.env.local`. Add the
+variables to that file:
 
 ```bash
 cat >> apps/mobile/ios/.xcode.env.local <<'EOF'
@@ -88,123 +96,133 @@ export SALDO_BUNDLE_ID=com.example.saldo
 EOF
 ```
 
-Append rather than overwrite — the file may already hold a `NODE_BINARY` line that prebuild wrote
-for you, and Xcode needs that to find Node. The file is git-ignored, and `--clean` deletes it along
-with the rest of `ios/`, so this step comes back every time you regenerate the project.
+Add to the file; do not replace it. The file can contain a `NODE_BINARY` line from the prebuild, and
+Xcode needs that line to find Node. Git ignores the file, and `--clean` deletes it with the rest of
+`ios/`. Thus you must do this step again each time that you make the project again.
 
 ## Sign it
 
-Open the **workspace**, not the project — the workspace is the one that knows about the pods:
+1. Open the **workspace**, not the project. Only the workspace knows the pods:
 
-```bash
-open apps/mobile/ios/Saldo.xcworkspace
-```
+   ```bash
+   open apps/mobile/ios/Saldo.xcworkspace
+   ```
 
-It is named after `SALDO_APP_NAME`, so it is `Saldo.xcworkspace` unless you changed that.
+   Its name comes from `SALDO_APP_NAME`. Thus it is `Saldo.xcworkspace`, unless you changed that.
+2. In Xcode, select the **Saldo** target in the left sidebar.
+3. Open **Signing & Capabilities**.
+4. Select **Automatically manage signing**.
+5. In the **Team** list, choose your name followed by «(Personal Team)».
+6. Make sure that the bundle identifier is the one that you used for the prebuild.
 
-In Xcode, select the **Saldo** target in the left sidebar, open **Signing & Capabilities**, tick
-**Automatically manage signing**, and choose your name followed by "(Personal Team)" in the **Team**
-dropdown. The bundle identifier below it should already be the one you passed in. Xcode registers
-the identifier and creates a provisioning profile by itself; if it shows a red error here, read
-[when it goes wrong](#when-it-goes-wrong) before changing anything.
+Xcode registers the identifier and makes a provisioning profile. If it shows a red error here, read
+[When it goes wrong](#when-it-goes-wrong) before you change anything.
 
 ## Run it on the phone
 
-The default Xcode scheme builds Debug, which needs a Metro bundler running on your Mac to start at
-all. You want Release, which bundles the JavaScript into the app and then needs nothing:
+The default Xcode scheme builds Debug. Debug needs a Metro bundler on your Mac to start. Use Release: it
+puts the JavaScript in the app, and then the app needs nothing more.
 
-1. **Product → Scheme → Edit Scheme… → Run → Info → Build Configuration → Release.** Close the
-   sheet.
-2. Plug the phone in, unlock it, and trust the Mac if it asks.
-3. On the phone, turn on **Settings → Privacy & Security → Developer Mode**, then restart it when
-   iOS asks. The switch only appears once a Mac has tried to install something, so if you cannot
-   find it, carry on to the next step and come back.
-4. Pick the phone from the device menu at the top of the Xcode window, next to the scheme.
-5. Press **Run** (⌘R).
+1. **Product → Scheme → Edit Scheme… → Run → Info → Build Configuration → Release.** Close the sheet.
+2. Connect the phone, unlock it, and trust the Mac if it asks.
+3. On the phone, turn on **Settings → Privacy & Security → Developer Mode**. Restart the phone when iOS
+   asks. The switch appears only after a Mac tried to install an app. If you cannot find it, do the next
+   step, then come back.
+4. Choose the phone in the device menu at the top of the Xcode window, next to the scheme.
+5. Click **Run** (⌘R).
 
-The first launch will probably stop with "Untrusted Developer": iOS does not run an app signed by an
-account it has not been told about. On the phone, go to **Settings → General → VPN & Device
-Management**, tap your Apple ID under "Developer App", and trust it. Then open Saldo from the home
-screen.
+The first start probably stops with «Untrusted Developer». iOS does not run an app from an account that
+it does not know. To trust the account:
 
-The first screen offers "Only on this phone" or "With your Saldo server"; the second asks for the
-server's address and then offers sign-in. If that server runs with `REGISTRATION=invite` you need a
-code first — see [letting people in](./self-hosting.md#letting-people-in).
+1. On the phone, open **Settings → General → VPN & Device Management**.
+2. Tap your Apple ID under «Developer App», and trust it.
+3. Open Saldo from the home screen.
+
+The first screen shows «Only on this phone» and «With your Saldo server». The second choice asks for the
+address of the server, then shows the sign-in. If the server uses `REGISTRATION=invite`, you need a code
+first: see [Letting people in](./self-hosting.md#letting-people-in).
 
 ## Keeping it alive
 
-With a free Apple ID the provisioning profile expires after seven days, and the app refuses to open
-until it is renewed. Either:
+With a free Apple ID, the provisioning profile expires after seven days. Then the app does not open until
+the profile is renewed. Use one of these ways:
 
-- **Install with [Sideloadly](https://sideloadly.io) and turn on its automatic refresh
-  (recommended).** Its background daemon signs the app again when it is near expiry, whenever it
-  can see the phone — over USB, or over Wi-Fi once Wi-Fi sideloading is set up. That needs the
-  computer running Sideloadly, so a phone that stays out of its reach for a week still lapses.
-- Plug the phone in and press Run in Xcode again, once a week. Nothing is lost — the app's data
-  stays on the phone across a reinstall, as long as the bundle identifier is the same.
-- [AltStore](https://altstore.io) and [SideStore](https://sidestore.io) do the same job as
-  Sideloadly, and also refresh in the background — AltStore from a helper on your Mac, SideStore
-  from the device itself.
+- **Install with [Sideloadly](https://sideloadly.io), and turn on its automatic refresh
+  (recommended).** Its background service signs the app again before it expires, when it can see the
+  phone: over USB, or over Wi-Fi after you set up Wi-Fi sideloading. The computer with Sideloadly must
+  be on. If the phone stays away from it for a week, the app still expires.
+- Connect the phone, and click Run in Xcode again, one time each week. You lose nothing: the data of the
+  app stays on the phone when you install again, if the bundle identifier is the same.
+- [AltStore](https://altstore.io) and [SideStore](https://sidestore.io) do the same job as Sideloadly,
+  and they also refresh in the background. AltStore uses a helper on your Mac. SideStore works from the
+  device.
 
-A paid developer account moves the expiry to a year, which is usually long enough to forget about.
+A paid developer account changes the expiry to one year.
 
 ## Building an .ipa for a sideload tool
 
-Those tools want an `.ipa`, and a free Apple ID cannot export one through Xcode's Archive →
-Distribute. It does not need to: they sign the app themselves at install time, so what they want is
-an **unsigned** build, which is a plain `xcodebuild` plus a zip.
+These tools need an `.ipa`. A free Apple ID cannot export one with Archive → Distribute in Xcode. This is
+not a problem: the tools sign the app themselves when they install it. Thus they need an **unsigned**
+build, which is a usual `xcodebuild` and a zip.
 
-```bash
-pnpm --filter mobile build:ipa com.yourname.saldo
-```
+1. Optional: see the values that the build will use, without a build. The build takes minutes, and
+   `--clean` deletes `ios/` before it starts:
 
-The argument is optional and defaults to this project's own bundle identifier; pass one of your own
-if the tool refuses to sign that. `SALDO_BUNDLE_ID` works as an environment variable instead, as do
-`SALDO_APP_NAME` and `SALDO_SCHEME`, and `SALDO_DRY_RUN=1` prints what it would bake in and stops —
-worth one run, because the build takes minutes and `--clean` throws `ios/` away before it starts.
+   ```bash
+   SALDO_DRY_RUN=1 pnpm --filter mobile build:ipa com.yourname.saldo
+   ```
 
-The file lands at `apps/mobile/build/Saldo.ipa`. To install it with Sideloadly:
+2. Build:
 
-1. Plug the phone in, unlock it, and choose it as the device in Sideloadly.
-2. Drag the `.ipa` into Sideloadly and enter your Apple ID.
-3. Turn on its **automatic refresh** option, so the app is signed again before the seven days run
-   out.
-4. Press **Start**.
-5. On the phone, turn on **Settings → Privacy & Security → Developer Mode** if iOS asks for it
-   (iOS 16 and later), then trust your Apple ID under **Settings → General → VPN & Device
-   Management**. Open Saldo from the home screen.
+   ```bash
+   pnpm --filter mobile build:ipa com.yourname.saldo
+   ```
 
-To update the app later, build a new `.ipa` and install it the same way, with the same Apple ID and
-the same bundle identifier: it replaces the old one and the data on the phone stays.
+The argument is optional. The default is the bundle identifier of this project. Use your own if the tool
+refuses to sign the default. `SALDO_BUNDLE_ID` as an environment variable does the same.
+`SALDO_APP_NAME` and `SALDO_SCHEME` also work.
 
-Sideloadly offers to rewrite the bundle identifier as it installs. Accepting is fine: the
-`saldo://` scheme that carries sign-in back from the browser lives in `Info.plist` and does not
-depend on the identifier. What you must not change is the scheme itself unless the server's
-`APP_REDIRECT_SCHEMES` changes with it — see [the build inputs](#the-build-inputs) above.
+The file is `apps/mobile/build/Saldo.ipa`. To install it with Sideloadly:
 
-The script is `apps/mobile/scripts/build-ipa.sh`, and it is short enough to read if you would
-rather run the steps by hand.
+1. Connect the phone, unlock it, and choose it as the device in Sideloadly.
+2. Drag the `.ipa` into Sideloadly, and type your Apple ID.
+3. Turn on **automatic refresh**, so that Sideloadly signs the app again before the seven days end.
+4. Click **Start**.
+5. On the phone, turn on **Settings → Privacy & Security → Developer Mode** if iOS asks (iOS 16 and
+   later).
+6. Trust your Apple ID in **Settings → General → VPN & Device Management**.
+7. Open Saldo from the home screen.
+
+To update the app later, build a new `.ipa`, and install it in the same way. Use the same Apple ID and
+the same bundle identifier. The new app replaces the old one, and the data on the phone stays.
+
+Sideloadly can change the bundle identifier when it installs the app. You can accept this. The `saldo://`
+scheme of the sign-in is in `Info.plist`, and it does not depend on the identifier. Do not change the
+scheme itself, unless you also change `APP_REDIRECT_SCHEMES` on the server: see
+[The build inputs](#the-build-inputs).
+
+The script is `apps/mobile/scripts/build-ipa.sh`. It is short: you can read it, and do the steps
+yourself.
 
 ## When it goes wrong
 
-**"Failed to register bundle identifier. The app identifier … is not available."** Somebody has
-already claimed it — `io.github.saldo.app` certainly is. Re-run the prebuild with a different
-`SALDO_BUNDLE_ID`. Changing it only in Xcode is not enough: the next `--clean` puts the old one
-back, because the generated project comes from `app.config.ts`.
+**«Failed to register bundle identifier. The app identifier … is not available.»** A different person
+has the identifier: `io.github.saldo.app` is certainly taken. Run the prebuild again with a different
+`SALDO_BUNDLE_ID`. A change only in Xcode is not sufficient: the next `--clean` puts the old identifier
+back, because the project comes from `app.config.ts`.
 
-**"Untrusted Developer" when the app starts.** Settings → General → VPN & Device Management on the
-phone, tap your Apple ID, trust it. This has to be done once per Apple ID, not once per install.
+**«Untrusted Developer» when the app starts.** On the phone, open Settings → General → VPN & Device
+Management, tap your Apple ID, and trust it. Do this one time for each Apple ID, not for each install.
 
-**"No account for team … " or "Your maximum App ID limit has been reached".** A free Apple ID may
-register ten identifiers every seven days, and each throwaway bundle id you try burns one. Settle on
-the identifier you want before experimenting.
+**«No account for team …» or «Your maximum App ID limit has been reached».** A free Apple ID can register
+ten identifiers each seven days. Each test identifier uses one. Choose your identifier before you try
+other things.
 
-**There is no `Saldo.xcworkspace`, only `Saldo.xcodeproj`.** The workspace is written by
-CocoaPods at the very end of the prebuild, so its absence means `pod install` did not finish. The
-prebuild prints `✔ Installed CocoaPods` when it did; re-run it and read the output rather than
-scrolling past it. Do not open the `.xcodeproj` instead — it does not know about the pods and will
-not build.
+**There is no `Saldo.xcworkspace`, only `Saldo.xcodeproj`.** CocoaPods writes the workspace at the end of
+the prebuild. If it is missing, `pod install` did not finish. When it finishes, the prebuild shows
+`✔ Installed CocoaPods`. Run the prebuild again, and read its output. Do not open the `.xcodeproj`: it does
+not know the pods, and it does not build.
 
-**You edited something under `apps/mobile/ios/` and it disappeared.** That directory is generated,
-and `--clean` deletes it. Native configuration belongs in `app.config.ts` or in a config plugin
-under `apps/mobile/plugins/`.
+**You changed a file in `apps/mobile/ios/`, and the change is gone.** The prebuild makes that directory,
+and `--clean` deletes it. Put native configuration in `app.config.ts`, or in a config plugin in
+`apps/mobile/plugins/`.

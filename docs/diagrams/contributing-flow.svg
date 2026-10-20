@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 156" width="760" height="156" role="img" aria-labelledby="contributing-flow-t contributing-flow-d">
+  <title id="contributing-flow-t">From an issue to main</title>
+  <desc id="contributing-flow-d">Open an issue that describes the behaviour. Work on a branch. Run pnpm lint, typecheck and test on your machine. Open a pull request with Conventional Commits. CI runs the check and analyze jobs, and the pull request goes into main when all is green.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="contributing-flow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="8" y="40" width="110" height="100" rx="14"/>
+  <text class="b" x="24" y="70">Issue</text>
+  <text class="m" x="24" y="94">What it does,</text>
+  <text class="m" x="24" y="114">what you want</text>
+  <path class="ln" d="M119 90 L133 90" marker-end="url(#contributing-flow-a)"/>
+  <rect class="bx" x="134" y="40" width="110" height="100" rx="14"/>
+  <text class="b" x="150" y="70">Branch</text>
+  <text class="m" x="150" y="94">One for each</text>
+  <text class="m" x="150" y="114">piece of work</text>
+  <path class="ln" d="M245 90 L259 90" marker-end="url(#contributing-flow-a)"/>
+  <rect class="bx-r" x="260" y="40" width="110" height="100" rx="14"/>
+  <text class="b" x="276" y="70">The gates</text>
+  <text class="mono" x="276" y="94">lint, test</text>
+  <text class="mono" x="276" y="114">typecheck</text>
+  <path class="ln" d="M371 90 L385 90" marker-end="url(#contributing-flow-a)"/>
+  <rect class="bx" x="386" y="40" width="110" height="100" rx="14"/>
+  <text class="b" x="402" y="70">Pull request</text>
+  <text class="m" x="402" y="94">Conventional</text>
+  <text class="m" x="402" y="114">Commits</text>
+  <path class="ln" d="M497 90 L511 90" marker-end="url(#contributing-flow-a)"/>
+  <rect class="bx-r" x="512" y="40" width="110" height="100" rx="14"/>
+  <text class="b" x="528" y="70">CI</text>
+  <text class="mono" x="528" y="94">check</text>
+  <text class="mono" x="528" y="114">analyze</text>
+  <path class="ln" d="M623 90 L637 90" marker-end="url(#contributing-flow-a)"/>
+  <rect class="bx-ink" x="638" y="40" width="110" height="100" rx="14"/>
+  <text class="b mono ti" x="654" y="70">main</text>
+  <text class="m ti" x="654" y="94">Merged when</text>
+  <text class="m ti" x="654" y="114">all is green</text>
+  <text class="m" x="8" y="24" text-anchor="start">Agree on the behaviour first</text>
+  <text class="m" x="260" y="24" text-anchor="start">On your machine</text>
+  <text class="m" x="512" y="24" text-anchor="start">On GitHub</text>
+</svg>

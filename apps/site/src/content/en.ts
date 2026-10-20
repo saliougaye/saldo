@@ -107,7 +107,7 @@ export const en = {
     skip: 'Skip to content',
     nav: { features: 'Features', selfHost: 'Self-hosting', screens: 'Screens', faq: 'FAQ' },
     navLabel: 'Sections',
-    guideShort: 'Guide',
+    docs: 'Docs',
     github: 'GitHub',
     themeLabel: { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' },
     copyDocker: 'Copy the Docker commands',
@@ -122,11 +122,31 @@ export const en = {
     footerLabel: 'Footer',
     footer: {
       github: 'GitHub',
+      docs: 'Docs',
       guide: 'Self-hosting',
       security: 'Security',
       contributing: 'Contributing',
       licence: 'Licence',
     },
+  },
+  docs: {
+    title: 'Docs',
+    description:
+      'The guides of Saldo: how the app thinks, how to run your own server, how to build the app, and how the project works.',
+    groups: {
+      app: { label: 'Use the app', about: 'How Saldo thinks, one idea at a time.' },
+      selfHost: {
+        label: 'Self-host',
+        about: 'Run the server with Docker or on Vercel, and let people in.',
+      },
+      build: {
+        label: 'Build the app',
+        about: 'Build and sign the app from source, for Android or iOS.',
+      },
+      project: { label: 'Project', about: 'Report a vulnerability, or help to build Saldo.' },
+    },
+    guideDescription:
+      'The Guide of the app: periods, accounts, budgets, goals, the forecast and your data, in a few lines each.',
   },
   hero: {
     pill: 'Open source · Local-first · Self-hostable',

@@ -1,0 +1,59 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { GUIDE_CONCEPTS, GUIDE_SECTIONS, paragraphs } from '@saldo/ui';
+import Icon from '../../components/Icon.astro';
+import { LOCALES } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { editUrl } from '../../lib/links';
+
+/**
+ * Spec 0.8b §05 (D55): the Guide of the app, from `guide.*` in the English catalog. The concepts
+ * and their order come from `@saldo/ui`, the list the phone reads, so the two cannot drift apart.
+ */
+const kebab = (id: string) => id.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+/** A section anchor from its title («Your data» → `your-data`): the concept `data` keeps `#data`. */
+const slug = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const sections = GUIDE_SECTIONS.map((section) => ({
+  id: slug(appText('en', `guide.section_${section}`)),
+  title: appText('en', `guide.section_${section}`),
+  concepts: GUIDE_CONCEPTS.filter((concept) => concept.section === section).map((concept) => ({
+    id: kebab(concept.id),
+    icon: concept.icon,
+    title: appText('en', `guide.${concept.id}.title`),
+    summary: appText('en', `guide.${concept.id}.summary`),
+    body: paragraphs(appText('en', `guide.${concept.id}.body`)),
+  })),
+}));
+
+const headings = sections.flatMap((section) => [
+  { depth: 2, slug: section.id, text: section.title },
+  ...section.concepts.map((concept) => ({ depth: 3, slug: concept.id, text: concept.title })),
+]);
+
+const frontmatter = {
+  title: appText('en', 'guide.title'),
+  description: LOCALES.en.docs.guideDescription,
+  editUrl: editUrl('packages/i18n/src/locales/en.ts'),
+};
+---
+
+<StarlightPage frontmatter={frontmatter} headings={headings}>
+  <p>{appText('en', 'guide.subtitle')}</p>
+  {sections.map((section) => (
+    <section>
+      <h2 id={section.id}>{section.title}</h2>
+      {section.concepts.map((concept) => (
+        <Fragment>
+          <h3 id={concept.id} class="guide-concept"><span class="guide-icon"><Icon name={concept.icon} /></span>{concept.title}</h3>
+          <p class="guide-summary">{concept.summary}</p>
+          {concept.body.map((paragraph) => <p>{paragraph}</p>)}
+        </Fragment>
+      ))}
+    </section>
+  ))}
+</StarlightPage>

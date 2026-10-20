@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { LOCALES } from '../../content/index';
+import { appText } from '../../lib/appText';
+import { DOC_GROUPS, docPath, GUIDE_SLUG } from '../../lib/docs';
+
+/** Spec 0.8b §02: the index of the library. The four groups, with a line and the pages of each. */
+const copy = LOCALES.en.docs;
+const titles = new Map((await getCollection('docs')).map((entry) => [entry.id, entry.data.title]));
+const title = (slug: string) =>
+  slug === GUIDE_SLUG ? appText('en', 'guide.title') : (titles.get(`docs/${slug}`) ?? slug);
+---
+
+<StarlightPage frontmatter={{ title: copy.title, description: copy.description, editUrl: false, tableOfContents: false }}>
+  <p>{copy.description}</p>
+  <ul class="docs-groups">
+    {DOC_GROUPS.map(({ group, slugs }) => (
+      <li>
+        <h2 id={group}>{copy.groups[group].label}</h2>
+        <p>{copy.groups[group].about}</p>
+        <ul>{slugs.map((slug) => <li><a href={docPath(slug)}>{title(slug)}</a></li>)}</ul>
+      </li>
+    ))}
+  </ul>
+</StarlightPage>

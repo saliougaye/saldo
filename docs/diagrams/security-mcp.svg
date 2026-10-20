@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 372" width="760" height="372" role="img" aria-labelledby="security-mcp-t security-mcp-d">
+  <title id="security-mcp-t">How an MCP client gets access</title>
+  <desc id="security-mcp-d">The MCP client registers itself with the Saldo server as a public client with PKCE. It opens the sign-in in the browser. The user signs in with a passkey and chooses read or read and write on /oauth/consent. The server gives the client a token for /mcp only, valid one hour. The client calls /mcp with the token in the Authorization header.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="security-mcp-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="15" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="110" y="40" text-anchor="middle">MCP client</text>
+  <text class="m" x="110" y="60" text-anchor="middle">Claude Code, Cursor, …</text>
+  <path class="lane" d="M110 72 L110 360"/>
+  <rect class="bx" x="285" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="380" y="40" text-anchor="middle">Browser</text>
+  <text class="m" x="380" y="60" text-anchor="middle">The user</text>
+  <path class="lane" d="M380 72 L380 360"/>
+  <rect class="bx" x="555" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="650" y="40" text-anchor="middle">Saldo server</text>
+  <text class="m" x="650" y="60" text-anchor="middle">Authorization server</text>
+  <path class="lane" d="M650 72 L650 360"/>
+  <path class="ln" d="M110 112 L644 112" marker-end="url(#security-mcp-a)"/>
+  <text class="m" x="380.0" y="102" text-anchor="middle">Registers itself: public client, PKCE</text>
+  <path class="ln" d="M110 162 L374 162" marker-end="url(#security-mcp-a)"/>
+  <text class="m" x="245.0" y="152" text-anchor="middle">Opens the sign-in</text>
+  <path class="ln" d="M386 212 L644 212" marker-end="url(#security-mcp-a)" marker-start="url(#security-mcp-a)"/>
+  <text class="m" x="515.0" y="202" text-anchor="middle">Passkey, then /oauth/consent: read or write</text>
+  <path class="ln dash" d="M650 262 L116 262" marker-end="url(#security-mcp-a)"/>
+  <text class="m" x="380.0" y="252" text-anchor="middle">Token for /mcp only, valid 1 hour</text>
+  <path class="ln" d="M110 312 L644 312" marker-end="url(#security-mcp-a)"/>
+  <text class="m" x="380.0" y="302" text-anchor="middle">Calls /mcp, token in the Authorization header</text>
+</svg>

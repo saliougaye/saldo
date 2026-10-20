@@ -1,6 +1,6 @@
 ---
 import type { SiteContent } from '../content/index';
-import { GUIDE_URL, REPO_URL } from '../lib/links';
+import { DOCS_URL, REPO_URL } from '../lib/links';
 import GithubMark from './GithubMark.astro';
 import ThemeToggle from './ThemeToggle.astro';
 
@@ -19,7 +19,7 @@ const nav = content.ui.nav;
       <a href="#features">{nav.features}</a><a href="#screens">{nav.screens}</a><a href="#selfhost">{nav.selfHost}</a><a href="#faq">{nav.faq}</a>
     </nav>
     <div class="nav-end">
-      <a class="btn btn-sm btn-text press hide-narrow" href={GUIDE_URL}>{content.ui.guideShort}</a>
+      <a class="btn btn-sm btn-text press hide-narrow" href={DOCS_URL}>{content.ui.docs}</a>
       <a class="btn btn-sm btn-ghost press" href={REPO_URL}><GithubMark /><span>{content.ui.github}</span></a>
       <ThemeToggle content={content} />
     </div>

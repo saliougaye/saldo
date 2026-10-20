@@ -98,6 +98,7 @@ cycle, and am I going faster than I should?*
 | D41 | **The first release of 0.8 is the landing page only** (decided 2026-10-18) | The docs library is a separate plan, 0.8b. See `specs/2026-10-18-marketing-site.html`. |
 | D42 | **`apps/site` is an Astro app with static output, not Next.js** (decided 2026-10-18) | Astro sends no JavaScript by default and imports TypeScript from the workspace packages. Next.js adds a React runtime to a static page. The earlier choice of Next.js did not compare Astro. Details in `specs/2026-10-18-marketing-site.html`. |
 | D43–D52 | **The landing page: copy, screens, URL, scripts, theme, tokens, lint, links, TypeScript, no tests and no carousel physics** (decided 2026-10-18; D52 on 2026-10-19) | Listed with their reasons in `specs/2026-10-18-marketing-site.html` §13. |
+| D53–D60 | **The docs library: Starlight in `apps/site`, Markdown read in place, link plugin, Guide from the catalog, `/docs/`, shared theme, sitemap, Vercel, English headings** (decided 2026-10-20) | Listed with their reasons in `specs/2026-10-20-docs-library.html` §11. |
 
 Always install the latest stable versions at implementation time and record them in the lockfile. Don't invent
 version numbers. If a library API differs from what a plan shows, follow the library's current docs and update
@@ -2487,10 +2488,10 @@ caller does not know the web app.
 
 #### 17.4.4 Security, documentation, steps
 
-- §18 gains a paragraph, and `SECURITY.md` a section «MCP e connettori»: what a token is and is not,
+- §18 gains a paragraph, and `SECURITY.md` a section «MCP and connectors»: what a token is and is not,
   the audience, the scopes, the immediate revocation, the 180 days, that no token is ever logged or accepted in a
   URL, that a write goes through the same path as the web's, and that this server never calls a model itself.
-- `docs/self-hosting.md` gains «Collegare un client MCP»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
+- `docs/self-hosting.md` gains «Connecting an MCP client»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
   to be `https://` — MCP clients refuse to authorize against plain `http` anywhere but on the same machine.
 - **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
   on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call

@@ -1,0 +1,15 @@
+---
+import { LOCALES } from '../../content/index';
+import Icon from '../Icon.astro';
+
+/** Spec 0.8b §06 (D57): the System → Light → Dark toggle of the landing page, for Starlight. */
+const labels = LOCALES.en.ui.themeLabel;
+---
+
+<button class="docs-theme" type="button" data-docs-theme data-label-system={labels.system} data-label-light={labels.light} data-label-dark={labels.dark} aria-label={labels.system}>
+  <Icon name="monitor" class="t-system" /><Icon name="sun" class="t-light" /><Icon name="moon" class="t-dark" />
+</button>
+
+<script>
+  import '../../scripts/docs-theme';
+</script>

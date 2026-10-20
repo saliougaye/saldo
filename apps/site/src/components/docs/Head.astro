@@ -1,0 +1,16 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import sans400 from '@fontsource/geist-sans/files/geist-sans-latin-400-normal.woff2?url';
+import sans600 from '@fontsource/geist-sans/files/geist-sans-latin-600-normal.woff2?url';
+import { siteTokensCss } from '../../lib/tokens';
+
+/**
+ * Spec 0.8b §06: Starlight's head, plus the `@saldo/ui` tokens that `styles/docs.css` maps. The
+ * body and heading fonts load early: a late swap moves long pages (Lighthouse CLS).
+ */
+---
+
+<Default />
+<link rel="preload" href={sans400} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={sans600} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={siteTokensCss}></style>

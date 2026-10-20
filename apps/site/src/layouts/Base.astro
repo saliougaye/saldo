@@ -5,8 +5,9 @@ import '@fontsource/geist-sans/latin-600.css';
 import '@fontsource/geist-mono/latin-400.css';
 import '../styles/global.css';
 import '../styles/phone.css';
-import { palettes, tokensCss } from '@saldo/ui';
+import { palettes } from '@saldo/ui';
 import type { SiteContent } from '../content/index';
+import { siteTokensCss } from '../lib/tokens';
 
 /**
  * Spec 0.8a §03, §08, §09. The tokens go into one `<style>` from `tokensCss()`. The theme script runs
@@ -23,11 +24,6 @@ const site = Astro.site ?? new URL('http://localhost:4321');
 const canonical = new URL(path, site).href;
 const image = new URL('/og.png', site).href;
 const meta = content.meta;
-const tokens = `${tokensCss()}
-:root {
-  --font-family: "Geist Sans", "Inter Tight", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, Menlo, monospace;
-}`;
 ---
 
 <!doctype html>
@@ -72,7 +68,7 @@ const tokens = `${tokensCss()}
     <meta name="twitter:title" content={meta.title} />
     <meta name="twitter:description" content={meta.description} />
     <meta name="twitter:image" content={image} />
-    <style is:inline set:html={tokens}></style>
+    <style is:inline set:html={siteTokensCss}></style>
   </head>
   <body>
     <a class="skip" href="#top">{content.ui.skip}</a>
