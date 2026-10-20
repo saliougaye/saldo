@@ -83,7 +83,22 @@ Read these points before you start:
    Compose needs the same values each time that you start the stack.
 
 4. Put a reverse proxy in front of the container, for HTTPS. `apps/web/docker/Caddyfile.example` is a
-   Caddy configuration of two lines. Caddy gets and renews the certificate automatically.
+   short Caddy configuration. Caddy gets and renews the certificate automatically.
+
+5. Set `TRUSTED_PROXIES` to the address of the proxy, and start the stack again.
+
+   > **Warning:** Without `TRUSTED_PROXIES`, all callers behind the proxy share one rate-limit counter.
+   > Then one caller can stop the sign-in of all other persons. See [Security notes](#security-notes).
+
+   ```bash
+   export TRUSTED_PROXIES=172.28.0.0/16
+   docker compose -f apps/web/docker/docker-compose.yml up -d
+   ```
+
+   Use the address of the proxy, or the subnet of the Docker network that the proxy shares with the
+   container. `docker network inspect` shows the subnet. Do not use `0.0.0.0/0` or a full private range.
+
+The compose file also passes `DEFAULT_TIME_ZONE` (default `UTC`) and `MCP_ENABLED` to the container.
 
 When the container starts, it applies the database migrations. Then it serves on port 3000. The compose
 file keeps attachments on the server, in the `attachments` volume (`ATTACHMENT_STORAGE=fs`). To keep
