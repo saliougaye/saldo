@@ -1,0 +1,153 @@
+/*
+ * Spec 0.8b §06 (D57): Starlight on the `@saldo/ui` tokens. The rules are unlayered, so they win
+ * over Starlight's layered defaults in both themes. `tokensCss()` (in `components/docs/Head.astro`)
+ * switches the token values with `data-theme`, so one block serves light and dark.
+ */
+:root,
+:root[data-theme="light"] {
+  --sl-font: var(--font-family);
+  --sl-font-mono: var(--font-mono);
+
+  --sl-color-white: var(--color-text);
+  --sl-color-gray-1: var(--color-text);
+  --sl-color-gray-2: var(--color-text);
+  --sl-color-gray-3: var(--color-text-muted);
+  --sl-color-gray-4: var(--color-text-faint);
+  --sl-color-gray-5: var(--color-border-strong);
+  --sl-color-gray-6: var(--color-surface);
+  --sl-color-gray-7: var(--color-surface);
+  --sl-color-black: var(--color-bg);
+
+  --sl-color-accent-low: var(--color-raised);
+  --sl-color-accent: var(--color-accent);
+  --sl-color-accent-high: var(--color-text);
+
+  --sl-color-text: var(--color-text);
+  --sl-color-text-accent: var(--color-text);
+  --sl-color-text-invert: var(--color-on-accent);
+  --sl-color-bg: var(--color-bg);
+  --sl-color-bg-nav: var(--color-bg);
+  --sl-color-bg-sidebar: var(--color-bg);
+  --sl-color-bg-inline-code: var(--color-raised);
+  --sl-color-bg-accent: var(--color-accent);
+  --sl-color-hairline-light: var(--color-border);
+  --sl-color-hairline: var(--color-border);
+  --sl-color-hairline-shade: var(--color-border-strong);
+  --sl-color-backdrop-overlay: var(--color-scrim);
+}
+
+.sl-markdown-content a {
+  text-underline-offset: 0.2em;
+}
+
+/*
+ * Code blocks are monochrome, like the terminal of the landing page: the syntax colours of
+ * Expressive Code are not in the palette. Its spans set `--0`/`--1`; `:root` makes this rule win over its theme rules.
+ */
+:root .expressive-code .ec-line span[style] {
+  color: var(--color-text);
+}
+
+/* The site title: the Rocky mark and «Saldo», as in the nav of the landing page. */
+.docs-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+.docs-brand img {
+  border-radius: var(--radius-icon-box);
+}
+
+/* Icons from `@saldo/ui` (Icon.astro). The landing page styles them in `global.css`. */
+.ico {
+  width: var(--ico, 16px);
+  height: var(--ico, 16px);
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The theme toggle: System → Light → Dark (ThemeSelect.astro). */
+.docs-theme {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  --ico: 18px;
+}
+.docs-theme:hover {
+  color: var(--color-text);
+  background: var(--color-raised);
+}
+.docs-theme:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.docs-theme .ico {
+  display: none;
+}
+html[data-theme-choice="system"] .docs-theme .t-system,
+html[data-theme-choice="light"] .docs-theme .t-light,
+html[data-theme-choice="dark"] .docs-theme .t-dark {
+  display: block;
+}
+
+/* The Guide page (pages/docs/guide.astro): each concept title starts with its icon box. */
+.sl-markdown-content .guide-concept {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.guide-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-icon-box);
+  background: var(--color-raised);
+  color: var(--color-text);
+}
+.sl-markdown-content .guide-summary {
+  color: var(--color-text-muted);
+}
+
+/* The index page (pages/docs/index.astro): one card for each group. */
+.docs-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+.sl-markdown-content .docs-groups > li {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.sl-markdown-content .docs-groups h2 {
+  margin: 0 0 8px;
+  font-size: var(--font-size-headline);
+}
+.sl-markdown-content .docs-groups p {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+}
+.sl-markdown-content .docs-groups ul {
+  margin: 0;
+  padding-left: 1.1em;
+}

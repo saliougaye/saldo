@@ -1,12 +1,16 @@
 /**
- * The two calls to action (spec 0.8a §10, D50) and the footer links. One module, so the move of the
- * guide to the docs library (0.8b) is one line.
+ * The two calls to action (spec 0.8a §10, D50) and the footer links. Since 0.8b the guide, the
+ * security policy and the contribution guide are pages of the docs library (spec 0.8b §08).
  */
 export const REPO_URL = 'https://github.com/saliougaye/saldo';
 
-const onMain = (path: string) => `${REPO_URL}/blob/main/${path}`;
+/** A file of the repository on GitHub, on `main`. */
+export const blobUrl = (path: string) => `${REPO_URL}/blob/main/${path}`;
+/** The GitHub editor for a file on `main`: the «Edit page» link of a docs page. */
+export const editUrl = (path: string) => `${REPO_URL}/edit/main/${path}`;
 
-export const GUIDE_URL = onMain('docs/self-hosting.md');
-export const SECURITY_URL = onMain('SECURITY.md');
-export const CONTRIBUTING_URL = onMain('CONTRIBUTING.md');
-export const LICENSE_URL = onMain('LICENSE');
+export const DOCS_URL = '/docs/';
+export const GUIDE_URL = '/docs/self-hosting/';
+export const SECURITY_URL = '/docs/security/';
+export const CONTRIBUTING_URL = '/docs/contributing/';
+export const LICENSE_URL = blobUrl('LICENSE');
