@@ -38,7 +38,7 @@ The scheme is `saldo`, unless the app was built with a different `SALDO_SCHEME`.
 | `DATABASE_URL` | `postgres://saldo:…@postgres:5432/saldo` | The Postgres database. |
 | `STORAGE_DIR` | `/data/attachments` | The directory for attachment files, with `ATTACHMENT_STORAGE=fs`. |
 | `SETTINGS_ENCRYPTION_KEY` | 32 random bytes, base64 | **Required.** Encrypts the secrets of the admin panel (today, the SMTP password). Make one with `openssl rand -base64 32`. Keep it: see [Server settings](#server-settings). |
-| `REGISTRATION` | `invite` | Optional. `open`, `closed`, `invite` (an account needs a code) or `first-user`. **The first account is always allowed, in all modes**: a new instance opens on `/setup`, a short wizard that makes it (0.3h). When you set the variable, it locks the choice in `/admin/settings`. When you do not set it, the wizard asks, and you can change it there later. The default is `first-user`. |
+| `REGISTRATION` | `invite` | Optional. `open`, `closed`, `invite` (an account needs a code) or `first-user`. **The first account is always allowed, in all modes**: a new instance opens on `/setup`, a short wizard that makes it. When you set the variable, it locks the choice in `/admin/settings`. When you do not set it, the wizard asks, and you can change it there later. The default is `first-user`. |
 | `INSTANCE_NAME` | `Casa Rossi` | Optional, 1–60 characters. The name on the sign-in page and in invites. When you set it, it locks the field in `/admin/settings`. When you do not set it, you choose the name there. The default is `WEBAUTHN_RP_NAME`. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | `smtp.example.com`, `587` | Optional outgoing mail. When `SMTP_HOST` is set, all the group comes from the environment, and the panel locks it. Then `SMTP_FROM` is required, `SMTP_PORT` is 587 by default, and you set `SMTP_USER` and `SMTP_PASSWORD` together or not at all. |
 | `APP_REDIRECT_SCHEMES` | `saldo` | The URL schemes that a mobile redirect can use, separated by commas. Include each `SALDO_SCHEME` of your app builds (the default is `saldo`). If a scheme is missing, each mobile sign-in stops with `invalid_redirect_uri`. |
@@ -278,8 +278,7 @@ The command shows the code one time. The server keeps only its hash. A code look
 one link in a message.
 
 **Registration asks for an email address.** The address is an identifier, not a credential: the passkey
-is the only way in. The address names the account in `/admin` and in the account list. Shared finances
-(0.6) will also use it for invites.
+is the only way in. The address names the account in `/admin` and in the account list.
 
 - **Without SMTP, the server sends nothing to the address.** The address stays unverified, and there is
   no recovery by email. On a household instance, any address that the members know is good.
@@ -388,7 +387,7 @@ server runs and restart, or remove the variable and choose in the panel.
 
 Saldo sends mail only through SMTP. That is sufficient for a transactional provider: each provider has
 an SMTP relay that takes the same five values as your own mail server. There is no `MAIL_TRANSPORT`
-switch, and no API driver for each provider, because Saldo does not need them (decided 2026-10-01).
+switch, and no API driver for each provider, because Saldo does not need them.
 From one provider to the next, three things change:
 
 - the host;
@@ -784,7 +783,7 @@ Increase `SYNC_SCHEMA_VERSION` when the old code cannot read correctly a row tha
 a new required field, a field with a changed meaning, a removed field. Do **not** increase it for a
 change that only the UI shows.
 
-The check above stops an old peer from losing data that it cannot keep (§8.1). An unnecessary increase
+The check above stops an old peer from losing data that it cannot keep. An unnecessary increase
 makes all users rebuild for nothing. A missing increase can make a user lose data.
 
 ## Security notes

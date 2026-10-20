@@ -64,7 +64,7 @@ Commit often. A small commit that tells why is better than a large commit that t
 ## Two numbers that are not yours to change casually
 
 `SYNC_SCHEMA_VERSION` (`packages/core/src/sync/protocol.ts`) stops an old peer from losing rows that it
-cannot keep (§8.1). Increase it when the old code cannot read correctly a row that the new code writes:
+cannot keep. Increase it when the old code cannot read correctly a row that the new code writes:
 a new required field, a field with a changed meaning, a removed field. Do not increase it for a change
 that only the UI shows. After an increase, each person must build and install each phone again by hand.
 Thus an unnecessary increase costs all persons an evening. A self-hoster reads about it in

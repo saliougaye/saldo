@@ -66,8 +66,7 @@ yourself.
 
 **The admin of an instance can reach its database.** Roles and revocation stop a member from
 administering the instance. They do not keep the owner out of Postgres. If two persons who do not trust
-each other share one server, Saldo does not support that today. See the shared finances milestone in
-[`ROADMAP.md`](ROADMAP.md).
+each other share one server, Saldo does not support that today.
 
 **The admin panel keeps one secret: the SMTP password, if you set one.** The server encrypts it with
 `SETTINGS_ENCRYPTION_KEY`, and nobody can read it back in the panel. But the server can decrypt it,
@@ -116,7 +115,7 @@ address do not exist, and nothing else changes.
 
 ## MCP and connectors
 
-From 0.4, an instance has a [Model Context Protocol](https://modelcontextprotocol.io) endpoint at
+An instance has a [Model Context Protocol](https://modelcontextprotocol.io) endpoint at
 `{PUBLIC_URL}/mcp`. An MCP client of a user (Claude Code, the custom connectors of Claude, any MCP client)
 reads the data of that user. If the user allows it, the client also changes the data.
 
@@ -154,8 +153,8 @@ These rules set the limits:
   as the web forms. It uses the same rules from `@saldo/core` and the same limits for each user. It also
   checks for a change that the phone made in the meantime. The client asks the person to confirm a write.
   The server does not ask a second time.
-- **The server never calls a model.** The model runs in the client of the user. In this milestone, Saldo
-  keeps no AI key. It only answers the calls that it gets.
+- **The server never calls a model.** The model runs in the client of the user. Saldo keeps no AI
+  key. It only answers the calls that it gets.
 - **An admin can turn it off** at `/admin/mcp`, or with `MCP_ENABLED=false` in the environment. The
   variable locks the switch. When MCP is off, `/mcp`, the discovery documents, registration and
   authorization answer 404, and the consent page refuses. Thus no client reads or writes anything. Token
