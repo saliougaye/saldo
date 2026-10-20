@@ -230,3 +230,76 @@ html[data-theme-choice="dark"] .docs-theme .t-dark {
   margin: 0;
   padding-left: 1.1em;
 }
+
+/*
+ * Diagrams (`docs/diagrams/*.svg`, put inline by `lib/repoLinks.ts`). The file keeps its own
+ * colours for GitHub; here the same classes take the tokens of the chosen theme. On a narrow
+ * screen the figure scrolls sideways, so the labels keep a readable size.
+ */
+.sl-markdown-content .docs-figure {
+  margin-block: 2rem;
+}
+.docs-figure-scroll {
+  overflow-x: auto;
+  padding: 20px;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.docs-figure svg {
+  display: block;
+  width: 100%;
+  min-width: 36rem;
+  height: auto;
+}
+.docs-figure figcaption {
+  margin-top: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+.docs-figure text {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  fill: var(--color-text);
+}
+.docs-figure .m {
+  font-size: var(--font-size-footnote);
+  fill: var(--color-text-muted);
+}
+.docs-figure .b {
+  font-weight: var(--font-weight-semibold);
+}
+.docs-figure .mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-footnote);
+}
+.docs-figure .bx {
+  fill: var(--color-bg);
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+}
+.docs-figure .bx-r {
+  fill: var(--color-raised);
+}
+.docs-figure .bx-ink {
+  fill: var(--color-text);
+}
+.docs-figure .ti {
+  fill: var(--color-bg);
+}
+.docs-figure .ln {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 1.5;
+}
+.docs-figure .dash {
+  stroke-dasharray: 5 4;
+}
+.docs-figure .lane {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+}
+.docs-figure .ah {
+  fill: var(--color-text-muted);
+}

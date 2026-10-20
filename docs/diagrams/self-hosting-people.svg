@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 172" width="760" height="172" role="img" aria-labelledby="self-hosting-people-t self-hosting-people-d">
+  <title id="self-hosting-people-t">Letting people in</title>
+  <desc id="self-hosting-people-d">A fresh instance sends every visitor to /setup. The wizard creates the first account with a passkey and no code, and that account is the admin. After that, every new account needs an invite code from /admin or from the command line, and each code works one time.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="self-hosting-people-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="12" y="40" width="136" height="100" rx="14"/>
+  <text class="b" x="26" y="70">Fresh instance</text>
+  <text class="m" x="26" y="96">/, /login, /register</text>
+  <text class="m" x="26" y="116">go to /setup</text>
+  <path class="ln" d="M149 90 L161 90" marker-end="url(#self-hosting-people-a)"/>
+  <rect class="bx-r" x="162" y="40" width="136" height="100" rx="14"/>
+  <text class="b mono" x="176" y="70">/setup</text>
+  <text class="m" x="176" y="96">Name, registration</text>
+  <text class="m" x="176" y="116">mode, your passkey</text>
+  <path class="ln" d="M299 90 L311 90" marker-end="url(#self-hosting-people-a)"/>
+  <rect class="bx-ink" x="312" y="40" width="136" height="100" rx="14"/>
+  <text class="b ti" x="326" y="70">First account</text>
+  <text class="m ti" x="326" y="96">The admin</text>
+  <text class="m ti" x="326" y="116">No code needed</text>
+  <path class="ln" d="M449 90 L461 90" marker-end="url(#self-hosting-people-a)"/>
+  <rect class="bx" x="462" y="40" width="136" height="100" rx="14"/>
+  <text class="b" x="476" y="70">Invite code</text>
+  <text class="m" x="476" y="96">From /admin</text>
+  <text class="m" x="476" y="116">or the CLI</text>
+  <path class="ln" d="M599 90 L611 90" marker-end="url(#self-hosting-people-a)"/>
+  <rect class="bx" x="612" y="40" width="136" height="100" rx="14"/>
+  <text class="b" x="626" y="70">New account</text>
+  <text class="m" x="626" y="96">The code works</text>
+  <text class="m" x="626" y="116">one time</text>
+  <text class="m" x="12" y="24">One time, on a new server</text>
+  <path class="lane" d="M455.0 16 L455.0 164"/>
+  <text class="m" x="462" y="24">Then, with REGISTRATION=invite</text>
+</svg>

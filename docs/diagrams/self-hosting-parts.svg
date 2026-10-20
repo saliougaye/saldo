@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300" role="img" aria-labelledby="self-hosting-parts-t self-hosting-parts-d">
+  <title id="self-hosting-parts-t">What runs where</title>
+  <desc id="self-hosting-parts-d">The Saldo app on the phone and the web app in a browser reach the Saldo server over HTTPS, through a reverse proxy. The server keeps accounts and synced rows in Postgres, and attachment bytes in an optional store.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="self-hosting-parts-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="20" y="44" width="180" height="96" rx="14"/>
+  <text class="b" x="38" y="74">Saldo app</text>
+  <text class="m" x="38" y="98">On the phone</text>
+  <text class="m" x="38" y="118">Works offline</text>
+  <rect class="bx" x="20" y="176" width="180" height="76" rx="14"/>
+  <text class="b" x="38" y="206">Web app</text>
+  <text class="m" x="38" y="230">In any browser</text>
+  <rect class="bx-r" x="252" y="108" width="140" height="84" rx="14"/>
+  <text class="b" x="270" y="138">Reverse proxy</text>
+  <text class="m" x="270" y="162">HTTPS certificate</text>
+  <text class="m" x="270" y="180">Caddy, for example</text>
+  <rect class="lane" x="424" y="16" width="320" height="268" rx="18"/>
+  <text class="m" x="442" y="42">Your server</text>
+  <rect class="bx-ink" x="442" y="58" width="148" height="92" rx="14"/>
+  <text class="b ti" x="460" y="88">Saldo server</text>
+  <text class="mono ti" x="460" y="110">apps/web</text>
+  <text class="m ti" x="460" y="130">Port 3000</text>
+  <rect class="bx" x="442" y="190" width="148" height="76" rx="14"/>
+  <text class="b" x="460" y="220">Postgres</text>
+  <text class="m" x="460" y="244">Accounts, synced rows</text>
+  <rect class="bx dash" x="610" y="58" width="120" height="92" rx="14"/>
+  <text class="b" x="626" y="88">Attachments</text>
+  <text class="m" x="626" y="110">Optional store</text>
+  <text class="m" x="626" y="130">fs, s3, Blob</text>
+  <path class="ln" d="M200 92 C226 92 228 132 250 136" marker-end="url(#self-hosting-parts-a)"/>
+  <path class="ln" d="M200 214 C226 214 228 168 250 164" marker-end="url(#self-hosting-parts-a)"/>
+  <path class="ln" d="M392 150 C414 150 418 104 440 104" marker-end="url(#self-hosting-parts-a)"/>
+  <path class="ln" d="M516 150 L516 188" marker-end="url(#self-hosting-parts-a)"/>
+  <path class="ln dash" d="M590 104 L608 104" marker-end="url(#self-hosting-parts-a)"/>
+</svg>

@@ -42,6 +42,9 @@ Spendee's paid features. You are implementing the POC.
 - **The docs library** (`/docs/` on the site, spec 0.8b) renders `docs/self-hosting.md`, `docs/building-android.md`,
   `docs/building-ios.md`, `SECURITY.md` and `CONTRIBUTING.md` in place. Keep the links between files relative, so they
   work on GitHub and on the site. Do not add frontmatter. To add a guide, add one line to `apps/site/src/lib/docs.ts`.
+  A diagram is an SVG file in `docs/diagrams/`, alone in its paragraph: `![Caption](diagrams/name.svg)`. Use the
+  classes of the existing diagrams (`bx`, `bx-r`, `bx-ink`, `ln`, `lane`, `m`, `b`, `mono`) and keep their `<style>`
+  block: GitHub reads it, and the site removes it and colours the classes with the theme tokens.
 - **When you change a screen that the site shows** (the table in spec 0.8a §04), change the matching component in
   `apps/site/src/components/phone/screens/` in the same pull request.
 - **No hard-coded colours, radii or font sizes** in apps. Use `@saldo/ui` tokens. New screens reuse existing primitives.

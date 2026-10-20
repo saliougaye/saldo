@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420" role="img" aria-labelledby="self-hosting-sign-in-t self-hosting-sign-in-d">
+  <title id="self-hosting-sign-in-t">Signing in on the phone</title>
+  <desc id="self-hosting-sign-in-d">The app opens the server page /auth/mobile in a browser on the phone. The server checks the return scheme against APP_REDIRECT_SCHEMES. The passkey ceremony runs in the browser. The browser returns to the app with a one-minute, single-use token, and the app exchanges the token for a session.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="self-hosting-sign-in-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <rect class="bx" x="15" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="110" y="40" text-anchor="middle">Saldo app</text>
+  <text class="m" x="110" y="60" text-anchor="middle">On the phone</text>
+  <path class="lane" d="M110 72 L110 404"/>
+  <rect class="bx" x="285" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="380" y="40" text-anchor="middle">Browser</text>
+  <text class="m" x="380" y="60" text-anchor="middle">On the same phone</text>
+  <path class="lane" d="M380 72 L380 404"/>
+  <rect class="bx" x="555" y="16" width="190" height="56" rx="14"/>
+  <text class="b" x="650" y="40" text-anchor="middle">Saldo server</text>
+  <text class="m" x="650" y="60" text-anchor="middle">Your domain</text>
+  <path class="lane" d="M650 72 L650 404"/>
+  <path class="ln" d="M110 112 L374 112" marker-end="url(#self-hosting-sign-in-a)"/>
+  <text class="m" x="245.0" y="102" text-anchor="middle">Opens /auth/mobile</text>
+  <path class="ln" d="M380 160 L644 160" marker-end="url(#self-hosting-sign-in-a)"/>
+  <text class="m" x="515.0" y="150" text-anchor="middle">Loads the page, with a saldo:// return link</text>
+  <rect class="bx-r" x="550" y="184" width="200" height="56" rx="12"/>
+  <text class="m" x="650" y="207" text-anchor="middle">Checks the scheme against</text>
+  <text class="mono" x="650" y="227" text-anchor="middle">APP_REDIRECT_SCHEMES</text>
+  <path class="ln" d="M386 278 L644 278" marker-end="url(#self-hosting-sign-in-a)" marker-start="url(#self-hosting-sign-in-a)"/>
+  <text class="m" x="515.0" y="268" text-anchor="middle">Passkey ceremony (Face ID)</text>
+  <path class="ln" d="M380 330 L116 330" marker-end="url(#self-hosting-sign-in-a)"/>
+  <text class="m" x="245.0" y="320" text-anchor="middle">Back to saldo:// with a one-time token</text>
+  <path class="ln" d="M110 382 L644 382" marker-end="url(#self-hosting-sign-in-a)"/>
+  <text class="m" x="380.0" y="372" text-anchor="middle">Exchanges the token for a session</text>
+</svg>
