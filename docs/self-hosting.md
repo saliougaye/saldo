@@ -289,9 +289,6 @@ is the only way in. The address names the account in `/admin` and in the account
 - **With SMTP** (see [Server settings](#server-settings)), the server sends a verification link. A
   verified address can recover the account.
 
-An account made before 0.3b has a synthetic address, `{id}@passkey.saldo.invalid`. The phone offers one
-time to replace it: at onboarding, and in Profile → Server and sync.
-
 **Signing in on the web with the passkey of the phone.** An account made on the phone has one passkey.
 The passkey belongs to the domain of this server, because the phone makes it on the `/auth/mobile` page
 of the server. Thus the web app accepts it too. Face ID is only how the phone unlocks the passkey. A
@@ -836,6 +833,4 @@ makes all users rebuild for nothing. A missing increase can make a user lose dat
   start.
 - The sign-in uses discoverable credentials only. It asks for no identifier, so nobody can use the
   sign-in to learn if an account exists.
-- An account made before 0.3b has no real email address. It has a synthetic address in the reserved
-  `.invalid` domain. The server never sends anything to it.
 
