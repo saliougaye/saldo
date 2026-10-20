@@ -39,6 +39,9 @@ Spendee's paid features. You are implementing the POC.
 - **The marketing site is the one exception** (`apps/site`, spec 0.8a D43). Its own copy lives in
   `apps/site/src/content/<locale>.ts`, one object for each locale. The app strings on its phone screens come from
   `@saldo/i18n` through `appText`. `astro check` stops a misspelt key, and the build fails when a catalog lacks a key. The site has no automated tests (spec 0.8a D52).
+- **The docs library** (`/docs/` on the site, spec 0.8b) renders `docs/self-hosting.md`, `docs/building-android.md`,
+  `docs/building-ios.md`, `SECURITY.md` and `CONTRIBUTING.md` in place. Keep the links between files relative, so they
+  work on GitHub and on the site. Do not add frontmatter. To add a guide, add one line to `apps/site/src/lib/docs.ts`.
 - **When you change a screen that the site shows** (the table in spec 0.8a §04), change the matching component in
   `apps/site/src/components/phone/screens/` in the same pull request.
 - **No hard-coded colours, radii or font sizes** in apps. Use `@saldo/ui` tokens. New screens reuse existing primitives.
