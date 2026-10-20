@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 306" width="760" height="306" role="img" aria-labelledby="ios-install-t ios-install-d">
+  <title id="ios-install-t">Two ways to install Saldo on an iPhone</title>
+  <desc id="ios-install-d">The recommended way: build:ipa makes an unsigned Saldo.ipa, and Sideloadly signs it with your Apple ID, installs it, and signs it again before the seven days end. To change the app, use Xcode: expo prebuild writes the ios project, Xcode signs it with your Personal Team, and you run it in Release again each week. On the iPhone, trust the Apple ID and turn on Developer Mode.</desc>
+  <style>
+    text { font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; fill: #171717; }
+    .m { font-size: 13px; fill: #6E6E6E; }
+    .b { font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .bx { fill: #FFFFFF; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; }
+    .bx-r { fill: #F1F1EF; }
+    .bx-ink { fill: #171717; }
+    .ti { fill: #FFFFFF; }
+    .ln { fill: none; stroke: #6E6E6E; stroke-width: 1.5; }
+    .dash { stroke-dasharray: 5 4; }
+    .lane { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 1.5; stroke-dasharray: 3 5; }
+    .ah { fill: #6E6E6E; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #EDEDED; }
+      .m { fill: #8C8C8C; }
+      .bx { fill: #0A0A0A; stroke: rgba(255, 255, 255, 0.2); }
+      .bx-r { fill: #1A1A1A; }
+      .bx-ink { fill: #EDEDED; }
+      .ti { fill: #0A0A0A; }
+      .ln { stroke: #8C8C8C; }
+      .lane { stroke: rgba(255, 255, 255, 0.2); }
+      .ah { fill: #8C8C8C; }
+    }
+  </style>
+  <defs>
+    <marker id="ios-install-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+  <text class="m" x="12" y="26" text-anchor="start">Recommended: an .ipa and Sideloadly</text>
+  <rect class="bx-r" x="12" y="40" width="170" height="96" rx="14"/>
+  <text class="b" x="28" y="70">build:ipa</text>
+  <text class="m" x="28" y="94">Unsigned build</text>
+  <text class="mono" x="28" y="114">Saldo.ipa</text>
+  <rect class="bx" x="214" y="40" width="190" height="96" rx="14"/>
+  <text class="b" x="230" y="70">Sideloadly</text>
+  <text class="m" x="230" y="94">Signs with your Apple ID</text>
+  <text class="m" x="230" y="114">Refreshes before 7 days</text>
+  <text class="m" x="12" y="182" text-anchor="start">To change the app: Xcode</text>
+  <rect class="bx-r" x="12" y="196" width="170" height="96" rx="14"/>
+  <text class="b" x="28" y="226">expo prebuild</text>
+  <text class="m" x="28" y="250">Writes ios/</text>
+  <text class="mono" x="28" y="270">.xcode.env.local</text>
+  <rect class="bx" x="214" y="196" width="190" height="96" rx="14"/>
+  <text class="b" x="230" y="226">Xcode</text>
+  <text class="m" x="230" y="250">Personal Team signs</text>
+  <text class="m" x="230" y="270">Run in Release</text>
+  <rect class="bx-ink" x="560" y="118" width="188" height="96" rx="14"/>
+  <text class="b ti" x="576" y="148">Your iPhone</text>
+  <text class="m ti" x="576" y="172">Trust the Apple ID</text>
+  <text class="m ti" x="576" y="192">Developer Mode on</text>
+  <path class="ln" d="M182 88 L212 88" marker-end="url(#ios-install-a)"/>
+  <path class="ln" d="M182 244 L212 244" marker-end="url(#ios-install-a)"/>
+  <path class="ln" d="M404 88 C480 88 490 150 558 156" marker-end="url(#ios-install-a)"/>
+  <path class="ln" d="M404 244 C480 244 490 182 558 176" marker-end="url(#ios-install-a)"/>
+  <text class="m" x="430" y="62" text-anchor="start">Again in 7 days,</text>
+  <text class="m" x="430" y="78" text-anchor="start">automatically</text>
+  <text class="m" x="430" y="274" text-anchor="start">Run again</text>
+  <text class="m" x="430" y="290" text-anchor="start">each week</text>
+</svg>

@@ -78,6 +78,17 @@ h1#_top {
 .sl-markdown-content :is(h2, h3) + * {
   margin-top: 0.6em;
 }
+.sl-markdown-content > :first-child {
+  margin-top: 0;
+}
+
+/* Cautions and warnings (`> **Caution:** …`) are a block one tone up, not a ruled quote. */
+.sl-markdown-content blockquote {
+  padding: 14px 18px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
 
 /* Tables and code read as reference: one size smaller, the header row one tone down. */
 .sl-markdown-content :is(table, .expressive-code) {
