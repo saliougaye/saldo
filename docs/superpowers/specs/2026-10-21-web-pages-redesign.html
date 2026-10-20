@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The other pages of the web app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── Home illustrations (Saldo tokens, en.ts strings) ─────────────────────── */
+.hm { width: 100%; font-size: 13px; line-height: 1.45; font-variant-numeric: tabular-nums; }
+.hm-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; }
+.hm-sum { display: grid; grid-template-columns: 5fr 6fr; gap: 28px; align-items: end; }
+.hm-lbl { margin: 0; color: var(--text-muted); font-weight: 500; }
+.hm-fig { margin: 4px 0 16px; font-size: 52px; font-weight: 600; letter-spacing: -.045em; line-height: 1; }
+.hm-fig span { font-size: .45em; color: var(--text-faint); letter-spacing: -.02em; }
+.hm-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+.hm-stats small { display: block; color: var(--text-muted); font-size: 11.5px; }
+.hm-stats b { font-weight: 500; font-size: 14px; white-space: nowrap; }
+.hm .ok { color: var(--ok); }
+.hm-ch { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.hm-leg { color: var(--text-muted); font-size: 11px; display: flex; gap: 8px; align-items: center; }
+.hm-leg i { display: inline-block; width: 12px; border-top: 1.75px solid var(--text); }
+.hm-leg i.u { border-top: 1.25px dashed var(--text-faint); }
+.hm-chart { width: 100%; height: 110px; display: block; }
+.hm-chart .g { stroke: var(--border); } .hm-chart .g2 { stroke: var(--border-strong); }
+.hm-chart .c { fill: none; stroke: var(--text); stroke-width: 1.75; vector-effect: non-scaling-stroke; }
+.hm-chart .u { fill: none; stroke: var(--text-faint); stroke-width: 1.25; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.hm-axis { display: flex; justify-content: space-between; margin-top: 6px; color: var(--text-faint); font-size: 11px; }
+.hm-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; }
+.hm-head b { font-size: 14px; } .hm-head span { color: var(--text-muted); } .hm-head em { margin-left: auto; font-style: normal; color: var(--text-muted); }
+.hm-adv { margin: 0 0 12px; color: var(--text-muted); } .hm-adv b { color: var(--text); font-weight: 500; }
+.hm-rings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.hm-rings > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hm-rings b { font-weight: 500; margin-top: 10px; } .hm-rings strong { font-weight: 500; font-size: 14px; }
+.hm-rings small { color: var(--text-muted); font-size: 11.5px; }
+.hm-ring { width: 44px; height: 44px; border-radius: 50%; background: conic-gradient(var(--text-faint) calc(var(--p) * 1%), var(--raised) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+.hm-ring.over { background: var(--text); }
+.hm-foot { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text-muted); }
+.hm-foot b { color: var(--text); font-weight: 500; }
+.hm-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.hm-grp { display: flex; justify-content: space-between; margin: 0 0 4px; color: var(--text-muted); font-size: 12px; }
+.hm-row { display: grid; grid-template-columns: 44px 14px minmax(0, 1fr) auto auto; gap: 8px; align-items: baseline; padding: 8px 0; }
+.hm-row time { color: var(--text-muted); font-size: 12px; }
+.hm-row i { width: 10px; height: 10px; border: 1.5px solid var(--c); border-radius: 3px; align-self: center; }
+.hm-row b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hm-row span { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.hm-row em { font-style: normal; font-weight: 500; white-space: nowrap; }
+.hm-row.up b, .hm-row.up em { color: var(--text-muted); font-weight: 400; }
+.hm-empty b { font-weight: 500; } .hm-empty p { margin: 4px 0 12px; color: var(--text-muted); }
+.hm-btn { display: inline-block; padding: 7px 12px; border-radius: 8px; font-weight: 500; }
+.hm-btn.p { background: var(--text); color: var(--bg); }
+kbd { font: 500 .82em var(--mono); background: var(--raised); padding: 1px 6px; border-radius: 5px; }
+@media (max-width: 700px) {
+  .hm-sum { grid-template-columns: 1fr; }
+  .hm-rings { grid-template-columns: 1fr 1fr; }
+  .hm-halves { grid-template-columns: 1fr; }
+  .hm-row span { display: none; }
+}
+
+/* ── Page illustrations (Saldo tokens, en.ts strings) ─────────────────────── */
+.pg { width: 100%; font-size: 13px; line-height: 1.45; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 10px; }
+.pg-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-card); padding: 18px; }
+.pg .ok { color: var(--ok); }
+.pg-muted { color: var(--text-muted); }
+.pg-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0; }
+.pg-sum > div { padding: 14px 16px; min-width: 0; }
+.pg-sum > div + div { border-left: 1px solid var(--border); }
+.pg-sum small { display: block; color: var(--text-muted); font-weight: 500; }
+.pg-sum b { display: block; font-size: 20px; font-weight: 600; letter-spacing: -.03em; margin: 2px 0 8px; white-space: nowrap; }
+.pg-pace { position: relative; height: 4px; border-radius: 2px; background: var(--raised); margin-bottom: 6px; }
+.pg-pace i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--text-muted); }
+.pg-pace u { position: absolute; top: -3px; bottom: -3px; width: 1.5px; background: var(--text); }
+.pg-day { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 12px; padding: 4px 0; }
+.pg-day b { color: var(--text); font-weight: 500; }
+.pg-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 0; }
+.pg-row i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--c); }
+.pg-row b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-row span { display: block; color: var(--text-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-row em { font-style: normal; font-weight: 500; white-space: nowrap; text-align: right; }
+.pg-row em small { display: block; color: var(--text-muted); font-weight: 400; font-size: 11.5px; }
+.pg-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.pg-head b { font-size: 14px; } .pg-head span { color: var(--text-muted); } .pg-head em { margin-left: auto; font-style: normal; color: var(--text-muted); }
+.pg-cols { position: relative; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); align-items: end; height: 120px; gap: 6px; }
+.pg-cols > span { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+.pg-cols > span > i { width: 60%; max-width: 22px; border-radius: 3px 3px 1px 1px; background: var(--text-faint); display: flex; flex-direction: column; overflow: hidden; }
+.pg-cols > span.sel > i { background: var(--text); }
+.pg-cols > span.fc > i { background: var(--raised); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.pg-cols > span > i > u { background: var(--raised); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.pg-cols > span > i > s { flex: 1; }
+.pg-med { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--text-muted); }
+.pg-ticks { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin-top: 6px; text-align: center; color: var(--text-muted); font-size: 11px; }
+.pg-ticks span small { display: block; font-size: 10.5px; color: var(--text-faint); }
+.pg-ticks .sel { color: var(--text); font-weight: 600; }
+.pg-split { display: flex; gap: 2px; height: 8px; margin: 4px 0 8px; }
+.pg-split i { border-radius: 2px; }
+.pg-cat { display: grid; grid-template-columns: 14px minmax(0, 1fr) minmax(0, 120px) 30px 70px; gap: 10px; align-items: center; padding: 7px 0; }
+.pg-cat i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--c); }
+.pg-cat b { font-weight: 500; }
+.pg-cat .tr { height: 4px; border-radius: 2px; background: var(--raised); overflow: hidden; }
+.pg-cat .tr u { display: block; height: 100%; background: var(--c); }
+.pg-cat small { color: var(--text-muted); text-align: right; }
+.pg-cat em { font-style: normal; font-weight: 500; text-align: right; white-space: nowrap; }
+.pg-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-muted); }
+.pg-foot b { color: var(--text); font-weight: 500; }
+.pg-ring { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--text-faint) calc(var(--p) * 1%), var(--raised) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+.pg-goal { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; }
+.pg-goal b { display: block; font-weight: 500; } .pg-goal span { display: block; color: var(--text-muted); font-size: 11.5px; }
+.pg-goal em { font-style: normal; font-weight: 500; text-align: right; } .pg-goal em small { display: block; font-weight: 400; color: var(--text-muted); font-size: 11.5px; }
+.pg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+.pg-dlg { max-width: 360px; margin: 0 auto; background: var(--bg); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 64px -24px rgba(0,0,0,.35); overflow: hidden; }
+.pg-dlg > div { padding: 16px 18px; }
+.pg-dlg h4 { margin: 0 0 12px; font-size: 15px; display: flex; justify-content: space-between; }
+.pg-dlg h4 span { color: var(--text-muted); font-weight: 400; }
+.pg-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; border-radius: 9px; background: var(--raised); font-weight: 500; text-align: center; color: var(--text-muted); }
+.pg-seg span { padding: 4px 0; border-radius: 7px; } .pg-seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.pg-amt { font-size: 30px; font-weight: 600; letter-spacing: -.04em; padding: 10px 0 6px; border-bottom: 1px solid var(--text); margin-bottom: 10px; }
+.pg-amt span { color: var(--text-faint); font-size: .7em; margin-right: 4px; }
+.pg-fl { display: block; margin: 10px 0 4px; color: var(--text-muted); font-size: 12px; font-weight: 500; }
+.pg-in { display: flex; gap: 6px; flex-wrap: wrap; }
+.pg-in span { padding: 4px 10px; border: 1px solid var(--border); border-radius: 7px; font-weight: 500; }
+.pg-in span.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.pg-dfoot { display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--border); }
+.pg-dfoot .sp { flex: 1; }
+.pg-btn { display: inline-block; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 8px; font-weight: 500; white-space: nowrap; }
+.pg-btn.p { background: var(--text); color: var(--bg); border-color: var(--text); }
+.pg-btn.g { border-color: transparent; color: var(--text-muted); }
+.pg-prof { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 18px; }
+.pg-nav { display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; }
+.pg-nav small { color: var(--text-faint); font-size: 11px; font-weight: 500; padding: 8px 8px 3px; }
+.pg-nav span { padding: 5px 8px; border-radius: 7px; color: var(--text-muted); font-weight: 500; }
+.pg-nav span.on { background: var(--raised); color: var(--text); }
+.pg-nav .adm { border-top: 1px dashed var(--border-strong); margin-top: 6px; padding-top: 4px; }
+.pg-kv { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); }
+.pg-kv:first-of-type { border-top: 0; }
+.pg-kv dt { color: var(--text-muted); } .pg-kv dd { margin: 0; }
+.pg-step { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
+.pg-step:first-of-type { border-top: 0; }
+.pg-step i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border-strong); }
+.pg-step.done i { background: var(--text); border-color: var(--text); }
+.pg-step.done b { color: var(--text-muted); text-decoration: line-through; }
+.pg-step b { display: block; font-weight: 500; } .pg-step span { display: block; color: var(--text-muted); font-size: 11.5px; }
+@media (max-width: 700px) {
+  .pg-sum { grid-template-columns: 1fr; } .pg-sum > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .pg-cat { grid-template-columns: 14px minmax(0, 1fr) 30px 64px; } .pg-cat .tr { display: none; }
+  .pg-two, .pg-prof { grid-template-columns: 1fr; }
+  .pg-ticks span small { display: none; }
+}
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#scope"><span>01</span>Scope</a></li>
+    <li><a href="#dialog"><span>02</span>The dialog</a></li>
+    <li><a href="#transactions"><span>03</span>Transactions</a></li>
+    <li><a href="#stats"><span>04</span>Statistics</a></li>
+    <li><a href="#accounts"><span>05</span>Accounts</a></li>
+    <li><a href="#profile"><span>06</span>Profile and Admin</a></li>
+    <li><a href="#empty"><span>07</span>Empty states</a></li>
+    <li><a href="#strings"><span>08</span>Strings</a></li>
+    <li><a href="#open"><span>09</span>Open items</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo web · Pages · Spec</span>
+    <h1>The other pages of the web app</h1>
+    <p>Transactions, Statistics, Accounts and Profile move to the shell of the new Home. Every detail and every form opens in one centred dialog.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Changes</b> G2 decisions D3, D7 and D10, Home decision H10</span>
+    <span><b>Mockups</b> <code>docs/design/redesign/</code>: <code>transactions</code>, <code>stats</code>, <code>accounts</code>, <code>profile</code>, <code>empty</code></span>
+    <span><b>Date</b> 2026-10-21</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="scope" aria-labelledby="h-scope">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-scope">Scope</h2>
+      <p class="lead">This spec changes four pages, the dialog and every empty state of the web app. The phone app and the marketing site do not change.</p>
+    </div>
+    <div class="prose">
+      <p>Read <code>2026-10-20-web-home-redesign.html</code> first. It sets the shell: the top bar, the column of 1040px and the plain cards (H1 to H3). This spec uses that shell on every page.</p>
+      <p>The decisions have the prefix W, for web pages. On these pages, this spec wins over <code>2026-10-11-web-g2-layout.html</code>.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">Decision</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><td>W1</td><td>A detail or a form opens in a dialog in the centre of the screen, over a scrim. A detail is 440px wide, a form is 480px wide. This replaces the side dialog of D3. D12 and D13 stay.</td></tr>
+          <tr><td>W2</td><td>Below 760px, the dialog is a sheet at the bottom of the screen.</td></tr>
+          <tr><td>W3</td><td>A transaction row opens “Edit transaction”, with its fields filled. There is no read-only detail of a transaction.</td></tr>
+          <tr><td>W4</td><td>An account, a goal, a category and a user open a detail. “Edit” changes the same dialog into the form. A second dialog does not open.</td></tr>
+          <tr><td>W5</td><td>Transactions has a summary of three cells, a tool row and one list. This replaces the three cards of D7.</td></tr>
+          <tr><td>W6</td><td>The Statistics chart shows one bar of expenses for each period and a dashed line for “usual”. The chart is the period picker.</td></tr>
+          <tr><td>W7</td><td>The Statistics breakdown uses the colour of each category.</td></tr>
+          <tr><td>W8</td><td>Statistics does not show the period trend. The Home shows it (H5).</td></tr>
+          <tr><td>W9</td><td>Accounts shows one row for each account and a separate Goals block. Cards are not used for accounts.</td></tr>
+          <tr><td>W10</td><td>Profile has a menu on the left side of the column. Admin is a group of that menu. Only a user with the <code>admin</code> role sees the group. This replaces D10.</td></tr>
+          <tr><td>W11</td><td>An empty state gives the first step: the action that fills it. Section 07 gives the rule for each page. This replaces the Empty part of H10.</td></tr>
+          <tr><td>W12</td><td>H11 applies to every page: no chips, no status dots, no gradient text, no entrance animation, no counting figure.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="dialog" aria-labelledby="h-dialog">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-dialog">The dialog</h2>
+      <p class="lead">A detail of Saldo holds few values. A side panel of the full height left most of its space empty.</p>
+    </div>
+    <div class="prose">
+      <p>The review compared a side sheet, a split view, a centred dialog and a row that opens in place. It kept the centred dialog (W1).</p>
+      <p><b>Transactions.</b> You open a transaction to correct it. Thus the row opens the form at once (W3). The form is the same form as “New transaction”, with these changes:</p>
+      <ul>
+        <li>The title is “Edit transaction”. The amount field does not take the focus.</li>
+        <li>Tags, note and repeat show as fields when the transaction has them.</li>
+        <li>The footer has “Delete” on the left, then “Cancel” and “Save”.</li>
+      </ul>
+      <p><b>Delete.</b> “Delete” removes the row and closes the dialog. A toast shows “Deleted ‹title›” with “Undo” for 5 seconds. “Undo” puts the row back.</p>
+      <p><b>Focus.</b> When the dialog opens, the focus goes to the dialog. A form for a new item puts the focus on its first field. <kbd>Tab</kbd> stays inside the dialog. <kbd>Esc</kbd> and a click on the scrim close it. The focus then goes back to the row.</p>
+      <p><b>Motion.</b> The dialog opens with scale 0.96 to 1 and opacity, in 200ms, <code>cubic-bezier(.23,1,.32,1)</code>. It closes in 150ms. The sheet of W2 moves up from the bottom in 260ms. With reduced motion, use opacity only.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 330" role="img" aria-labelledby="f1t">
+        <title id="f1t">A click on a transaction row opens the edit form. Save and Cancel close it. Delete closes it and shows a toast with Undo. A click on an account opens its detail, and Edit changes the same dialog into the form.</title>
+        <rect class="bx" x="20" y="40" width="200" height="70" rx="14"/><text x="120" y="82" text-anchor="middle" font-size="19" class="b">Transaction row</text>
+        <rect class="bx-r" x="330" y="40" width="250" height="70" rx="14"/><text x="455" y="82" text-anchor="middle" font-size="19" class="b">Edit transaction</text>
+        <rect class="bx" x="700" y="10" width="300" height="56" rx="14"/><text x="850" y="45" text-anchor="middle" font-size="17">Saved · dialog closes</text>
+        <rect class="bx" x="700" y="86" width="300" height="56" rx="14"/><text x="850" y="121" text-anchor="middle" font-size="17">Deleted · toast with Undo</text>
+        <line class="ln-ink" x1="220" y1="75" x2="322" y2="75" marker-end="url(#ah-ink)"/><text x="271" y="64" text-anchor="middle" font-size="15" class="tm">click, Enter</text>
+        <path class="ln" d="M580 66 C640 66 640 38 692 38" marker-end="url(#ah)"/>
+        <path class="ln" d="M580 86 C640 86 640 114 692 114" marker-end="url(#ah)"/>
+        <rect class="bx" x="20" y="220" width="200" height="70" rx="14"/><text x="120" y="262" text-anchor="middle" font-size="19" class="b">Account row</text>
+        <rect class="bx-r" x="330" y="220" width="250" height="70" rx="14"/><text x="455" y="262" text-anchor="middle" font-size="19" class="b">Account detail</text>
+        <rect class="bx-r" x="700" y="220" width="300" height="70" rx="14"/><text x="850" y="262" text-anchor="middle" font-size="19" class="b">Edit account</text>
+        <line class="ln-ink" x1="220" y1="255" x2="322" y2="255" marker-end="url(#ah-ink)"/>
+        <line class="ln-ink" x1="580" y1="255" x2="692" y2="255" marker-end="url(#ah-ink)"/><text x="636" y="244" text-anchor="middle" font-size="15" class="tm">Edit</text>
+        <text x="850" y="314" text-anchor="middle" font-size="15" class="tm">same dialog, new content</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> The two ways a row opens a dialog. A transaction goes to its form. An account, a goal, a category or a user goes to its detail first.</figcaption>
+    </figure>
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-dlg">
+          <div>
+            <h4>Edit transaction <span>✕</span></h4>
+            <div class="pg-seg"><span class="on">Expense</span><span>Income</span><span>Transfer</span></div>
+            <div class="pg-amt"><span>€</span>32.00</div>
+            <span class="pg-fl">Category</span><div class="pg-in"><span class="on">Restaurants</span><span>Groceries</span><span>Transport</span></div>
+            <span class="pg-fl">Account</span><div class="pg-in"><span>Card</span><span>Current account</span><span class="on">Cash</span></div>
+            <span class="pg-fl">Note</span><div class="pg-in"><span style="font-weight:400">Dinner with Luca and Giulia</span></div>
+          </div>
+          <div class="pg-dfoot"><span class="pg-btn g">Delete</span><span class="sp"></span><span class="pg-btn">Cancel</span><span class="pg-btn p">Save</span></div>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 2. The edit form of a transaction, in the centre of the screen. The form is the form of “New transaction”, filled.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="transactions" aria-labelledby="h-transactions">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-transactions">Transactions</h2>
+      <p class="lead">The page answers two questions: how the period goes, and where one transaction is.</p>
+    </div>
+    <div class="prose">
+      <p>The page has three parts, from top to bottom:</p>
+      <ol class="steps">
+        <li><b>Summary.</b> One block in three cells: Expenses, Income, Upcoming. Under Expenses, a bar shows the share of income that you spent. A tick on the bar shows the share of the period that has gone.</li>
+        <li><b>Tools.</b> The search field, the filters (account, category, tag) and “Expenses only”. When a filter is on, a line shows the count, the filtered expenses and “Reset filters”.</li>
+        <li><b>List.</b> One block. “Upcoming” is a closed row at the top. A click opens its rows. Then the days follow, newest first. Each day shows its date and its expenses.</li>
+      </ol>
+      <p><b>Keys.</b> <kbd>↑</kbd> <kbd>↓</kbd> move along the rows. <kbd>↵</kbd> opens the row. <kbd>N</kbd> opens “New transaction”. <kbd>/</kbd> puts the focus in the search field.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box pg-sum">
+          <div><small>Expenses</small><b>€1,366.18</b><div class="pg-pace"><i style="width:59%"></i><u style="left:43%"></u></div><span class="pg-muted">59% of income · day 13 of 30</span></div>
+          <div><small>Income</small><b class="ok">€2,334.00</b><span class="pg-muted">12 transactions</span></div>
+          <div><small>Upcoming</small><b>€612.40</b><span class="pg-muted">20 after today</span></div>
+        </div>
+        <div class="pg-box">
+          <div class="pg-day"><b>Upcoming</b><span>€612.40</span></div>
+          <div class="pg-day" style="padding-top:12px"><b>12 September, Saturday</b><span>−€60.50</span></div>
+          <div class="pg-row" style="--c:#C57B4E"><i></i><span><b>Esselunga</b><span>Groceries · Card</span></span><em>−€56.30</em></div>
+          <div class="pg-row" style="--c:#4F8D8B"><i></i><span><b>Coffee bar</b><span>Restaurants · Card · #work</span></span><em>−€4.20</em></div>
+          <div class="pg-day" style="padding-top:12px"><b>11 September, Friday</b><span>−€68.99</span></div>
+          <div class="pg-row" style="--c:#8F9152"><i></i><span><b>Q8 fuel</b><span>Transport · Card</span></span><em>−€45.00</em></div>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 3. Summary and list. The category icon has the colour of its category. The rows have no chips.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="stats" aria-labelledby="h-stats">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-stats">Statistics</h2>
+      <p class="lead">The page answers two questions: how this period compares with the others, and where the money went.</p>
+    </div>
+    <div class="prose">
+      <p><b>The period block.</b> The block shows Expenses as the big figure, then Income, Net and the end of period projection. Under the figures is the chart “Expenses by period”.</p>
+      <p>The old chart showed income and expenses side by side, with outlines and min–max lines. The review found it hard to read. The new chart shows one value only (W6):</p>
+      <ul>
+        <li>One bar for each period: six closed periods, the current period and three forecast periods.</li>
+        <li>A dashed line for “usual”: the median of the six closed periods. A line under the chart gives its value.</li>
+        <li>The amount of each period under its month. Below 760px, the amounts do not show.</li>
+        <li>The current period: the spent part is filled, the projected part is an outline.</li>
+        <li>A forecast period: a light bar, and “~” before its amount. The min–max range shows in the tooltip and in the table of the forecast.</li>
+      </ul>
+      <p>A click on a bar selects its period. <kbd>←</kbd> and <kbd>→</kbd> select the previous and the next period. The page head and every block below follow the selection.</p>
+      <p><b>Breakdown.</b> The split bar and the share bar of each row use the colour of the category (W7). The first six categories have their own colour. The others share one segment in <code>barGrey</code>. A row shows the share, the change against usual and the amount. A click opens the detail of the category: the amount, the last six periods, the latest transactions and “All transactions”. “Committed share” is a line at the bottom of the block.</p>
+      <p><b>Tags.</b> One row for each tag, then the line of transactions with no tag and the note on tags that overlap.</p>
+      <p><b>A forecast period.</b> Breakdown and Tags do not show. “Expected recurring transactions” and “Forecast periods” show. “How it’s calculated” is a line at the bottom of “Forecast periods”.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box">
+          <div class="pg-head"><b>Expenses by period</b></div>
+          <div class="pg-cols">
+            <span><i style="height:72%"></i></span><span><i style="height:81%"></i></span><span><i style="height:66%"></i></span><span><i style="height:87%"></i></span><span><i style="height:96%"></i></span><span><i style="height:75%"></i></span>
+            <span class="sel"><i style="height:83%"><u style="height:45%"></u><s></s></i></span>
+            <span class="fc"><i style="height:77%"></i></span><span class="fc"><i style="height:76%"></i></span><span class="fc"><i style="height:88%"></i></span>
+            <span class="pg-med" style="bottom:78%"></span>
+          </div>
+          <div class="pg-ticks"><span>Mar<small>2150</small></span><span>Apr<small>2420</small></span><span>May<small>1981</small></span><span>Jun<small>2610</small></span><span>Jul<small>2891</small></span><span>Aug<small>2240</small></span><span class="sel">Sep<small>1366</small></span><span>Oct<small>~2310</small></span><span>Nov<small>~2280</small></span><span>Dec<small>~2650</small></span></div>
+          <p class="pg-muted" style="margin:10px 0 0"><b style="color:var(--text);font-weight:500">Usual</b> is the median of the last 6 periods: €2,330.</p>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 4. The chart of expenses by period. September is selected and current. October to December are forecast.</p>
+    </div>
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box">
+          <div class="pg-head"><b>Breakdown</b><em>Expenses · Income</em></div>
+          <div class="pg-split"><i style="flex:688;background:#C9A048"></i><i style="flex:212;background:#C57B4E"></i><i style="flex:148;background:#4F8D8B"></i><i style="flex:121;background:#8F9152"></i><i style="flex:104;background:#A06FA0"></i><i style="flex:52;background:#5A82A6"></i><i style="flex:40;background:var(--text-faint)"></i></div>
+          <div class="pg-cat" style="--c:#C9A048"><i></i><b>Home</b><span class="tr"><u style="width:100%"></u></span><small>50%</small><em>€688.40</em></div>
+          <div class="pg-cat" style="--c:#C57B4E"><i></i><b>Groceries</b><span class="tr"><u style="width:31%"></u></span><small>16%</small><em>€212.30</em></div>
+          <div class="pg-cat" style="--c:#4F8D8B"><i></i><b>Restaurants</b><span class="tr"><u style="width:22%"></u></span><small>11%</small><em>€148.20</em></div>
+          <div class="pg-foot"><span><b>Committed share</b> 52% of this period was decided at the start.</span></div>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 5. The breakdown in the colours of the categories. The rows continue under the third one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="accounts" aria-labelledby="h-accounts">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-accounts">Accounts</h2>
+      <p class="lead">The page answers three questions: what you own, where it is, and what you set aside.</p>
+    </div>
+    <div class="prose">
+      <ol class="steps">
+        <li><b>Net worth.</b> The big figure is the net worth. Under it, the spendable total and its note. On the right, a line of the net worth for the last 8 months, with the change.</li>
+        <li><b>To spend.</b> One row for each account: the icon in the colour of the account, the name, a line with the bank, the change in this period and the free money, a small line of the balance, and the balance. A credit card in debt shows the amount “To repay”.</li>
+        <li><b>Savings and investments.</b> The same rows, with “not in the spendable total”.</li>
+        <li><b>Goals.</b> A block of its own (W9), in two columns: a TargetRing of 40px, the name, “€1,200.00 of €3,000.00 · in Current account”, the percent and the state. The review also tried goals under their account, and did not keep it.</li>
+        <li><b>Archived accounts.</b> One row with the count, at the bottom.</li>
+      </ol>
+      <p><b>Dialogs.</b> The account detail shows the balance or the amount to repay, the line, the income and the expenses of the period, and the recent transactions. A credit card also shows the amount accrued in the cycle and the next charge. The footer has “Archive account” and “Edit”. A card in debt also has “Settle card”.</p>
+      <p>The goal detail shows a TargetRing of 72px, the saved amount, the sentence of the goal, “Set aside” and “Withdraw”, the values and the movements. The footer has “Close goal” and “Edit”.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box">
+          <div class="pg-head"><b>To spend</b><span>3 accounts</span></div>
+          <div class="pg-row" style="--c:#5A82A6"><i></i><span><b>Current account</b><span>Intesa Sanpaolo · +€967.82 this period · €1,482.15 free</span></span><em>€4,682.15</em></div>
+          <div class="pg-row" style="--c:#4F6FB0"><i></i><span><b>Amex Gold</b><span>American Express · −€412.30 this period</span></span><em>€412.30<small>To repay</small></em></div>
+          <div class="pg-row" style="--c:#C9A048"><i></i><span><b>Cash</b><span>Cash · −€31.50 this period</span></span><em>€84.50</em></div>
+        </div>
+        <div class="pg-box">
+          <div class="pg-head"><b>Goals</b><span>1 behind · 1 reached</span></div>
+          <div class="pg-two">
+            <div class="pg-goal"><span class="pg-ring" style="--p:40"></span><span><b>Japan holiday</b><span>€1,200.00 of €3,000.00</span></span><em>40%<small>€80.00 behind</small></em></div>
+            <div class="pg-goal"><span class="pg-ring" style="--p:20"></span><span><b>Car</b><span>€2,400.00 of €12,000.00</span></span><em>20%<small>€120.00 ahead</small></em></div>
+          </div>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 6. Account rows and the Goals block. The ring has the <code>barGrey</code> fill (H12).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="profile" aria-labelledby="h-profile">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-profile">Profile and Admin</h2>
+      <p class="lead">Profile has nine sections. Admin has five. A top bar cannot hold them, so Profile gets a menu inside its own column.</p>
+    </div>
+    <div class="prose">
+      <p><b>The way in.</b> The avatar in the top bar opens a menu: the name and the email, “Profile” and “Sign out”. The top bar has no Admin item.</p>
+      <p><b>The page.</b> The head shows the avatar, the name and the email. A user with the <code>admin</code> role also sees “Administrator”. Under the head, a menu of 220px is on the left, and the section is on the right.</p>
+      <p>The menu has these groups, in this order:</p>
+      <ul>
+        <li><b>Account:</b> Profile, Passkeys, Preferences.</li>
+        <li><b>Organise:</b> Categories, Tags, Budgets, Goals. Each item shows its count.</li>
+        <li><b>Connections and data:</b> Connectors, Data.</li>
+        <li><b>Admin · ‹instance name›:</b> Accounts, Invites, Instance, Settings, MCP. Only for the <code>admin</code> role (W10).</li>
+      </ul>
+      <p>“Sign out” is the last item, under a line.</p>
+      <p><b>Below 760px.</b> The menu is a list of groups, as on the phone. A row opens its section. The section has a back button to the list.</p>
+      <p><b>Sections.</b> A section is a title, an optional lead sentence and blocks of rows. A setting with few values uses a segmented control and saves at once. A row of a list opens a dialog (W4).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 300" role="img" aria-labelledby="f7t">
+        <title id="f7t">The avatar menu opens Profile. Profile shows three groups to every user. The Admin group shows only for the admin role.</title>
+        <rect class="bx" x="20" y="115" width="170" height="70" rx="14"/><text x="105" y="157" text-anchor="middle" font-size="19" class="b">Avatar menu</text>
+        <rect class="bx-r" x="290" y="115" width="170" height="70" rx="14"/><text x="375" y="157" text-anchor="middle" font-size="19" class="b">Profile</text>
+        <line class="ln-ink" x1="190" y1="150" x2="282" y2="150" marker-end="url(#ah-ink)"/>
+        <rect class="bx" x="600" y="10" width="420" height="56" rx="12"/><text x="810" y="45" text-anchor="middle" font-size="17">Account · Profile, Passkeys, Preferences</text>
+        <rect class="bx" x="600" y="80" width="420" height="56" rx="12"/><text x="810" y="115" text-anchor="middle" font-size="17">Organise · Categories, Tags, Budgets, Goals</text>
+        <rect class="bx" x="600" y="150" width="420" height="56" rx="12"/><text x="810" y="185" text-anchor="middle" font-size="17">Connections and data · Connectors, Data</text>
+        <rect class="bx-r" x="600" y="224" width="420" height="56" rx="12" stroke-dasharray="6 6"/><text x="810" y="259" text-anchor="middle" font-size="17">Admin · Accounts, Invites, Instance, Settings, MCP</text>
+        <path class="ln" d="M460 140 C530 140 530 38 592 38" marker-end="url(#ah)"/>
+        <path class="ln" d="M460 148 C530 148 530 108 592 108" marker-end="url(#ah)"/>
+        <path class="ln" d="M460 156 C530 156 530 178 592 178" marker-end="url(#ah)"/>
+        <path class="ln" d="M460 166 C530 166 530 252 592 252" marker-end="url(#ah)" stroke-dasharray="5 5"/>
+        <text x="526" y="290" text-anchor="middle" font-size="15" class="tm">admin role only</text>
+      </svg>
+      <figcaption><b>Figure 7.</b> The way to Profile and its groups. The dashed group shows only for the <code>admin</code> role.</figcaption>
+    </figure>
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box pg-prof">
+          <div class="pg-nav"><small>Account</small><span>Profile</span><span>Passkeys</span><span class="on">Preferences</span><small>Organise</small><span>Categories</span><span>Tags</span><small class="adm">Admin · Saldo at home</small><span>Accounts</span><span>Invites</span></div>
+          <dl style="margin:0">
+            <div class="pg-kv"><dt>Language</dt><dd><span class="pg-seg" style="grid-template-columns:repeat(2,auto);display:inline-grid"><span class="on" style="padding:4px 10px">English</span><span style="padding:4px 10px">Italiano</span></span></dd></div>
+            <div class="pg-kv"><dt>Theme</dt><dd><span class="pg-seg" style="grid-template-columns:repeat(3,auto);display:inline-grid"><span class="on" style="padding:4px 10px">System</span><span style="padding:4px 10px">Light</span><span style="padding:4px 10px">Dark</span></span></dd></div>
+            <div class="pg-kv"><dt>Currency</dt><dd><span class="pg-btn">Euro · € ▾</span></dd></div>
+          </dl>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 8. Profile with the menu on the left. The menu is shorter here than on the page.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="empty" aria-labelledby="h-empty">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-empty">Empty states</h2>
+      <p class="lead">An empty state gives the action that fills it. A short text with one button is not sufficient.</p>
+    </div>
+    <div class="prose">
+      <p>The review compared three ways: text and one action, dashed shapes of the content, and the first step. It kept the first step (W11). The table gives the rule for each place.</p>
+      <p><b>The Home.</b> A new user sees a block “Getting started” with four steps and the progress. A done step shows a check and a line through its title. The Budget, Transactions and Goals blocks do not show until they have data. Under “Getting started”, a block shows the money in the accounts. The block of H5 replaces it after the first transaction.</p>
+      <p><b>Data.</b> Two rules need new functions in <code>@saldo/core</code>, with tests: the budget suggestions (the median of the last 6 months for each category) and the search in other periods.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">Place</th><th scope="col">First step</th></tr></thead>
+        <tbody>
+          <tr><td>Home, new user</td><td>“Getting started”: add an account, record the first expense, set a budget, set aside for a goal (optional). One action on each open step.</td></tr>
+          <tr><td>Transactions, none</td><td>A quick add in the page: amount, category, “Add”. Under it, “Import from CSV”.</td></tr>
+          <tr><td>Transactions, no results</td><td>“No results in ‹period›”, then the matches of the search in other periods, and “Search everywhere”.</td></tr>
+          <tr><td>Statistics, empty period</td><td>“‹Period› has no transactions yet”, with “Go to ‹last period with data›” and “New transaction”. The chart stays.</td></tr>
+          <tr><td>Accounts, none</td><td>“Which account do you want to add?” and six types. A type opens “New account” with the type set.</td></tr>
+          <tr><td>Goals, none</td><td>Three suggestions: emergency fund (3 times the median monthly expenses), holiday, car. Then “Create a goal”.</td></tr>
+          <tr><td>Profile · Budgets</td><td>“Where you spend most”: the top categories, each with its median monthly spend and “Create”.</td></tr>
+          <tr><td>Profile · Tags</td><td>A field to add a tag, in the page.</td></tr>
+          <tr><td>Profile · Invites</td><td>The form of a new invite, in the page: label, expiry, “Create code”.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stage">
+      <div class="pg">
+        <div class="pg-box">
+          <div class="pg-head"><b>Getting started</b><em>1 of 4</em></div>
+          <div class="pg-step done"><i></i><span><b>Add an account</b><span>Current account · €1,250.00</span></span><span></span></div>
+          <div class="pg-step"><i></i><span><b>Record the first expense</b><span>Statistics, budgets and balances start there.</span></span><span class="pg-btn p">New transaction</span></div>
+          <div class="pg-step"><i></i><span><b>Set a budget</b><span>A limit for each category.</span></span><span class="pg-btn">Create a budget</span></div>
+          <div class="pg-step"><i></i><span><b>Set aside for a goal</b><span>Optional.</span></span><span class="pg-btn">Create a goal</span></div>
+        </div>
+      </div>
+      <p class="stage-cap">Figure 9. The Home of a new user. The keys of these strings are new (section 08).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="strings" aria-labelledby="h-strings">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-strings">Strings</h2>
+      <p class="lead">Use the keys that exist. Add the new keys to <code>it.ts</code> and <code>en.ts</code> together.</p>
+    </div>
+    <div class="prose">
+      <p>The table gives the new keys. The plan can change a key name. It must keep one key for one meaning.</p>
+      <p>The empty states that keep a text use their keys of today: <code>transactions.empty</code>, <code>goals.emptyBody</code>, <code>tags.emptyBody</code>, <code>admin.invites.note</code> and the others.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">New key</th><th scope="col">en</th><th scope="col">it</th></tr></thead>
+        <tbody>
+          <tr><td><code>stats.expensesByPeriod</code></td><td>Expenses by period</td><td>Uscite per periodo</td></tr>
+          <tr><td><code>stats.usual</code></td><td>Usual</td><td>Il solito</td></tr>
+          <tr><td><code>stats.usualNote</code></td><td>Usual is the median of the last 6 periods: {{amount}}.</td><td>Il solito è la mediana degli ultimi 6 periodi: {{amount}}.</td></tr>
+          <tr><td><code>stats.projectionAboveShort</code></td><td>about {{amount}} above usual</td><td>circa {{amount}} sopra il solito</td></tr>
+          <tr><td><code>stats.projectionBelowShort</code></td><td>about {{amount}} below usual</td><td>circa {{amount}} sotto il solito</td></tr>
+          <tr><td><code>stats.emptyPeriod</code></td><td>{{period}} has no transactions yet</td><td>{{period}} non ha ancora transazioni</td></tr>
+          <tr><td><code>stats.goToPeriod</code></td><td>Go to {{period}}</td><td>Vai a {{period}}</td></tr>
+          <tr><td><code>transactions.edit</code></td><td>Edit transaction</td><td>Modifica transazione</td></tr>
+          <tr><td><code>transactions.deleted</code></td><td>Deleted “{{title}}”</td><td>Eliminata «{{title}}»</td></tr>
+          <tr><td><code>transactions.quickAddTitle</code></td><td>Record your first expense</td><td>Registra la prima spesa</td></tr>
+          <tr><td><code>transactions.noResultsIn</code></td><td>No results in {{period}}</td><td>Nessun risultato in {{period}}</td></tr>
+          <tr><td><code>transactions.otherPeriods</code></td><td>“{{query}}” appears in other periods:</td><td>«{{query}}» compare in altri periodi:</td></tr>
+          <tr><td><code>transactions.searchEverywhere</code></td><td>Search everywhere</td><td>Cerca ovunque</td></tr>
+          <tr><td><code>home.startTitle</code></td><td>Getting started</td><td>Per iniziare</td></tr>
+          <tr><td><code>home.startProgress</code></td><td>{{done}} of {{count}}</td><td>{{done}} di {{count}}</td></tr>
+          <tr><td><code>home.stepAccount</code></td><td>Add an account</td><td>Aggiungi un conto</td></tr>
+          <tr><td><code>home.stepTransaction</code></td><td>Record the first expense</td><td>Registra la prima spesa</td></tr>
+          <tr><td><code>home.stepBudget</code></td><td>Set a budget</td><td>Imposta un budget</td></tr>
+          <tr><td><code>home.stepGoal</code></td><td>Set aside for a goal</td><td>Metti da parte per un obiettivo</td></tr>
+          <tr><td><code>home.inAccounts</code></td><td>In your accounts</td><td>Nei tuoi conti</td></tr>
+          <tr><td><code>accounts.whichType</code></td><td>Which account do you want to add?</td><td>Che conto vuoi aggiungere?</td></tr>
+          <tr><td><code>goals.presetEmergency</code></td><td>Emergency fund</td><td>Fondo emergenza</td></tr>
+          <tr><td><code>goals.presetHoliday</code></td><td>Holiday</td><td>Vacanze</td></tr>
+          <tr><td><code>goals.presetCar</code></td><td>Car</td><td>Macchina</td></tr>
+          <tr><td><code>budgets.suggestTitle</code></td><td>Where you spend most</td><td>Dove spendi di più</td></tr>
+          <tr><td><code>budgets.suggestAmount</code></td><td>{{amount}} a month</td><td>{{amount}} al mese</td></tr>
+          <tr><td><code>admin.invites.createFirst</code></td><td>Create the first invite</td><td>Crea il primo invito</td></tr>
+          <tr><td><code>web.profile.groupAccount</code></td><td>Account</td><td>Account</td></tr>
+          <tr><td><code>web.profile.groupOrganise</code></td><td>Organise</td><td>Organizza</td></tr>
+          <tr><td><code>web.profile.groupConnections</code></td><td>Connections and data</td><td>Collegamenti e dati</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="open" aria-labelledby="h-open">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-open">Open items</h2>
+      <p class="lead">Decide these items in the plan, before the code.</p>
+    </div>
+    <div class="prose">
+      <ol class="steps">
+        <li><b>The Admin routes.</b> Admin moves into Profile. Decide if <code>/admin/*</code> stays as a route with the Profile layout, or moves to <code>/profile/admin/*</code>. Keep the guard of <code>requireWebAdmin</code> on every page and Server Action.</li>
+        <li><b>The phone.</b> The empty states and the edit form open from a row are web rules. Decide if the phone follows them in a later phase. The site shows phone screens (spec 0.8a §04): do not change them now.</li>
+        <li><b>New functions in core.</b> Budget suggestions, search in other periods and the emergency fund amount need pure functions in <code>@saldo/core</code> with tests (AGENTS.md, «Tests»).</li>
+        <li><b>Keys on Statistics.</b> <kbd>←</kbd> and <kbd>→</kbd> change the period. Make sure that they do not act when the focus is in a field or in a dialog.</li>
+        <li><b>The URL of a dialog.</b> Today <code>?t=</code>, <code>?a=</code>, <code>?g=</code> and <code>?c=</code> open a panel. Keep them for the centred dialog, so that a link still opens a detail.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · web pages redesign · the mockups are in <code>docs/design/redesign/</code> (not in the repository)</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>
