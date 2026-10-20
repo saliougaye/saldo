@@ -2488,10 +2488,10 @@ caller does not know the web app.
 
 #### 17.4.4 Security, documentation, steps
 
-- §18 gains a paragraph, and `SECURITY.md` a section «MCP e connettori»: what a token is and is not,
+- §18 gains a paragraph, and `SECURITY.md` a section «MCP and connectors»: what a token is and is not,
   the audience, the scopes, the immediate revocation, the 180 days, that no token is ever logged or accepted in a
   URL, that a write goes through the same path as the web's, and that this server never calls a model itself.
-- `docs/self-hosting.md` gains «Collegare un client MCP»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
+- `docs/self-hosting.md` gains «Connecting an MCP client»: the endpoint, `MCP_ENABLED`, and that `PUBLIC_URL` has
   to be `https://` — MCP clients refuse to authorize against plain `http` anywhere but on the same machine.
 - **Tests.** The catalogue by TDD on fixtures, with the parity tests against the pages' view functions; the route
   on PGlite: 401 with the challenge, 403 on scope, a tool call that answers, a revocation that turns the next call

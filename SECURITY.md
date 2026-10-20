@@ -100,7 +100,7 @@ owner then asks the admin of the instance to restore the address (`pnpm --filter
 If that trade is not one you want, leave SMTP unconfigured: verification, recovery and the change of address then do
 not exist, and nothing else changes.
 
-## MCP e connettori (MCP and connectors)
+## MCP and connectors
 
 From 0.4 an instance serves a [Model Context Protocol](https://modelcontextprotocol.io) endpoint at
 `{PUBLIC_URL}/mcp`, so an MCP client a user already runs (Claude Code, Claude's custom connectors, any MCP client)

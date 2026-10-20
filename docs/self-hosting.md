@@ -39,7 +39,7 @@ Building the app is covered [for Android](./building-android.md) and [for iOS](.
 | `APP_REDIRECT_SCHEMES` | `saldo` | Comma-separated URL schemes accepted as a mobile redirect target. It must list whatever the app builds were given as `SALDO_SCHEME` (default `saldo`), or every mobile sign-in stops with `invalid_redirect_uri`. |
 | `TRUSTED_PROXIES` | `172.28.0.0/16` | Comma-separated IPs/CIDRs of the reverse proxy in front of this server. See "Auth rate limiting" below — required whenever something like Caddy sits in front. |
 | `DEFAULT_TIME_ZONE` | `Europe/Rome` | Optional, default `UTC`. The time zone the web app computes «today» in for a user whose settings carry none yet; every phone fills its own at onboarding, so this matters only for accounts created before that. Not `TZ`, which Vercel reserves. |
-| `MCP_ENABLED` | `false` | Optional, `true` or `false`. Set, it wins and locks the switch in `/admin/mcp`; unset, the admin chooses there (default on). See «Collegare un client MCP» below. |
+| `MCP_ENABLED` | `false` | Optional, `true` or `false`. Set, it wins and locks the switch in `/admin/mcp`; unset, the admin chooses there (default on). See «Connecting an MCP client» below. |
 
 Two things to know before you start:
 
@@ -192,7 +192,7 @@ Set these in the project's **Environment Variables**, or with `vercel env add <N
 They do **not** go in `vercel.json`: that file is committed, and its `env` field holds literal
 values, so a secret put there is a secret published.
 
-| | Value | |
+| Variable | Value | Notes |
 | --- | --- | --- |
 | `PUBLIC_URL` | `https://saldo.example.com` | Your production domain. Not a preview URL. |
 | `WEBAUTHN_RP_ID` | `saldo.example.com` | The registrable domain: no scheme, no port. A passkey is bound to it. |
@@ -494,7 +494,7 @@ values typed into the panel need no restart and take effect on the next message.
 Mailpit (above): host `localhost`, port `1025`, no user, any sender — the only case where a plain connection is
 accepted.
 
-## Collegare un client MCP (connecting an MCP client)
+## Connecting an MCP client
 
 The server exposes a [Model Context Protocol](https://modelcontextprotocol.io) endpoint, so each user can point their
 own MCP client — Claude Code, Claude's custom connectors, Cursor, any client that speaks Streamable HTTP and OAuth —
@@ -522,8 +522,8 @@ in with their passkey.
   on). Off, `/mcp`, the `.well-known` documents, registration and authorization answer 404 and the consent page
   refuses; refreshing and revoking tokens keep working, so authorized connectors resume when it is back on. Nothing is
   deleted.
-- **What a client may do** — tokens, scopes, revocation, the 180-day lapse — is in [`SECURITY.md`](../SECURITY.md),
-  «MCP e connettori».
+- **What a client may do** — tokens, scopes, revocation, the 180-day lapse — is in [`SECURITY.md`](../SECURITY.md#mcp-and-connectors),
+  «MCP and connectors».
 
 ## Local development
 
