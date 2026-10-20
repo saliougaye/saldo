@@ -85,7 +85,9 @@ Read these points before you start:
 4. Put a reverse proxy in front of the container, for HTTPS. `apps/web/docker/Caddyfile.example` is a
    Caddy configuration of two lines. Caddy gets and renews the certificate automatically.
 
-When the container starts, it applies the database migrations. Then it serves on port 3000. If port 3000
+When the container starts, it applies the database migrations. Then it serves on port 3000. The compose
+file keeps attachments on the server, in the `attachments` volume (`ATTACHMENT_STORAGE=fs`). To keep
+them only on the phones, set `ATTACHMENT_STORAGE=none`. If port 3000
 is not free on the host, set `WEB_PORT`:
 
 ```bash
@@ -116,8 +118,9 @@ Four things are different from the compose file. Three of them cause failures if
   ```
 
 - **Do not use `ATTACHMENT_STORAGE=fs`.** Vercel deletes its filesystem at each deploy. Use `none`
-  (attachments stay on the phone), `s3`, or `vercel-blob`. Before you use `vercel-blob`, read the
-  caution in [Attachments](#attachments).
+  (attachments stay on the phone), `s3`, or `vercel-blob`. With `vercel-blob`, uploads go through the
+  server, and an attachment larger than some MB fails. For large attachments, use `s3`. Before you use
+  `vercel-blob`, also read the caution in [Attachments](#attachments).
 - **`PUBLIC_URL` and `WEBAUTHN_RP_ID` must name the production domain**, not a preview URL. A passkey works
   only on the domain that made it. A passkey made on a preview URL does not work on the real domain, and
   the WebAuthn error does not tell you the cause.
@@ -669,12 +672,13 @@ Receipts and photos are optional. You choose where their bytes go, with `ATTACHM
 
 | Value | Also set | Notes |
 | --- | --- | --- |
-| `none` (default) | — | Attachments stay on the phone. The app still saves them, and their rows still sync. Thus a different device shows them as not available, not as missing. |
-| `fs` | `STORAGE_DIR` | A directory on the server. Back it up with the database. Not for Vercel: Vercel deletes its filesystem at each deploy. |
+| `none` (default, but the Docker compose file sets `fs`) | — | Attachments stay on the phone. The app still saves them, and their rows still sync. Thus a different device shows them as not available, not as missing. |
+| `fs` | `STORAGE_DIR` | A directory on the server. The Docker compose file uses `/data/attachments`, on the `attachments` volume. Back it up with the database. Not for Vercel: Vercel deletes its filesystem at each deploy. |
 | `s3` | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, optional `S3_ENDPOINT` and `S3_FORCE_PATH_STYLE` | Amazon S3. With `S3_ENDPOINT`, also Cloudflare R2, MinIO, Backblaze B2 and Hetzner. |
-| `vercel-blob` | `BLOB_READ_WRITE_TOKEN` | Vercel adds the token. Read the caution below. |
+| `vercel-blob` | `BLOB_READ_WRITE_TOKEN` | Vercel adds the token. Uploads go through the server, so the request limit of the platform applies: an attachment larger than some MB fails. Read the caution below. |
 
-An upload uses the shortest path that the store allows. With S3, the phone sends the bytes directly to
+An upload uses the shortest path that the store allows. With `fs` and `vercel-blob`, the phone sends the
+bytes to the server. With S3, the phone sends the bytes directly to
 the bucket. It uses a URL that the server signs for that one object, its exact size and its exact type.
 This is necessary: a serverless function accepts a request body much smaller than 10 MB, the maximum size
 of an attachment. An upload through the server would fail there.
