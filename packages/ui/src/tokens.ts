@@ -273,8 +273,18 @@ export const layout = {
   targetRing: 36,
   targetRingSmall: 28,
   minHitTarget: 44,
-  /** Web (§17.1.7). The top bar that replaces the tab bar on wide screens. */
-  topbarHeight: 64,
+  /** Web (H1, 2026-10-20): the top bar, on every width. */
+  topbarHeight: 56,
+  /** Web (H2): the one column every page sits in. The inner part of the top bar has the same width. */
+  contentColumn: 1040,
+  /** Web (H2): the padding on each side of the column, at and above `shellBreakpoint`. */
+  columnPadding: 32,
+  /**
+   * Web (H1): the top bar shows the destinations and «New transaction» at and above this width;
+   * below it, the phone's tab bar does. A media query cannot read a custom property, so the web
+   * writes 760 in its `@media` rules with a comment naming this token.
+   */
+  shellBreakpoint: 760,
   /** Web: the widest a page's content grows, and its inline margin. */
   contentWide: 1120,
   /** Web: the widest a page's content grows beside the sidebar, so a large screen has no empty band on the right. */

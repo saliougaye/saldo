@@ -65,7 +65,7 @@ Decisions this plan takes where the spec leaves a choice:
 
 Design tokens get no test (AGENTS.md, «Tests»). `css.ts` writes every `layout` entry as `--layout-<kebab-name>`, so the new entries become `--layout-content-column`, `--layout-column-padding` and `--layout-shell-breakpoint` with no other change.
 
-- [ ] **Step 1: Change `topbarHeight` and add the three entries**
+- [x] **Step 1: Change `topbarHeight` and add the three entries**
 
 In `packages/ui/src/tokens.ts`, replace:
 
@@ -91,12 +91,12 @@ with:
   shellBreakpoint: 760,
 ```
 
-- [ ] **Step 2: Typecheck the package**
+- [x] **Step 2: Typecheck the package**
 
 Run: `rtk proxy pnpm --filter @saldo/ui typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts
