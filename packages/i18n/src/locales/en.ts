@@ -1597,6 +1597,14 @@ export const en: Messages = {
       nextPeriod: 'Next period',
       back: 'Saldo',
       backLabel: 'Back to Saldo',
+      accountMenu: 'Account menu',
+    },
+    profile: {
+      groupAccount: 'Account',
+      groupOrganise: 'Organise',
+      groupConnections: 'Connections and data',
+      groupAdmin: 'Admin · {{name}}',
+      backLabel: 'Back to Profile',
     },
     preferences: {
       systemFollows: '“System” follows the settings of the device you’re using.',

@@ -1603,6 +1603,14 @@ export const it = {
       nextPeriod: 'Periodo successivo',
       back: 'Saldo',
       backLabel: 'Torna a Saldo',
+      accountMenu: 'Menu dell’account',
+    },
+    profile: {
+      groupAccount: 'Account',
+      groupOrganise: 'Organizza',
+      groupConnections: 'Collegamenti e dati',
+      groupAdmin: 'Admin · {{name}}',
+      backLabel: 'Torna a Profilo',
     },
     preferences: {
       systemFollows: '«Sistema» segue le impostazioni del dispositivo che stai usando.',

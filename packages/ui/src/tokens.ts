@@ -302,8 +302,8 @@ export const layout = {
   /** Web (W1): the centred dialog where a form opens. */
   dialogFormWidth: 480,
   searchWidth: 320,
-  /** Web: the sub-navigation of Profilo and Admin. */
-  subnavWidth: 200,
+  /** Web (W10, 2026-10-21): the menu of Profile, which Admin shares. */
+  subnavWidth: 220,
   /** Web: the sidebar that replaces the top bar at and above `wideBreakpoint` (G2, 2026-10-11). */
   sidebarWidth: 232,
   /** Web: the column of the sign-in and registration pages. */

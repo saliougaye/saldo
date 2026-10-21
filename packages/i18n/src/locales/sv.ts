@@ -1597,6 +1597,14 @@ export const sv: Messages = {
       nextPeriod: 'Nästa period',
       back: 'Saldo',
       backLabel: 'Tillbaka till Saldo',
+      accountMenu: 'Kontomeny',
+    },
+    profile: {
+      groupAccount: 'Konto',
+      groupOrganise: 'Ordna',
+      groupConnections: 'Anslutningar och data',
+      groupAdmin: 'Admin · {{name}}',
+      backLabel: 'Tillbaka till profilen',
     },
     preferences: {
       systemFollows: '”System” följer inställningarna på enheten du använder.',

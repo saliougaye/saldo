@@ -55,7 +55,7 @@
 - Modify: `packages/i18n/src/locales/en.ts`, `it.ts`, `de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts`
 - Modify: `packages/ui/src/tokens.ts`
 
-- [ ] **Step 1: Add `web.shell.accountMenu`**
+- [x] **Step 1: Add `web.shell.accountMenu`**
 
 In each locale, inside `web: { … shell: { … } }`, add after the line `backLabel: …`:
 
@@ -69,7 +69,7 @@ In each locale, inside `web: { … shell: { … } }`, add after the line `backLa
 | `pt.ts` | `      accountMenu: 'Menu da conta',` |
 | `sv.ts` | `      accountMenu: 'Kontomeny',` |
 
-- [ ] **Step 2: Add the `web.profile` block**
+- [x] **Step 2: Add the `web.profile` block**
 
 In each locale, right after the closing `},` of `web.shell`, add the block for that locale. First check that `web` has no `profile` key yet: `rtk grep -n "^    profile: {" packages/i18n/src/locales/en.ts` must show nothing inside `web`.
 
@@ -157,7 +157,7 @@ In each locale, right after the closing `},` of `web.shell`, add the block for t
     },
 ```
 
-- [ ] **Step 3: The menu width**
+- [x] **Step 3: The menu width**
 
 In `packages/ui/src/tokens.ts`, replace:
 
@@ -173,7 +173,7 @@ with:
   subnavWidth: 220,
 ```
 
-- [ ] **Step 4: Test and commit**
+- [x] **Step 4: Test and commit**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.

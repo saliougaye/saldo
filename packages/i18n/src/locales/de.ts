@@ -1618,6 +1618,14 @@ export const de: Messages = {
       nextPeriod: 'Nächster Zeitraum',
       back: 'Saldo',
       backLabel: 'Zurück zu Saldo',
+      accountMenu: 'Kontomenü',
+    },
+    profile: {
+      groupAccount: 'Konto',
+      groupOrganise: 'Ordnen',
+      groupConnections: 'Verbindungen und Daten',
+      groupAdmin: 'Admin · {{name}}',
+      backLabel: 'Zurück zum Profil',
     },
     preferences: {
       systemFollows: '„System“ folgt den Einstellungen des Geräts, das du gerade benutzt.',
