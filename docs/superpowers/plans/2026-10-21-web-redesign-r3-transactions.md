@@ -46,7 +46,7 @@
 
 No test of its own: the catalog test and the parity test check the keys.
 
-- [ ] **Step 1: Add the keys**
+- [x] **Step 1: Add the keys**
 
 In each file, after the line that starts with `    onlyExcluded:` inside `transactions: {`, add the six lines for that locale.
 
@@ -127,12 +127,12 @@ In each file, after the line that starts with `    onlyExcluded:` inside `transa
     keysSearch: 'sök',
 ```
 
-- [ ] **Step 2: Run the catalog tests**
+- [x] **Step 2: Run the catalog tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add packages/i18n/src/locales
