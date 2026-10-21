@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { navItems } from '../../src/features/shell/nav';
 import { userI18n } from '../../src/i18n/server';
-import { isAdminUser } from '../../src/server/auth/admin';
 import { requireWebUser } from '../../src/server/auth/currentUser';
 import { NavPendingProvider } from '../../src/ui/NavPending';
 import { Shortcuts } from '../../src/ui/Shortcuts';
@@ -20,9 +19,8 @@ export const dynamic = 'force-dynamic';
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await requireWebUser();
-  const admin = isAdminUser(user);
   const { t } = await userI18n(user.id);
-  const items = navItems(admin).map((item) => ({ ...item, label: t(item.labelKey) }));
+  const items = navItems().map((item) => ({ ...item, label: t(item.labelKey) }));
   return (
     <NavPendingProvider label={t('common.loading')}>
       <div className={styles.shell}>
@@ -31,18 +29,21 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </a>
         <TopBar
           items={items}
-          user={{ name: user.displayName }}
+          user={{ name: user.displayName, email: user.email }}
           strings={{
             label: t('web.shell.mainNav'),
             newTransaction: t('web.shell.newTransaction'),
+            accountMenu: t('web.shell.accountMenu'),
             profile: t('profile.title'),
+            signOut: t('sync.signOut'),
+            working: t('common.loading'),
           }}
         />
         <main className={styles.content} id="content">
           {children}
         </main>
         <TabBar
-          items={items.filter((item) => item.trailing !== true)}
+          items={items}
           label={t('web.shell.sectionNav')}
           newTransaction={t('web.shell.newTransaction')}
         />

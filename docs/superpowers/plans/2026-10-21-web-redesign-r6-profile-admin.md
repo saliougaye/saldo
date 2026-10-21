@@ -194,7 +194,7 @@ rtk git commit -m "feat(i18n): the groups of the Profile menu and the account me
 - Replace: `apps/web/src/ui/Avatar.tsx`
 - Modify: `apps/web/src/ui/Avatar.module.css`
 
-- [ ] **Step 1: The Admin item goes from the destinations**
+- [x] **Step 1: The Admin item goes from the destinations**
 
 In `apps/web/src/features/shell/nav.ts`:
 
@@ -214,7 +214,7 @@ export function navItems(): NavItem[] {
 Run: `rtk grep -rn "trailing\b\|navItems(" apps/web/src apps/web/app`
 Then fix every caller this finds, as Steps 2 and 3 do.
 
-- [ ] **Step 2: The app layout**
+- [x] **Step 2: The app layout**
 
 In `apps/web/app/(app)/layout.tsx`:
 
@@ -239,7 +239,7 @@ In `apps/web/app/(app)/layout.tsx`:
 
 4. Replace `items={items.filter((item) => item.trailing !== true)}` in `<TabBar>` with `items={items}`.
 
-- [ ] **Step 3: The top bar**
+- [x] **Step 3: The top bar**
 
 In `apps/web/src/ui/TopBar.tsx`:
 
@@ -289,7 +289,7 @@ interface Props {
 
 5. Remove the imports that are no longer used (`IconName` if unused).
 
-- [ ] **Step 4: The avatar menu**
+- [x] **Step 4: The avatar menu**
 
 Replace the whole of `apps/web/src/ui/Avatar.tsx` with:
 
@@ -364,7 +364,7 @@ export function Avatar({ name, email, strings }: Props) {
 
 `FilterMenu` uses `Menu.LinkItem` with `closeOnClick` and `render`, so those props exist. If `Menu.Item` in the installed Base UI version has no `closeOnClick`, remove that prop: the menu then closes on the click, and the busy label is not needed. Check the Base UI docs, as AGENTS.md asks.
 
-- [ ] **Step 5: The avatar menu CSS**
+- [x] **Step 5: The avatar menu CSS**
 
 In `apps/web/src/ui/Avatar.module.css`, replace the rule `.avatar[aria-current="page"] { … }` with:
 
@@ -464,7 +464,7 @@ In `apps/web/src/ui/Avatar.module.css`, replace the rule `.avatar[aria-current="
 
 In the `prefers-reduced-motion` block at the end of the file, add `.popup { transition-property: opacity; }`.
 
-- [ ] **Step 6: Typecheck, test and commit**
+- [x] **Step 6: Typecheck, test and commit**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no error.
