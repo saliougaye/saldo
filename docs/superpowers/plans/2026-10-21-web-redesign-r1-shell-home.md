@@ -42,7 +42,7 @@ Decisions this plan takes where the spec leaves a choice:
 | File | What changes |
 |---|---|
 | `packages/ui/src/tokens.ts` | `layout`: `topbarHeight` 56, new `contentColumn`, `columnPadding`, `shellBreakpoint`. |
-| `packages/i18n/src/locales/en.ts`, `it.ts` | 7 new keys (`home.*`, `targets.spent`). |
+| `packages/i18n/src/locales/*.ts` (7 locales) | 7 new keys (`home.*`, `targets.spent`). |
 | `apps/web/src/features/home/homeView.ts` (+ test) | «Coming up» nearest first; `HOME_ROWS_CLOSED`. |
 | `apps/web/app/(app)/layout.tsx` | No sidebar. |
 | `apps/web/app/(app)/shell.module.css` | One column of 1040px. |
@@ -110,8 +110,11 @@ rtk git commit -m "feat(ui): layout tokens for the web top bar and the 1040px co
 **Files:**
 - Modify: `packages/i18n/src/locales/en.ts` (`home`, `targets`)
 - Modify: `packages/i18n/src/locales/it.ts` (`home`, `targets`)
+- Modify: `packages/i18n/src/locales/de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts` (`home`, `targets`)
 
-- [ ] **Step 1: Add the English keys**
+The catalog test checks that every locale has the key structure of `it`. Add the 7 keys to all seven locales.
+
+- [x] **Step 1: Add the English keys**
 
 In `packages/i18n/src/locales/en.ts`, in `home`, after `unbudgetedNote: 'spent in categories with no budget',` add:
 
@@ -130,7 +133,7 @@ In `targets`, after `leftDetail: 'left · {{spent}} spent of {{limit}}',` add:
     spent: '{{amount}} spent',
 ```
 
-- [ ] **Step 2: Add the Italian keys**
+- [x] **Step 2: Add the Italian keys**
 
 In `packages/i18n/src/locales/it.ts`, in `home`, after the `unbudgetedNote` line add:
 
@@ -149,15 +152,19 @@ In `targets`, after the `leftDetail` line add:
     spent: '{{amount}} spesi',
 ```
 
-- [ ] **Step 3: Run the i18n tests (parity and keys)**
+- [x] **Step 2b: Add the keys to `de`, `es`, `fr`, `pt` and `sv`**
+
+Same 7 keys, in the same places, translated. The key-structure test fails without them.
+
+- [x] **Step 3: Run the i18n tests (parity and keys)**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: all tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
-rtk git add packages/i18n/src/locales/en.ts packages/i18n/src/locales/it.ts
+rtk git add packages/i18n/src/locales
 rtk git commit -m "feat(i18n): strings for the trend and the budget rings of the new Home"
 ```
 

@@ -1216,6 +1216,12 @@ export const en: Messages = {
     upcomingSummary_other: '{{count}} coming up · {{amount}}',
     unbudgeted: 'Not budgeted',
     unbudgetedNote: 'spent in categories with no budget',
+    vsUsual: 'Vs usual',
+    trendThisPeriod: 'This period',
+    trendUsual: 'Usual',
+    trendSpentBy: 'spent by {{date}}',
+    trendUsualBy: 'usual by {{date}}',
+    trendHint: 'Use the arrow keys to move along the days.',
   },
   targets: {
     today: 'today',
@@ -1239,6 +1245,7 @@ export const en: Messages = {
     createBudget: 'Create a budget',
     itemLabel: '{{name}}, {{amount}} of {{limit}}, {{status}}',
     leftDetail: 'left · {{spent}} spent of {{limit}}',
+    spent: '{{amount}} spent',
   },
   goals: {
     closeFirst: 'Close the goals in this account first',

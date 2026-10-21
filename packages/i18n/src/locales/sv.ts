@@ -1215,6 +1215,12 @@ export const sv: Messages = {
     upcomingSummary_other: '{{count}} kommande · {{amount}}',
     unbudgeted: 'Utan budget',
     unbudgetedNote: 'spenderat i kategorier utan budget',
+    vsUsual: 'Mot vanligt',
+    trendThisPeriod: 'Denna period',
+    trendUsual: 'Vanligt',
+    trendSpentBy: 'spenderat till {{date}}',
+    trendUsualBy: 'vanligt till {{date}}',
+    trendHint: 'Använd piltangenterna för att gå mellan dagarna.',
   },
   targets: {
     today: 'i dag',
@@ -1238,6 +1244,7 @@ export const sv: Messages = {
     createBudget: 'Skapa en budget',
     itemLabel: '{{name}}, {{amount}} av {{limit}}, {{status}}',
     leftDetail: 'kvar · {{spent}} av {{limit}} spenderat',
+    spent: '{{amount}} spenderat',
   },
   goals: {
     closeFirst: 'Stäng först målen i det här kontot',

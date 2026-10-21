@@ -1222,6 +1222,12 @@ export const it = {
     upcomingSummary_other: '{{count}} in arrivo · {{amount}}',
     unbudgeted: 'Non a budget',
     unbudgetedNote: 'spesi in categorie senza budget',
+    vsUsual: 'Rispetto al solito',
+    trendThisPeriod: 'Questo periodo',
+    trendUsual: 'Di solito',
+    trendSpentBy: 'spesi al {{date}}',
+    trendUsualBy: 'di solito al {{date}}',
+    trendHint: 'Usa le frecce per scorrere i giorni.',
   },
   targets: {
     today: 'oggi',
@@ -1245,6 +1251,7 @@ export const it = {
     createBudget: 'Crea un budget',
     itemLabel: '{{name}}, {{amount}} di {{limit}}, {{status}}',
     leftDetail: 'rimasti · {{spent}} spesi di {{limit}}',
+    spent: '{{amount}} spesi',
   },
   goals: {
     closeFirst: 'Chiudi prima gli obiettivi in questo conto',

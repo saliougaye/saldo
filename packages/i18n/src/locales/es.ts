@@ -1223,6 +1223,12 @@ export const es: Messages = {
     upcomingSummary_other: '{{count}} próximos · {{amount}}',
     unbudgeted: 'Sin presupuesto',
     unbudgetedNote: 'gastado en categorías sin presupuesto',
+    vsUsual: 'Frente a lo habitual',
+    trendThisPeriod: 'Este periodo',
+    trendUsual: 'Habitual',
+    trendSpentBy: 'gastado a {{date}}',
+    trendUsualBy: 'habitual a {{date}}',
+    trendHint: 'Usa las flechas para moverte por los días.',
   },
   targets: {
     today: 'hoy',
@@ -1246,6 +1252,7 @@ export const es: Messages = {
     createBudget: 'Crear un presupuesto',
     itemLabel: '{{name}}, {{amount}} de {{limit}}, {{status}}',
     leftDetail: 'restante · {{spent}} gastados de {{limit}}',
+    spent: '{{amount}} gastados',
   },
   goals: {
     closeFirst: 'Cierra primero los objetivos de esta cuenta',
