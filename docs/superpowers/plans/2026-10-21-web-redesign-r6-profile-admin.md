@@ -1104,18 +1104,18 @@ rtk git commit -m "test(web): the Profile menu, its Admin group and the account 
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Tick R6**
+- [x] **Step 1: Tick R6**
 
 In `docs/superpowers/plans/README.md`, replace:
 
 ```markdown
-- [ ] **R6** — Profile and Admin (W10).
+- [x] **R6** — Profile and Admin (W10).
 ```
 
 with:
 
 ```markdown
-- [ ] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
+- [x] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
 ```
 
 After the paragraph `**Acceptance for R5:** …`, add:
@@ -1128,7 +1128,7 @@ counts), Connections and data, and «Admin · ‹instance›» for the admin rol
 list of groups and a section has a way back.
 ```
 
-- [ ] **Step 2: Run the gates, unfiltered**
+- [x] **Step 2: Run the gates, unfiltered**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -1139,7 +1139,7 @@ Expected: every package passes. On a machine with Node older than 22.22, `site` 
 Run: `rtk proxy pnpm test`
 Expected: every package passes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add docs/superpowers/plans/README.md

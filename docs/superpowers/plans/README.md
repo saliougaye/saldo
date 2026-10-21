@@ -537,7 +537,7 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
 - [x] **R3** — Transactions (W5) (`plans/2026-10-21-web-redesign-r3-transactions.md`).
 - [x] **R4** — Statistics (W6–W8) (`plans/2026-10-21-web-redesign-r4-stats.md`).
 - [x] **R5** — Accounts (W9) (`plans/2026-10-21-web-redesign-r5-accounts.md`).
-- [ ] **R6** — Profile and Admin (W10).
+- [x] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
 - [ ] **R7** — empty states and the new `@saldo/core` functions (W11).
 
 **Acceptance for R1:** no sidebar on any width; the top bar and the content share the 1040px column;
@@ -561,6 +561,12 @@ table; the period trend is gone from the page.
 **Acceptance for R5:** Accounts shows the net worth block, one row for each account in «To spend» and
 in «Savings and investments» (no cards), a Goals block of its own with 40px rings, and the archived
 row; the account dialog has «Archive account» and «Edit» at its bottom.
+
+**Acceptance for R6:** the avatar opens a menu with the name, the email, «Profile» and «Sign out»;
+the top bar has no Admin icon; Profile has a 220px menu in the groups Account, Organise (with
+counts), Connections and data, and «Admin · ‹instance›» for the admin role only, then «Sign out»;
+`/admin/*` keeps its routes and its guard and shows the same frame; below 760px `/profile` is the
+list of groups and a section has a way back.
 
 ### Notifications for future transactions
 
