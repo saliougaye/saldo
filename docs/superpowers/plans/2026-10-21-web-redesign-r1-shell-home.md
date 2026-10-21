@@ -681,7 +681,7 @@ The component is a client component because it follows the pointer and the keys.
 
 The control is a `slider` (ARIA): the value is the day, `aria-valuetext` is what the tooltip says. A test for this component would test a component with mocked data, which AGENTS.md does not want; Task 9 covers it end to end.
 
-- [ ] **Step 1: Create the component**
+- [x] **Step 1: Create the component**
 
 Create `apps/web/src/ui/charts/TrendScrub.tsx`:
 
@@ -726,7 +726,11 @@ interface Props {
   };
 }
 
-function points(values: readonly number[], x: (index: number) => number, y: (value: number) => number): string {
+function points(
+  values: readonly number[],
+  x: (index: number) => number,
+  y: (value: number) => number,
+): string {
   return values.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(' ');
 }
 
@@ -736,7 +740,15 @@ function points(values: readonly number[], x: (index: number) => number, y: (val
  * tooltip show the day. Up to today the tooltip shows what you spent by that day; after today, what
  * you usually spend by that day, and the dot is faint.
  */
-export function TrendScrub({ current, usual, span, dates, currentAmounts, usualAmounts, strings }: Props) {
+export function TrendScrub({
+  current,
+  usual,
+  span,
+  dates,
+  currentAmounts,
+  usualAmounts,
+  strings,
+}: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [day, setDay] = useState<number | null>(null);
   const days = Math.max(span, 1);
@@ -830,10 +842,18 @@ export function TrendScrub({ current, usual, span, dates, currentAmounts, usualA
             vectorEffect="non-scaling-stroke"
           />
           {usual.length < 2 ? null : (
-            <polyline className={styles.usual} points={points(usual, x, y)} vectorEffect="non-scaling-stroke" />
+            <polyline
+              className={styles.usual}
+              points={points(usual, x, y)}
+              vectorEffect="non-scaling-stroke"
+            />
           )}
           {current.length < 2 ? null : (
-            <polyline className={styles.current} points={points(current, x, y)} vectorEffect="non-scaling-stroke" />
+            <polyline
+              className={styles.current}
+              points={points(current, x, y)}
+              vectorEffect="non-scaling-stroke"
+            />
           )}
         </svg>
         <span className={styles.line} style={{ insetInlineStart: `${left}%` }} aria-hidden="true" />
@@ -867,7 +887,7 @@ export function TrendScrub({ current, usual, span, dates, currentAmounts, usualA
 }
 ```
 
-- [ ] **Step 2: Create the CSS**
+- [x] **Step 2: Create the CSS**
 
 Create `apps/web/src/ui/charts/TrendScrub.module.css`:
 
@@ -959,12 +979,6 @@ Create `apps/web/src/ui/charts/TrendScrub.module.css`:
   transition: opacity 120ms ease;
 }
 
-.on .line,
-.on .dot,
-.on .tip {
-  opacity: 1;
-}
-
 .line {
   top: 0;
   bottom: 0;
@@ -979,10 +993,6 @@ Create `apps/web/src/ui/charts/TrendScrub.module.css`:
   border-radius: var(--radius-pill);
   background: var(--color-text);
   box-shadow: 0 0 0 2px var(--color-bg);
-}
-
-.on .dotFaint {
-  opacity: 0.4;
 }
 
 .tip {
@@ -1004,6 +1014,16 @@ Create `apps/web/src/ui/charts/TrendScrub.module.css`:
 
 .tip small {
   opacity: 0.72;
+}
+
+.on .line,
+.on .dot,
+.on .tip {
+  opacity: 1;
+}
+
+.on .dotFaint {
+  opacity: 0.4;
 }
 
 .axis {
@@ -1033,7 +1053,7 @@ Create `apps/web/src/ui/charts/TrendScrub.module.css`:
 }
 ```
 
-- [ ] **Step 3: Typecheck and lint**
+- [x] **Step 3: Typecheck and lint**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
@@ -1041,7 +1061,7 @@ Expected: no errors.
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines. If Biome reformats the long lines, run `rtk proxy pnpm exec biome check --write apps/web/src/ui/charts/TrendScrub.tsx` and check the diff.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/web/src/ui/charts/TrendScrub.tsx apps/web/src/ui/charts/TrendScrub.module.css

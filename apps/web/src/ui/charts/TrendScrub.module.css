@@ -1,0 +1,159 @@
+.trend {
+  min-width: 0;
+}
+
+.legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 14px;
+}
+
+.keyCurrent {
+  border-top: 1.75px solid var(--color-text);
+}
+
+.keyUsual {
+  border-top: 1.25px dashed var(--color-text-faint);
+}
+
+.scrub {
+  position: relative;
+  height: 170px;
+  cursor: crosshair;
+  touch-action: pan-y;
+  outline: none;
+}
+
+.scrub:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 6px;
+  border-radius: var(--radius-input);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.base {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+
+.current {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.usual {
+  fill: none;
+  stroke: var(--color-text-faint);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 4;
+}
+
+.line,
+.dot,
+.tip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.line {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border-strong);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-bg);
+}
+
+.tip {
+  top: -8px;
+  padding: 6px 9px;
+  border-radius: var(--radius-input);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-caption);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.tip b {
+  display: block;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tip small {
+  opacity: 0.72;
+}
+
+.on .line,
+.on .dot,
+.on .tip {
+  opacity: 1;
+}
+
+.on .dotFaint {
+  opacity: 0.4;
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--color-text-faint);
+  font-size: var(--font-size-caption);
+}
+
+/* Read by a screen reader through `aria-describedby`, not shown. */
+.hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .dot,
+  .tip {
+    transition: none;
+  }
+}
