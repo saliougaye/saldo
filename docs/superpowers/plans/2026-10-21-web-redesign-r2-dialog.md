@@ -1156,6 +1156,12 @@ Do it again at 390px: the form is a sheet at the bottom of the screen.
 
 Fix any problem before Task 6, and commit the fix as `fix(web): …`.
 
+**Note (found in Task 5):** the transaction form is taller than the dialog at 1440×900 and in the 390px
+sheet, so the foot was below the fold. The foot is now `position: sticky` at the bottom of the dialog.
+`Panel.module.css` names its bottom padding `--dialog-pad-end`, and the foot of `TransactionForm` and of
+`FormFoot` (account, goal, budget, category, tag) takes that padding and sticks over it, so no field shows
+under the buttons. Commit: `fix(web): the form's buttons stay in view while the dialog scrolls`.
+
 ---
 
 ### Task 6: e2e follows W1–W4

@@ -11,7 +11,9 @@
   flex-direction: column;
   gap: 12px;
   max-block-size: 92dvh;
-  padding: 8px var(--layout-screen-padding-x) calc(24px + env(safe-area-inset-bottom));
+  /* The bottom padding, named: a form's foot sticks over it (see FormFoot). */
+  --dialog-pad-end: calc(24px + env(safe-area-inset-bottom));
+  padding: 8px var(--layout-screen-padding-x) var(--dialog-pad-end);
   overflow-y: auto;
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--color-surface);
@@ -123,6 +125,7 @@
 /* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
 @media (min-width: 760px) {
   .panel {
+    --dialog-pad-end: 22px;
     inset: 0;
     inline-size: min(var(--layout-dialog-detail-width), calc(100vw - 32px));
     block-size: fit-content;
@@ -173,7 +176,7 @@
     min-height: 0;
     overflow-y: auto;
     gap: 24px;
-    padding: 8px 22px 22px;
+    padding: 8px 22px var(--dialog-pad-end);
   }
 }
 

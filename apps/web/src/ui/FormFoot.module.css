@@ -1,8 +1,19 @@
+/*
+ * The foot stays at the bottom of the dialog while the body scrolls. The dialog's own bottom padding
+ * (`--dialog-pad-end`, from Panel) moves into the foot: it sticks at the edge, and no field shows under it.
+ */
 .foot {
+  position: sticky;
+  bottom: calc(-1 * var(--dialog-pad-end, 0px));
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  margin-bottom: calc(-1 * var(--dialog-pad-end, 0px));
+  padding-block: 12px var(--dialog-pad-end, 12px);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .hint {
