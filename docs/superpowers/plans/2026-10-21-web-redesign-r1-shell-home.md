@@ -2250,7 +2250,7 @@ rtk git commit -m "test(web): the Home's budget tiles and the trend keys"
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Add the redesign to the roadmap**
+- [x] **Step 1: Add the redesign to the roadmap**
 
 In `docs/superpowers/plans/README.md`, before `### Notifications for future transactions`, add:
 
@@ -2273,7 +2273,7 @@ the Home shows Summary, Budget, Transactions and Goals in this order; the trend 
 and with ← → Home End; «Coming up» shows the nearest date first; a closed period shows 10 latest rows.
 ```
 
-- [ ] **Step 2: Run the gates, unfiltered**
+- [x] **Step 2: Run the gates, unfiltered**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -2284,12 +2284,14 @@ Expected: every package passes.
 Run: `rtk proxy pnpm test`
 Expected: every package passes.
 
-- [ ] **Step 3: Check the other pages under the new shell**
+- [x] **Step 3: Check the other pages under the new shell**
 
 Run: `rtk proxy pnpm --filter web dev` and open `/transactions`, `/stats`, `/accounts`, `/profile` and `/admin` at 1440px and at 390px.
 Expected: each page is in the 1040px column under the top bar, and nothing overflows. Their own redesign is R3–R6. If a page overflows the column, fix it with a `min-width: 0` on the grid child that overflows, and note the fix in the commit.
 
-- [ ] **Step 4: Commit**
+Note (checked with a screenshot script at 1440px and 390px): no page overflows, so no fix was needed. Profile and Admin got their sub-navigation fix in Task 4.
+
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add docs/superpowers/plans/README.md

@@ -526,6 +526,23 @@ Asked for by the user on 2026-09-11 as three **investigations**. All three ended
   grid, and `CustomRangeSheet` uses the same component in range mode, so there is one calendar.
   "Oggi" and "Ieri" stay chips on the form, so the common case opens no sheet at all.
 
+### Web redesign — top bar, one column, new pages ◐ in progress
+
+Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-21-web-pages-redesign.html`
+(W1–W12). Branch: `redesign/web`. Seven plans, each one ends with software that works:
+
+- [x] **R1** — the top bar and the new Home (`plans/2026-10-21-web-redesign-r1-shell-home.md`).
+- [ ] **R2** — the centred dialog, and the edit form opened from a transaction row (W1–W4).
+- [ ] **R3** — Transactions (W5).
+- [ ] **R4** — Statistics (W6–W8).
+- [ ] **R5** — Accounts (W9).
+- [ ] **R6** — Profile and Admin (W10).
+- [ ] **R7** — empty states and the new `@saldo/core` functions (W11).
+
+**Acceptance for R1:** no sidebar on any width; the top bar and the content share the 1040px column;
+the Home shows Summary, Budget, Transactions and Goals in this order; the trend moves with the pointer
+and with ← → Home End; «Coming up» shows the nearest date first; a closed period shows 10 latest rows.
+
 ### Notifications for future transactions
 
 Moved to `ROADMAP.md` (0.1) on 2026-10-19.
