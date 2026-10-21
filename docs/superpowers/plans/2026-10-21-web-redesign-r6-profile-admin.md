@@ -44,6 +44,7 @@
 | `apps/web/app/(app)/profile/SettingsPage.tsx` | New: the shared frame with its data. |
 | `apps/web/app/(app)/profile/layout.tsx`, `page.tsx`, `profile.module.css` | Use the frame; `/profile` is the account section. |
 | `apps/web/app/(app)/admin/layout.tsx`, `admin.module.css` | The guard, then the same frame. |
+| `apps/web/next.config.ts` | The `/profile` redirect goes; `/admin` keeps its own. |
 | `apps/web/e2e/shell.spec.ts`, `profile.spec.ts`, others that need it | Follow the new way in. |
 | `docs/superpowers/plans/README.md` | R6 ticked. |
 
@@ -491,8 +492,9 @@ Between this commit and Task 3, an admin reaches Admin only by its URL. Task 3 a
 - Modify: `apps/web/app/(app)/profile/profile.module.css`
 - Replace: `apps/web/app/(app)/admin/layout.tsx`
 - Modify: `apps/web/app/(app)/admin/admin.module.css`
+- Modify: `apps/web/next.config.ts` (the `/profile` redirect goes)
 
-- [ ] **Step 1: `NavLink` can be current on a second path**
+- [x] **Step 1: `NavLink` can be current on a second path**
 
 In `apps/web/src/ui/NavLink.tsx`, add to the props type, after `count?: number;`:
 
@@ -508,11 +510,13 @@ Add `alsoCurrentAt,` to the destructured props. Replace `const current = isCurre
   const current = isCurrent(href, path) || (alsoCurrentAt !== undefined && path === alsoCurrentAt);
 ```
 
-- [ ] **Step 2: Check the counts**
+- [x] **Step 2: Check the counts**
 
 Open `app/(app)/profile/categories/page.tsx`, `tags/page.tsx`, `budgets/page.tsx` and `goals/page.tsx`. For each one, write down which rows it lists: for example, categories that are not archived, or every tag. Step 4 counts the same rows. If a section uses a view function (for example `categoriesView`), call that function in Step 4 and take its length, so that the menu and the section can never disagree.
 
-- [ ] **Step 3: The frame**
+Result of the check: Categories lists the rows of `categoriesView(data).sections`, which are the live top-level categories and their children, not every category that is not archived. A live child of an archived parent has no row. Tags lists `tagsView(data)`. Budgets lists one row for each budget, because `budgetViews` maps one to one, so the count is `data.budgets.length` and does not depend on the period. Goals lists `goalViews(...)`.
+
+- [x] **Step 3: The frame**
 
 Replace the whole of `apps/web/src/ui/SubnavLayout.tsx` with:
 
@@ -571,10 +575,8 @@ export function SubnavLayout({
 /** A group of the menu: its title, then its links (W10). */
 export function SubnavGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className={styles.group} role="group" aria-label={title}>
-      <p className={styles.groupTitle} aria-hidden="true">
-        {title}
-      </p>
+    <div className={styles.group}>
+      <p className={styles.groupTitle}>{title}</p>
       {children}
     </div>
   );
@@ -623,6 +625,7 @@ Replace the whole of `apps/web/src/ui/SubnavLayout.module.css` with:
 }
 
 .groupTitle {
+  margin: 0;
   padding: 0 12px 4px;
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
@@ -700,19 +703,25 @@ Replace the whole of `apps/web/src/ui/SubnavLayout.module.css` with:
 }
 ```
 
-- [ ] **Step 4: `SettingsPage`**
+- [x] **Step 4: `SettingsPage`**
 
-Create `apps/web/app/(app)/profile/SettingsPage.tsx`. Use the counts you checked in Step 2. The code below shows the shape. Keep the four `count` lines if they match what the sections list, and change them if they do not:
+Create `apps/web/app/(app)/profile/SettingsPage.tsx`. Use the counts you checked in Step 2:
 
 ```tsx
 import { goalViews } from '@saldo/core';
 import type { ReactNode } from 'react';
 import { activeInviteCount } from '../../../src/features/admin/invitesView';
+import { categoriesView } from '../../../src/features/categories/categoriesView';
+import { tagsView } from '../../../src/features/tags/tagsView';
+import { userI18n } from '../../../src/i18n/server';
 import { isAdminUser, listAccounts } from '../../../src/server/auth/admin';
+import { requireWebUser } from '../../../src/server/auth/currentUser';
 import { listInvites } from '../../../src/server/auth/invites';
 import { getDb } from '../../../src/server/db/client';
-import { readPage } from '../../../src/server/page/context';
+import { env } from '../../../src/server/env';
+import { pageState } from '../../../src/server/page/context';
 import { pageInstanceInfo } from '../../../src/server/page/instanceSettings';
+import { loadUserData } from '../../../src/server/userData/load';
 import { initials } from '../../../src/ui/initials';
 import { NavLink } from '../../../src/ui/NavLink';
 import { SignOutButton } from '../../../src/ui/SignOutButton';
@@ -725,20 +734,30 @@ import styles from './profile.module.css';
  * data, and Admin for the admin role only — and «Sign out» under a line. The Admin group is only a
  * set of links: `requireWebAdmin` still guards the admin layout, every admin page and every admin
  * Server Action.
+ *
+ * It does not call `readPage`: that sends an account that never onboarded to `/onboarding`, and an
+ * admin of such an account still administers the instance (`adminContext`, §17.1.7). Without a
+ * `settings` row the counts are those of an empty projection.
  */
 export async function SettingsPage({ children }: { children: ReactNode }) {
-  const page = await readPage(Promise.resolve({}));
-  const { t, user, data, today, def } = page;
+  const user = await requireWebUser();
+  const [data, { t }] = await Promise.all([loadUserData(user.id), userI18n(user.id)]);
+  const { today, def } = pageState({
+    data,
+    now: new Date(),
+    fallbackTimeZone: env().defaultTimeZone,
+    params: {},
+  });
   const admin = isAdminUser(user);
   const db = getDb();
   const adminData = admin
     ? await Promise.all([listAccounts(db), listInvites(db, new Date()), pageInstanceInfo()])
     : null;
 
-  // The rows each section of «Organise» lists (Task 3, Step 2).
+  // The rows each section of «Organise» lists, from the view function each section calls (Step 2).
   const counts = {
-    categories: data.categories.filter((category) => category.archivedAt == null).length,
-    tags: data.tags.length,
+    categories: categoriesView(data).sections.reduce((sum, section) => sum + section.rows.length, 0),
+    tags: tagsView(data).length,
     budgets: data.budgets.length,
     goals: goalViews(data.accounts, data.transactions, today, def).length,
   };
@@ -839,9 +858,9 @@ export async function SettingsPage({ children }: { children: ReactNode }) {
 }
 ```
 
-Read the old `admin/layout.tsx` before you delete it. It may call `adminContext(user)` for its `t`, and that `t` may resolve the admin keys in another way than `readPage`'s `t`. If the admin labels come out wrong in Step 8, use `adminContext` for the Admin group.
+The old `admin/layout.tsx` called `adminContext(user)` for its `t`. That `t` is `userI18n`'s `t`, so the admin labels resolve in the same way here.
 
-- [ ] **Step 5: The Profile layout and index**
+- [x] **Step 5: The Profile layout and index**
 
 Replace the whole of `apps/web/app/(app)/profile/layout.tsx` with:
 
@@ -858,6 +877,8 @@ export default function ProfileLayout({ children }: { children: ReactNode }) {
 }
 ```
 
+In `apps/web/next.config.ts`, delete the `/profile` entry of `redirects()` and keep `/admin`. That redirect sent `/profile` to `/profile/account` with a 307 before any render, so the page below never ran. Change the comment above it: it now names Admin only.
+
 Replace the whole of `apps/web/app/(app)/profile/page.tsx` with:
 
 ```tsx
@@ -871,7 +892,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 ```
 
-- [ ] **Step 6: The Admin layout**
+- [x] **Step 6: The Admin layout**
 
 Replace the whole of `apps/web/app/(app)/admin/layout.tsx` with:
 
@@ -894,7 +915,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 }
 ```
 
-- [ ] **Step 7: The CSS of the head**
+- [x] **Step 7: The CSS of the head**
 
 In `apps/web/app/(app)/profile/profile.module.css`:
 - Delete the `.page` rule and the `@media (min-width: 1024px)` block that hides `.head`. The head now shows at every width, except on a section below 760px, where `SubnavLayout` hides it.
@@ -909,7 +930,7 @@ In `apps/web/app/(app)/profile/profile.module.css`:
 
 In `apps/web/app/(app)/admin/admin.module.css`, delete the rules that only the old layout used (`.page`, `.head`, `.title`, `.headCount`, `.sideTitle`, `.sideName`). Delete a rule only if `rtk grep -rn "styles\.<name>" "apps/web/app/(app)/admin"` finds no other user.
 
-- [ ] **Step 8: Lint, typecheck, test, and look at it**
+- [x] **Step 8: Lint, typecheck, test, and look at it**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
@@ -935,7 +956,7 @@ Expected:
 - **Dialogs:** a dialog of Categories or Tags still opens over the page.
 - **Member:** `/admin` still answers «not found».
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add apps/web/src/ui/NavLink.tsx apps/web/src/ui/SubnavLayout.tsx apps/web/src/ui/SubnavLayout.module.css "apps/web/app/(app)/profile" "apps/web/app/(app)/admin"
