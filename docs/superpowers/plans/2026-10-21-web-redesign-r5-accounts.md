@@ -88,7 +88,7 @@ The e2e tests read the page through these hooks. Keep them:
 - **Free amount:** the text `goals.free` shows in the line of an account that holds goals.
 - **Title:** the `h1` is `accounts.title`.
 
-- [ ] **Step 1: Imports**
+- [x] **Step 1: Imports**
 
 In `apps/web/app/(app)/accounts/page.tsx`:
 
@@ -103,7 +103,7 @@ import { paletteIndex } from '../../../src/ui/IconBox';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 ```
 
-(If `goalLinks` is already imported, add `NEW_GOAL_HREF` to that import instead.)
+(`goalLinks` is already imported: add `NEW_GOAL_HREF` to that import. Import `paletteIndex` with `IconBox`: `import { IconBox, paletteIndex } from '../../../src/ui/IconBox';`. Remove the `ReactNode` import from `react`: nothing uses it after `Figure` goes.)
 
 5. Delete the `Figure` function (the page no longer uses `HeroFigure`).
 6. After the constant `GOAL_RING`, add:
@@ -120,7 +120,7 @@ function tint(colorIndex: number | null | undefined): string | undefined {
 }
 ```
 
-- [ ] **Step 2: The account row**
+- [x] **Step 2: The account row**
 
 Replace the whole `accountCard` function with:
 
@@ -167,7 +167,7 @@ Replace the whole `accountCard` function with:
   };
 ```
 
-- [ ] **Step 3: The goal row**
+- [x] **Step 3: The goal row**
 
 Replace the whole `goalCard` function and the `cards` function with:
 
@@ -225,7 +225,7 @@ Replace the whole `goalCard` function and the `cards` function with:
 
 Add `const MISSING = '—';` after the constant `RECENT`. Then check that `goalLabel` and `goalStatus` accept a `GoalView`. The Home passes one, so they do.
 
-- [ ] **Step 4: The net worth line's change**
+- [x] **Step 4: The net worth line's change**
 
 After the `netWorthSeries` constant, add:
 
@@ -235,7 +235,7 @@ After the `netWorthSeries` constant, add:
     netWorthSeries.length < 2 ? 0 : (netWorthSeries.at(-1) ?? 0) - (netWorthSeries[0] ?? 0);
 ```
 
-- [ ] **Step 5: The account dialog's actions go to its bottom**
+- [x] **Step 5: The account dialog's actions go to its bottom**
 
 In `accountBody`, cut the whole block:
 
@@ -256,7 +256,7 @@ Paste it after the closing `</Section>` of «Last transactions», as the last ch
 
 In `goalBody`, change the `className` of the last `<div className={formStyles.actions}>` (the one with «Edit» and `CloseGoal`) to `` `${formStyles.actions} ${styles.dialogFoot}` ``. Then put `CloseGoal` before the «Edit» link, as the spec orders the footer: «Close goal», then «Edit».
 
-- [ ] **Step 6: The list**
+- [x] **Step 6: The list**
 
 Replace everything inside `<div className={styles.list}> … </div>` (from `<PageHead` to the end of the archived `ListRow` ternary) with:
 
@@ -367,7 +367,7 @@ Replace everything inside `<div className={styles.list}> … </div>` (from `<Pag
 
 Before this plan, the page showed `profile.archivedAccounts` as a note when nothing was archived. A row with nothing behind it says nothing, so the note goes.
 
-- [ ] **Step 7: Replace the page CSS**
+- [x] **Step 7: Replace the page CSS**
 
 Read the old `accounts.module.css` first. Then replace the whole file with the CSS below. It keeps every class that the dialogs use (`label`, `note`, `count`, `cardRows`, `paid`, `periodRow`, `goalHead`, `sentence`).
 
@@ -433,8 +433,9 @@ Read the old `accounts.module.css` first. Then replace the whole file with the C
 
 .boxHead {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 12px;
+  gap: 2px 12px;
   margin-bottom: 4px;
 }
 
@@ -730,7 +731,7 @@ Read the old `accounts.module.css` first. Then replace the whole file with the C
 
 If the old file had a rule that the new `page.tsx` still uses and that the CSS above lacks, add it back. Then run: `rtk grep -on "styles\.[a-zA-Z]*" "apps/web/app/(app)/accounts/page.tsx"` and check every name against the new CSS.
 
-- [ ] **Step 8: Lint, typecheck and test**
+- [x] **Step 8: Lint, typecheck and test**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines. Delete an import or a variable that Biome reports as unused (for example `GoalProgress` stays: `goalRingTone` uses it).
@@ -741,7 +742,7 @@ Expected: no error.
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS.
 
-- [ ] **Step 9: Look at the page**
+- [x] **Step 9: Look at the page**
 
 Run: `rtk proxy pnpm --filter web dev`. Sign in with a seeded user and open `/accounts` at 1440px and at 390px, in the light and the dark theme. Use a temporary Playwright screenshot script if you have no browser, and delete it before you commit.
 
@@ -752,7 +753,7 @@ Expected:
 - **Dialogs:** a click on an account opens its dialog, with «Archive account» and «Edit» at the bottom. A click on a goal opens its dialog, with «Close goal» and «Edit» at the bottom.
 - **Overflow:** nothing overflows at 390px.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/accounts"
