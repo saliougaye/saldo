@@ -1035,7 +1035,7 @@ rtk git commit -m "feat(web): Transactions as a summary, a tool row and one list
 **Files:**
 - Modify: `apps/web/e2e/transactions.spec.ts`
 
-- [ ] **Step 1: Fix the comment of the upcoming test**
+- [x] **Step 1: Fix the comment of the upcoming test**
 
 In the test `'«In arrivo» folds the rows dated ahead and opens on a click'`, replace:
 
@@ -1050,7 +1050,7 @@ with:
     // Folded: the disclosure hides its rows.
 ```
 
-- [ ] **Step 2: Add a test for the summary and «More»**
+- [x] **Step 2: Add a test for the summary and «More»**
 
 In `test.describe('seeded account', …)`, after the test `'filter chips narrow the list and clear again'`, add:
 
@@ -1099,7 +1099,7 @@ In `test.describe('seeded account', …)`, after the test `'filter chips narrow 
 
 If `LedgerTransaction` has no `excludeFromTotals` field, use the field name that `ledgerRows.ts` gives it (the first test of the file already reads `tx.excludeFromTotals`).
 
-- [ ] **Step 3: Run the e2e suite**
+- [x] **Step 3: Run the e2e suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: every test passes. A test that looked for the summary cards (`Card`) or for the dividers «After today» / «Already recorded» must follow the new page: fix the test, and say why in the commit.
@@ -1107,7 +1107,7 @@ Expected: every test passes. A test that looked for the summary cards (`Card`) o
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/web/e2e

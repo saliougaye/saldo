@@ -333,8 +333,9 @@ test('deleting a tag removes it from its transactions and leaves them in place',
     category: 'Ristoranti',
     tag: 'Rimborso',
   });
+  // W5: the tag is in the subtitle of the row, «Category · Account · #tag».
   await page.goto('/transactions');
-  await expect(page.getByText('#Rimborso', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Pranzo' })).toContainText('#Rimborso');
 
   await page.goto('/profile/tags');
   await expect(listRow(page, 'Rimborso')).toContainText(plural(t, 'it', 'tags.uses', 1));
@@ -351,8 +352,8 @@ test('deleting a tag removes it from its transactions and leaves them in place',
   await expect(page.getByText(t('tags.empty'), { exact: true })).toBeVisible();
 
   await page.goto('/transactions');
-  await expect(page.getByText('Pranzo', { exact: true })).toBeVisible();
-  await expect(page.getByText('#Rimborso', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Pranzo' })).toBeVisible();
+  await expect(page.getByText('#Rimborso')).toHaveCount(0);
 
   await member.context.close();
 });

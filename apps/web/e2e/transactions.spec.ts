@@ -93,8 +93,7 @@ test.describe('seeded account', () => {
     await expect(disclosure.locator('summary')).toContainText(
       plural(t, lang, 'transactions.upcomingCount', ahead.length),
     );
-    // Folded: the disclosure hides its rows. The In arrivo card above the list shows the next
-    // three, so the checks look inside the disclosure only.
+    // Folded: the disclosure hides its rows.
     for (const tx of ahead) {
       await expect(disclosure.getByRole('link', { name: tx.description })).toBeHidden();
     }
@@ -180,6 +179,47 @@ test.describe('seeded account', () => {
     await page.getByRole('searchbox', { name: t('common.search') }).fill(search);
     await page.keyboard.press('Enter');
     await expect(list).toHaveCount(hits.length);
+    await member.context.close();
+  });
+
+  test('the summary counts the period, and «More» holds the other filters', async ({
+    browser,
+    t,
+    locale,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Riepilogo',
+      email: 'tx-summary@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const lang = appLocale(locale);
+    const money = moneyFormatter(ledger, lang);
+    const month = previousMonth(monthOf(ledger.today));
+    const rows = ledger.transactions.filter((tx) => inRange(tx.date, month));
+    const counted = rows.filter((tx) => tx.kind !== 'transfer' && !tx.excludeFromTotals);
+    const spent = counted
+      .filter((tx) => tx.kind === 'expense')
+      .reduce((total, tx) => total + tx.amount, 0);
+    const income = counted.filter((tx) => tx.kind === 'income');
+
+    await page.goto(`/transactions?p=${month.start}`);
+
+    // W5: a closed period has two cells, Expenses and Income; the figures are the period's.
+    const summary = page.getByRole('region', { name: t('transactions.summaryLabel') });
+    await expect(summary).toContainText(money(spent));
+    await expect(summary).toContainText(plural(t, lang, 'transactions.periodCount', income.length));
+    await expect(summary.getByText(t('home.upcoming'), { exact: true })).toHaveCount(0);
+
+    // «More» holds «Income only»; its label then names the filter that is on.
+    await page.getByRole('button', { name: t('transactions.moreFilters') }).click();
+    await page.getByRole('menuitem', { name: t('transactions.onlyIncome') }).click();
+    await expect(page.getByRole('button', { name: t('transactions.onlyIncome') })).toBeVisible();
+    await expect(page.locator(`${SETTLED_DAYS} a`)).toHaveCount(
+      rows.filter((tx) => tx.kind === 'income').length,
+    );
+    await expect(page.getByRole('link', { name: t('transactions.resetFilters') })).toBeVisible();
     await member.context.close();
   });
 
