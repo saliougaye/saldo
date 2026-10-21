@@ -2064,7 +2064,7 @@ Create `apps/web/app/(app)/home/loading.module.css`:
 }
 
 .sk {
-  border-radius: 6px;
+  border-radius: var(--radius-input);
   background: var(--color-raised);
 }
 
@@ -2109,7 +2109,7 @@ Create `apps/web/app/(app)/home/loading.module.css`:
 .ring {
   width: 52px;
   height: 52px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
 }
 
 .line {

@@ -20,7 +20,7 @@
 }
 
 .sk {
-  border-radius: 6px;
+  border-radius: var(--radius-input);
   background: var(--color-raised);
 }
 
@@ -65,7 +65,7 @@
 .ring {
   width: 52px;
   height: 52px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
 }
 
 .line {
