@@ -321,12 +321,14 @@ rtk git commit -m "feat(web): «Coming up» nearest first, 10 latest rows in a c
 - Modify: `apps/web/src/ui/TabBar.module.css`
 - Delete: `apps/web/src/ui/SideBar.tsx`, `SideBar.module.css`, `ProfileLink.tsx`, `ProfileLink.module.css`
 
-- [ ] **Step 1: Make sure nothing else uses the sidebar**
+- [x] **Step 1: Make sure nothing else uses the sidebar**
 
 Run: `rtk grep -n "SideBar\|ProfileLink\|data-sidebar" apps/web/src apps/web/app apps/web/e2e`
 Expected: matches only in `layout.tsx`, `shell.module.css`, `SideBar.tsx` and `ProfileLink.tsx`. If an e2e test matches, change it in Task 9.
 
-- [ ] **Step 2: Replace the layout**
+Note (checked on the code): `SubnavLayout` (Profile and Admin) still draws its sub-navigation as a fixed 240px column on screens of 1024px and wider, and `data-section-nav` no longer hides anything. Do not touch it in this plan. R6 replaces it. Until then, Profile and Admin overlap the left edge of the column at those widths.
+
+- [x] **Step 2: Replace the layout**
 
 Replace the whole `apps/web/app/(app)/layout.tsx` with:
 
@@ -386,7 +388,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 3: Replace the shell CSS**
+- [x] **Step 3: Replace the shell CSS**
 
 Replace the whole `apps/web/app/(app)/shell.module.css` with:
 
@@ -427,7 +429,7 @@ Replace the whole `apps/web/app/(app)/shell.module.css` with:
 }
 ```
 
-- [ ] **Step 4: Replace the top bar**
+- [x] **Step 4: Replace the top bar**
 
 Replace the whole `apps/web/src/ui/TopBar.tsx` with:
 
@@ -594,7 +596,7 @@ Replace the whole `apps/web/src/ui/TopBar.module.css` with:
 }
 ```
 
-- [ ] **Step 5: Move the tab bar's breakpoint to 760**
+- [x] **Step 5: Move the tab bar's breakpoint to 760**
 
 In `apps/web/src/ui/TabBar.module.css`, replace:
 
@@ -610,13 +612,13 @@ with:
 @media (min-width: 760px) {
 ```
 
-- [ ] **Step 6: Delete the sidebar**
+- [x] **Step 6: Delete the sidebar**
 
 ```bash
 rtk git rm apps/web/src/ui/SideBar.tsx apps/web/src/ui/SideBar.module.css apps/web/src/ui/ProfileLink.tsx apps/web/src/ui/ProfileLink.module.css
 ```
 
-- [ ] **Step 7: Typecheck and lint**
+- [x] **Step 7: Typecheck and lint**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
@@ -629,7 +631,7 @@ Expected: no `lint/…` lines and no `× Some errors were emitted while running 
 Run: `rtk proxy pnpm --filter web dev`, sign in, and open `/home` at 1440px, 900px and 390px.
 Expected: at 1440px and 900px, the top bar shows the brand, Home, Transactions, Statistics, Accounts, «New transaction» and the avatar, and no sidebar shows. At 390px the top bar shows the brand and the avatar, and the tab bar is at the bottom. The brand aligns with the left edge of the content.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add apps/web/app/\(app\)/layout.tsx apps/web/app/\(app\)/shell.module.css apps/web/src/ui/TopBar.tsx apps/web/src/ui/TopBar.module.css apps/web/src/ui/TabBar.module.css

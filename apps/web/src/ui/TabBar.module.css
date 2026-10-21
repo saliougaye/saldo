@@ -41,8 +41,8 @@
   scale: 0.96;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
   .bar,
   .fab {
     display: none;

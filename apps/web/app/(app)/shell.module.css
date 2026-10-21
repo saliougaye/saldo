@@ -6,45 +6,19 @@
   flex-direction: column;
 }
 
-.column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
+/* H2: one column of 1040px for every page, with the top bar's inner edges. */
 .content {
   flex: 1;
   width: 100%;
-  max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+  max-width: calc(var(--layout-content-column) + 2 * var(--layout-column-padding));
   margin: 0 auto;
-  padding: 24px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
+  padding: 16px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .shell {
-    flex-direction: row;
-  }
-
-  /* Beside the sidebar the content starts at its edge, as in the mockup: not centred in the rest. */
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
   .content {
-    max-width: calc(var(--layout-content-wide-sidebar) + 2 * var(--layout-page-padding-web));
-    margin: 0;
-    padding: 40px var(--layout-page-padding-web) 64px;
-  }
-
-  /*
-   * D10: Profilo and Admin put their own sub-navigation where the sidebar is. The sidebar keeps its
-   * width (so the content does not move) and leaves the accessibility tree (`visibility`).
-   */
-  .shell:has([data-section-nav]) :global([data-sidebar]) {
-    visibility: hidden;
-  }
-
-  /* Settings rows read as label and value: Profilo and Admin keep the narrower measure. */
-  .shell:has([data-section-nav]) .content {
-    max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+    padding: 16px var(--layout-column-padding) 64px;
   }
 }
 
