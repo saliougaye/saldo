@@ -238,7 +238,7 @@ rtk git commit -m "refactor(web): the end-of-period projection as its own functi
 - Create: `apps/web/src/features/stats/expensesChart.ts`
 - Test: `apps/web/src/features/stats/expensesChart.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/web/src/features/stats/expensesChart.test.ts`:
 
@@ -319,12 +319,12 @@ describe('expensesChartView', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to see it fail**
+- [x] **Step 2: Run the test to see it fail**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/stats/expensesChart.test.ts`
 Expected: FAIL, because `./expensesChart` does not exist.
 
-- [ ] **Step 3: Write the function**
+- [x] **Step 3: Write the function**
 
 Create `apps/web/src/features/stats/expensesChart.ts`:
 
@@ -389,12 +389,12 @@ export function expensesChartView(input: {
 }
 ```
 
-- [ ] **Step 4: Run the test to see it pass**
+- [x] **Step 4: Run the test to see it pass**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/stats/expensesChart.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/web/src/features/stats/expensesChart.ts apps/web/src/features/stats/expensesChart.test.ts
