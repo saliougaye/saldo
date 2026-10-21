@@ -1332,6 +1332,7 @@ export const sv: Messages = {
     missing_deadline: 'Välj ett datum efter i dag',
     missing_parent: 'Välj kontot',
     free: 'fritt',
+    savedOfIn: '{{saved}} av {{target}} · på {{account}}',
     reachedTitle: 'Målet {{name}} nått: {{amount}}',
     itemLabel: '{{name}}, {{amount}} av {{target}}, {{status}}',
     parentArchived: 'Målets konto är arkiverat: återställ kontot först',

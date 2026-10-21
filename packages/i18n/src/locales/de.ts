@@ -1347,6 +1347,7 @@ export const de: Messages = {
     missing_deadline: 'Wähl ein Datum nach heute',
     missing_parent: 'Wähl das Konto',
     free: 'frei',
+    savedOfIn: '{{saved}} von {{target}} · in {{account}}',
     reachedTitle: 'Ziel {{name}} erreicht: {{amount}}',
     itemLabel: '{{name}}, {{amount}} von {{target}}, {{status}}',
     parentArchived: 'Das Konto dieses Ziels ist archiviert: stell zuerst das Konto wieder her',

@@ -1339,6 +1339,7 @@ export const it = {
     missing_deadline: 'Scegli una data dopo oggi',
     missing_parent: 'Scegli il conto',
     free: 'liberi',
+    savedOfIn: '{{saved}} di {{target}} · in {{account}}',
     reachedTitle: 'Obiettivo {{name}} raggiunto: {{amount}}',
     itemLabel: '{{name}}, {{amount}} di {{target}}, {{status}}',
     parentArchived: 'Il conto di questo obiettivo è archiviato: ripristina prima il conto',

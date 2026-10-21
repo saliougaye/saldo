@@ -46,7 +46,7 @@
 **Files:**
 - Modify: `packages/i18n/src/locales/en.ts`, `it.ts`, `de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts` (the `goals` block, after the line `    free: …`; that line is unique in each file)
 
-- [ ] **Step 1: Add the key**
+- [x] **Step 1: Add the key**
 
 After the line that starts with `    free:` in each file, add the line for that locale:
 
@@ -60,12 +60,12 @@ After the line that starts with `    free:` in each file, add the line for that 
 | `pt.ts` | `    savedOfIn: '{{saved}} de {{target}} · em {{account}}',` |
 | `sv.ts` | `    savedOfIn: '{{saved}} av {{target}} · på {{account}}',` |
 
-- [ ] **Step 2: Run the catalog tests**
+- [x] **Step 2: Run the catalog tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add packages/i18n/src/locales

@@ -1333,6 +1333,7 @@ export const en: Messages = {
     missing_deadline: 'Pick a date after today',
     missing_parent: 'Choose the account',
     free: 'free',
+    savedOfIn: '{{saved}} of {{target}} · in {{account}}',
     reachedTitle: 'Goal {{name}} reached: {{amount}}',
     itemLabel: '{{name}}, {{amount}} of {{target}}, {{status}}',
     parentArchived: "This goal's account is archived: restore the account first",
