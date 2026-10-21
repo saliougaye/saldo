@@ -64,6 +64,17 @@ export interface ListViewInput {
   kindLabel?: (kind: TransactionKind) => string;
 }
 
+/** What `filterTransactions` reads to match a search against names: the list and W11's other periods share it. */
+export function filterLookup(data: UserData): FilterLookup {
+  const categories = new Map(data.categories.map((category) => [category.id, category]));
+  const accounts = new Map(data.accounts.map((account) => [account.id, account]));
+  return {
+    accountName: (id) => accounts.get(id)?.name ?? '',
+    categoryName: (id) => categories.get(id)?.name ?? '',
+    categoryParentId: (id) => categories.get(id)?.parentId ?? null,
+  };
+}
+
 /**
  * The list of §5.12: the period's rows, filtered by core, split into what has happened and what is
  * dated ahead, then grouped by day. The rows are `transactionRow`'s, so the phone and the web title
@@ -79,12 +90,7 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
     .sort(newestFirst);
 
   const categories = new Map(data.categories.map((category) => [category.id, category]));
-  const accounts = new Map(data.accounts.map((account) => [account.id, account]));
-  const lookup: FilterLookup = {
-    accountName: (id) => accounts.get(id)?.name ?? '',
-    categoryName: (id) => categories.get(id)?.name ?? '',
-    categoryParentId: (id) => categories.get(id)?.parentId ?? null,
-  };
+  const lookup = filterLookup(data);
   const filtered = filterTransactions(inRange, filters, lookup);
   const split = splitUpcoming(filtered, today);
 

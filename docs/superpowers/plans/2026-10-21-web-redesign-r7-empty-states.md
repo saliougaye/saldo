@@ -632,23 +632,21 @@ rtk git commit -m "feat(web): Getting started on the Home of a new user (W11)"
 - Modify: `apps/web/app/(app)/transactions/page.tsx`
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Read the save action**
+- [x] **Step 1: Read the save action**
 
-Read `apps/web/app/(app)/transactions/actions.ts` (`saveTransactionAction`) and `TransactionForm.tsx` (`save`). Write down what `buffer` must hold: the amount as the user typed it, or the keypad's digits. Read how `formView` builds `initial.buffer` and how `@saldo/core` reads it (`amountKeypad.ts`, `parseAmount` or similar). The quick add must send what the form sends for the same amount.
+Read `apps/web/app/(app)/transactions/actions.ts` (`saveTransactionAction`) and `TransactionForm.tsx` (`save`). Write down what `buffer` must hold: the amount as the user typed it, or the keypad's digits. Read how `formView` builds `initial.buffer` and how `@saldo/core` reads it (`amountKeypad.ts`, `parseAmount` or similar). The quick add must send what the form sends for the same amount. Result: `buffer` is `sanitizeAmountInput`'s string with `.` as the separator, which `AmountField` builds. The quick add uses `AmountField` (`size="body"`), so it sends the same string.
 
-- [ ] **Step 2: The quick add**
+- [x] **Step 2: The quick add**
 
 Create `apps/web/app/(app)/transactions/QuickAdd.tsx`. It is a client component with:
 - **Props:**
-  - `accountId: string`: the first spendable account.
-  - `categories: { id: string; name: string }[]`: the top-level expense categories, in the order of the new form's «all categories».
-  - `today: string`.
-  - `strings`: title, amount, category, add, busy, importCsv, and the error texts. The page resolves them from the catalog.
-  - `decimalSeparator` and `symbol`, as `TransactionForm` takes them.
+  - `view: FormView`: the new form's view. The quick add reads `minorDigits`, `today` and the top-level expense categories from it.
+  - `accountId: string`: the account the new form opens on.
+  - `locale`, `currency`, `decimalSeparator`, `symbol`, `symbolPosition` and `messages`: the page's `formProps`, as `TransactionForm` takes them. The component builds its own `t` over `messages`.
 - **Markup:** a `<form>` with the title `transactions.quickAddTitle` as an `h2`. Then one row:
-  - an amount `<input inputMode="decimal">` with the label `txForm.amount`;
-  - a `<select>` with the label `txForm.category`, first category selected;
-  - a submit button `common.add` (if that key does not exist, use `txForm.create`).
+  - `AmountField` with the label `txForm.amount`;
+  - `Select` with the label `txForm.category`, first category selected;
+  - a submit `Button` with `txForm.create`.
 - **Link:** under the form, a link `transactions.importCsv` to `/profile/data`.
 - **Submit:** call `saveTransactionAction` with the same fields `TransactionForm.save` sends:
   - `id: null`, `expectedUpdatedAt: undefined`, `kind: 'expense'`;
@@ -656,12 +654,12 @@ Create `apps/web/app/(app)/transactions/QuickAdd.tsx`. It is a client component 
   - `date: today`, `accountId`, `toAccountId: null`, `categoryId`;
   - `description: ''`, `tagIds: []`, `excludeFromTotals: false`, `closeGoalId: null`.
 
-  On `ok`, call `actionApplied()` and `router.refresh()`. On a refusal, show the message in a `role="alert"` line, with the texts `TransactionForm` uses for the same errors.
+  On `ok`, call `actionApplied()` and `router.refresh()`. Before the call, `missingForSave` finds an empty amount. On a refusal, show the message in an `Alert`, with the texts `TransactionForm` uses for the same errors.
 - **Pending:** a `useTransition` pending state disables the button and shows `strings.busy`.
 
-Use the same classes and tokens as the tool row of R3 (`Chip.module.css` for the button look, the `SearchField` look for the inputs). Put the new classes in `transactions.module.css`.
+Use the existing primitives. Put the new classes (`quickAdd`, `quickTitle`, `quickRow`) in `transactions.module.css`. `quickRow` is a grid of three columns, and one column under 760px.
 
-- [ ] **Step 3: Show it when there are no transactions at all**
+- [x] **Step 3: Show it when there are no transactions at all**
 
 In `page.tsx`, the branch `!hasRows && !view.filtered` renders `<EmptyState title={t('transactions.empty')} …/>`. Replace it with:
 
@@ -680,19 +678,17 @@ In `page.tsx`, the branch `!hasRows && !view.filtered` renders `<EmptyState titl
             </div>
 ```
 
-Above the `return`, add:
+Next to `hasRows`, add:
 
 ```tsx
-  // W11: the quick add saves on the first spendable account (not a pocket, not archived).
+  // W11: the quick add saves on the account the new form opens on (not a pocket, not archived).
   const defaultAccount =
-    page.data.accounts.find(
-      (account) => account.archivedAt === null && !isPocket(account) && account.type !== 'savings',
-    ) ?? null;
+    newForm?.accounts.find((account) => !account.pocket && !account.archived) ?? null;
 ```
 
-Import `isPocket` from `@saldo/core`. If the account type for savings has another name, or the app has a helper for «spendable» (`rtk grep -rn "spendable" packages/core/src`), use that helper. Show the quick add only when the user has no transaction at all (`page.data.transactions.length === 0`). For an empty period of a user who has transactions, keep `transactions.empty`.
+The new form already picks its first account so (`formView`), and has no rule about savings accounts. The quick add follows it. Show the quick add only when the user has no transaction at all (`page.data.transactions.length === 0`). For an empty period of a user who has transactions, keep `transactions.empty`.
 
-- [ ] **Step 4: No results — the matches in other periods**
+- [x] **Step 4: No results — the matches in other periods**
 
 In `page.tsx`, the branch `!hasRows && view.filtered` renders `transactions.noResults`. Replace its content with:
 
@@ -776,7 +772,7 @@ Add the CSS:
 }
 ```
 
-- [ ] **Step 5: Check and commit**
+- [x] **Step 5: Check and commit**
 
 Run: `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm --filter web test`
 Expected: clean, no error, PASS.

@@ -1,6 +1,13 @@
-import { addDays, countsInTotals, isWithin, summarizePeriod } from '@saldo/core';
+import {
+  addDays,
+  countsInTotals,
+  isWithin,
+  matchesInOtherPeriods,
+  summarizePeriod,
+} from '@saldo/core';
 import {
   catalogs,
+  formatCycleRange,
   formatDayMonth,
   formatMoney,
   formatMoneyParts,
@@ -8,7 +15,7 @@ import {
   plural,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import { PERIOD_PARAM } from '../../../src/features/period/periodParams';
+import { PERIOD_PARAM, periodHref } from '../../../src/features/period/periodParams';
 import { detailView } from '../../../src/features/transactions/detailView';
 import { formView } from '../../../src/features/transactions/formView';
 import {
@@ -16,7 +23,12 @@ import {
   searchFromFilters,
   toggleHref,
 } from '../../../src/features/transactions/listParams';
-import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
+import {
+  type DayView,
+  filterChoices,
+  filterLookup,
+  listView,
+} from '../../../src/features/transactions/listView';
 import { NEW_PARAM, SELECTION_PARAM } from '../../../src/features/transactions/panelState';
 import { formMessages } from '../../../src/i18n/formMessages';
 import { getDb } from '../../../src/server/db/client';
@@ -32,6 +44,7 @@ import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { SearchField } from '../../../src/ui/SearchField';
 import { DeleteTransaction } from './DeleteTransaction';
+import { QuickAdd } from './QuickAdd';
 import { TransactionForm } from './TransactionForm';
 import { TransactionsPanels } from './TransactionsPanels';
 import { TxRow } from './TxRow';
@@ -239,6 +252,20 @@ export default async function TransactionsPage({
   );
 
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
+  // W11: the same search in the other periods, when this one finds nothing.
+  const otherPeriods =
+    hasRows || !view.filtered
+      ? []
+      : matchesInOtherPeriods({
+          txs: page.data.transactions,
+          filters,
+          lookup: filterLookup(page.data),
+          def,
+          exclude: period.range,
+        });
+  // W11: the quick add saves on the account the new form opens on (not a pocket, not archived).
+  const defaultAccount =
+    newForm?.accounts.find((account) => !account.pocket && !account.archived) ?? null;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
 
   const formProps = {
@@ -459,12 +486,43 @@ export default async function TransactionsPage({
           view.filtered ? (
             <div className={styles.empty}>
               <EmptyState
-                title={t('transactions.noResults')}
+                title={t('transactions.noResultsIn', {
+                  period: formatCycleRange(period.range, locale, today),
+                })}
                 body={t('transactions.noResultsBody')}
               />
+              {otherPeriods.length === 0 || filters.query === '' ? null : (
+                <div className={styles.otherPeriods}>
+                  <p>{t('transactions.otherPeriods', { query: filters.query })}</p>
+                  {otherPeriods.map((entry) => (
+                    <Link
+                      key={entry.range.start}
+                      className={styles.otherPeriod}
+                      href={periodHref(PATH, entry.range, def, today, searchFromFilters(filters))}
+                    >
+                      <span>{formatCycleRange(entry.range, locale, today)}</span>
+                      <span>{plural(t, locale, 'transactions.periodCount', entry.count)}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
               <Link className={styles.reset} href={link(periodOnly)}>
                 {t('transactions.resetFilters')}
               </Link>
+            </div>
+          ) : page.data.transactions.length === 0 ? (
+            // W11: no transaction at all — the first expense is a form away.
+            <div className={styles.listBox}>
+              {newForm === null || defaultAccount === null ? (
+                <div className={styles.empty}>
+                  <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
+                  <Link className={styles.reset} href="/accounts?new">
+                    {t('home.stepAccount')}
+                  </Link>
+                </div>
+              ) : (
+                <QuickAdd view={newForm} accountId={defaultAccount.id} {...formProps} />
+              )}
             </div>
           ) : (
             <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
