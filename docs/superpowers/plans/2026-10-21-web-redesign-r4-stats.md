@@ -145,12 +145,12 @@ rtk git commit -m "feat(i18n): strings for the expenses chart of Statistics"
 
 This is a refactor: `statsView.test.ts` already covers the projection through `statsView`, and it must stay green.
 
-- [ ] **Step 1: Run the tests before the change**
+- [x] **Step 1: Run the tests before the change**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/stats/statsView.test.ts`
 Expected: PASS.
 
-- [ ] **Step 2: Add the function**
+- [x] **Step 2: Add the function**
 
 In `apps/web/src/features/stats/statsView.ts`, add `cycleLength`, `type DateRange` and `elapsedDays` to the `@saldo/core` import (keep the import sorted as Biome wants it). Then, after the constant `MIN_DAYS_LEFT`, add:
 
@@ -186,7 +186,7 @@ export function periodProjection(input: {
 }
 ```
 
-- [ ] **Step 3: Use it in `statsView`**
+- [x] **Step 3: Use it in `statsView`**
 
 In `statsView`, delete the lines:
 
@@ -215,7 +215,7 @@ with:
       projection: periodProjection({ txs, def, range: period.range, today }),
 ```
 
-- [ ] **Step 4: Run the tests again**
+- [x] **Step 4: Run the tests again**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/stats/statsView.test.ts`
 Expected: PASS. If a test fails, `period.elapsed` or `period.length` differs from `elapsedDays` or `cycleLength` for that case. Read both in `@saldo/core` and make `periodProjection` match `PeriodView`, not the other way round.
@@ -223,7 +223,7 @@ Expected: PASS. If a test fails, `period.elapsed` or `period.length` differs fro
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no error. Remove an import that is no longer used if Biome or `tsc` says so.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/web/src/features/stats/statsView.ts
