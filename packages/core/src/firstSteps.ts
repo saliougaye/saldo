@@ -1,0 +1,101 @@
+import { type BudgetRef, suggestBudgetAmount, takenCategoryIds } from './budgets';
+import type { LocalDate } from './dates';
+import { type FilterLookup, filterTransactions, type TransactionFilters } from './filters';
+import { categorySpendHistory, HISTORY_WINDOW, periodHistory, periodSpendHistory } from './history';
+import type { CategoryRef, LedgerTx } from './ledger';
+import type { MinorUnits } from './money';
+import { type PeriodDef, periodContaining } from './period';
+import { median } from './stats';
+
+/** How many months of spend the emergency fund covers (W11). */
+export const EMERGENCY_FUND_MONTHS = 3;
+
+export interface BudgetSuggestion {
+  categoryId: string;
+  /** The median monthly spend of the category, the amount §5.5 suggests for its budget. */
+  amount: MinorUnits;
+}
+
+/**
+ * W11, Profile · Budgets: «Where you spend most» — the categories with the largest median spend of
+ * the last periods, at the parent level, without the ones a budget already covers. The amount is
+ * `suggestBudgetAmount`, the same figure the budget form offers. A category with a median of 0 (spent
+ * in fewer than half the periods) suggests nothing.
+ */
+export function budgetSuggestions(input: {
+  txs: readonly LedgerTx[];
+  categories: readonly CategoryRef[];
+  budgets: readonly BudgetRef[];
+  def: PeriodDef;
+  today: LocalDate;
+  count?: number;
+}): BudgetSuggestion[] {
+  const { txs, categories, budgets, def, today, count = 3 } = input;
+  const history = categorySpendHistory(
+    periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW),
+    categories,
+    today,
+  );
+  const taken = takenCategoryIds(budgets, categories);
+  const known = new Set(categories.map((category) => category.id));
+  const ids = new Set(history.flatMap((amounts) => [...amounts.keys()]));
+  return [...ids]
+    .filter((id) => known.has(id) && !taken.has(id))
+    .map((categoryId) => ({
+      categoryId,
+      amount: suggestBudgetAmount(history, [categoryId], categories) ?? 0,
+    }))
+    .filter((suggestion) => suggestion.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.categoryId.localeCompare(b.categoryId))
+    .slice(0, count);
+}
+
+export interface PeriodMatches {
+  range: ReturnType<typeof periodContaining>;
+  count: number;
+}
+
+/**
+ * W11, Transactions · no results: the periods other than `exclude` where the same filters find rows,
+ * newest first, with how many rows each one holds.
+ */
+export function matchesInOtherPeriods<T extends LedgerTx>(input: {
+  txs: readonly T[];
+  filters: TransactionFilters;
+  lookup: FilterLookup;
+  def: PeriodDef;
+  exclude: { start: LocalDate };
+  limit?: number;
+}): PeriodMatches[] {
+  const { def, exclude, limit = 3 } = input;
+  const byStart = new Map<string, PeriodMatches>();
+  for (const tx of filterTransactions(input.txs, input.filters, input.lookup)) {
+    const range = periodContaining(def, tx.date);
+    if (range.start === exclude.start) continue;
+    const entry = byStart.get(range.start);
+    if (entry === undefined) byStart.set(range.start, { range, count: 1 });
+    else entry.count += 1;
+  }
+  return [...byStart.values()]
+    .sort((a, b) => b.range.start.localeCompare(a.range.start))
+    .slice(0, limit);
+}
+
+/**
+ * W11, Goals · none: the target the «Emergency fund» preset offers — `EMERGENCY_FUND_MONTHS` times
+ * the median spend of the last used periods. `null` with no history: the preset then has no amount.
+ */
+export function emergencyFundTarget(input: {
+  txs: readonly LedgerTx[];
+  def: PeriodDef;
+  today: LocalDate;
+}): MinorUnits | null {
+  const { txs, def, today } = input;
+  const middle = median(
+    periodSpendHistory(
+      periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW),
+      today,
+    ),
+  );
+  return middle === null ? null : Math.round(middle * EMERGENCY_FUND_MONTHS);
+}

@@ -104,7 +104,7 @@ rtk git commit -m "feat(i18n): strings for the first steps of the empty states (
 - Test: `packages/core/src/firstSteps.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/core/src/firstSteps.test.ts`:
 
@@ -228,12 +228,12 @@ describe('emergencyFundTarget', () => {
 
 If `DateRange` from `periodContaining` has more fields than `start` and `end`, change the expected `range` objects to `expect.objectContaining({ start, end })`.
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core exec vitest run src/firstSteps.test.ts`
 Expected: FAIL, because `./firstSteps` does not exist.
 
-- [ ] **Step 3: Write the functions**
+- [x] **Step 3: Write the functions**
 
 Create `packages/core/src/firstSteps.ts`:
 
@@ -337,7 +337,10 @@ export function emergencyFundTarget(input: {
 }): MinorUnits | null {
   const { txs, def, today } = input;
   const middle = median(
-    periodSpendHistory(periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW), today),
+    periodSpendHistory(
+      periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW),
+      today,
+    ),
   );
   return middle === null ? null : Math.round(middle * EMERGENCY_FUND_MONTHS);
 }
@@ -345,11 +348,11 @@ export function emergencyFundTarget(input: {
 
 If an import path differs, import the name from the module that exports it (`rtk grep -n "export function <name>" packages/core/src`). For example, `periodContaining` or `median` may live in another file.
 
-- [ ] **Step 4: Export them**
+- [x] **Step 4: Export them**
 
 In `packages/core/src/index.ts`, add `export * from './firstSteps';` in alphabetical order (after `./filters`).
 
-- [ ] **Step 5: Run the tests to see them pass**
+- [x] **Step 5: Run the tests to see them pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core exec vitest run src/firstSteps.test.ts`
 Expected: PASS.
@@ -357,7 +360,7 @@ Expected: PASS.
 Run: `rtk proxy pnpm --filter @saldo/core test` and `rtk proxy pnpm --filter @saldo/core typecheck`
 Expected: PASS, no error.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add packages/core/src/firstSteps.ts packages/core/src/firstSteps.test.ts packages/core/src/index.ts

@@ -1,0 +1,115 @@
+import { describe, expect, it } from 'vitest';
+import { CATEGORIES, tx } from './__tests__/fixtures';
+import { EMPTY_FILTERS, type FilterLookup } from './filters';
+import { budgetSuggestions, emergencyFundTarget, matchesInOtherPeriods } from './firstSteps';
+import type { PeriodDef } from './period';
+
+const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
+const TODAY = '2026-04-18';
+const APRIL = { start: '2026-04-01', end: '2026-04-30' };
+
+/** Three used months before April. Groceries (with its child) and transport are spent each month. */
+function threeMonths() {
+  return [
+    tx({ date: '2026-01-05', amount: 10000, categoryId: 'cat-groceries' }),
+    tx({ date: '2026-02-05', amount: 20000, categoryId: 'cat-supermarket' }),
+    tx({ date: '2026-03-05', amount: 30000, categoryId: 'cat-groceries' }),
+    tx({ date: '2026-01-07', amount: 4000, categoryId: 'cat-transport' }),
+    tx({ date: '2026-02-07', amount: 6000, categoryId: 'cat-transport' }),
+    tx({ date: '2026-03-07', amount: 5000, categoryId: 'cat-transport' }),
+    // Spent in one month of three: its median is 0, so it suggests nothing.
+    tx({ date: '2026-03-09', amount: 50000, categoryId: 'cat-rent' }),
+    // Income is never a budget.
+    tx({ date: '2026-03-01', amount: 200000, kind: 'income', categoryId: 'cat-salary' }),
+  ];
+}
+
+describe('budgetSuggestions', () => {
+  it('ranks the categories by their median monthly spend, at the parent level', () => {
+    const suggestions = budgetSuggestions({
+      txs: threeMonths(),
+      categories: CATEGORIES,
+      budgets: [],
+      def: MONTH,
+      today: TODAY,
+    });
+    expect(suggestions).toEqual([
+      { categoryId: 'cat-groceries', amount: 20000 },
+      { categoryId: 'cat-transport', amount: 5000 },
+    ]);
+  });
+
+  it('leaves out a category that a budget already covers, and keeps the count', () => {
+    const suggestions = budgetSuggestions({
+      txs: threeMonths(),
+      categories: CATEGORIES,
+      budgets: [{ id: 'b1', categoryIds: ['cat-groceries'] }],
+      def: MONTH,
+      today: TODAY,
+      count: 1,
+    });
+    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
+  });
+
+  it('suggests nothing with no history', () => {
+    expect(
+      budgetSuggestions({ txs: [], categories: CATEGORIES, budgets: [], def: MONTH, today: TODAY }),
+    ).toEqual([]);
+  });
+});
+
+describe('matchesInOtherPeriods', () => {
+  const lookup: FilterLookup = {
+    accountName: () => '',
+    categoryName: () => '',
+    categoryParentId: () => null,
+  };
+  const txs = [
+    tx({ date: '2026-01-03', amount: 100, description: 'Esselunga' }),
+    tx({ date: '2026-01-20', amount: 100, description: 'Esselunga Viale' }),
+    tx({ date: '2026-03-02', amount: 100, description: 'esselunga' }),
+    tx({ date: '2026-04-02', amount: 100, description: 'Esselunga' }),
+    tx({ date: '2026-02-02', amount: 100, description: 'Coop' }),
+  ];
+
+  it('counts the matches of each other period, newest period first', () => {
+    const matches = matchesInOtherPeriods({
+      txs,
+      filters: { ...EMPTY_FILTERS, query: 'esselunga' },
+      lookup,
+      def: MONTH,
+      exclude: APRIL,
+    });
+    expect(matches).toEqual([
+      { range: { start: '2026-03-01', end: '2026-03-31' }, count: 1 },
+      { range: { start: '2026-01-01', end: '2026-01-31' }, count: 2 },
+    ]);
+  });
+
+  it('stops at the limit', () => {
+    const matches = matchesInOtherPeriods({
+      txs,
+      filters: { ...EMPTY_FILTERS, query: 'esselunga' },
+      lookup,
+      def: MONTH,
+      exclude: APRIL,
+      limit: 1,
+    });
+    expect(matches.map((entry) => entry.range.start)).toEqual(['2026-03-01']);
+  });
+});
+
+describe('emergencyFundTarget', () => {
+  it('is three times the median monthly spend', () => {
+    const txs = [
+      tx({ date: '2026-01-05', amount: 10000 }),
+      tx({ date: '2026-02-05', amount: 30000 }),
+      tx({ date: '2026-03-05', amount: 20000 }),
+    ];
+    expect(emergencyFundTarget({ txs, def: MONTH, today: TODAY })).toBe(60000);
+  });
+
+  it('is null with no history', () => {
+    expect(emergencyFundTarget({ txs: [], def: MONTH, today: TODAY })).toBeNull();
+  });
+});
