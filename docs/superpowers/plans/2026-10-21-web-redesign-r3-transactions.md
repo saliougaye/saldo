@@ -148,7 +148,7 @@ rtk git commit -m "feat(i18n): strings for the summary, the More menu and the ke
 
 `Chip` and `FilterMenu` both use these classes. The markup does not change, so the e2e locators (`link` with `aria-current`, `button` with the label) stay valid.
 
-- [ ] **Step 1: Replace the CSS**
+- [x] **Step 1: Replace the CSS**
 
 Replace the whole of `apps/web/src/ui/Chip.module.css` with:
 
@@ -225,12 +225,12 @@ Replace the whole of `apps/web/src/ui/Chip.module.css` with:
 }
 ```
 
-- [ ] **Step 2: Test**
+- [x] **Step 2: Test**
 
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS (`cssTokens.test.ts` included).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add apps/web/src/ui/Chip.module.css
