@@ -56,7 +56,7 @@ export default async function AdminInvitesPage() {
   const panels: Record<string, PanelSpec> = {
     new: {
       title: t('admin.invites.new'),
-      sheet: true,
+      form: true,
       body: (
         <MintInvite
           closeHref={PATH}
@@ -98,7 +98,7 @@ export default async function AdminInvitesPage() {
           `i:${invite.id}`,
           {
             title: label,
-            sheet: true,
+            form: true,
             body: (
               <>
                 <div className={styles.who}>

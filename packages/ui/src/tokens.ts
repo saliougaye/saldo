@@ -297,8 +297,10 @@ export const layout = {
   /** Web: between open sections, and between the two columns of Home and Statistiche. */
   sectionGapWeb: 56,
   columnGapWeb: 72,
-  /** Web: the trailing panel where details and forms open (Transazioni, Conti, Profilo, Admin). */
-  panelWidth: 420,
+  /** Web (W1, 2026-10-21): the centred dialog where a detail opens. */
+  dialogDetailWidth: 440,
+  /** Web (W1): the centred dialog where a form opens. */
+  dialogFormWidth: 480,
   searchWidth: 320,
   /** Web: the sub-navigation of Profilo and Admin. */
   subnavWidth: 200,

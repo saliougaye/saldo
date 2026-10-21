@@ -502,7 +502,7 @@ export default async function AccountsPage({
   if (fresh !== null) {
     panels.new = {
       title: t('accounts.newAccount'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(fresh, PATH),
     };
@@ -605,7 +605,7 @@ export default async function AccountsPage({
     if (editing !== null && editing.id === id) {
       panels[key] = {
         title: t('accounts.editAccount'),
-        sheet: true,
+        form: true,
         bare: true,
         closeTo: key,
         body: formBody(editing, `${PATH}?a=${id}`),

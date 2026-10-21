@@ -96,7 +96,7 @@ export default async function ProfileGoalsPage({
   if (fresh !== null) {
     panels.new = {
       title: t('goals.newGoal'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(fresh, null),
     };
@@ -106,7 +106,7 @@ export default async function ProfileGoalsPage({
     if (form === null) continue;
     panels[`g:${item.account.id}`] = {
       title: t('goals.editGoal'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(form, item.parent?.name ?? null),
     };

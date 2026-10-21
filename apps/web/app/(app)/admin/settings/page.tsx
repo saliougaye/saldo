@@ -106,7 +106,7 @@ export default async function AdminSettingsPage() {
   const panels: Record<`edit:${SettingsPanelId}`, PanelSpec> = {
     'edit:name': {
       title: t('admin.settings.name.title'),
-      sheet: true,
+      form: true,
       body: (
         <div className={styles.form}>
           {lockedAlert('name')}
@@ -131,7 +131,7 @@ export default async function AdminSettingsPage() {
     },
     'edit:registration': {
       title: t('admin.settings.registration.title'),
-      sheet: true,
+      form: true,
       body: (
         <div className={styles.form}>
           {lockedAlert('registration')}
@@ -151,7 +151,7 @@ export default async function AdminSettingsPage() {
     },
     'edit:smtp': {
       title: t('admin.settings.smtp.title'),
-      sheet: true,
+      form: true,
       body: (
         <div className={styles.form}>
           <p className={styles.note}>{t('admin.settings.smtp.note')}</p>

@@ -47,7 +47,7 @@ export default async function ProfileTagsPage({
   const panels: Record<string, PanelSpec> = {
     new: {
       title: t('tags.newTag'),
-      sheet: true,
+      form: true,
       body: <TagForm tag={null} transactionsHref={null} />,
     },
     ...Object.fromEntries(
@@ -55,7 +55,7 @@ export default async function ProfileTagsPage({
         `tag:${row.id}`,
         {
           title: t('tags.editTag'),
-          sheet: true,
+          form: true,
           body: (
             <TagForm
               tag={row}

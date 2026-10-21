@@ -18,8 +18,8 @@ import { usePanelController } from './usePanelController';
 export interface PanelSpec {
   title: string;
   body: ReactNode;
-  /** Below the breakpoint, a bottom sheet (a form) and not the whole screen. */
-  sheet?: boolean;
+  /** A form: the wider dialog (W1). */
+  form?: boolean;
   /** The body carries its own heading. */
   bare?: boolean;
   /** Where ✕ and Esc go from this panel, as a key. Default: no panel. */
@@ -131,9 +131,9 @@ export function PanelSwitch({
   const panel =
     key === null || spec === undefined ? null : (
       <Panel
-        key={spec.sheet === true ? 'form' : 'detail'}
+        key={spec.form === true ? 'form' : 'detail'}
         title={spec.title}
-        sheet={spec.sheet}
+        form={spec.form}
         bare={spec.bare}
         closeHref={closeHref}
         closeLabel={closeLabel}

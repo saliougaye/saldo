@@ -108,7 +108,7 @@ export default async function ProfileCategoriesPage({
   if (fresh !== null) {
     panels.new = {
       title: t('categories.newCategory'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(fresh),
     };
@@ -121,14 +121,14 @@ export default async function ProfileCategoriesPage({
     if (form === null) continue;
     panels[`c:${category.id}`] = {
       title: t('categories.editCategory'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(form, view.usage.get(category.id) ?? 0),
     };
   }
   panels.archived = {
     title: t('categories.archived'),
-    sheet: true,
+    form: true,
     body: (
       <>
         <p className={styles.note}>{t('categories.archivedNote')}</p>

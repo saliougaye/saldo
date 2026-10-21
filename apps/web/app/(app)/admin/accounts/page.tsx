@@ -92,7 +92,7 @@ export default async function AdminAccountsPage() {
       `u:${detail.id}`,
       {
         title: detail.displayName,
-        sheet: true,
+        form: true,
         body: (
           <>
             <div className={styles.who}>

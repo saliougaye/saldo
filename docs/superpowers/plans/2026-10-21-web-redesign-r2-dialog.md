@@ -52,7 +52,7 @@
 
 No unit test: this is CSS and a prop name. Task 6 checks the geometry with Playwright.
 
-- [ ] **Step 1: Replace the panel width token**
+- [x] **Step 1: Replace the panel width token**
 
 In `packages/ui/src/tokens.ts`, replace:
 
@@ -73,7 +73,7 @@ with:
 Run: `rtk grep -rn "panelWidth\|panel-width" packages apps --exclude-dir=node_modules`
 Expected: only `apps/web/src/ui/Panel.module.css`, which Step 3 replaces.
 
-- [ ] **Step 2: Rename `sheet` to `form` in `Panel.tsx`**
+- [x] **Step 2: Rename `sheet` to `form` in `Panel.tsx`**
 
 In `apps/web/src/ui/Panel.tsx`:
 
@@ -129,7 +129,7 @@ with:
         <span className={styles.handle} aria-hidden="true" />
 ```
 
-- [ ] **Step 3: Replace `Panel.module.css`**
+- [x] **Step 3: Replace `Panel.module.css`**
 
 Replace the whole of `apps/web/src/ui/Panel.module.css` with:
 
@@ -353,7 +353,7 @@ Replace the whole of `apps/web/src/ui/Panel.module.css` with:
 }
 ```
 
-- [ ] **Step 4: Rename `sheet` to `form` in `PanelSwitch`**
+- [x] **Step 4: Rename `sheet` to `form` in `PanelSwitch`**
 
 In `apps/web/src/ui/PanelSwitch.tsx`, replace:
 
@@ -385,7 +385,7 @@ with:
         form={spec.form}
 ```
 
-- [ ] **Step 5: Rename the prop in the pages**
+- [x] **Step 5: Rename the prop in the pages**
 
 Run from `apps/web`:
 
@@ -402,7 +402,7 @@ In `apps/web/app/(app)/transactions/TransactionsPanels.tsx`, replace the two lin
 Run: `rtk grep -rn "sheet: true\|spec.sheet\|data-sheet" apps/web/app apps/web/src`
 Expected: no match.
 
-- [ ] **Step 6: Typecheck and test**
+- [x] **Step 6: Typecheck and test**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no error.
@@ -410,12 +410,12 @@ Expected: no error.
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS. `cssTokens.test.ts` passes: the new CSS has no typed colour, radius or font size.
 
-- [ ] **Step 7: Look at the dialog**
+- [x] **Step 7: Look at the dialog**
 
 Run: `rtk proxy pnpm --filter web dev`. Open `/accounts`, click an account, then «Edit». Do it at 1440px and at 390px, in the light and the dark theme.
 Expected: at 1440px the detail is 440px wide in the centre of the screen and the form 480px; at 390px both are sheets at the bottom, with the handle. Esc, ✕ and a click on the scrim close it.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 rtk git add packages/ui/src/tokens.ts apps/web/src/ui/Panel.tsx apps/web/src/ui/Panel.module.css apps/web/src/ui/PanelSwitch.tsx "apps/web/app/(app)"

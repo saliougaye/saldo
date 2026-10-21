@@ -124,7 +124,7 @@ export function TransactionsPanels(props: Props) {
     newForm === null ? null : (
       <Activity mode={creating ? 'visible' : 'hidden'}>
         <Panel
-          sheet
+          form
           bare
           title={props.newTitle}
           closeHref={baseHref}
@@ -145,7 +145,7 @@ export function TransactionsPanels(props: Props) {
     content = (
       <Panel
         key="form"
-        sheet
+        form
         bare
         title={props.editTitle}
         closeHref={editCloseHref}

@@ -66,7 +66,7 @@ export default async function BudgetsPage({
   if (fresh !== null) {
     panels.new = {
       title: t('budgets.newBudget'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(fresh, null),
     };
@@ -76,7 +76,7 @@ export default async function BudgetsPage({
     if (form === null) continue;
     panels[`b:${item.budget.id}`] = {
       title: t('budgets.editBudget'),
-      sheet: true,
+      form: true,
       bare: true,
       body: formBody(form, item.budget.name),
     };
