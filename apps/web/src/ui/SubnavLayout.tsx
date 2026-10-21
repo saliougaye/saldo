@@ -5,9 +5,9 @@ import { PANEL_SLOT } from './panelSlot';
 import styles from './SubnavLayout.module.css';
 
 /**
- * A sub-navigation and the section. On a wide screen the sub-navigation is the sidebar itself (D10,
- * 2026-10-11), with «‹ Saldo» and the section's title above the links; on a narrow one it is a row
- * of links above the section. `PasskeyList` portals its panel into the slot with `createPortal`.
+ * A sub-navigation and the section. On a wide screen the sub-navigation is a column beside the
+ * section (D10, 2026-10-11), sticky under the top bar, with «‹ Saldo» and the section's title above
+ * the links; on a narrow one it is a row of links above the section. `PasskeyList` portals its panel into the slot with `createPortal`.
  */
 export function SubnavLayout({
   navLabel,
@@ -26,8 +26,7 @@ export function SubnavLayout({
 }) {
   return (
     <div className={styles.layout}>
-      {/* `data-section-nav`: the shell hides its own sidebar while this one takes its place. */}
-      <nav className={styles.subnav} aria-label={navLabel} data-section-nav="">
+      <nav className={styles.subnav} aria-label={navLabel}>
         <Link className={styles.back} href={back.href} aria-label={back.label}>
           <Icon name="chevL" size={16} />
           {back.text}

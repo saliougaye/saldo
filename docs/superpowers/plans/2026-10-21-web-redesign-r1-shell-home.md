@@ -328,6 +328,8 @@ Expected: matches only in `layout.tsx`, `shell.module.css`, `SideBar.tsx` and `P
 
 Note (checked on the code): `SubnavLayout` (Profile and Admin) still draws its sub-navigation as a fixed 240px column on screens of 1024px and wider, and `data-section-nav` no longer hides anything. Do not touch it in this plan. R6 replaces it. Until then, Profile and Admin overlap the left edge of the column at those widths.
 
+Done in the last block of this plan instead (`fix(web): the Profile and Admin sub-navigation sits in the column`): at 1024px and wider `SubnavLayout` is a two-column grid (`--layout-sidebar-width` and the section), and the sub-navigation is `position: sticky` under the top bar. The dead `data-section-nav` hook is gone. R6 still replaces the layout.
+
 - [x] **Step 2: Replace the layout**
 
 Replace the whole `apps/web/app/(app)/layout.tsx` with:
@@ -626,7 +628,7 @@ Expected: no errors.
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
 
-- [ ] **Step 8: Look at it**
+- [x] **Step 8: Look at it**
 
 Run: `rtk proxy pnpm --filter web dev`, sign in, and open `/home` at 1440px, 900px and 390px.
 Expected: at 1440px and 900px, the top bar shows the brand, Home, Transactions, Statistics, Accounts, «New transaction» and the avatar, and no sidebar shows. At 390px the top bar shows the brand and the avatar, and the tab bar is at the bottom. The brand aligns with the left edge of the content.

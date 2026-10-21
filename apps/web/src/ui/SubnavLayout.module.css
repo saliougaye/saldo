@@ -46,23 +46,20 @@
 
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
 @media (min-width: 1024px) {
-  /*
-   * D10: the sub-navigation is the sidebar. It sits exactly over the shell's sidebar, which the
-   * shell hides (`data-section-nav`), so the section does not move when you enter Profilo.
-   */
+  /* R1: the sub-navigation is a column of the content's own grid, beside the section. */
+  .layout {
+    grid-template-columns: var(--layout-sidebar-width) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  /* It stays in view under the top bar while the section scrolls. */
   .subnav {
-    position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
-    z-index: 11;
+    position: sticky;
+    top: calc(var(--layout-topbar-height) + 16px);
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 2px;
-    inline-size: var(--layout-sidebar-width);
-    padding: 20px 16px;
-    border-inline-end: 1px solid var(--color-border);
-    background: var(--color-surface);
     transition-property: translate, opacity;
     transition-duration: var(--motion-fade);
     transition-timing-function: var(--motion-easing);
