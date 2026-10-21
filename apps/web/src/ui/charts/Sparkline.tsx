@@ -3,7 +3,7 @@ import styles from './Sparkline.module.css';
 
 /**
  * The phone's account sparkline (§6.10) in DOM SVG: eight month-end balances, no axis, no dot —
- * a shape, not a chart to read values off of. `TrendChart` is the same idea at a larger scale.
+ * a shape, not a chart to read values off of. `TrendScrub` is the same idea at a larger scale.
  */
 export function Sparkline({
   series,

@@ -412,7 +412,7 @@ rtk git commit -m "feat(web): the bars and the usual line of the expenses chart 
 
 No unit test: a component with no logic of its own. Task 6 covers both with Playwright.
 
-- [ ] **Step 1: Write the chart**
+- [x] **Step 1: Write the chart**
 
 Create `apps/web/src/ui/charts/ExpensesChart.tsx`:
 
@@ -500,7 +500,7 @@ export function ExpensesChart({ bars, usualHeight }: Props) {
 }
 ```
 
-- [ ] **Step 2: Write the chart CSS**
+- [x] **Step 2: Write the chart CSS**
 
 Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
 
@@ -558,12 +558,18 @@ Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
   block-size: calc(max(var(--h), var(--pj)) * var(--plot));
   min-block-size: 2px;
   overflow: hidden;
-  border-radius: var(--radius-icon-box) var(--radius-icon-box) 1px 1px;
+  border-radius: var(--radius-icon-box) var(--radius-icon-box) 0 0;
 }
 
 .spent {
   flex: 1;
   background: var(--color-bar-grey);
+}
+
+/* A forecast period: a light bar. */
+.forecast .spent {
+  background: var(--color-track);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
 .col[aria-current="true"] .spent {
@@ -574,12 +580,6 @@ Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
 .projection {
   flex: none;
   block-size: calc((var(--pj) - var(--h)) * var(--plot));
-  background: var(--color-track);
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
-}
-
-/* A forecast period: a light bar. */
-.forecast .spent {
   background: var(--color-track);
   box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
@@ -607,6 +607,10 @@ Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
   white-space: nowrap;
 }
 
+.forecast .tick {
+  color: var(--color-text-faint);
+}
+
 .col[aria-current="true"] .tick {
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
@@ -616,10 +620,6 @@ Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
-}
-
-.forecast .tick {
-  color: var(--color-text-faint);
 }
 
 .value {
@@ -706,7 +706,7 @@ Create `apps/web/src/ui/charts/ExpensesChart.module.css`:
 }
 ```
 
-- [ ] **Step 3: Write `PeriodKeys`**
+- [x] **Step 3: Write `PeriodKeys`**
 
 Create `apps/web/src/ui/PeriodKeys.tsx`:
 
@@ -750,7 +750,7 @@ export function PeriodKeys({ previousHref, nextHref }: Props) {
 
 The extra `[data-panel]` check is there because `ignoresShortcut` lets a `Panel` dialog through on purpose (R2 kept that for the list keys). On Statistics an open category dialog must keep ← and → away from the page.
 
-- [ ] **Step 4: Typecheck**
+- [x] **Step 4: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no error.
@@ -771,14 +771,14 @@ The e2e tests read the page through these hooks. Keep them:
 - **Breakdown rows:** each row is a link with `c=` in its `href` and the category name as an exact text (`cardOf`). The links «Expenses» and «Income» are inside the Breakdown section.
 - **Running period:** it shows «so far» (`stats.soFar`).
 
-- [ ] **Step 1: Find the previous and next period links**
+- [x] **Step 1: Find the previous and next period links**
 
 Run: `rtk grep -n "previous\|next\|href" apps/web/src/ui/PeriodHeader.tsx`
-Read how `PeriodHeader` builds its ‹ › links: which function it calls and with which reach. Step 2 calls the same function for `PeriodKeys`. If the hrefs come from a helper in `src/features/period/periodParams.ts` (for example `stepHref`), import it. If `PeriodHeader` builds them inline, move that code into an exported helper `periodStepHrefs(…)` in `periodParams.ts`. Make `PeriodHeader` call it too, so both use one rule. Write down the name you used, and use it in Step 2 in place of `periodStepHrefs`.
+`PeriodHeader` calls `periodSteps(def, range, today, path, others, reach)` from `src/features/period/periodParams.ts`. It returns `{ previous, next }`, and `next` is `null` when the period has no next. Step 2 calls the same function for `PeriodKeys`, so the header and the keys use one rule. No new helper is needed.
 
-- [ ] **Step 2: Replace the page**
+- [x] **Step 2: Replace the page**
 
-Replace the whole of `apps/web/app/(app)/stats/page.tsx` with the code below. If Step 1 gave the helper another name or signature, change the two lines marked `// Step 1`.
+Replace the whole of `apps/web/app/(app)/stats/page.tsx` with the code below.
 
 ```tsx
 import {
@@ -796,7 +796,7 @@ import {
   PERIOD_PARAM,
   periodFromParam,
   periodHref,
-  periodStepHrefs, // Step 1
+  periodSteps,
 } from '../../../src/features/period/periodParams';
 import { expensesChartView } from '../../../src/features/stats/expensesChart';
 import { forecastView } from '../../../src/features/stats/forecastView';
@@ -809,15 +809,15 @@ import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
 import { Chip } from '../../../src/ui/Chip';
 import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
-import { type ExpensesChartBar, ExpensesChart } from '../../../src/ui/charts/ExpensesChart';
+import { ExpensesChart, type ExpensesChartBar } from '../../../src/ui/charts/ExpensesChart';
 import { Sparkline } from '../../../src/ui/charts/Sparkline';
 import { SplitBar, type SplitSegment } from '../../../src/ui/charts/SplitBar';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { Icon } from '../../../src/ui/Icon';
 import { paletteIndex } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
-import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PanelLink } from '../../../src/ui/PanelNav';
+import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { PeriodKeys } from '../../../src/ui/PeriodKeys';
 import { Section } from '../../../src/ui/Section';
@@ -968,14 +968,14 @@ export default async function StatsPage({
     </>
   );
 
-  const { previous: previousHref, next: nextHref } = periodStepHrefs(
-    PATH,
-    period,
+  const { previous: previousHref, next: nextHref } = periodSteps(
     def,
+    period.range,
     today,
+    PATH,
     keep,
     reach,
-  ); // Step 1
+  );
   const header = (
     <>
       <PeriodHeader
@@ -1025,7 +1025,12 @@ export default async function StatsPage({
                 max: formatMajor(selected.expensesMax, currency, locale, 'never'),
               })}
             >
-              <AmountText minor={selected.expenses} currency={currency} locale={locale} size="hero" />
+              <AmountText
+                minor={selected.expenses}
+                currency={currency}
+                locale={locale}
+                size="hero"
+              />
             </Figure>
             <div className={styles.stats}>
               <Figure label={t('stats.incomeAbout')} note={t('stats.fromRecurrences')}>
@@ -1066,7 +1071,9 @@ export default async function StatsPage({
           <section className={styles.box}>
             <div className={styles.boxHead}>
               <h2 className={styles.boxTitle}>{t('stats.forecastRecurrences')}</h2>
-              <span className={styles.status}>{formatCycleRange(selected.range, locale, today)}</span>
+              <span className={styles.status}>
+                {formatCycleRange(selected.range, locale, today)}
+              </span>
             </div>
             {view.recurrences.length === 0 ? (
               <EmptyState title={t('stats.forecastNoRecurrences')} />
@@ -1082,7 +1089,9 @@ export default async function StatsPage({
                     colorIndex={category?.colorIndex}
                     title={row.description === '' ? (category?.name ?? MISSING) : row.description}
                     subtitle={
-                      row.count > 1 ? plural(t, locale, 'stats.forecastTimes', row.count) : undefined
+                      row.count > 1
+                        ? plural(t, locale, 'stats.forecastTimes', row.count)
+                        : undefined
                     }
                     trailing={
                       <AmountText
@@ -1188,7 +1197,9 @@ export default async function StatsPage({
   const categoryHref = (categoryId: string) =>
     periodHref(PATH, period.range, def, today, { ...keep, c: categoryId });
   const deltaText = (delta: number | null) =>
-    delta === null ? t('stats.newLabel') : t('stats.vsUsual', { delta: formatSignedPercent(delta) });
+    delta === null
+      ? t('stats.newLabel')
+      : t('stats.vsUsual', { delta: formatSignedPercent(delta) });
 
   // Every category's dialog, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {};
@@ -1274,7 +1285,12 @@ export default async function StatsPage({
         <section className={styles.box} aria-label={t('stats.expensesByPeriod')}>
           <div className={styles.figures}>
             <Figure hero label={t('stats.expenses')} note={spentNote}>
-              <AmountText minor={view.figures.spent} currency={currency} locale={locale} size="hero" />
+              <AmountText
+                minor={view.figures.spent}
+                currency={currency}
+                locale={locale}
+                size="hero"
+              />
             </Figure>
             <div className={styles.stats}>
               <Figure label={t('stats.income')}>
@@ -1437,7 +1453,7 @@ export default async function StatsPage({
 
 Note on the old page: it did not pass `money()` to the forecast table. It called `formatMoney` with the same arguments, so the output is the same.
 
-- [ ] **Step 3: Replace the page CSS**
+- [x] **Step 3: Replace the page CSS**
 
 Replace the whole of `apps/web/app/(app)/stats/stats.module.css` with:
 
@@ -1692,8 +1708,8 @@ Replace the whole of `apps/web/app/(app)/stats/stats.module.css` with:
   text-align: end;
 }
 
-.tableSelected th,
-.tableSelected td {
+.table .tableSelected th,
+.table .tableSelected td {
   font-weight: var(--font-weight-semibold);
 }
 
@@ -1728,7 +1744,7 @@ Replace the whole of `apps/web/app/(app)/stats/stats.module.css` with:
 
 Before you replace the file, read the old `stats.module.css` to its end. If it has a rule this page still uses that the new file lacks (for example `.sticky`, `.percent`), add that rule back only if the new `page.tsx` uses the class.
 
-- [ ] **Step 4: Delete what nothing uses**
+- [x] **Step 4: Delete what nothing uses**
 
 Run: `rtk grep -rln "CashflowChart\|TrendChart\|ui/Columns" apps/web/app apps/web/src`
 Expected: only the files of those components. Then delete:
@@ -1739,7 +1755,7 @@ rtk git rm apps/web/src/ui/charts/CashflowChart.tsx apps/web/src/ui/charts/Cashf
 
 If `src/ui/Columns.tsx` (and its CSS) has no other user, delete them too. Keep `ChartFrame`, `Sparkline`, `HeroBand` and `PageHead`, which Accounts and the category dialog still use. If a comment in `Sparkline.tsx` names `TrendChart`, change it to name `TrendScrub`.
 
-- [ ] **Step 5: Lint, typecheck and test**
+- [x] **Step 5: Lint, typecheck and test**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
@@ -1750,7 +1766,7 @@ Expected: no error.
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS.
 
-- [ ] **Step 6: Look at the page**
+- [x] **Step 6: Look at the page**
 
 Run: `rtk proxy pnpm --filter web dev`. Sign in with a seeded user. Use a temporary Playwright screenshot script if you have no browser, and delete it before you commit. Look at these four pages:
 - `/stats`, the current period.
@@ -1773,7 +1789,7 @@ Expected:
 - **Keys:** ← and → change the period. They do nothing while the category dialog is open.
 - **Overflow:** nothing overflows at 390px.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/stats" apps/web/src/ui/charts apps/web/src/ui/PeriodKeys.tsx apps/web/src/ui/PeriodHeader.tsx apps/web/src/features/period apps/web/src/ui
