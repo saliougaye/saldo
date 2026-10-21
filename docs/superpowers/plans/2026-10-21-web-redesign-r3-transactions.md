@@ -247,7 +247,7 @@ rtk git commit -m "feat(web): filters are tool buttons, not chips (W12)"
 
 No unit test: a component with no logic (AGENTS.md, «Tests»). Task 5 covers it with Playwright.
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 Create `apps/web/app/(app)/transactions/TxRow.tsx`:
 
@@ -326,7 +326,7 @@ export function TxRow({
 }
 ```
 
-- [ ] **Step 2: Write the CSS**
+- [x] **Step 2: Write the CSS**
 
 Create `apps/web/app/(app)/transactions/TxRow.module.css`:
 
@@ -411,7 +411,7 @@ Create `apps/web/app/(app)/transactions/TxRow.module.css`:
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no error. If `ListRowView['colorIndex']` has another type than `number | null | undefined`, widen the prop to that type.
@@ -426,7 +426,7 @@ Do not commit yet: Task 4 uses the component, and both go in one commit.
 - Modify: `apps/web/app/(app)/transactions/page.tsx`
 - Replace: `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Imports**
+- [x] **Step 1: Imports**
 
 In `apps/web/app/(app)/transactions/page.tsx`:
 
@@ -434,7 +434,7 @@ In `apps/web/app/(app)/transactions/page.tsx`:
 2. Remove the import of `Card, CardGrid, CardLabel, CardNote` and the import of `ListRow`.
 3. Add `import { TxRow } from './TxRow';` after the `TransactionsPanels` import.
 
-- [ ] **Step 2: The figures of the summary**
+- [x] **Step 2: The figures of the summary**
 
 After the line `const summary = summarizePeriod(page.data.transactions, period.range, today);`, add:
 
@@ -472,7 +472,7 @@ After the `filteredTotal` constant, add:
           : t('transactions.moreFilters');
 ```
 
-- [ ] **Step 3: The day sections**
+- [x] **Step 3: The day sections**
 
 Replace the whole `daySection` function with:
 
@@ -525,7 +525,7 @@ Replace the whole `daySection` function with:
 
 If `Section` is no longer used anywhere in the file, remove its import.
 
-- [ ] **Step 4: The head — summary, tools, filter line**
+- [x] **Step 4: The head — summary, tools, filter line**
 
 Inside `<TransactionsPanels …>`, replace the whole `<div className={styles.head}> … </div>` block (from `<div className={styles.head}>` to its closing `</div>`, just before `{!hasRows ? (`) with:
 
@@ -681,7 +681,7 @@ Inside `<TransactionsPanels …>`, replace the whole `<div className={styles.hea
         </div>
 ```
 
-- [ ] **Step 5: The list block**
+- [x] **Step 5: The list block**
 
 Replace the `: ( <> … </> )` branch of `{!hasRows ? ( … ) : ( … )}` — the part that renders the `<details>` of «In arrivo», the settled divider and `view.days.map(…)` — with:
 
@@ -733,7 +733,7 @@ Replace the `: ( <> … </> )` branch of `{!hasRows ? ( … ) : ( … )}` — th
         )}
 ```
 
-- [ ] **Step 6: Replace the page CSS**
+- [x] **Step 6: Replace the page CSS**
 
 Replace the whole of `apps/web/app/(app)/transactions/transactions.module.css` with:
 
@@ -996,7 +996,7 @@ Replace the whole of `apps/web/app/(app)/transactions/transactions.module.css` w
 }
 ```
 
-- [ ] **Step 7: Lint, typecheck and test**
+- [x] **Step 7: Lint, typecheck and test**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines. If Biome reports an unused import or variable in `page.tsx` (for example `Section`, `ListRow`, `upcomingRows`), delete it and run lint again.
@@ -1010,7 +1010,7 @@ Expected: PASS.
 Run: `rtk grep -n "styles\.\(head\|summary\|cell\|cellLabel\|cellNote\|tools\|filterLine\|filterNote\|empty\|reset\|listBox\|upcoming\|upcomingSummary\|upcomingText\|upcomingTitle\|chevron\|upcomingBody\|day\|dayHead\|dayHeading\|dayTitle\|dayName\|keys\)\b" "apps/web/app/(app)/transactions/page.tsx"`
 Expected: every class the page uses is in the new CSS. Then search for any other `styles.` name in `page.tsx` that the new CSS does not have, and fix it.
 
-- [ ] **Step 8: Look at the page**
+- [x] **Step 8: Look at the page**
 
 Run: `rtk proxy pnpm --filter web dev`. Sign in with a seeded user and open `/transactions` at 1440px and at 390px, in the light and the dark theme. Use a temporary Playwright screenshot script if you have no browser; delete it before you commit.
 
@@ -1021,7 +1021,7 @@ Expected:
 - **Key hint:** it shows under the list at 1440px with a mouse. It does not show at 390px.
 - **Overflow:** nothing overflows at 390px.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/transactions"

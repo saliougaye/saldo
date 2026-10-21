@@ -1,0 +1,78 @@
+/* W5: one row of the list. The icon has the colour of its category; nothing else is coloured. */
+.row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: var(--color-raised);
+  }
+}
+
+.row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+/* The row whose form is open. */
+.selected {
+  background: var(--color-raised);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title b {
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repeat {
+  flex: none;
+  color: var(--color-text-faint);
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  white-space: nowrap;
+}
+
+.upcoming .title b {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}

@@ -2,13 +2,13 @@
 .layout {
   display: flex;
   flex-direction: column;
-  gap: var(--layout-section-gap-web);
+  gap: 16px;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--layout-section-gap-web);
+  gap: 16px;
   min-width: 0;
 }
 
@@ -20,19 +20,62 @@
 .head {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
 }
 
-/* The search and the chips share one wrapping row: the search leads, the chips follow at 8px. */
-.filters {
+/* W5: the summary — one block, three cells (two in a closed period). */
+.summary {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 20px 24px;
+}
+
+.cell + .cell {
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.cellLabel {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+}
+
+.cellNote {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+/* W5: the tools — the search grows, the buttons follow it on one wrapping row. */
+.tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 
-.filters > :first-child {
-  margin-inline-end: 8px;
+.tools > search {
+  flex: 1 1 200px;
+  inline-size: auto;
+  min-width: 200px;
+}
+
+.filterLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
 }
 
 .filterNote {
@@ -49,106 +92,111 @@
 
 .reset {
   font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
   text-decoration: underline;
   text-decoration-color: var(--color-border-strong);
   text-underline-offset: 3px;
 }
 
-/* «In arrivo»: one row that opens onto the days ahead (§5.12, the phone's `UpcomingRow`). */
+/* W5: the list — one block. */
+.listBox {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 24px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+
+/* «Upcoming»: one closed row at the top; open, a hairline closes its rows. */
 .upcoming {
   display: flex;
   flex-direction: column;
+}
+
+.upcoming[open] {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .upcomingSummary {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-footnote);
+  min-height: 52px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
   cursor: pointer;
   list-style: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
 }
 
 .upcomingSummary::-webkit-details-marker {
   display: none;
 }
 
-.upcomingIcon {
-  flex: none;
-}
-
-.upcomingText {
-  flex: 1;
-  min-width: 0;
-}
-
-.upcomingTitle {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
-
 @media (hover: hover) and (pointer: fine) {
   .upcomingSummary:hover {
-    color: var(--color-text);
+    background: var(--color-raised);
   }
 }
 
+.upcomingText {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.upcomingTitle {
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
 .chevron {
-  color: var(--color-text-faint);
-  transition: transform var(--motion-press) var(--motion-easing);
+  flex: none;
+  color: var(--color-text-muted);
+  transition: rotate var(--motion-press) var(--motion-easing);
 }
 
 .upcoming[open] .chevron {
-  transform: rotate(180deg);
+  rotate: 90deg;
 }
 
 .upcomingBody {
   display: flex;
   flex-direction: column;
-  gap: var(--layout-section-gap-web);
-  padding-top: 24px;
 }
 
-/* The phone's `SectionDivider`: a caption in capitals, then a hairline to the end of the row. */
-.divider {
+.day {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-medium);
+  flex-direction: column;
+}
+
+.dayHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 0 6px;
   color: var(--color-text-muted);
-  text-transform: uppercase;
+  font-size: var(--font-size-footnote);
 }
 
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-}
-
-.settledDivider {
-  display: none;
-}
-
-.upcoming[open] + .settledDivider {
-  display: flex;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chevron {
-    transition: none;
-  }
-}
-
-/* A day's title row: the name in the text colour, the date in the muted one. */
-.dayTitle {
+.dayHeading {
+  min-width: 0;
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-regular);
+}
+
+/* A day's title: the name in the text colour, the date in the muted one. */
+.dayTitle {
   color: var(--color-text-muted);
 }
 
@@ -157,34 +205,52 @@
   color: var(--color-text);
 }
 
-/* Tags as pills on a wide screen (§17.1.7). */
-.tags {
+/* The key hint: only with a mouse, on a wide screen. */
+.keys {
   display: none;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 12px;
+  color: var(--color-text-faint);
+  font-size: var(--font-size-caption);
 }
 
-@media (min-width: 1024px) {
-  .tags {
+.keys kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-icon-box);
+  color: var(--color-text-muted);
+  font: inherit;
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (hover: hover) and (pointer: fine) and (min-width: 760px) {
+  .keys {
     display: flex;
   }
 }
 
-.pill {
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--color-raised);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
+@media (max-width: 759px) {
+  .summary {
+    grid-auto-flow: row;
+  }
+
+  .cell {
+    padding: 16px 18px;
+  }
+
+  .cell + .cell {
+    border-inline-start: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .listBox {
+    padding: 4px 16px 12px;
+  }
 }
 
-/* The rows of the In arrivo card: compact, and their hover stays inside the card's padding. */
-.cardRows {
-  display: flex;
-  flex-direction: column;
-}
-
-.cardRows > a {
-  min-height: 36px;
-  padding-block: 6px;
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }
