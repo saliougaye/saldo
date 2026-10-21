@@ -178,7 +178,7 @@ rtk git commit -m "feat(i18n): strings for the trend and the budget rings of the
 
 The phone has its own query and does not read `homeView`, so this change does not reach the phone. H7 asks for the nearest date first; H8 asks for 10 latest rows in a closed period.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to the `describe('homeView', …)` block in `apps/web/src/features/home/homeView.test.ts`:
 
@@ -238,12 +238,12 @@ Append to the `describe('homeView', …)` block in `apps/web/src/features/home/h
   });
 ```
 
-- [ ] **Step 2: Run the tests and make sure they fail**
+- [x] **Step 2: Run the tests and make sure they fail**
 
 Run: `rtk proxy pnpm --filter web test -- src/features/home/homeView.test.ts`
 Expected: the two new tests FAIL. The first gets `['far', 'middle', 'near']`; the second gets a length of 5 for the closed period.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `apps/web/src/features/home/homeView.ts`, replace:
 
@@ -298,12 +298,12 @@ with:
     .map(row);
 ```
 
-- [ ] **Step 4: Run the tests and make sure they pass**
+- [x] **Step 4: Run the tests and make sure they pass**
 
 Run: `rtk proxy pnpm --filter web test -- src/features/home/homeView.test.ts`
 Expected: 4 tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add apps/web/src/features/home/homeView.ts apps/web/src/features/home/homeView.test.ts

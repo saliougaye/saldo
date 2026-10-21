@@ -38,6 +38,17 @@ import { type HomeTrend, homeTrend } from './trend';
 /** How many rows «In arrivo» and «Ultime transazioni» show before «Vedi tutte» (§6.2). */
 export const HOME_ROWS = 5;
 
+/**
+ * H8: a closed period has no «In arrivo», so «Ultime transazioni» takes both columns, 5 rows in
+ * each.
+ */
+export const HOME_ROWS_CLOSED = 10;
+
+/** H7: «In arrivo» reads as a timeline, the nearest date first. Equal dates keep their order. */
+function nearestFirst(a: Transaction, b: Transaction): number {
+  return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+}
+
 export interface HomeRow extends TransactionRow {
   id: string;
   date: LocalDate;
@@ -140,13 +151,15 @@ export function homeView({ data, today, def, period, kindLabel }: HomeViewInput)
 
   // «In arrivo» stops at the end of the period: a row dated after it belongs to the next period
   // (§5.12, §6.15).
-  const upcomingAll = byDateDesc.filter((tx) => isUpcoming(tx, today) && tx.date <= periodEnd);
+  const upcomingAll = byDateDesc
+    .filter((tx) => isUpcoming(tx, today) && tx.date <= periodEnd)
+    .sort(nearestFirst);
   // `periodEnd` bounds this list too, and not only «In arrivo»: the phone's query never loads a
   // row past it, so on a **closed** period its «Ultime transazioni» stops at the period. Without
   // the bound the web reaches into the periods after it and shows five rows the phone does not.
   const recent = byDateDesc
     .filter((tx) => !isUpcoming(tx, today) && tx.date >= period.range.start && tx.date <= periodEnd)
-    .slice(0, HOME_ROWS)
+    .slice(0, period.isCurrent ? HOME_ROWS : HOME_ROWS_CLOSED)
     .map(row);
 
   const { items: budgetItems } = budgetsView({ data, today, def, period });
