@@ -532,7 +532,8 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
 (W1–W12). Branch: `redesign/web`. Seven plans, each one ends with software that works:
 
 - [x] **R1** — the top bar and the new Home (`plans/2026-10-21-web-redesign-r1-shell-home.md`).
-- [ ] **R2** — the centred dialog, and the edit form opened from a transaction row (W1–W4).
+- [x] **R2** — the centred dialog, and the edit form opened from a transaction row (W1–W4)
+  (`plans/2026-10-21-web-redesign-r2-dialog.md`).
 - [ ] **R3** — Transactions (W5).
 - [ ] **R4** — Statistics (W6–W8).
 - [ ] **R5** — Accounts (W9).
@@ -542,6 +543,10 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
 **Acceptance for R1:** no sidebar on any width; the top bar and the content share the 1040px column;
 the Home shows Summary, Budget, Transactions and Goals in this order; the trend moves with the pointer
 and with ← → Home End; «Coming up» shows the nearest date first; a closed period shows 10 latest rows.
+
+**Acceptance for R2:** a detail opens in a 440px dialog and a form in a 480px dialog, in the centre
+of the screen; below 760px both are sheets at the bottom; a transaction row opens «Edit transaction»;
+«Delete» in its foot deletes at once and the toast offers «Undo»; ↑ ↓ move along the rows.
 
 ### Notifications for future transactions
 

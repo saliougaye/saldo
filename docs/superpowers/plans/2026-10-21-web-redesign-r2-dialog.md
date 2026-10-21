@@ -1484,7 +1484,7 @@ rtk git commit -m "test(web): the centred dialog, the edit form from a row and t
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Tick R2**
+- [x] **Step 1: Tick R2**
 
 In `docs/superpowers/plans/README.md`, replace:
 
@@ -1507,7 +1507,7 @@ of the screen; below 760px both are sheets at the bottom; a transaction row open
 «Delete» in its foot deletes at once and the toast offers «Undo»; ↑ ↓ move along the rows.
 ```
 
-- [ ] **Step 2: Run the gates, unfiltered**
+- [x] **Step 2: Run the gates, unfiltered**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -1518,12 +1518,12 @@ Expected: every package passes. On a machine with Node older than 22.22, `site` 
 Run: `rtk proxy pnpm test`
 Expected: every package passes.
 
-- [ ] **Step 3: Look at the other dialogs**
+- [x] **Step 3: Look at the other dialogs**
 
 Run: `rtk proxy pnpm --filter web dev`. Open one dialog on each page that has one: `/accounts` (an account, a goal, «New account»), `/stats` (a category), `/profile/categories`, `/profile/tags`, `/profile/budgets`, `/admin/accounts`, `/admin/invites`, `/admin/settings`. Do it at 1440px and at 390px.
 Expected: each is a centred dialog at 1440px and a sheet at 390px. No text clips, and a long body scrolls inside the dialog.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add docs/superpowers/plans/README.md
