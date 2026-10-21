@@ -767,7 +767,7 @@ rtk git commit -m "feat(web): Accounts as rows, with Goals in a block of their o
 **Files:**
 - Modify: `apps/web/e2e/accounts-goals.spec.ts`
 
-- [ ] **Step 1: The goals are in their own block**
+- [x] **Step 1: The goals are in their own block**
 
 In the first test, replace:
 
@@ -800,7 +800,7 @@ with:
 
 Change the test title from `'accounts sit in their group, a goal sits under its account, and an account is archived and restored'` to `'accounts sit in their group, goals in their own block, and an account is archived and restored'`.
 
-- [ ] **Step 2: Run the suite**
+- [x] **Step 2: Run the suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: every test passes. A test that clicked a goal inside the savings section must now find it in the Goals block. A test that read the note «Archived accounts» with nothing archived must follow the new page. Fix those tests and say why in the commit.
@@ -808,7 +808,7 @@ Expected: every test passes. A test that clicked a goal inside the savings secti
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add apps/web/e2e
@@ -822,7 +822,7 @@ rtk git commit -m "test(web): goals in their own block on Accounts (W9)"
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Tick R5**
+- [x] **Step 1: Tick R5**
 
 In `docs/superpowers/plans/README.md`, replace:
 
@@ -844,7 +844,7 @@ in «Savings and investments» (no cards), a Goals block of its own with 40px ri
 row; the account dialog has «Archive account» and «Edit» at its bottom.
 ```
 
-- [ ] **Step 2: Run the gates, unfiltered**
+- [x] **Step 2: Run the gates, unfiltered**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -855,7 +855,7 @@ Expected: every package passes. On a machine with Node older than 22.22, `site` 
 Run: `rtk proxy pnpm test`
 Expected: every package passes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add docs/superpowers/plans/README.md

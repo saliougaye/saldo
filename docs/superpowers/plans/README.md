@@ -536,7 +536,7 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
   (`plans/2026-10-21-web-redesign-r2-dialog.md`).
 - [x] **R3** — Transactions (W5) (`plans/2026-10-21-web-redesign-r3-transactions.md`).
 - [x] **R4** — Statistics (W6–W8) (`plans/2026-10-21-web-redesign-r4-stats.md`).
-- [ ] **R5** — Accounts (W9).
+- [x] **R5** — Accounts (W9) (`plans/2026-10-21-web-redesign-r5-accounts.md`).
 - [ ] **R6** — Profile and Admin (W10).
 - [ ] **R7** — empty states and the new `@saldo/core` functions (W11).
 
@@ -557,6 +557,10 @@ has the category icon in its colour and no chips; the key hint shows under the l
 colours of the categories with share bars and «Committed share» as its last line, and the tags; a
 bar and ← → select the period; a forecast period shows its recurring transactions and the forecast
 table; the period trend is gone from the page.
+
+**Acceptance for R5:** Accounts shows the net worth block, one row for each account in «To spend» and
+in «Savings and investments» (no cards), a Goals block of its own with 40px rings, and the archived
+row; the account dialog has «Archive account» and «Edit» at its bottom.
 
 ### Notifications for future transactions
 
