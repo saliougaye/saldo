@@ -1,5 +1,5 @@
 import type { BudgetAdvice, BudgetView, GoalView } from '@saldo/core';
-import { goalPace, goalTone, pocketParentCandidates } from '@saldo/core';
+import { accountBalances, goalPace, goalTone } from '@saldo/core';
 import {
   budgetCardStatusText,
   formatDayMonth,
@@ -16,6 +16,7 @@ import { Fragment, type ReactNode } from 'react';
 import { NEW_GOAL_HREF } from '../../../src/features/accounts/goalLinks';
 import { budgetRowFor } from '../../../src/features/budgets/budgetRow';
 import { budgetStatus } from '../../../src/features/budgets/budgetText';
+import { gettingStarted } from '../../../src/features/home/gettingStarted';
 import { HOME_ROWS, type HomeRow, homeView } from '../../../src/features/home/homeView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
@@ -94,6 +95,11 @@ export default async function HomePage({
     period,
     kindLabel: (kind) => t(`kinds.${kind}`),
   });
+
+  // W11: a new user starts here. The blocks with nothing to show do not show.
+  const start = gettingStarted(page.data);
+  const balances = accountBalances(page.data.accounts, page.data.transactions, today);
+  const liveAccounts = page.data.accounts.filter((account) => account.archivedAt === null);
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
   const percent = (ratio: number) => t('targets.percent', { value: Math.round(ratio * 100) });
@@ -248,7 +254,6 @@ export default async function HomePage({
     </Link>
   );
   const goalStatusLine = goalCardStatusText(view.goals.items.length, view.goals.status, t, locale);
-  const canCreateGoal = pocketParentCandidates(page.data.accounts).length > 0;
 
   return (
     <div className={styles.page}>
@@ -268,173 +273,248 @@ export default async function HomePage({
         />
       </div>
 
-      {/* Summary (H5) */}
-      <section className={`${styles.box} ${styles.summary}`} aria-label={t('home.remaining')}>
-        <div>
-          <div className={styles.figure}>
-            <span className={styles.label}>
-              {period.isCurrent ? t('home.remaining') : t('home.leftover')}
+      {/* Getting started (W11) */}
+      {start.show ? (
+        <section className={styles.box} aria-labelledby="start-title">
+          <div className={styles.blockHead}>
+            <h2 id="start-title">{t('home.startTitle')}</h2>
+            <span className={styles.meta}>
+              {t('home.startProgress', { done: start.done, count: start.steps.length })}
             </span>
-            <AmountText
-              minor={view.summary.remaining}
-              currency={currency}
-              locale={locale}
-              size="hero"
-            />
           </div>
-          <dl className={styles.stats}>
-            <div>
-              <dt>{t('home.income')}</dt>
-              <dd>
-                <AmountText
-                  minor={view.summary.income}
-                  currency={currency}
-                  locale={locale}
-                  positive
-                />
-              </dd>
+          <ol className={styles.steps}>
+            {start.steps.map((step) => {
+              const action =
+                step.key === 'account' ? (
+                  <Link className={styles.action} href="/accounts?new">
+                    {t('accounts.newAccount')}
+                  </Link>
+                ) : step.key === 'transaction' ? (
+                  <NewTransactionLink className={styles.action}>
+                    {t('web.shell.newTransaction')}
+                  </NewTransactionLink>
+                ) : step.key === 'budget' ? (
+                  <Link className={styles.action} href="/profile/budgets?new">
+                    {t('budgets.create')}
+                  </Link>
+                ) : (
+                  <Link className={styles.action} href={NEW_GOAL_HREF}>
+                    {t('goals.create')}
+                  </Link>
+                );
+              const body =
+                step.key === 'account'
+                  ? start.firstAccount === null
+                    ? null
+                    : `${start.firstAccount.name} · ${money(balances.get(start.firstAccount.id) ?? 0)}`
+                  : step.key === 'transaction'
+                    ? t('home.stepTransactionBody')
+                    : step.key === 'budget'
+                      ? t('home.stepBudgetBody')
+                      : t('home.stepGoalBody');
+              const title = {
+                account: t('home.stepAccount'),
+                transaction: t('home.stepTransaction'),
+                budget: t('home.stepBudget'),
+                goal: t('home.stepGoal'),
+              }[step.key];
+              return (
+                <li key={step.key} className={styles.step} data-done={step.done ? '' : undefined}>
+                  <span className={styles.stepMark} aria-hidden="true">
+                    {step.done ? <Icon name="check" size={14} /> : null}
+                  </span>
+                  <span className={styles.stepText}>
+                    <b>{title}</b>
+                    {body === null ? null : <span>{body}</span>}
+                  </span>
+                  {step.done ? null : action}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ) : null}
+
+      {/* In your accounts (W11): no transaction yet, so the balances come before the summary */}
+      {start.noTransactions && liveAccounts.length > 0 ? (
+        <section className={styles.box} aria-labelledby="in-accounts-title">
+          <div className={styles.blockHead}>
+            <h2 id="in-accounts-title">{t('home.inAccounts')}</h2>
+          </div>
+          {liveAccounts.map((account) => (
+            <Link key={account.id} className={styles.accountRow} href={`/accounts?a=${account.id}`}>
+              <span>{account.name}</span>
+              <AmountText
+                minor={balances.get(account.id) ?? 0}
+                currency={currency}
+                locale={locale}
+              />
+            </Link>
+          ))}
+        </section>
+      ) : null}
+
+      {/* Summary (H5) */}
+      {start.noTransactions ? null : (
+        <section className={`${styles.box} ${styles.summary}`} aria-label={t('home.remaining')}>
+          <div>
+            <div className={styles.figure}>
+              <span className={styles.label}>
+                {period.isCurrent ? t('home.remaining') : t('home.leftover')}
+              </span>
+              <AmountText
+                minor={view.summary.remaining}
+                currency={currency}
+                locale={locale}
+                size="hero"
+              />
             </div>
-            <div>
-              <dt>{t('home.expenses')}</dt>
-              <dd>
-                <AmountText minor={view.summary.spent} currency={currency} locale={locale} />
-              </dd>
-            </div>
-            <div>
-              <dt>{t('home.vsUsual')}</dt>
-              <dd
-                className={
-                  delta === null ? styles.muted : delta > 0 ? styles.attention : styles.positive
-                }
-              >
-                {delta === null ? '—' : formatMoney(delta, currency, locale, 'always')}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        {view.trend.current.length === 0 && view.trend.usual.length === 0 ? (
-          <div className={styles.chartEmpty}>{t('stats.empty')}</div>
-        ) : (
-          <TrendScrub
-            current={view.trend.current}
-            usual={view.trend.usual}
-            span={period.length}
-            dates={dayDates}
-            currentAmounts={view.trend.current.map((value) => money(value))}
-            usualAmounts={view.trend.usual.map((value) => money(value))}
-            strings={{
-              label: t('stats.cycleTrend'),
-              thisPeriod: t('home.trendThisPeriod'),
-              usual: t('home.trendUsual'),
-              spentBy: dayDates.map((date) => t('home.trendSpentBy', { date })),
-              usualBy: dayDates.map((date) => t('home.trendUsualBy', { date })),
-              hint: t('home.trendHint'),
-            }}
-          />
-        )}
-      </section>
+            <dl className={styles.stats}>
+              <div>
+                <dt>{t('home.income')}</dt>
+                <dd>
+                  <AmountText
+                    minor={view.summary.income}
+                    currency={currency}
+                    locale={locale}
+                    positive
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>{t('home.expenses')}</dt>
+                <dd>
+                  <AmountText minor={view.summary.spent} currency={currency} locale={locale} />
+                </dd>
+              </div>
+              <div>
+                <dt>{t('home.vsUsual')}</dt>
+                <dd
+                  className={
+                    delta === null ? styles.muted : delta > 0 ? styles.attention : styles.positive
+                  }
+                >
+                  {delta === null ? '—' : formatMoney(delta, currency, locale, 'always')}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          {view.trend.current.length === 0 && view.trend.usual.length === 0 ? (
+            <div className={styles.chartEmpty}>{t('stats.empty')}</div>
+          ) : (
+            <TrendScrub
+              current={view.trend.current}
+              usual={view.trend.usual}
+              span={period.length}
+              dates={dayDates}
+              currentAmounts={view.trend.current.map((value) => money(value))}
+              usualAmounts={view.trend.usual.map((value) => money(value))}
+              strings={{
+                label: t('stats.cycleTrend'),
+                thisPeriod: t('home.trendThisPeriod'),
+                usual: t('home.trendUsual'),
+                spentBy: dayDates.map((date) => t('home.trendSpentBy', { date })),
+                usualBy: dayDates.map((date) => t('home.trendUsualBy', { date })),
+                hint: t('home.trendHint'),
+              }}
+            />
+          )}
+        </section>
+      )}
 
       {/* Budget (H6) */}
-      <section className={styles.box}>
-        <div className={styles.blockHead}>
-          <h2>{t('home.budget')}</h2>
-          <span className={styles.meta}>{budgetStatusLine}</span>
-          <Link className={styles.headLink} href="/profile/budgets">
-            {t('targets.allBudgets')}
-            <Icon name="chevR" size={15} />
-          </Link>
-        </div>
-        {period.isCurrent &&
-        featured !== undefined &&
-        advice !== null &&
-        advice.kind !== 'closed' ? (
-          <p className={styles.advice}>
-            <b className={styles.strong}>{featured.budget.name}.</b>{' '}
-            {adviceSentence(advice, featured)}
-          </p>
-        ) : null}
-        {view.budgets.items.length === 0 ? (
-          <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
-        ) : (
+      {view.budgets.items.length === 0 ? null : (
+        <section className={styles.box}>
+          <div className={styles.blockHead}>
+            <h2>{t('home.budget')}</h2>
+            <span className={styles.meta}>{budgetStatusLine}</span>
+            <Link className={styles.headLink} href="/profile/budgets">
+              {t('targets.allBudgets')}
+              <Icon name="chevR" size={15} />
+            </Link>
+          </div>
+          {period.isCurrent &&
+          featured !== undefined &&
+          advice !== null &&
+          advice.kind !== 'closed' ? (
+            <p className={styles.advice}>
+              <b className={styles.strong}>{featured.budget.name}.</b>{' '}
+              {adviceSentence(advice, featured)}
+            </p>
+          ) : null}
           <div className={styles.rings}>{view.budgets.items.map(budgetTile)}</div>
-        )}
-        <Link className={styles.foot} href="/profile/budgets?new">
-          <span>
-            {t('home.unbudgeted')} <b className={styles.strong}>{money(view.budgets.unbudgeted)}</b>
-          </span>
-          <span className={styles.footAction}>{t('targets.createBudget')}</span>
-        </Link>
-      </section>
+          <Link className={styles.foot} href="/profile/budgets?new">
+            <span>
+              {t('home.unbudgeted')}{' '}
+              <b className={styles.strong}>{money(view.budgets.unbudgeted)}</b>
+            </span>
+            <span className={styles.footAction}>{t('targets.createBudget')}</span>
+          </Link>
+        </section>
+      )}
 
       {/* Transactions (H7, H8) */}
-      <section className={styles.box}>
-        <div className={styles.blockHead}>
-          <h2>{t('tabs.transactions')}</h2>
-          {showUpcoming ? (
-            <span className={styles.meta}>
-              {plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
-                amount: formatMoney(view.upcoming.net, currency, locale, 'always'),
-              })}
-            </span>
-          ) : null}
-          <Link className={styles.headLink} href="/transactions">
-            {t('home.allTransactions')}
-            <Icon name="chevR" size={15} />
-          </Link>
-        </div>
-        {view.recent.length === 0 && !showUpcoming ? (
-          emptyTransactions
-        ) : period.isCurrent ? (
-          <div className={styles.halves}>
+      {start.noTransactions ? null : (
+        <section className={styles.box}>
+          <div className={styles.blockHead}>
+            <h2>{t('tabs.transactions')}</h2>
+            {showUpcoming ? (
+              <span className={styles.meta}>
+                {plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
+                  amount: formatMoney(view.upcoming.net, currency, locale, 'always'),
+                })}
+              </span>
+            ) : null}
+            <Link className={styles.headLink} href="/transactions">
+              {t('home.allTransactions')}
+              <Icon name="chevR" size={15} />
+            </Link>
+          </div>
+          {view.recent.length === 0 && !showUpcoming ? (
+            emptyTransactions
+          ) : period.isCurrent ? (
+            <div className={styles.halves}>
+              <div>
+                <span className={styles.group}>{t('home.latest')}</span>
+                {view.recent.length === 0
+                  ? emptyTransactions
+                  : view.recent.map((row) => txRow(row, false))}
+              </div>
+              {showUpcoming ? (
+                <div>
+                  <span className={styles.group}>
+                    {t('home.upcomingUntil', { date: formatDayMonth(period.range.end, locale) })}
+                  </span>
+                  {view.upcoming.rows.map((row) => txRow(row, true))}
+                </div>
+              ) : null}
+            </div>
+          ) : (
             <div>
               <span className={styles.group}>{t('home.latest')}</span>
-              {view.recent.length === 0
-                ? emptyTransactions
-                : view.recent.map((row) => txRow(row, false))}
-            </div>
-            {showUpcoming ? (
-              <div>
-                <span className={styles.group}>
-                  {t('home.upcomingUntil', { date: formatDayMonth(period.range.end, locale) })}
-                </span>
-                {view.upcoming.rows.map((row) => txRow(row, true))}
+              <div className={styles.halves}>
+                <div>{view.recent.slice(0, HOME_ROWS).map((row) => txRow(row, false))}</div>
+                <div>{view.recent.slice(HOME_ROWS).map((row) => txRow(row, false))}</div>
               </div>
-            ) : null}
-          </div>
-        ) : (
-          <div>
-            <span className={styles.group}>{t('home.latest')}</span>
-            <div className={styles.halves}>
-              <div>{view.recent.slice(0, HOME_ROWS).map((row) => txRow(row, false))}</div>
-              <div>{view.recent.slice(HOME_ROWS).map((row) => txRow(row, false))}</div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* Goals (H9) */}
-      <section className={styles.box}>
-        <div className={styles.blockHead}>
-          <h2>{t('goals.title')}</h2>
-          <span className={styles.meta}>{goalStatusLine}</span>
-          <Link className={styles.headLink} href="/accounts">
-            {t('goals.all')}
-            <Icon name="chevR" size={15} />
-          </Link>
-        </div>
-        {view.goals.items.length === 0 ? (
-          <div className={styles.empty}>
-            <EmptyState title={t('goals.empty')} body={t('goals.emptyBody')} />
-            {canCreateGoal ? (
-              <Link className={styles.action} href={NEW_GOAL_HREF}>
-                {t('goals.create')}
-              </Link>
-            ) : null}
+      {view.goals.items.length === 0 ? null : (
+        <section className={styles.box}>
+          <div className={styles.blockHead}>
+            <h2>{t('goals.title')}</h2>
+            <span className={styles.meta}>{goalStatusLine}</span>
+            <Link className={styles.headLink} href="/accounts">
+              {t('goals.all')}
+              <Icon name="chevR" size={15} />
+            </Link>
           </div>
-        ) : (
           <div className={styles.goals}>{view.goals.items.map(goalRow)}</div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

@@ -376,7 +376,7 @@ rtk git commit -m "feat(core): budget suggestions, matches in other periods, eme
 - Modify: `apps/web/app/(app)/home/page.tsx`
 - Modify: `apps/web/app/(app)/home/home.module.css`
 
-- [ ] **Step 1: The steps**
+- [x] **Step 1: The steps**
 
 Create `apps/web/src/features/home/gettingStarted.ts`:
 
@@ -422,7 +422,7 @@ export function gettingStarted(data: UserData): GettingStarted {
 
 No unit test: it is a mapping of four flags (AGENTS.md, «Tests»). Task 7 covers it with Playwright.
 
-- [ ] **Step 2: Render it on the Home**
+- [x] **Step 2: Render it on the Home**
 
 Read `apps/web/app/(app)/home/page.tsx`. Then make these changes:
 
@@ -521,13 +521,13 @@ Read `apps/web/app/(app)/home/page.tsx`. Then make these changes:
 
 If the page renders the period header and the summary in one wrapper, put the two new blocks right after the period header, inside the same parent as the other boxes.
 
-4. Wrap the Summary block (H5) in `{start.noTransactions ? null : (…)}`. Wrap the Budget block in `{view.budgets.items.length === 0 ? null : (…)}`. Wrap the Transactions block in `{start.noTransactions ? null : (…)}`. Wrap the Goals block in `{view.goals.items.length === 0 ? null : (…)}`. The old empty states of those blocks (`emptyTransactions`, the Goals `EmptyState`, the Budget empty text) can no longer show, so delete them and the constants that only they used. Keep the `step.done` check (a done step shows no action, and a line through its title).
+4. Wrap the Summary block (H5) in `{start.noTransactions ? null : (…)}`. Wrap the Budget block in `{view.budgets.items.length === 0 ? null : (…)}`. Wrap the Transactions block in `{start.noTransactions ? null : (…)}`. Wrap the Goals block in `{view.goals.items.length === 0 ? null : (…)}`. The old empty states of the Budget and Goals blocks can no longer show, so delete them and `canCreateGoal`. Keep `emptyTransactions` for the Transactions block: a period with no row, for a user who has rows in other periods, still shows it. Keep the `step.done` check (a done step shows no action, and a line through its title).
 
 The step text uses `t(…)` keys from Task 1. A new user with no account sees no «In your accounts» block, because there is nothing to list.
 
-- [ ] **Step 3: The CSS**
+- [x] **Step 3: The CSS**
 
-Add to `apps/web/app/(app)/home/home.module.css` (check first that `.action` and `.meta` exist; reuse them if they do, and do not add them twice):
+Add to the end of `apps/web/app/(app)/home/home.module.css` (after the Goals rules: Biome's `noDescendingSpecificity` needs `.step[data-done] .stepText b` after `.goalText b`). `.action` and `.meta` exist; do not add them twice:
 
 ```css
 /* W11: «Getting started» — one row for each step, a check and a line through a done one. */
@@ -545,6 +545,7 @@ Add to `apps/web/app/(app)/home/home.module.css` (check first that `.action` and
   align-items: center;
   gap: 12px;
   min-height: 56px;
+  padding: 8px 0;
   border-top: 1px solid var(--color-border);
 }
 
@@ -607,7 +608,7 @@ Add to `apps/web/app/(app)/home/home.module.css` (check first that `.action` and
 }
 ```
 
-- [ ] **Step 4: Check and commit**
+- [x] **Step 4: Check and commit**
 
 Run: `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm --filter web test`
 Expected: clean, no error, PASS.

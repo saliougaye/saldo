@@ -410,3 +410,80 @@
     scale: 1;
   }
 }
+
+/* W11: «Getting started» — one row for each step, a check and a line through a done one. */
+.steps {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.step:first-child {
+  border-top: 0;
+}
+
+.stepMark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-border-strong);
+  color: var(--color-bg);
+}
+
+.step[data-done] .stepMark {
+  border-color: var(--color-text);
+  background: var(--color-text);
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stepText b {
+  font-weight: var(--font-weight-medium);
+}
+
+.stepText span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.step[data-done] .stepText b {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.accountRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .accountRow:hover {
+    background: var(--color-raised);
+  }
+}
