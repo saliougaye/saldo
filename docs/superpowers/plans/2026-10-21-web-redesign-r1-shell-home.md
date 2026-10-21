@@ -1927,6 +1927,7 @@ Replace the whole `apps/web/app/(app)/home/home.module.css` with:
 
   .rowText {
     flex-direction: column;
+    align-items: stretch;
     gap: 0;
   }
 }
@@ -1983,7 +1984,7 @@ rtk git commit -m "feat(web): the Home as one column of four blocks (H3–H9, H1
 
 H10: each block shows its shapes in `raised`, with no data. The shapes pulse to 50% opacity every 1.6s, and do not pulse with reduced motion. `SkeletonPending` keeps «Loading…» for a screen reader, as `PageSkeleton` does. `data-skeleton` stays, because `scripts/measure-nav.ts` looks for it.
 
-- [ ] **Step 1: Replace `loading.tsx`**
+- [x] **Step 1: Replace `loading.tsx`**
 
 Replace the whole `apps/web/app/(app)/home/loading.tsx` with:
 
@@ -2036,7 +2037,7 @@ export default function Loading() {
 }
 ```
 
-- [ ] **Step 2: Create the CSS**
+- [x] **Step 2: Create the CSS**
 
 Create `apps/web/app/(app)/home/loading.module.css`:
 
@@ -2137,12 +2138,12 @@ Create `apps/web/app/(app)/home/loading.module.css`:
 }
 ```
 
-- [ ] **Step 3: Typecheck and lint**
+- [x] **Step 3: Typecheck and lint**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`
 Expected: no errors, no `lint/…` lines.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/home/loading.tsx" "apps/web/app/(app)/home/loading.module.css"
