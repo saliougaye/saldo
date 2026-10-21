@@ -1078,7 +1078,7 @@ rtk git commit -m "feat(web): TrendScrub, the period trend you move along with t
 
 Every figure still comes from `homeView`. The e2e helpers depend on three things that this page keeps: each block is a `<section>` with an `<h2>`; a figure label and its amount have the same parent; the budget and goal tiles carry their `targets.itemLabel` and `goals.itemLabel` in a `VisuallyHidden`.
 
-- [ ] **Step 1: Replace the page**
+- [x] **Step 1: Replace the page**
 
 Replace the whole `apps/web/app/(app)/home/page.tsx` with:
 
@@ -1261,7 +1261,11 @@ export default async function HomePage({
   const budgetTile = (item: BudgetView) => {
     const tone = budgets.tone(item);
     return (
-      <Link key={item.budget.id} className={styles.tile} href={`/profile/budgets?b=${item.budget.id}`}>
+      <Link
+        key={item.budget.id}
+        className={styles.tile}
+        href={`/profile/budgets?b=${item.budget.id}`}
+      >
         <VisuallyHidden>{budgets.label(item)}</VisuallyHidden>
         <span className={styles.tileBody} aria-hidden="true">
           <TargetRing
@@ -1278,7 +1282,9 @@ export default async function HomePage({
               ? t('targets.overLimitBy', { amount: money(item.spent - item.limit) })
               : t('targets.left', { amount: money(item.limit - item.spent) })}
           </span>
-          <span className={styles.tileNote}>{t('targets.spent', { amount: money(item.spent) })}</span>
+          <span className={styles.tileNote}>
+            {t('targets.spent', { amount: money(item.spent) })}
+          </span>
           <span className={styles.tileNote}>
             {item.open ? (
               budgetStatus(item, { t, money })
@@ -1290,7 +1296,12 @@ export default async function HomePage({
       </Link>
     );
   };
-  const budgetStatusLine = budgetCardStatusText(view.budgets.items.length, view.budgets.status, t, locale);
+  const budgetStatusLine = budgetCardStatusText(
+    view.budgets.items.length,
+    view.budgets.status,
+    t,
+    locale,
+  );
 
   // ---- Goals (H9) -----------------------------------------------------------------------------
   const goalDeps: GoalTextDeps = { t, locale, money, today, periodKind: settings.periodKind };
@@ -1349,13 +1360,23 @@ export default async function HomePage({
             <span className={styles.label}>
               {period.isCurrent ? t('home.remaining') : t('home.leftover')}
             </span>
-            <AmountText minor={view.summary.remaining} currency={currency} locale={locale} size="hero" />
+            <AmountText
+              minor={view.summary.remaining}
+              currency={currency}
+              locale={locale}
+              size="hero"
+            />
           </div>
           <dl className={styles.stats}>
             <div>
               <dt>{t('home.income')}</dt>
               <dd>
-                <AmountText minor={view.summary.income} currency={currency} locale={locale} positive />
+                <AmountText
+                  minor={view.summary.income}
+                  currency={currency}
+                  locale={locale}
+                  positive
+                />
               </dd>
             </div>
             <div>
@@ -1366,7 +1387,11 @@ export default async function HomePage({
             </div>
             <div>
               <dt>{t('home.vsUsual')}</dt>
-              <dd className={delta === null ? styles.muted : delta > 0 ? styles.attention : styles.positive}>
+              <dd
+                className={
+                  delta === null ? styles.muted : delta > 0 ? styles.attention : styles.positive
+                }
+              >
                 {delta === null ? '—' : formatMoney(delta, currency, locale, 'always')}
               </dd>
             </div>
@@ -1404,9 +1429,13 @@ export default async function HomePage({
             <Icon name="chevR" size={15} />
           </Link>
         </div>
-        {period.isCurrent && featured !== undefined && advice !== null && advice.kind !== 'closed' ? (
+        {period.isCurrent &&
+        featured !== undefined &&
+        advice !== null &&
+        advice.kind !== 'closed' ? (
           <p className={styles.advice}>
-            <b className={styles.strong}>{featured.budget.name}.</b> {adviceSentence(advice, featured)}
+            <b className={styles.strong}>{featured.budget.name}.</b>{' '}
+            {adviceSentence(advice, featured)}
           </p>
         ) : null}
         {view.budgets.items.length === 0 ? (
@@ -1416,8 +1445,7 @@ export default async function HomePage({
         )}
         <Link className={styles.foot} href="/profile/budgets?new">
           <span>
-            {t('home.unbudgeted')}{' '}
-            <b className={styles.strong}>{money(view.budgets.unbudgeted)}</b>
+            {t('home.unbudgeted')} <b className={styles.strong}>{money(view.budgets.unbudgeted)}</b>
           </span>
           <span className={styles.footAction}>{t('targets.createBudget')}</span>
         </Link>
@@ -1445,7 +1473,9 @@ export default async function HomePage({
           <div className={styles.halves}>
             <div>
               <span className={styles.group}>{t('home.latest')}</span>
-              {view.recent.length === 0 ? emptyTransactions : view.recent.map((row) => txRow(row, false))}
+              {view.recent.length === 0
+                ? emptyTransactions
+                : view.recent.map((row) => txRow(row, false))}
             </div>
             {showUpcoming ? (
               <div>
@@ -1497,7 +1527,7 @@ export default async function HomePage({
 
 Note: `budgetRowFor` returns `label`, `pace`, `tone` and `colour` beside `row`, each taking the budget item; the old page already used them.
 
-- [ ] **Step 2: Replace the CSS**
+- [x] **Step 2: Replace the CSS**
 
 Replace the whole `apps/web/app/(app)/home/home.module.css` with:
 
@@ -1762,7 +1792,7 @@ Replace the whole `apps/web/app/(app)/home/home.module.css` with:
   color: var(--color-text-faint);
 }
 
-.rowUp .rowText b {
+.rowUp b {
   color: var(--color-text-muted);
   font-weight: var(--font-weight-regular);
 }
@@ -1915,7 +1945,7 @@ Replace the whole `apps/web/app/(app)/home/home.module.css` with:
 }
 ```
 
-- [ ] **Step 3: Typecheck and lint**
+- [x] **Step 3: Typecheck and lint**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors. `--font-weight-regular` is the 400 weight of `fontWeight` in `tokens.ts`.
@@ -1923,7 +1953,7 @@ Expected: no errors. `--font-weight-regular` is the 400 weight of `fontWeight` i
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines. Run `rtk proxy pnpm exec biome check --write "apps/web/app/(app)/home"` if Biome only asks for formatting.
 
-- [ ] **Step 4: Look at it**
+- [x] **Step 4: Look at it**
 
 Run: `rtk proxy pnpm --filter web dev`. Sign in with the seeded account and open `/home`.
 Expected:
@@ -1936,7 +1966,7 @@ Expected:
 - Goals shows rows with a 40px ring in two columns.
 - At 390px every block is one column, with the tab bar at the bottom.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 rtk git add "apps/web/app/(app)/home/page.tsx" "apps/web/app/(app)/home/home.module.css"

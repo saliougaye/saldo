@@ -1,31 +1,22 @@
-/* G2: the head, then three sections in a column, 56px apart (D4). */
+/* H4: one column, the blocks 16px apart. */
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--layout-section-gap-web);
+  gap: 16px;
 }
 
-.emptyNote {
-  padding-block: 4px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  text-wrap: pretty;
-  max-width: 52ch;
-}
-
-/* The link under a section's rows: the label, then the chevron at the trailing end. */
-.more {
+.head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-height: var(--layout-min-hit-target);
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  text-decoration: none;
+  min-height: 56px;
 }
 
-.more:hover {
-  color: var(--color-text);
+/* H3: a plain card — `bg`, a 1px border, the card radius, no shadow. */
+.box {
+  padding: 24px;
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
 }
 
 .strong {
@@ -37,64 +28,384 @@
   color: var(--color-text-muted);
 }
 
-/* The three labels under the bar: the ends anchored, «oggi» centred on the tick. */
-.ends {
-  position: relative;
-  height: 16px;
-  margin-top: 8px;
+.positive {
+  color: var(--color-positive);
 }
 
-.endStart,
-.endToday,
-.endEnd {
-  position: absolute;
+.attention {
+  color: var(--color-accent);
+}
+
+/* ---- Summary --------------------------------------------------------------------------------- */
+.summary {
+  display: grid;
+  gap: 28px;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 32px;
+}
+
+.stats dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.stats dd {
+  margin-top: 2px;
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.chartEmpty {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* ---- Block head ------------------------------------------------------------------------------ */
+.blockHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.blockHead h2 {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.meta {
+  color: var(--color-text-muted);
+}
+
+.headLink {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .headLink:hover {
+    color: var(--color-text);
+  }
+}
+
+/* ---- Budget ---------------------------------------------------------------------------------- */
+.advice {
+  margin: -4px 0 12px;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.rings {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 -10px;
+}
+
+.tile {
+  padding: 12px 10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover {
+    background: var(--color-raised);
+  }
+}
+
+.tileBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tileName {
+  margin-top: 10px;
+  font-weight: var(--font-weight-medium);
+}
+
+.tileValue,
+.tileOver {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-medium);
+}
+
+.tileOver {
+  color: var(--color-accent);
+}
+
+.tileNote {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.footAction {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* ---- Transactions ---------------------------------------------------------------------------- */
+.halves {
+  display: grid;
+  gap: 20px;
+}
+
+.group {
+  display: block;
+  padding-bottom: 6px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+/* H7: a 44px row — date, icon in the category colour, title and category, amount. */
+.row {
+  display: grid;
+  grid-template-columns: 52px 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: var(--color-raised);
+  }
+}
+
+.rowDate {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+}
+
+.rowText {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rowText b {
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowText > span {
+  color: var(--color-text-muted);
   font-size: var(--font-size-footnote);
   white-space: nowrap;
 }
 
-.endStart {
-  inset-inline-start: 0;
-  color: var(--color-text-muted);
+.rowRepeat {
+  align-self: center;
+  flex: none;
+  color: var(--color-text-faint);
 }
 
-.endEnd {
-  inset-inline-end: 0;
+.rowUp b {
   color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
 }
 
-.endToday {
-  text-align: center;
-  color: var(--color-text-muted);
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
 }
 
-.txCols {
+.primaryAction,
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.primaryAction {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.action {
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.primaryAction:active,
+.action:active {
+  scale: 0.97;
+}
+
+/* ---- Goals ----------------------------------------------------------------------------------- */
+.goals {
   display: grid;
-  gap: 24px;
+  gap: 8px 40px;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .txCols {
-    grid-template-columns: 7fr 5fr;
-    column-gap: var(--layout-column-gap-web);
-    align-items: start;
+.goal {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .goal:hover {
+    background: var(--color-raised);
   }
 }
 
-.groupLabel {
-  display: block;
-  padding: 6px 0 2px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-  letter-spacing: var(--tracking-tight);
+.goalText {
+  min-width: 0;
 }
 
-.vsUsual {
+.goalText b {
+  display: block;
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.goalText span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.goalValue {
+  text-align: end;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.goalValue small {
+  display: block;
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.goalValue small.attention {
   color: var(--color-accent);
 }
 
-.ghostBody {
-  font-size: var(--font-size-footnote);
-  line-height: 1.45;
-  text-wrap: pretty;
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
+  .summary {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 40px;
+    align-items: end;
+  }
+
+  .halves,
+  .goals {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 40px;
+  }
+}
+
+@media (max-width: 759px) {
+  .box {
+    padding: 18px;
+  }
+
+  .rings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats {
+    gap: 16px;
+  }
+
+  .row {
+    grid-template-columns: 44px 16px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .rowText {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .rowText > span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryAction:active,
+  .action:active {
+    scale: 1;
+  }
 }
