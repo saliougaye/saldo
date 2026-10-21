@@ -535,7 +535,7 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
 - [x] **R2** — the centred dialog, and the edit form opened from a transaction row (W1–W4)
   (`plans/2026-10-21-web-redesign-r2-dialog.md`).
 - [x] **R3** — Transactions (W5) (`plans/2026-10-21-web-redesign-r3-transactions.md`).
-- [ ] **R4** — Statistics (W6–W8).
+- [x] **R4** — Statistics (W6–W8) (`plans/2026-10-21-web-redesign-r4-stats.md`).
 - [ ] **R5** — Accounts (W9).
 - [ ] **R6** — Profile and Admin (W10).
 - [ ] **R7** — empty states and the new `@saldo/core` functions (W11).
@@ -551,6 +551,12 @@ of the screen; below 760px both are sheets at the bottom; a transaction row open
 **Acceptance for R3:** Transactions shows one summary block (three cells, two in a closed period),
 one tool row (search, Account, Category, Tag, «Expenses only», «More») and one list block; each row
 has the category icon in its colour and no chips; the key hint shows under the list with a mouse.
+
+**Acceptance for R4:** Statistics shows the period block (Expenses, Income, Net, projection, and
+«Expenses by period» with one bar for each period and a dashed «usual» line), the breakdown in the
+colours of the categories with share bars and «Committed share» as its last line, and the tags; a
+bar and ← → select the period; a forecast period shows its recurring transactions and the forecast
+table; the period trend is gone from the page.
 
 ### Notifications for future transactions
 
