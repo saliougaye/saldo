@@ -1,4 +1,4 @@
-/* D3: the panel is a dialog over the page, so the list keeps its width whatever is open. */
+/* W1: the dialog is over the page, so the list keeps its width whatever is open. */
 .layout {
   display: flex;
   flex-direction: column;
@@ -33,78 +33,6 @@
 
 .filters > :first-child {
   margin-inline-end: 8px;
-}
-
-.facts {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0;
-}
-
-.fact {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  font-size: var(--font-size-footnote);
-  border-top: 1px solid var(--color-border);
-}
-
-.fact:first-child {
-  border-top: 0;
-}
-
-.factLabel {
-  color: var(--color-text-muted);
-  flex: none;
-}
-
-.factValue {
-  margin: 0;
-  text-align: end;
-  overflow-wrap: anywhere;
-}
-
-.factLink {
-  color: var(--color-text);
-  text-decoration: underline;
-  text-decoration-color: var(--color-border-strong);
-  text-underline-offset: 3px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* «Modifica» (E): the mockup's `.btn-secondary` with its key beside the word. */
-.action {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--layout-header-button);
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  background: var(--color-raised);
-  color: var(--color-text);
-  font-size: var(--font-size-footnote);
-  transition: scale var(--motion-press) var(--motion-easing);
-}
-
-.action:active {
-  scale: 0.97;
-}
-
-.kbd {
-  padding: 0 5px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius-chip-small);
-  font-family: inherit;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
-  opacity: 0.55;
 }
 
 .filterNote {
@@ -248,16 +176,6 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   white-space: nowrap;
-}
-
-/* The mockup's `.actions .spacer`: «Modifica» leading, «Elimina» trailing. */
-.spacer {
-  flex: 1;
-}
-
-/* The mockup's `.btn-danger`: the secondary button, in the accent ink. */
-.danger {
-  color: var(--color-accent);
 }
 
 /* The rows of the In arrivo card: compact, and their hover stays inside the card's padding. */

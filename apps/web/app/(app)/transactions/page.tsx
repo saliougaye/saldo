@@ -1,23 +1,15 @@
 import { addDays, summarizePeriod } from '@saldo/core';
 import {
-  cadenceLabel,
   catalogs,
-  endLabel,
   formatDayMonth,
-  formatLongDate,
   formatMoney,
   formatMoneyParts,
   formatWeekday,
   plural,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import type { ReactNode } from 'react';
 import { PERIOD_PARAM } from '../../../src/features/period/periodParams';
-import {
-  type DetailFactKind,
-  type DetailView,
-  detailView,
-} from '../../../src/features/transactions/detailView';
+import { detailView } from '../../../src/features/transactions/detailView';
 import { formView } from '../../../src/features/transactions/formView';
 import {
   filtersFromSearch,
@@ -25,11 +17,7 @@ import {
   toggleHref,
 } from '../../../src/features/transactions/listParams';
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
-import {
-  EDIT_PARAM,
-  NEW_PARAM,
-  SELECTION_PARAM,
-} from '../../../src/features/transactions/panelState';
+import { NEW_PARAM, SELECTION_PARAM } from '../../../src/features/transactions/panelState';
 import { formMessages } from '../../../src/i18n/formMessages';
 import { getDb } from '../../../src/server/db/client';
 import { readPage } from '../../../src/server/page/context';
@@ -46,10 +34,9 @@ import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { SearchField } from '../../../src/ui/SearchField';
 import { Section } from '../../../src/ui/Section';
-import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import { DeleteTransaction } from './DeleteTransaction';
 import { TransactionForm } from './TransactionForm';
-import { type DetailPanel, TransactionsPanels } from './TransactionsPanels';
+import { TransactionsPanels } from './TransactionsPanels';
 import styles from './transactions.module.css';
 import { UndoToast } from './UndoToast';
 
@@ -61,20 +48,8 @@ const PATH = '/transactions';
 /** After a delete the page is `?deleted={id}`, which renders «Annulla» (decision 8). */
 const DELETED_PARAM = 'deleted';
 
-/** The DOM id of «In arrivo»'s disclosure: `ListKeys` walks its rows only while it is open. */
+/** The DOM id of «In arrivo»'s disclosure. The arrows skip its rows while it is closed. */
 const UPCOMING_ID = 'upcoming';
-
-/** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
-const MISSING = '—';
-
-/** Which label each fact of the panel takes: the phone's own, key for key (§6.6). */
-const FACT_LABELS: Record<DetailFactKind, string> = {
-  from: 'txForm.from',
-  to: 'txForm.to',
-  category: 'transactions.detailCategory',
-  account: 'transactions.detailAccount',
-  date: 'transactions.detailDate',
-};
 
 /**
  * Transazioni on the web (§17.1.7): the period, the search and the chips of §5.12, «In arrivo» as
@@ -118,9 +93,9 @@ export default async function TransactionsPage({
         }
       : undefined,
   });
-  // `new URLSearchParams({ edit: '' })` writes `edit=`: presence is what counts, so `?edit` works too.
+  // W3: `?t={id}` is the row's edit form. `?new` wins, as `panelFromSearch` reads it.
   const editForm =
-    selectedId !== undefined && params[EDIT_PARAM] !== undefined
+    selectedId !== undefined && !creating
       ? formView({ data: page.data, today, currency, mode: 'edit', id: selectedId })
       : null;
 
@@ -144,11 +119,6 @@ export default async function TransactionsPage({
     conflict: t('web.form.error_conflict'),
     unexpected: t('web.form.error_unexpected'),
   };
-  // Decision 10: deleting an occurrence of a recurrence says so, as the phone does.
-  const recurringIds = new Set(
-    page.data.transactions.filter((row) => row.recurrenceId !== null).map((row) => row.id),
-  );
-
   // What every link on this page carries: the filters, and the period, which is not one of them.
   const periodOnly: Record<string, string> = {};
   const periodParam = params[PERIOD_PARAM];
@@ -247,138 +217,8 @@ export default async function TransactionsPage({
     </Section>
   );
 
-  const fact = (key: string, label: string, value: ReactNode) => (
-    <div className={styles.fact} key={key}>
-      <dt className={styles.factLabel}>{label}</dt>
-      <dd className={styles.factValue}>{value}</dd>
-    </div>
-  );
-
-  /** The phone's «Nota» row: always there, with what it says when nothing was typed. */
-  const noteText = (detail: DetailView) => {
-    if (detail.note !== null) return detail.note;
-    const { recurrence } = detail;
-    if (recurrence === null) return t('transactions.manual');
-    return t('recurrence.recurringNote', {
-      cadence: cadenceLabel(recurrence, recurrence.startDate, t, locale).toLowerCase(),
-    });
-  };
-
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
-
-  /** The detail of one row: what the phone's detail screen shows (§6.6). */
-  const detailBody = (detail: DetailView) => (
-    <>
-      {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
-          `-amount` / `negative` while its list row leaves it unsigned, and the web matches
-          the phone screen for screen (see `DetailView.hero`). */}
-      <AmountText
-        minor={detail.hero.minor}
-        currency={currency}
-        locale={locale}
-        sign={detail.hero.signDisplay}
-        size="hero"
-      />
-
-      <dl className={styles.facts}>
-        {detail.facts.map((item) =>
-          fact(
-            item.kind,
-            t(FACT_LABELS[item.kind]),
-            item.value === null ? (
-              MISSING
-            ) : item.kind === 'date' ? (
-              formatLongDate(item.value, locale)
-            ) : item.href === null ? (
-              item.value
-            ) : (
-              <Link className={styles.factLink} href={item.href}>
-                {item.value}
-              </Link>
-            ),
-          ),
-        )}
-        {fact('note', t('transactions.detailNote'), noteText(detail))}
-        {detail.recurrence === null
-          ? null
-          : fact(
-              'recurrence',
-              t('recurrence.recurringRow'),
-              endLabel(detail.recurrence.endDate, t, locale),
-            )}
-        {detail.excluded
-          ? fact(
-              'excluded',
-              t('transactions.excludedFromTotals'),
-              // The tick is the whole value, and `Icon` is always `aria-hidden`: without the
-              // word beside it a screen reader reads the label and then silence.
-              <>
-                <Icon name="check" size={16} />
-                <VisuallyHidden>{t('common.yes')}</VisuallyHidden>
-              </>,
-            )
-          : null}
-        {detail.tagNames.length === 0
-          ? null
-          : fact('tags', t('transactions.tags'), detail.tagNames.join(' · '))}
-        {detail.attachmentCount === 0
-          ? null
-          : fact(
-              'attachments',
-              t('transactions.detailAttachments'),
-              plural(t, locale, 'attachments.summary', detail.attachmentCount),
-            )}
-      </dl>
-
-      <div className={styles.actions}>
-        {/* Still a navigation: the edit form is rendered by the server (2026-10-07 plan, decision 4). */}
-        <Link
-          className={styles.action}
-          href={href({ [SELECTION_PARAM]: detail.id, [EDIT_PARAM]: '' })}
-          aria-keyshortcuts="e"
-        >
-          <Icon name="pencil" size={14} />
-          {t('common.edit')}
-          <span aria-hidden="true">
-            <kbd className={styles.kbd}>E</kbd>
-          </span>
-        </Link>
-        <span className={styles.spacer} />
-        <DeleteTransaction
-          id={detail.id}
-          updatedAt={detail.updatedAt}
-          deletedHref={href({ [DELETED_PARAM]: detail.id })}
-          strings={{
-            action: t('common.delete'),
-            title: t('transactions.deleteTitle', { name: detail.title }),
-            body: t(
-              recurringIds.has(detail.id)
-                ? 'transactions.deleteRecurringBody'
-                : 'transactions.deleteBody',
-            ),
-            confirm: t('common.delete'),
-            cancel: t('common.cancel'),
-            busy: t('common.loading'),
-            errors: writeErrors,
-          }}
-        />
-      </div>
-    </>
-  );
-
-  // Every row of the list, and the one the URL selected when the list does not hold it (a link
-  // from Home to a row of another period).
-  const upcomingIds = view.upcomingDays.flatMap((day) => day.rows.map((row) => row.id));
-  const ids = view.days.flatMap((day) => day.rows.map((row) => row.id));
-  const listed = [...upcomingIds, ...ids];
-  const detailIds =
-    selectedId === undefined || listed.includes(selectedId) ? listed : [...listed, selectedId];
-  const details: Record<string, DetailPanel> = {};
-  for (const id of detailIds) {
-    const detail = detailView({ data: page.data, id, kindLabel });
-    if (detail !== null) details[id] = { title: detail.title, body: detailBody(detail) };
-  }
 
   const formProps = {
     locale,
@@ -388,9 +228,10 @@ export default async function TransactionsPage({
     symbolPosition: moneyParts.symbolPosition,
     messages: formMessages(catalogs[locale]),
   };
-  // A closing expense ends on Conti, where the goal has just left the list.
+  // Save closes the dialog: the list (W3). A closing expense ends on Conti, where the goal has just
+  // left the list.
   const afterSave = (form: { closeGoalId: string | null }) =>
-    form.closeGoalId === null ? href({ [SELECTION_PARAM]: '__ID__' }) : '/accounts';
+    form.closeGoalId === null ? href() : '/accounts';
 
   return (
     <>
@@ -422,16 +263,26 @@ export default async function TransactionsPage({
                     key={`edit:${editForm.id}`}
                     view={editForm}
                     {...formProps}
-                    closeHref={href({ [SELECTION_PARAM]: editForm.id })}
+                    closeHref={href()}
                     afterSave={afterSave(editForm)}
+                    deleteControl={
+                      editForm.updatedAt === null ? undefined : (
+                        <DeleteTransaction
+                          id={editForm.id}
+                          updatedAt={editForm.updatedAt}
+                          deletedHref={href({ [DELETED_PARAM]: editForm.id })}
+                          strings={{
+                            action: t('common.delete'),
+                            busy: t('common.loading'),
+                            errors: writeErrors,
+                          }}
+                        />
+                      )
+                    }
                   />
                 ),
               }
         }
-        details={details}
-        upcomingIds={upcomingIds}
-        ids={ids}
-        upcomingDisclosureId={UPCOMING_ID}
       >
         <div className={styles.head}>
           <PeriodHeader
@@ -489,7 +340,6 @@ export default async function TransactionsPage({
                     key={row.id}
                     open
                     href={href({ [SELECTION_PARAM]: row.id })}
-                    selectId={row.id}
                     title={row.title}
                     subtitle={formatDayMonth(row.date, locale)}
                     trailing={
@@ -632,7 +482,7 @@ export default async function TransactionsPage({
           // A second delete is a new toast, with its own five seconds.
           key={deletedId}
           id={deletedId}
-          restoredHref={href({ [SELECTION_PARAM]: deletedId })}
+          restoredHref={href()}
           withoutDeletedHref={href()}
           strings={{
             message: t('transactions.deleted', { name: undoTitle }),

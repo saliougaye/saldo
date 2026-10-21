@@ -12,7 +12,7 @@ const UNDO_MS = 5000;
 
 interface Props {
   id: string;
-  /** Where «Annulla» lands once the row is back: the list with `t={id}`, so it is selected again. */
+  /** Where «Annulla» lands once the row is back: the list, with the row in it again. */
   restoredHref: string;
   /** The same page without `deleted`, so a reload after the toast has gone does not bring it back. */
   withoutDeletedHref: string;

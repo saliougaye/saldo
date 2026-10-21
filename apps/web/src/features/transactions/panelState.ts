@@ -1,9 +1,10 @@
 /** The parameter that carries the selected row (§17.1.7). */
 export const SELECTION_PARAM = 't';
 
-/** `?new` opens «Nuova transazione»; `?t={id}&edit` turns the detail into the form (decision 8). */
+/** `?new` opens «Nuova transazione»; `?t={id}` opens «Modifica transazione» on that row (W3). */
 export const NEW_PARAM = 'new';
-export const EDIT_PARAM = 'edit';
+/** Before W3, `?t={id}&edit` turned the detail into the form. An old link still carries it; it changes nothing. */
+const EDIT_PARAM = 'edit';
 
 /** The parameters that choose the panel and nothing else. */
 const PANEL_PARAMS: ReadonlySet<string> = new Set([SELECTION_PARAM, NEW_PARAM, EDIT_PARAM]);
@@ -11,18 +12,14 @@ const PANEL_PARAMS: ReadonlySet<string> = new Set([SELECTION_PARAM, NEW_PARAM, E
 /** A URL that only resolves a path: the page's own links are all relative. */
 const ORIGIN = 'http://panel.invalid';
 
-export type PanelState =
-  | { kind: 'none' }
-  | { kind: 'new' }
-  | { kind: 'detail'; id: string }
-  | { kind: 'edit'; id: string };
+export type PanelState = { kind: 'none' } | { kind: 'new' } | { kind: 'edit'; id: string };
 
-/** What a URL opens, with the precedence the page always had: `?new`, then `?t=…&edit`, then `?t=`. */
+/** What a URL opens: `?new` first, then the row's edit form. A row has no read-only detail (W3). */
 export function panelFromSearch(search: URLSearchParams): PanelState {
   if (search.has(NEW_PARAM)) return { kind: 'new' };
   const id = search.get(SELECTION_PARAM);
   if (id === null || id === '') return { kind: 'none' };
-  return search.has(EDIT_PARAM) ? { kind: 'edit', id } : { kind: 'detail', id };
+  return { kind: 'edit', id };
 }
 
 /** The same panel: the same kind on the same row. */
@@ -67,10 +64,7 @@ export function panelHref(base: string, panel: PanelState): string {
   const url = new URL(base, ORIGIN);
   for (const key of PANEL_PARAMS) url.searchParams.delete(key);
   if (panel.kind === 'new') url.searchParams.set(NEW_PARAM, '');
-  if (panel.kind === 'detail' || panel.kind === 'edit') {
-    url.searchParams.set(SELECTION_PARAM, panel.id);
-  }
-  if (panel.kind === 'edit') url.searchParams.set(EDIT_PARAM, '');
+  if (panel.kind === 'edit') url.searchParams.set(SELECTION_PARAM, panel.id);
   const query = url.searchParams.toString();
   return query === '' ? url.pathname : `${url.pathname}?${query}`;
 }

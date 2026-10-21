@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useId,
   useMemo,
@@ -56,8 +57,10 @@ interface Props {
   symbolPosition: 'prefix' | 'suffix';
   messages: FormMessages;
   closeHref: string;
-  /** `/transactions?…&t=__ID__`: where a save lands. */
+  /** Where a save lands. `__ID__`, if there, becomes the saved row's id. */
   afterSave: string;
+  /** The edit form's «Elimina» (W3): on the left of the foot, where the new form shows its key hint. */
+  deleteControl?: ReactNode;
 }
 
 const KINDS: readonly TransactionKind[] = ['expense', 'income', 'transfer'];
@@ -90,6 +93,7 @@ export function TransactionForm({
   messages,
   closeHref,
   afterSave,
+  deleteControl,
 }: Props) {
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
@@ -622,7 +626,7 @@ export function TransactionForm({
       {problem === null ? null : <Alert body={message(problem)} />}
 
       <div className={styles.foot}>
-        <span className={styles.hint}>{t('web.form.keyboardHint')}</span>
+        {deleteControl ?? <span className={styles.hint}>{t('web.form.keyboardHint')}</span>}
         <PanelLink className={styles.cancel} href={closeHref}>
           {t('common.cancel')}
         </PanelLink>

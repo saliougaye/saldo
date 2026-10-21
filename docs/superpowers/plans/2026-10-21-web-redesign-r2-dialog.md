@@ -430,7 +430,7 @@ rtk git commit -m "feat(web): details and forms open in a centred dialog, a shee
 - Modify: `apps/web/src/features/transactions/panelState.ts`
 - Test: `apps/web/src/features/transactions/panelState.test.ts`
 
-- [ ] **Step 1: Change the tests first**
+- [x] **Step 1: Change the tests first**
 
 Replace the whole of `apps/web/src/features/transactions/panelState.test.ts` with:
 
@@ -524,12 +524,12 @@ describe('samePanel', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to see it fail**
+- [x] **Step 2: Run the test to see it fail**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/transactions/panelState.test.ts`
 Expected: FAIL. `panelFromSearch(search('t=a'))` gives `{ kind: 'detail', id: 'a' }`.
 
-- [ ] **Step 3: Change `panelState.ts`**
+- [x] **Step 3: Change `panelState.ts`**
 
 In `apps/web/src/features/transactions/panelState.ts`, replace:
 
@@ -595,7 +595,7 @@ with:
   if (panel.kind === 'edit') url.searchParams.set(SELECTION_PARAM, panel.id);
 ```
 
-- [ ] **Step 4: Run the test to see it pass**
+- [x] **Step 4: Run the test to see it pass**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/features/transactions/panelState.test.ts`
 Expected: PASS.
@@ -612,7 +612,7 @@ The typecheck now fails in `TransactionsPanels.tsx` and `page.tsx`, which still 
 
 No unit test: Task 6 covers the keys with Playwright.
 
-- [ ] **Step 1: Mark each row link**
+- [x] **Step 1: Mark each row link**
 
 In `apps/web/src/ui/PanelNav.tsx`, in `PanelLink`, replace:
 
@@ -630,7 +630,7 @@ with:
       onClick={onClick}
 ```
 
-- [ ] **Step 2: Replace `ListKeys.tsx`**
+- [x] **Step 2: Replace `ListKeys.tsx`**
 
 Replace the whole of `apps/web/src/ui/ListKeys.tsx` with:
 
@@ -692,7 +692,7 @@ Do not commit yet (see Task 2 Step 4).
 - Modify: `apps/web/app/(app)/transactions/page.tsx`
 - Modify: `apps/web/app/(app)/transactions/transactions.module.css`
 
-- [ ] **Step 1: Replace `TransactionsPanels.tsx`**
+- [x] **Step 1: Replace `TransactionsPanels.tsx`**
 
 Replace the whole of `apps/web/app/(app)/transactions/TransactionsPanels.tsx` with:
 
@@ -852,7 +852,7 @@ export function TransactionsPanels(props: Props) {
 }
 ```
 
-- [ ] **Step 2: Replace `DeleteTransaction.tsx`**
+- [x] **Step 2: Replace `DeleteTransaction.tsx`**
 
 Replace the whole of `apps/web/app/(app)/transactions/DeleteTransaction.tsx` with:
 
@@ -935,7 +935,7 @@ export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props
 }
 ```
 
-- [ ] **Step 3: Give the form a slot for «Delete»**
+- [x] **Step 3: Give the form a slot for «Delete»**
 
 In `apps/web/app/(app)/transactions/TransactionForm.tsx`:
 
@@ -1011,7 +1011,7 @@ In `apps/web/app/(app)/transactions/TransactionForm.module.css`, after the `.can
 }
 ```
 
-- [ ] **Step 4: Remove the detail from `page.tsx`**
+- [x] **Step 4: Remove the detail from `page.tsx`**
 
 In `apps/web/app/(app)/transactions/page.tsx`:
 
@@ -1112,14 +1112,14 @@ with:
   /** Where «Annulla» lands once the row is back: the list, with the row in it again. */
 ```
 
-- [ ] **Step 5: Remove the detail's CSS**
+- [x] **Step 5: Remove the detail's CSS**
 
 In `apps/web/app/(app)/transactions/transactions.module.css`, delete the rules `.facts`, `.fact`, `.fact:first-child`, `.factLabel`, `.factValue`, `.factLink`, `.actions`, `.action`, `.action:active`, `.kbd`, `.spacer` and `.danger`, with their comments.
 
 Run: `rtk grep -rn "styles\.\(facts\|fact\|factLabel\|factValue\|factLink\|actions\|action\|kbd\|spacer\|danger\)\b" "apps/web/app/(app)/transactions"`
 Expected: no match.
 
-- [ ] **Step 6: Lint, typecheck and test**
+- [x] **Step 6: Lint, typecheck and test**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines. If Biome reports an unused import in `page.tsx` (for example `VisuallyHidden`, `formatLongDate`, `endLabel`, `cadenceLabel`), delete it and run lint again.
@@ -1130,7 +1130,7 @@ Expected: no error.
 Run: `rtk proxy pnpm --filter web test`
 Expected: PASS.
 
-- [ ] **Step 7: Commit Tasks 2, 3 and 4**
+- [x] **Step 7: Commit Tasks 2, 3 and 4**
 
 ```bash
 rtk git add apps/web/src/features/transactions/panelState.ts apps/web/src/features/transactions/panelState.test.ts apps/web/src/ui/ListKeys.tsx apps/web/src/ui/PanelNav.tsx "apps/web/app/(app)/transactions"
