@@ -99,3 +99,27 @@ export function emergencyFundTarget(input: {
   );
   return middle === null ? null : Math.round(middle * EMERGENCY_FUND_MONTHS);
 }
+
+/**
+ * W11, Statistics · an empty period: the period the «Go to …» link opens. The closest one that holds
+ * a row — the latest before `period`, or, when `period` comes before every row, the first after it.
+ * `null` with no row outside `period`.
+ */
+export function nearestPeriodWithData(input: {
+  txs: readonly LedgerTx[];
+  def: PeriodDef;
+  period: { start: LocalDate; end: LocalDate };
+}): ReturnType<typeof periodContaining> | null {
+  const { txs, def, period } = input;
+  let before: LocalDate | null = null;
+  let after: LocalDate | null = null;
+  for (const tx of txs) {
+    if (tx.date < period.start) {
+      if (before === null || tx.date > before) before = tx.date;
+    } else if (tx.date > period.end) {
+      if (after === null || tx.date < after) after = tx.date;
+    }
+  }
+  const date = before ?? after;
+  return date === null ? null : periodContaining(def, date);
+}

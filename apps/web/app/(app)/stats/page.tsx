@@ -1,3 +1,4 @@
+import { isWithin, nearestPeriodWithData } from '@saldo/core';
 import {
   formatCycleRange,
   formatLongDate,
@@ -33,6 +34,7 @@ import { EmptyState } from '../../../src/ui/EmptyState';
 import { Icon } from '../../../src/ui/Icon';
 import { paletteIndex } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
+import { NewTransactionLink } from '../../../src/ui/NewTransactionLink';
 import { PanelLink } from '../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
@@ -375,6 +377,11 @@ export default async function StatsPage({
   // ─────────────────────────────────────────────────────────────────────────────────────────────
   const view = statsView({ data: page.data, def, today, period, direction });
   const tagNames = new Map(page.data.tags.map((tag) => [tag.id, tag.name]));
+  // W11: a period with no row at all. The chart stays; the breakdown and the tags give the way out.
+  const periodEmpty = !page.data.transactions.some((tx) => isWithin(period.range, tx.date));
+  const nearestWithData = periodEmpty
+    ? nearestPeriodWithData({ txs: page.data.transactions, def, period: period.range })
+    : null;
   const anyTagIncome = view.tags.tags.some((row) => row.income > 0);
 
   // W7: each row in the colour of its category; past the sixth, the bar shares one grey segment.
@@ -543,125 +550,152 @@ export default async function StatsPage({
           {chartBlock}
         </section>
 
-        {/* W7: the breakdown, in the colours of the categories. */}
-        <section className={styles.box}>
-          <div className={styles.boxHead}>
-            <h2 className={styles.boxTitle}>{t('stats.split')}</h2>
-            <span className={styles.toggle}>
-              <Chip
-                label={t('stats.expenses')}
-                href={directionHref('expense')}
-                active={direction === 'expense'}
-              />
-              <Chip
-                label={t('stats.income')}
-                href={directionHref('income')}
-                active={direction === 'income'}
-              />
-            </span>
-          </div>
-          {view.split.rows.length === 0 ? (
-            <EmptyState title={t('stats.empty')} />
-          ) : (
-            <>
-              <SplitBar segments={segments} />
-              <div className={styles.cats}>
-                {ranked.map(({ row, colour }) => (
-                  <PanelLink
-                    key={row.categoryId}
-                    className={styles.cat}
-                    selectedClassName={styles.catSelected}
-                    selectId={`c:${row.categoryId}`}
-                    href={categoryHref(row.categoryId)}
-                  >
-                    <span className={styles.catIcon} style={{ color: colour }}>
-                      {row.category === undefined ? null : (
-                        <Icon name={row.category.icon as IconName} size={18} />
-                      )}
-                    </span>
-                    <span className={styles.catName}>{row.category?.name ?? MISSING}</span>
-                    <span className={styles.catShare}>
-                      <span className={styles.track}>
-                        <span style={{ width: `${row.share}%`, background: colour }} />
-                      </span>
-                      <span>{t('targets.percent', { value: row.share })}</span>
-                    </span>
-                    <span className={styles.catDelta}>{deltaText(row.delta)}</span>
-                    <span className={styles.catAmount}>
-                      <AmountText minor={row.amount} currency={currency} locale={locale} />
-                    </span>
-                  </PanelLink>
-                ))}
+        {periodEmpty ? (
+          <section className={styles.box}>
+            <p className={styles.emptyTitle}>
+              {t('stats.emptyPeriod', {
+                period: formatCycleRange(period.range, locale, today),
+              })}
+            </p>
+            <div className={styles.emptyActions}>
+              {nearestWithData === null ? null : (
+                <Link
+                  className={styles.emptyAction}
+                  href={periodHref(PATH, nearestWithData, def, today, keep)}
+                >
+                  {t('stats.goToPeriod', {
+                    period: formatCycleRange(nearestWithData, locale, today),
+                  })}
+                </Link>
+              )}
+              <NewTransactionLink className={styles.emptyAction}>
+                {t('web.shell.newTransaction')}
+              </NewTransactionLink>
+            </div>
+          </section>
+        ) : (
+          <>
+            {/* W7: the breakdown, in the colours of the categories. */}
+            <section className={styles.box}>
+              <div className={styles.boxHead}>
+                <h2 className={styles.boxTitle}>{t('stats.split')}</h2>
+                <span className={styles.toggle}>
+                  <Chip
+                    label={t('stats.expenses')}
+                    href={directionHref('expense')}
+                    active={direction === 'expense'}
+                  />
+                  <Chip
+                    label={t('stats.income')}
+                    href={directionHref('income')}
+                    active={direction === 'income'}
+                  />
+                </span>
               </div>
-            </>
-          )}
-          {view.split.excluded.count === 0 ? null : (
-            <p className={styles.note}>
-              {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
-                amount: money(view.split.excluded.amount),
-              })}
-            </p>
-          )}
-          {/* «Committed share» is a line at the bottom of the block. */}
-          {direction === 'expense' && view.split.rows.length > 0 ? (
-            <p className={styles.foot}>
-              <b>{t('stats.committed')}</b>{' '}
-              {t('stats.committedLine', {
-                pct: view.committed.share,
-                amount: money(view.committed.amount),
-              })}
-            </p>
-          ) : null}
-        </section>
+              {view.split.rows.length === 0 ? (
+                <EmptyState title={t('stats.empty')} />
+              ) : (
+                <>
+                  <SplitBar segments={segments} />
+                  <div className={styles.cats}>
+                    {ranked.map(({ row, colour }) => (
+                      <PanelLink
+                        key={row.categoryId}
+                        className={styles.cat}
+                        selectedClassName={styles.catSelected}
+                        selectId={`c:${row.categoryId}`}
+                        href={categoryHref(row.categoryId)}
+                      >
+                        <span className={styles.catIcon} style={{ color: colour }}>
+                          {row.category === undefined ? null : (
+                            <Icon name={row.category.icon as IconName} size={18} />
+                          )}
+                        </span>
+                        <span className={styles.catName}>{row.category?.name ?? MISSING}</span>
+                        <span className={styles.catShare}>
+                          <span className={styles.track}>
+                            <span style={{ width: `${row.share}%`, background: colour }} />
+                          </span>
+                          <span>{t('targets.percent', { value: row.share })}</span>
+                        </span>
+                        <span className={styles.catDelta}>{deltaText(row.delta)}</span>
+                        <span className={styles.catAmount}>
+                          <AmountText minor={row.amount} currency={currency} locale={locale} />
+                        </span>
+                      </PanelLink>
+                    ))}
+                  </div>
+                </>
+              )}
+              {view.split.excluded.count === 0 ? null : (
+                <p className={styles.note}>
+                  {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
+                    amount: money(view.split.excluded.amount),
+                  })}
+                </p>
+              )}
+              {/* «Committed share» is a line at the bottom of the block. */}
+              {direction === 'expense' && view.split.rows.length > 0 ? (
+                <p className={styles.foot}>
+                  <b>{t('stats.committed')}</b>{' '}
+                  {t('stats.committedLine', {
+                    pct: view.committed.share,
+                    amount: money(view.committed.amount),
+                  })}
+                </p>
+              ) : null}
+            </section>
 
-        <section className={styles.box}>
-          <div className={styles.boxHead}>
-            <h2 className={styles.boxTitle}>{t('stats.tags')}</h2>
-            <span className={styles.status}>
-              {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
-            </span>
-          </div>
-          {view.tags.tags.length === 0 ? (
-            <EmptyState title={t('stats.tagsEmpty')} />
-          ) : (
-            view.tags.tags.map((row) => (
-              <ListRow
-                key={row.tagId}
-                open
-                title={tagNames.get(row.tagId) ?? row.tagId}
-                subtitle={plural(t, locale, 'tags.uses', row.count)}
-                href={transactionsHref({ tag: row.tagId })}
-                trailing={
-                  <span className={styles.tagAmounts}>
-                    {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
-                    {row.expense === 0 && row.income > 0 ? null : (
-                      <AmountText minor={row.expense} currency={currency} locale={locale} />
-                    )}
-                    {row.income === 0 ? null : (
-                      <AmountText
-                        minor={row.income}
-                        currency={currency}
-                        locale={locale}
-                        size="footnote"
-                        sign="always"
-                      />
-                    )}
-                  </span>
-                }
-              />
-            ))
-          )}
-          {view.tags.untaggedCount === 0 ? null : (
-            <p className={styles.note}>
-              {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
-                amount: money(view.tags.untagged),
-              })}
-            </p>
-          )}
-          {view.tags.tags.length < 2 ? null : (
-            <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
-          )}
-        </section>
+            <section className={styles.box}>
+              <div className={styles.boxHead}>
+                <h2 className={styles.boxTitle}>{t('stats.tags')}</h2>
+                <span className={styles.status}>
+                  {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
+                </span>
+              </div>
+              {view.tags.tags.length === 0 ? (
+                <EmptyState title={t('stats.tagsEmpty')} />
+              ) : (
+                view.tags.tags.map((row) => (
+                  <ListRow
+                    key={row.tagId}
+                    open
+                    title={tagNames.get(row.tagId) ?? row.tagId}
+                    subtitle={plural(t, locale, 'tags.uses', row.count)}
+                    href={transactionsHref({ tag: row.tagId })}
+                    trailing={
+                      <span className={styles.tagAmounts}>
+                        {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
+                        {row.expense === 0 && row.income > 0 ? null : (
+                          <AmountText minor={row.expense} currency={currency} locale={locale} />
+                        )}
+                        {row.income === 0 ? null : (
+                          <AmountText
+                            minor={row.income}
+                            currency={currency}
+                            locale={locale}
+                            size="footnote"
+                            sign="always"
+                          />
+                        )}
+                      </span>
+                    }
+                  />
+                ))
+              )}
+              {view.tags.untaggedCount === 0 ? null : (
+                <p className={styles.note}>
+                  {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
+                    amount: money(view.tags.untagged),
+                  })}
+                </p>
+              )}
+              {view.tags.tags.length < 2 ? null : (
+                <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </PanelSwitch>
   );

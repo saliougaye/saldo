@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, tx } from './__tests__/fixtures';
 import { EMPTY_FILTERS, type FilterLookup } from './filters';
-import { budgetSuggestions, emergencyFundTarget, matchesInOtherPeriods } from './firstSteps';
+import {
+  budgetSuggestions,
+  emergencyFundTarget,
+  matchesInOtherPeriods,
+  nearestPeriodWithData,
+} from './firstSteps';
 import type { PeriodDef } from './period';
 
 const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
@@ -111,5 +116,32 @@ describe('emergencyFundTarget', () => {
 
   it('is null with no history', () => {
     expect(emergencyFundTarget({ txs: [], def: MONTH, today: TODAY })).toBeNull();
+  });
+});
+
+describe('nearestPeriodWithData', () => {
+  const txs = [
+    tx({ date: '2026-01-20', amount: 100 }),
+    tx({ date: '2026-03-02', amount: 100 }),
+    tx({ date: '2026-03-28', amount: 100 }),
+  ];
+  const range = (start: string, end: string) => ({ start, end });
+
+  it('takes the latest period before an empty one', () => {
+    expect(
+      nearestPeriodWithData({ txs, def: MONTH, period: range('2026-04-01', '2026-04-30') }),
+    ).toEqual(range('2026-03-01', '2026-03-31'));
+  });
+
+  it('takes the first period after an empty one that comes before every row', () => {
+    expect(
+      nearestPeriodWithData({ txs, def: MONTH, period: range('2025-11-01', '2025-11-30') }),
+    ).toEqual(range('2026-01-01', '2026-01-31'));
+  });
+
+  it('is null with no row at all', () => {
+    expect(
+      nearestPeriodWithData({ txs: [], def: MONTH, period: range('2026-04-01', '2026-04-30') }),
+    ).toBeNull();
   });
 });

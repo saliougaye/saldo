@@ -280,3 +280,29 @@
     display: none;
   }
 }
+
+/* W11: an empty period — what it says, and the ways out. */
+.emptyTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}

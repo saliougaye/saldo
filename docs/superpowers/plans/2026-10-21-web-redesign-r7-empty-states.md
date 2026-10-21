@@ -791,20 +791,21 @@ rtk git commit -m "feat(web): the quick add, and a search's matches in other per
 **Files:**
 - Modify: `apps/web/app/(app)/stats/page.tsx`
 - Modify: `apps/web/app/(app)/stats/stats.module.css`
+- Modify: `packages/core/src/firstSteps.ts` and its test (`nearestPeriodWithData`)
 
-- [ ] **Step 1: Render it**
+- [x] **Step 1: Render it**
 
 In the running/closed branch of `page.tsx`, after `const view = statsView(…)`, add:
 
 ```tsx
   // W11: a period with no row at all. The chart stays; the breakdown and the tags give the way out.
   const periodEmpty = !page.data.transactions.some((tx) => isWithin(period.range, tx.date));
-  const lastWithData = periodEmpty
-    ? (periodHistory(page.data.transactions, def, period.range, 24)[0]?.period ?? null)
+  const nearestWithData = periodEmpty
+    ? nearestPeriodWithData({ txs: page.data.transactions, def, period: period.range })
     : null;
 ```
 
-Import `isWithin` and `periodHistory` from `@saldo/core`. In the returned JSX, replace the Breakdown and the Tags `section`s with this block when `periodEmpty`:
+Import `isWithin` and `nearestPeriodWithData` from `@saldo/core`. `nearestPeriodWithData` is a fourth function of `packages/core/src/firstSteps.ts`, with a test: the latest period with a row before the empty one, or the first one after it when the empty period comes before every row. `periodHistory` alone looks back only, so it gives nothing for a period before the first row. In the returned JSX, replace the Breakdown and the Tags `section`s with this block when `periodEmpty`:
 
 ```tsx
         {periodEmpty ? (
@@ -815,13 +816,13 @@ Import `isWithin` and `periodHistory` from `@saldo/core`. In the returned JSX, r
               })}
             </p>
             <div className={styles.emptyActions}>
-              {lastWithData === null ? null : (
+              {nearestWithData === null ? null : (
                 <Link
                   className={styles.emptyAction}
-                  href={periodHref(PATH, lastWithData, def, today, keep)}
+                  href={periodHref(PATH, nearestWithData, def, today, keep)}
                 >
                   {t('stats.goToPeriod', {
-                    period: formatCycleRange(lastWithData, locale, today),
+                    period: formatCycleRange(nearestWithData, locale, today),
                   })}
                 </Link>
               )}
@@ -838,9 +839,9 @@ Import `isWithin` and `periodHistory` from `@saldo/core`. In the returned JSX, r
         )}
 ```
 
-The two comments mark where the existing sections go: move the existing Breakdown and Tags `section` elements there, unchanged. Import `NewTransactionLink` from `src/ui/NewTransactionLink`. `periodHistory` only looks back from `period`, so a forecast period never reaches this branch.
+The two comments mark where the existing sections go: move the existing Breakdown and Tags `section` elements there, unchanged. Import `NewTransactionLink` from `src/ui/NewTransactionLink`. A forecast period never reaches this branch.
 
-- [ ] **Step 2: The CSS**
+- [x] **Step 2: The CSS**
 
 Add to `stats.module.css`:
 
@@ -870,9 +871,11 @@ Add to `stats.module.css`:
 }
 ```
 
-- [ ] **Step 3: Check and commit**
+- [x] **Step 3: Check and commit**
 
-Run the gates as in Task 4, Step 5. Look at `/stats?p=` for a month before the seed's first transaction: expect the chart, then «‹Month› has no transactions yet», «Go to ‹the oldest month with data›» and «New transaction».
+Run `rtk proxy pnpm --filter @saldo/core test` too.
+
+Run the gates as in Task 4, Step 5. Look at `/stats?p=` for a month before the seed's first transaction: expect the chart, then «‹Month› has no transactions yet», «Go to ‹the nearest month with data›» and «New transaction».
 
 ```bash
 rtk git add "apps/web/app/(app)/stats"
