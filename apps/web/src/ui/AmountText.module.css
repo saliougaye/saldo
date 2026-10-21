@@ -15,6 +15,14 @@
   line-height: 1.1;
 }
 
+/* H5: in the big figure, the cents and the currency are 45% of the size (a token: no `em` by hand), in `textFaint`. */
+.hero .dim {
+  font-size: var(--font-size-hero-web-cents);
+  opacity: 1;
+  color: var(--color-text-faint);
+  letter-spacing: var(--tracking-tight);
+}
+
 .large {
   font-size: var(--font-size-amount-lg);
   font-weight: var(--font-weight-semibold);

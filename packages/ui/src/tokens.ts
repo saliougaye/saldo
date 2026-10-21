@@ -213,6 +213,8 @@ export const fontSize = {
   hero: 44,
   /** The one figure a wide web page leads with: «Rimasto da spendere», Patrimonio (§17.1.7). */
   heroWeb: 56,
+  /** H5: the cents and the currency beside `heroWeb`, 45% of its size (56 × 0.45 = 25.2). */
+  heroWebCents: 25.2,
   /** The marketing site's headline at full width (spec 0.8a, D48). Never in the app. */
   siteDisplay: 72,
 } as const;

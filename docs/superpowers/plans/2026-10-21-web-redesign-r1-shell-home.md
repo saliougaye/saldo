@@ -643,26 +643,29 @@ rtk git commit -m "feat(web): one top bar on every width, the sidebar goes (H1, 
 ### Task 5: The hero figure — cents at 45%
 
 **Files:**
+- Modify: `packages/ui/src/tokens.ts`
 - Modify: `apps/web/src/ui/AmountText.module.css`
 
-- [ ] **Step 1: Add the rule**
+- [x] **Step 1: Add the token and the rule**
+
+The test `cssTokens.test.ts` refuses a font size typed by hand, `em` included. So add a token first. In `packages/ui/src/tokens.ts`, in `fontSize`, after `heroWeb: 56,` add `heroWebCents: 25.2,` (45% of 56). Then:
 
 In `apps/web/src/ui/AmountText.module.css`, after the `.hero { … }` block, add:
 
 ```css
-/* H5: in the big figure, the cents and the currency are 45% of the size, in `textFaint`. */
+/* H5: in the big figure, the cents and the currency are 45% of the size (a token: no `em` by hand), in `textFaint`. */
 .hero .dim {
-  font-size: 0.45em;
+  font-size: var(--font-size-hero-web-cents);
   opacity: 1;
   color: var(--color-text-faint);
   letter-spacing: var(--tracking-tight);
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
-rtk git add apps/web/src/ui/AmountText.module.css
+rtk git add packages/ui/src/tokens.ts apps/web/src/ui/AmountText.module.css
 rtk git commit -m "feat(web): the hero figure's cents at 45% in textFaint (H5)"
 ```
 
