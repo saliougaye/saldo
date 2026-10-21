@@ -1803,12 +1803,12 @@ rtk git commit -m "feat(web): Statistics as the period block, the breakdown and 
 **Files:**
 - Modify: `apps/web/e2e/home-stats.spec.ts`
 
-- [ ] **Step 1: Run the Statistics tests as they are**
+- [x] **Step 1: Run the Statistics tests as they are**
 
 Run: `rtk proxy pnpm --filter web e2e -- home-stats.spec.ts`
 Expected: they pass. They read the figures, the rows of the breakdown, the tags and the dialog, and Task 5 kept those hooks. If one fails, read why. Fix the page when it broke a rule of the spec. Fix the test when it only looked for the old markup.
 
-- [ ] **Step 2: Add a test for the chart and the keys**
+- [x] **Step 2: Add a test for the chart and the keys**
 
 In `test.describe('Statistiche', …)`, after the test `'‹ moves the figures and the title to the previous period'`, add:
 
@@ -1857,7 +1857,7 @@ In `test.describe('Statistiche', …)`, after the test `'‹ moves the figures a
 
 Make sure that `upperFirst`, `formatMonthLong`, `monthOf`, `previousMonth`, `appLocale`, `readLedger` and `createMember` are already imported in the file: the test `'‹ moves the figures…'` uses all of them.
 
-- [ ] **Step 3: Run the suite**
+- [x] **Step 3: Run the suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: every test passes.
@@ -1865,7 +1865,7 @@ Expected: every test passes.
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/web/e2e

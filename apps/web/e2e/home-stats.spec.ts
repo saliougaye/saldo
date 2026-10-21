@@ -350,6 +350,8 @@ test.describe('Statistiche', () => {
     const expenses = split('expense');
     expect(expenses.ranked.length).toBeGreaterThan(5);
     const income = split('income');
+    // The closed month has income, so the loop below reads a populated income view.
+    expect(income.ranked.length).toBeGreaterThan(0);
     // The figures above the split agree with it.
     await expect(statFigure(page, t('stats.expenses'))).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
@@ -487,6 +489,47 @@ test.describe('Statistiche', () => {
     await expect(figure(t('stats.income'))).toContainText(money(last.income));
     await expect(figure(t('stats.expenses'))).toContainText(money(last.spent));
     await expect(figure(t('stats.net'))).toContainText(money(last.income - last.spent, 'always'));
+    await member.context.close();
+  });
+
+  test('a bar of the chart selects its period, and ← → move it (W6)', async ({
+    browser,
+    t,
+    locale,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Grafico',
+      email: 'stats-chart@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const lang = appLocale(locale);
+    const current = monthOf(ledger.today);
+    const closed = previousMonth(current);
+    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+
+    await page.goto('/stats');
+    await expect(page.getByText(title(current), { exact: true })).toBeVisible();
+    const block = page.getByRole('region', { name: t('stats.expensesByPeriod') });
+    // «Usual» is said in words under the chart.
+    await expect(block).toContainText(
+      t('stats.usualNote', { amount: 'X' }).split('X')[0]?.trim() ?? '',
+    );
+
+    // Six closed bars, then the running one, which is selected. Each bar is a link to its period.
+    const bars = block.getByRole('link');
+    await expect(bars.nth(6)).toHaveAttribute('aria-current', 'true');
+    await bars.nth(5).click();
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
+    await expect(bars.nth(5)).toHaveAttribute('aria-current', 'true');
+    await expect(block.locator('a[aria-current="true"]')).toHaveCount(1);
+
+    // → goes back to the current month, ← to the previous one.
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByText(title(current), { exact: true })).toBeVisible();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
     await member.context.close();
   });
 });
