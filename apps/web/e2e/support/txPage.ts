@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { CurrencyCode } from '@saldo/core';
 import type { SignDisplay, Translate } from '@saldo/i18n';
 import { type AppLocale, formatDayMonth, formatMoney, formatWeekday } from '@saldo/i18n';
@@ -58,7 +58,7 @@ interface NewExpense {
   category: string;
 }
 
-/** Fills «Nuova transazione» as an expense and saves it. Returns the id the page lands on. */
+/** Fills «Nuova transazione» as an expense and saves it. Returns the id of the new row. */
 export async function createExpense(page: Page, t: Translate, input: NewExpense): Promise<string> {
   // The top bar's link: Transazioni also has its own «Nuova transazione» in the page.
   await page
@@ -72,9 +72,14 @@ export async function createExpense(page: Page, t: Translate, input: NewExpense)
   await form.getByRole('button', { name: t('txForm.allCategories') }).click();
   await page.getByRole('option', { name: input.category, exact: true }).click();
   await form.getByRole('button', { name: t('txForm.create') }).click();
-  await page.waitForURL(/[?&]t=/);
-  const id = new URL(page.url()).searchParams.get('t');
-  if (id === null) throw new Error('the saved transaction is not selected');
+  // Save closes the dialog and lands on the list (W3): the new row's link carries its id.
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const href = await page
+    .getByRole('link', { name: input.description })
+    .first()
+    .getAttribute('href');
+  const id = href === null ? null : new URL(href, page.url()).searchParams.get('t');
+  if (id === null) throw new Error('the saved transaction has no row');
   return id;
 }
 

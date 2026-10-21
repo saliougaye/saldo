@@ -60,10 +60,12 @@ test('accounts sit in their group, a goal sits under its account, and an account
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+&edit$/);
   const edit = page.getByRole('dialog', { name: t('accounts.editAccount') });
   await expect(edit.getByLabel(t('accounts.name'), { exact: true })).toHaveValue('Risparmi');
+  // W4: «Edit» changes the same dialog into the form; a second dialog does not open.
+  await expect(page.getByRole('dialog')).toHaveCount(1);
   await edit.getByRole('link', { name: t('common.close') }).click();
   await expect(risparmi).toBeVisible();
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+$/);
-  // D3: the panel is a dialog over the page, so the list is out of reach until it is closed.
+  // W1: the dialog is over the page, so the list is out of reach until it is closed.
   await risparmi.getByRole('link', { name: t('common.close') }).click();
   await expect(risparmi).toHaveCount(0);
 

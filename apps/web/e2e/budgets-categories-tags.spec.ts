@@ -466,13 +466,18 @@ test('regression: a ?tag=ID load renders the panel beside the list in the server
   expect(href).toMatch(/\?tag=/);
   if (href === null) throw new Error('the row has no link');
 
-  // D3: at 1440px the panel is a dialog at the trailing edge, over the list.
+  // W1: at 1440px the panel is a dialog in the centre, over the list. The poll waits for the entrance.
   await page.goto(href);
   const panel = page.getByRole('dialog', { name: t('tags.editTag') });
   await expect(panel.getByLabel(t('tags.name'), { exact: true })).toHaveValue('Vacanze');
-  const side = await panel.boundingBox();
-  if (side === null) throw new Error('the panel has no box');
-  expect(side.x + side.width).toBeGreaterThan(1440 - 32);
+  const box = async () => {
+    const value = await panel.boundingBox();
+    if (value === null) throw new Error('the panel has no box');
+    return value;
+  };
+  await expect.poll(async () => Math.round((await box()).width)).toBe(480);
+  const centred = await box();
+  expect(Math.abs(centred.x + centred.width / 2 - 720)).toBeLessThanOrEqual(1);
   await expect(page.locator('[data-panel-switch]')).toBeVisible();
 
   // The server's HTML holds the panel and its form, before any script runs.

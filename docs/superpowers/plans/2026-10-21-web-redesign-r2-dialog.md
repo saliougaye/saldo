@@ -1170,8 +1170,10 @@ under the buttons. Commit: `fix(web): the form's buttons stay in view while the 
 - Modify: `apps/web/e2e/support/txPage.ts`
 - Modify: `apps/web/e2e/transactions.spec.ts`
 - Modify: `apps/web/e2e/accounts-goals.spec.ts`
+- Modify: `apps/web/e2e/support/ledger.ts`
+- Modify: `apps/web/e2e/budgets-categories-tags.spec.ts`
 
-- [ ] **Step 1: `createExpense` reads the id from the new row**
+- [x] **Step 1: `createExpense` reads the id from the new row**
 
 In `apps/web/e2e/support/txPage.ts`, replace:
 
@@ -1222,7 +1224,7 @@ with:
 import { expect, type Locator, type Page } from '@playwright/test';
 ```
 
-- [ ] **Step 2: The row test opens the form**
+- [x] **Step 2: The row test opens the form**
 
 In `apps/web/e2e/transactions.spec.ts`, replace the whole test `'a row opens its detail in the panel, and the panel closes again'` with:
 
@@ -1335,7 +1337,7 @@ In `apps/web/e2e/transactions.spec.ts`, replace the whole test `'a row opens its
   });
 ```
 
-- [ ] **Step 3: Create, edit and delete**
+- [x] **Step 3: Create, edit and delete**
 
 In the test `'create an expense, edit it, delete it: the list and Home follow'`, replace everything from `    // Create.` to the line before `    await member.context.close();` with:
 
@@ -1382,7 +1384,7 @@ In the test `'create an expense, edit it, delete it: the list and Home follow'`,
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));
 ```
 
-- [ ] **Step 4: «Undo»**
+- [x] **Step 4: «Undo»**
 
 In the test `'«Annulla» brings a deleted transaction back'`, replace everything from `    await page.getByRole('button', { name: t('common.delete') }).click();` to the line before `    await page.goto('/home');` with:
 
@@ -1401,7 +1403,7 @@ In the test `'«Annulla» brings a deleted transaction back'`, replace everythin
     await expect(page.getByRole('link', { name: 'Caffè di prova' })).toContainText(money(-800));
 ```
 
-- [ ] **Step 5: The conflict test**
+- [x] **Step 5: The conflict test**
 
 In the test `'saving a transaction that moved since it was opened shows the conflict'`:
 
@@ -1437,7 +1439,7 @@ with:
 
 The two `goto(…&edit)` lines stay: they check that an old `&edit` link still opens the form.
 
-- [ ] **Step 6: W4 on Accounts**
+- [x] **Step 6: W4 on Accounts**
 
 In `apps/web/e2e/accounts-goals.spec.ts`, after:
 
@@ -1454,15 +1456,21 @@ add:
 
 Replace the comment `// D3: the panel is a dialog over the page, so the list is out of reach until it is closed.` with `// W1: the dialog is over the page, so the list is out of reach until it is closed.`
 
-- [ ] **Step 7: Run the e2e suite**
+- [x] **Step 7: Run the e2e suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
-Expected: every test passes. If a test of another page fails because it relied on the old panel width or on the full-screen panel below 1024px, fix the test, not the dialog, and say why in the commit.
+Expected: every test passes.
+
+**Done, with two more changes found by the run:**
+- `saveTransaction` in `support/ledger.ts` waited for `/transactions?…t=`. Save now lands on `/transactions`, so the default `landing` is `/\/transactions$/`. Five tests of Accounts and Budgets used it.
+- The regression test `a ?tag=ID load renders the panel beside the list` checked that the dialog sits at the trailing edge. It now checks that the dialog is 480px wide and centred (W1).
+
+If a test of another page fails because it relied on the old panel width or on the full-screen panel below 1024px, fix the test, not the dialog, and say why in the commit.
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 rtk git add apps/web/e2e

@@ -112,11 +112,11 @@ export async function fillTransaction(page: Page, t: Translate, tx: NewTransacti
   }
 }
 
-/** «Aggiungi»: submits the form and waits for where a save lands: the saved row, by default. */
+/** «Aggiungi»: submits the form and waits for where a save lands: the list, by default (W3). */
 export async function saveTransaction(
   page: Page,
   t: Translate,
-  landing: RegExp = /\/transactions\?(.*&)?t=/,
+  landing: RegExp = /\/transactions$/,
 ): Promise<void> {
   await page.getByRole('button', { name: t('txForm.create'), exact: true }).click();
   await expect(page).toHaveURL(landing);
