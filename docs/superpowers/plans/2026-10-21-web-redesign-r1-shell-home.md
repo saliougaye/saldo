@@ -2161,7 +2161,7 @@ rtk git commit -m "feat(web): the Home loads with the shapes of its four blocks 
 
 The budget tile no longer shows `targets.leftDetail` («left · {spent} spent of {limit}»). It shows `targets.spent` («{amount} spent») under what is left.
 
-- [ ] **Step 1: Change the budget assertion**
+- [x] **Step 1: Change the budget assertion**
 
 In `apps/web/e2e/home-stats.spec.ts`, in the test `'the budgets and the goals are cards that carry the seeded figures'`, replace:
 
@@ -2188,12 +2188,19 @@ with:
 
 Rename the test to `'the budgets and the goals carry the seeded figures'`.
 
-- [ ] **Step 2: Look for tests that need the sidebar**
+- [x] **Step 2: Look for tests that need the sidebar**
 
 Run: `rtk grep -n "data-sidebar\|SideBar\|sidebar" apps/web/e2e`
 Expected: no match. If a test opened a destination from the sidebar, open it from the top bar instead: `page.getByRole('navigation', { name: t('web.shell.mainNav') }).getByRole('link', { name })`.
 
-- [ ] **Step 3: Add a test for the trend keys**
+Note (checked on the code): the grep matches only two comments, and no test needs the sidebar. The full suite showed four other things that the top bar changed. Fix each one in the same commit:
+
+- `createExpense` (`support/txPage.ts`) clicked «New transaction» by role. The top bar and the Transactions page now both have that link. Scope the click to `getByRole('banner')`.
+- `shell.spec.ts` looked for the Admin link inside the main navigation. It is an icon link in the top bar, beside the navigation. Look for it in `getByRole('banner')`.
+- `statFigure` and `cardOf` used `[class*="HeroBand"]` and `a[class*="Card"]`. A production build hashes CSS-module names and drops the file name, so these never match there (they matched in `E2E_DEV=1`). Use the structure and the role instead of a class name.
+- In «‹ steps back», two `next.click()` calls ran with no wait between them. The second click landed on the old link, and the test ended on the closed month. Wait for the heading between the two clicks.
+
+- [x] **Step 3: Add a test for the trend keys**
 
 Append inside `test.describe('Home', …)` in `apps/web/e2e/home-stats.spec.ts`:
 
@@ -2219,17 +2226,17 @@ Append inside `test.describe('Home', …)` in `apps/web/e2e/home-stats.spec.ts`:
   });
 ```
 
-- [ ] **Step 4: Run the Home tests**
+- [x] **Step 4: Run the Home tests**
 
 Run: `rtk proxy pnpm --filter web e2e -- home-stats.spec.ts`
 Expected: every test in the file passes. If «In arrivo» checks an order, it now gets the nearest date first: change the expected list to `ahead.sort((a, b) => a.date.localeCompare(b.date))`.
 
-- [ ] **Step 5: Run the whole suite**
+- [x] **Step 5: Run the whole suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: every test passes. A test that clicked a sidebar link fails here: fix it as in Step 2.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/web/e2e/home-stats.spec.ts

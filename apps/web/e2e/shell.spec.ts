@@ -18,7 +18,9 @@ test.describe('navigation', () => {
     for (const key of ['tabs.home', 'tabs.transactions', 'tabs.stats', 'tabs.accounts']) {
       await expect(nav.getByRole('link', { name: t(key), exact: true })).toBeVisible();
     }
-    await expect(nav.getByRole('link', { name: t('admin.title'), exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: t('admin.title'), exact: true }),
+    ).toHaveCount(0);
 
     // The panel does not admit that it exists.
     const response = await page.goto('/admin');
@@ -35,9 +37,13 @@ test.describe('navigation', () => {
     await page.goto('/home');
 
     const nav = page.getByRole('navigation', { name: t('web.shell.mainNav') });
-    await nav.getByRole('link', { name: t('admin.title'), exact: true }).click();
+    // H1: Admin is an icon link at the end of the top bar, beside the destinations, not in them.
+    await page
+      .getByRole('banner')
+      .getByRole('link', { name: t('admin.title'), exact: true })
+      .click();
     await expect(page).toHaveURL(/\/admin/);
-    // D10: Admin's sub-navigation takes the sidebar's place; «‹ Saldo» brings it back.
+    // D10: Admin's sub-navigation is a column beside the section; «‹ Saldo» brings it back.
     await page.getByRole('link', { name: t('web.shell.backLabel') }).click();
     await expect(page).toHaveURL(/\/home$/);
     for (const [key, path] of [

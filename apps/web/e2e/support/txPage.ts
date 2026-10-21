@@ -15,12 +15,13 @@ export function moneyFormatter(ledger: Pick<Ledger, 'currency'>, locale: AppLoca
     formatMoney(minor, ledger.currency as CurrencyCode, locale, sign);
 }
 
-/** A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the words. */
+/**
+ * A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the
+ * words: the head comes first in the page. It goes by the structure, not by a class name, because a
+ * production build hashes CSS-module names and drops the file name.
+ */
 export function statFigure(page: Page, label: string): Locator {
-  return page
-    .locator('[class*="figures"] > div, [class*="HeroBand"][class*="figure"]')
-    .filter({ has: page.getByText(label, { exact: true }) })
-    .first();
+  return page.getByText(label, { exact: true }).first().locator('..');
 }
 
 /** «Oggi · 6 ott», «Ieri · 5 ott», then «Domenica · 4 ott»: the title of a day's section. */
@@ -59,7 +60,11 @@ interface NewExpense {
 
 /** Fills «Nuova transazione» as an expense and saves it. Returns the id the page lands on. */
 export async function createExpense(page: Page, t: Translate, input: NewExpense): Promise<string> {
-  await page.getByRole('link', { name: t('web.shell.newTransaction') }).click();
+  // The top bar's link: Transazioni also has its own «Nuova transazione» in the page.
+  await page
+    .getByRole('banner')
+    .getByRole('link', { name: t('web.shell.newTransaction') })
+    .click();
   const form = page.getByRole('dialog', { name: t('txForm.newTitle') });
   await form.getByLabel(t('txForm.amount')).fill(input.amount);
   await form.getByLabel(t('txForm.descriptionExpense')).fill(input.description);

@@ -78,7 +78,7 @@ test.describe('Home', () => {
     // «In arrivo»: every row dated ahead, up to the five the card shows.
     const ahead = ledger.transactions
       .filter((tx) => tx.date > ledger.today && tx.date <= month.end)
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => a.date.localeCompare(b.date));
     expect(ahead.length).toBeGreaterThanOrEqual(2);
     // Transazioni holds both lists: the group label tells «In arrivo» from «Ultime». The summary
     // beside the title says how many there are; its amount is left out (it adds the rows up).
@@ -127,11 +127,7 @@ test.describe('Home', () => {
     await member.context.close();
   });
 
-  test('the budgets and the goals are cards that carry the seeded figures', async ({
-    browser,
-    t,
-    locale,
-  }) => {
+  test('the budgets and the goals carry the seeded figures', async ({ browser, t, locale }) => {
     const member = await createMember(browser, t, {
       name: 'Obiettivi',
       email: 'home-targets@e2e.test',
@@ -169,15 +165,10 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      // D5: every budget is a card; the line under the figure says what is spent of the limit.
-      if (spentSoFar <= budget.amount) {
-        await expect(
-          page.getByText(
-            t('targets.leftDetail', { spent: money(spentSoFar), limit: money(budget.amount) }),
-            { exact: true },
-          ),
-        ).toHaveCount(1);
-      }
+      // H6: every budget is a ring tile; under what is left, a line says what is spent.
+      await expect(
+        page.getByText(t('targets.spent', { amount: money(spentSoFar) }), { exact: true }).first(),
+      ).toBeVisible();
     }
 
     // Goals: a pocket's balance is the transfers into it.
@@ -282,20 +273,41 @@ test.describe('Home', () => {
     await expect(page.getByText(title(earlier), { exact: true })).toBeVisible();
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(before.spent));
 
+    // Each click is a navigation: wait for its page before the next click, or both land on one link.
     await next.click();
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
     await next.click();
     await expect(page.getByText(title(current), { exact: true })).toBeVisible();
     await expect(next).toHaveCount(0);
     await expect(page).not.toHaveURL(/[?&]p=/);
     await member.context.close();
   });
+
+  test('the trend moves day by day with the arrow keys (H5)', async ({ browser, t }) => {
+    const member = await createMember(browser, t, {
+      name: 'Andamento',
+      email: 'home-trend@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    await page.goto('/home');
+    const trend = page.getByRole('slider', { name: t('stats.cycleTrend') });
+    await trend.focus();
+    await page.keyboard.press('Home');
+    await expect(trend).toHaveAttribute('aria-valuenow', '1');
+    await page.keyboard.press('ArrowRight');
+    await expect(trend).toHaveAttribute('aria-valuenow', '2');
+    await page.keyboard.press('End');
+    const last = await trend.getAttribute('aria-valuemax');
+    await expect(trend).toHaveAttribute('aria-valuenow', last ?? '');
+    await member.context.close();
+  });
 });
 
 /** A category card of Ripartizione: the link that holds the category's name. */
 function cardOf(scope: Locator, name: string): Locator {
-  return scope
-    .locator('a[class*="Card"]')
-    .filter({ has: scope.page().getByText(name, { exact: true }) });
+  // By role, not by class name: a production build hashes CSS-module names and drops the file name.
+  return scope.getByRole('link').filter({ has: scope.page().getByText(name, { exact: true }) });
 }
 
 test.describe('Statistiche', () => {
@@ -350,10 +362,11 @@ test.describe('Statistiche', () => {
     // Biggest first.
     const first = expenses.ranked[0];
     await expect(cardOf(section, first?.name ?? '')).toBeVisible();
-    const order = await section
-      .locator('a[class*="Card"] [class*="Card"][class*="name"]')
-      .allTextContents();
-    expect(order).toEqual(expenses.ranked.map((row) => row.name));
+    const cards = section.locator('a[href*="c="]');
+    await expect(cards).toHaveCount(expenses.ranked.length);
+    for (const [index, row] of expenses.ranked.entries()) {
+      await expect(cards.nth(index).getByText(row.name, { exact: true })).toBeVisible();
+    }
 
     // The same month read as income.
     await section.getByRole('link', { name: t('stats.income') }).click();
