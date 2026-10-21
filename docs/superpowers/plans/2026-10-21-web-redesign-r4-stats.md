@@ -50,7 +50,7 @@
 **Files:**
 - Modify: `packages/i18n/src/locales/en.ts`, `it.ts`, `de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts` (the `stats` block, after the line `soFar: …`)
 
-- [ ] **Step 1: Add the keys**
+- [x] **Step 1: Add the keys**
 
 In each file, after the line that starts with `    soFar:` inside `stats: {`, add the five lines for that locale.
 
@@ -124,12 +124,12 @@ In each file, after the line that starts with `    soFar:` inside `stats: {`, ad
     projectionBelowShort: 'cirka {{amount}} under det vanliga',
 ```
 
-- [ ] **Step 2: Run the catalog tests**
+- [x] **Step 2: Run the catalog tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add packages/i18n/src/locales
