@@ -57,8 +57,14 @@ test.describe('accounts', () => {
     const { page } = admin;
     await page.goto('/admin/accounts');
 
-    // Wide: the sub-navigation column carries the title (D10) as the h1; the page's own head is hidden.
-    await expect(page.getByRole('heading', { name: t('admin.title') })).toBeVisible();
+    // W10: Admin shares Profile's frame; its menu group carries the instance name, and «Accounts» is the current item.
+    const menu = page.getByRole('navigation', { name: t('profile.title') });
+    await expect(
+      menu.getByText(t('web.profile.groupAdmin', { name: ADMIN.instance })),
+    ).toBeVisible();
+    await expect(
+      menu.getByRole('link', { name: startsWith(t('admin.nav.accounts')) }),
+    ).toHaveAttribute('aria-current', 'page');
     await expect(accountRow(page, ADMIN.name)).toContainText(t('admin.roleAdmin'));
     await expect(accountRow(page, member.name)).toContainText(member.email);
     await expect(accountRow(page, member.name)).toContainText(t('admin.roleMember'));
@@ -415,7 +421,10 @@ test.describe('instance and settings', () => {
     await admin.context.close();
   });
 
-  test('the instance name is saved, shown in the head, and restored', async ({ browser, t }) => {
+  test('the instance name is saved, shown in the Admin menu group, and restored', async ({
+    browser,
+    t,
+  }) => {
     const renamed = 'Casa Rinominata';
     const admin = await openAdmin(browser);
     const { page } = admin;
@@ -430,17 +439,23 @@ test.describe('instance and settings', () => {
       await rename(renamed);
       await expect(page.getByRole('link', { name: new RegExp(renamed) })).toBeVisible();
       await expect(
-        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+        page
+          .getByText(t('web.profile.groupAdmin', { name: renamed }), { exact: true })
+          .locator('visible=true'),
       ).toBeVisible();
       await page.reload();
       await expect(
-        page.getByText(new RegExp(`^${renamed} ·`)).locator('visible=true'),
+        page
+          .getByText(t('web.profile.groupAdmin', { name: renamed }), { exact: true })
+          .locator('visible=true'),
       ).toBeVisible();
     } finally {
       await rename(ADMIN.instance);
     }
     await expect(
-      page.getByText(new RegExp(`^${ADMIN.instance} ·`)).locator('visible=true'),
+      page
+        .getByText(t('web.profile.groupAdmin', { name: ADMIN.instance }), { exact: true })
+        .locator('visible=true'),
     ).toBeVisible();
     await admin.context.close();
   });

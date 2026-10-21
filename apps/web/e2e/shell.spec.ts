@@ -21,6 +21,13 @@ test.describe('navigation', () => {
     await expect(
       page.getByRole('banner').getByRole('link', { name: t('admin.title'), exact: true }),
     ).toHaveCount(0);
+    // W10: the Admin group of the Profile menu is for the admin role only.
+    await page.goto('/profile');
+    await expect(
+      page
+        .getByRole('navigation', { name: t('profile.title') })
+        .getByRole('link', { name: t('admin.nav.accounts') }),
+    ).toHaveCount(0);
 
     // The panel does not admit that it exists.
     const response = await page.goto('/admin');
@@ -31,21 +38,25 @@ test.describe('navigation', () => {
     await member.context.close();
   });
 
-  test('the admin also sees Admin, and each tab opens its section', async ({ browser, t }) => {
+  test('the admin finds Admin in the Profile menu, and each tab opens its section', async ({
+    browser,
+    t,
+  }) => {
     const admin = await openAdmin(browser);
     const { page } = admin;
     await page.goto('/home');
 
     const nav = page.getByRole('navigation', { name: t('web.shell.mainNav') });
-    // H1: Admin is an icon link at the end of the top bar, beside the destinations, not in them.
-    await page
-      .getByRole('banner')
-      .getByRole('link', { name: t('admin.title'), exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/admin/);
-    // D10: Admin's sub-navigation is a column beside the section; «‹ Saldo» brings it back.
-    await page.getByRole('link', { name: t('web.shell.backLabel') }).click();
-    await expect(page).toHaveURL(/\/home$/);
+    // W10: Admin is not in the top bar; it is the last group of the Profile menu.
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: t('admin.title'), exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: t('web.shell.accountMenu') }).click();
+    await page.getByRole('menuitem', { name: t('profile.title') }).click();
+    await expect(page).toHaveURL(/\/profile$/);
+    const menu = page.getByRole('navigation', { name: t('profile.title') });
+    await menu.getByRole('link', { name: t('admin.nav.accounts') }).click();
+    await expect(page).toHaveURL(/\/admin\/accounts$/);
     for (const [key, path] of [
       ['tabs.transactions', '/transactions'],
       ['tabs.stats', '/stats'],

@@ -25,8 +25,14 @@ test('the preferences list shows the five rows, and a row opens its panel and cl
     email: 'prefs-rows@e2e.test',
   });
   const { page } = member;
+  // W10: `/profile` is the first section, «Profile», and its menu item is the current one.
   await page.goto('/profile');
-  await expect(page).toHaveURL(/\/profile\/account$/);
+  await expect(page).toHaveURL(/\/profile$/);
+  await expect(
+    page
+      .getByRole('navigation', { name: t('profile.title') })
+      .getByRole('link', { name: t('profile.title'), exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
 
   await page
     .getByRole('link', { name: t('settings.preferences'), exact: true })
@@ -340,5 +346,47 @@ test('the account shows the name and the email, and says the address stays unver
   await expect(page.getByText(t('web.account.unverified'))).toBeVisible();
   await expect(page.getByText(t('web.account.mailOff'))).toBeVisible();
   await expect(page.getByRole('button', { name: t('web.account.verify') })).toHaveCount(0);
+  await member.context.close();
+});
+
+test('below 760px Profile is a list of groups, and a section has a way back (W10)', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Elenco',
+    email: 'profile-list@e2e.test',
+  });
+  const { page } = member;
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto('/profile');
+  const menu = page.getByRole('navigation', { name: t('profile.title') });
+  await expect(menu.getByText(t('web.profile.groupOrganise'), { exact: true })).toBeVisible();
+
+  await menu.getByRole('link', { name: t('categories.title') }).click();
+  await expect(page).toHaveURL(/\/profile\/categories$/);
+  await expect(menu).toBeHidden();
+  await page.getByRole('link', { name: t('web.profile.backLabel') }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+  await expect(menu).toBeVisible();
+  await member.context.close();
+});
+
+test('the avatar opens the account menu, with Profile and Sign out (W10)', async ({
+  browser,
+  t,
+}) => {
+  const member = await createMember(browser, t, {
+    name: 'Menu',
+    email: 'profile-menu@e2e.test',
+  });
+  const { page } = member;
+  await page.goto('/home');
+  await page.getByRole('button', { name: t('web.shell.accountMenu') }).click();
+  const popup = page.getByRole('menu');
+  await expect(popup).toContainText('profile-menu@e2e.test');
+  await expect(popup.getByRole('menuitem', { name: t('profile.title') })).toBeVisible();
+  await popup.getByRole('menuitem', { name: t('sync.signOut') }).click();
+  await expect(page).toHaveURL(/\/login/);
   await member.context.close();
 });

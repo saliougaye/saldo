@@ -971,7 +971,7 @@ rtk git commit -m "feat(web): Profile's grouped menu, with Admin as its last gro
 - Modify: `apps/web/e2e/shell.spec.ts`, `apps/web/e2e/profile.spec.ts`
 - Modify: other specs and `apps/web/e2e/support/*.ts` that reached Admin through the top bar
 
-- [ ] **Step 1: Find what used the old way in**
+- [x] **Step 1: Find what used the old way in**
 
 Run: `rtk grep -rn "admin.title\|/profile'\|profile/account\|banner" apps/web/e2e`
 For each hit, decide:
@@ -979,7 +979,7 @@ For each hit, decide:
 - **`/profile` redirect:** a test that expected `/profile` to redirect to `/profile/account` must now expect `/profile` to stay.
 - **Profile heading:** a test that read the old Profile heading must read the new head.
 
-- [ ] **Step 2: The shell test of the admin**
+- [x] **Step 2: The shell test of the admin**
 
 In `apps/web/e2e/shell.spec.ts`, in the test `'the admin also sees Admin, and each tab opens its section'`, replace the part that checks the Admin icon link in the banner with:
 
@@ -996,7 +996,7 @@ In `apps/web/e2e/shell.spec.ts`, in the test `'the admin also sees Admin, and ea
     await expect(page).toHaveURL(/\/admin\/accounts$/);
 ```
 
-Rename the test to `'the admin finds Admin in the Profile menu, and each tab opens its section'`. Keep the rest of the test. If it later loops over the tabs, check that the loop still finds four tabs.
+Rename the test to `'the admin finds Admin in the Profile menu, and each tab opens its section'`. Remove the click on «‹ Saldo» (`web.shell.backLabel`) and the check of `/home` after it: the frame has no such link now. Keep the rest of the test. If it later loops over the tabs, check that the loop still finds four tabs.
 
 In the member test, add after the check that the banner has no Admin link:
 
@@ -1010,7 +1010,7 @@ In the member test, add after the check that the banner has no Admin link:
     ).toHaveCount(0);
 ```
 
-- [ ] **Step 3: The Profile test**
+- [x] **Step 3: The Profile test**
 
 In `apps/web/e2e/profile.spec.ts`, replace:
 
@@ -1032,7 +1032,7 @@ with:
   ).toHaveAttribute('aria-current', 'page');
 ```
 
-- [ ] **Step 4: The menu below 760px, and the avatar menu**
+- [x] **Step 4: The menu below 760px, and the avatar menu**
 
 Add to `apps/web/e2e/profile.spec.ts` (with the imports and fixtures the file already uses for a member):
 
@@ -1049,7 +1049,7 @@ test('below 760px Profile is a list of groups, and a section has a way back (W10
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto('/profile');
   const menu = page.getByRole('navigation', { name: t('profile.title') });
-  await expect(menu.getByRole('group', { name: t('web.profile.groupOrganise') })).toBeVisible();
+  await expect(menu.getByText(t('web.profile.groupOrganise'), { exact: true })).toBeVisible();
 
   await menu.getByRole('link', { name: t('categories.title') }).click();
   await expect(page).toHaveURL(/\/profile\/categories$/);
@@ -1082,15 +1082,15 @@ test('the avatar opens the account menu, with Profile and Sign out (W10)', async
 
 If `createMember` is not imported in `profile.spec.ts`, import it from `./support/members`, as `transactions.spec.ts` does. If `profile.spec.ts` builds its member in another way, use that way.
 
-- [ ] **Step 5: Run the suite**
+- [x] **Step 5: Run the suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
-Expected: every test passes. A failure in `admin.spec.ts` is most likely a test that read the old Admin head (`admin.title` as the `h1`). Make it read the new head or the menu group, and say why in the commit. Do not weaken a guard test: `/admin` and `/admin/accounts` must still answer «not found» to a member.
+Expected: every test passes. A failure in `admin.spec.ts` is most likely a test that read the old Admin head (`admin.title` as the `h1`). Make it read the new head or the menu group, and say why in the commit. Two tests need this: in «the list shows the roles…», check the `Admin · ‹instance›` group title and the current «Accounts» link of the menu instead of the `admin.title` heading; in «the instance name is saved…», read the instance name from the group title (`web.profile.groupAdmin`) instead of the old head. Do not weaken a guard test: `/admin` and `/admin/accounts` must still answer «not found» to a member.
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 rtk git add apps/web/e2e
@@ -1115,7 +1115,7 @@ In `docs/superpowers/plans/README.md`, replace:
 with:
 
 ```markdown
-- [x] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
+- [ ] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
 ```
 
 After the paragraph `**Acceptance for R5:** …`, add:
