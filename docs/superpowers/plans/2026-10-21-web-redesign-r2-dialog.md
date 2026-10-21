@@ -1141,7 +1141,7 @@ rtk git commit -m "feat(web): a transaction row opens its edit form, with Delete
 
 ### Task 5: Look at Transactions in the browser
 
-- [ ] **Step 1: Check the flow by hand**
+- [x] **Step 1: Check the flow by hand**
 
 Run: `rtk proxy pnpm --filter web dev`. Sign in with a seeded user and open `/transactions` at 1440px.
 
