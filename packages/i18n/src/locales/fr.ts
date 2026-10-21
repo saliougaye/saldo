@@ -164,6 +164,7 @@ export const fr: Messages = {
       revoke: 'Révoquer',
       revokeTitle: 'Révoquer l’invitation « {{label}} » ?',
       revokeBody: 'Le code cesse de fonctionner aussitôt. Impossible d’annuler.',
+      createFirst: 'Crée la première invitation',
     },
     instance: {
       trailing: 'de l’environnement et du build',
@@ -517,6 +518,10 @@ export const fr: Messages = {
     detailDate: 'Date',
     detailNote: 'Note',
     detailAttachments: 'Pièces jointes',
+    quickAddTitle: 'Enregistre ta première dépense',
+    importCsv: 'Importer depuis un CSV',
+    noResultsIn: 'Aucun résultat en {{period}}',
+    otherPeriods: '« {{query}} » apparaît dans d’autres périodes :',
   },
   txForm: {
     newTitle: 'Nouvelle opération',
@@ -755,6 +760,8 @@ export const fr: Messages = {
     atDate: 'au {{date}}',
     forecastColAt: 'Au',
     forecastColRange: 'entre',
+    emptyPeriod: '{{period}} n’a pas encore d’opérations',
+    goToPeriod: 'Aller à {{period}}',
   },
   attachments: {
     add: 'Ajouter une pièce jointe',
@@ -986,6 +993,8 @@ export const fr: Messages = {
     empty: 'Aucun budget',
     emptyBody:
       'Un budget fixe un plafond par catégorie et te prévient quand tu dépenses plus vite que le rythme de la période.',
+    suggestTitle: 'Où tu dépenses le plus',
+    suggestAmount: '{{amount}} par mois',
   },
   accounts: {
     title: 'Comptes',
@@ -1044,6 +1053,7 @@ export const fr: Messages = {
     archived_one: '{{count}} compte archivé',
     archived_other: '{{count}} comptes archivés',
     empty: 'Aucun compte',
+    whichType: 'Quel compte veux-tu ajouter ?',
   },
   categories: {
     title: 'Catégories',
@@ -1250,6 +1260,16 @@ export const fr: Messages = {
     trendSpentBy: 'dépensé au {{date}}',
     trendUsualBy: 'd’habitude au {{date}}',
     trendHint: 'Utilisez les flèches pour parcourir les jours.',
+    startTitle: 'Pour commencer',
+    startProgress: '{{done}} sur {{count}}',
+    stepAccount: 'Ajoute un compte',
+    stepTransaction: 'Enregistre la première dépense',
+    stepTransactionBody: 'Les statistiques, les budgets et les soldes partent de là.',
+    stepBudget: 'Définis un budget',
+    stepBudgetBody: 'Une limite pour chaque catégorie.',
+    stepGoal: 'Mets de côté pour un objectif',
+    stepGoalBody: 'Facultatif.',
+    inAccounts: 'Dans tes comptes',
   },
   targets: {
     today: 'aujourd’hui',
@@ -1355,6 +1375,9 @@ export const fr: Messages = {
     itemLabel: '{{name}}, {{amount}} sur {{target}}, {{status}}',
     parentArchived: 'Le compte de cet objectif est archivé\u202f: restaure d’abord le compte',
     closedLocked: 'Fait partie d’un objectif fermé\u202f: impossible de le modifier',
+    presetEmergency: 'Fonds d’urgence',
+    presetHoliday: 'Vacances',
+    presetCar: 'Voiture',
   },
   recap: {
     title_month: '{{month}} est terminé',

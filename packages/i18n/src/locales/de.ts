@@ -165,6 +165,7 @@ export const de: Messages = {
       revokeTitle: 'Einladung „{{label}}“ widerrufen?',
       revokeBody:
         'Der Code funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen.',
+      createFirst: 'Erste Einladung erstellen',
     },
     instance: {
       trailing: 'aus Umgebung und Build',
@@ -517,6 +518,10 @@ export const de: Messages = {
     detailDate: 'Datum',
     detailNote: 'Notiz',
     detailAttachments: 'Anhänge',
+    quickAddTitle: 'Erfasse deine erste Ausgabe',
+    importCsv: 'Aus CSV importieren',
+    noResultsIn: 'Keine Ergebnisse in {{period}}',
+    otherPeriods: '„{{query}}“ kommt in anderen Zeiträumen vor:',
   },
   txForm: {
     newTitle: 'Neue Buchung',
@@ -756,6 +761,8 @@ export const de: Messages = {
     atDate: 'bis {{date}}',
     forecastColAt: 'Bis',
     forecastColRange: 'zwischen',
+    emptyPeriod: '{{period}} hat noch keine Buchungen',
+    goToPeriod: 'Zu {{period}}',
   },
   attachments: {
     add: 'Anhang hinzufügen',
@@ -987,6 +994,8 @@ export const de: Messages = {
     empty: 'Keine Budgets',
     emptyBody:
       'Ein Budget setzt einer Kategorie ein Limit und warnt dich, wenn du schneller ausgibst, als der Zeitraum vergeht.',
+    suggestTitle: 'Wofür du am meisten ausgibst',
+    suggestAmount: '{{amount}} im Monat',
   },
   accounts: {
     title: 'Konten',
@@ -1044,6 +1053,7 @@ export const de: Messages = {
     archived_one: '{{count}} archiviertes Konto',
     archived_other: '{{count}} archivierte Konten',
     empty: 'Keine Konten',
+    whichType: 'Welches Konto möchtest du hinzufügen?',
   },
   categories: {
     title: 'Kategorien',
@@ -1247,6 +1257,16 @@ export const de: Messages = {
     trendSpentBy: 'ausgegeben bis {{date}}',
     trendUsualBy: 'üblich bis {{date}}',
     trendHint: 'Mit den Pfeiltasten durch die Tage gehen.',
+    startTitle: 'Los geht’s',
+    startProgress: '{{done}} von {{count}}',
+    stepAccount: 'Konto hinzufügen',
+    stepTransaction: 'Die erste Ausgabe erfassen',
+    stepTransactionBody: 'Statistiken, Budgets und Kontostände beginnen dort.',
+    stepBudget: 'Budget festlegen',
+    stepBudgetBody: 'Ein Limit für jede Kategorie.',
+    stepGoal: 'Für ein Ziel zurücklegen',
+    stepGoalBody: 'Optional.',
+    inAccounts: 'Auf deinen Konten',
   },
   targets: {
     today: 'heute',
@@ -1352,6 +1372,9 @@ export const de: Messages = {
     itemLabel: '{{name}}, {{amount}} von {{target}}, {{status}}',
     parentArchived: 'Das Konto dieses Ziels ist archiviert: stell zuerst das Konto wieder her',
     closedLocked: 'Gehört zu einem geschlossenen Ziel: nicht änderbar',
+    presetEmergency: 'Notgroschen',
+    presetHoliday: 'Urlaub',
+    presetCar: 'Auto',
   },
   recap: {
     title_month: '{{month}} ist vorbei',

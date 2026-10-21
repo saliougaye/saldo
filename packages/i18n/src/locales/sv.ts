@@ -163,6 +163,7 @@ export const sv: Messages = {
       revoke: 'Återkalla',
       revokeTitle: 'Återkalla inbjudan ”{{label}}”?',
       revokeBody: 'Koden slutar fungera direkt. Det går inte att ångra.',
+      createFirst: 'Skapa den första inbjudan',
     },
     instance: {
       trailing: 'från miljön och bygget',
@@ -508,6 +509,10 @@ export const sv: Messages = {
     detailDate: 'Datum',
     detailNote: 'Anteckning',
     detailAttachments: 'Bilagor',
+    quickAddTitle: 'Registrera din första utgift',
+    importCsv: 'Importera från CSV',
+    noResultsIn: 'Inga resultat i {{period}}',
+    otherPeriods: '”{{query}}” finns i andra perioder:',
   },
   txForm: {
     newTitle: 'Ny transaktion',
@@ -746,6 +751,8 @@ export const sv: Messages = {
     atDate: 'den {{date}}',
     forecastColAt: 'Den',
     forecastColRange: 'mellan',
+    emptyPeriod: '{{period}} har inga transaktioner än',
+    goToPeriod: 'Gå till {{period}}',
   },
   attachments: {
     add: 'Lägg till bilaga',
@@ -974,6 +981,8 @@ export const sv: Messages = {
     empty: 'Inga budgetar',
     emptyBody:
       'En budget sätter ett tak per kategori och varnar dig när du ligger före periodens takt.',
+    suggestTitle: 'Där du spenderar mest',
+    suggestAmount: '{{amount}} i månaden',
   },
   accounts: {
     title: 'Konton',
@@ -1032,6 +1041,7 @@ export const sv: Messages = {
     archived_one: '{{count}} arkiverat konto',
     archived_other: '{{count}} arkiverade konton',
     empty: 'Inga konton',
+    whichType: 'Vilket konto vill du lägga till?',
   },
   categories: {
     title: 'Kategorier',
@@ -1232,6 +1242,16 @@ export const sv: Messages = {
     trendSpentBy: 'spenderat till {{date}}',
     trendUsualBy: 'vanligt till {{date}}',
     trendHint: 'Använd piltangenterna för att gå mellan dagarna.',
+    startTitle: 'Kom igång',
+    startProgress: '{{done}} av {{count}}',
+    stepAccount: 'Lägg till ett konto',
+    stepTransaction: 'Registrera den första utgiften',
+    stepTransactionBody: 'Statistik, budgetar och saldon utgår därifrån.',
+    stepBudget: 'Sätt en budget',
+    stepBudgetBody: 'En gräns för varje kategori.',
+    stepGoal: 'Spara till ett mål',
+    stepGoalBody: 'Valfritt.',
+    inAccounts: 'På dina konton',
   },
   targets: {
     today: 'i dag',
@@ -1337,6 +1357,9 @@ export const sv: Messages = {
     itemLabel: '{{name}}, {{amount}} av {{target}}, {{status}}',
     parentArchived: 'Målets konto är arkiverat: återställ kontot först',
     closedLocked: 'Hör till ett stängt mål: kan inte ändras',
+    presetEmergency: 'Buffert',
+    presetHoliday: 'Semester',
+    presetCar: 'Bil',
   },
   recap: {
     title_month: '{{month}} är slut',

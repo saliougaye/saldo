@@ -162,6 +162,7 @@ export const it = {
       revoke: 'Revoca',
       revokeTitle: 'Revocare l’invito «{{label}}»?',
       revokeBody: 'Il codice smette di funzionare subito. Non si può annullare.',
+      createFirst: 'Crea il primo invito',
     },
     instance: {
       trailing: 'dall’ambiente e dalla build',
@@ -509,6 +510,10 @@ export const it = {
     detailDate: 'Data',
     detailNote: 'Nota',
     detailAttachments: 'Allegati',
+    quickAddTitle: 'Registra la prima spesa',
+    importCsv: 'Importa da CSV',
+    noResultsIn: 'Nessun risultato in {{period}}',
+    otherPeriods: '«{{query}}» compare in altri periodi:',
   },
   txForm: {
     newTitle: 'Nuova transazione',
@@ -748,6 +753,8 @@ export const it = {
     atDate: 'al {{date}}',
     forecastColAt: 'Al',
     forecastColRange: 'tra',
+    emptyPeriod: '{{period}} non ha ancora transazioni',
+    goToPeriod: 'Vai a {{period}}',
   },
   attachments: {
     add: 'Aggiungi allegato',
@@ -979,6 +986,8 @@ export const it = {
     empty: 'Nessun budget',
     emptyBody:
       'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul ritmo del periodo.',
+    suggestTitle: 'Dove spendi di più',
+    suggestAmount: '{{amount}} al mese',
   },
   accounts: {
     title: 'Conti',
@@ -1037,6 +1046,7 @@ export const it = {
     archived_one: '{{count}} conto archiviato',
     archived_other: '{{count}} conti archiviati',
     empty: 'Nessun conto',
+    whichType: 'Che conto vuoi aggiungere?',
   },
   categories: {
     title: 'Categorie',
@@ -1239,6 +1249,16 @@ export const it = {
     trendSpentBy: 'spesi al {{date}}',
     trendUsualBy: 'di solito al {{date}}',
     trendHint: 'Usa le frecce per scorrere i giorni.',
+    startTitle: 'Per iniziare',
+    startProgress: '{{done}} di {{count}}',
+    stepAccount: 'Aggiungi un conto',
+    stepTransaction: 'Registra la prima spesa',
+    stepTransactionBody: 'Statistiche, budget e saldi partono da lì.',
+    stepBudget: 'Imposta un budget',
+    stepBudgetBody: 'Un limite per ogni categoria.',
+    stepGoal: 'Metti da parte per un obiettivo',
+    stepGoalBody: 'Facoltativo.',
+    inAccounts: 'Nei tuoi conti',
   },
   targets: {
     today: 'oggi',
@@ -1344,6 +1364,9 @@ export const it = {
     itemLabel: '{{name}}, {{amount}} di {{target}}, {{status}}',
     parentArchived: 'Il conto di questo obiettivo è archiviato: ripristina prima il conto',
     closedLocked: 'Fa parte di un obiettivo chiuso: non si può modificare',
+    presetEmergency: 'Fondo emergenza',
+    presetHoliday: 'Vacanze',
+    presetCar: 'Macchina',
   },
   recap: {
     title_month: '{{month}} si è chiuso',

@@ -163,6 +163,7 @@ export const es: Messages = {
       revoke: 'Revocar',
       revokeTitle: '¿Revocar la invitación «{{label}}»?',
       revokeBody: 'El código deja de funcionar al instante. No se puede deshacer.',
+      createFirst: 'Crea la primera invitación',
     },
     instance: {
       trailing: 'del entorno y de la compilación',
@@ -511,6 +512,10 @@ export const es: Messages = {
     detailDate: 'Fecha',
     detailNote: 'Nota',
     detailAttachments: 'Adjuntos',
+    quickAddTitle: 'Registra tu primer gasto',
+    importCsv: 'Importar desde CSV',
+    noResultsIn: 'Sin resultados en {{period}}',
+    otherPeriods: '«{{query}}» aparece en otros periodos:',
   },
   txForm: {
     newTitle: 'Nuevo movimiento',
@@ -750,6 +755,8 @@ export const es: Messages = {
     atDate: 'al {{date}}',
     forecastColAt: 'Al',
     forecastColRange: 'entre',
+    emptyPeriod: '{{period}} aún no tiene movimientos',
+    goToPeriod: 'Ir a {{period}}',
   },
   attachments: {
     add: 'Añadir adjunto',
@@ -980,6 +987,8 @@ export const es: Messages = {
     empty: 'Sin presupuestos',
     emptyBody:
       'Un presupuesto pone un tope por categoría y te avisa cuando vas por delante del ritmo del periodo.',
+    suggestTitle: 'Dónde gastas más',
+    suggestAmount: '{{amount}} al mes',
   },
   accounts: {
     title: 'Cuentas',
@@ -1038,6 +1047,7 @@ export const es: Messages = {
     archived_one: '{{count}} cuenta archivada',
     archived_other: '{{count}} cuentas archivadas',
     empty: 'Sin cuentas',
+    whichType: '¿Qué cuenta quieres añadir?',
   },
   categories: {
     title: 'Categorías',
@@ -1240,6 +1250,16 @@ export const es: Messages = {
     trendSpentBy: 'gastado a {{date}}',
     trendUsualBy: 'habitual a {{date}}',
     trendHint: 'Usa las flechas para moverte por los días.',
+    startTitle: 'Para empezar',
+    startProgress: '{{done}} de {{count}}',
+    stepAccount: 'Añade una cuenta',
+    stepTransaction: 'Registra el primer gasto',
+    stepTransactionBody: 'Las estadísticas, los presupuestos y los saldos parten de ahí.',
+    stepBudget: 'Define un presupuesto',
+    stepBudgetBody: 'Un límite para cada categoría.',
+    stepGoal: 'Aparta dinero para un objetivo',
+    stepGoalBody: 'Opcional.',
+    inAccounts: 'En tus cuentas',
   },
   targets: {
     today: 'hoy',
@@ -1345,6 +1365,9 @@ export const es: Messages = {
     itemLabel: '{{name}}, {{amount}} de {{target}}, {{status}}',
     parentArchived: 'La cuenta de este objetivo está archivada: restaura primero la cuenta',
     closedLocked: 'Forma parte de un objetivo cerrado: no se puede cambiar',
+    presetEmergency: 'Fondo de emergencia',
+    presetHoliday: 'Vacaciones',
+    presetCar: 'Coche',
   },
   recap: {
     title_month: '{{month}} ha terminado',

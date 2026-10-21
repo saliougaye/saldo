@@ -162,6 +162,7 @@ export const en: Messages = {
       revoke: 'Revoke',
       revokeTitle: 'Revoke the invite “{{label}}”?',
       revokeBody: 'The code stops working at once. This can’t be undone.',
+      createFirst: 'Create the first invite',
     },
     instance: {
       trailing: 'from the environment and the build',
@@ -509,6 +510,10 @@ export const en: Messages = {
     detailDate: 'Date',
     detailNote: 'Note',
     detailAttachments: 'Attachments',
+    quickAddTitle: 'Record your first expense',
+    importCsv: 'Import from CSV',
+    noResultsIn: 'No results in {{period}}',
+    otherPeriods: '“{{query}}” appears in other periods:',
   },
   txForm: {
     newTitle: 'New transaction',
@@ -747,6 +752,8 @@ export const en: Messages = {
     atDate: 'by {{date}}',
     forecastColAt: 'By',
     forecastColRange: 'between',
+    emptyPeriod: '{{period}} has no transactions yet',
+    goToPeriod: 'Go to {{period}}',
   },
   attachments: {
     add: 'Add an attachment',
@@ -974,6 +981,8 @@ export const en: Messages = {
     alertTitle: 'Budget {{name}}: {{pct}}% used',
     empty: 'No budgets',
     emptyBody: 'A budget caps a category and warns you when you are ahead of the period’s pace.',
+    suggestTitle: 'Where you spend most',
+    suggestAmount: '{{amount}} a month',
   },
   accounts: {
     title: 'Accounts',
@@ -1031,6 +1040,7 @@ export const en: Messages = {
     archived_one: '{{count}} archived account',
     archived_other: '{{count}} archived accounts',
     empty: 'No accounts',
+    whichType: 'Which account do you want to add?',
   },
   categories: {
     title: 'Categories',
@@ -1233,6 +1243,16 @@ export const en: Messages = {
     trendSpentBy: 'spent by {{date}}',
     trendUsualBy: 'usual by {{date}}',
     trendHint: 'Use the arrow keys to move along the days.',
+    startTitle: 'Getting started',
+    startProgress: '{{done}} of {{count}}',
+    stepAccount: 'Add an account',
+    stepTransaction: 'Record the first expense',
+    stepTransactionBody: 'Statistics, budgets and balances start there.',
+    stepBudget: 'Set a budget',
+    stepBudgetBody: 'A limit for each category.',
+    stepGoal: 'Set aside for a goal',
+    stepGoalBody: 'Optional.',
+    inAccounts: 'In your accounts',
   },
   targets: {
     today: 'today',
@@ -1338,6 +1358,9 @@ export const en: Messages = {
     itemLabel: '{{name}}, {{amount}} of {{target}}, {{status}}',
     parentArchived: "This goal's account is archived: restore the account first",
     closedLocked: "Part of a closed goal: it can't be changed",
+    presetEmergency: 'Emergency fund',
+    presetHoliday: 'Holiday',
+    presetCar: 'Car',
   },
   recap: {
     title_month: '{{month}} is over',

@@ -53,7 +53,7 @@
 **Files:**
 - Modify: `packages/i18n/src/locales/en.ts`, `it.ts`, `de.ts`, `es.ts`, `fr.ts`, `pt.ts`, `sv.ts`
 
-- [ ] **Step 1: Add the keys**
+- [x] **Step 1: Add the keys**
 
 Add each key to the block its prefix names (`home`, `transactions`, `stats`, `accounts`, `goals`, `budgets`, `admin.invites`), in all seven files. Put it after the last key of that block. First check with `rtk grep` that no key of the same name exists in that block.
 
@@ -85,7 +85,7 @@ Add each key to the block its prefix names (`home`, `transactions`, `stats`, `ac
 
 For `de`, `es`, `fr`, `pt` and `sv`, write a translation in the voice of the existing strings of that file. Keep `{{…}}` placeholders as they are. Use the quotes that the file already uses in similar strings.
 
-- [ ] **Step 2: Test and commit**
+- [x] **Step 2: Test and commit**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS.
