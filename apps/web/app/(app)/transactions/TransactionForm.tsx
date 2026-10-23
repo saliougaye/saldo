@@ -46,6 +46,7 @@ import { Select, type SelectOption } from '../../../src/ui/Select';
 import { Switch } from '../../../src/ui/Switch';
 import { TextField } from '../../../src/ui/TextField';
 import { createTagAction, saveTransactionAction } from './actions';
+import { DeletingContext } from './deleting';
 import styles from './TransactionForm.module.css';
 
 interface Props {
@@ -101,6 +102,7 @@ export function TransactionForm({
   const [values, setValues] = useState<TransactionFormValues>(view.initial);
   const [problem, setProblem] = useState<Problem>(null);
   const [pending, startTransition] = useTransition();
+  const [deleting, setDeleting] = useState(false);
   const [tags, setTags] = useState(view.tags);
   const [tagQuery, setTagQuery] = useState('');
   // The suggestions appear when the tag field first takes the focus and stay: collapsing them on
@@ -197,7 +199,7 @@ export function TransactionForm({
   }, [view.mode]);
 
   const save = () => {
-    if (pending) return;
+    if (pending || deleting) return;
     const gap = missingForSave(values, minorDigits, overdrawn);
     if (gap !== null) {
       setProblem({ missing: gap });
@@ -626,12 +628,16 @@ export function TransactionForm({
       {problem === null ? null : <Alert body={message(problem)} />}
 
       <div className={styles.foot}>
-        {deleteControl ?? <span className={styles.hint}>{t('web.form.keyboardHint')}</span>}
+        {deleteControl === undefined ? (
+          <span className={styles.hint}>{t('web.form.keyboardHint')}</span>
+        ) : (
+          <DeletingContext value={setDeleting}>{deleteControl}</DeletingContext>
+        )}
         <PanelLink className={styles.cancel} href={closeHref}>
           {t('common.cancel')}
         </PanelLink>
         <div>
-          <Button type="submit" busy={pending} busyLabel={t('common.loading')}>
+          <Button type="submit" busy={pending} busyLabel={t('common.loading')} disabled={deleting}>
             {t(view.mode === 'new' ? 'txForm.create' : 'txForm.save')}
           </Button>
         </div>

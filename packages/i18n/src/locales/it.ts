@@ -5,6 +5,10 @@ export const it = {
   common: {
     save: 'Salva',
     cancel: 'Annulla',
+    /** A name or a figure that is not there: a deleted category, a period with no comparison. */
+    missing: '—',
+    /** An estimate: a forecast figure. */
+    approx: '~{{amount}}',
     delete: 'Elimina',
     edit: 'Modifica',
     undo: 'Annulla',

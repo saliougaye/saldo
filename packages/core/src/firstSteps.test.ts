@@ -43,6 +43,7 @@ describe('budgetSuggestions', () => {
       categories: LIVE,
       budgets: [],
       def: MONTH,
+      period: APRIL,
       today: TODAY,
     });
     expect(suggestions).toEqual([
@@ -57,6 +58,7 @@ describe('budgetSuggestions', () => {
       categories: LIVE,
       budgets: [{ id: 'b1', categoryIds: ['cat-groceries'] }],
       def: MONTH,
+      period: APRIL,
       today: TODAY,
       count: 1,
     });
@@ -74,6 +76,7 @@ describe('budgetSuggestions', () => {
       ),
       budgets: [],
       def: MONTH,
+      period: APRIL,
       today: TODAY,
     });
     expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
@@ -81,7 +84,14 @@ describe('budgetSuggestions', () => {
 
   it('suggests nothing with no history', () => {
     expect(
-      budgetSuggestions({ txs: [], categories: LIVE, budgets: [], def: MONTH, today: TODAY }),
+      budgetSuggestions({
+        txs: [],
+        categories: LIVE,
+        budgets: [],
+        def: MONTH,
+        period: APRIL,
+        today: TODAY,
+      }),
     ).toEqual([]);
   });
 });

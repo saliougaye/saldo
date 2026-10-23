@@ -7,6 +7,7 @@ import {
   categorySpendHistory,
   emptyBudgetForm,
   getCurrency,
+  HISTORY_WINDOW,
   type LocalDate,
   type MinorDigits,
   minorToAmountBuffer,
@@ -16,9 +17,6 @@ import {
   takenCategoryIds,
   type UserData,
 } from '@saldo/core';
-
-/** The phone's `BudgetForm`: six past periods feed the suggested amount (§5.5). */
-export const HISTORY_CYCLES = 6;
 
 /** A top-level expense category, as a tile of the form. */
 export interface BudgetCategoryTile {
@@ -80,7 +78,8 @@ export function budgetFormShared(input: {
       })),
     budgets: data.budgets.map((budget) => ({ id: budget.id, categoryIds: budget.categoryIds })),
     history: categorySpendHistory(
-      periodHistory(data.transactions, def, period.range, HISTORY_CYCLES),
+      // The phone's `BudgetForm`: six past periods feed the suggested amount (§5.5).
+      periodHistory(data.transactions, def, period.range, HISTORY_WINDOW),
       data.categories,
       today,
     ).map((amounts) => Object.fromEntries(amounts)),

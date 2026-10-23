@@ -7,6 +7,8 @@ export const pt: Messages = {
   common: {
     save: 'Guardar',
     cancel: 'Cancelar',
+    missing: '—',
+    approx: '~{{amount}}',
     delete: 'Eliminar',
     edit: 'Editar',
     undo: 'Anular',

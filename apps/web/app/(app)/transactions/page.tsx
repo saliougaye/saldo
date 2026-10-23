@@ -1,10 +1,4 @@
-import {
-  addDays,
-  countsInTotals,
-  isWithin,
-  matchesInOtherPeriods,
-  summarizePeriod,
-} from '@saldo/core';
+import { addDays, matchesInOtherPeriods, summarizePeriod } from '@saldo/core';
 import {
   catalogs,
   formatCycleRange,
@@ -83,10 +77,6 @@ export default async function TransactionsPage({
   // D7: the summary says what the period holds, whatever the filters; the list under it is filtered.
   const summary = summarizePeriod(page.data.transactions, period.range, today);
 
-  // W5: the note under Income counts the rows the figure above it adds up.
-  const incomeCount = page.data.transactions.filter(
-    (tx) => tx.kind === 'income' && isWithin(period.range, tx.date) && countsInTotals(tx, today),
-  ).length;
   // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
   // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.
   const selectedId = params[SELECTION_PARAM];
@@ -366,7 +356,7 @@ export default async function TransactionsPage({
                 positive
               />
               <span className={styles.cellNote}>
-                {plural(t, locale, 'transactions.periodCount', incomeCount)}
+                {plural(t, locale, 'transactions.periodCount', summary.incomeCount)}
               </span>
             </div>
             {period.isCurrent ? (

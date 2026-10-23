@@ -259,7 +259,7 @@ export function GoalForm({ view, parentName, closeHref, afterSave }: Props) {
       ) : (
         <div className={styles.readonly}>
           <span className={styles.label}>{t('goals.parent')}</span>
-          <span className={styles.readonlyValue}>{parentName ?? '—'}</span>
+          <span className={styles.readonlyValue}>{parentName ?? t('common.missing')}</span>
         </div>
       )}
 

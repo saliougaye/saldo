@@ -43,6 +43,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  margin: 0;
 }
 
 .stats {

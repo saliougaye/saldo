@@ -6,6 +6,8 @@ export const sv: Messages = {
   common: {
     save: 'Spara',
     cancel: 'Avbryt',
+    missing: '—',
+    approx: '~{{amount}}',
     delete: 'Radera',
     edit: 'Redigera',
     undo: 'Ångra',

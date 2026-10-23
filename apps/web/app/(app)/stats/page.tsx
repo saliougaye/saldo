@@ -19,7 +19,7 @@ import {
 import { expensesChartView } from '../../../src/features/stats/expensesChart';
 import { forecastView } from '../../../src/features/stats/forecastView';
 import { navigatorForecast, navigatorView } from '../../../src/features/stats/navigatorView';
-import { periodProjection, statsView } from '../../../src/features/stats/statsView';
+import { periodProjection, SPLIT_COLOURS, statsView } from '../../../src/features/stats/statsView';
 import { filtersFromSearch } from '../../../src/features/transactions/listParams';
 import { listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
@@ -57,11 +57,6 @@ const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
 const CATEGORY_ROWS = 5;
 
 /** The name a category no longer in the list takes, as on the phone. */
-const MISSING = '—';
-
-/** W7: how many categories keep their own colour in the split bar; the rest share one grey. */
-const SPLIT_COLOURS = 6;
-
 const GREY = 'var(--color-bar-grey)';
 
 /** A category colour as the CSS variable the root layout injects; grey for a row with none. */
@@ -84,11 +79,12 @@ function Figure({
   children: ReactNode;
 }) {
   return (
-    <div className={hero ? styles.hero : styles.figure}>
-      <span className={styles.label}>{label}</span>
+    // A figure captioned by its label: the amount reads as one thing, apart from the legend's words.
+    <figure className={hero ? styles.hero : styles.figure}>
+      <figcaption className={styles.label}>{label}</figcaption>
       {children}
       {note === undefined || note === '' ? null : <span className={styles.note}>{note}</span>}
-    </div>
+    </figure>
   );
 }
 
@@ -160,10 +156,10 @@ export default async function StatsPage({
       key: column.range.start,
       href: periodHref(PATH, column.range, def, today, keep),
       tick: formatPeriodTick(column.range.start, def.kind, locale),
-      value: forecastColumn ? `~${amount}` : amount,
+      value: forecastColumn ? t('common.approx', { amount }) : amount,
       label: `${formatCycleRange(column.range, locale, today)} · ${
-        forecastColumn ? '~' : ''
-      }${money(bar.amount)}`,
+        forecastColumn ? t('common.approx', { amount: money(bar.amount) }) : money(bar.amount)
+      }`,
       detail:
         range === undefined
           ? null
@@ -263,7 +259,7 @@ export default async function StatsPage({
               </Figure>
               <Figure label={t('stats.netAbout')}>
                 <AmountText
-                  minor={selected.income - selected.expenses}
+                  minor={view.net}
                   currency={currency}
                   locale={locale}
                   size="headline"
@@ -306,7 +302,11 @@ export default async function StatsPage({
                     open
                     icon={category?.icon as IconName | undefined}
                     colorIndex={category?.colorIndex}
-                    title={row.description === '' ? (category?.name ?? MISSING) : row.description}
+                    title={
+                      row.description === ''
+                        ? (category?.name ?? t('common.missing'))
+                        : row.description
+                    }
                     subtitle={
                       row.count > 1
                         ? plural(t, locale, 'stats.forecastTimes', row.count)
@@ -394,7 +394,7 @@ export default async function StatsPage({
     })),
     {
       key: 'other',
-      amount: ranked.slice(SPLIT_COLOURS).reduce((sum, { row }) => sum + row.amount, 0),
+      amount: view.split.other,
       colour: GREY,
     },
   ];
@@ -438,7 +438,7 @@ export default async function StatsPage({
       .days.flatMap((day) => day.rows)
       .slice(0, CATEGORY_ROWS);
     panels[`c:${row.categoryId}`] = {
-      title: row.category?.name ?? MISSING,
+      title: row.category?.name ?? t('common.missing'),
       body: (
         <>
           <Figure
@@ -611,7 +611,9 @@ export default async function StatsPage({
                             <Icon name={row.category.icon as IconName} size={18} />
                           )}
                         </span>
-                        <span className={styles.catName}>{row.category?.name ?? MISSING}</span>
+                        <span className={styles.catName}>
+                          {row.category?.name ?? t('common.missing')}
+                        </span>
                         <span className={styles.catShare}>
                           <span className={styles.track}>
                             <span style={{ width: `${row.share}%`, background: colour }} />
@@ -660,7 +662,7 @@ export default async function StatsPage({
                   <ListRow
                     key={row.tagId}
                     open
-                    title={tagNames.get(row.tagId) ?? row.tagId}
+                    title={tagNames.get(row.tagId) ?? t('common.missing')}
                     subtitle={plural(t, locale, 'tags.uses', row.count)}
                     href={transactionsHref({ tag: row.tagId })}
                     trailing={

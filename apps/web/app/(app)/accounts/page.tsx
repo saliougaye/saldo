@@ -136,8 +136,6 @@ const PANEL_PARAMS = {
 /** How many movements an account's or a goal's panel lists. */
 const RECENT = 6;
 
-const MISSING = '—';
-
 /**
  * Conti on the web (§5.3, §5.14, §17.1.7): the band's two totals, the spendable and the savings
  * groups, and — in the trailing panel — one account's balance and recent movements (`?a=`) or one
@@ -180,7 +178,7 @@ export default async function AccountsPage({
     const detail = detailOf(row.account.id);
     const due = detail?.due ?? null;
     const owes = due !== null && due > 0;
-    const change = detail === null ? 0 : detail.period.income - detail.period.spent;
+    const change = detail === null ? 0 : detail.period.net;
     const line = [
       row.account.institution ?? t(`accountTypes.${row.account.type}`),
       t('accounts.periodDelta', { amount: formatMoney(change, currency, locale, 'always') }),
@@ -232,7 +230,8 @@ export default async function AccountsPage({
   const goalRow = (item: GoalView) => {
     const tone = goalRingTone(item.progress);
     const parentId = item.account.parentAccountId;
-    const parentName = parentId == null ? MISSING : (accountNames.get(parentId) ?? MISSING);
+    const parentName =
+      parentId == null ? t('common.missing') : (accountNames.get(parentId) ?? t('common.missing'));
     return (
       <PanelLink
         key={item.account.id}
@@ -451,7 +450,9 @@ export default async function AccountsPage({
         <div className={styles.cardRows}>
           <ListRow
             title={t('goals.parent')}
-            trailing={<span className={styles.count}>{goalParent?.name ?? '—'}</span>}
+            trailing={
+              <span className={styles.count}>{goalParent?.name ?? t('common.missing')}</span>
+            }
           />
           <ListRow
             title={t('goals.deadline')}

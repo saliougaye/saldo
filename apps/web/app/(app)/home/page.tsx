@@ -395,7 +395,9 @@ export default async function HomePage({
                     delta === null ? styles.muted : delta > 0 ? styles.attention : styles.positive
                   }
                 >
-                  {delta === null ? '—' : formatMoney(delta, currency, locale, 'always')}
+                  {delta === null
+                    ? t('common.missing')
+                    : formatMoney(delta, currency, locale, 'always')}
                 </dd>
               </div>
             </dl>

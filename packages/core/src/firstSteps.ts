@@ -1,4 +1,5 @@
 import { type BudgetRef, suggestBudgetAmount, takenCategoryIds } from './budgets';
+import type { DateRange } from './cycle';
 import type { LocalDate } from './dates';
 import type { Category } from './entities';
 import { type FilterLookup, filterTransactions, type TransactionFilters } from './filters';
@@ -32,12 +33,14 @@ export function budgetSuggestions(input: {
   categories: readonly SuggestableCategory[];
   budgets: readonly BudgetRef[];
   def: PeriodDef;
+  /** The period the page shows: the budget form reads its history from the same one. */
+  period: DateRange;
   today: LocalDate;
   count?: number;
 }): BudgetSuggestion[] {
-  const { txs, categories, budgets, def, today, count = 3 } = input;
+  const { txs, categories, budgets, def, period, today, count = 3 } = input;
   const history = categorySpendHistory(
-    periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW),
+    periodHistory(txs, def, period, HISTORY_WINDOW),
     categories,
     today,
   );

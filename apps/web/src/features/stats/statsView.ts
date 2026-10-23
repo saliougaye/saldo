@@ -103,9 +103,14 @@ export interface SplitRow {
   history: number[];
 }
 
+/** W7: how many categories keep their own colour in the split bar; the rest share one grey. */
+export const SPLIT_COLOURS = 6;
+
 export interface StatsSplit {
   total: number;
   rows: SplitRow[];
+  /** What the rows past `SPLIT_COLOURS` add up to: the bar's one grey segment. */
+  other: number;
   /** «N transazioni escluse dai totali» (§5.7), and what they add up to. */
   excluded: { count: number; amount: number };
 }
@@ -204,6 +209,7 @@ export function statsView(input: {
     split: {
       total,
       rows,
+      other: rows.slice(SPLIT_COLOURS).reduce((sum, row) => sum + row.amount, 0),
       excluded: {
         count: excluded.length,
         amount: excluded.reduce((sum, tx) => sum + tx.amount, 0),

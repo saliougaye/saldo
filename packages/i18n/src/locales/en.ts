@@ -4,6 +4,10 @@ export const en: Messages = {
   common: {
     save: 'Save',
     cancel: 'Cancel',
+    /** A name or a figure that is not there: a deleted category, a period with no comparison. */
+    missing: '—',
+    /** An estimate: a forecast figure. */
+    approx: '~{{amount}}',
     delete: 'Delete',
     edit: 'Edit',
     undo: 'Undo',

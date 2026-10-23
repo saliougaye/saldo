@@ -109,6 +109,7 @@ export default async function BudgetsPage({
     categories: page.data.categories,
     budgets: page.data.budgets,
     def,
+    period: period.range,
     today,
   });
 
@@ -149,7 +150,7 @@ export default async function BudgetsPage({
                     open
                     icon={category?.icon as IconName | undefined}
                     colorIndex={category?.colorIndex}
-                    title={category?.name ?? '—'}
+                    title={category?.name ?? t('common.missing')}
                     subtitle={t(`budgets.suggestAmount_${def.kind}`, {
                       amount: money(suggestion.amount),
                     })}

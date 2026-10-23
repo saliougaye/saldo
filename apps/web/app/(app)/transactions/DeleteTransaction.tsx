@@ -1,11 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useContext, useEffect, useState, useTransition } from 'react';
 import type { WriteError } from '../../../src/server/write/transactions';
 import { actionApplied } from '../../../src/ui/actionApplied';
 import { Icon } from '../../../src/ui/Icon';
 import { deleteTransactionAction } from './actions';
+import { DeletingContext } from './deleting';
 import styles from './TransactionForm.module.css';
 
 interface Props {
@@ -32,6 +33,11 @@ export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const setDeleting = useContext(DeletingContext);
+  // The form's Save waits while the row is being deleted.
+  useEffect(() => {
+    setDeleting(pending);
+  }, [pending, setDeleting]);
 
   const remove = () => {
     if (pending) return;

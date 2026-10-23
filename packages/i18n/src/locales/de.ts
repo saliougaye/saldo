@@ -6,6 +6,8 @@ export const de: Messages = {
   common: {
     save: 'Sichern',
     cancel: 'Abbrechen',
+    missing: '—',
+    approx: '~{{amount}}',
     delete: 'Löschen',
     edit: 'Bearbeiten',
     undo: 'Rückgängig',

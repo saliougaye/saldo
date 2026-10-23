@@ -58,6 +58,8 @@ export function signedAmount(
 
 export interface PeriodSummary {
   income: number;
+  /** How many rows `income` adds up: the note under the figure (W5). */
+  incomeCount: number;
   spent: number;
   remaining: number;
   length: number;
@@ -75,11 +77,14 @@ export function summarizePeriod(
   today: LocalDate,
 ): PeriodSummary {
   let income = 0;
+  let incomeCount = 0;
   let spent = 0;
   for (const tx of txs) {
     if (!isWithin(range, tx.date) || !countsInTotals(tx, today)) continue;
-    if (tx.kind === 'income') income += tx.amount;
-    else spent += tx.amount;
+    if (tx.kind === 'income') {
+      income += tx.amount;
+      incomeCount += 1;
+    } else spent += tx.amount;
   }
   const length = cycleLength(range);
   const elapsed = elapsedDays(range, today);
@@ -87,6 +92,7 @@ export function summarizePeriod(
   const ratio = income > 0 ? spent / income : 0;
   return {
     income,
+    incomeCount,
     spent,
     remaining: income - spent,
     length,
