@@ -17,11 +17,10 @@ export function moneyFormatter(ledger: Pick<Ledger, 'currency'>, locale: AppLoca
 
 /**
  * A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the
- * words: the head comes first in the page. It goes by the structure, not by a class name, because a
- * production build hashes CSS-module names and drops the file name.
+ * words: each figure is a `<figure>` captioned by its label.
  */
 export function statFigure(page: Page, label: string): Locator {
-  return page.getByText(label, { exact: true }).first().locator('..');
+  return page.getByRole('figure', { name: label, exact: true });
 }
 
 /** «Oggi · 6 ott», «Ieri · 5 ott», then «Domenica · 4 ott»: the title of a day's section. */
@@ -72,10 +71,15 @@ export async function createExpense(page: Page, t: Translate, input: NewExpense)
   await form.getByRole('button', { name: t('txForm.allCategories') }).click();
   await page.getByRole('option', { name: input.category, exact: true }).click();
   await form.getByRole('button', { name: t('txForm.create') }).click();
-  // Save closes the dialog and lands on the list (W3): the new row's link carries its id.
+  // Save closes the dialog and lands on the list (W3): the new row's link carries its id. The row's
+  // title is the description, whole — a name that only contains it is another row.
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const href = await page
-    .getByRole('link', { name: input.description })
+    .getByRole('main')
+    .getByRole('link')
+    .filter({
+      has: page.locator('b', { hasText: new RegExp(`^${literal(input.description).source}$`) }),
+    })
     .first()
     .getAttribute('href');
   const id = href === null ? null : new URL(href, page.url()).searchParams.get('t');

@@ -156,18 +156,18 @@ test.describe('Home', () => {
           (tx) => tx.kind === 'expense' && tx.categoryId !== null && covered.has(tx.categoryId),
         ),
       );
+      // H6: every budget is a ring tile, named by its label; under what is left, a line of the
+      // same tile says what is spent.
+      const tile = page.getByRole('link', {
+        name: labelStart(t, 'targets.itemLabel', {
+          name: budget.name,
+          amount: money(spentSoFar),
+          limit: money(budget.amount),
+        }),
+      });
+      await expect(tile).toHaveCount(1);
       await expect(
-        page.getByText(
-          labelStart(t, 'targets.itemLabel', {
-            name: budget.name,
-            amount: money(spentSoFar),
-            limit: money(budget.amount),
-          }),
-        ),
-      ).toHaveCount(1);
-      // H6: every budget is a ring tile; under what is left, a line says what is spent.
-      await expect(
-        page.getByText(t('targets.spent', { amount: money(spentSoFar) }), { exact: true }).first(),
+        tile.getByText(t('targets.spent', { amount: money(spentSoFar) }), { exact: true }),
       ).toBeVisible();
     }
 

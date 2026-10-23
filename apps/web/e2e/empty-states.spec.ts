@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { type CurrencyCode, getCurrency, minorToAmountBuffer } from '@saldo/core';
 import { expect, test } from './fixtures';
 import { listRow, money } from './support/ledger';
 import { monthOf, previousMonth, readLedger, shiftDate } from './support/ledgerRows';
@@ -93,15 +94,27 @@ test('Transactions: a search with no result in the period lists the periods that
   const ledger = await readLedger(member);
   const month = monthOf(ledger.today);
 
-  // A description that the seed never dated inside this period, but dated in another one.
-  const inMonth = new Set(
-    ledger.transactions
-      .filter((tx) => tx.date >= month.start && tx.date <= month.end)
-      .map((tx) => tx.description.toLowerCase()),
+  // A description that no row of this period matches, but a row of another one does. The search
+  // also reads the category and the account names, and matches a part of a word: check them all.
+  const names = new Map(
+    [...ledger.categories, ...ledger.accounts].map((row) => [row.id, row.name.toLowerCase()]),
   );
+  const haystacks = ledger.transactions
+    .filter((tx) => tx.date >= month.start && tx.date <= month.end)
+    .map((tx) =>
+      [tx.description, tx.categoryId, tx.accountId, tx.toAccountId]
+        .map((part, index) =>
+          index === 0 ? (part ?? '').toLowerCase() : part === null ? '' : (names.get(part) ?? ''),
+        )
+        .join(' '),
+    );
   const elsewhere = ledger.transactions
+    .filter((tx) => tx.date < month.start || tx.date > month.end)
     .map((tx) => tx.description.toLowerCase())
-    .find((description) => description.length > 2 && !inMonth.has(description));
+    .find(
+      (description) =>
+        description.length > 2 && !haystacks.some((haystack) => haystack.includes(description)),
+    );
   expect(elsewhere).toBeDefined();
 
   await page.goto(`/transactions?q=${encodeURIComponent(elsewhere ?? '')}`);
@@ -213,7 +226,10 @@ test('Budgets: a member with spending and no budget gets suggestions, each one a
   await expect(main.getByText(t('budgets.suggestTitle'))).toBeVisible();
   const create = main.getByRole('link', { name: t('budgets.create'), exact: true }).first();
   const href = (await create.getAttribute('href')) ?? '';
-  const categoryId = new URL(href, page.url()).searchParams.get('category');
+  const link = new URL(href, page.url()).searchParams;
+  const categoryId = link.get('category');
+  const amount = Number(link.get('amount'));
+  expect(amount).toBeGreaterThan(0);
   const category = ledger.categories.find((row) => row.id === categoryId);
   expect(category).toBeDefined();
 
@@ -222,7 +238,10 @@ test('Budgets: a member with spending and no budget gets suggestions, each one a
   await expect(
     form.getByRole('button', { name: category?.name ?? '', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
-  await expect(form.getByRole('textbox', { name: t('budgets.amount') })).not.toHaveValue('');
+  // The suggestion's figure, in the form's own buffer.
+  await expect(form.getByRole('textbox', { name: t('budgets.amount') })).toHaveValue(
+    minorToAmountBuffer(amount, getCurrency(ledger.currency as CurrencyCode).minorDigits),
+  );
 
   await member.context.close();
 });
