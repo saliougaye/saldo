@@ -302,6 +302,13 @@ export const layout = {
   /** Web (W1): the centred dialog where a form opens. */
   dialogFormWidth: 480,
   searchWidth: 320,
+  /** Web (palette spec 2026-10-23, §07): the width of the command palette. */
+  paletteWidth: 640,
+  /**
+   * Web (redesign H1): the top bar shows «Search» at and above this width. A media query cannot read
+   * a custom property, so the web writes 1000 in its `@media` rule with a comment naming this token.
+   */
+  searchBreakpoint: 1000,
   /** Web (W10, 2026-10-21): the menu of Profile, which Admin shares. */
   subnavWidth: 220,
   /** Web: the sidebar that replaces the top bar at and above `wideBreakpoint` (G2, 2026-10-11). */
