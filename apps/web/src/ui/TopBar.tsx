@@ -1,4 +1,5 @@
 import type { IconName } from '@saldo/ui';
+import type { ReactNode } from 'react';
 import type { NavItem } from '../features/shell/nav';
 import { AppLink as Link } from './AppLink';
 import { Avatar } from './Avatar';
@@ -11,6 +12,8 @@ import styles from './TopBar.module.css';
 interface Props {
   items: (NavItem & { label: string })[];
   user: { name: string; email: string };
+  /** «Search» and the command palette it opens (`CommandPalette`); the layout builds it. */
+  search: ReactNode;
   strings: {
     /** Names the landmark: the tab bar is a second `<nav>` on the same page (§17.1.7). */
     label: string;
@@ -23,11 +26,11 @@ interface Props {
 }
 
 /**
- * H1: from left to right the brand, the four destinations, «New transaction» and the avatar, which
- * opens the account menu (W10). Admin is a group of the Profile menu, not an item here.
+ * H1: from left to right the brand, the four destinations, «Search» (from 1000px, `CommandPalette`),
+ * «New transaction» and the avatar, which opens the account menu (W10). Admin is a group of the Profile menu, not an item here.
  * Below 760px only the brand and the avatar show: the tab bar carries the rest.
  */
-export function TopBar({ items, user, strings }: Props) {
+export function TopBar({ items, user, search, strings }: Props) {
   return (
     <header className={styles.bar}>
       <div className={styles.inner}>
@@ -45,6 +48,7 @@ export function TopBar({ items, user, strings }: Props) {
           ))}
         </nav>
         <div className={styles.actions}>
+          {search}
           {/* Decision 8: the form on Transazioni, from any page; `N` does the same (`Shortcuts`). */}
           <NewTransactionLink className={styles.new} aria-keyshortcuts="n">
             <Icon name="plus" size={16} />
