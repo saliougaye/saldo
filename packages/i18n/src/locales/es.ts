@@ -988,7 +988,10 @@ export const es: Messages = {
     emptyBody:
       'Un presupuesto pone un tope por categoría y te avisa cuando vas por delante del ritmo del periodo.',
     suggestTitle: 'Dónde gastas más',
-    suggestAmount: '{{amount}} al mes',
+    suggestAmount_month: '{{amount}} al mes',
+    suggestAmount_week: '{{amount}} a la semana',
+    suggestAmount_cycle: '{{amount}} por ciclo',
+    suggestAmount_year: '{{amount}} al año',
   },
   accounts: {
     title: 'Cuentas',

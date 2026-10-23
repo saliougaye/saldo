@@ -1,5 +1,6 @@
 import { type BudgetRef, suggestBudgetAmount, takenCategoryIds } from './budgets';
 import type { LocalDate } from './dates';
+import type { Category } from './entities';
 import { type FilterLookup, filterTransactions, type TransactionFilters } from './filters';
 import { categorySpendHistory, HISTORY_WINDOW, periodHistory, periodSpendHistory } from './history';
 import type { CategoryRef, LedgerTx } from './ledger';
@@ -12,19 +13,23 @@ export const EMERGENCY_FUND_MONTHS = 3;
 
 export interface BudgetSuggestion {
   categoryId: string;
-  /** The median monthly spend of the category, the amount §5.5 suggests for its budget. */
+  /** The median spend of the category in one of the user's periods: what §5.5 suggests. */
   amount: MinorUnits;
 }
+
+/** What a suggestion reads of a category: a budget's form offers only live top-level expense ones. */
+type SuggestableCategory = CategoryRef & Pick<Category, 'direction' | 'archivedAt'>;
 
 /**
  * W11, Profile · Budgets: «Where you spend most» — the categories with the largest median spend of
  * the last periods, at the parent level, without the ones a budget already covers. The amount is
  * `suggestBudgetAmount`, the same figure the budget form offers. A category with a median of 0 (spent
- * in fewer than half the periods) suggests nothing.
+ * in fewer than half the periods) suggests nothing, and so does one the form cannot take: archived,
+ * or not an expense category (the spend of an archived child still rolls up to its live parent).
  */
 export function budgetSuggestions(input: {
   txs: readonly LedgerTx[];
-  categories: readonly CategoryRef[];
+  categories: readonly SuggestableCategory[];
   budgets: readonly BudgetRef[];
   def: PeriodDef;
   today: LocalDate;
@@ -37,7 +42,11 @@ export function budgetSuggestions(input: {
     today,
   );
   const taken = takenCategoryIds(budgets, categories);
-  const known = new Set(categories.map((category) => category.id));
+  const known = new Set(
+    categories
+      .filter((category) => category.direction === 'expense' && category.archivedAt === null)
+      .map((category) => category.id),
+  );
   const ids = new Set(history.flatMap((amounts) => [...amounts.keys()]));
   return [...ids]
     .filter((id) => known.has(id) && !taken.has(id))
@@ -83,14 +92,20 @@ export function matchesInOtherPeriods<T extends LedgerTx>(input: {
 
 /**
  * W11, Goals · none: the target the «Emergency fund» preset offers — `EMERGENCY_FUND_MONTHS` times
- * the median spend of the last used periods. `null` with no history: the preset then has no amount.
+ * the median spend of the last used months. A month or a cycle is a month; a user who tracks weeks
+ * or years is measured in calendar months, so the fund stays three months of spend.
+ * `null` with no history: the preset then has no amount.
  */
 export function emergencyFundTarget(input: {
   txs: readonly LedgerTx[];
   def: PeriodDef;
   today: LocalDate;
 }): MinorUnits | null {
-  const { txs, def, today } = input;
+  const { txs, today } = input;
+  const def: PeriodDef =
+    input.def.kind === 'month' || input.def.kind === 'cycle'
+      ? input.def
+      : { kind: 'month', startDay: 1 };
   const middle = median(
     periodSpendHistory(
       periodHistory(txs, def, periodContaining(def, today), HISTORY_WINDOW),

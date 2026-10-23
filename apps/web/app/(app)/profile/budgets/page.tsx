@@ -150,7 +150,9 @@ export default async function BudgetsPage({
                     icon={category?.icon as IconName | undefined}
                     colorIndex={category?.colorIndex}
                     title={category?.name ?? '—'}
-                    subtitle={t('budgets.suggestAmount', { amount: money(suggestion.amount) })}
+                    subtitle={t(`budgets.suggestAmount_${def.kind}`, {
+                      amount: money(suggestion.amount),
+                    })}
                     trailing={
                       <PanelLink
                         className={styles.newBudget}

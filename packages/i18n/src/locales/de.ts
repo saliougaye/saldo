@@ -995,7 +995,10 @@ export const de: Messages = {
     emptyBody:
       'Ein Budget setzt einer Kategorie ein Limit und warnt dich, wenn du schneller ausgibst, als der Zeitraum vergeht.',
     suggestTitle: 'Wofür du am meisten ausgibst',
-    suggestAmount: '{{amount}} im Monat',
+    suggestAmount_month: '{{amount}} im Monat',
+    suggestAmount_week: '{{amount}} pro Woche',
+    suggestAmount_cycle: '{{amount}} pro Zyklus',
+    suggestAmount_year: '{{amount}} pro Jahr',
   },
   accounts: {
     title: 'Konten',

@@ -13,6 +13,13 @@ const MONTH: PeriodDef = { kind: 'month', startDay: 1 };
 const TODAY = '2026-04-18';
 const APRIL = { start: '2026-04-01', end: '2026-04-30' };
 
+/** The fixture's categories as the budget page reads them: live, salary the only income one. */
+const LIVE = CATEGORIES.map((category) => ({
+  ...category,
+  direction: category.id === 'cat-salary' ? ('income' as const) : ('expense' as const),
+  archivedAt: null,
+}));
+
 /** Three used months before April. Groceries (with its child) and transport are spent each month. */
 function threeMonths() {
   return [
@@ -33,7 +40,7 @@ describe('budgetSuggestions', () => {
   it('ranks the categories by their median monthly spend, at the parent level', () => {
     const suggestions = budgetSuggestions({
       txs: threeMonths(),
-      categories: CATEGORIES,
+      categories: LIVE,
       budgets: [],
       def: MONTH,
       today: TODAY,
@@ -47,7 +54,7 @@ describe('budgetSuggestions', () => {
   it('leaves out a category that a budget already covers, and keeps the count', () => {
     const suggestions = budgetSuggestions({
       txs: threeMonths(),
-      categories: CATEGORIES,
+      categories: LIVE,
       budgets: [{ id: 'b1', categoryIds: ['cat-groceries'] }],
       def: MONTH,
       today: TODAY,
@@ -56,9 +63,25 @@ describe('budgetSuggestions', () => {
     expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
   });
 
+  it('REGRESSION: leaves out an archived category, whose «Create» link the budget form drops', () => {
+    // Its link opened «New budget» with the amount and no category: the form takes only live ones.
+    const suggestions = budgetSuggestions({
+      txs: threeMonths(),
+      categories: LIVE.map((category) =>
+        category.id === 'cat-groceries'
+          ? { ...category, archivedAt: '2026-03-31T12:00:00.000Z' }
+          : category,
+      ),
+      budgets: [],
+      def: MONTH,
+      today: TODAY,
+    });
+    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
+  });
+
   it('suggests nothing with no history', () => {
     expect(
-      budgetSuggestions({ txs: [], categories: CATEGORIES, budgets: [], def: MONTH, today: TODAY }),
+      budgetSuggestions({ txs: [], categories: LIVE, budgets: [], def: MONTH, today: TODAY }),
     ).toEqual([]);
   });
 });
@@ -112,6 +135,18 @@ describe('emergencyFundTarget', () => {
       tx({ date: '2026-03-05', amount: 20000 }),
     ];
     expect(emergencyFundTarget({ txs, def: MONTH, today: TODAY })).toBe(60000);
+  });
+
+  it('REGRESSION: stays three months of spend for a user who tracks weeks', () => {
+    // It took three of the user's own periods: three weeks of spend for a weekly user.
+    const weekly = [
+      ...['2026-01-05', '2026-01-12', '2026-01-19', '2026-01-26'],
+      ...['2026-02-02', '2026-02-09', '2026-02-16', '2026-02-23'],
+      ...['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23'],
+    ].map((date) => tx({ date, amount: 10000 }));
+    expect(
+      emergencyFundTarget({ txs: weekly, def: { kind: 'week', startDay: 1 }, today: TODAY }),
+    ).toBe(120000);
   });
 
   it('is null with no history', () => {

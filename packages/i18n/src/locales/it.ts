@@ -987,7 +987,10 @@ export const it = {
     emptyBody:
       'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul ritmo del periodo.',
     suggestTitle: 'Dove spendi di più',
-    suggestAmount: '{{amount}} al mese',
+    suggestAmount_month: '{{amount}} al mese',
+    suggestAmount_week: '{{amount}} a settimana',
+    suggestAmount_cycle: '{{amount}} a ciclo',
+    suggestAmount_year: "{{amount}} all'anno",
   },
   accounts: {
     title: 'Conti',

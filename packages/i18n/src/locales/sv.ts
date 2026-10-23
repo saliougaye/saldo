@@ -982,7 +982,10 @@ export const sv: Messages = {
     emptyBody:
       'En budget sätter ett tak per kategori och varnar dig när du ligger före periodens takt.',
     suggestTitle: 'Där du spenderar mest',
-    suggestAmount: '{{amount}} i månaden',
+    suggestAmount_month: '{{amount}} i månaden',
+    suggestAmount_week: '{{amount}} i veckan',
+    suggestAmount_cycle: '{{amount}} per period',
+    suggestAmount_year: '{{amount}} om året',
   },
   accounts: {
     title: 'Konton',

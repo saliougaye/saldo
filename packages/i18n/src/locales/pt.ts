@@ -987,7 +987,10 @@ export const pt: Messages = {
     emptyBody:
       'Um orçamento põe um teto por categoria e avisa-te quando vais à frente do ritmo do período.',
     suggestTitle: 'Onde gastas mais',
-    suggestAmount: '{{amount}} por mês',
+    suggestAmount_month: '{{amount}} por mês',
+    suggestAmount_week: '{{amount}} por semana',
+    suggestAmount_cycle: '{{amount}} por ciclo',
+    suggestAmount_year: '{{amount}} por ano',
   },
   accounts: {
     title: 'Contas',

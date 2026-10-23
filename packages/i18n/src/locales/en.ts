@@ -982,7 +982,10 @@ export const en: Messages = {
     empty: 'No budgets',
     emptyBody: 'A budget caps a category and warns you when you are ahead of the period’s pace.',
     suggestTitle: 'Where you spend most',
-    suggestAmount: '{{amount}} a month',
+    suggestAmount_month: '{{amount}} a month',
+    suggestAmount_week: '{{amount}} a week',
+    suggestAmount_cycle: '{{amount}} a cycle',
+    suggestAmount_year: '{{amount}} a year',
   },
   accounts: {
     title: 'Accounts',

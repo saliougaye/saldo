@@ -994,7 +994,10 @@ export const fr: Messages = {
     emptyBody:
       'Un budget fixe un plafond par catégorie et te prévient quand tu dépenses plus vite que le rythme de la période.',
     suggestTitle: 'Où tu dépenses le plus',
-    suggestAmount: '{{amount}} par mois',
+    suggestAmount_month: '{{amount}} par mois',
+    suggestAmount_week: '{{amount}} par semaine',
+    suggestAmount_cycle: '{{amount}} par cycle',
+    suggestAmount_year: '{{amount}} par an',
   },
   accounts: {
     title: 'Comptes',
