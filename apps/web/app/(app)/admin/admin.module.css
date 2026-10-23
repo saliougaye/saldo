@@ -306,3 +306,17 @@
   overflow-wrap: anywhere;
   text-wrap: pretty;
 }
+
+/* W11: «Create the first invite» — the form in the page under the empty state. */
+.first {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.firstTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}

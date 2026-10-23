@@ -9,6 +9,7 @@ import {
   getCurrency,
   type LocalDate,
   type MinorDigits,
+  minorToAmountBuffer,
   type PeriodDef,
   type PeriodView,
   periodHistory,
@@ -95,6 +96,8 @@ export function budgetFormView(input: {
   currency: CurrencyCode;
   mode: 'new' | 'edit';
   id: string | null;
+  /** What a budget suggestion fills in (W11): a new form only, an edit ignores it. */
+  prefill?: { categoryIds: string[]; amount?: string };
 }): BudgetFormView | null {
   const { data } = input;
   const { minorDigits } = getCurrency(input.currency);
@@ -105,10 +108,44 @@ export function budgetFormView(input: {
     mode: input.mode,
     id: editing?.id ?? null,
     updatedAt: editing?.updatedAt ?? null,
-    initial: editing === undefined ? emptyBudgetForm() : budgetFormFrom(editing, minorDigits),
+    initial:
+      editing === undefined
+        ? {
+            ...emptyBudgetForm(),
+            categoryIds: input.prefill?.categoryIds ?? [],
+            buffer: input.prefill?.amount ?? '',
+          }
+        : budgetFormFrom(editing, minorDigits),
     heldIds: editing === undefined ? [] : [...editing.categoryIds],
     minorDigits,
   };
+}
+
+/**
+ * What a suggestion's link puts in the new budget form. The URL is user input: the category must be
+ * a live top-level expense category that no budget covers, and the amount a whole number of minor
+ * units above zero. What fails the check is dropped; with nothing left there is no prefill.
+ */
+export function budgetPrefillFrom(
+  params: { category?: string; amount?: string },
+  data: UserData,
+  currency: CurrencyCode,
+): { categoryIds: string[]; amount?: string } | undefined {
+  const taken = takenCategoryIds(data.budgets, data.categories);
+  const category = data.categories.find(
+    (row) =>
+      row.id === params.category &&
+      row.direction === 'expense' &&
+      row.parentId === null &&
+      row.archivedAt === null &&
+      !taken.has(row.id),
+  );
+  const amount =
+    params.amount !== undefined && /^[1-9]\d{0,14}$/.test(params.amount)
+      ? minorToAmountBuffer(Number(params.amount), getCurrency(currency).minorDigits)
+      : undefined;
+  if (category === undefined && amount === undefined) return undefined;
+  return { categoryIds: category === undefined ? [] : [category.id], amount };
 }
 
 /**

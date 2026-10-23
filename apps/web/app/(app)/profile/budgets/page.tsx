@@ -1,15 +1,19 @@
+import { budgetSuggestions } from '@saldo/core';
 import { catalogs, formatMoney, formatMoneyParts } from '@saldo/i18n';
+import type { IconName } from '@saldo/ui';
 import { budgetRowFor } from '../../../../src/features/budgets/budgetRow';
 import { budgetsView } from '../../../../src/features/budgets/budgetsView';
 import {
   type BudgetFormView,
   budgetFormShared,
   budgetFormView,
+  budgetPrefillFrom,
 } from '../../../../src/features/budgets/formView';
 import { budgetMessages } from '../../../../src/i18n/budgetMessages';
 import { readPage } from '../../../../src/server/page/context';
 import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
+import { ListRow } from '../../../../src/ui/ListRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
@@ -36,7 +40,7 @@ export default async function BudgetsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const page = await readPage(searchParams);
-  const { t, locale, currency, today, def, period } = page;
+  const { t, locale, currency, today, def, period, params } = page;
   const view = budgetsView({ data: page.data, today, def, period });
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
@@ -54,7 +58,14 @@ export default async function BudgetsPage({
     messages: budgetMessages(catalogs[locale]),
   };
   const formOf = (id: string | null) =>
-    budgetFormView({ data: page.data, currency, mode: id === null ? 'new' : 'edit', id });
+    budgetFormView({
+      data: page.data,
+      currency,
+      mode: id === null ? 'new' : 'edit',
+      id,
+      // W11: a suggestion's link fills in the category and the amount of the new form.
+      prefill: id === null ? budgetPrefillFrom(params, page.data, currency) : undefined,
+    });
   const formBody = (form: BudgetFormView, savedName: string | null) => (
     <BudgetForm view={form} closeHref={PATH} afterSave={PATH} savedName={savedName} />
   );
@@ -92,6 +103,15 @@ export default async function BudgetsPage({
     selectId: (item) => `b:${item.budget.id}`,
   });
 
+  // W11: with no budget, the categories where the user spends most, each one a click from its form.
+  const suggestions = budgetSuggestions({
+    txs: page.data.transactions,
+    categories: page.data.categories,
+    budgets: page.data.budgets,
+    def,
+    today,
+  });
+
   return (
     <BudgetFormProvider value={shared}>
       <PanelSwitch
@@ -111,10 +131,38 @@ export default async function BudgetsPage({
             </PanelLink>
           }
         >
-          {view.items.length === 0 ? (
+          {view.items.length === 0 && suggestions.length === 0 ? (
             <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
           ) : (
             <div>{view.items.map(rows.row)}</div>
+          )}
+          {view.items.length > 0 || suggestions.length === 0 ? null : (
+            <div className={styles.suggest}>
+              <h3 className={styles.suggestTitle}>{t('budgets.suggestTitle')}</h3>
+              {suggestions.map((suggestion) => {
+                const category = page.data.categories.find(
+                  (row) => row.id === suggestion.categoryId,
+                );
+                return (
+                  <ListRow
+                    key={suggestion.categoryId}
+                    open
+                    icon={category?.icon as IconName | undefined}
+                    colorIndex={category?.colorIndex}
+                    title={category?.name ?? '—'}
+                    subtitle={t('budgets.suggestAmount', { amount: money(suggestion.amount) })}
+                    trailing={
+                      <PanelLink
+                        className={styles.newBudget}
+                        href={`${PATH}?new&category=${encodeURIComponent(suggestion.categoryId)}&amount=${suggestion.amount}`}
+                      >
+                        {t('budgets.create')}
+                      </PanelLink>
+                    }
+                  />
+                );
+              })}
+            </div>
           )}
         </Section>
       </PanelSwitch>

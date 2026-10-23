@@ -90,3 +90,8 @@
 .deleteButton:hover {
   background: var(--color-raised);
 }
+
+/* W11: the field of «New tag», in the page under the empty state. */
+.first {
+  margin-top: 20px;
+}

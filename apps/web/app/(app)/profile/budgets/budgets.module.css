@@ -12,6 +12,19 @@
   white-space: nowrap;
 }
 
+/* W11: with no budget, the categories where the user spends most. */
+.suggest {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestTitle {
+  margin: 8px 0 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
 /* A budget's row: the percentage over the state, then the ring (the same classes Home draws with). */
 .rowStatus {
   display: flex;

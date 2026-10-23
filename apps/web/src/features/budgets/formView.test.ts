@@ -1,7 +1,7 @@
 import { type Budget, budgetSchema, categorySchema } from '@saldo/core';
 import { describe, expect, it } from 'vitest';
 import { CATEGORY, CATEGORY_2, CATEGORY_CHILD, dataWith, tx } from '../test/fixtures';
-import { budgetCategoryTiles, budgetFormShared } from './formView';
+import { budgetCategoryTiles, budgetFormShared, budgetPrefillFrom } from './formView';
 
 const BUDGET: Budget = budgetSchema.parse({
   id: 'b1',
@@ -75,5 +75,36 @@ describe('budgetCategoryTiles', () => {
       [CATEGORY_2.id, true, false],
       ['x1', false, true],
     ]);
+  });
+});
+
+describe('budgetPrefillFrom', () => {
+  const archived = categorySchema.parse({
+    ...CATEGORY_2,
+    id: 'x1',
+    archivedAt: '2026-09-01T00:00:00.000Z',
+  });
+  const data = dataWith([], {
+    budgets: [BUDGET],
+    categories: [CATEGORY, CATEGORY_2, CATEGORY_CHILD, archived],
+  });
+
+  it('takes a free live top-level category and a whole amount in minor units', () => {
+    expect(budgetPrefillFrom({ category: CATEGORY_2.id, amount: '75050' }, data, 'EUR')).toEqual({
+      categoryIds: [CATEGORY_2.id],
+      amount: '750.5',
+    });
+  });
+
+  it('drops what the URL got wrong: a taken, archived, child or unknown category, a bad amount', () => {
+    for (const category of [CATEGORY.id, archived.id, CATEGORY_CHILD.id, 'nope']) {
+      expect(budgetPrefillFrom({ category, amount: '100' }, data, 'EUR')?.categoryIds).toEqual([]);
+    }
+    for (const amount of ['abc', '-5', '0', '1.5', '12345678901234567890']) {
+      expect(budgetPrefillFrom({ category: CATEGORY_2.id, amount }, data, 'EUR')?.amount).toBe(
+        undefined,
+      );
+    }
+    expect(budgetPrefillFrom({ category: 'nope', amount: 'abc' }, data, 'EUR')).toBeUndefined();
   });
 });

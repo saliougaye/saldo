@@ -57,11 +57,21 @@ interface Input {
   id: string | null;
 }
 
+interface AccountInput extends Input {
+  /** What a first step of an empty page fills in (W11); a new form only, an edit ignores it. */
+  prefill?: Partial<AccountFormValues>;
+}
+
+interface GoalInput extends Input {
+  /** What a goal preset fills in (W11); a new form only, an edit ignores it. */
+  prefill?: Partial<GoalFormValues>;
+}
+
 /**
  * What the account panel reads (§6.22). An edit shows the *current* balance, which the server turns
  * back into an opening balance; a pocket, an archived account or an unknown id has no form here.
  */
-export function accountFormView(input: Input): AccountFormView | null {
+export function accountFormView(input: AccountInput): AccountFormView | null {
   const { data, today } = input;
   const { minorDigits } = getCurrency(input.currency);
   const editing =
@@ -79,7 +89,7 @@ export function accountFormView(input: Input): AccountFormView | null {
     updatedAt: editing?.updatedAt ?? null,
     initial:
       editing === undefined
-        ? emptyAccountForm()
+        ? { ...emptyAccountForm(), ...input.prefill }
         : accountFormFrom(editing, balances.get(editing.id) ?? 0, minorDigits),
     types: accountTypesFor(data.accounts, editing?.id ?? null),
     paymentAccounts: paymentAccountCandidates(data.accounts, editing?.id ?? null).map(
@@ -91,7 +101,7 @@ export function accountFormView(input: Input): AccountFormView | null {
 }
 
 /** The goal form (§6.37). An edit needs a live pocket; the parent is chosen only when creating. */
-export function goalFormView(input: Input): GoalFormView | null {
+export function goalFormView(input: GoalInput): GoalFormView | null {
   const { data } = input;
   const { minorDigits } = getCurrency(input.currency);
   const editing =
@@ -106,7 +116,10 @@ export function goalFormView(input: Input): GoalFormView | null {
     mode: input.mode,
     id: editing?.id ?? null,
     updatedAt: editing?.updatedAt ?? null,
-    initial: editing === undefined ? emptyGoalForm() : goalFormFrom(editing, minorDigits),
+    initial:
+      editing === undefined
+        ? { ...emptyGoalForm(), ...input.prefill }
+        : goalFormFrom(editing, minorDigits),
     minorDigits,
     today: input.today,
   };

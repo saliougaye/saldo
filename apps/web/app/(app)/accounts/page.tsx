@@ -1,5 +1,7 @@
 import {
+  accountTypesFor,
   canArchiveAccount,
+  emergencyFundTarget,
   type GoalProgress,
   type GoalView,
   goalCardStatus,
@@ -28,7 +30,7 @@ import {
   plural,
   richText,
 } from '@saldo/i18n';
-import type { IconName } from '@saldo/ui';
+import { accountTypeIcons, type IconName } from '@saldo/ui';
 import { Fragment } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { archivedView } from '../../../src/features/accounts/archivedView';
@@ -37,6 +39,7 @@ import { type AccountFormView, accountFormView } from '../../../src/features/acc
 import {
   goalEditHref,
   goalExpenseHref,
+  goalPresets,
   goalTransferHref,
   NEW_GOAL_HREF,
 } from '../../../src/features/accounts/goalLinks';
@@ -222,6 +225,10 @@ export default async function AccountsPage({
     locale,
   );
   const canCreateGoal = pocketParentCandidates(page.data.accounts).length > 0;
+  const presets = goalPresets({
+    names: [t('goals.presetEmergency'), t('goals.presetHoliday'), t('goals.presetCar')],
+    emergency: emergencyFundTarget({ txs: page.data.transactions, def, today }),
+  });
   const goalRow = (item: GoalView) => {
     const tone = goalRingTone(item.progress);
     const parentId = item.account.parentAccountId;
@@ -512,7 +519,17 @@ export default async function AccountsPage({
 
   // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {};
-  const fresh = accountFormView({ data: page.data, today, currency, mode: 'new', id: null });
+  // W11: a first step of an empty page opens the form with its type. Only a type the form offers.
+  const typeParam = accountTypesFor(page.data.accounts, null).find((type) => type === params.type);
+  const fresh = accountFormView({
+    data: page.data,
+    today,
+    currency,
+    mode: 'new',
+    id: null,
+    prefill:
+      typeParam === undefined ? undefined : { type: typeParam, icon: accountTypeIcons[typeParam] },
+  });
   if (fresh !== null) {
     panels.new = {
       title: t('accounts.newAccount'),
@@ -728,7 +745,21 @@ export default async function AccountsPage({
               </section>
 
               {empty ? (
-                <EmptyState title={t('accounts.empty')} />
+                <section className={styles.box}>
+                  <h2 className={styles.boxTitle}>{t('accounts.whichType')}</h2>
+                  <div className={styles.types}>
+                    {accountTypesFor(page.data.accounts, null).map((type) => (
+                      <PanelLink
+                        key={type}
+                        className={styles.type}
+                        href={`${PATH}?new&type=${type}`}
+                      >
+                        <Icon name={accountTypeIcons[type]} size={20} />
+                        {t(`accountTypes.${type}`)}
+                      </PanelLink>
+                    ))}
+                  </div>
+                </section>
               ) : (
                 <>
                   <section className={styles.box}>
@@ -763,9 +794,21 @@ export default async function AccountsPage({
                       <div className={styles.empty}>
                         <EmptyState title={t('goals.empty')} body={t('goals.emptyBody')} />
                         {canCreateGoal ? (
-                          <Link className={styles.action} href={NEW_GOAL_HREF}>
-                            {t('goals.create')}
-                          </Link>
+                          <>
+                            <div className={styles.presets}>
+                              {presets.map((preset) => (
+                                <Link key={preset.key} className={styles.type} href={preset.href}>
+                                  <b>{preset.name}</b>
+                                  {preset.amount === null ? null : (
+                                    <span>{money(preset.amount)}</span>
+                                  )}
+                                </Link>
+                              ))}
+                            </div>
+                            <Link className={styles.action} href={NEW_GOAL_HREF}>
+                              {t('goals.create')}
+                            </Link>
+                          </>
                         ) : null}
                       </div>
                     ) : (

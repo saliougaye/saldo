@@ -88,7 +88,13 @@ export default async function ProfileTagsPage({
         >
           <p className={styles.note}>{t('tags.footnote')}</p>
           {rows.length === 0 ? (
-            <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
+            <>
+              <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
+              {/* W11: the field of «New tag» is in the page; a save lists the tag. */}
+              <div className={styles.first}>
+                <TagForm tag={null} transactionsHref={null} inline />
+              </div>
+            </>
           ) : (
             <div>
               {rows.map((row) => (

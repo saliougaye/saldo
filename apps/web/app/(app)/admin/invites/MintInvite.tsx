@@ -28,6 +28,8 @@ interface Props {
   /** The four lifetimes, as the server accepts them; `value` is the number of days. */
   ttlOptions: readonly { value: string; label: string }[];
   defaultTtl: string;
+  /** In the page, not in the panel (W11): the field does not take the focus when the page opens. */
+  inline?: boolean;
   strings: {
     newTitle: string;
     label: string;
@@ -63,7 +65,7 @@ const COPIED_MS = 2000;
  * once. It is never written to the URL, a cookie or web storage; leaving any way but «Fatto» loses it.
  */
 export function MintInvite(props: Props) {
-  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings } = props;
+  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings, inline } = props;
   const router = useRouter();
   const [label, setLabel] = useState('');
   const [ttl, setTtl] = useState(defaultTtl);
@@ -134,7 +136,7 @@ export function MintInvite(props: Props) {
           value={label}
           maxLength={maxLabelLength}
           autoComplete="off"
-          autoFocus
+          autoFocus={inline !== true}
           onChange={(event) => {
             setLabel(event.target.value);
             setProblem(null);

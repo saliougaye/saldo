@@ -353,3 +353,45 @@
     display: none;
   }
 }
+
+/* W11: the first steps of an empty page — the account types and the goal presets. */
+.types,
+.presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  align-self: stretch;
+}
+
+.type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+.type span {
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Six types: three across and two rows, not five and an orphan. */
+@media (min-width: 760px) {
+  .types {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .type:hover {
+    background: var(--color-raised);
+  }
+}

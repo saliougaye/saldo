@@ -894,17 +894,17 @@ rtk git commit -m "feat(web): an empty period on Statistics points to one with d
 - Modify: `apps/web/app/(app)/profile/tags/page.tsx`
 - Modify: `apps/web/app/(app)/admin/invites/page.tsx`
 
-- [ ] **Step 1: The forms take a prefill**
+- [x] **Step 1: The forms take a prefill**
 
 In `apps/web/src/features/accounts/formView.ts`:
 - Add `prefill?: Partial<AccountFormValues>` to `accountFormView`'s input, and `prefill?: Partial<GoalFormValues>` to `goalFormView`'s input. To do this, split `Input` into two interfaces, or add both fields as optional to `Input`.
 - For a new form, use `{ ...emptyAccountForm(), ...input.prefill }` and `{ ...emptyGoalForm(), ...input.prefill }`. An edit form ignores the prefill.
 
-Read `AccountFormValues` and `GoalFormValues` in `@saldo/core`. Write down the field names of the type, the name and the target, and the format of the target: a minor-unit number, or a typed string such as `"1500,00"`. The pages below must give that format.
+`AccountFormValues` has `type` and `icon`; `GoalFormValues` has `name` and `buffer`. `buffer` is the target as a keypad string such as `"1500"` or `"1500.5"`, not minor units: `minorToAmountBuffer` makes it. The pages below give that format.
 
 In `apps/web/src/features/budgets/formView.ts`, add `prefill?: { categoryIds: string[]; amount?: string }` to `budgetFormView`. A new form starts with those categories and that amount, in the shape of `BudgetFormValues`.
 
-- [ ] **Step 2: Accounts — «Which account do you want to add?»**
+- [x] **Step 2: Accounts — «Which account do you want to add?»**
 
 In `apps/web/app/(app)/accounts/page.tsx`:
 
@@ -926,6 +926,8 @@ In `apps/web/app/(app)/accounts/page.tsx`:
 ```
 
 `typeIcon` is the icon the new-account form gives that type. Find it in `@saldo/core` (`rtk grep -rn "icon" packages/core/src/accounts.ts`). If no map exists, add a small `const TYPE_ICON: Record<Account['type'], IconName>` in the page, with icons from `@saldo/ui`'s set that the phone uses for the same types. A link with `&type=` changes more than the panel, so it navigates, and the server renders the prefilled form.
+
+**Code:** `typeIcon` is `accountTypeIcons` from `@saldo/ui`, so no new map is needed. The prefill also sets `icon: accountTypeIcons[type]`, because the form's change handler does the same when the type changes. The six tiles show three across from 760px, not five and one alone: `.types` has a `min-width: 760px` rule.
 
 3. **The CSS.** Add to `accounts.module.css`:
 
@@ -957,7 +959,7 @@ In `apps/web/app/(app)/accounts/page.tsx`:
 }
 ```
 
-- [ ] **Step 3: Goals — three presets**
+- [x] **Step 3: Goals — three presets**
 
 The Goals block of Accounts (R5) and `/profile/goals` both show the goals' empty state. In both, when there is no goal and `canCreateGoal` (or the same rule on `/profile/goals`), show three presets before the «Create a goal» link:
 
@@ -989,9 +991,9 @@ with, above the `return`:
   }));
 ```
 
-On `/profile/goals`, the `new` panel must read `params.name` and `params.target`, and pass them as `goalFormView`'s `prefill`. Convert `target` from minor units to the format Step 1 found. Use the `@saldo/core` money helper that the goal form uses for an edit (`goalFormFrom`): it turns a stored target into the form's value. Add a `.presets` rule as `.types` above, and add `.type span { margin-inline-start: auto; color: var(--color-text-muted); }`. Import `emergencyFundTarget` from `@saldo/core`.
+**Code:** the presets and the check of the URL are two helpers in `goalLinks.ts`: `goalPresets` and `goalPrefillFrom`. The check cuts the name to 60 characters and drops a target that is not a whole number above zero. On `/profile/goals` the presets show only when there is no goal. On `/profile/goals`, the `new` panel must read `params.name` and `params.target`, and pass them as `goalFormView`'s `prefill`. Convert `target` from minor units to the format Step 1 found. Use the `@saldo/core` money helper that the goal form uses for an edit (`goalFormFrom`): it turns a stored target into the form's value. Add a `.presets` rule as `.types` above (200px tiles on `/profile/goals`), and add `.type span { margin-inline-start: auto; color: var(--color-text-muted); }`. Import `emergencyFundTarget` from `@saldo/core`.
 
-- [ ] **Step 4: Budgets — «Where you spend most»**
+- [x] **Step 4: Budgets — «Where you spend most»**
 
 In `apps/web/app/(app)/profile/budgets/page.tsx`, when there is no budget, replace the empty state with:
 
@@ -1020,17 +1022,17 @@ In `apps/web/app/(app)/profile/budgets/page.tsx`, when there is no budget, repla
         </Section>
 ```
 
-with `const suggestions = budgetSuggestions({ txs: page.data.transactions, categories: page.data.categories, budgets: page.data.budgets, def, today });`. When `suggestions` is empty, keep the old empty state. The `new` panel reads `params.category` (only a live category id) and `params.amount`, and passes them as `budgetFormView`'s `prefill`, with the amount converted to the form's format as in Step 3. Import `budgetSuggestions` from `@saldo/core`, and `ListRow`/`IconName` if they are not imported.
+with `const suggestions = budgetSuggestions({ txs: page.data.transactions, categories: page.data.categories, budgets: page.data.budgets, def, today });`. When `suggestions` is empty, keep the old empty state. **Code:** the suggestions sit inside the first `Section`, under a small heading, so that no empty section shows. `budgetPrefillFrom` in `budgets/formView.ts` checks the URL: a free, live, top-level expense category, and a whole amount above zero. The `new` panel reads `params.category` (only a live category id) and `params.amount`, and passes them as `budgetFormView`'s `prefill`, with the amount converted to the form's format as in Step 3. Import `budgetSuggestions` from `@saldo/core`, and `ListRow`/`IconName` if they are not imported.
 
-- [ ] **Step 5: Tags — the field in the page**
+- [x] **Step 5: Tags — the field in the page**
 
-In `apps/web/app/(app)/profile/tags/page.tsx`, when there is no tag, render the body of the existing «New tag» panel (`TagForm` with the new form's view) inside the page, in place of the empty state, with `closeHref={PATH}` and `afterSave={PATH}`. Read `TagForm.tsx` first. If it assumes it is inside a `Panel` (for example, it focuses the panel's heading), give it a prop `inline` that skips that, and keep the panel behaviour as the default.
+In `apps/web/app/(app)/profile/tags/page.tsx`, when there is no tag, render the body of the existing «New tag» panel (`TagForm` with the new form's view) inside the page, in place of the empty state, with `closeHref={PATH}` and `afterSave={PATH}`. Read `TagForm.tsx` first. If it assumes it is inside a `Panel` (for example, it focuses the panel's heading), give it a prop `inline` that skips that. **Code:** `inline` only turns off `autoFocus`; a `.first` rule adds the space above the form, and keep the panel behaviour as the default.
 
-- [ ] **Step 6: Invites — the form in the page**
+- [x] **Step 6: Invites — the form in the page**
 
-In `apps/web/app/(app)/admin/invites/page.tsx`, when there is no invite, render the body of the «New invite» panel (`MintInvite`, or whatever the `new` panel renders) inside the page, under the heading `admin.invites.createFirst`, in place of the empty state. Keep `requireWebAdmin` and the Server Action guards exactly as they are.
+In `apps/web/app/(app)/admin/invites/page.tsx`, when there is no invite, render the body of the «New invite» panel (`MintInvite`, or whatever the `new` panel renders) inside the page, under the heading `admin.invites.createFirst`, in place of the empty state. Keep `requireWebAdmin` and the Server Action guards exactly as they are. **Code:** `MintInvite` has the same `inline` prop, and the page builds the form once in `mintForm(inline)` for the panel and for the empty state.
 
-- [ ] **Step 7: Check and commit**
+- [x] **Step 7: Check and commit**
 
 Run: `rtk proxy pnpm lint`, `rtk proxy pnpm --filter web typecheck`, `rtk proxy pnpm --filter web test`
 Expected: clean, no error, PASS.

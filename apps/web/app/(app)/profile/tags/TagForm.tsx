@@ -47,13 +47,15 @@ interface Props {
   tag: { id: string; name: string; updatedAt: string; uses: number } | null;
   /** The transactions list filtered by this tag; null for a new one. */
   transactionsHref: string | null;
+  /** In the page, not in the panel (W11): the field does not take the focus when the page opens. */
+  inline?: boolean;
 }
 
 /**
  * «Nuovo tag» and «Modifica tag» (§5.10): a tag is only its name. An existing one also offers
  * «Vedi le transazioni», «Unisci a un altro tag» and «Elimina tag»; the last two ask first.
  */
-export function TagForm({ tag, transactionsHref }: Props) {
+export function TagForm({ tag, transactionsHref, inline = false }: Props) {
   const { tags, locale, messages, closeHref, afterSave } = shared.useShared();
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
@@ -127,7 +129,7 @@ export function TagForm({ tag, transactionsHref }: Props) {
           value={name}
           maxLength={40}
           autoComplete="off"
-          autoFocus={tag === null}
+          autoFocus={tag === null && !inline}
           invalid={problem?.field === true}
           onChange={(event) => {
             setName(event.target.value);

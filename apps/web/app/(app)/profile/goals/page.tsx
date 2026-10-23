@@ -1,4 +1,11 @@
-import { type GoalView, goalTone, goalViews, pocketParentCandidates } from '@saldo/core';
+import {
+  emergencyFundTarget,
+  type GoalView,
+  getCurrency,
+  goalTone,
+  goalViews,
+  pocketParentCandidates,
+} from '@saldo/core';
 import { catalogs, formatMoney, formatMoneyParts, type GoalTextDeps, goalOf } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { archivedView } from '../../../../src/features/accounts/archivedView';
@@ -7,7 +14,12 @@ import {
   goalFormView,
   goalParentOptions,
 } from '../../../../src/features/accounts/formView';
-import { goalAccountsHref, NEW_GOAL_HREF } from '../../../../src/features/accounts/goalLinks';
+import {
+  goalAccountsHref,
+  goalPrefillFrom,
+  goalPresets,
+  NEW_GOAL_HREF,
+} from '../../../../src/features/accounts/goalLinks';
 import { accountWriteErrors } from '../../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../../src/i18n/accountMessages';
 import { readPage } from '../../../../src/server/page/context';
@@ -21,6 +33,7 @@ import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
 import { Section } from '../../../../src/ui/Section';
 import { TargetRing } from '../../../../src/ui/TargetRing';
 import formStyles from '../../accounts/accountForms.module.css';
+import accountStyles from '../../accounts/accounts.module.css';
 import { GoalForm, GoalFormProvider, type GoalFormSharedValue } from '../../accounts/GoalForm';
 import { RestoreButton } from '../../accounts/RestoreButton';
 import styles from './goals.module.css';
@@ -50,7 +63,7 @@ export default async function ProfileGoalsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const page = await readPage(searchParams);
-  const { t, locale, currency, today, def, settings } = page;
+  const { t, locale, currency, today, def, settings, params } = page;
   const items = goalViews(page.data.accounts, page.data.transactions, today, def);
   const closed = archivedView(page.data).goals;
   const canCreate = pocketParentCandidates(page.data.accounts).length > 0;
@@ -69,7 +82,15 @@ export default async function ProfileGoalsPage({
     messages: accountMessages(catalogs[locale]),
   };
   const formOf = (id: string | null) =>
-    goalFormView({ data: page.data, today, currency, mode: id === null ? 'new' : 'edit', id });
+    goalFormView({
+      data: page.data,
+      today,
+      currency,
+      mode: id === null ? 'new' : 'edit',
+      id,
+      // W11: a preset's link fills in the name and the target of the new form.
+      prefill: id === null ? goalPrefillFrom(params, getCurrency(currency).minorDigits) : undefined,
+    });
   const formBody = (form: GoalFormView, parentName: string | null) => (
     <>
       <GoalForm
@@ -112,6 +133,12 @@ export default async function ProfileGoalsPage({
     };
   }
 
+  // W11: the emergency fund is 3 times the median monthly spend; holiday and car have no figure.
+  const presets = goalPresets({
+    names: [t('goals.presetEmergency'), t('goals.presetHoliday'), t('goals.presetCar')],
+    emergency: emergencyFundTarget({ txs: page.data.transactions, def, today }),
+  });
+
   const tone = (item: GoalView): 'normal' | 'over' | 'done' => {
     const value = goalTone(item.progress);
     return value === 'attention' ? 'over' : value === 'plain' ? 'normal' : 'done';
@@ -139,6 +166,16 @@ export default async function ProfileGoalsPage({
           }
         >
           {items.length === 0 ? <p className={styles.note}>{t('goals.emptyBody')}</p> : null}
+          {items.length === 0 && canCreate ? (
+            <div className={styles.presets}>
+              {presets.map((preset) => (
+                <Link key={preset.key} className={accountStyles.type} href={preset.href}>
+                  <b>{preset.name}</b>
+                  {preset.amount === null ? null : <span>{money(preset.amount)}</span>}
+                </Link>
+              ))}
+            </div>
+          ) : null}
           {canCreate ? null : <p className={styles.note}>{t('web.accounts.goalNeedsAccount')}</p>}
           {items.map((item) => (
             <ListRow
