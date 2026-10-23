@@ -7,7 +7,8 @@ import { PanelLink } from './PanelNav';
 
 interface Props {
   hint: string;
-  cancelHref: string;
+  /** No «Annulla» without it: a form in the page has nothing to close (W11). */
+  cancelHref?: string;
   cancelLabel: string;
   submitLabel: string;
   busyLabel: string;
@@ -30,9 +31,11 @@ export function FormFoot({
       {leading === undefined ? null : <div className={styles.leading}>{leading}</div>}
       <span className={styles.hint}>{hint}</span>
       {/* In a panel that lives in client state, «Annulla» closes it in place; elsewhere it is a link. */}
-      <PanelLink className={styles.cancel} href={cancelHref}>
-        {cancelLabel}
-      </PanelLink>
+      {cancelHref === undefined ? null : (
+        <PanelLink className={styles.cancel} href={cancelHref}>
+          {cancelLabel}
+        </PanelLink>
+      )}
       <div>
         <Button type="submit" busy={pending} busyLabel={busyLabel}>
           {submitLabel}

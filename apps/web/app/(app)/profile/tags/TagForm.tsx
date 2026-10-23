@@ -47,7 +47,10 @@ interface Props {
   tag: { id: string; name: string; updatedAt: string; uses: number } | null;
   /** The transactions list filtered by this tag; null for a new one. */
   transactionsHref: string | null;
-  /** In the page, not in the panel (W11): the field does not take the focus when the page opens. */
+  /**
+   * In the page, not in the panel (W11): the field does not take the focus when the page opens, the
+   * form leaves the page's single-key shortcuts alone, and there is no «Annulla».
+   */
   inline?: boolean;
 }
 
@@ -121,7 +124,8 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
       onKeyDown={onKeyDown}
       noValidate
       // N, E and ↑ ↓ do nothing while the form is open, even with the focus on the page (`ignoresShortcut`).
-      data-owns-keys=""
+      // In the page (W11) the form is always on screen, so it leaves them to the page.
+      data-owns-keys={inline ? undefined : ''}
     >
       <div className={styles.field} data-field="name">
         <TextField
@@ -172,7 +176,7 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
 
       <FormFoot
         hint={t('web.form.keyboardHint')}
-        cancelHref={closeHref}
+        cancelHref={inline ? undefined : closeHref}
         cancelLabel={t('common.cancel')}
         submitLabel={t('common.save')}
         busyLabel={t('common.loading')}

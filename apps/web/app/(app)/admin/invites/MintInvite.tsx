@@ -28,8 +28,13 @@ interface Props {
   /** The four lifetimes, as the server accepts them; `value` is the number of days. */
   ttlOptions: readonly { value: string; label: string }[];
   defaultTtl: string;
-  /** In the page, not in the panel (W11): the field does not take the focus when the page opens. */
+  /**
+   * In the page, not in the panel (W11): the field does not take the focus when the page opens, the
+   * form leaves the page's single-key shortcuts alone, and there is no «Annulla».
+   */
   inline?: boolean;
+  /** Called on «Fatto», before the navigation: `FirstInvite` lets the form go then. */
+  onDone?: () => void;
   strings: {
     newTitle: string;
     label: string;
@@ -65,7 +70,8 @@ const COPIED_MS = 2000;
  * once. It is never written to the URL, a cookie or web storage; leaving any way but «Fatto» loses it.
  */
 export function MintInvite(props: Props) {
-  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings, inline } = props;
+  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings, inline, onDone } =
+    props;
   const router = useRouter();
   const [label, setLabel] = useState('');
   const [ttl, setTtl] = useState(defaultTtl);
@@ -128,7 +134,7 @@ export function MintInvite(props: Props) {
         onSubmit={onSubmit}
         onKeyDown={onKeyDown}
         noValidate
-        data-owns-keys=""
+        data-owns-keys={inline === true ? undefined : ''}
       >
         <TextField
           label={strings.label}
@@ -146,7 +152,7 @@ export function MintInvite(props: Props) {
         {problem === null ? null : <Alert body={problem} />}
         <FormFoot
           hint={strings.keyboardHint}
-          cancelHref={closeHref}
+          cancelHref={inline === true ? undefined : closeHref}
           cancelLabel={strings.cancel}
           submitLabel={strings.create}
           busyLabel={strings.busy}
@@ -200,6 +206,7 @@ export function MintInvite(props: Props) {
       </p>
       <Button
         onClick={() => {
+          onDone?.();
           router.replace(doneHref);
         }}
       >
