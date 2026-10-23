@@ -323,6 +323,13 @@
   gap: 16px;
 }
 
+/* «di 6.000,00 € · 30%» on its own line under the figure, as the phone's `FeaturedTarget`. */
+.goalFigures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .sentence {
   font-size: var(--font-size-body);
   text-wrap: pretty;

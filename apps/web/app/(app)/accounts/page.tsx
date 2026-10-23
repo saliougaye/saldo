@@ -418,8 +418,10 @@ export default async function AccountsPage({
             ratio={goal.ratio}
             pace={goalPace(goal)}
             tone={goalRingTone(goal)}
+            icon={selected.account.icon as IconName}
+            colorIndex={selected.account.colorIndex}
           />
-          <div>
+          <div className={styles.goalFigures}>
             <AmountText minor={goal.saved} currency={currency} locale={locale} size="title" />
             <span className={styles.note}>{goalOf(subject, goalDeps)}</span>
           </div>
