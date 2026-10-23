@@ -37,13 +37,15 @@ interface Props {
   updatedAt: string;
   /** `web.accounts.archiveBody`, with the account's name. */
   body: string;
+  /** The button's own text where the context names the account already: «Archivia» in its form. */
+  label?: string;
 }
 
 /**
  * The account panel's «Archivia» and its question (§5.6). The page already hides the button when
  * the account holds open goals; `holdsGoals` still reads here for a goal a phone added a second ago.
  */
-export function ArchiveAccount({ id, updatedAt, body }: Props) {
+export function ArchiveAccount({ id, updatedAt, body, label }: Props) {
   const { afterHref, strings } = shared.useShared();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -74,14 +76,14 @@ export function ArchiveAccount({ id, updatedAt, body }: Props) {
     <>
       <button
         type="button"
-        className={`${styles.actionLink} ${styles.actionButton} ${styles.danger}`}
+        className={styles.footAction}
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
       >
-        <Icon name="trash" size={14} />
-        {strings.action}
+        <Icon name="archive" size={15} />
+        {label ?? strings.action}
       </button>
       <ConfirmDialog
         open={open}

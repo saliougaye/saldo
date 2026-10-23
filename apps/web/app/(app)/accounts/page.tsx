@@ -1,5 +1,6 @@
 import {
   accountTypesFor,
+  addMonths,
   canArchiveAccount,
   emergencyFundTarget,
   type GoalProgress,
@@ -8,9 +9,12 @@ import {
   goalPace,
   goalTone,
   goalViews,
+  makeLocalDate,
   newestFirst,
   nextCreditChargeDate,
+  parseLocalDate,
   pocketParentCandidates,
+  pocketsOf,
   transactionRow,
 } from '@saldo/core';
 import {
@@ -20,18 +24,18 @@ import {
   formatLongDate,
   formatMoney,
   formatMoneyParts,
+  formatPeriodTick,
   type GoalTextDeps,
   type GoalTextSubject,
   goalCardStatusText,
   goalLabel,
-  goalOf,
   goalSentence,
   goalStatus,
   plural,
   richText,
 } from '@saldo/i18n';
 import { accountTypeIcons, type IconName } from '@saldo/ui';
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { type AccountRowView, accountsView } from '../../../src/features/accounts/accountsView';
 import { archivedView } from '../../../src/features/accounts/archivedView';
 import { type AccountDetailView, accountDetail } from '../../../src/features/accounts/detailView';
@@ -67,6 +71,7 @@ import {
 import formStyles from './accountForms.module.css';
 import styles from './accounts.module.css';
 import { CloseGoal, CloseGoalShared, type CloseGoalSharedValue } from './CloseGoal';
+import { NetWorthChart } from './NetWorthChart';
 import { RestoreButton } from './RestoreButton';
 
 export const runtime = 'nodejs';
@@ -85,6 +90,15 @@ function tint(colorIndex: number | null | undefined): string | undefined {
   return colorIndex === null || colorIndex === undefined
     ? undefined
     : `var(--category-${paletteIndex(colorIndex)})`;
+}
+
+/** W9: the head of an account's or a goal's dialog — its icon, in its colour, in a round tile. */
+function dialogIcon(account: { icon: string; colorIndex: number | null | undefined }) {
+  return (
+    <span className={styles.dialogIcon} style={{ color: tint(account.colorIndex) }}>
+      <Icon name={account.icon as IconName} size={18} />
+    </span>
+  );
 }
 
 interface Segment {
@@ -194,9 +208,7 @@ export default async function AccountsPage({
         selectId={`a:${row.account.id}`}
         href={`${PATH}?a=${row.account.id}`}
       >
-        <span className={styles.accIcon} style={{ color: tint(row.account.colorIndex) }}>
-          <Icon name={row.account.icon as IconName} size={18} />
-        </span>
+        <IconBox name={row.account.icon as IconName} colorIndex={row.account.colorIndex} />
         <span className={styles.accText}>
           <b>{row.account.name}</b>
           <span>{line}</span>
@@ -289,8 +301,12 @@ export default async function AccountsPage({
       <ListRow
         key={tx.id}
         href={`/transactions?t=${tx.id}`}
-        icon={row.icon as IconName}
-        colorIndex={row.colorIndex}
+        leading={
+          // W9: the glyph in its category's colour, as on Transactions and the Home.
+          <span className={styles.recentIcon} style={{ color: tint(row.colorIndex) }}>
+            <Icon name={row.icon as IconName} size={18} />
+          </span>
+        }
         title={row.title}
         subtitle={formatDayMonth(tx.date, locale)}
         trailing={
@@ -320,10 +336,22 @@ export default async function AccountsPage({
     const chargeDate = statementDue > 0 ? (statement?.chargeDate ?? null) : null;
     const statementPaid = statement !== null && statement.statement > 0 && statement.due === 0;
     const recent = recentOf(selected.account.id);
+    // «Intesa Sanpaolo · Conto · 1482,15 € liberi»: only the parts the account has.
+    const holdsGoals = pocketsOf(page.data.accounts, selected.account.id).length > 0;
+    const subLine = [
+      selected.account.institution ?? null,
+      t(`accountTypes.${selected.account.type}`),
+      holdsGoals ? `${money(selected.free)} ${t('goals.free')}` : null,
+    ]
+      .filter((part) => part !== null && part !== '')
+      .join(' · ');
     return (
       <>
-        <span className={styles.label}>{heroLabel}</span>
-        <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
+        <div className={styles.hero}>
+          <span className={styles.label}>{heroLabel}</span>
+          <AmountText minor={heroAmount} currency={currency} locale={locale} size="hero" />
+          <span className={styles.subLine}>{subLine}</span>
+        </div>
         <Sparkline series={selected.series} />
 
         {statement === null ? null : (
@@ -364,12 +392,17 @@ export default async function AccountsPage({
           </div>
         )}
 
-        <div className={styles.periodRow}>
-          <div>
+        <div className={styles.periodTiles}>
+          <div className={styles.tile}>
             <span className={styles.label}>{t('home.income')}</span>
-            <AmountText minor={selected.period.income} currency={currency} locale={locale} />
+            <AmountText
+              minor={selected.period.income}
+              currency={currency}
+              locale={locale}
+              positive={selected.period.income > 0}
+            />
           </div>
-          <div>
+          <div className={styles.tile}>
             <span className={styles.label}>{t('home.expenses')}</span>
             <AmountText minor={selected.period.spent} currency={currency} locale={locale} />
           </div>
@@ -393,7 +426,8 @@ export default async function AccountsPage({
           ) : (
             <span className={formStyles.muted}>{t('goals.closeFirst')}</span>
           )}
-          <Link className={formStyles.actionLink} href={`${PATH}?a=${selected.account.id}&edit`}>
+          <Link className={styles.primaryButton} href={`${PATH}?a=${selected.account.id}&edit`}>
+            <Icon name="pencil" size={15} />
             {t('common.edit')}
           </Link>
         </div>
@@ -417,12 +451,18 @@ export default async function AccountsPage({
             ratio={goal.ratio}
             pace={goalPace(goal)}
             tone={goalRingTone(goal)}
-            icon={selected.account.icon as IconName}
-            colorIndex={selected.account.colorIndex}
+            // The dialog's head shows the goal's icon: the ring here is the progress alone.
           />
           <div className={styles.goalFigures}>
             <AmountText minor={goal.saved} currency={currency} locale={locale} size="title" />
-            <span className={styles.note}>{goalOf(subject, goalDeps)}</span>
+            <span className={styles.subLine}>
+              {[
+                t('goals.ofTarget', { amount: money(goal.target) }),
+                selected.account.goalDeadline == null
+                  ? t('goals.noDeadline')
+                  : t('goals.by', { date: formatLongDate(selected.account.goalDeadline, locale) }),
+              ].join(' · ')}
+            </span>
           </div>
         </div>
         <p className={styles.sentence}>
@@ -431,17 +471,19 @@ export default async function AccountsPage({
         </p>
 
         {parentLive ? (
-          <div className={formStyles.actions}>
+          <div className={styles.goalActions}>
             <Link
-              className={formStyles.actionLink}
+              className={styles.button}
               href={goalTransferHref(parentId ?? '', selected.account.id, selected.account.name)}
             >
+              <Icon name="plus" size={15} />
               {t('goals.setAside')}
             </Link>
             <Link
-              className={formStyles.actionLink}
+              className={styles.button}
               href={goalTransferHref(selected.account.id, parentId ?? '', selected.account.name)}
             >
+              <Icon name="minus" size={15} />
               {t('goals.withdraw')}
             </Link>
           </div>
@@ -498,7 +540,8 @@ export default async function AccountsPage({
             }
             returnTo={t('goals.returnTo', { name: goalParent?.name ?? '' })}
           />
-          <Link className={formStyles.actionLink} href={goalEditHref(selected.account.id)}>
+          <Link className={styles.primaryButton} href={goalEditHref(selected.account.id)}>
+            <Icon name="pencil" size={15} />
             {t('common.edit')}
           </Link>
         </div>
@@ -506,7 +549,7 @@ export default async function AccountsPage({
     );
   };
 
-  const formBody = (form: AccountFormView, closeHref: string) => (
+  const formBody = (form: AccountFormView, closeHref: string, archive?: ReactNode) => (
     <AccountForm
       view={form}
       locale={locale}
@@ -517,6 +560,7 @@ export default async function AccountsPage({
       messages={accountMessages(catalogs[locale])}
       closeHref={closeHref}
       afterSave={`${PATH}?a=__ID__`}
+      archive={archive}
     />
   );
 
@@ -624,6 +668,12 @@ export default async function AccountsPage({
   // The change over the line: the last month-end less the first.
   const netWorthChange =
     netWorthSeries.length < 2 ? 0 : (netWorthSeries.at(-1) ?? 0) - (netWorthSeries[0] ?? 0);
+  // One label for each month-end: the series ends with the month of today (`monthEndBalances`).
+  const thisMonth = parseLocalDate(today);
+  const netWorthMonths = netWorthSeries.map((_, index) => {
+    const ym = addMonths(thisMonth, index - (netWorthSeries.length - 1));
+    return formatPeriodTick(makeLocalDate(ym.year, ym.month, 1), 'month', locale);
+  });
 
   // `?a={id}&edit` opens «Modifica conto» under the key `a:{id}` when that key is the one the URL
   // opens. The form needs the account's own balance, so only that account gets one, and a link to
@@ -637,6 +687,20 @@ export default async function AccountsPage({
       ? null
       : accountFormView({ data: page.data, today, currency, mode: 'edit', id: editId });
 
+  // W9: «Archivia» in the foot of «Modifica conto», as in the detail: only when the account can go.
+  const editArchive = (id: string) => {
+    const account = accountsById.get(id);
+    if (account === undefined || !canArchiveAccount(page.data.accounts, id)) return undefined;
+    return (
+      <ArchiveAccount
+        id={id}
+        updatedAt={account.updatedAt}
+        body={t('web.accounts.archiveBody', { name: account.name })}
+        label={t('common.archive')}
+      />
+    );
+  };
+
   for (const id of accountIds) {
     const key = `a:${id}`;
     if (editing !== null && editing.id === id) {
@@ -645,18 +709,26 @@ export default async function AccountsPage({
         form: true,
         bare: true,
         closeTo: key,
-        body: formBody(editing, `${PATH}?a=${id}`),
+        body: formBody(editing, `${PATH}?a=${id}`, editArchive(id)),
       };
       continue;
     }
     const detail = detailOf(id);
     if (detail === null) continue;
-    panels[key] = { title: detail.account.name, body: accountBody(detail) };
+    panels[key] = {
+      title: detail.account.name,
+      icon: dialogIcon(detail.account),
+      body: accountBody(detail),
+    };
   }
   for (const id of goalIds) {
     const detail = detailOf(id);
     if (detail === null || detail.goal === null) continue;
-    panels[`g:${id}`] = { title: detail.account.name, body: goalBody(detail, detail.goal) };
+    panels[`g:${id}`] = {
+      title: detail.account.name,
+      icon: dialogIcon(detail.account),
+      body: goalBody(detail, detail.goal),
+    };
   }
 
   const archiveShared: ArchiveAccountSharedValue = {
@@ -717,7 +789,7 @@ export default async function AccountsPage({
                       size="hero"
                     />
                   </div>
-                  <div className={styles.figure}>
+                  <div className={`${styles.figure} ${styles.spendable}`}>
                     <span className={styles.label}>{t('accounts.spendable')}</span>
                     <AmountText
                       minor={view.spendable}
@@ -742,7 +814,7 @@ export default async function AccountsPage({
                         sign="always"
                       />
                     </div>
-                    <Sparkline series={netWorthSeries} height={72} />
+                    <NetWorthChart series={netWorthSeries} labels={netWorthMonths} />
                   </div>
                 )}
               </section>
@@ -791,6 +863,13 @@ export default async function AccountsPage({
                       <h2 className={styles.boxTitle}>{t('goals.title')}</h2>
                       {goalItems.length === 0 ? null : (
                         <span className={styles.meta}>{goalStatusLine}</span>
+                      )}
+                      {/* With no goal, the empty block below has its own first step. */}
+                      {goalItems.length === 0 || !canCreateGoal ? null : (
+                        <Link className={styles.headLink} href={NEW_GOAL_HREF}>
+                          <Icon name="plus" size={15} />
+                          {t('goals.newGoal')}
+                        </Link>
                       )}
                     </div>
                     {goalItems.length === 0 ? (

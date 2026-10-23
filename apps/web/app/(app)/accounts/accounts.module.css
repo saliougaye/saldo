@@ -75,10 +75,30 @@
   font-size: var(--font-size-footnote);
 }
 
+/* «+ Nuovo obiettivo» at the end of a block's head. */
+.headLink {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .headLink:hover {
+    color: var(--color-text);
+  }
+}
+
 /* Net worth: the figures on the left, the line on the right. */
 .worth {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
   align-items: end;
   gap: 24px 40px;
 }
@@ -95,6 +115,12 @@
   gap: 4px;
 }
 
+/* W9: a rule between the net worth and the spendable total. */
+.spendable {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
 .worthTrend {
   display: flex;
   flex-direction: column;
@@ -104,7 +130,47 @@
 .worthTrendHead {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 12px;
+}
+
+/* W9: the net worth line — a faint area, a baseline, the months under it. */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chartSvg {
+  display: block;
+  inline-size: 100%;
+  block-size: 120px;
+  overflow: visible;
+}
+
+.chartArea {
+  fill: var(--color-text);
+  opacity: 0.06;
+}
+
+.chartBase {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-faint);
+  font-size: var(--font-size-caption);
 }
 
 /* W9: an account row. */
@@ -115,10 +181,10 @@
 
 .acc {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 96px auto;
+  grid-template-columns: var(--layout-icon-box) minmax(0, 1fr) 96px auto;
   align-items: center;
   gap: 14px;
-  min-height: 56px;
+  min-height: 60px;
   padding: 0 10px;
   margin: 0 -10px;
   border-radius: var(--radius-input);
@@ -142,12 +208,6 @@
 
 .selected {
   background: var(--color-raised);
-}
-
-.accIcon {
-  display: grid;
-  place-items: center;
-  color: var(--color-text-muted);
 }
 
 .accText {
@@ -306,15 +366,97 @@
   font-size: var(--font-size-footnote);
 }
 
-.periodRow {
-  display: flex;
-  gap: 24px;
-}
-
-.periodRow > div {
+/* The balance, its label and the line under it: «Intesa Sanpaolo · Conto · 1482,15 € liberi». */
+.hero {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.subLine {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  text-wrap: pretty;
+}
+
+/* W9: «Entrate» and «Uscite» of the period, in two tiles. */
+.periodTiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+  font-weight: var(--font-weight-medium);
+}
+
+/* A recent movement's glyph, in its category's colour (`ListRow`'s `leading`). */
+.recentIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 20px;
+  color: var(--color-text-muted);
+}
+
+/* W9: the head of a dialog — the icon of the account or the goal, in a round tile. */
+.dialogIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border: 1.5px solid var(--color-track);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+}
+
+/* The dialogs' buttons: «Modifica» filled; «Accantona» and «Preleva» outlined, side by side. */
+.button,
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.primaryButton {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.button:active,
+.primaryButton:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    background: var(--color-raised);
+  }
+}
+
+.goalActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .goalHead {
@@ -335,11 +477,18 @@
   text-wrap: pretty;
 }
 
-/* The footer of a dialog: «Archive account» and «Edit», «Close goal» and «Edit». */
+/* The footer of a dialog: «Archive account» and «Edit», «Close goal» and «Edit», at the two ends. */
 .dialogFoot {
-  justify-content: flex-end;
+  justify-content: space-between;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
+}
+
+/* The mockup's breakpoint for the net worth: below it, the line goes under the figures. */
+@media (max-width: 859px) {
+  .worth {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
@@ -348,12 +497,9 @@
     padding: 18px;
   }
 
-  .worth {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .acc {
-    grid-template-columns: 20px minmax(0, 1fr) auto;
+    grid-template-columns: var(--layout-icon-box) minmax(0, 1fr) auto;
+    gap: 12px;
   }
 
   .accSpark {
