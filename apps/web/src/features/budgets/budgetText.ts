@@ -15,8 +15,12 @@ export function budgetPace(item: BudgetView): number | null {
   return item.open ? item.pace : null;
 }
 
+/**
+ * H12: the fill stays grey while a budget is only over pace; the status text says so. Only a
+ * budget over its limit turns the ring to the accent.
+ */
 export function budgetTone(item: BudgetView): 'normal' | 'over' {
-  return item.overPace || item.overLimit ? 'over' : 'normal';
+  return item.overLimit ? 'over' : 'normal';
 }
 
 export function budgetColour(
