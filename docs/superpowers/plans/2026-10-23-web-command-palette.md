@@ -51,7 +51,7 @@
 - Create: `packages/core/src/search.test.ts`
 - Modify: `packages/core/src/index.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```ts
 // packages/core/src/search.test.ts
@@ -138,12 +138,12 @@ describe('rankSearch', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to make sure they fail**
+- [x] **Step 2: Run the tests to make sure they fail**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- search`
 Expected: FAIL, `Cannot find module './search'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/core/src/search.ts
@@ -271,12 +271,12 @@ Add to `packages/core/src/index.ts`, after `export * from './rollover';`:
 export * from './search';
 ```
 
-- [ ] **Step 4: Run the tests to make sure they pass**
+- [x] **Step 4: Run the tests to make sure they pass**
 
 Run: `rtk proxy pnpm --filter @saldo/core test -- search`
 Expected: PASS, 12 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/search.ts packages/core/src/search.test.ts packages/core/src/index.ts
@@ -291,7 +291,7 @@ git commit -m "feat(core): the ranking rule of the command palette"
 - Modify: `packages/ui/src/tokens.ts` (the `layout` object)
 - Modify: `packages/i18n/src/locales/{it,en,de,es,fr,pt,sv}.ts` (the `web` object, after `shell`)
 
-- [ ] **Step 1: Add the tokens** after `searchWidth: 320,` in `layout`:
+- [x] **Step 1: Add the tokens** after `searchWidth: 320,` in `layout`:
 
 ```ts
   /** Web (palette spec 2026-10-23, §07): the width of the command palette. */
@@ -303,7 +303,7 @@ git commit -m "feat(core): the ranking rule of the command palette"
   searchBreakpoint: 1000,
 ```
 
-- [ ] **Step 2: Add `web.search`** after the `shell: { … },` block of each catalog. `it`:
+- [x] **Step 2: Add `web.search`** after the `shell: { … },` block of each catalog. `it`:
 
 ```ts
     search: {
@@ -438,12 +438,12 @@ git commit -m "feat(core): the ranking rule of the command palette"
 
 Check the formality of each catalog against its `shell` block (`du`/`tu`) before you commit.
 
-- [ ] **Step 3: Run the catalog tests**
+- [x] **Step 3: Run the catalog tests**
 
 Run: `rtk proxy pnpm --filter @saldo/i18n test`
 Expected: PASS (key structure and variables match `it`).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/ui/src/tokens.ts packages/i18n/src/locales/it.ts packages/i18n/src/locales/en.ts packages/i18n/src/locales/de.ts packages/i18n/src/locales/es.ts packages/i18n/src/locales/fr.ts packages/i18n/src/locales/pt.ts packages/i18n/src/locales/sv.ts
@@ -462,21 +462,28 @@ If another agent changed a catalog at the same time, stage only your hunks: `git
 - Create: `apps/web/src/server/search/search.test.ts`
 - Create: `apps/web/app/(app)/actions.ts`
 
-- [ ] **Step 1: Write the failing integration test**
+- [x] **Step 1: Write the failing integration test**
 
 ```ts
 // apps/web/src/server/search/search.test.ts
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { syncRows } from '../db/schema';
 import { createTestDatabase, type TestDatabase } from '../test/harness';
+import { createTestSession } from '../test/session';
 import { searchFor } from './search';
 
 let harness: TestDatabase;
 let seq = 0;
+let userA = '';
+let userB = '';
 
 const HLC = '000000000000001-0000-dev';
 const CREATED = '2026-09-10T09:00:00.000Z';
-const NOW = new Date('2026-10-23T10:00:00.000Z');
+const REQUEST = {
+  now: new Date('2026-10-23T10:00:00.000Z'),
+  fallbackTimeZone: 'Europe/Rome',
+  acceptLanguage: null,
+};
 const meta = { createdAt: CREATED, updatedAt: HLC, deletedAt: null };
 
 const settings = {
@@ -551,6 +558,11 @@ beforeAll(async () => {
   harness = await createTestDatabase();
 });
 
+beforeEach(async () => {
+  userA = (await createTestSession(harness.db, 'Ada')).userId;
+  userB = (await createTestSession(harness.db, 'Bea')).userId;
+});
+
 afterEach(async () => {
   await harness.reset();
 });
@@ -561,30 +573,30 @@ afterAll(async () => {
 
 describe('searchFor', () => {
   it('finds only the rows of the user it searches for', async () => {
-    await seed('user-a', 'settings', settings);
-    await seed('user-a', 'account', account('acc-main', 'Coop card'));
-    await seed('user-b', 'settings', settings);
-    await seed('user-b', 'account', account('acc-other', 'Coop savings'));
+    await seed(userA, 'settings', settings);
+    await seed(userA, 'account', account('acc-main', 'Coop card'));
+    await seed(userB, 'settings', settings);
+    await seed(userB, 'account', account('acc-other', 'Coop savings'));
 
-    const result = await searchFor('user-a', 'coop', NOW, 'Europe/Rome');
+    const result = await searchFor(userA, 'coop', REQUEST);
 
     const ids = result.groups.flatMap((group) => group.hits.map((hit) => hit.href));
     expect(ids).toEqual(['/accounts?a=acc-main']);
   });
 
   it('leaves archived accounts out and links a transaction to its period', async () => {
-    await seed('user-a', 'settings', settings);
-    await seed('user-a', 'account', account('acc-main', 'Main account'));
-    await seed('user-a', 'account', account('acc-old', 'Main account old', CREATED));
-    await seed('user-a', 'category', groceries);
-    await seed('user-a', 'transaction', expense('tx-now', 'Grocery run', 4210, '2026-10-21'));
-    await seed('user-a', 'transaction', expense('tx-then', 'Grocery run', 1860, '2026-09-14'));
+    await seed(userA, 'settings', settings);
+    await seed(userA, 'account', account('acc-main', 'Main account'));
+    await seed(userA, 'account', account('acc-old', 'Main account old', CREATED));
+    await seed(userA, 'category', groceries);
+    await seed(userA, 'transaction', expense('tx-now', 'Grocery run', 4210, '2026-10-21'));
+    await seed(userA, 'transaction', expense('tx-then', 'Grocery run', 1860, '2026-09-14'));
 
-    const accounts = await searchFor('user-a', 'main', NOW, 'Europe/Rome');
+    const accounts = await searchFor(userA, 'main', REQUEST);
     expect(accounts.groups.map((group) => group.key)).toEqual(['account']);
     expect(accounts.groups[0]?.hits.map((hit) => hit.title)).toEqual(['Main account']);
 
-    const groceriesResult = await searchFor('user-a', 'grocery', NOW, 'Europe/Rome');
+    const groceriesResult = await searchFor(userA, 'grocery', REQUEST);
     const txs = groceriesResult.groups.find((group) => group.key === 'transaction');
     expect(txs?.hits.map((hit) => hit.href)).toEqual([
       '/transactions?t=tx-now',
@@ -594,24 +606,24 @@ describe('searchFor', () => {
   });
 
   it('finds a transaction by its amount', async () => {
-    await seed('user-a', 'settings', settings);
-    await seed('user-a', 'account', account('acc-main', 'Main account'));
-    await seed('user-a', 'category', groceries);
-    await seed('user-a', 'transaction', expense('tx-now', 'Grocery run', 4210, '2026-10-21'));
+    await seed(userA, 'settings', settings);
+    await seed(userA, 'account', account('acc-main', 'Main account'));
+    await seed(userA, 'category', groceries);
+    await seed(userA, 'transaction', expense('tx-now', 'Grocery run', 4210, '2026-10-21'));
 
-    const result = await searchFor('user-a', '42,10', NOW, 'Europe/Rome');
+    const result = await searchFor(userA, '42,10', REQUEST);
     const txs = result.groups.find((group) => group.key === 'transaction');
     expect(txs?.hits.map((hit) => hit.title)).toEqual(['Grocery run']);
   });
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/server/search`
 Expected: FAIL, `Cannot find module './search'`.
 
-- [ ] **Step 3: Write the view**
+- [x] **Step 3: Write the view**
 
 ```ts
 // apps/web/src/features/search/searchView.ts
@@ -702,7 +714,9 @@ export function searchView(input: {
   const balances = accountBalances(data.accounts, data.transactions, today);
 
   const accounts = rank(
-    live.filter((account) => !isPocket(account)).map((account) => ({ value: account, text: account.name })),
+    live
+      .filter((account) => !isPocket(account))
+      .map((account) => ({ value: account, text: account.name })),
   ).map((account) => ({
     id: account.id,
     title: account.name,
@@ -712,16 +726,16 @@ export function searchView(input: {
     href: `/accounts?a=${encodeURIComponent(account.id)}`,
   }));
 
-  const goals = rank(
-    live.filter(isPocket).map((goal) => ({ value: goal, text: goal.name })),
-  ).map((goal) => ({
-    id: goal.id,
-    title: goal.name,
-    detail: names.get(goal.parentAccountId ?? '') ?? null,
-    figure: typeof goal.goalTarget === 'number' ? money(goal.goalTarget) : null,
-    icon: iconOr(goal.icon, 'piggy'),
-    href: `/accounts?g=${encodeURIComponent(goal.id)}`,
-  }));
+  const goals = rank(live.filter(isPocket).map((goal) => ({ value: goal, text: goal.name }))).map(
+    (goal) => ({
+      id: goal.id,
+      title: goal.name,
+      detail: names.get(goal.parentAccountId ?? '') ?? null,
+      figure: typeof goal.goalTarget === 'number' ? money(goal.goalTarget) : null,
+      icon: iconOr(goal.icon, 'piggy'),
+      href: `/accounts?g=${encodeURIComponent(goal.id)}`,
+    }),
+  );
 
   const budgets = rank(data.budgets.map((budget) => ({ value: budget, text: budget.name }))).map(
     (budget) => ({
@@ -770,7 +784,12 @@ export function searchView(input: {
     }),
   }));
   const transactions = rank(
-    rows.map((item) => ({ value: item, text: item.row.title, amount: item.tx.amount, date: item.tx.date })),
+    rows.map((item) => ({
+      value: item,
+      text: item.row.title,
+      amount: item.tx.amount,
+      date: item.tx.date,
+    })),
   ).map(({ tx, row }) => ({
     id: tx.id,
     title: row.title,
@@ -792,13 +811,14 @@ export function searchView(input: {
 }
 ```
 
-- [ ] **Step 4: Write the server function and the action**
+- [x] **Step 4: Write the server function and the action**
 
 ```ts
 // apps/web/src/server/search/search.ts
-import type { SearchResult } from '../../features/search/searchView';
-import { searchView } from '../../features/search/searchView';
-import { userI18n } from '../../i18n/server';
+import { readSettings } from '@saldo/core';
+import { catalogs, makeTranslator } from '@saldo/i18n';
+import { type SearchResult, searchView } from '../../features/search/searchView';
+import { webLocale } from '../../i18n/locale';
 import { pageState } from '../page/context';
 import { loadUserData } from '../userData/load';
 
@@ -807,24 +827,30 @@ export const MAX_SEARCH_QUERY = 120;
 
 /**
  * Palette spec §05: the data search of one user. `userId` comes from the session, never from the
- * request — the caller (`searchAction`) reads it. `loadUserData` reads that user's rows only.
+ * request — the caller (`searchAction`) reads it — and `loadUserData` reads that user's rows only.
+ * The request's headers come in as values, so a test can call this without a request.
  */
 export async function searchFor(
   userId: string,
   query: string,
-  now: Date,
-  fallbackTimeZone: string,
+  request: { now: Date; fallbackTimeZone: string; acceptLanguage: string | null },
 ): Promise<SearchResult> {
-  const [data, i18n] = await Promise.all([loadUserData(userId), userI18n(userId)]);
-  const state = pageState({ data, now, fallbackTimeZone, params: {} });
+  const data = await loadUserData(userId);
+  const locale = webLocale(readSettings(data.settings).language, request.acceptLanguage);
+  const state = pageState({
+    data,
+    now: request.now,
+    fallbackTimeZone: request.fallbackTimeZone,
+    params: {},
+  });
   return searchView({
     data,
     query: query.slice(0, MAX_SEARCH_QUERY),
     today: state.today,
     def: state.def,
     currency: state.currency,
-    locale: i18n.locale,
-    t: i18n.t,
+    locale,
+    t: makeTranslator(catalogs[locale]),
   });
 }
 ```
@@ -833,6 +859,7 @@ export async function searchFor(
 // apps/web/app/(app)/actions.ts
 'use server';
 
+import { headers } from 'next/headers';
 import type { SearchResult } from '../../src/features/search/searchView';
 import { requireWebUser } from '../../src/server/auth/currentUser';
 import { env } from '../../src/server/env';
@@ -844,16 +871,20 @@ import { searchFor } from '../../src/server/search/search';
  */
 export async function searchAction(query: unknown): Promise<SearchResult> {
   const user = await requireWebUser();
-  return searchFor(user.id, typeof query === 'string' ? query : '', new Date(), env().defaultTimeZone);
+  return searchFor(user.id, typeof query === 'string' ? query : '', {
+    now: new Date(),
+    fallbackTimeZone: env().defaultTimeZone,
+    acceptLanguage: (await headers()).get('accept-language'),
+  });
 }
 ```
 
-- [ ] **Step 5: Run the test to make sure it passes**
+- [x] **Step 5: Run the test to make sure it passes**
 
 Run: `rtk proxy pnpm --filter web exec vitest run src/server/search`
 Expected: PASS, 3 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/features/search/searchView.ts apps/web/src/server/search/search.ts apps/web/src/server/search/search.test.ts "apps/web/app/(app)/actions.ts"
@@ -867,7 +898,7 @@ git commit -m "feat(web): the data search of the command palette"
 **Files:**
 - Create: `apps/web/src/features/search/commands.ts`
 
-- [ ] **Step 1: Write the list** (a constant list: no test, per AGENTS.md «Tests»)
+- [x] **Step 1: Write the list** (a constant list: no test, per AGENTS.md «Tests»)
 
 ```ts
 // apps/web/src/features/search/commands.ts
@@ -938,12 +969,12 @@ export function paletteCommands(t: Translate): PaletteCommands {
 }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 Run: `rtk proxy pnpm --filter web typecheck`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/features/search/commands.ts
@@ -960,7 +991,7 @@ git commit -m "feat(web): the pages and actions of the command palette"
 - Modify: `apps/web/src/ui/TopBar.tsx` (a `search` slot)
 - Modify: `apps/web/app/(app)/layout.tsx`
 
-- [ ] **Step 1: Write the component**
+- [x] **Step 1: Write the component**
 
 ```tsx
 // apps/web/src/ui/CommandPalette.tsx
@@ -1141,7 +1172,11 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
         );
   const current = result !== null && result.query === text ? result : null;
   const groups: Group[] = [
-    { value: 'actions', label: strings.actions, items: rankCommands(commands.actions).map(commandRow) },
+    {
+      value: 'actions',
+      label: strings.actions,
+      items: rankCommands(commands.actions).map(commandRow),
+    },
     { value: 'pages', label: strings.goTo, items: rankCommands(commands.pages).map(commandRow) },
     ...(text === '' || result === null
       ? []
@@ -1157,7 +1192,14 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
       value: 'all',
       label: '',
       items: [
-        { id: 'all', title: current.seeAll.label, detail: null, figure: null, icon: 'search', href: current.seeAll.href },
+        {
+          id: 'all',
+          title: current.seeAll.label,
+          detail: null,
+          figure: null,
+          icon: 'search',
+          href: current.seeAll.href,
+        },
       ],
     });
   }
@@ -1174,9 +1216,9 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
       <Dialog.Trigger className={styles.trigger} aria-keyshortcuts="Meta+K Control+K">
         <Icon name="search" size={16} />
         <span>{strings.button}</span>
-        <kbd className={styles.kbd} aria-hidden="true">
+        <span className={styles.kbd} aria-hidden="true">
           {apple ? '⌘K' : 'Ctrl K'}
-        </kbd>
+        </span>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop className={styles.backdrop} />
@@ -1193,7 +1235,8 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
             items={groups}
             value={query}
             onValueChange={(next, details) => {
-              if (details.reason === 'input-change' || details.reason === 'input-clear') onQuery(next);
+              if (details.reason === 'input-change' || details.reason === 'input-clear')
+                onQuery(next);
             }}
             filter={null}
             autoHighlight="always"
@@ -1230,7 +1273,11 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
               {failed ? <p className={styles.message}>{strings.error}</p> : null}
               <Autocomplete.List className={styles.list}>
                 {(group: Group) => (
-                  <Autocomplete.Group key={group.value} items={group.items} className={styles.group}>
+                  <Autocomplete.Group
+                    key={group.value}
+                    items={group.items}
+                    className={styles.group}
+                  >
                     {group.label === '' ? null : (
                       <Autocomplete.GroupLabel className={styles.groupLabel}>
                         {group.label}
@@ -1286,7 +1333,7 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
 }
 ```
 
-- [ ] **Step 2: Write the styles**
+- [x] **Step 2: Write the styles**
 
 ```css
 /* apps/web/src/ui/CommandPalette.module.css */
@@ -1550,9 +1597,9 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
 }
 ```
 
-- [ ] **Step 3: Give the top bar a slot** — in `apps/web/src/ui/TopBar.tsx` add `search: ReactNode;` to `Props` (import `type ReactNode` from `react`), take `search` in the parameters, and render `{search}` as the first child of `<div className={styles.actions}>`, before `NewTransactionLink`. Change the doc comment: “From left to right the brand, the four destinations, «Search» (from 1000px, `CommandPalette`), «New transaction» and the avatar”.
+- [x] **Step 3: Give the top bar a slot** — in `apps/web/src/ui/TopBar.tsx` add `search: ReactNode;` to `Props` (import `type ReactNode` from `react`), take `search` in the parameters, and render `{search}` as the first child of `<div className={styles.actions}>`, before `NewTransactionLink`. Change the doc comment: “From left to right the brand, the four destinations, «Search» (from 1000px, `CommandPalette`), «New transaction» and the avatar”.
 
-- [ ] **Step 4: Mount it in the layout** — in `apps/web/app/(app)/layout.tsx`:
+- [x] **Step 4: Mount it in the layout** — in `apps/web/app/(app)/layout.tsx`:
 
 ```tsx
 import { headers } from 'next/headers';
@@ -1589,12 +1636,12 @@ import { searchAction } from './actions';
         />
 ```
 
-- [ ] **Step 5: Typecheck and lint**
+- [x] **Step 5: Typecheck and lint**
 
 Run: `rtk proxy pnpm --filter web typecheck` and `rtk proxy pnpm lint`
 Expected: no errors; no `lint/…` lines.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/ui/CommandPalette.tsx apps/web/src/ui/CommandPalette.module.css apps/web/src/ui/TopBar.tsx "apps/web/app/(app)/layout.tsx"
@@ -1608,7 +1655,7 @@ git commit -m "feat(web): the command palette and Search in the top bar"
 **Files:**
 - Create: `apps/web/e2e/command-palette.spec.ts`
 
-- [ ] **Step 1: Write the spec**
+- [x] **Step 1: Write the spec**
 
 ```ts
 // apps/web/e2e/command-palette.spec.ts
@@ -1625,7 +1672,11 @@ test.describe('command palette', () => {
   }) => {
     const member = await createMember(browser, t, { name: 'Paletta', email: 'palette@e2e.test' });
     const { page } = member;
-    await addTransaction(page, t, { amount: '12,34', description: 'Gelateria Pistacchio' });
+    await addTransaction(page, t, {
+      amount: '12,34',
+      description: 'Gelateria Pistacchio',
+      category: 'Sport',
+    });
 
     await page.goto('/home');
     await page.keyboard.press('ControlOrMeta+k');
@@ -1633,7 +1684,9 @@ test.describe('command palette', () => {
     const field = palette.getByRole('combobox', { name: t('web.search.title') });
     await expect(field).toBeFocused();
     // An empty query: the actions and the main pages.
-    await expect(palette.getByRole('option', { name: t('web.shell.newTransaction') })).toBeVisible();
+    await expect(
+      palette.getByRole('option', { name: t('web.shell.newTransaction') }),
+    ).toBeVisible();
 
     await field.fill('principale');
     await expect(palette.getByRole('option', { name: new RegExp(MAIN) })).toBeVisible();
@@ -1655,7 +1708,10 @@ test.describe('command palette', () => {
     await page.goto('/home');
     await page.keyboard.press('ControlOrMeta+k');
     await field.fill('zzzz');
-    await expect(palette.getByText(t('web.search.noResults', { query: 'zzzz' }))).toBeVisible();
+    const noMatch = t('web.search.noResults', { query: 'zzzz' });
+    await expect(palette.getByRole('paragraph').filter({ hasText: noMatch })).toBeVisible();
+    // The status region says it as well, for a screen reader.
+    await expect(palette.getByRole('status')).toHaveText(noMatch);
     await palette.getByRole('option', { name: t('web.search.seeAll', { query: 'zzzz' }) }).click();
     await expect(page).toHaveURL(/\/transactions\?q=zzzz$/);
 
@@ -1673,7 +1729,10 @@ test.describe('command palette', () => {
     browser,
     t,
   }) => {
-    const member = await createMember(browser, t, { name: 'Stretta', email: 'palette-narrow@e2e.test' });
+    const member = await createMember(browser, t, {
+      name: 'Stretta',
+      email: 'palette-narrow@e2e.test',
+    });
     const { page } = member;
     const trigger = page.getByRole('banner').getByRole('button', { name: t('common.search') });
     const palette = page.getByRole('dialog', { name: t('web.search.title') });
@@ -1697,12 +1756,12 @@ test.describe('command palette', () => {
 });
 ```
 
-- [ ] **Step 2: Run it** from `apps/web` (a `next dev` of the user's runs on port 3000; do not use `E2E_DEV=1`, and do not stop that server):
+- [x] **Step 2: Run it** from `apps/web` (a `next dev` of the user's runs on port 3000; do not use `E2E_DEV=1`, and do not stop that server):
 
 Run: `E2E_PORT=3198 E2E_DB_PORT=54398 rtk proxy pnpm exec playwright test e2e/01-setup.spec.ts e2e/command-palette.spec.ts`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/e2e/command-palette.spec.ts
@@ -1718,10 +1777,10 @@ git commit -m "test(web): the command palette from the keyboard, at three widths
 - Modify: `docs/superpowers/plans/2026-10-21-web-redesign-r1-shell-home.md` (the “No Search” decision)
 - Modify: `docs/superpowers/plans/README.md` (web redesign section)
 
-- [ ] **Step 1:** In the redesign spec, append to open item 5: “Done on 2026-10-23: see <code>2026-10-23-web-command-palette.html</code>. “Search” is in the top bar from 1000px.”
-- [ ] **Step 2:** In the R1 plan, append to the “No Search” bullet: “The palette shipped on 2026-10-23 (`2026-10-23-web-command-palette.md`). “Search” is now in the top bar.”
-- [ ] **Step 3:** In `plans/README.md`, add a row for the palette to the web redesign table, with this plan and the spec, status done.
-- [ ] **Step 4: Commit**
+- [x] **Step 1:** In the redesign spec, append to open item 5: “Done on 2026-10-23: see <code>2026-10-23-web-command-palette.html</code>. “Search” is in the top bar from 1000px.”
+- [x] **Step 2:** In the R1 plan, append to the “No Search” bullet: “The palette shipped on 2026-10-23 (`2026-10-23-web-command-palette.md`). “Search” is now in the top bar.”
+- [x] **Step 3:** In `plans/README.md`, add a row for the palette to the web redesign table, with this plan and the spec, status done.
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-10-20-web-home-redesign.html docs/superpowers/plans/2026-10-21-web-redesign-r1-shell-home.md docs/superpowers/plans/README.md docs/superpowers/plans/2026-10-23-web-command-palette.md
@@ -1732,8 +1791,18 @@ git commit -m "docs: the command palette done, open item 5 of the redesign close
 
 ### Task 8: Gates and a look in the browser
 
-- [ ] **Step 1:** `rtk proxy pnpm lint` — clean means no `lint/…` lines and no `× Some errors were emitted`.
-- [ ] **Step 2:** `rtk proxy pnpm typecheck --continue` — `site` may fail only on the Node ≥ 22.22 engine check.
-- [ ] **Step 3:** `rtk proxy pnpm test` — every package green.
-- [ ] **Step 4:** From `apps/web`: `E2E_PORT=3198 E2E_DB_PORT=54398 rtk proxy pnpm e2e` — the full suite green.
-- [ ] **Step 5:** Take screenshots of the palette at 1440px and 390px, light and dark, with a temporary Playwright script outside the repository. Delete the script and the images.
+- [x] **Step 1:** `rtk proxy pnpm lint` — clean means no `lint/…` lines and no `× Some errors were emitted`.
+- [x] **Step 2:** `rtk proxy pnpm typecheck --continue` — `site` may fail only on the Node ≥ 22.22 engine check.
+- [x] **Step 3:** `rtk proxy pnpm test` — every package green.
+- [x] **Step 4:** From `apps/web`: `E2E_PORT=3198 E2E_DB_PORT=54398 rtk proxy pnpm e2e` — the full suite green.
+- [x] **Step 5:** Take screenshots of the palette at 1440px and 390px, light and dark, with a temporary Playwright script outside the repository. Delete the script and the images.
+
+---
+
+## Deviations found during execution
+
+- **Task 3:** `searchFor` cannot call `userI18n`, because `userI18n` reads `headers()` and a test has no request. `searchFor` now takes `{ now, fallbackTimeZone, acceptLanguage }` and picks the locale with `webLocale`. `searchAction` reads the `accept-language` header and passes it.
+- **Task 3:** `sync_rows.user_id` is a foreign key to `user`. The test makes the two users with `createTestSession` before it seeds their rows.
+- **Task 5:** Biome reports `noAriaHiddenOnFocusable` on a `<kbd aria-hidden>` in the trigger. The trigger shows the shortcut in a `<span>`, as `SearchField` does.
+- **Task 6:** the no-result sentence is in the page and in the status region. The test finds the paragraph, and checks the status region on its own.
+- The code blocks above are the committed code, after `biome check --write`.

@@ -539,6 +539,9 @@ Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-2
 - [x] **R5** — Accounts (W9) (`plans/2026-10-21-web-redesign-r5-accounts.md`).
 - [x] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
 - [x] **R7** — empty states and the new `@saldo/core` functions (W11) (`plans/2026-10-21-web-redesign-r7-empty-states.md`).
+- [x] **Command palette** — “Search” in the top bar, and the palette that `⌘K` / `Ctrl K` opens on every page
+  (`plans/2026-10-23-web-command-palette.md`, spec `specs/2026-10-23-web-command-palette.html`). It closes
+  open item 5 of the home redesign spec.
 
 **Acceptance for R1:** no sidebar on any width; the top bar and the content share the 1040px column;
 the Home shows Summary, Budget, Transactions and Goals in this order; the trend moves with the pointer
@@ -577,6 +580,14 @@ list of groups and a section has a way back.
 - Accounts offers the account types, Goals offers three presets, and Budgets offers «Where you spend most».
 - Tags and Invites show their form in the page.
 - `budgetSuggestions`, `matchesInOtherPeriods` and `emergencyFundTarget` are in `@saldo/core`, with tests.
+
+**Acceptance for the command palette:**
+- From 1000px the top bar shows “Search” with the shortcut. Below 1000px it does not show “Search”.
+- `⌘K` and `Ctrl K` open and close the palette at every width. `Esc` closes it, and the focus goes back.
+- The palette finds pages, actions, accounts, goals, budgets, categories, tags and transactions (by title and by amount).
+- The last row opens `/transactions?q=…` with the query.
+- The Server Action reads the data of the signed-in user only. A test on PGlite makes sure of it.
+- `rankSearch` is in `@saldo/core`, with tests.
 
 ### Notifications for future transactions
 

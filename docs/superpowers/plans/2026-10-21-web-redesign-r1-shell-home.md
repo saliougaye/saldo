@@ -32,7 +32,7 @@ The two specs are split into seven plans. Each plan ends with software that work
 
 Decisions this plan takes where the spec leaves a choice:
 
-- **No “Search” in the top bar.** The spec (open item 5) says: if the command palette does not exist, do not show “Search”. It does not exist.
+- **No “Search” in the top bar.** The spec (open item 5) says: if the command palette does not exist, do not show “Search”. It does not exist. *Update 2026-10-23:* the palette exists (`2026-10-23-web-command-palette.md`). “Search” is now in the top bar.
 - **Admin stays in the top bar** as an icon link, for the `admin` role, until R6 moves it into Profile.
 - **The Home empty state** follows H10 (empty title, text, one action) in this plan. R7 replaces it with “Getting started” (W11).
 - **The hero cents** (H5: 45% of the size, `textFaint`) change `AmountText`'s `hero` size for every page. Statistics and Accounts use the same figure, and R4/R5 keep it.
