@@ -1280,7 +1280,7 @@ export const sv: Messages = {
     createBudget: 'Skapa en budget',
     itemLabel: '{{name}}, {{amount}} av {{limit}}, {{status}}',
     leftDetail: 'kvar · {{spent}} av {{limit}} spenderat',
-    spent: '{{amount}} spenderat',
+    spentOf: '{{spent}} av {{limit}}',
   },
   goals: {
     closeFirst: 'Stäng först målen i det här kontot',
@@ -1358,6 +1358,7 @@ export const sv: Messages = {
     missing_parent: 'Välj kontot',
     free: 'fritt',
     savedOfIn: '{{saved}} av {{target}} · på {{account}}',
+    savedOf: '{{saved}} av {{target}}',
     reachedTitle: 'Målet {{name}} nått: {{amount}}',
     itemLabel: '{{name}}, {{amount}} av {{target}}, {{status}}',
     parentArchived: 'Målets konto är arkiverat: återställ kontot först',

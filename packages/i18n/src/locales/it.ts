@@ -1289,7 +1289,7 @@ export const it = {
     createBudget: 'Crea un budget',
     itemLabel: '{{name}}, {{amount}} di {{limit}}, {{status}}',
     leftDetail: 'rimasti · {{spent}} spesi di {{limit}}',
-    spent: '{{amount}} spesi',
+    spentOf: '{{spent}} di {{limit}}',
   },
   goals: {
     closeFirst: 'Chiudi prima gli obiettivi in questo conto',
@@ -1367,6 +1367,7 @@ export const it = {
     missing_parent: 'Scegli il conto',
     free: 'liberi',
     savedOfIn: '{{saved}} di {{target}} · in {{account}}',
+    savedOf: '{{saved}} di {{target}}',
     reachedTitle: 'Obiettivo {{name}} raggiunto: {{amount}}',
     itemLabel: '{{name}}, {{amount}} di {{target}}, {{status}}',
     parentArchived: 'Il conto di questo obiettivo è archiviato: ripristina prima il conto',

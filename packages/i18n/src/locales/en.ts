@@ -1283,7 +1283,7 @@ export const en: Messages = {
     createBudget: 'Create a budget',
     itemLabel: '{{name}}, {{amount}} of {{limit}}, {{status}}',
     leftDetail: 'left · {{spent}} spent of {{limit}}',
-    spent: '{{amount}} spent',
+    spentOf: '{{spent}} of {{limit}}',
   },
   goals: {
     closeFirst: 'Close the goals in this account first',
@@ -1361,6 +1361,7 @@ export const en: Messages = {
     missing_parent: 'Choose the account',
     free: 'free',
     savedOfIn: '{{saved}} of {{target}} · in {{account}}',
+    savedOf: '{{saved}} of {{target}}',
     reachedTitle: 'Goal {{name}} reached: {{amount}}',
     itemLabel: '{{name}}, {{amount}} of {{target}}, {{status}}',
     parentArchived: "This goal's account is archived: restore the account first",

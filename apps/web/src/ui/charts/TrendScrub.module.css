@@ -2,11 +2,24 @@
   min-width: 0;
 }
 
+/* The title on the left, the legend on the right (spec Figure 3). */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 14px;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
 .legend {
   display: flex;
-  justify-content: flex-end;
   gap: 16px;
-  margin-bottom: 10px;
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
 }

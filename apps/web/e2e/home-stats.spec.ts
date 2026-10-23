@@ -1,5 +1,6 @@
 import type { Locator } from '@playwright/test';
-import { formatDayMonth, formatMonthLong, plural } from '@saldo/i18n';
+import type { CurrencyCode } from '@saldo/core';
+import { formatDayMonth, formatMoneyParts, formatMonthLong, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
   categoryFamily,
@@ -138,12 +139,11 @@ test.describe('Home', () => {
     const lang = appLocale(locale);
     const money = moneyFormatter(ledger, lang);
     const month = monthOf(ledger.today);
-    const percent = (value: number) => t('targets.percent', { value });
-    const ofLine = (limit: number, spentSoFar: number) =>
-      t('targets.ofLimit', {
-        amount: money(limit),
-        percent: percent(percentOf(spentSoFar, limit)),
-      });
+    // «195,60 di 480,00 €»: the spent figure has no symbol, the limit carries it.
+    const bare = (minor: number) => {
+      const parts = formatMoneyParts(minor, ledger.currency as CurrencyCode, lang);
+      return `${parts.sign}${parts.integer}${parts.fraction === '' ? '' : `${parts.decimalSeparator}${parts.fraction}`}`;
+    };
 
     await page.goto('/home');
 
@@ -157,7 +157,7 @@ test.describe('Home', () => {
         ),
       );
       // H6: every budget is a ring tile, named by its label; under what is left, a line of the
-      // same tile says what is spent.
+      // same tile says what is spent of the limit (§06).
       const tile = page.getByRole('link', {
         name: labelStart(t, 'targets.itemLabel', {
           name: budget.name,
@@ -167,7 +167,10 @@ test.describe('Home', () => {
       });
       await expect(tile).toHaveCount(1);
       await expect(
-        tile.getByText(t('targets.spent', { amount: money(spentSoFar) }), { exact: true }),
+        tile.getByText(
+          t('targets.spentOf', { spent: bare(spentSoFar), limit: money(budget.amount) }),
+          { exact: true },
+        ),
       ).toBeVisible();
     }
 
@@ -187,8 +190,12 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      // Every goal is a card too, with the same «of» line under its figure.
-      await expect(page.getByText(ofLine(target, put), { exact: true })).toHaveCount(1);
+      // Under the name, the row says what is saved of the target (§07).
+      await expect(
+        page.getByText(t('goals.savedOf', { saved: money(put), target: money(target) }), {
+          exact: true,
+        }),
+      ).toHaveCount(1);
     }
     await member.context.close();
   });

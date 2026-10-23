@@ -26,7 +26,7 @@ interface Props {
   /** One formatted amount per day of the period, for the tooltip after today. */
   usualAmounts: readonly string[];
   strings: {
-    /** Names the slider for a screen reader. */
+    /** The visible title above the chart, «Period trend»; it also names the slider. */
     label: string;
     thisPeriod: string;
     usual: string;
@@ -64,6 +64,7 @@ export function TrendScrub({
   const box = useRef<HTMLDivElement>(null);
   // One id per chart: two charts on a page must not share the hint.
   const hintId = useId();
+  const labelId = useId();
   const [day, setDay] = useState<number | null>(null);
   const days = Math.max(span, 1);
   const max = Math.max(1, ...current, ...usual);
@@ -104,14 +105,19 @@ export function TrendScrub({
 
   return (
     <div className={styles.trend}>
-      <div className={styles.legend} aria-hidden="true">
-        <span>
-          <i className={styles.keyCurrent} />
-          {strings.thisPeriod}
+      <div className={styles.head}>
+        <span id={labelId} className={styles.label}>
+          {strings.label}
         </span>
-        <span>
-          <i className={styles.keyUsual} />
-          {strings.usual}
+        <span className={styles.legend} aria-hidden="true">
+          <span>
+            <i className={styles.keyCurrent} />
+            {strings.thisPeriod}
+          </span>
+          <span>
+            <i className={styles.keyUsual} />
+            {strings.usual}
+          </span>
         </span>
       </div>
       <div
@@ -119,7 +125,7 @@ export function TrendScrub({
         className={`${styles.scrub} ${day === null ? '' : styles.on}`}
         role="slider"
         tabIndex={0}
-        aria-label={strings.label}
+        aria-labelledby={labelId}
         aria-describedby={hintId}
         aria-valuemin={1}
         aria-valuemax={days}

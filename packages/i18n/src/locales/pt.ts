@@ -1288,7 +1288,7 @@ export const pt: Messages = {
     createBudget: 'Criar um orçamento',
     itemLabel: '{{name}}, {{amount}} de {{limit}}, {{status}}',
     leftDetail: 'restante · {{spent}} gastos de {{limit}}',
-    spent: '{{amount}} gastos',
+    spentOf: '{{spent}} de {{limit}}',
   },
   goals: {
     closeFirst: 'Fecha primeiro os objetivos desta conta',
@@ -1366,6 +1366,7 @@ export const pt: Messages = {
     missing_parent: 'Escolhe a conta',
     free: 'livre',
     savedOfIn: '{{saved}} de {{target}} · em {{account}}',
+    savedOf: '{{saved}} de {{target}}',
     reachedTitle: 'Objetivo {{name}} atingido: {{amount}}',
     itemLabel: '{{name}}, {{amount}} de {{target}}, {{status}}',
     parentArchived: 'A conta deste objetivo está arquivada: restaura primeiro a conta',

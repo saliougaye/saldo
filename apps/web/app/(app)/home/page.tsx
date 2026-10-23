@@ -4,10 +4,10 @@ import {
   budgetCardStatusText,
   formatDayMonth,
   formatMoney,
+  formatMoneyParts,
   type GoalTextDeps,
   goalCardStatusText,
   goalLabel,
-  goalOf,
   goalStatus,
   plural,
 } from '@saldo/i18n';
@@ -105,6 +105,15 @@ export default async function HomePage({
   );
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
+  /** §06: «195,60 di 480,00 €» — the spent figure without the symbol, which the limit carries. */
+  const bare = (minor: number) => {
+    const parts = formatMoneyParts(minor, currency, locale);
+    const number =
+      parts.fraction === ''
+        ? parts.integer
+        : `${parts.integer}${parts.decimalSeparator}${parts.fraction}`;
+    return `${parts.sign}${number}`;
+  };
   const percent = (ratio: number) => t('targets.percent', { value: Math.round(ratio * 100) });
 
   // ---- Summary (H5) ---------------------------------------------------------------------------
@@ -205,7 +214,7 @@ export default async function HomePage({
               : t('targets.left', { amount: money(item.limit - item.spent) })}
           </span>
           <span className={styles.tileNote}>
-            {t('targets.spent', { amount: money(item.spent) })}
+            {t('targets.spentOf', { spent: bare(item.spent), limit: money(item.limit) })}
           </span>
           <span className={styles.tileNote}>
             {item.open ? (
@@ -244,7 +253,12 @@ export default async function HomePage({
       />
       <span className={styles.goalText} aria-hidden="true">
         <b>{item.account.name}</b>
-        <span>{goalOf(item, goalDeps)}</span>
+        <span>
+          {t('goals.savedOf', {
+            saved: money(item.progress.saved),
+            target: money(item.progress.target),
+          })}
+        </span>
       </span>
       <span className={styles.goalValue} aria-hidden="true">
         {percent(item.progress.ratio)}
@@ -461,13 +475,6 @@ export default async function HomePage({
         <section className={styles.box}>
           <div className={styles.blockHead}>
             <h2>{t('tabs.transactions')}</h2>
-            {showUpcoming ? (
-              <span className={styles.meta}>
-                {plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
-                  amount: formatMoney(view.upcoming.net, currency, locale, 'always'),
-                })}
-              </span>
-            ) : null}
             <Link className={styles.headLink} href="/transactions">
               {t('home.allTransactions')}
               <Icon name="chevR" size={15} />
@@ -485,8 +492,16 @@ export default async function HomePage({
               </div>
               {showUpcoming ? (
                 <div>
+                  {/* §07: the count and the net amount at the end of the group's own line. */}
                   <span className={styles.group}>
-                    {t('home.upcomingUntil', { date: formatDayMonth(period.range.end, locale) })}
+                    <span>
+                      {t('home.upcomingUntil', { date: formatDayMonth(period.range.end, locale) })}
+                    </span>
+                    <span>
+                      {plural(t, locale, 'home.upcomingSummary', view.upcoming.count, {
+                        amount: formatMoney(view.upcoming.net, currency, locale, 'always'),
+                      })}
+                    </span>
                   </span>
                   {view.upcoming.rows.map((row) => txRow(row, true))}
                 </div>

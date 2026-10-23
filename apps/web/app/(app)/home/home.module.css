@@ -193,8 +193,12 @@
   gap: 20px;
 }
 
+/* The label on the left; «Coming up» adds its count and net amount on the right (§07). */
 .group {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 12px;
   padding-bottom: 6px;
   color: var(--color-text-muted);
   font-size: var(--font-size-footnote);
