@@ -30,6 +30,7 @@ export * from './recap';
 export * from './recents';
 export * from './recurrence';
 export * from './rollover';
+export * from './search';
 export * from './seed';
 export * from './stats';
 export * from './sync/hlc';
