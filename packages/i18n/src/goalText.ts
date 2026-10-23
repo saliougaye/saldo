@@ -65,8 +65,12 @@ export function goalStatus(goal: GoalTextSubject, { t, money }: GoalTextDeps): s
       return t('goals.statusExpired');
     case 'behind':
       return t('goals.statusBehind', { amount: money(-(gap ?? 0)) });
+    // `onTrack` is also a goal a little behind the pace, within one period's share (§5.14): it is
+    // «nei tempi», not «−13,61 € avanti».
     case 'onTrack':
-      return t('goals.statusAhead', { amount: money(gap ?? 0) });
+      return gap !== null && gap > 0
+        ? t('goals.statusAhead', { amount: money(gap) })
+        : t('goals.onTime');
     case 'open':
       return t('goals.statusMissing', { amount: money(missing) });
   }
@@ -136,9 +140,11 @@ export function goalSentence(goal: GoalTextSubject, deps: GoalTextDeps): GoalSen
     case 'perPeriod':
       return {
         action: { key: `goals.perPeriod_${periodKind}`, vars: { amount: money(advice.perPeriod) } },
-        state: t(advice.behind ? 'goals.stateBehind' : 'goals.stateAhead', {
-          amount: money(advice.gap),
-        }),
+        state: advice.behind
+          ? t('goals.stateBehind', { amount: money(advice.gap) })
+          : (goal.progress.gap ?? 0) > 0
+            ? t('goals.stateAhead', { amount: money(advice.gap) })
+            : t('goals.stateOnTime'),
       };
     case 'lastPeriod':
       return {
