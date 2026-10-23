@@ -37,6 +37,8 @@ interface Props {
   bare?: boolean;
   /** A form: 480px wide on a wide screen, where a detail is 440px (W1). */
   form?: boolean;
+  /** Before the title: the icon of what the dialog shows (an account, a goal). Decorative. */
+  icon?: ReactNode;
   /**
    * A page that keeps the panel in client state: the ✕, the scrim and Esc ask it to close,
    * and it closes at once. `from` says which: the keyboard closes with no motion. It answers false
@@ -75,6 +77,7 @@ export function Panel({
   closeLabel,
   bare = false,
   form = false,
+  icon,
   onClose,
   closing: closingProp = false,
   instant = false,
@@ -212,6 +215,11 @@ export function Panel({
         {/* Below 760px every dialog is a sheet (W2); the CSS hides the handle on a wide screen. */}
         <span className={styles.handle} aria-hidden="true" />
         <div className={`${styles.head} ${bare ? styles.bare : ''}`}>
+          {icon === undefined || bare ? null : (
+            <span className={styles.icon} aria-hidden="true">
+              {icon}
+            </span>
+          )}
           <h2
             className={`${styles.title} ${bare ? styles.hidden : ''}`}
             ref={heading}

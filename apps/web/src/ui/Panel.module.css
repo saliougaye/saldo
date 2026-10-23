@@ -59,9 +59,20 @@
   overflow-wrap: anywhere;
 }
 
+/* The icon before the title (an account's, a goal's): the title moves next to it. */
+.icon {
+  display: flex;
+  flex: none;
+}
+
+.icon + .title {
+  margin-inline-start: -4px;
+}
+
 .close {
   display: grid;
   flex: none;
+  margin-inline-start: auto;
   place-items: center;
   inline-size: var(--layout-header-button);
   block-size: var(--layout-header-button);

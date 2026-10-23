@@ -22,6 +22,8 @@ export interface PanelSpec {
   form?: boolean;
   /** The body carries its own heading. */
   bare?: boolean;
+  /** Before the title: the icon of what the panel shows (an account, a goal). */
+  icon?: ReactNode;
   /** Where ✕ and Esc go from this panel, as a key. Default: no panel. */
   closeTo?: string | null;
 }
@@ -135,6 +137,7 @@ export function PanelSwitch({
         title={spec.title}
         form={spec.form}
         bare={spec.bare}
+        icon={spec.icon}
         closeHref={closeHref}
         closeLabel={closeLabel}
         onClose={onClose}
