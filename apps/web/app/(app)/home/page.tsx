@@ -1,5 +1,5 @@
 import type { BudgetAdvice, BudgetView, GoalView } from '@saldo/core';
-import { accountBalances, goalPace, goalTone } from '@saldo/core';
+import { accountBalances, addDays, goalPace, goalTone, isPocket } from '@saldo/core';
 import {
   budgetCardStatusText,
   formatDayMonth,
@@ -99,18 +99,19 @@ export default async function HomePage({
   // W11: a new user starts here. The blocks with nothing to show do not show.
   const start = gettingStarted(page.data);
   const balances = accountBalances(page.data.accounts, page.data.transactions, today);
-  const liveAccounts = page.data.accounts.filter((account) => account.archivedAt === null);
+  // «In your accounts» lists accounts, as `gettingStarted` counts them: a goal is not one.
+  const liveAccounts = page.data.accounts.filter(
+    (account) => account.archivedAt === null && !isPocket(account),
+  );
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
   const percent = (ratio: number) => t('targets.percent', { value: Math.round(ratio * 100) });
 
   // ---- Summary (H5) ---------------------------------------------------------------------------
   const delta = view.trend.delta;
-  const dayDates = Array.from({ length: Math.max(period.length, 1) }, (_, index) => {
-    const date = new Date(`${period.range.start}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() + index);
-    return formatDayMonth(date.toISOString().slice(0, 10), locale);
-  });
+  const dayDates = Array.from({ length: Math.max(period.length, 1) }, (_, index) =>
+    formatDayMonth(addDays(period.range.start, index), locale),
+  );
 
   // ---- Transactions (H7, H8) ------------------------------------------------------------------
   const txRow = (row: HomeRow, upcoming: boolean) => (

@@ -355,8 +355,10 @@ legend.label {
   transition: background-color var(--motion-press) var(--motion-easing);
 }
 
-.delete:hover {
-  background: var(--color-raised);
+@media (hover: hover) and (pointer: fine) {
+  .delete:hover {
+    background: var(--color-raised);
+  }
 }
 
 .deleteError {

@@ -1,6 +1,6 @@
 'use client';
 
-import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react';
+import { type KeyboardEvent, type PointerEvent, useId, useRef, useState } from 'react';
 import styles from './TrendScrub.module.css';
 
 /** The coordinate space of the lines. The SVG stretches it to the width it gets. */
@@ -62,6 +62,8 @@ export function TrendScrub({
   strings,
 }: Props) {
   const box = useRef<HTMLDivElement>(null);
+  // One id per chart: two charts on a page must not share the hint.
+  const hintId = useId();
   const [day, setDay] = useState<number | null>(null);
   const days = Math.max(span, 1);
   const max = Math.max(1, ...current, ...usual);
@@ -118,7 +120,7 @@ export function TrendScrub({
         role="slider"
         tabIndex={0}
         aria-label={strings.label}
-        aria-describedby="trend-hint"
+        aria-describedby={hintId}
         aria-valuemin={1}
         aria-valuemax={days}
         aria-valuenow={shown + 1}
@@ -191,7 +193,7 @@ export function TrendScrub({
           <span key={index}>{dates[index] ?? ''}</span>
         ))}
       </div>
-      <p id="trend-hint" className={styles.hint}>
+      <p id={hintId} className={styles.hint}>
         {strings.hint}
       </p>
     </div>

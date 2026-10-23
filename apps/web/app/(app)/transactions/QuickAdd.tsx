@@ -1,7 +1,6 @@
 'use client';
 
-import { type CurrencyCode, emptyForm, missingForSave } from '@saldo/core';
-import type { AppLocale } from '@saldo/i18n/format';
+import { emptyForm, missingForSave } from '@saldo/core';
 import { makeTranslator } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
@@ -21,8 +20,6 @@ interface Props {
   view: FormView;
   /** The first spendable account: the form's own default. */
   accountId: string;
-  locale: AppLocale;
-  currency: CurrencyCode;
   decimalSeparator: string;
   symbol: string;
   symbolPosition: 'prefix' | 'suffix';
