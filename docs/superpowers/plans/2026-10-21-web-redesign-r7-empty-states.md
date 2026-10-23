@@ -1056,16 +1056,17 @@ rtk git commit -m "feat(web): first steps for accounts, goals, budgets, tags and
 **Files:**
 - Modify or create in `apps/web/e2e/`: a spec `empty-states.spec.ts`, and the specs that read an old empty state
 
-- [ ] **Step 1: Find the old empty states in the tests**
+- [x] **Step 1: Find the old empty states in the tests**
 
 Run: `rtk grep -rn "transactions.empty\|accounts.empty\|goals.empty\|budgets.empty\|tags.empty\|noResults\|stats.empty" apps/web/e2e`
 Each test that reads one of them must read the new state. Change it only where the page changed on purpose, and say so in the commit.
 
-- [ ] **Step 2: Write the new spec**
+- [x] **Step 2: Write the new spec**
 
 Create `apps/web/e2e/empty-states.spec.ts`. Use `createMember` from `./support/members` (without `seed` for a new member), `readLedger`, `createExpense` and the fixtures the other specs use. One test for each of these:
 
 1. **New member, Home:**
+   - The default onboarding makes one account, so archive it first: the member then has no account.
    - The Home shows the heading `home.startTitle` and `home.startProgress` «0 of 4».
    - The link `accounts.newAccount` goes to `/accounts?new`.
    - After you create an account in the form, the Home shows «1 of 4», and `home.inAccounts` lists the account.
@@ -1081,6 +1082,7 @@ Create `apps/web/e2e/empty-states.spec.ts`. Use `createMember` from `./support/m
    - The page shows `stats.emptyPeriod` and a `stats.goToPeriod` link.
    - Clicking that link opens a period whose breakdown has rows.
 5. **Accounts, new member:**
+   - Archive the account of the onboarding, as in test 1.
    - `/accounts` shows `accounts.whichType`.
    - Clicking the first type opens the dialog `accounts.newAccount`, with that type selected.
 6. **Budgets, seeded member with no budget:**
@@ -1090,7 +1092,11 @@ Create `apps/web/e2e/empty-states.spec.ts`. Use `createMember` from `./support/m
 
 Make every assertion read strings through `t(…)`, as the other specs do.
 
-- [ ] **Step 3: Run the suite**
+Two pages changed on purpose, so two helpers and one test change with them:
+- Transactions with no row shows the quick add in the page. `fillTransaction` and `saveTransaction` in `e2e/support/ledger.ts` now look inside the `dialog`, because the quick add has an amount field and an «Aggiungi» button of its own.
+- A member with no transaction sees «In your accounts» on the Home, not the summary. The test «create an expense, edit it, delete it» in `transactions.spec.ts` now reads that block, not the `home.expenses` figure, before the first row and after the last delete.
+
+- [x] **Step 3: Run the suite**
 
 Run: `rtk proxy pnpm --filter web e2e`
 Expected: every test passes.
@@ -1098,7 +1104,7 @@ Expected: every test passes.
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 rtk git add apps/web/e2e
@@ -1112,7 +1118,7 @@ rtk git commit -m "test(web): the first steps of the empty states (W11)"
 **Files:**
 - Modify: `docs/superpowers/plans/README.md`
 
-- [ ] **Step 1: Tick R7 and close the redesign**
+- [x] **Step 1: Tick R7 and close the redesign**
 
 In `docs/superpowers/plans/README.md`:
 - Replace `- [ ] **R7** — empty states and the new \`@saldo/core\` functions (W11).` with `- [x] **R7** — empty states and the new \`@saldo/core\` functions (W11) (\`plans/2026-10-21-web-redesign-r7-empty-states.md\`).`
@@ -1125,13 +1131,13 @@ In `docs/superpowers/plans/README.md`:
 - Transactions:
   - with no transaction, it has a quick add;
   - a search with no result lists the other periods that match.
-- An empty period of Statistics links to the last period with data.
+- An empty period of Statistics links to the nearest period with data.
 - Accounts offers the account types, Goals offers three presets, and Budgets offers «Where you spend most».
 - Tags and Invites show their form in the page.
 - `budgetSuggestions`, `matchesInOtherPeriods` and `emergencyFundTarget` are in `@saldo/core`, with tests.
 ```
 
-- [ ] **Step 2: Run the gates, unfiltered**
+- [x] **Step 2: Run the gates, unfiltered**
 
 Run: `rtk proxy pnpm lint`
 Expected: no `lint/…` lines and no `× Some errors were emitted while running checks.`
@@ -1142,7 +1148,7 @@ Expected: every package passes. On a machine with Node older than 22.22, `site` 
 Run: `rtk proxy pnpm test`
 Expected: every package passes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 rtk git add docs/superpowers/plans/README.md

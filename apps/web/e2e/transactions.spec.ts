@@ -344,8 +344,9 @@ test.describe('own rows', () => {
     const { page } = member;
     const ledger = await readLedger(member);
     const money = moneyFormatter(ledger, appLocale(locale));
+    // W11: with no transaction the Home lists the accounts, not the summary.
     await page.goto('/home');
-    await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));
+    await expect(page.getByRole('region', { name: t('home.inAccounts') })).toBeVisible();
 
     // Create: Save closes the dialog, and the row is in the list.
     const id = await createExpense(page, t, {
@@ -386,7 +387,8 @@ test.describe('own rows', () => {
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Cena di prova' })).toHaveCount(0);
     await page.goto('/home');
-    await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));
+    await expect(page.getByRole('region', { name: t('home.inAccounts') })).toBeVisible();
+    await expect(page.getByText(t('home.expenses'), { exact: true })).toHaveCount(0);
     await member.context.close();
   });
 
