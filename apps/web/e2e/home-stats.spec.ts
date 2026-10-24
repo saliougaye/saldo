@@ -1,11 +1,6 @@
 import type { Locator } from '@playwright/test';
 import type { CurrencyCode } from '@saldo/core';
-import {
-  formatDayMonth,
-  formatMoneyParts,
-  formatPeriodRange,
-  plural,
-} from '@saldo/i18n';
+import { formatDayMonth, formatMoneyParts, formatPeriodRange, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
   categoryFamily,
