@@ -101,7 +101,21 @@ This file records the scope and the decisions. The work is done, so this file ha
 - **The lead of Categorie says «transazioni»**, because the list also shows income.
 - **The colours `canvas` and `card` are web tokens.** Mobile does not read them. The existing token values do not change.
 
+## Command palette review
+
+A review of the palette before the merge found nothing serious. These fixes are in:
+
+- The rows of an older query are disabled while the new query runs.
+- `amountQuery` reads `,05` as 0,05 €.
+- The input stops at `MAX_SEARCH_QUERY`.
+- A held ⌘K does nothing more.
+- The «See all» group has a name.
+
+These items stay open:
+
+- The search action has no rate limit. A signed-in script can load only its own data.
+- `normalizeText` does not fold ß, ø, ł and æ. The Transactions filter has the same limit.
+
 ## Open items
 
-- A review of the command palette before the merge to `main`.
 - The period head sits about 16px lower than in the mockup, because the shell's top padding comes first.
