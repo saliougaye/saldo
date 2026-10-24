@@ -46,4 +46,32 @@ describe('listView', () => {
       'later-this-month',
     ]);
   });
+
+  // Bug: the row said «Spesa» only, though figure 3 and the mockup say «Groceries · Card». The
+  // account follows the category, and goes when the list is already filtered to that account.
+  it('names the account after the category, except in a list filtered to that account', () => {
+    const input = {
+      data: dataWith([
+        tx({ id: 'checking', amount: 100, date: '2026-09-10' }),
+        tx({ id: 'savings', amount: 100, date: '2026-09-10', accountId: 'a2' }),
+      ]),
+      today: '2026-09-15',
+      period: {
+        range: { start: '2026-09-01', end: '2026-09-30' },
+        isCurrent: true,
+        elapsed: 15,
+        length: 30,
+      },
+    };
+    const subtitles = (view: ReturnType<typeof listView>) =>
+      view.days.flatMap((day) => day.rows).map((row) => [row.id, row.subtitle]);
+
+    expect(subtitles(listView({ ...input, filters: EMPTY_FILTERS }))).toEqual([
+      ['savings', 'Spesa · Risparmi'],
+      ['checking', 'Spesa · Conto'],
+    ]);
+    expect(
+      subtitles(listView({ ...input, filters: { ...EMPTY_FILTERS, accountId: 'a2' } })),
+    ).toEqual([['savings', 'Spesa']]);
+  });
 });

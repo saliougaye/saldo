@@ -105,10 +105,21 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
   const tagsByName = [...data.tags].sort((a, b) => binary(a.name, b.name));
   const tagged = filters.tagIds.length > 0;
   /** With a tag filter on, a row says which tags it carries instead of its category (§5.12). */
-  const subtitleOf = (tx: Transaction, fallback: string): string => {
+  const leadOf = (tx: Transaction, fallback: string): string => {
     if (!tagged) return fallback;
     const names = tagsByName.filter((tag) => tx.tagIds.includes(tag.id)).map((tag) => tag.name);
     return names.length === 0 ? fallback : names.join(' · ');
+  };
+  /**
+   * W5, figure 3: «Category · Account». `transactionRow` gives the category only, as the phone's
+   * row wants it, so the web adds the account here. A list filtered to one account leaves it out:
+   * every row is on it. A transfer names its accounts in its title already.
+   */
+  const subtitleOf = (tx: Transaction, fallback: string): string => {
+    const lead = leadOf(tx, fallback);
+    if (tx.kind === 'transfer' || tx.accountId === filters.accountId) return lead;
+    const account = lookup.accountName(tx.accountId);
+    return account === '' ? lead : `${lead} · ${account}`;
   };
   const toDays = (txs: readonly Transaction[]): DayView[] =>
     groupByDay(txs).map((group) => ({
