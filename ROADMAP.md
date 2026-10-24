@@ -3,7 +3,7 @@
 Where Saldo goes after the proof of concept, in the order the work has to happen. Each milestone is a
 coherent release a self-hoster can update to. Milestone numbers are names, not version numbers and, since
 2026-10-19, not an order either: the diagram below gives the order, and the sections follow it. Going public
-and the marketing site come right after the MCP server; AI and shared finances follow; releasing comes last.
+and the marketing site come right after the MCP server; releases and the stores follow them; AI and shared finances come last.
 
 This file holds the big directions. Small features that fit in one plan live in
 [`TODO.md`](TODO.md); the POC phases that are already built, with their plans and acceptance criteria, live
@@ -18,17 +18,15 @@ milestone bends one of them, the bend is written down here before it is built.
 ## The order, and what actually constrains it
 
 ```
-0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.7 Public ──> 0.8 Marketing site ──> 0.5 AI on the server ──> 0.6 Shared finances ──> 0.9 Releases
+0.1 Everyday features ──> 0.2 Forecast ──> 0.3 Web app ──> 0.4 MCP server ──> 0.7 Public ──> 0.8 Marketing site ──> 0.9 Releases & stores ──> 0.5 AI on the server ──> 0.6 Shared finances
 ```
 
-Only five things in this order are dependencies; everything else is preference and can move.
+Only three things in this order are dependencies; everything else is preference and can move.
 
 | Before | After | Why |
 |---|---|---|
 | Forecast (0.2) | AI insights (0.5), the MCP forecast tool (0.4) | they consume its aggregates |
-| Shared finances (0.6) | Releases (0.9) | it changes the key of `sync_rows`; before a release there are no production rows to migrate (decided 2026-09-26) |
 | Whichever of web app, MCP, AI comes first | the other two | it builds the server-side projection they all read |
-| Everything | Releases (0.9) | a decision, taken 2026-09-22 |
 | Public (0.7) | Marketing site (0.8) → Releases (0.9) | the site links to the public repository, and is live before a release is announced (decided 2026-09-26) |
 
 **Moved on 2026-10-19:** Public (0.7) and the marketing site (0.8) now come before AI (0.5) and shared finances
@@ -36,6 +34,12 @@ Only five things in this order are dependencies; everything else is preference a
 before it. Both give way to getting the project seen sooner. The cost is small: the repository goes public
 before the `sync_rows` key changes, so the README must say that `main` is pre-release and that no migration is
 promised until 0.9 (a checklist item in 0.7).
+
+**Moved on 2026-10-24:** Releases and the stores (0.9) now come before AI (0.5) and shared finances (0.6). The
+decisions of 2026-09-22 and 2026-09-26 put the release last, so that no real data would exist when shared finances
+changed the key of `sync_rows`. They give way to getting the app into the hands of people sooner. The cost is real
+this time: from the first store release, people hold production rows. Shared finances (0.6) must then ship a
+**forward migration** of `sync_rows` and of the phone's local rows, not a reset. 0.6 says so in its own section.
 
 Two decisions taken on 2026-09-22 shape the whole list:
 
@@ -682,6 +686,79 @@ claims to show.
 
 ---
 
+## 0.9 — Releases & stores
+
+Self-hosting currently means building the server from source, and installing the app means owning a Mac
+or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found
+on 2026-09-18 while asking what an open-source self-hoster sees.
+
+### Releases first: there is nothing to update *to*
+
+`git tag` returns nothing, there is no `CHANGELOG`, and `apps/web/src/server/version.ts:5` hard-codes
+`APP_VERSION = '0.1.0'`, so `/api/health` and the landing page report the same version whatever commit is
+running. `docs/self-hosting.md` §Updating explains the order (server first, then the phones) but the only
+thing to update to is `main`, and a `SYNC_SCHEMA_VERSION` bump with no release note is discovered as a
+`409` on the phone. The image and the fork workflow below need a tag to hang on anyway, so this comes
+first:
+
+- [ ] Semver tags (`v0.1.0` …) and a `CHANGELOG.md` whose entries say in the first line whether
+      `SYNC_SCHEMA_VERSION` or `apiVersion` moved — that line is what a self-hoster reads before pulling.
+- [ ] `APP_VERSION` derived from the tag at build time (the file's own comment says why it cannot read
+      `package.json` at runtime; a build-time inject keeps that property).
+
+### Then distribution
+
+Since 2026-09-25 the app starts without a server and asks for its address, so **one official APK can exist**;
+a fork that builds its own only has to own the bundle id and the signing key. Two things make either easy:
+
+- [ ] A tagged server image on `ghcr.io`, so `docker compose` pulls instead of building. Tagged with the
+      same version as the release, and `latest` only on a tagged build.
+- [ ] A reusable workflow a user runs in their own fork, with their own bundle id and signing
+      secrets, producing a signed APK as an artifact. It pins itself to a tag too, so the APK a user builds
+      says which release it is.
+
+The second one needs care in the writing: keystore-in-secrets guidance.
+
+### The stores: the app that people install without building it
+
+Added on 2026-10-24. An APK in an artifact or a build from source is not enough: most people will install the
+app from the **Google Play Store** and the **Apple App Store**. This replaces an earlier rule of this file, that
+the repository never publishes an app of its own because it would point at the wrong server. That rule no longer
+holds. Since 2026-09-25 the app starts without a server and asks for its address, so one official build works with
+every instance. The passkey ceremony runs in the browser and comes back through the `SALDO_SCHEME` redirect, so the
+official build uses the default scheme and no server needs a file that names the app.
+
+A fork that wants its own bundle id and signing key keeps the workflow above. The official build is a second, separate way.
+
+- [ ] Decide before planning:
+  - [ ] The identity: the bundle id and the Android package (the default in `app.config.ts` is `io.github.saldo.app`; the id of a
+        store app cannot change afterwards), the developer name that the store shows, and the support address.
+  - [ ] The cost and the owner of the accounts: Google Play Console (one payment) and Apple Developer Program (a
+        yearly payment). Decide whether they belong to a person or to an organisation.
+  - [ ] The first channels: Play internal and closed testing, and TestFlight, before the public listing.
+  - [ ] How a store reviewer sees the app. A reviewer has no server. Local-only mode already works without one, but
+        Apple can ask for a demo server and an account. Decide who runs it.
+- [ ] The listing: name, description and screenshots in Italian and English, the icon, the privacy policy page on
+      the site, the data safety form (Google) and the privacy labels (Apple). The text says that the app sends data
+      to the server that the user types, and to no other server.
+- [ ] Release builds from a tag, by a workflow in this repository: an Android App Bundle signed with the upload key,
+      and an iOS archive. The signing secrets stay in GitHub secrets. Add a `docs/releasing.md` that follows the docs
+      rules.
+- [ ] Upload to the testing tracks from the workflow (Play API, App Store Connect API). The first public review
+      stays a manual step.
+- [ ] A compatibility rule between the store app and the server version. Phones update on their own and servers do
+      not: the `409` on a `SYNC_SCHEMA_VERSION` mismatch must tell the person to update the server, in words.
+- [ ] The site (0.8) links to both stores, and `docs/self-hosting.md` says that the store app is the usual way to install.
+- [ ] Replace the «`main` is pre-release» notice in `README.md` and the proof-of-concept line in `SECURITY.md` with the
+      text of a first release: what a release promises, and that from now on a change of the data format ships with a
+      migration.
+
+**Done when:** `docs/self-hosting.md` quick start pulls an image instead of cloning, `/api/health` reports
+the tag it was built from, a fork owner gets a signed APK without a Mac, and a person finds Saldo in the Play
+Store and the App Store and connects it to their own server.
+
+---
+
 ## 0.5 — AI on the server, bring your own key (spec §17.2, §17.3)
 
 Spec §17.2 stored the provider key in the phone's `expo-secure-store`, never synced, never sent to the Saldo
@@ -734,10 +811,15 @@ key never contacts a provider, and §18 says exactly what leaves the server and 
 Saldo exists to replace Spendee's paid features (§1), and shared wallets is one of them. Spec §1.2 excludes
 households from the POC; this is the note that it is the next non-goal to fall.
 
-**Before the release, decided when it starts** (changed 2026-09-26, and again 2026-10-19). It was meant to be
-decided before 0.3 so the web app would not be rewritten. It ships before 0.9 instead (0.7 and 0.8 moved ahead of
-it on 2026-10-19), while there are still no production rows: changing the key of `sync_rows` and the web app's `where user_id = ?` then costs a migration of test data,
-not of anybody's real data. 0.3 and 0.4 do not prepare for it.
+**After the first store release, decided when it starts** (changed 2026-09-26, 2026-10-19 and 2026-10-24). It was
+meant to be decided before 0.3 so the web app would not be rewritten, and later to ship before any release, while
+there are no production rows. Since 2026-10-24 it ships after 0.9: changing the key of `sync_rows` and the web app's
+`where user_id = ?` now costs a migration of **real data**. 0.3 and 0.4 do not prepare for it. The plan must contain:
+
+- a forward migration on the server: each existing user gets a personal space that owns their rows;
+- a `SYNC_SCHEMA_VERSION` bump, so a phone that has not updated gets the `409` and the message from 0.9;
+- a path for the local rows on a phone that updates later than the server;
+- a test that migrates a database filled by the previous release.
 
 Phase 10b in `docs/superpowers/plans/README.md` is labelled a stopgap, and the proper fix (scoping the
 local rows) was put off on 2026-09-12 because *what the rows would be scoped by* is undecided. The two
@@ -763,47 +845,8 @@ below) there is no shared key to distribute, which is the part that made «space
       server are not served. Shared finances either keep that line or have to earn its removal.
 - [ ] Spec section (`§5.x Shared finances`), then the plan.
 
-**Done when:** two phones with two passkeys see the same transactions, budgets and accounts, and the
-10b stopgap label comes off.
-
----
-
-## 0.9 — Releases & distribution
-
-Self-hosting currently means building the server from source, and installing the app means owning a Mac
-or an Android SDK. `.github/workflows/ci.yml` is the only workflow: nothing is published anywhere. Found
-on 2026-09-18 while asking what an open-source self-hoster sees.
-
-### Releases first: there is nothing to update *to*
-
-`git tag` returns nothing, there is no `CHANGELOG`, and `apps/web/src/server/version.ts:5` hard-codes
-`APP_VERSION = '0.1.0'`, so `/api/health` and the landing page report the same version whatever commit is
-running. `docs/self-hosting.md` §Updating explains the order (server first, then the phones) but the only
-thing to update to is `main`, and a `SYNC_SCHEMA_VERSION` bump with no release note is discovered as a
-`409` on the phone. The image and the fork workflow below need a tag to hang on anyway, so this comes
-first:
-
-- [ ] Semver tags (`v0.1.0` …) and a `CHANGELOG.md` whose entries say in the first line whether
-      `SYNC_SCHEMA_VERSION` or `apiVersion` moved — that line is what a self-hoster reads before pulling.
-- [ ] `APP_VERSION` derived from the tag at build time (the file's own comment says why it cannot read
-      `package.json` at runtime; a build-time inject keeps that property).
-
-### Then distribution
-
-Since 2026-09-25 the app starts without a server and asks for its address, so **one official APK can exist**;
-a fork that builds its own only has to own the bundle id and the signing key. Two things make either easy:
-
-- [ ] A tagged server image on `ghcr.io`, so `docker compose` pulls instead of building. Tagged with the
-      same version as the release, and `latest` only on a tagged build.
-- [ ] A reusable workflow a user runs in their own fork, with their own bundle id and signing
-      secrets, producing a signed APK as an artifact. It pins itself to a tag too, so the APK a user builds
-      says which release it is.
-
-The second one needs care in the writing: keystore-in-secrets guidance, and a hard rule that this
-repository never publishes an APK of its own, because any APK it built would point at the wrong server.
-
-**Done when:** `docs/self-hosting.md` quick start pulls an image instead of cloning, `/api/health` reports
-the tag it was built from, and a fork owner gets a signed APK without a Mac.
+**Done when:** two phones with two passkeys see the same transactions, budgets and accounts, the
+10b stopgap label comes off, and an instance that runs the last 0.9 release updates without losing a row.
 
 ---
 

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { resetEmailChangeLimitForTests } from '../../../../src/server/auth/emailChange';
 import { settleBackground } from '../../../../src/server/background';
-import { emailChanges, user } from '../../../../src/server/db/schema';
+import { emailChanges, session, user } from '../../../../src/server/db/schema';
 import { mailThrottle } from '../../../../src/server/mail/throttle';
 import { changeTokenIn, sessionWithEmail } from '../../../../src/server/test/emailChange';
 import { createTestDatabase, type TestDatabase } from '../../../../src/server/test/harness';
@@ -229,6 +229,76 @@ describe('changing a real address', () => {
     expect(await spend(changeTokenIn(mail.sent[0]))).toBe(410);
     expect(await harness.db.select().from(emailChanges)).toHaveLength(0);
     expect((await emailOf(account.userId)).email).toBe(OLD);
+  });
+
+  describe('with a session that a passkey did not create a short time ago', () => {
+    const tenMinutesAgo = () => new Date(Date.now() - 10 * 60 * 1000);
+
+    it('asks for a fresh passkey, stores nothing and mails nobody', async () => {
+      const mail = catchMail();
+      await enableMail(harness.db);
+      const account = await sessionWithEmail(harness.db, OLD, { createdAt: tenMinutesAgo() });
+      const response = await ask(account.bearer, NEW);
+      expect(response.status).toBe(403);
+      expect(await response.json()).toMatchObject({ error: { code: 'reauth_required' } });
+      expect(await harness.db.select().from(emailChanges)).toHaveLength(0);
+      expect(mail.sent).toHaveLength(0);
+      expect((await emailOf(account.userId)).email).toBe(OLD);
+    });
+
+    it('spends no slot of the hourly limit, so a fresh session still gets through', async () => {
+      catchMail();
+      await enableMail(harness.db);
+      const account = await sessionWithEmail(harness.db, OLD, { createdAt: tenMinutesAgo() });
+      for (let i = 0; i < 11; i++) {
+        expect((await ask(account.bearer, `try${i}@new.example`)).status).toBe(403);
+      }
+      // What the passkey button does: a ceremony makes a new session for the same account.
+      const fresh = crypto.randomUUID();
+      await harness.db.insert(session).values({
+        id: crypto.randomUUID(),
+        userId: account.userId,
+        token: fresh,
+        expiresAt: new Date(Date.now() + 3600 * 1000),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect((await ask(`Bearer ${fresh}`, NEW)).status).toBe(202);
+    });
+
+    it('still answers 409 when the server has no SMTP: that check comes first', async () => {
+      const account = await sessionWithEmail(harness.db, OLD, { createdAt: tenMinutesAgo() });
+      const response = await ask(account.bearer, NEW);
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({ error: { code: 'email_already_set' } });
+    });
+
+    it('can still cancel a pending change: that only removes a row', async () => {
+      catchMail();
+      await enableMail(harness.db);
+      const account = await sessionWithEmail(harness.db, OLD);
+      await ask(account.bearer, NEW);
+      await harness.db
+        .update(session)
+        .set({ createdAt: tenMinutesAgo() })
+        .where(eq(session.userId, account.userId));
+      const response = await DELETE(
+        new Request('http://localhost/api/me/email', {
+          method: 'DELETE',
+          headers: { authorization: account.bearer },
+        }),
+      );
+      expect(response.status).toBe(204);
+      expect(await harness.db.select().from(emailChanges)).toHaveLength(0);
+    });
+
+    it('still fills a synthetic address: there is no real address to protect yet', async () => {
+      const old = await createTestSession(harness.db, 'Ada', 'user', tenMinutesAgo());
+      const response = await POST(
+        request({ email: 'ada@example.com' }, { authorization: old.bearer }),
+      );
+      expect(response.status).toBe(200);
+    });
   });
 
   it('needs a signed-in account', async () => {

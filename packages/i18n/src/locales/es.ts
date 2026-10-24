@@ -1766,6 +1766,9 @@ export const es: Messages = {
       changeInvalid: 'Eso no es una dirección de correo.',
       changeSame: 'Esta ya es tu dirección.',
       changeLater: 'Espera un minuto antes de volver a pedirlo.',
+      changeReauth: 'Para proteger tu cuenta, confirma con tu passkey antes de cambiar tu correo.',
+      changeReauthButton: 'Confirmar con mi passkey',
+      changeReauthFailed: 'No se confirmó la passkey. No ha cambiado nada.',
     },
     accounts: {
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',

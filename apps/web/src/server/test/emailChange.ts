@@ -8,9 +8,9 @@ import { createTestSession, type TestSession } from './session';
 export async function sessionWithEmail(
   db: ServerDatabase,
   email: string,
-  options: { verified?: boolean } = {},
+  options: { verified?: boolean; createdAt?: Date } = {},
 ): Promise<TestSession> {
-  const session = await createTestSession(db, 'Ada');
+  const session = await createTestSession(db, 'Ada', 'user', options.createdAt);
   await db
     .update(user)
     .set({ email, emailVerified: options.verified ?? true })

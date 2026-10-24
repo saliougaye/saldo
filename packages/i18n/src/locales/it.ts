@@ -1765,6 +1765,10 @@ export const it = {
       changeInvalid: 'Questo non è un indirizzo email.',
       changeSame: 'Questo è già il tuo indirizzo.',
       changeLater: 'Aspetta un minuto prima di chiederlo di nuovo.',
+      changeReauth:
+        'Per proteggere il tuo account, conferma con la passkey prima di cambiare l’email.',
+      changeReauthButton: 'Conferma con la mia passkey',
+      changeReauthFailed: 'La passkey non è stata confermata. Non è cambiato nulla.',
     },
     accounts: {
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',

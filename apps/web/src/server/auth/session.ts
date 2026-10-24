@@ -11,6 +11,11 @@ export interface AuthenticatedUser {
    * it is good for a page render only: a Server Action and an admin route call `isAdmin` again.
    */
   role: string | null;
+  /**
+   * When the session began, which is when a passkey ceremony ran: the session slides, but this
+   * never moves. A change of the email address asks for a young one (`freshSession.ts`).
+   */
+  sessionCreatedAt: Date;
 }
 
 /**
@@ -40,5 +45,6 @@ export async function authenticate(headers: Headers): Promise<AuthenticatedUser 
     email: session.user.email,
     emailVerified: session.user.emailVerified,
     role: session.user.role ?? null,
+    sessionCreatedAt: session.session.createdAt,
   };
 }

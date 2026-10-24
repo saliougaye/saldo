@@ -17,6 +17,8 @@ export async function createTestSession(
   db: ServerDatabase,
   displayName = 'Ada',
   role: 'admin' | 'user' = 'user',
+  /** When the session began; a test of the fresh-passkey rule sets it in the past. */
+  createdAt: Date = new Date(),
 ): Promise<TestSession> {
   const id = crypto.randomUUID();
   const [created] = await db
@@ -38,6 +40,7 @@ export async function createTestSession(
     userId: created.id,
     token,
     expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+    createdAt,
     updatedAt: new Date(),
   });
   // Touch the instance so a misconfigured one fails here rather than inside a route handler.
