@@ -22,11 +22,12 @@ export async function renameAccountAction(name: unknown): Promise<RenameAccountR
 
 export type ChangeEmailResult =
   | { ok: true }
-  | { ok: false; reason: 'invalid' | 'same' | 'later' | 'failed' };
+  | { ok: false; reason: 'invalid' | 'same' | 'later' | 'reauth' | 'failed' };
 
 /**
  * Profilo → Account asks to change the address. The rules are `startEmailChange`'s, the same ones
  * `POST /api/me/email` applies; the answer does not say whether another account has the address.
+ * `reauth` means the session is too old: the form asks for the passkey and sends the request again.
  */
 export async function requestEmailChangeAction(address: string): Promise<ChangeEmailResult> {
   const account = await requireWebUser();
@@ -37,10 +38,12 @@ export async function requestEmailChangeAction(address: string): Promise<ChangeE
     currentEmail: account.email,
     newEmail: email,
     acceptLanguage: (await headers()).get('accept-language'),
+    sessionCreatedAt: account.sessionCreatedAt,
     now: new Date(),
   });
   if (!result.ok) {
     if (result.reason === 'unchanged') return { ok: false, reason: 'same' };
+    if (result.reason === 'reauth') return { ok: false, reason: 'reauth' };
     return { ok: false, reason: result.reason === 'rate_limited' ? 'later' : 'failed' };
   }
   revalidatePath('/profile', 'layout');

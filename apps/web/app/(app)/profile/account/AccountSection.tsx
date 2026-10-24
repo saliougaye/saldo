@@ -87,6 +87,9 @@ export async function AccountSection({
             invalid: t('web.account.changeInvalid'),
             same: t('web.account.changeSame'),
             later: t('web.account.changeLater'),
+            reauth: t('web.account.changeReauth'),
+            reauthButton: t('web.account.changeReauthButton'),
+            reauthFailed: t('web.account.changeReauthFailed'),
             failed: t('web.auth.genericError'),
           }}
         />
