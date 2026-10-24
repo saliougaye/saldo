@@ -22,9 +22,10 @@
   cursor: default;
 }
 
+/* The mockup's filled button: the text colour, with `bg` on it, in both themes. */
 .primary {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
 .secondary {

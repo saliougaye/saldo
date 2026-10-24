@@ -57,6 +57,6 @@
   .section {
     padding: var(--layout-card-padding);
     border-radius: var(--radius-card);
-    background: var(--color-surface);
+    background: var(--color-card);
   }
 }

@@ -1,6 +1,7 @@
+/* H3: the tinted page under the blocks; a block is `card` on it. */
 .shell {
   min-height: 100dvh;
-  background: var(--color-bg);
+  background: var(--color-canvas);
   color: var(--color-text);
   display: flex;
   flex-direction: column;

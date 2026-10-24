@@ -11,11 +11,11 @@
   min-height: 56px;
 }
 
-/* H3: a plain card — `bg`, a 1px border, the card radius, no shadow. */
+/* H3: a plain card — `card` on the tinted `canvas`, a 1px border, the card radius, no shadow. */
 .box {
   padding: 24px;
   border-radius: var(--radius-card);
-  background: var(--color-bg);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
 }
 
@@ -32,8 +32,14 @@
   color: var(--color-positive);
 }
 
+/*
+ * Over the limit, over the usual, behind a goal: the spec's accent is neutral on the web, and in the
+ * light theme it is paler than the text. The emphasis is the text colour at a heavier weight, so it
+ * reads stronger than the figures beside it in both themes.
+ */
 .attention {
-  color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* ---- Summary --------------------------------------------------------------------------------- */
@@ -162,7 +168,8 @@
 }
 
 .tileOver {
-  color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .tileNote {
@@ -287,9 +294,10 @@
   transition: scale var(--motion-press) var(--motion-easing);
 }
 
+/* The mockup's filled button: the text colour, with `bg` on it. */
 .primaryAction {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
 .action {
@@ -359,7 +367,8 @@
 }
 
 .goalValue small.attention {
-  color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
