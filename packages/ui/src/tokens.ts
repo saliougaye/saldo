@@ -290,6 +290,8 @@ export const layout = {
   minHitTarget: 44,
   /** Web (H1, 2026-10-20): the top bar, on every width. */
   topbarHeight: 56,
+  /** Site (spec 0.8a): the marketing site keeps its own 64px bar; the app's bar is `topbarHeight`. */
+  siteTopbarHeight: 64,
   /** Web (redesign §04): the page head — ‹ period › and the day — on one row. */
   periodHeadHeight: 72,
   /** Web: the ‹ and › of the page head. */

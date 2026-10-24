@@ -295,7 +295,7 @@ img {
   display: flex;
   align-items: center;
   gap: 24px;
-  height: var(--layout-topbar-height);
+  height: var(--layout-site-topbar-height);
 }
 .brand {
   display: inline-flex;
@@ -1888,7 +1888,7 @@ img {
 /* ---------- additions of the site (not in the mockup) ---------- */
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--layout-topbar-height) + 8px);
+  scroll-padding-top: calc(var(--layout-site-topbar-height) + 8px);
 }
 @media (prefers-reduced-motion: reduce) {
   html {
