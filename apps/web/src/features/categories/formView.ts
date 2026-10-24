@@ -37,6 +37,8 @@ export function categoryFormView(input: {
   currency: CurrencyCode;
   mode: 'new' | 'edit';
   id: string | null;
+  /** A new category's direction: the one the list shows (`?d=income`). Default: an expense. */
+  direction?: Category['direction'];
 }): CategoryFormView | null {
   const { data } = input;
   const { minorDigits } = getCurrency(input.currency);
@@ -59,7 +61,7 @@ export function categoryFormView(input: {
     updatedAt: editing?.updatedAt ?? null,
     initial:
       editing === undefined
-        ? emptyCategoryForm()
+        ? { ...emptyCategoryForm(), direction: input.direction ?? 'expense' }
         : categoryFormFrom(editing, own?.amount ?? null, minorDigits),
     hasChildren:
       editing !== undefined && data.categories.some((row) => row.parentId === editing.id),

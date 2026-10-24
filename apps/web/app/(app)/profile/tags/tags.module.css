@@ -12,14 +12,6 @@
   white-space: nowrap;
 }
 
-/* The line under the title: what a tag is for (the phone's footnote). */
-.note {
-  margin: 0 0 8px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
-  text-wrap: pretty;
-}
-
 .uses {
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);

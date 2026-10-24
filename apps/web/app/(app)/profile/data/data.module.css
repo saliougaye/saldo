@@ -8,7 +8,7 @@
 
 /* What is not here, and where it is: the phone. */
 .note {
-  margin: 12px 0 0;
+  margin: 0;
   font-size: var(--font-size-footnote);
   color: var(--color-text-faint);
   text-wrap: pretty;

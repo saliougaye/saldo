@@ -7,7 +7,7 @@ import { env } from '../../../../src/server/env';
 import { adminContext } from '../../../../src/server/page/adminContext';
 import { API_VERSION, APP_VERSION } from '../../../../src/server/version';
 import { Icon } from '../../../../src/ui/Icon';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import styles from '../admin.module.css';
 
@@ -39,22 +39,24 @@ export default async function AdminInstancePage() {
   const say = (message: Parameters<typeof resolveMessage>[0]) =>
     resolveMessage(message, { t, locale, formatDate: ctx.formatDate.long });
   return (
-    <Section open title={t('admin.nav.instance')} trailing={t('admin.instance.trailing')}>
-      <div>
-        {rows.map((row) => (
-          <SummaryRow
-            key={row.id}
-            leading={
-              <span className={styles.tile} aria-hidden="true">
-                <Icon name={ICONS[row.id] ?? 'info'} size={16} />
-              </span>
-            }
-            title={t(row.labelKey)}
-            subtitle={row.subtitle === null ? undefined : say(row.subtitle)}
-            value={say(row.value)}
-          />
-        ))}
-      </div>
-    </Section>
+    <SettingsSection title={t('admin.nav.instance')} trailing={t('admin.instance.trailing')}>
+      <SettingsBox>
+        <div>
+          {rows.map((row) => (
+            <SummaryRow
+              key={row.id}
+              leading={
+                <span className={styles.tile} aria-hidden="true">
+                  <Icon name={ICONS[row.id] ?? 'info'} size={16} />
+                </span>
+              }
+              title={t(row.labelKey)}
+              subtitle={row.subtitle === null ? undefined : say(row.subtitle)}
+              value={say(row.value)}
+            />
+          ))}
+        </div>
+      </SettingsBox>
+    </SettingsSection>
   );
 }

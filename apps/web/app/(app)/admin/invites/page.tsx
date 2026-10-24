@@ -16,7 +16,7 @@ import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import styles from '../admin.module.css';
 import { FirstInvite } from './FirstInvite';
@@ -181,14 +181,20 @@ export default async function AdminInvitesPage() {
         closeLabel={t('common.close')}
         slot
       >
-        <Section open title={t('admin.nav.invites')} trailing={newLink}>
-          <p className={styles.note}>{t('admin.invites.note')}</p>
+        <SettingsSection
+          title={t('admin.nav.invites')}
+          lead={t('admin.invites.note')}
+          trailing={newLink}
+        >
           {rows.length === 0 ? (
             <EmptyState title={t('admin.invites.empty')} body={t('admin.invites.emptyBody')} />
           ) : (
-            <div>
+            <SettingsBox>
               {rows.map((row) => (
-                <div key={row.id} className={row.muted ? styles.muted : undefined}>
+                <div
+                  key={row.id}
+                  className={`${styles.inviteRow} ${row.muted ? styles.muted : ''}`}
+                >
                   <SummaryRow
                     href={`${PATH}?i=${encodeURIComponent(row.id)}`}
                     selectId={`i:${row.id}`}
@@ -201,9 +207,22 @@ export default async function AdminInvitesPage() {
                     subtitle={say(row.subtitle, 'short')}
                     value={t(row.statusKey)}
                   />
+                  {/* Beside the row's link, not in it: a button cannot sit in a link. */}
+                  {row.status === 'active' ? (
+                    <RevokeInvite
+                      id={row.id}
+                      inline
+                      title={t('admin.invites.revokeTitle', {
+                        label: row.label ?? t('admin.invites.noLabel'),
+                      })}
+                      name={t('admin.invites.revokeRow', {
+                        label: row.label ?? t('admin.invites.noLabel'),
+                      })}
+                    />
+                  ) : null}
                 </div>
               ))}
-            </div>
+            </SettingsBox>
           )}
           {/* Outside the branch above: the first mint brings a row, and the code must stay on screen. */}
           <FirstInvite
@@ -211,7 +230,7 @@ export default async function AdminInvitesPage() {
             title={t('admin.invites.createFirst')}
             mint={mint}
           />
-        </Section>
+        </SettingsSection>
       </PanelSwitch>
     </RevokeInviteShared>
   );

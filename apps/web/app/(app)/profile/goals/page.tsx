@@ -30,7 +30,7 @@ import { IconBox } from '../../../../src/ui/IconBox';
 import { ListRow } from '../../../../src/ui/ListRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { TargetRing } from '../../../../src/ui/TargetRing';
 import formStyles from '../../accounts/accountForms.module.css';
 import accountStyles from '../../accounts/accounts.module.css';
@@ -118,7 +118,6 @@ export default async function ProfileGoalsPage({
     panels.new = {
       title: t('goals.newGoal'),
       form: true,
-      bare: true,
       body: formBody(fresh, null),
     };
   }
@@ -128,7 +127,6 @@ export default async function ProfileGoalsPage({
     panels[`g:${item.account.id}`] = {
       title: t('goals.editGoal'),
       form: true,
-      bare: true,
       body: formBody(form, item.parent?.name ?? null),
     };
   }
@@ -153,8 +151,7 @@ export default async function ProfileGoalsPage({
         closeLabel={t('common.close')}
         slot
       >
-        <Section
-          open
+        <SettingsSection
           title={t('goals.title')}
           trailing={
             canCreate ? (
@@ -177,60 +174,64 @@ export default async function ProfileGoalsPage({
             </div>
           ) : null}
           {canCreate ? null : <p className={styles.note}>{t('web.accounts.goalNeedsAccount')}</p>}
-          {items.map((item) => (
-            <ListRow
-              key={item.account.id}
-              open
-              href={`${PATH}?g=${item.account.id}`}
-              selectId={`g:${item.account.id}`}
-              leading={
-                <TargetRing
-                  size={ROW_RING}
-                  ratio={item.progress.ratio}
-                  pace={null}
-                  tone={tone(item)}
-                  icon={item.account.icon as IconName}
-                  colorIndex={item.account.colorIndex}
+          {items.length === 0 ? null : (
+            <SettingsBox>
+              {items.map((item) => (
+                <ListRow
+                  key={item.account.id}
+                  open
+                  href={`${PATH}?g=${item.account.id}`}
+                  selectId={`g:${item.account.id}`}
+                  leading={
+                    <TargetRing
+                      size={ROW_RING}
+                      ratio={item.progress.ratio}
+                      pace={null}
+                      tone={tone(item)}
+                      icon={item.account.icon as IconName}
+                      colorIndex={item.account.colorIndex}
+                    />
+                  }
+                  title={item.account.name}
+                  subtitle={item.parent?.name}
+                  trailing={
+                    <span className={styles.rowAmount}>
+                      <AmountText minor={item.progress.saved} currency={currency} locale={locale} />
+                      <span className={styles.rowOf}>{goalOf(item, goalDeps)}</span>
+                    </span>
+                  }
                 />
-              }
-              title={item.account.name}
-              subtitle={item.parent?.name}
-              trailing={
-                <span className={styles.rowAmount}>
-                  <AmountText minor={item.progress.saved} currency={currency} locale={locale} />
-                  <span className={styles.rowOf}>{goalOf(item, goalDeps)}</span>
-                </span>
-              }
-            />
-          ))}
-        </Section>
+              ))}
+            </SettingsBox>
+          )}
 
-        {closed.length === 0 ? null : (
-          <Section open title={t('web.accounts.closedGoals')}>
-            {closed.map((row) => (
-              <ListRow
-                key={row.id}
-                leading={
-                  <span className={formStyles.faded}>
-                    <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
-                  </span>
-                }
-                title={row.name}
-                subtitle={row.parentName}
-                trailing={
-                  <RestoreButton
-                    id={row.id}
-                    kind="goal"
-                    label={t('accounts.restore')}
-                    busyLabel={t('common.loading')}
-                    errors={writeErrors}
-                    disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
-                  />
-                }
-              />
-            ))}
-          </Section>
-        )}
+          {closed.length === 0 ? null : (
+            <SettingsBox title={t('web.accounts.closedGoals')}>
+              {closed.map((row) => (
+                <ListRow
+                  key={row.id}
+                  leading={
+                    <span className={formStyles.faded}>
+                      <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                    </span>
+                  }
+                  title={row.name}
+                  subtitle={row.parentName}
+                  trailing={
+                    <RestoreButton
+                      id={row.id}
+                      kind="goal"
+                      label={t('accounts.restore')}
+                      busyLabel={t('common.loading')}
+                      errors={writeErrors}
+                      disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
+                    />
+                  }
+                />
+              ))}
+            </SettingsBox>
+          )}
+        </SettingsSection>
       </PanelSwitch>
     </GoalFormProvider>
   );

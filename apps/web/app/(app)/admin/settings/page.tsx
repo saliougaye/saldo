@@ -17,7 +17,7 @@ import { readServerSettings, smtpView } from '../../../../src/server/settings/se
 import { Alert } from '../../../../src/ui/Alert';
 import { Icon } from '../../../../src/ui/Icon';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import styles from '../admin.module.css';
 import { NamePanel } from './NamePanel';
@@ -207,34 +207,36 @@ export default async function AdminSettingsPage() {
       closeLabel={t('common.close')}
       slot
     >
-      <Section open title={t('admin.settings.title')} trailing={t('admin.settings.trailing')}>
-        <div>
-          {rows.map((row) => (
-            <SummaryRow
-              key={row.id}
-              href={`${SETTINGS_PATH}?edit=${row.id}`}
-              selectId={`edit:${row.id}`}
-              leading={
-                <span className={styles.tile} aria-hidden="true">
-                  <Icon name={ICONS[row.id]} size={16} />
-                </span>
-              }
-              title={t(row.labelKey)}
-              subtitle={say(row.subtitle)}
-              value={
-                row.value === null ? undefined : row.ok ? (
-                  <span className={styles.secret}>
-                    <span className={styles.dotOk} aria-hidden="true" />
-                    {say(row.value)}
+      <SettingsSection title={t('admin.settings.title')} trailing={t('admin.settings.trailing')}>
+        <SettingsBox>
+          <div>
+            {rows.map((row) => (
+              <SummaryRow
+                key={row.id}
+                href={`${SETTINGS_PATH}?edit=${row.id}`}
+                selectId={`edit:${row.id}`}
+                leading={
+                  <span className={styles.tile} aria-hidden="true">
+                    <Icon name={ICONS[row.id]} size={16} />
                   </span>
-                ) : (
-                  say(row.value)
-                )
-              }
-            />
-          ))}
-        </div>
-      </Section>
+                }
+                title={t(row.labelKey)}
+                subtitle={say(row.subtitle)}
+                value={
+                  row.value === null ? undefined : row.ok ? (
+                    <span className={styles.secret}>
+                      <span className={styles.dotOk} aria-hidden="true" />
+                      {say(row.value)}
+                    </span>
+                  ) : (
+                    say(row.value)
+                  )
+                }
+              />
+            ))}
+          </div>
+        </SettingsBox>
+      </SettingsSection>
     </PanelSwitch>
   );
 }

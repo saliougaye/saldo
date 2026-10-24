@@ -8,7 +8,7 @@ import { Icon } from '../../../../src/ui/Icon';
 import { ListRow } from '../../../../src/ui/ListRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { TagForm, TagFormShared, type TagFormSharedValue } from './TagForm';
 import styles from './tags.module.css';
 
@@ -76,9 +76,9 @@ export default async function ProfileTagsPage({
         closeLabel={t('common.close')}
         slot
       >
-        <Section
-          open
+        <SettingsSection
           title={t('tags.title')}
+          lead={t('tags.footnote')}
           trailing={
             <PanelLink className={styles.newTag} href={`${PATH}?new`}>
               <Icon name="plus" size={16} />
@@ -86,32 +86,35 @@ export default async function ProfileTagsPage({
             </PanelLink>
           }
         >
-          <p className={styles.note}>{t('tags.footnote')}</p>
-          {rows.length === 0 ? (
-            <>
-              <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
-              {/* W11: the field of «New tag» is in the page; a save lists the tag. */}
-              <div className={styles.first}>
-                <TagForm tag={null} transactionsHref={null} inline />
+          <SettingsBox>
+            {rows.length === 0 ? (
+              <>
+                <EmptyState title={t('tags.empty')} body={t('tags.emptyBody')} />
+                {/* W11: the field of «New tag» is in the page; a save lists the tag. */}
+                <div className={styles.first}>
+                  <TagForm tag={null} transactionsHref={null} inline />
+                </div>
+              </>
+            ) : (
+              <div>
+                {rows.map((row) => (
+                  <ListRow
+                    key={row.id}
+                    href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
+                    selectId={`tag:${row.id}`}
+                    icon="tag"
+                    title={row.name}
+                    trailing={
+                      <span className={styles.uses}>
+                        {plural(t, locale, 'tags.uses', row.uses)}
+                      </span>
+                    }
+                  />
+                ))}
               </div>
-            </>
-          ) : (
-            <div>
-              {rows.map((row) => (
-                <ListRow
-                  key={row.id}
-                  href={`${PATH}?tag=${encodeURIComponent(row.id)}`}
-                  selectId={`tag:${row.id}`}
-                  icon="tag"
-                  title={row.name}
-                  trailing={
-                    <span className={styles.uses}>{plural(t, locale, 'tags.uses', row.uses)}</span>
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </Section>
+            )}
+          </SettingsBox>
+        </SettingsSection>
       </PanelSwitch>
     </TagFormShared>
   );

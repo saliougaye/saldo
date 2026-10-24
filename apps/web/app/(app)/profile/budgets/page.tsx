@@ -16,7 +16,7 @@ import { Icon } from '../../../../src/ui/Icon';
 import { ListRow } from '../../../../src/ui/ListRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { BudgetForm, BudgetFormProvider, type BudgetFormSharedValue } from './BudgetForm';
 import styles from './budgets.module.css';
 
@@ -78,7 +78,6 @@ export default async function BudgetsPage({
     panels.new = {
       title: t('budgets.newBudget'),
       form: true,
-      bare: true,
       body: formBody(fresh, null),
     };
   }
@@ -88,7 +87,6 @@ export default async function BudgetsPage({
     panels[`b:${item.budget.id}`] = {
       title: t('budgets.editBudget'),
       form: true,
-      bare: true,
       body: formBody(form, item.budget.name),
     };
   }
@@ -122,8 +120,7 @@ export default async function BudgetsPage({
         closeLabel={t('common.close')}
         slot
       >
-        <Section
-          open
+        <SettingsSection
           title={t('budgets.title')}
           trailing={
             <PanelLink className={styles.newBudget} href={`${PATH}?new`}>
@@ -132,42 +129,44 @@ export default async function BudgetsPage({
             </PanelLink>
           }
         >
-          {view.items.length === 0 && suggestions.length === 0 ? (
-            <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
-          ) : (
-            <div>{view.items.map(rows.row)}</div>
-          )}
-          {view.items.length > 0 || suggestions.length === 0 ? null : (
-            <div className={styles.suggest}>
-              <h3 className={styles.suggestTitle}>{t('budgets.suggestTitle')}</h3>
-              {suggestions.map((suggestion) => {
-                const category = page.data.categories.find(
-                  (row) => row.id === suggestion.categoryId,
-                );
-                return (
-                  <ListRow
-                    key={suggestion.categoryId}
-                    open
-                    icon={category?.icon as IconName | undefined}
-                    colorIndex={category?.colorIndex}
-                    title={category?.name ?? t('common.missing')}
-                    subtitle={t(`budgets.suggestAmount_${def.kind}`, {
-                      amount: money(suggestion.amount),
-                    })}
-                    trailing={
-                      <PanelLink
-                        className={styles.newBudget}
-                        href={`${PATH}?new&category=${encodeURIComponent(suggestion.categoryId)}&amount=${suggestion.amount}`}
-                      >
-                        {t('budgets.create')}
-                      </PanelLink>
-                    }
-                  />
-                );
-              })}
-            </div>
-          )}
-        </Section>
+          <SettingsBox>
+            {view.items.length === 0 && suggestions.length === 0 ? (
+              <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
+            ) : (
+              <div>{view.items.map(rows.row)}</div>
+            )}
+            {view.items.length > 0 || suggestions.length === 0 ? null : (
+              <div className={styles.suggest}>
+                <h3 className={styles.suggestTitle}>{t('budgets.suggestTitle')}</h3>
+                {suggestions.map((suggestion) => {
+                  const category = page.data.categories.find(
+                    (row) => row.id === suggestion.categoryId,
+                  );
+                  return (
+                    <ListRow
+                      key={suggestion.categoryId}
+                      open
+                      icon={category?.icon as IconName | undefined}
+                      colorIndex={category?.colorIndex}
+                      title={category?.name ?? t('common.missing')}
+                      subtitle={t(`budgets.suggestAmount_${def.kind}`, {
+                        amount: money(suggestion.amount),
+                      })}
+                      trailing={
+                        <PanelLink
+                          className={styles.newBudget}
+                          href={`${PATH}?new&category=${encodeURIComponent(suggestion.categoryId)}&amount=${suggestion.amount}`}
+                        >
+                          {t('budgets.create')}
+                        </PanelLink>
+                      }
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </SettingsBox>
+        </SettingsSection>
       </PanelSwitch>
     </BudgetFormProvider>
   );

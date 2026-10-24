@@ -25,6 +25,7 @@
   color: var(--color-text-muted);
 }
 
+/* «Nuovo invito»: the page's one primary action (spec §06), in the colours of `Button`'s primary. */
 .newLink {
   display: inline-flex;
   align-items: center;
@@ -32,11 +33,57 @@
   height: 36px;
   padding: 0 14px;
   border-radius: var(--radius-button);
-  background: var(--color-raised);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.newLink:active {
+  scale: 0.97;
+}
+
+/* An invite's row: the link to its panel, then «Revoca» outside it (a button cannot sit in a link). */
+.inviteRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inviteRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* «Revoca» on the row: smaller than the panel's button, so the row keeps its height. */
+.inlineAction {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
   color: var(--color-text);
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  cursor: pointer;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.inlineAction:hover {
+  background: var(--color-raised);
+}
+
+.inlineAction:active {
+  scale: 0.97;
+}
+
+.inlineAction:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
 }
 
 .note {
@@ -46,8 +93,28 @@
   text-wrap: pretty;
 }
 
+/* The end of an account's row: the role, and under it the last sign-in (spec §06). */
+.roleCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.lastSignIn {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 .role {
   white-space: nowrap;
+}
+
+.roleCell .role {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .revoked {

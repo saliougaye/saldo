@@ -1,0 +1,82 @@
+/* Profilo → Profilo (spec §06): label, value, action — one row each, a line between them. */
+.rows {
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--color-border);
+}
+
+.label {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+}
+
+.value {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+/* «Modifica», «Cambia email»: a quiet bordered button, as the mockup's `.btn`. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.action:hover {
+  background: var(--color-raised);
+}
+
+.action:active {
+  scale: 0.97;
+}
+
+/* The dialog's form: the field, then its foot. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (max-width: 759px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+  }
+
+  .label {
+    grid-column: 1 / -1;
+    padding-top: 4px;
+    font-size: var(--font-size-footnote);
+  }
+}

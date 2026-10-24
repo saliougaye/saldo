@@ -148,7 +148,13 @@ export function MintInvite(props: Props) {
             setProblem(null);
           }}
         />
-        <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+        {/* «Scade dopo» over the control, as a field's label; the group carries the same name. */}
+        <div className={styles.field}>
+          <span className={styles.fieldLabel} aria-hidden="true">
+            {strings.ttl}
+          </span>
+          <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+        </div>
         {problem === null ? null : <Alert body={problem} />}
         <FormFoot
           hint={strings.keyboardHint}

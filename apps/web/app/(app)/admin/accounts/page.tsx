@@ -16,7 +16,7 @@ import { getDb } from '../../../../src/server/db/client';
 import { adminContext } from '../../../../src/server/page/adminContext';
 import { initials } from '../../../../src/ui/initials';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import styles from '../admin.module.css';
 import { AccountActions, AccountActionsShared } from './AccountActions';
@@ -157,31 +157,36 @@ export default async function AdminAccountsPage() {
           closeLabel={t('common.close')}
           slot
         >
-          <Section open title={t('admin.nav.accounts')} trailing={trailing}>
-            <div>
-              {rows.map((row) => (
-                <div key={row.id} className={row.revoked ? styles.muted : undefined}>
-                  <SummaryRow
-                    href={`${PATH}?u=${encodeURIComponent(row.id)}`}
-                    selectId={`u:${row.id}`}
-                    leading={
-                      <span className={styles.avatar} aria-hidden="true">
-                        {row.initials}
-                      </span>
-                    }
-                    title={row.name}
-                    subtitle={row.email ?? t('admin.noEmail')}
-                    value={
-                      <span className={styles.role}>
-                        {t(row.roleKey)}
-                        {row.revoked ? ` · ${t('admin.accounts.revoked')}` : ''}
-                      </span>
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </Section>
+          <SettingsSection title={t('admin.nav.accounts')} trailing={trailing}>
+            <SettingsBox>
+              <div>
+                {rows.map((row) => (
+                  <div key={row.id} className={row.revoked ? styles.muted : undefined}>
+                    <SummaryRow
+                      href={`${PATH}?u=${encodeURIComponent(row.id)}`}
+                      selectId={`u:${row.id}`}
+                      leading={
+                        <span className={styles.avatar} aria-hidden="true">
+                          {row.initials}
+                        </span>
+                      }
+                      title={row.name}
+                      subtitle={say(row.subtitle)}
+                      value={
+                        <span className={styles.roleCell}>
+                          <span className={styles.role}>
+                            {t(row.roleKey)}
+                            {row.revoked ? ` · ${t('admin.accounts.revoked')}` : ''}
+                          </span>
+                          <span className={styles.lastSignIn}>{say(row.lastSignIn, 'short')}</span>
+                        </span>
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </SettingsBox>
+          </SettingsSection>
         </PanelSwitch>
       </DeleteAccountShared>
     </AccountActionsShared>

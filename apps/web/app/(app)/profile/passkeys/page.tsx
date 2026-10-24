@@ -8,10 +8,8 @@ import { env } from '../../../../src/server/env';
 import { loadUserData } from '../../../../src/server/userData/load';
 import { resolveTimeZone } from '../../../../src/server/userData/today';
 import { Alert } from '../../../../src/ui/Alert';
-import { Section } from '../../../../src/ui/Section';
-import styles from '../../app.module.css';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { PasskeyList } from './PasskeyList';
-import passkeyStyles from './passkeys.module.css';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,15 +46,14 @@ export default async function PasskeysPage({
   };
 
   return (
-    <Section open title={t('web.passkeys.title')}>
-      <div className={passkeyStyles.stack}>
-        {recovered ? (
-          <Alert
-            title={t('web.passkeys.recoveredTitle', { email: user.email })}
-            body={t('web.passkeys.recoveredBody')}
-          />
-        ) : null}
-        <p className={styles.body}>{t('web.passkeys.body')}</p>
+    <SettingsSection title={t('web.passkeys.title')} lead={t('web.passkeys.body')}>
+      {recovered ? (
+        <Alert
+          title={t('web.passkeys.recoveredTitle', { email: user.email })}
+          body={t('web.passkeys.recoveredBody')}
+        />
+      ) : null}
+      <SettingsBox>
         <PasskeyList
           passkeys={passkeys.map((passkey) => {
             const added = addedOn(passkey.createdAt);
@@ -85,7 +82,7 @@ export default async function PasskeysPage({
             failed: t('web.auth.genericError'),
           }}
         />
-      </div>
-    </Section>
+      </SettingsBox>
+    </SettingsSection>
   );
 }
