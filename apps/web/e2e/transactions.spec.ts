@@ -185,7 +185,7 @@ test.describe('seeded account', () => {
     await member.context.close();
   });
 
-  test('the summary counts the period, and «More» holds the other filters', async ({
+  test('the summary counts the period and follows the filters, and «More» holds the other filters', async ({
     browser,
     t,
     locale,
@@ -206,10 +206,11 @@ test.describe('seeded account', () => {
       .filter((tx) => tx.kind === 'expense')
       .reduce((total, tx) => total + tx.amount, 0);
     const income = counted.filter((tx) => tx.kind === 'income');
+    const earned = income.reduce((total, tx) => total + tx.amount, 0);
 
     await page.goto(`/transactions?p=${month.start}`);
 
-    // W5: a closed period has two cells, Expenses and Income; the figures are the period's.
+    // W5: a closed period has two cells, Expenses and Income.
     const summary = page.getByRole('region', { name: t('transactions.summaryLabel') });
     await expect(summary).toContainText(money(spent));
     await expect(summary).toContainText(plural(t, lang, 'transactions.periodCount', income.length));
@@ -222,6 +223,10 @@ test.describe('seeded account', () => {
     await expect(page.locator(`${SETTLED_DAYS} a`)).toHaveCount(
       rows.filter((tx) => tx.kind === 'income').length,
     );
+    // R8: the summary follows the filters, so «Income only» spent nothing.
+    await expect(summary).not.toContainText(money(spent));
+    await expect(summary).toContainText(money(0));
+    await expect(summary).toContainText(money(earned));
     await expect(page.getByRole('link', { name: t('transactions.resetFilters') })).toBeVisible();
     await member.context.close();
   });

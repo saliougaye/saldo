@@ -7,8 +7,10 @@ import {
   type ListTotals,
   type LocalDate,
   newestFirst,
+  type PeriodSummary,
   type PeriodView,
   splitUpcoming,
+  summarizePeriod,
   type Transaction,
   type TransactionFilters,
   type TransactionKind,
@@ -52,6 +54,8 @@ export interface ListView {
   hiddenTransfers: number;
   /** What the rows on screen add up to, excluded ones included (`totalsOf`, §5.12). */
   totals: ListTotals;
+  /** The summary block (W5): the period's figures over the rows the filters keep. */
+  summary: PeriodSummary;
   filtered: boolean;
 }
 
@@ -152,6 +156,7 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
     upcoming: { count: split.upcoming.length, net: split.upcomingNet },
     hiddenTransfers,
     totals: totalsOf(split.settled),
+    summary: summarizePeriod(filtered, period.range, today),
     filtered: hasActiveFilters(filters),
   };
 }

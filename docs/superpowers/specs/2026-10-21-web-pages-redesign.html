@@ -429,7 +429,7 @@ kbd { font: 500 .82em var(--mono); background: var(--raised); padding: 1px 6px; 
       <p><b>Transactions.</b> You open a transaction to correct it. Thus the row opens the form at once (W3). The form is the same form as “New transaction”, with these changes:</p>
       <ul>
         <li>The title is “Edit transaction”. The amount field does not take the focus.</li>
-        <li>Tags, note and repeat show as fields when the transaction has them.</li>
+        <li>Tags and repeat show as fields when the transaction has them. The web form has no note field (§17.1.9).</li>
         <li>The footer has “Delete” on the left, then “Cancel” and “Save”.</li>
       </ul>
       <p><b>Delete.</b> “Delete” removes the row and closes the dialog. A toast shows “Deleted ‹title›” with “Undo” for 5 seconds. “Undo” puts the row back.</p>
@@ -487,7 +487,7 @@ kbd { font: 500 .82em var(--mono); background: var(--raised); padding: 1px 6px; 
     <div class="prose">
       <p>The page has three parts, from top to bottom:</p>
       <ol class="steps">
-        <li><b>Summary.</b> One block in three cells: Expenses, Income, Upcoming. Under Expenses, a bar shows the share of income that you spent. A tick on the bar shows the share of the period that has gone.</li>
+        <li><b>Summary.</b> One block in three cells: Expenses, Income, Upcoming. Under Expenses, a bar shows the share of income that you spent. A tick on the bar shows the share of the period that has gone. The figures add up the rows that the search and the filters keep.</li>
         <li><b>Tools.</b> The search field, the filters (account, category, tag) and “Expenses only”. When a filter is on, a line shows the count, the filtered expenses and “Reset filters”.</li>
         <li><b>List.</b> One block. “Upcoming” is a closed row at the top. A click opens its rows. Then the days follow, newest first. Each day shows its date and its expenses.</li>
       </ol>

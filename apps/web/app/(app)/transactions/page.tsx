@@ -1,4 +1,4 @@
-import { addDays, summarizePeriod } from '@saldo/core';
+import { addDays } from '@saldo/core';
 import {
   catalogs,
   formatDayMonth,
@@ -72,8 +72,8 @@ export default async function TransactionsPage({
   const kindLabel = (kind: string) => t(`kinds.${kind}`);
   const view = listView({ data: page.data, filters, today, period, kindLabel });
   const choices = filterChoices(page.data);
-  // D7: the summary says what the period holds, whatever the filters; the list under it is filtered.
-  const summary = summarizePeriod(page.data.transactions, period.range, today);
+  // The summary follows the filters, as the list under it does (R8, the user's decision over D7).
+  const summary = view.summary;
 
   // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
   // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.
@@ -334,7 +334,7 @@ export default async function TransactionsPage({
             strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
           />
 
-          {/* W5: one block in three cells. The figures are the period's, whatever the filters. */}
+          {/* W5: one block in three cells, over the rows the filters keep. */}
           {firstUse ? null : (
             <section className={styles.summary} aria-label={t('transactions.summaryLabel')}>
               <div className={styles.cell}>

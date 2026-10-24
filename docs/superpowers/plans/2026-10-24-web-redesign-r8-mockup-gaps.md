@@ -93,7 +93,9 @@ This file records the scope and the decisions. The work is done, so this file ha
 
 - **The Panel head has one slot for an icon.** Three branches added their own slot. The merge keeps `icon` on `Panel` and `PanelSpec`. A body that is `bare` does not show the icon.
 - **The category dialog shows six bars.** The spec says «the last six periods». The mockup has seven.
-- **The Transactions summary does not follow the search.** The spec and the r3 plan say the figures are the period's figures. The status in the page head counts the filtered rows. This difference is an open item for the product.
+- **The Transactions summary follows the search and the filters.** The user decided this on 2026-10-24. Before, the summary showed the whole period, and a search with no match showed «0 transazioni» next to the period's Uscite. `listView` returns `summary`, and the spec says so in section 05.
+- **The web form has no Note field.** The user decided this on 2026-10-24. The POC rule §17.1.9 stays.
+- **The site keeps a 64px top bar.** The new token `siteTopbarHeight` holds it, because the app's `topbarHeight` is 56.
 - **The Home budget tile shows the € sign only on the limit** («449,37 di 450,00 €»), as in spec figure 4.
 - **The count of a budget suggestion uses `transactions.periodCount`** («61 transazioni»). The mockup says «61 voci».
 - **The lead of Categorie says «transazioni»**, because the list also shows income.
@@ -101,7 +103,5 @@ This file records the scope and the decisions. The work is done, so this file ha
 
 ## Open items
 
-- The Note field in the transaction form. The spec asks for it, and the POC rule §17.1.9 leaves it out. The user decides.
-- The height token of the site's top bar (64 → 56).
 - A review of the command palette before the merge to `main`.
 - The period head sits about 16px lower than in the mockup, because the shell's top padding comes first.
