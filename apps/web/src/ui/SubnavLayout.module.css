@@ -39,9 +39,86 @@
   color: var(--color-text-faint);
 }
 
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .subnav a,
 .subnav button {
   width: 100%;
+}
+
+/* An item: `NavLink`'s look on a wide screen. */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-body);
+  letter-spacing: var(--tracking-tight);
+  transition-property: scale, background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+.link:hover {
+  color: var(--color-text);
+}
+
+/* Hover ≠ current: the same surface at 60%, so the two states are one family at two strengths. */
+.link:hover:not([aria-current]) {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+}
+
+.link[aria-current="page"] {
+  color: var(--color-text);
+  background: var(--color-raised);
+}
+
+.link:active {
+  scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link:active {
+    scale: 1;
+  }
+}
+
+.linkIcon {
+  flex: none;
+}
+
+.linkLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Only on the list below 760px. */
+.hint,
+.chevron {
+  display: none;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
 }
 
 .separator {
@@ -89,6 +166,95 @@
 @media (max-width: 759px) {
   /* `/profile`: the menu alone, as the phone's list of groups. */
   .page[data-index] .layout > :not(nav) {
+    display: none;
+  }
+
+  /* Spec §06, the list of groups: each group's items in a box, a line between them. */
+  .page[data-index] .groupTitle {
+    padding: 0 2px 6px;
+    font-size: var(--font-size-footnote);
+    color: var(--color-text-muted);
+  }
+
+  .page[data-index] .items,
+  .page[data-index] .foot {
+    gap: 0;
+    padding: 4px 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-bg);
+  }
+
+  .page[data-index] .link {
+    gap: 12px;
+    height: auto;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 0;
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .page[data-index] .link + .link {
+    box-shadow: inset 0 1px 0 var(--color-border);
+  }
+
+  /* The list is a way in, not a place: nothing on it is the current one. */
+  .page[data-index] .link[aria-current="page"] {
+    background: transparent;
+  }
+
+  .page[data-index] .link:hover:not([aria-current]) {
+    background: var(--color-raised);
+  }
+
+  .page[data-index] .linkIcon,
+  .page[data-index] .chevron {
+    color: var(--color-text-muted);
+  }
+
+  .page[data-index] .count,
+  .page[data-index] .hint {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
+    margin-inline-start: 0;
+    padding-inline-start: 8px;
+    overflow: hidden;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page[data-index] .chevron {
+    display: block;
+    flex: none;
+  }
+
+  /* An item with both («Inviti 2», «2 attivi»): the list says the words. */
+  .page[data-index] .count:has(+ .hint) {
+    display: none;
+  }
+
+  /* The label takes the room, so the hint and the chevron sit at the end, with or without a hint. */
+  .page[data-index] .linkLabel {
+    flex: 1 0 auto;
+  }
+
+  /* «Sign out» in its own box, as a row of the list. */
+  .page[data-index] .foot > button {
+    gap: 12px;
+    height: auto;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 0;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .page[data-index] .separator {
     display: none;
   }
 
