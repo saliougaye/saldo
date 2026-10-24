@@ -12,7 +12,6 @@ import { requireWebAdmin } from '../../../../src/server/auth/currentUser';
 import { listInvites, MAX_INVITE_LABEL_LENGTH } from '../../../../src/server/auth/invites';
 import { getDb } from '../../../../src/server/db/client';
 import { adminContext } from '../../../../src/server/page/adminContext';
-import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
@@ -186,9 +185,8 @@ export default async function AdminInvitesPage() {
           lead={t('admin.invites.note')}
           trailing={newLink}
         >
-          {rows.length === 0 ? (
-            <EmptyState title={t('admin.invites.empty')} body={t('admin.invites.emptyBody')} />
-          ) : (
+          {/* W11: with no invite, the form of the first one is the whole state: no «No invites» above it. */}
+          {rows.length === 0 ? null : (
             <SettingsBox>
               {rows.map((row) => (
                 <div

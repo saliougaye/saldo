@@ -449,21 +449,34 @@
 }
 
 /* W11: an empty period — what it says, and the ways out. */
+.emptyText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 60ch;
+}
+
 .emptyTitle {
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyBody {
+  color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .emptyActions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 2px;
 }
 
 .emptyAction {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   height: var(--layout-nav-item-height);
   padding: 0 12px;
   border: 1px solid var(--color-border-strong);
@@ -472,4 +485,11 @@
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
+}
+
+/* «New transaction»: the one filled button of the block. */
+.emptyPrimary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }

@@ -1,5 +1,5 @@
 import type { BudgetAdvice, BudgetView, GoalView } from '@saldo/core';
-import { accountBalances, addDays, goalPace, goalTone, isPocket } from '@saldo/core';
+import { accountBalances, addDays, goalPace, goalTone, netWorth } from '@saldo/core';
 import {
   budgetCardStatusText,
   formatDayMonth,
@@ -27,6 +27,7 @@ import { Icon } from '../../../src/ui/Icon';
 import { paletteIndex } from '../../../src/ui/IconBox';
 import { NewTransactionLink } from '../../../src/ui/NewTransactionLink';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
+import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { TargetRing } from '../../../src/ui/TargetRing';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import styles from './home.module.css';
@@ -99,10 +100,10 @@ export default async function HomePage({
   // W11: a new user starts here. The blocks with nothing to show do not show.
   const start = gettingStarted(page.data);
   const balances = accountBalances(page.data.accounts, page.data.transactions, today);
-  // «In your accounts» lists accounts, as `gettingStarted` counts them: a goal is not one.
-  const liveAccounts = page.data.accounts.filter(
-    (account) => account.archivedAt === null && !isPocket(account),
-  );
+  // «In your accounts»: the money of every live account, as Conti's net worth adds it up.
+  const inAccounts = netWorth(page.data.accounts, balances);
+  // The first open step is the next one: its action is the filled button (figure 9).
+  const nextStep = start.steps.find((step) => !step.done)?.key ?? null;
 
   const money = (minor: number) => formatMoney(minor, currency, locale);
   /** §06: «195,60 di 480,00 €» — the spent figure without the symbol, which the limit carries. */
@@ -293,27 +294,37 @@ export default async function HomePage({
         <section className={styles.box} aria-labelledby="start-title">
           <div className={styles.blockHead}>
             <h2 id="start-title">{t('home.startTitle')}</h2>
-            <span className={styles.meta}>
+            <span className={styles.startProgress}>
+              <span className={styles.startTrack} aria-hidden="true">
+                <ProgressBar ratio={start.done / start.steps.length} />
+              </span>
               {t('home.startProgress', { done: start.done, count: start.steps.length })}
             </span>
           </div>
           <ol className={styles.steps}>
             {start.steps.map((step) => {
+              const next = step.key === nextStep;
+              const actionClass = next ? styles.primaryAction : styles.action;
+              const plus = next ? <Icon name="plus" size={15} /> : null;
               const action =
                 step.key === 'account' ? (
-                  <Link className={styles.action} href="/accounts?new">
+                  <Link className={actionClass} href="/accounts?new">
+                    {plus}
                     {t('accounts.newAccount')}
                   </Link>
                 ) : step.key === 'transaction' ? (
-                  <NewTransactionLink className={styles.action}>
+                  <NewTransactionLink className={actionClass}>
+                    {plus}
                     {t('web.shell.newTransaction')}
                   </NewTransactionLink>
                 ) : step.key === 'budget' ? (
-                  <Link className={styles.action} href="/profile/budgets?new">
+                  <Link className={actionClass} href="/profile/budgets?new">
+                    {plus}
                     {t('budgets.create')}
                   </Link>
                 ) : (
-                  <Link className={styles.action} href={NEW_GOAL_HREF}>
+                  <Link className={actionClass} href={NEW_GOAL_HREF}>
+                    {plus}
                     {t('goals.create')}
                   </Link>
                 );
@@ -351,21 +362,16 @@ export default async function HomePage({
       ) : null}
 
       {/* In your accounts (W11): no transaction yet, so the balances come before the summary */}
-      {start.noTransactions && liveAccounts.length > 0 ? (
-        <section className={styles.box} aria-labelledby="in-accounts-title">
-          <div className={styles.blockHead}>
-            <h2 id="in-accounts-title">{t('home.inAccounts')}</h2>
-          </div>
-          {liveAccounts.map((account) => (
-            <Link key={account.id} className={styles.accountRow} href={`/accounts?a=${account.id}`}>
-              <span>{account.name}</span>
-              <AmountText
-                minor={balances.get(account.id) ?? 0}
-                currency={currency}
-                locale={locale}
-              />
-            </Link>
-          ))}
+      {start.noTransactions && start.firstAccount !== null ? (
+        <section
+          className={`${styles.box} ${styles.inAccounts}`}
+          aria-labelledby="in-accounts-title"
+        >
+          <h2 id="in-accounts-title" className={styles.label}>
+            {t('home.inAccounts')}
+          </h2>
+          <span className={styles.inAccountsTotal}>{money(inAccounts)}</span>
+          <p className={styles.inAccountsNote}>{t('home.inAccountsNote')}</p>
         </section>
       ) : null}
 

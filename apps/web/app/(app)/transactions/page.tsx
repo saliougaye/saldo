@@ -1,12 +1,13 @@
-import { addDays, matchesInOtherPeriods, summarizePeriod } from '@saldo/core';
+import { addDays, summarizePeriod } from '@saldo/core';
 import {
   catalogs,
-  formatCycleRange,
   formatDayMonth,
   formatMoney,
   formatMoneyParts,
+  formatPeriodName,
   formatWeekday,
   plural,
+  upperFirst,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { PERIOD_PARAM, periodHref } from '../../../src/features/period/periodParams';
@@ -17,12 +18,8 @@ import {
   searchFromFilters,
   toggleHref,
 } from '../../../src/features/transactions/listParams';
-import {
-  type DayView,
-  filterChoices,
-  filterLookup,
-  listView,
-} from '../../../src/features/transactions/listView';
+import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
+import { otherPeriodsView } from '../../../src/features/transactions/otherPeriodsView';
 import { NEW_PARAM, SELECTION_PARAM } from '../../../src/features/transactions/panelState';
 import { formMessages } from '../../../src/i18n/formMessages';
 import { getDb } from '../../../src/server/db/client';
@@ -34,6 +31,7 @@ import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
+import { paletteIndex } from '../../../src/ui/IconBox';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { SearchField } from '../../../src/ui/SearchField';
@@ -245,17 +243,15 @@ export default async function TransactionsPage({
   );
 
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
+  // W11: no transaction at all, and no filter: the quick add stands alone, with no summary of
+  // zeros and no search above it, so the amount and «Add» stay in the first screen of a phone.
+  const firstUse = page.data.transactions.length === 0 && !view.filtered;
   // W11: the same search in the other periods, when this one finds nothing.
   const otherPeriods =
-    hasRows || !view.filtered
+    hasRows || !view.filtered || filters.query === ''
       ? []
-      : matchesInOtherPeriods({
-          txs: page.data.transactions,
-          filters,
-          lookup: filterLookup(page.data),
-          def,
-          exclude: period.range,
-        });
+      : otherPeriodsView({ data: page.data, filters, def, exclude: period.range, kindLabel });
+  const periodName = formatPeriodName(period.range, locale, today);
   // W11: the quick add saves on the account the new form opens on (not a pocket, not archived).
   const defaultAccount =
     newForm?.accounts.find((account) => !account.pocket && !account.archived) ?? null;
@@ -339,127 +335,136 @@ export default async function TransactionsPage({
           />
 
           {/* W5: one block in three cells. The figures are the period's, whatever the filters. */}
-          <section className={styles.summary} aria-label={t('transactions.summaryLabel')}>
-            <div className={styles.cell}>
-              <span className={styles.cellLabel}>{t('home.expenses')}</span>
-              <AmountText minor={summary.spent} currency={currency} locale={locale} size="title" />
-              <ProgressBar
-                ratio={summary.ratio}
-                pace={period.isCurrent ? summary.pace : null}
-                // H12: grey over pace, the accent only once spending passes the income.
-                tone={summary.ratio > 1 ? 'over' : 'normal'}
-              />
-              <span className={styles.cellNote}>{expenseNote}</span>
-            </div>
-            <div className={styles.cell}>
-              <span className={styles.cellLabel}>{t('home.income')}</span>
-              <AmountText
-                minor={summary.income}
-                currency={currency}
-                locale={locale}
-                size="title"
-                positive
-              />
-              <span className={styles.cellNote}>
-                {plural(t, locale, 'transactions.periodCount', summary.incomeCount)}
-              </span>
-            </div>
-            {period.isCurrent ? (
+          {firstUse ? null : (
+            <section className={styles.summary} aria-label={t('transactions.summaryLabel')}>
               <div className={styles.cell}>
-                <span className={styles.cellLabel}>{t('home.upcoming')}</span>
+                <span className={styles.cellLabel}>{t('home.expenses')}</span>
                 <AmountText
-                  minor={view.upcoming.net}
+                  minor={summary.spent}
                   currency={currency}
                   locale={locale}
                   size="title"
-                  sign="always"
+                />
+                <ProgressBar
+                  ratio={summary.ratio}
+                  pace={period.isCurrent ? summary.pace : null}
+                  // H12: grey over pace, the accent only once spending passes the income.
+                  tone={summary.ratio > 1 ? 'over' : 'normal'}
+                />
+                <span className={styles.cellNote}>{expenseNote}</span>
+              </div>
+              <div className={styles.cell}>
+                <span className={styles.cellLabel}>{t('home.income')}</span>
+                <AmountText
+                  minor={summary.income}
+                  currency={currency}
+                  locale={locale}
+                  size="title"
+                  positive
                 />
                 <span className={styles.cellNote}>
-                  {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                  {plural(t, locale, 'transactions.periodCount', summary.incomeCount)}
                 </span>
               </div>
-            ) : null}
-          </section>
+              {period.isCurrent ? (
+                <div className={styles.cell}>
+                  <span className={styles.cellLabel}>{t('home.upcoming')}</span>
+                  <AmountText
+                    minor={view.upcoming.net}
+                    currency={currency}
+                    locale={locale}
+                    size="title"
+                    sign="always"
+                  />
+                  <span className={styles.cellNote}>
+                    {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                  </span>
+                </div>
+              ) : null}
+            </section>
+          )}
 
           {/* W5: the search, the three menus, «Expenses only» and «More». */}
-          <div className={styles.tools}>
-            <SearchField
-              // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
-              key={filters.query}
-              path={PATH}
-              keep={keepWithoutQuery}
-              value={filters.query}
-              label={t('common.search')}
-              placeholder={t('transactions.searchPlaceholder')}
-            />
-            <FilterMenu
-              label={accountLabel}
-              active={filters.accountId !== null}
-              options={choices.accounts.map((account) => ({
-                key: account.id,
-                label: account.archived
-                  ? `${account.name} · ${t('accounts.archivedBadge')}`
-                  : account.name,
-                href: toggleHref(PATH, filters, { accountId: account.id }, params),
-                selected: filters.accountId === account.id,
-              }))}
-            />
-            <FilterMenu
-              label={categoryLabel}
-              active={filters.categoryId !== null}
-              options={choices.categories.map((category) => ({
-                key: category.id,
-                label: category.child ? `— ${category.name}` : category.name,
-                href: toggleHref(PATH, filters, { categoryId: category.id }, params),
-                selected: filters.categoryId === category.id,
-              }))}
-            />
-            {choices.tags.length === 0 ? null : (
+          {firstUse ? null : (
+            <div className={styles.tools}>
+              <SearchField
+                // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
+                key={filters.query}
+                path={PATH}
+                keep={keepWithoutQuery}
+                value={filters.query}
+                label={t('common.search')}
+                placeholder={t('transactions.searchPlaceholder')}
+              />
               <FilterMenu
-                label={tagLabel}
-                active={filters.tagIds.length > 0}
-                options={choices.tags.map((tag) => ({
-                  key: tag.id,
-                  label: tag.name,
-                  href: toggleHref(PATH, filters, { tagId: tag.id }, params),
-                  selected: filters.tagIds.includes(tag.id),
+                label={accountLabel}
+                active={filters.accountId !== null}
+                options={choices.accounts.map((account) => ({
+                  key: account.id,
+                  label: account.archived
+                    ? `${account.name} · ${t('accounts.archivedBadge')}`
+                    : account.name,
+                  href: toggleHref(PATH, filters, { accountId: account.id }, params),
+                  selected: filters.accountId === account.id,
                 }))}
               />
-            )}
-            <Chip
-              label={t('transactions.onlyExpenses')}
-              href={toggleHref(PATH, filters, { direction: 'expense' }, params)}
-              active={filters.direction === 'expense'}
-            />
-            <FilterMenu
-              label={moreLabel}
-              active={
-                filters.direction === 'income' ||
-                filters.direction === 'transfer' ||
-                filters.onlyExcluded
-              }
-              options={[
-                {
-                  key: 'income',
-                  label: t('transactions.onlyIncome'),
-                  href: toggleHref(PATH, filters, { direction: 'income' }, params),
-                  selected: filters.direction === 'income',
-                },
-                {
-                  key: 'transfer',
-                  label: t('transactions.onlyTransfers'),
-                  href: toggleHref(PATH, filters, { direction: 'transfer' }, params),
-                  selected: filters.direction === 'transfer',
-                },
-                {
-                  key: 'excluded',
-                  label: t('transactions.onlyExcluded'),
-                  href: toggleHref(PATH, filters, { excluded: !filters.onlyExcluded }, params),
-                  selected: filters.onlyExcluded,
-                },
-              ]}
-            />
-          </div>
+              <FilterMenu
+                label={categoryLabel}
+                active={filters.categoryId !== null}
+                options={choices.categories.map((category) => ({
+                  key: category.id,
+                  label: category.child ? `— ${category.name}` : category.name,
+                  href: toggleHref(PATH, filters, { categoryId: category.id }, params),
+                  selected: filters.categoryId === category.id,
+                }))}
+              />
+              {choices.tags.length === 0 ? null : (
+                <FilterMenu
+                  label={tagLabel}
+                  active={filters.tagIds.length > 0}
+                  options={choices.tags.map((tag) => ({
+                    key: tag.id,
+                    label: tag.name,
+                    href: toggleHref(PATH, filters, { tagId: tag.id }, params),
+                    selected: filters.tagIds.includes(tag.id),
+                  }))}
+                />
+              )}
+              <Chip
+                label={t('transactions.onlyExpenses')}
+                href={toggleHref(PATH, filters, { direction: 'expense' }, params)}
+                active={filters.direction === 'expense'}
+              />
+              <FilterMenu
+                label={moreLabel}
+                active={
+                  filters.direction === 'income' ||
+                  filters.direction === 'transfer' ||
+                  filters.onlyExcluded
+                }
+                options={[
+                  {
+                    key: 'income',
+                    label: t('transactions.onlyIncome'),
+                    href: toggleHref(PATH, filters, { direction: 'income' }, params),
+                    selected: filters.direction === 'income',
+                  },
+                  {
+                    key: 'transfer',
+                    label: t('transactions.onlyTransfers'),
+                    href: toggleHref(PATH, filters, { direction: 'transfer' }, params),
+                    selected: filters.direction === 'transfer',
+                  },
+                  {
+                    key: 'excluded',
+                    label: t('transactions.onlyExcluded'),
+                    href: toggleHref(PATH, filters, { excluded: !filters.onlyExcluded }, params),
+                    selected: filters.onlyExcluded,
+                  },
+                ]}
+              />
+            </div>
+          )}
 
           {/* W5: with a filter on, one line: the count, what it spent, and the way back. */}
           {view.filtered && hasRows ? (
@@ -479,26 +484,67 @@ export default async function TransactionsPage({
 
         {!hasRows ? (
           view.filtered ? (
-            <div className={styles.empty}>
+            <div className={`${styles.listBox} ${styles.noResults}`}>
               <EmptyState
-                title={t('transactions.noResultsIn', {
-                  period: formatCycleRange(period.range, locale, today),
-                })}
+                title={t('transactions.noResultsIn', { period: periodName })}
                 body={t('transactions.noResultsBody')}
               />
-              {otherPeriods.length === 0 || filters.query === '' ? null : (
+              {otherPeriods.length === 0 ? null : (
                 <div className={styles.otherPeriods}>
-                  <p>{t('transactions.otherPeriods', { query: filters.query })}</p>
-                  {otherPeriods.map((entry) => (
-                    <Link
-                      key={entry.range.start}
-                      className={styles.otherPeriod}
-                      href={periodHref(PATH, entry.range, def, today, searchFromFilters(filters))}
-                    >
-                      <span>{formatCycleRange(entry.range, locale, today)}</span>
-                      <span>{plural(t, locale, 'transactions.periodCount', entry.count)}</span>
-                    </Link>
-                  ))}
+                  <p className={styles.otherPeriodsLead}>
+                    {t('transactions.otherPeriods', { query: filters.query })}
+                  </p>
+                  {otherPeriods.map((entry) => {
+                    // The other period with the same search; a row opens there with its panel.
+                    const there = (extra: Record<string, string> = {}) =>
+                      periodHref(PATH, entry.range, def, today, {
+                        ...searchFromFilters(filters),
+                        ...extra,
+                      });
+                    return (
+                      <section key={entry.range.start} className={styles.otherPeriod}>
+                        <Link className={styles.otherPeriodHead} href={there()}>
+                          <b>{upperFirst(formatPeriodName(entry.range, locale, today), locale)}</b>
+                          <span className={styles.otherPeriodCount}>
+                            {plural(t, locale, 'transactions.periodCount', entry.count)}
+                            <Icon name="chevR" size={15} />
+                          </span>
+                        </Link>
+                        {entry.rows.map((row) => (
+                          <Link
+                            key={row.id}
+                            className={styles.otherRow}
+                            href={there({ [SELECTION_PARAM]: row.id })}
+                          >
+                            <span
+                              className={styles.otherRowIcon}
+                              style={{
+                                color:
+                                  row.colorIndex === null || row.colorIndex === undefined
+                                    ? undefined
+                                    : `var(--category-${paletteIndex(row.colorIndex)})`,
+                              }}
+                            >
+                              <Icon name={row.icon as IconName} size={18} />
+                            </span>
+                            <span className={styles.otherRowText}>
+                              <b>{row.title}</b>
+                              <span>
+                                {formatDayMonth(row.date, locale)} · {row.subtitle}
+                              </span>
+                            </span>
+                            <AmountText
+                              minor={row.amount.minor}
+                              currency={currency}
+                              locale={locale}
+                              sign={row.amount.signDisplay}
+                              muted={row.amount.muted}
+                            />
+                          </Link>
+                        ))}
+                      </section>
+                    );
+                  })}
                 </div>
               )}
               <Link className={styles.reset} href={link(periodOnly)}>

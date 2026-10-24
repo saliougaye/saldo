@@ -482,21 +482,47 @@
   text-decoration: line-through;
 }
 
-.accountRow {
+/* «Getting started»: how far the steps are, a short bar and «1 of 4», on the trailing side. */
+.startProgress {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
   align-items: center;
-  padding: 0 10px;
-  margin: 0 -10px;
-  border-radius: var(--radius-input);
-  color: var(--color-text);
-  text-decoration: none;
+  gap: 12px;
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  white-space: nowrap;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .accountRow:hover {
-    background: var(--color-raised);
+.startTrack {
+  inline-size: 120px;
+}
+
+@media (max-width: 759px) {
+  .startTrack {
+    inline-size: 64px;
   }
+}
+
+/* «In your accounts»: one figure, until the first transaction brings the summary (H5). */
+.inAccounts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inAccounts h2 {
+  font-size: var(--font-size-body);
+}
+
+.inAccountsTotal {
+  font-size: var(--font-size-hero);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tightest);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.inAccountsNote {
+  color: var(--color-text-muted);
 }

@@ -17,6 +17,7 @@ import type { TagMessages } from '../../../../src/i18n/tagMessages';
 import { Alert } from '../../../../src/ui/Alert';
 import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { actionApplied } from '../../../../src/ui/actionApplied';
+import { Button } from '../../../../src/ui/Button';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Icon } from '../../../../src/ui/Icon';
 import { sharedProps } from '../../../../src/ui/sharedProps';
@@ -116,6 +117,35 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
     }
   };
 
+  // W11: the first tag, in the page — one field and «Add», with no key hint and nothing to close.
+  if (inline) {
+    return (
+      <form className={styles.inlineForm} ref={form} onSubmit={onSubmit} noValidate>
+        <div className={styles.inlineRow} data-field="name">
+          <TextField
+            label={t('tags.name')}
+            labelHidden
+            placeholder={t('tags.namePlaceholder')}
+            value={name}
+            maxLength={40}
+            autoComplete="off"
+            invalid={problem?.field === true}
+            onChange={(event) => {
+              setName(event.target.value);
+              setProblem(null);
+            }}
+          />
+          <div>
+            <Button type="submit" busy={pending} busyLabel={t('common.loading')}>
+              {t('tags.add')}
+            </Button>
+          </div>
+        </div>
+        {problem === null ? null : <Alert body={problem.text} />}
+      </form>
+    );
+  }
+
   return (
     <form
       className={styles.form}
@@ -124,8 +154,7 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
       onKeyDown={onKeyDown}
       noValidate
       // N, E and ↑ ↓ do nothing while the form is open, even with the focus on the page (`ignoresShortcut`).
-      // In the page (W11) the form is always on screen, so it leaves them to the page.
-      data-owns-keys={inline ? undefined : ''}
+      data-owns-keys=""
     >
       <div className={styles.field} data-field="name">
         <TextField
@@ -133,7 +162,7 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
           value={name}
           maxLength={40}
           autoComplete="off"
-          autoFocus={tag === null && !inline}
+          autoFocus={tag === null}
           invalid={problem?.field === true}
           onChange={(event) => {
             setName(event.target.value);
@@ -176,7 +205,7 @@ export function TagForm({ tag, transactionsHref, inline = false }: Props) {
 
       <FormFoot
         hint={t('web.form.keyboardHint')}
-        cancelHref={inline ? undefined : closeHref}
+        cancelHref={closeHref}
         cancelLabel={t('common.cancel')}
         submitLabel={t('common.save')}
         busyLabel={t('common.loading')}

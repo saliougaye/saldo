@@ -41,9 +41,10 @@
   margin-top: 20px;
 }
 
-/* W11: the three presets of a page with no goal; the tile is the one Conti draws. */
+/* W11: the three presets of a page with no goal, under the lead text, then «Something else?». */
 .presets {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  margin-top: 12px;
 }

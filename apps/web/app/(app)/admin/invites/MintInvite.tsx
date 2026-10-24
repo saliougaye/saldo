@@ -127,6 +127,40 @@ export function MintInvite(props: Props) {
     timer.current = setTimeout(() => setCopied(null), COPIED_MS);
   };
 
+  // W11: the first invite, in the page — the label, then the lifetime and «Create code» on one
+  // row. No key hint and no «Cancel»: the form is the page's, there is nothing to close.
+  if (minted === null && inline === true) {
+    return (
+      <form className={styles.inlineMint} onSubmit={onSubmit} onKeyDown={onKeyDown} noValidate>
+        <TextField
+          label={strings.label}
+          hint={strings.labelHint}
+          value={label}
+          maxLength={maxLabelLength}
+          autoComplete="off"
+          onChange={(event) => {
+            setLabel(event.target.value);
+            setProblem(null);
+          }}
+        />
+        <div className={styles.inlineTtl}>
+          <span className={styles.inlineTtlLabel} aria-hidden="true">
+            {strings.ttl}
+          </span>
+          <div className={styles.inlineTtlRow}>
+            <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+            <div>
+              <Button type="submit" busy={pending} busyLabel={strings.busy}>
+                {strings.create}
+              </Button>
+            </div>
+          </div>
+        </div>
+        {problem === null ? null : <Alert body={problem} />}
+      </form>
+    );
+  }
+
   if (minted === null) {
     return (
       <form
@@ -134,7 +168,7 @@ export function MintInvite(props: Props) {
         onSubmit={onSubmit}
         onKeyDown={onKeyDown}
         noValidate
-        data-owns-keys={inline === true ? undefined : ''}
+        data-owns-keys=""
       >
         <TextField
           label={strings.label}
@@ -142,7 +176,7 @@ export function MintInvite(props: Props) {
           value={label}
           maxLength={maxLabelLength}
           autoComplete="off"
-          autoFocus={inline !== true}
+          autoFocus
           onChange={(event) => {
             setLabel(event.target.value);
             setProblem(null);
@@ -158,7 +192,7 @@ export function MintInvite(props: Props) {
         {problem === null ? null : <Alert body={problem} />}
         <FormFoot
           hint={strings.keyboardHint}
-          cancelHref={inline === true ? undefined : closeHref}
+          cancelHref={closeHref}
           cancelLabel={strings.cancel}
           submitLabel={strings.create}
           busyLabel={strings.busy}

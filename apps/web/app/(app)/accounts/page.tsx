@@ -1,4 +1,5 @@
 import {
+  type AccountType,
   accountTypesFor,
   addMonths,
   canArchiveAccount,
@@ -57,8 +58,10 @@ import { EmptyState } from '../../../src/ui/EmptyState';
 import { Icon } from '../../../src/ui/Icon';
 import { IconBox, paletteIndex } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
+import { MoreRow, MoreRowLabel, moreRowLinkClassName } from '../../../src/ui/MoreRow';
 import { PanelLink } from '../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
+import { PickTileBody, pickTileClassName, pickTilesClassName } from '../../../src/ui/PickTile';
 import { Section } from '../../../src/ui/Section';
 import { TargetRing } from '../../../src/ui/TargetRing';
 import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
@@ -78,6 +81,17 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PATH = '/accounts';
+
+/** W11: the colour of each type's tile in «Which account do you want to add?», as the design draws it. */
+const TYPE_TILE_COLORS: Record<AccountType, number> = {
+  checking: 5,
+  debit_card: 17,
+  credit_card: 10,
+  cash: 13,
+  savings: 15,
+  investment: 4,
+  pocket: 14,
+};
 
 /** The ring on the goal panel: bigger, because there is nothing else in it to look at. */
 const GOAL_RING = 72;
@@ -239,6 +253,14 @@ export default async function AccountsPage({
     names: [t('goals.presetEmergency'), t('goals.presetHoliday'), t('goals.presetCar')],
     emergency: emergencyFundTarget({ txs: page.data.transactions, def, today }),
   });
+  const presetHint = (preset: (typeof presets)[number]) =>
+    preset.key === 'emergency'
+      ? preset.amount === null
+        ? t('goals.presetEmergencyHintNone')
+        : t('goals.presetEmergencyHint', { amount: money(preset.amount) })
+      : preset.key === 'holiday'
+        ? t('goals.presetHolidayHint')
+        : t('goals.presetCarHint');
   const goalRow = (item: GoalView) => {
     const tone = goalRingTone(item.progress);
     const parentId = item.account.parentAccountId;
@@ -774,63 +796,71 @@ export default async function AccountsPage({
                 </PanelLink>
               </div>
 
-              {/* Net worth: the big figure, the spendable total under it, the line on the right. */}
-              <section
-                className={`${styles.box} ${styles.worth}`}
-                aria-label={t('accounts.netWorth')}
-              >
-                <div className={styles.worthFigures}>
-                  <div className={styles.figure}>
-                    <span className={styles.label}>{t('accounts.netWorth')}</span>
-                    <AmountText
-                      minor={view.netWorth}
-                      currency={currency}
-                      locale={locale}
-                      size="hero"
-                    />
-                  </div>
-                  <div className={`${styles.figure} ${styles.spendable}`}>
-                    <span className={styles.label}>{t('accounts.spendable')}</span>
-                    <AmountText
-                      minor={view.spendable}
-                      currency={currency}
-                      locale={locale}
-                      size="headline"
-                    />
-                    <span className={styles.note}>{t('accounts.spendableNote')}</span>
-                  </div>
-                </div>
-                {netWorthSeries.length < 2 ? null : (
-                  <div className={styles.worthTrend}>
-                    <div className={styles.worthTrendHead}>
-                      <span className={styles.label}>
-                        {plural(t, locale, 'accounts.netWorthTrend', netWorthSeries.length)}
-                      </span>
+              {/* Net worth: the big figure, the spendable total under it, the line on the right.
+                  With no account it is 0 and says nothing: the types come first (W11). */}
+              {empty ? null : (
+                <section
+                  className={`${styles.box} ${styles.worth}`}
+                  aria-label={t('accounts.netWorth')}
+                >
+                  <div className={styles.worthFigures}>
+                    <div className={styles.figure}>
+                      <span className={styles.label}>{t('accounts.netWorth')}</span>
                       <AmountText
-                        minor={netWorthChange}
+                        minor={view.netWorth}
                         currency={currency}
                         locale={locale}
-                        size="footnote"
-                        sign="always"
+                        size="hero"
                       />
                     </div>
-                    <NetWorthChart series={netWorthSeries} labels={netWorthMonths} />
+                    <div className={`${styles.figure} ${styles.spendable}`}>
+                      <span className={styles.label}>{t('accounts.spendable')}</span>
+                      <AmountText
+                        minor={view.spendable}
+                        currency={currency}
+                        locale={locale}
+                        size="headline"
+                      />
+                      <span className={styles.note}>{t('accounts.spendableNote')}</span>
+                    </div>
                   </div>
-                )}
-              </section>
+                  {netWorthSeries.length < 2 ? null : (
+                    <div className={styles.worthTrend}>
+                      <div className={styles.worthTrendHead}>
+                        <span className={styles.label}>
+                          {plural(t, locale, 'accounts.netWorthTrend', netWorthSeries.length)}
+                        </span>
+                        <AmountText
+                          minor={netWorthChange}
+                          currency={currency}
+                          locale={locale}
+                          size="footnote"
+                          sign="always"
+                        />
+                      </div>
+                      <NetWorthChart series={netWorthSeries} labels={netWorthMonths} />
+                    </div>
+                  )}
+                </section>
+              )}
 
               {empty ? (
                 <section className={styles.box}>
                   <h2 className={styles.boxTitle}>{t('accounts.whichType')}</h2>
-                  <div className={styles.types}>
+                  <p className={styles.lead}>{t('accounts.whichTypeBody')}</p>
+                  <div className={pickTilesClassName}>
                     {accountTypesFor(page.data.accounts, null).map((type) => (
                       <PanelLink
                         key={type}
-                        className={styles.type}
+                        className={pickTileClassName}
                         href={`${PATH}?new&type=${type}`}
                       >
-                        <Icon name={accountTypeIcons[type]} size={20} />
-                        {t(`accountTypes.${type}`)}
+                        <PickTileBody
+                          icon={accountTypeIcons[type]}
+                          colorIndex={TYPE_TILE_COLORS[type]}
+                          title={t(`accountTypes.${type}`)}
+                          hint={t(`accounts.typeHint.${type}`)}
+                        />
                       </PanelLink>
                     ))}
                   </div>
@@ -877,19 +907,28 @@ export default async function AccountsPage({
                         <EmptyState title={t('goals.empty')} body={t('goals.emptyBody')} />
                         {canCreateGoal ? (
                           <>
-                            <div className={styles.presets}>
+                            <div className={pickTilesClassName}>
                               {presets.map((preset) => (
-                                <Link key={preset.key} className={styles.type} href={preset.href}>
-                                  <b>{preset.name}</b>
-                                  {preset.amount === null ? null : (
-                                    <span>{money(preset.amount)}</span>
-                                  )}
+                                <Link
+                                  key={preset.key}
+                                  className={pickTileClassName}
+                                  href={preset.href}
+                                >
+                                  <PickTileBody
+                                    icon={preset.icon}
+                                    colorIndex={preset.colorIndex}
+                                    round
+                                    title={preset.name}
+                                    hint={presetHint(preset)}
+                                  />
                                 </Link>
                               ))}
                             </div>
-                            <Link className={styles.action} href={NEW_GOAL_HREF}>
-                              {t('goals.create')}
-                            </Link>
+                            <MoreRow prompt={t('goals.somethingElse')}>
+                              <Link className={moreRowLinkClassName} href={NEW_GOAL_HREF}>
+                                <MoreRowLabel label={t('goals.create')} />
+                              </Link>
+                            </MoreRow>
                           </>
                         ) : null}
                       </div>

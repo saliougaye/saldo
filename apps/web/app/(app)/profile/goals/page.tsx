@@ -28,12 +28,13 @@ import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { Icon } from '../../../../src/ui/Icon';
 import { IconBox } from '../../../../src/ui/IconBox';
 import { ListRow } from '../../../../src/ui/ListRow';
+import { MoreRow, MoreRowLabel, moreRowLinkClassName } from '../../../../src/ui/MoreRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
+import { PickTileBody, pickTileClassName, pickTilesClassName } from '../../../../src/ui/PickTile';
 import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { TargetRing } from '../../../../src/ui/TargetRing';
 import formStyles from '../../accounts/accountForms.module.css';
-import accountStyles from '../../accounts/accounts.module.css';
 import { GoalForm, GoalFormProvider, type GoalFormSharedValue } from '../../accounts/GoalForm';
 import { RestoreButton } from '../../accounts/RestoreButton';
 import styles from './goals.module.css';
@@ -165,12 +166,33 @@ export default async function ProfileGoalsPage({
           {items.length === 0 ? <p className={styles.note}>{t('goals.emptyBody')}</p> : null}
           {items.length === 0 && canCreate ? (
             <div className={styles.presets}>
-              {presets.map((preset) => (
-                <Link key={preset.key} className={accountStyles.type} href={preset.href}>
-                  <b>{preset.name}</b>
-                  {preset.amount === null ? null : <span>{money(preset.amount)}</span>}
-                </Link>
-              ))}
+              <div className={pickTilesClassName}>
+                {presets.map((preset) => (
+                  // A navigation, not a panel switch: the server fills the form from the link.
+                  <Link key={preset.key} className={pickTileClassName} href={preset.href}>
+                    <PickTileBody
+                      icon={preset.icon}
+                      colorIndex={preset.colorIndex}
+                      round
+                      title={preset.name}
+                      hint={
+                        preset.key === 'emergency'
+                          ? preset.amount === null
+                            ? t('goals.presetEmergencyHintNone')
+                            : t('goals.presetEmergencyHint', { amount: money(preset.amount) })
+                          : preset.key === 'holiday'
+                            ? t('goals.presetHolidayHint')
+                            : t('goals.presetCarHint')
+                      }
+                    />
+                  </Link>
+                ))}
+              </div>
+              <MoreRow prompt={t('goals.somethingElse')}>
+                <PanelLink className={moreRowLinkClassName} href={NEW_GOAL_HREF}>
+                  <MoreRowLabel label={t('goals.create')} />
+                </PanelLink>
+              </MoreRow>
             </div>
           ) : null}
           {canCreate ? null : <p className={styles.note}>{t('web.accounts.goalNeedsAccount')}</p>}

@@ -2,6 +2,7 @@
 
 import { type InputHTMLAttributes, useId } from 'react';
 import styles from './TextField.module.css';
+import hidden from './VisuallyHidden.module.css';
 
 interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id'> {
   label: string;
@@ -9,14 +10,23 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' 
   invalid?: boolean;
   /** An invite code is read in groups, so it is set in a monospaced face. */
   mono?: boolean;
+  /** For a screen reader only: a one-field form in the page (W11) says what it wants in the placeholder. */
+  labelHidden?: boolean;
 }
 
-export function TextField({ label, hint, invalid = false, mono = false, ...rest }: Props) {
+export function TextField({
+  label,
+  hint,
+  invalid = false,
+  mono = false,
+  labelHidden = false,
+  ...rest
+}: Props) {
   const id = useId();
   const hintId = `${id}-hint`;
   return (
     <div className={styles.field}>
-      <label className={styles.label} htmlFor={id}>
+      <label className={labelHidden ? hidden.hidden : styles.label} htmlFor={id}>
         {label}
       </label>
       <input

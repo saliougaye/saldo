@@ -85,5 +85,19 @@
 
 /* W11: the field of «New tag», in the page under the empty state. */
 .first {
-  margin-top: 20px;
+  margin-top: 8px;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The field and «Add» on one row; the button keeps its own width. */
+.inlineRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
 }

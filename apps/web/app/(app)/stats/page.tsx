@@ -4,9 +4,11 @@ import {
   formatLongDate,
   formatMajor,
   formatMoney,
+  formatPeriodName,
   formatPeriodTick,
   formatSignedPercent,
   plural,
+  upperFirst,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { Fragment, type ReactNode } from 'react';
@@ -609,6 +611,45 @@ export default async function StatsPage({
       <div className={styles.page}>
         {header}
 
+        {/* W11: a period with no row. The way out comes first; the chart stays under it. */}
+        {periodEmpty ? (
+          <section className={styles.box}>
+            <div className={styles.emptyText}>
+              <h2 className={styles.emptyTitle}>
+                {upperFirst(
+                  t('stats.emptyPeriod', {
+                    period: formatPeriodName(period.range, locale, today),
+                  }),
+                  locale,
+                )}
+              </h2>
+              <p className={styles.emptyBody}>{t('stats.emptyPeriodBody')}</p>
+            </div>
+            <div className={styles.emptyActions}>
+              {nearestWithData === null ? null : (
+                <Link
+                  className={styles.emptyAction}
+                  href={periodHref(PATH, nearestWithData, def, today, keep)}
+                >
+                  {nearestWithData.start < period.range.start ? (
+                    <Icon name="chevL" size={15} />
+                  ) : null}
+                  {t('stats.goToPeriod', {
+                    period: formatPeriodName(nearestWithData, locale, today),
+                  })}
+                  {nearestWithData.start > period.range.start ? (
+                    <Icon name="chevR" size={15} />
+                  ) : null}
+                </Link>
+              )}
+              <NewTransactionLink className={`${styles.emptyAction} ${styles.emptyPrimary}`}>
+                <Icon name="plus" size={15} />
+                {t('web.shell.newTransaction')}
+              </NewTransactionLink>
+            </div>
+          </section>
+        ) : null}
+
         {/* The period block: Expenses, then Income, Net and the projection; the chart under them. */}
         <section className={styles.box} aria-label={t('stats.expensesByPeriod')}>
           <div className={styles.figures}>
@@ -654,30 +695,7 @@ export default async function StatsPage({
           {chartBlock}
         </section>
 
-        {periodEmpty ? (
-          <section className={styles.box}>
-            <p className={styles.emptyTitle}>
-              {t('stats.emptyPeriod', {
-                period: formatCycleRange(period.range, locale, today),
-              })}
-            </p>
-            <div className={styles.emptyActions}>
-              {nearestWithData === null ? null : (
-                <Link
-                  className={styles.emptyAction}
-                  href={periodHref(PATH, nearestWithData, def, today, keep)}
-                >
-                  {t('stats.goToPeriod', {
-                    period: formatCycleRange(nearestWithData, locale, today),
-                  })}
-                </Link>
-              )}
-              <NewTransactionLink className={styles.emptyAction}>
-                {t('web.shell.newTransaction')}
-              </NewTransactionLink>
-            </div>
-          </section>
-        ) : (
+        {periodEmpty ? null : (
           <>
             {/* W7: the breakdown, in the colours of the categories. */}
             <section className={styles.box}>

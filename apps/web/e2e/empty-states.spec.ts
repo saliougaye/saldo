@@ -49,8 +49,11 @@ test('Home: a new member sees «Getting started», and an account moves it forwa
 
   await page.goto('/home');
   await expect(start).toContainText(t('home.startProgress', { done: 1, count: 4 }));
+  // The done step names the account; «In your accounts» is one total until the first transaction.
+  await expect(start).toContainText('Contanti in tasca');
   const accounts = page.getByRole('region', { name: t('home.inAccounts') });
-  await expect(accounts.getByText('Contanti in tasca')).toBeVisible();
+  await expect(accounts).toContainText(money(0));
+  await expect(accounts).toContainText(t('home.inAccountsNote'));
 
   await member.context.close();
 });
@@ -63,6 +66,9 @@ test('Transactions: with none, the quick add saves the first expense', async ({ 
   const { page } = member;
 
   await page.goto('/transactions');
+  // No summary of zeros and no search above the first expense: the quick add stands alone.
+  await expect(page.getByRole('region', { name: t('transactions.summaryLabel') })).toHaveCount(0);
+  await expect(page.getByRole('searchbox')).toHaveCount(0);
   const quick = page.locator('form').filter({
     has: page.getByRole('heading', { name: t('transactions.quickAddTitle') }),
   });
@@ -126,6 +132,15 @@ test('Transactions: a search with no result in the period lists the periods that
   await expect(periods.first()).toBeVisible();
   await expect(periods.first()).toHaveAttribute('href', /p=/);
 
+  // The matches themselves are listed under their period, and each one opens in its own period.
+  const pattern = new RegExp(literal(elsewhere ?? '').source, 'i');
+  const match = main.locator('a[href*="t="]').filter({ hasText: pattern }).first();
+  await expect(match).toHaveAttribute('href', /p=/);
+  await match.click();
+  await expect(page).toHaveURL(/t=/);
+  await expect(page.getByRole('dialog', { name: t('txForm.editTitle') })).toBeVisible();
+  await page.goto(`/transactions?q=${encodeURIComponent(elsewhere ?? '')}`);
+
   // The link opens a period that holds the rows, and the search stays on.
   await periods.first().click();
   await expect(page).toHaveURL(/q=/);
@@ -182,7 +197,8 @@ test('Accounts: a member with none picks a type, and the form opens with it', as
   const tiles = page.getByRole('main').locator('a[href*="?new&type="]');
   await expect(tiles).toHaveCount(6);
   const tile = tiles.nth(1);
-  const label = (await tile.innerText()).trim();
+  // The tile is the type's name and one line about it; the form names only the type.
+  const label = (await tile.locator('b').innerText()).trim();
   await tile.click();
 
   const form = page.getByRole('dialog', { name: t('accounts.newAccount') });

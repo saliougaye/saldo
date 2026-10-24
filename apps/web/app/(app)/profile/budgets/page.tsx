@@ -1,5 +1,5 @@
 import { budgetSuggestions } from '@saldo/core';
-import { catalogs, formatMoney, formatMoneyParts } from '@saldo/i18n';
+import { catalogs, formatMoney, formatMoneyParts, plural } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { budgetRowFor } from '../../../../src/features/budgets/budgetRow';
 import { budgetsView } from '../../../../src/features/budgets/budgetsView';
@@ -129,43 +129,56 @@ export default async function BudgetsPage({
             </PanelLink>
           }
         >
-          <SettingsBox>
-            {view.items.length === 0 && suggestions.length === 0 ? (
-              <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
-            ) : (
-              <div>{view.items.map(rows.row)}</div>
-            )}
-            {view.items.length > 0 || suggestions.length === 0 ? null : (
-              <div className={styles.suggest}>
-                <h3 className={styles.suggestTitle}>{t('budgets.suggestTitle')}</h3>
-                {suggestions.map((suggestion) => {
-                  const category = page.data.categories.find(
-                    (row) => row.id === suggestion.categoryId,
-                  );
-                  return (
-                    <ListRow
-                      key={suggestion.categoryId}
-                      open
-                      icon={category?.icon as IconName | undefined}
-                      colorIndex={category?.colorIndex}
-                      title={category?.name ?? t('common.missing')}
-                      subtitle={t(`budgets.suggestAmount_${def.kind}`, {
-                        amount: money(suggestion.amount),
-                      })}
-                      trailing={
+          {/* W11: with no budget, the suggestions are the block; otherwise the rows, or the empty text. */}
+          {view.items.length > 0 || suggestions.length === 0 ? (
+            <SettingsBox>
+              {view.items.length === 0 ? (
+                <EmptyState title={t('budgets.empty')} body={t('budgets.emptyBody')} />
+              ) : (
+                <div>{view.items.map(rows.row)}</div>
+              )}
+            </SettingsBox>
+          ) : (
+            <section className={styles.suggest} aria-labelledby="suggest-title">
+              <div className={styles.suggestHead}>
+                <h3 id="suggest-title" className={styles.suggestTitle}>
+                  {t('budgets.suggestTitle')}
+                </h3>
+                <span className={styles.suggestNote}>{t(`budgets.suggestNote_${def.kind}`)}</span>
+              </div>
+              <p className={styles.suggestLead}>{t('budgets.suggestLead')}</p>
+              {suggestions.map((suggestion) => {
+                const category = page.data.categories.find(
+                  (row) => row.id === suggestion.categoryId,
+                );
+                return (
+                  <ListRow
+                    key={suggestion.categoryId}
+                    open
+                    icon={category?.icon as IconName | undefined}
+                    colorIndex={category?.colorIndex}
+                    title={category?.name ?? t('common.missing')}
+                    subtitle={plural(t, locale, 'transactions.periodCount', suggestion.txCount)}
+                    trailing={
+                      <span className={styles.suggestTrailing}>
+                        <span className={styles.suggestAmount}>
+                          {t(`budgets.suggestAmount_${def.kind}`, {
+                            amount: money(suggestion.amount),
+                          })}
+                        </span>
                         <PanelLink
                           className={styles.newBudget}
                           href={`${PATH}?new&category=${encodeURIComponent(suggestion.categoryId)}&amount=${suggestion.amount}`}
                         >
                           {t('budgets.create')}
                         </PanelLink>
-                      }
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </SettingsBox>
+                      </span>
+                    }
+                  />
+                );
+              })}
+            </section>
+          )}
         </SettingsSection>
       </PanelSwitch>
     </BudgetFormProvider>

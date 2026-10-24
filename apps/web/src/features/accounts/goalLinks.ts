@@ -1,4 +1,5 @@
 import { type GoalFormValues, type MinorDigits, minorToAmountBuffer } from '@saldo/core';
+import type { IconName } from '@saldo/ui';
 
 /**
  * The links «Metti da parte», «Preleva» and «Registra la spesa» follow (decision 7): the ordinary
@@ -36,6 +37,9 @@ export interface GoalPreset {
   /** Minor units; null for a preset with no figure of its own. */
   amount: number | null;
   href: string;
+  /** The tile's glyph and the palette index of its colour, as the design draws them. */
+  icon: IconName;
+  colorIndex: number;
 }
 
 /** The three presets: the emergency fund has a target, holiday and car have none. */
@@ -45,10 +49,10 @@ export function goalPresets(input: {
   emergency: number | null;
 }): GoalPreset[] {
   const [emergency, holiday, car] = input.names;
-  const presets: { key: GoalPreset['key']; name: string; amount: number | null }[] = [
-    { key: 'emergency', name: emergency, amount: input.emergency },
-    { key: 'holiday', name: holiday, amount: null },
-    { key: 'car', name: car, amount: null },
+  const presets: Omit<GoalPreset, 'href'>[] = [
+    { key: 'emergency', name: emergency, amount: input.emergency, icon: 'shield', colorIndex: 14 },
+    { key: 'holiday', name: holiday, amount: null, icon: 'plane', colorIndex: 11 },
+    { key: 'car', name: car, amount: null, icon: 'car', colorIndex: 2 },
   ];
   return presets.map((preset) => ({
     ...preset,

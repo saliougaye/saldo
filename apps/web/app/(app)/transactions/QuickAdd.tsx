@@ -12,6 +12,7 @@ import { AmountField } from '../../../src/ui/AmountField';
 import { AppLink as Link } from '../../../src/ui/AppLink';
 import { actionApplied } from '../../../src/ui/actionApplied';
 import { Button } from '../../../src/ui/Button';
+import { MoreRow, MoreRowLabel, moreRowLinkClassName } from '../../../src/ui/MoreRow';
 import { Select } from '../../../src/ui/Select';
 import { saveTransactionAction } from './actions';
 import styles from './transactions.module.css';
@@ -95,7 +96,10 @@ export function QuickAdd({
 
   return (
     <form className={styles.quickAdd} onSubmit={submit} noValidate>
-      <h2 className={styles.quickTitle}>{t('transactions.quickAddTitle')}</h2>
+      <div className={styles.quickHead}>
+        <h2 className={styles.quickTitle}>{t('transactions.quickAddTitle')}</h2>
+        <p className={styles.quickBody}>{t('transactions.quickAddBody')}</p>
+      </div>
       <div className={styles.quickRow}>
         <AmountField
           size="body"
@@ -132,9 +136,12 @@ export function QuickAdd({
         </Button>
       </div>
       {problem === null ? null : <Alert body={problem} />}
-      <Link className={styles.reset} href="/profile/data">
-        {t('transactions.importCsv')}
-      </Link>
+      {/* The web has no CSV import yet: Profile → Data says where it is (R7 plan, decisions). */}
+      <MoreRow prompt={t('transactions.importCsvPrompt')}>
+        <Link className={moreRowLinkClassName} href="/profile/data">
+          <MoreRowLabel label={t('transactions.importCsv')} />
+        </Link>
+      </MoreRow>
     </form>
   );
 }
