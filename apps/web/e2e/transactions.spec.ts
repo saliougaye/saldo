@@ -55,7 +55,10 @@ test.describe('seeded account', () => {
         .filter((tx) => tx.kind === 'expense' && !tx.excludeFromTotals)
         .reduce((total, tx) => total + tx.amount, 0);
       const section = sectionOf(page, dayHeading(date, ledger.today, t, appLocale(locale)));
-      await expect(section.locator(':scope > div').first()).toContainText(money(spend));
+      // Figure 3: the day's expenses with the minus sign; a day with none shows no figure.
+      const head = section.locator(':scope > div').first();
+      if (spend === 0) await expect(head).not.toContainText(money(0));
+      else await expect(head).toContainText(money(-spend));
       await expect(section.getByRole('link')).toHaveCount(dayRows.length);
     }
 
@@ -357,7 +360,7 @@ test.describe('own rows', () => {
     const today = ledger.today;
     const day = sectionOf(page, dayHeading(today, today, t, appLocale(locale)));
     await expect(day.getByRole('link', { name: 'Pranzo di prova' })).toContainText(money(-1250));
-    await expect(day.locator(':scope > div').first()).toContainText(money(1250));
+    await expect(day.locator(':scope > div').first()).toContainText(money(-1250));
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(1250));
 

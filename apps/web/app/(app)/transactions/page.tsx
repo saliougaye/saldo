@@ -202,13 +202,16 @@ export default async function TransactionsPage({
     <section className={styles.day} key={day.date}>
       <div className={styles.dayHead}>
         <h2 className={styles.dayHeading}>{dayTitle(day.date)}</h2>
-        <AmountText
-          minor={day.expenseTotal}
-          currency={currency}
-          locale={locale}
-          size="footnote"
-          muted
-        />
+        {/* Figure 3: the day's expenses with their minus sign; a day with none shows no figure. */}
+        {day.expenseTotal === 0 ? null : (
+          <AmountText
+            minor={-day.expenseTotal}
+            currency={currency}
+            locale={locale}
+            size="footnote"
+            muted
+          />
+        )}
       </div>
       {day.rows.map((row) => (
         <TxRow

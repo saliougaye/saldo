@@ -230,18 +230,32 @@
   }
 }
 
+/*
+ * The mockup's phone summary: Expenses across the block, then Income and Upcoming side by side.
+ * A closed period has no Upcoming, so its Income takes the whole row.
+ */
 @media (max-width: 759px) {
   .summary {
     grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .cell {
     padding: 16px 18px;
   }
 
+  .cell:first-child,
+  .cell:nth-child(2):last-child {
+    grid-column: 1 / -1;
+  }
+
   .cell + .cell {
     border-inline-start: 0;
     border-top: 1px solid var(--color-border);
+  }
+
+  .cell + .cell + .cell {
+    border-inline-start: 1px solid var(--color-border);
   }
 
   .listBox {
