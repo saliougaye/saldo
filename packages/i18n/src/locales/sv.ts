@@ -1757,6 +1757,10 @@ export const sv: Messages = {
       changeInvalid: 'Det där är ingen e-postadress.',
       changeSame: 'Det här är redan din adress.',
       changeLater: 'Vänta en minut innan du försöker igen.',
+      changeReauth:
+        'För att skydda ditt konto, bekräfta med din passkey innan du ändrar din e-post.',
+      changeReauthButton: 'Bekräfta med min passkey',
+      changeReauthFailed: 'Passkey bekräftades inte. Inget har ändrats.',
     },
     accounts: {
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',

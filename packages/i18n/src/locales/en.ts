@@ -1758,6 +1758,10 @@ export const en: Messages = {
       changeInvalid: 'That is not an email address.',
       changeSame: 'This is already your address.',
       changeLater: 'Wait a minute before asking again.',
+      changeReauth:
+        'To protect your account, confirm with your passkey before you change your email.',
+      changeReauthButton: 'Confirm with my passkey',
+      changeReauthFailed: 'The passkey was not confirmed. Nothing changed.',
     },
     accounts: {
       error_invalid: 'Couldn’t save: check the fields and try again.',

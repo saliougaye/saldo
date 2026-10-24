@@ -1781,6 +1781,10 @@ export const fr: Messages = {
       changeInvalid: 'Ceci n’est pas une adresse e-mail.',
       changeSame: 'C’est déjà votre adresse.',
       changeLater: 'Attendez une minute avant de le redemander.',
+      changeReauth:
+        'Pour protéger votre compte, confirmez avec votre passkey avant de changer votre e-mail.',
+      changeReauthButton: 'Confirmer avec ma passkey',
+      changeReauthFailed: 'La passkey n’a pas été confirmée. Rien n’a changé.',
     },
     accounts: {
       error_invalid: 'Impossible d’enregistrer : vérifiez les champs et réessayez.',

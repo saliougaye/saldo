@@ -1778,6 +1778,10 @@ export const de: Messages = {
       changeInvalid: 'Das ist keine E-Mail-Adresse.',
       changeSame: 'Das ist bereits deine Adresse.',
       changeLater: 'Warte eine Minute, bevor du es noch einmal versuchst.',
+      changeReauth:
+        'Zum Schutz deines Kontos bestätige mit deinem Passkey, bevor du deine E-Mail änderst.',
+      changeReauthButton: 'Mit meinem Passkey bestätigen',
+      changeReauthFailed: 'Der Passkey wurde nicht bestätigt. Es hat sich nichts geändert.',
     },
     accounts: {
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
