@@ -382,6 +382,7 @@ export default async function HomePage({
                 currency={currency}
                 locale={locale}
                 size="hero"
+                faintCents
               />
             </div>
             <dl className={styles.stats}>

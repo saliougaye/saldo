@@ -21,13 +21,18 @@ interface Props {
   /** `hero` is the 56px figure of a band, `body` a row's trailing amount. */
   size?: 'hero' | 'large' | 'title' | 'headline' | 'body' | 'footnote';
   muted?: boolean;
-  /** Green without a `+`: Home's «Entrate», which is income by its label and needs no sign. */
+  /**
+   * Green without a `+`: an «Entrate» figure, which is income by its label and needs no sign. Zero
+   * income stays neutral, as in the mockup: there is nothing to be green about.
+   */
   positive?: boolean;
+  /** H5: the cents and the symbol small and in `textFaint`. Only the Home's big figure asks for it. */
+  faintCents?: boolean;
 }
 
 /**
- * The design's amount: the fraction and the symbol at 50% opacity, the integer at full. Hidden mode
- * is a phone-only, device-local state (§17.1.6), so there is nothing to mask here.
+ * An amount, all in one colour. With `faintCents` the fraction and the symbol step back (H5). Hidden
+ * mode is a phone-only, device-local state (§17.1.6), so there is nothing to mask here.
  */
 export function AmountText({
   minor,
@@ -37,20 +42,21 @@ export function AmountText({
   size = 'body',
   muted = false,
   positive = false,
+  faintCents = false,
 }: Props) {
   const parts = formatMoneyParts(minor, currency, locale, sign);
-  const symbol = <span className={styles.dim}>{parts.symbol}</span>;
+  const dim = faintCents ? styles.faint : undefined;
+  const symbol = <span className={dim}>{parts.symbol}</span>;
+  const tone = positive && minor > 0 ? 'positive' : amountClass(minor, sign);
   return (
     <span
-      className={`${styles.amount} ${styles[size]} ${positive ? styles.positive : styles[amountClass(minor, sign)]} ${
-        muted ? styles.muted : ''
-      }`}
+      className={`${styles.amount} ${styles[size]} ${styles[tone]} ${muted ? styles.muted : ''}`}
     >
       {parts.sign}
       {parts.symbolPosition === 'prefix' ? symbol : null}
       {parts.integer}
       {parts.fraction === '' ? null : (
-        <span className={styles.dim}>
+        <span className={dim}>
           {parts.decimalSeparator}
           {parts.fraction}
         </span>
