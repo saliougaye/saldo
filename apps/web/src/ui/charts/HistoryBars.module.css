@@ -1,0 +1,51 @@
+/* A category's last periods: one bar each, the dashed median across them, the period under each. */
+.chart {
+  --plot: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plot,
+.ticks {
+  display: grid;
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+  gap: 6px;
+}
+
+.plot {
+  position: relative;
+  align-items: end;
+  height: var(--plot);
+}
+
+.bar {
+  display: block;
+  /* A few periods must not draw slabs: the bar keeps the width of a full chart's. */
+  justify-self: center;
+  inline-size: min(100%, 56px);
+  block-size: calc(var(--h) * var(--plot));
+  min-block-size: 2px;
+  border-radius: var(--radius-icon-box) var(--radius-icon-box) 0 0;
+  background: var(--color-bar-grey);
+}
+
+.median {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(var(--m) * var(--plot));
+  border-top: 1px dashed var(--color-text-faint);
+  pointer-events: none;
+}
+
+.ticks {
+  color: var(--color-text-faint);
+  font-size: var(--font-size-caption);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.current {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}

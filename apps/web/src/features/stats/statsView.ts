@@ -96,6 +96,8 @@ export interface SplitRow {
   share: number;
   /** Against the median of the periods the category was spent in; `null` with no baseline. */
   delta: number | null;
+  /** The median `delta` reads against: the dashed line of the panel's chart. `null` with none. */
+  baseline: number | null;
   /**
    * The category's spend in each used previous period, oldest first, then this period's: the
    * sparkline of its panel (D8). A used period with no spend in the category is a real zero.
@@ -109,6 +111,8 @@ export const SPLIT_COLOURS = 6;
 export interface StatsSplit {
   total: number;
   rows: SplitRow[];
+  /** The periods of each row's `history`, in the same order: the ticks of the panel's chart. */
+  periods: DateRange[];
   /** What the rows past `SPLIT_COLOURS` add up to: the bar's one grey segment. */
   other: number;
   /** «N transazioni escluse dai totali» (§5.7), and what they add up to. */
@@ -160,11 +164,8 @@ export function statsView(input: {
   );
   // As on the phone, the history is the **expense** one whatever the direction:
   // `categorySpendHistory` reads `spendingByCategory` with its default kind.
-  const history = categorySpendHistory(
-    periodHistory(txs, def, period.range, CASHFLOW_CYCLES),
-    data.categories,
-    today,
-  );
+  const used = periodHistory(txs, def, period.range, CASHFLOW_CYCLES);
+  const history = categorySpendHistory(used, data.categories, today);
   const total = [...amounts.values()].reduce((sum, value) => sum + value, 0);
   const categories = new Map(data.categories.map((category) => [category.id, category]));
   const rows: SplitRow[] = [...amounts.entries()]
@@ -172,12 +173,14 @@ export function statsView(input: {
     .map(([categoryId, amount]) => {
       // A period the category was not spent in is not a zero baseline: dropped, as on the phone.
       const past = history.map((cycle) => cycle.get(categoryId) ?? 0).filter((value) => value > 0);
+      const baseline = median(past);
       return {
         categoryId,
         category: categories.get(categoryId),
         amount,
         share: sharePercent(amount, total),
-        delta: deltaPercent(amount, median(past)),
+        delta: deltaPercent(amount, baseline),
+        baseline,
         // `history` is most recent first (`periodHistory`); the chart reads left to right.
         history: [...history.map((cycle) => cycle.get(categoryId) ?? 0).reverse(), amount],
       };
@@ -209,6 +212,7 @@ export function statsView(input: {
     split: {
       total,
       rows,
+      periods: [...used.map((entry) => entry.period).reverse(), period.range],
       other: rows.slice(SPLIT_COLOURS).reduce((sum, row) => sum + row.amount, 0),
       excluded: {
         count: excluded.length,

@@ -73,15 +73,110 @@
   max-width: 52ch;
 }
 
+/* «Expenses by period» and the key of its marks, on one line; the key wraps under on a narrow screen. */
+.chartHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
 .chartTitle {
-  font-size: var(--font-size-footnote);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* The marks of the chart, small: a closed bar, a forecast bar, the dashed «usual». */
+.keySpent,
+.keyForecast {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--color-bar-grey);
+}
+
+.keyForecast {
+  background: var(--color-track);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.keyUsual {
+  display: inline-block;
+  width: 16px;
+  border-top: 1.5px dashed var(--color-text-muted);
 }
 
 .chartFoot {
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.chartFoot b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Under «Breakdown»: the total and how many categories make it. */
+.total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.total b {
+  font-size: var(--font-size-amount-key);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tightest);
+  white-space: nowrap;
+}
+
+.total span {
+  color: var(--color-text-muted);
+}
+
+/* «Committed share»: the label, the two-tone bar beside it, and the sentence under both. */
+.commit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.commit b {
+  font-weight: var(--font-weight-medium);
+}
+
+.commit p {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
   text-wrap: pretty;
 }
 
@@ -104,11 +199,6 @@
   font-size: var(--font-size-footnote);
   color: var(--color-text-faint);
   white-space: nowrap;
-}
-
-.toggle {
-  display: inline-flex;
-  gap: 6px;
 }
 
 /* W7: one row for each category — icon, name, share bar, change against usual, amount. */
@@ -151,9 +241,25 @@
   place-items: center;
 }
 
+.catText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .catName {
   min-width: 0;
   font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* «11% · +34% vs usual» under the name: only below 760px, where the columns do not show. */
+.catSub {
+  display: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -197,10 +303,66 @@
   white-space: nowrap;
 }
 
+/* A tag: «#casa-nuova 3 uses» on one line, then its amounts. */
+.tagRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tagRow:hover {
+    background: var(--color-raised);
+  }
+}
+
+.tagRow:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.tagName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+}
+
+.tagName small {
+  margin-inline-start: 8px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-regular);
+}
+
+.tagHash {
+  color: var(--color-text-muted);
+}
+
 .tagAmounts {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  font-weight: var(--font-weight-medium);
+}
+
+/* The head of a category's dialog: its icon, in its colour, in a ring of the track. */
+.dialogIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--color-track);
+  border-radius: var(--radius-pill);
 }
 
 .more {
@@ -275,6 +437,10 @@
   .catShare,
   .catDelta {
     display: none;
+  }
+
+  .catSub {
+    display: block;
   }
 
   .rangeCol {

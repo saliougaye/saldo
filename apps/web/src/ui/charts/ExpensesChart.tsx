@@ -10,10 +10,15 @@ export interface ExpensesChartBar {
   tick: string;
   /** «1,366» under the tick; «~2,310» for a forecast period. Hidden below 760px. */
   value: string;
-  /** The period and its amount, for the tooltip and a screen reader. */
+  /** The whole bar as one sentence, for a screen reader. */
   label: string;
-  /** A forecast period's min–max, on a second line of the tooltip. */
-  detail: string | null;
+  /** The first line of the tooltip, in bold: the period, and «forecast» or «in progress». */
+  tipTitle: string;
+  /**
+   * The lines under it: the expenses and how they sit against «usual»; so far and at the end of
+   * the period on the running bar; about how much and the min–max on a forecast bar.
+   */
+  tipLines: readonly string[];
   kind: 'closed' | 'current' | 'forecast';
   selected: boolean;
   /** 0–1. */
@@ -50,7 +55,7 @@ export function ExpensesChart({ bars, usualHeight }: Props) {
           href={bar.href}
           className={`${styles.col} ${styles[bar.kind]}`}
           aria-current={bar.selected ? 'true' : undefined}
-          aria-label={bar.detail === null ? bar.label : `${bar.label} · ${bar.detail}`}
+          aria-label={bar.label}
         >
           <span className={styles.plot}>
             <span
@@ -66,8 +71,12 @@ export function ExpensesChart({ bars, usualHeight }: Props) {
               <span className={styles.spent} />
             </span>
             <span className={styles.tip} aria-hidden="true">
-              <b>{bar.label}</b>
-              {bar.detail}
+              <b>{bar.tipTitle}</b>
+              {bar.tipLines.map((line) => (
+                <span key={line} className={styles.tipLine}>
+                  {line}
+                </span>
+              ))}
             </span>
           </span>
           <span className={styles.tick} aria-hidden="true">

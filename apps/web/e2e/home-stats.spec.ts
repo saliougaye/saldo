@@ -519,9 +519,12 @@ test.describe('Statistiche', () => {
     await page.goto('/stats');
     await expect(page.getByText(title(current), { exact: true })).toBeVisible();
     const block = page.getByRole('region', { name: t('stats.expensesByPeriod') });
-    // «Usual» is said in words under the chart.
+    // «Usual» is said in words under the chart; the term is in bold, so the text has no markup.
     await expect(block).toContainText(
-      t('stats.usualNote', { amount: 'X' }).split('X')[0]?.trim() ?? '',
+      t('stats.usualNote', { amount: 'X' })
+        .replace(/<\/?b>/g, '')
+        .split('X')[0]
+        ?.trim() ?? '',
     );
 
     // Six closed bars, then the running one, which is selected. Each bar is a link to its period.

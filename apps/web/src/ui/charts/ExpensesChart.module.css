@@ -139,8 +139,12 @@
     transform var(--motion-press) var(--motion-easing);
 }
 
-.tip b {
+.tip b,
+.tipLine {
   display: block;
+}
+
+.tip b {
   font-weight: var(--font-weight-semibold);
 }
 

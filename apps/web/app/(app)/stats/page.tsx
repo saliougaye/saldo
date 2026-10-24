@@ -9,7 +9,7 @@ import {
   plural,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import {
   PERIOD_PARAM,
   periodFromParam,
@@ -25,10 +25,8 @@ import { listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
-import { Chip } from '../../../src/ui/Chip';
-import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
 import { ExpensesChart, type ExpensesChartBar } from '../../../src/ui/charts/ExpensesChart';
-import { Sparkline } from '../../../src/ui/charts/Sparkline';
+import { HistoryBars } from '../../../src/ui/charts/HistoryBars';
 import { SplitBar, type SplitSegment } from '../../../src/ui/charts/SplitBar';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { Icon } from '../../../src/ui/Icon';
@@ -40,6 +38,7 @@ import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { PeriodKeys } from '../../../src/ui/PeriodKeys';
 import { Section } from '../../../src/ui/Section';
+import { SegmentedLinks } from '../../../src/ui/SegmentedLinks';
 import styles from './stats.module.css';
 
 export const runtime = 'nodejs';
@@ -56,6 +55,9 @@ const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
 /** How many of a category's transactions its dialog lists. */
 const CATEGORY_ROWS = 5;
 
+/** The spec's «last six periods» of a category's dialog: the selected one and the five before it. */
+const HISTORY_BARS = 6;
+
 /** The name a category no longer in the list takes, as on the phone. */
 const GREY = 'var(--color-bar-grey)';
 
@@ -64,6 +66,23 @@ function tint(colorIndex: number | null | undefined): string {
   return colorIndex === null || colorIndex === undefined
     ? GREY
     : `var(--category-${paletteIndex(colorIndex)})`;
+}
+
+/** The catalogs' one piece of markup: `<b>` around a term, as Home renders it. */
+function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/<b>|<\/b>/).map((part, index) =>
+        index % 2 === 1 ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed sentence, in order.
+          <b key={index}>{part}</b>
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed sentence, in order.
+          <Fragment key={index}>{part}</Fragment>
+        ),
+      )}
+    </>
+  );
 }
 
 /** A figure of the period block: the label, the amount, and an optional line under it. */
@@ -139,34 +158,58 @@ export default async function StatsPage({
   const money = (minor: number) => formatMoney(minor, currency, locale);
 
   // ---- The chart (W6) -------------------------------------------------------------------------
+  const major = (minor: number) => formatMajor(minor, currency, locale, 'never');
   const running = navigator.columns.find((column) => column.kind === 'current');
-  const chart = expensesChartView({
-    columns: navigator.columns,
-    projection:
-      running === undefined
-        ? null
-        : periodProjection({ txs: page.data.transactions, def, range: running.range, today }),
-  });
+  const runningProjection =
+    running === undefined
+      ? null
+      : periodProjection({ txs: page.data.transactions, def, range: running.range, today });
+  const chart = expensesChartView({ columns: navigator.columns, projection: runningProjection });
   const bars: ExpensesChartBar[] = chart.bars.map((bar) => {
     const { column } = bar;
-    const forecastColumn = column.kind === 'forecast';
-    const amount = formatMajor(bar.amount, currency, locale, 'never');
+    const amount = major(bar.amount);
     const range = column.values.forecast;
+    const rangeText = formatCycleRange(column.range, locale, today);
+    const tipTitle =
+      column.kind === 'forecast'
+        ? `${rangeText} · ${t('period.forecast')}`
+        : column.kind === 'current'
+          ? `${rangeText} · ${t('period.running')}`
+          : rangeText;
+    // The tooltip says what the bar shows, then what it means against «usual» or the forecast.
+    const tipLines =
+      column.kind === 'forecast'
+        ? [
+            t('stats.tipForecast', { amount }),
+            ...(range === undefined
+              ? []
+              : [t('stats.forecastRange', { min: major(range.min), max: major(range.max) })]),
+          ]
+        : column.kind === 'current'
+          ? [
+              t('stats.tipSpentSoFar', { amount: money(bar.amount) }),
+              ...(runningProjection === null
+                ? []
+                : [t('stats.tipEndAbout', { amount: major(runningProjection) })]),
+            ]
+          : [
+              t('stats.tipSpent', { amount: money(bar.amount) }),
+              ...(chart.usual === null
+                ? []
+                : [
+                    t(bar.amount >= chart.usual ? 'stats.aboveUsual' : 'stats.belowUsual', {
+                      amount: major(Math.abs(bar.amount - chart.usual)),
+                    }),
+                  ]),
+            ];
     return {
       key: column.range.start,
       href: periodHref(PATH, column.range, def, today, keep),
       tick: formatPeriodTick(column.range.start, def.kind, locale),
-      value: forecastColumn ? t('common.approx', { amount }) : amount,
-      label: `${formatCycleRange(column.range, locale, today)} · ${
-        forecastColumn ? t('common.approx', { amount: money(bar.amount) }) : money(bar.amount)
-      }`,
-      detail:
-        range === undefined
-          ? null
-          : t('stats.forecastRange', {
-              min: formatMajor(range.min, currency, locale, 'never'),
-              max: formatMajor(range.max, currency, locale, 'never'),
-            }),
+      value: column.kind === 'forecast' ? t('common.approx', { amount }) : amount,
+      label: [tipTitle, ...tipLines].join(' · '),
+      tipTitle,
+      tipLines,
       kind: column.kind,
       selected: column.selected,
       height: bar.height,
@@ -175,11 +218,37 @@ export default async function StatsPage({
   });
   const chartBlock = (
     <>
-      <h2 className={styles.chartTitle}>{t('stats.expensesByPeriod')}</h2>
+      <div className={styles.chartHead}>
+        <h2 className={styles.chartTitle}>{t('stats.expensesByPeriod')}</h2>
+        {/* The key of the chart: what each mark means. The bars say it again in their labels. */}
+        <ul className={styles.legend} aria-hidden="true">
+          <li>
+            <i className={styles.keySpent} />
+            {t('stats.legendExpenses')}
+          </li>
+          {bars.some((bar) => bar.kind === 'forecast') ? (
+            <li>
+              <i className={styles.keyForecast} />
+              {t('stats.legendForecast')}
+            </li>
+          ) : null}
+          {chart.usual === null ? null : (
+            <li>
+              <i className={styles.keyUsual} />
+              {t('stats.usual')}
+            </li>
+          )}
+        </ul>
+      </div>
       <ExpensesChart bars={bars} usualHeight={chart.usualHeight} />
-      {chart.usual === null ? null : (
-        <p className={styles.chartFoot}>{t('stats.usualNote', { amount: money(chart.usual) })}</p>
-      )}
+      <p className={styles.chartFoot}>
+        {chart.usual === null ? null : (
+          <>
+            <Rich text={t('stats.usualNote', { amount: major(chart.usual) })} />{' '}
+          </>
+        )}
+        {t('stats.pickPeriod')}
+      </p>
     </>
   );
 
@@ -203,7 +272,7 @@ export default async function StatsPage({
         reach={reach}
         status={
           period.ahead > 0
-            ? undefined
+            ? t('period.forecast')
             : period.isCurrent
               ? t('period.inProgress', { elapsed: period.elapsed, length: period.length })
               : t('period.closed')
@@ -236,8 +305,8 @@ export default async function StatsPage({
               hero
               label={t('stats.expensesAbout')}
               note={t('stats.forecastRange', {
-                min: formatMajor(selected.expensesMin, currency, locale, 'never'),
-                max: formatMajor(selected.expensesMax, currency, locale, 'never'),
+                min: major(selected.expensesMin),
+                max: major(selected.expensesMax),
               })}
             >
               <AmountText
@@ -353,8 +422,8 @@ export default async function StatsPage({
                     <td>{money(entry.expenses)}</td>
                     <td className={`${styles.faint} ${styles.rangeCol}`}>
                       {t('stats.forecastRange', {
-                        min: formatMajor(entry.expensesMin, currency, locale, 'never'),
-                        max: formatMajor(entry.expensesMax, currency, locale, 'never'),
+                        min: major(entry.expensesMin),
+                        max: major(entry.expensesMax),
                       })}
                     </td>
                     <td>{money(entry.balance)}</td>
@@ -425,9 +494,14 @@ export default async function StatsPage({
       ? t('stats.newLabel')
       : t('stats.vsUsual', { delta: formatSignedPercent(delta) });
 
+  // W7: a row's share bar is relative to the largest category, which fills its track.
+  const largest = ranked[0]?.row.amount ?? 0;
+  const shareWidth = (amount: number) => (largest <= 0 ? 0 : (amount / largest) * 100);
+  const historyPeriods = view.split.periods.slice(-HISTORY_BARS);
+
   // Every category's dialog, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {};
-  for (const { row } of ranked) {
+  for (const { row, colour } of ranked) {
     const rows = listView({
       data: page.data,
       filters: filtersFromSearch({ category: row.categoryId, direction }),
@@ -437,8 +511,15 @@ export default async function StatsPage({
     })
       .days.flatMap((day) => day.rows)
       .slice(0, CATEGORY_ROWS);
+    const history = row.history.slice(-HISTORY_BARS);
     panels[`c:${row.categoryId}`] = {
       title: row.category?.name ?? t('common.missing'),
+      icon:
+        row.category === undefined ? undefined : (
+          <span className={styles.dialogIcon} style={{ color: colour }}>
+            <Icon name={row.category.icon as IconName} size={18} />
+          </span>
+        ),
       body: (
         <>
           <Figure
@@ -453,16 +534,39 @@ export default async function StatsPage({
               positive={direction === 'income'}
             />
           </Figure>
-          <ChartFrame title={plural(t, locale, 'stats.lastPeriods', row.history.length)}>
-            <Sparkline series={row.history} height={56} />
-          </ChartFrame>
+          <Section
+            open
+            title={plural(t, locale, 'stats.lastPeriods', history.length)}
+            trailing={
+              row.baseline === null
+                ? undefined
+                : t('stats.dashedMedian', { amount: major(row.baseline) })
+            }
+          >
+            <HistoryBars
+              colour={colour}
+              median={row.baseline}
+              bars={history.map((amount, index) => {
+                const range = historyPeriods[index];
+                return {
+                  key: range?.start ?? `${index}`,
+                  tick: range === undefined ? '' : formatPeriodTick(range.start, def.kind, locale),
+                  amount,
+                };
+              })}
+            />
+          </Section>
           <Section
             open
             title={t('tabs.transactions')}
-            more={
-              <Link className={styles.more} href={transactionsHref({ category: row.categoryId })}>
-                <span>{t('home.allTransactions')}</span>
-                <Icon name="chevR" size={16} />
+            trailing={
+              <Link
+                className={styles.more}
+                href={transactionsHref({ category: row.categoryId })}
+                aria-label={t('home.allTransactions')}
+              >
+                <span>{t('stats.allShort')}</span>
+                <Icon name="chevR" size={14} />
               </Link>
             }
           >
@@ -579,23 +683,31 @@ export default async function StatsPage({
             <section className={styles.box}>
               <div className={styles.boxHead}>
                 <h2 className={styles.boxTitle}>{t('stats.split')}</h2>
-                <span className={styles.toggle}>
-                  <Chip
-                    label={t('stats.expenses')}
-                    href={directionHref('expense')}
-                    active={direction === 'expense'}
-                  />
-                  <Chip
-                    label={t('stats.income')}
-                    href={directionHref('income')}
-                    active={direction === 'income'}
-                  />
-                </span>
+                <SegmentedLinks
+                  options={[
+                    {
+                      key: 'expense',
+                      label: t('stats.expenses'),
+                      href: directionHref('expense'),
+                      active: direction === 'expense',
+                    },
+                    {
+                      key: 'income',
+                      label: t('stats.income'),
+                      href: directionHref('income'),
+                      active: direction === 'income',
+                    },
+                  ]}
+                />
               </div>
               {view.split.rows.length === 0 ? (
                 <EmptyState title={t('stats.empty')} />
               ) : (
                 <>
+                  <p className={styles.total}>
+                    <b>{money(view.split.total)}</b>
+                    <span>{plural(t, locale, 'stats.categoryCount', view.split.rows.length)}</span>
+                  </p>
                   <SplitBar segments={segments} />
                   <div className={styles.cats}>
                     {ranked.map(({ row, colour }) => (
@@ -611,12 +723,20 @@ export default async function StatsPage({
                             <Icon name={row.category.icon as IconName} size={18} />
                           )}
                         </span>
-                        <span className={styles.catName}>
-                          {row.category?.name ?? t('common.missing')}
+                        {/* Below 760px the share and the change go under the name, on one line. */}
+                        <span className={styles.catText}>
+                          <span className={styles.catName}>
+                            {row.category?.name ?? t('common.missing')}
+                          </span>
+                          <span className={styles.catSub}>
+                            {t('targets.percent', { value: row.share })} · {deltaText(row.delta)}
+                          </span>
                         </span>
                         <span className={styles.catShare}>
                           <span className={styles.track}>
-                            <span style={{ width: `${row.share}%`, background: colour }} />
+                            <span
+                              style={{ width: `${shareWidth(row.amount)}%`, background: colour }}
+                            />
                           </span>
                           <span>{t('targets.percent', { value: row.share })}</span>
                         </span>
@@ -638,13 +758,29 @@ export default async function StatsPage({
               )}
               {/* «Committed share» is a line at the bottom of the block. */}
               {direction === 'expense' && view.split.rows.length > 0 ? (
-                <p className={styles.foot}>
-                  <b>{t('stats.committed')}</b>{' '}
-                  {t('stats.committedLine', {
-                    pct: view.committed.share,
-                    amount: money(view.committed.amount),
-                  })}
-                </p>
+                <div className={styles.commit}>
+                  <b>{t('stats.committed')}</b>
+                  <SplitBar
+                    segments={[
+                      {
+                        key: 'committed',
+                        amount: view.committed.amount,
+                        colour: 'var(--color-text)',
+                      },
+                      {
+                        key: 'discretionary',
+                        amount: view.committed.discretionary,
+                        colour: 'var(--color-track)',
+                      },
+                    ]}
+                  />
+                  <p>
+                    {t('stats.committedLine', {
+                      pct: view.committed.share,
+                      amount: money(view.committed.amount),
+                    })}
+                  </p>
+                </div>
               ) : null}
             </section>
 
@@ -659,30 +795,33 @@ export default async function StatsPage({
                 <EmptyState title={t('stats.tagsEmpty')} />
               ) : (
                 view.tags.tags.map((row) => (
-                  <ListRow
+                  // «#casa-nuova 3 usi» on one line, the amounts at the end.
+                  <Link
                     key={row.tagId}
-                    open
-                    title={tagNames.get(row.tagId) ?? t('common.missing')}
-                    subtitle={plural(t, locale, 'tags.uses', row.count)}
+                    className={styles.tagRow}
                     href={transactionsHref({ tag: row.tagId })}
-                    trailing={
-                      <span className={styles.tagAmounts}>
-                        {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
-                        {row.expense === 0 && row.income > 0 ? null : (
-                          <AmountText minor={row.expense} currency={currency} locale={locale} />
-                        )}
-                        {row.income === 0 ? null : (
-                          <AmountText
-                            minor={row.income}
-                            currency={currency}
-                            locale={locale}
-                            size="footnote"
-                            sign="always"
-                          />
-                        )}
-                      </span>
-                    }
-                  />
+                  >
+                    <span className={styles.tagName}>
+                      <span className={styles.tagHash}>#</span>
+                      <span>{tagNames.get(row.tagId) ?? t('common.missing')}</span>
+                      <small>{plural(t, locale, 'tags.uses', row.count)}</small>
+                    </span>
+                    <span className={styles.tagAmounts}>
+                      {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
+                      {row.expense === 0 && row.income > 0 ? null : (
+                        <AmountText minor={row.expense} currency={currency} locale={locale} />
+                      )}
+                      {row.income === 0 ? null : (
+                        <AmountText
+                          minor={row.income}
+                          currency={currency}
+                          locale={locale}
+                          size="footnote"
+                          sign="always"
+                        />
+                      )}
+                    </span>
+                  </Link>
                 ))
               )}
               {view.tags.untaggedCount === 0 ? null : (
