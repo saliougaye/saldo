@@ -526,6 +526,69 @@ Asked for by the user on 2026-09-11 as three **investigations**. All three ended
   grid, and `CustomRangeSheet` uses the same component in range mode, so there is one calendar.
   "Oggi" and "Ieri" stay chips on the form, so the common case opens no sheet at all.
 
+### Web redesign — top bar, one column, new pages ✅ done
+
+Specs: `specs/2026-10-20-web-home-redesign.html` (H1–H12) and `specs/2026-10-21-web-pages-redesign.html`
+(W1–W12). Branch: `redesign/web`. Seven plans, each one ends with software that works:
+
+- [x] **R1** — the top bar and the new Home (`plans/2026-10-21-web-redesign-r1-shell-home.md`).
+- [x] **R2** — the centred dialog, and the edit form opened from a transaction row (W1–W4)
+  (`plans/2026-10-21-web-redesign-r2-dialog.md`).
+- [x] **R3** — Transactions (W5) (`plans/2026-10-21-web-redesign-r3-transactions.md`).
+- [x] **R4** — Statistics (W6–W8) (`plans/2026-10-21-web-redesign-r4-stats.md`).
+- [x] **R5** — Accounts (W9) (`plans/2026-10-21-web-redesign-r5-accounts.md`).
+- [x] **R6** — Profile and Admin (W10) (`plans/2026-10-21-web-redesign-r6-profile-admin.md`).
+- [x] **R7** — empty states and the new `@saldo/core` functions (W11) (`plans/2026-10-21-web-redesign-r7-empty-states.md`).
+- [x] **Command palette** — “Search” in the top bar, and the palette that `⌘K` / `Ctrl K` opens on every page
+  (`plans/2026-10-23-web-command-palette.md`, spec `specs/2026-10-23-web-command-palette.html`). It closes
+  open item 5 of the home redesign spec.
+
+**Acceptance for R1:** no sidebar on any width; the top bar and the content share the 1040px column;
+the Home shows Summary, Budget, Transactions and Goals in this order; the trend moves with the pointer
+and with ← → Home End; «Coming up» shows the nearest date first; a closed period shows 10 latest rows.
+
+**Acceptance for R2:** a detail opens in a 440px dialog and a form in a 480px dialog, in the centre
+of the screen; below 760px both are sheets at the bottom; a transaction row opens «Edit transaction»;
+«Delete» in its foot deletes at once and the toast offers «Undo»; ↑ ↓ move along the rows.
+
+**Acceptance for R3:** Transactions shows one summary block (three cells, two in a closed period),
+one tool row (search, Account, Category, Tag, «Expenses only», «More») and one list block; each row
+has the category icon in its colour and no chips; the key hint shows under the list with a mouse.
+
+**Acceptance for R4:** Statistics shows the period block (Expenses, Income, Net, projection, and
+«Expenses by period» with one bar for each period and a dashed «usual» line), the breakdown in the
+colours of the categories with share bars and «Committed share» as its last line, and the tags; a
+bar and ← → select the period; a forecast period shows its recurring transactions and the forecast
+table; the period trend is gone from the page.
+
+**Acceptance for R5:** Accounts shows the net worth block, one row for each account in «To spend» and
+in «Savings and investments» (no cards), a Goals block of its own with 40px rings, and the archived
+row; the account dialog has «Archive account» and «Edit» at its bottom.
+
+**Acceptance for R6:** the avatar opens a menu with the name, the email, «Profile» and «Sign out»;
+the top bar has no Admin icon; Profile has a 220px menu in the groups Account, Organise (with
+counts), Connections and data, and «Admin · ‹instance›» for the admin role only, then «Sign out»;
+`/admin/*` keeps its routes and its guard and shows the same frame; below 760px `/profile` is the
+list of groups and a section has a way back.
+
+**Acceptance for R7:**
+- A new user sees «Getting started» on the Home, and the blocks with no data do not show.
+- Transactions:
+  - with no transaction, it has a quick add;
+  - a search with no result lists the other periods that match.
+- An empty period of Statistics links to the nearest period with data.
+- Accounts offers the account types, Goals offers three presets, and Budgets offers «Where you spend most».
+- Tags and Invites show their form in the page.
+- `budgetSuggestions`, `matchesInOtherPeriods` and `emergencyFundTarget` are in `@saldo/core`, with tests.
+
+**Acceptance for the command palette:**
+- From 1000px the top bar shows “Search” with the shortcut. Below 1000px it does not show “Search”.
+- `⌘K` and `Ctrl K` open and close the palette at every width. `Esc` closes it, and the focus goes back.
+- The palette finds pages, actions, accounts, goals, budgets, categories, tags and transactions (by title and by amount).
+- The last row opens `/transactions?q=…` with the query.
+- The Server Action reads the data of the signed-in user only. A test on PGlite makes sure of it.
+- `rankSearch` is in `@saldo/core`, with tests.
+
 ### Notifications for future transactions
 
 Moved to `ROADMAP.md` (0.1) on 2026-10-19.

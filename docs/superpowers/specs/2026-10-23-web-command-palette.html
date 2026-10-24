@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — The command palette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* ── This spec: the command palette illustrations ─────────────────────────── */
+svg.ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--border); white-space: nowrap; }
+.stage.pals { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.pal { width: 100%; max-width: 560px; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.14); font-size: 14px; line-height: 1.4; overflow: hidden; }
+.pal .in { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.pal .in svg { width: 16px; height: 16px; flex: none; color: var(--text-muted); }
+.pal .in span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal .in .ph { color: var(--text-faint); }
+.pal .list { padding: 6px; }
+.pal .gl { font: 500 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); padding: 12px 10px 6px; }
+.pal .it { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; min-width: 0; }
+.pal .it.hl { background: var(--raised); }
+.pal .it .ic { width: 28px; height: 28px; border-radius: 8px; background: var(--raised); display: grid; place-items: center; flex: none; }
+.pal .it.hl .ic { background: var(--bg); }
+.pal .it .ic svg { width: 15px; height: 15px; }
+.pal .it .tx { flex: 1; min-width: 0; }
+.pal .it .tx b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal .it .tx small { display: block; color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal .it .tr { flex: none; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 13px; }
+.pal .it .tr.neg { color: var(--text); }
+.pal .msg { padding: 22px 12px 10px; }
+.pal .msg b { display: block; font-weight: 500; }
+.pal .msg small { color: var(--text-muted); font-size: 13px; }
+.pal .ft { display: flex; gap: 14px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
+.pal .ft span { display: inline-flex; align-items: center; gap: 6px; }
+.bar { width: 100%; max-width: 760px; display: flex; align-items: center; gap: 14px; background: var(--bg); border-radius: 14px; box-shadow: var(--shadow); padding: 10px 14px; font-size: 13px; overflow: hidden; }
+.bar .brandmark { font-weight: 600; display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.bar .brandmark i { width: 18px; height: 18px; border-radius: 6px; background: var(--text); display: inline-block; }
+.bar .dest { display: flex; gap: 2px; color: var(--text-muted); }
+.bar .dest span { padding: 5px 8px; border-radius: 8px; white-space: nowrap; }
+.bar .dest span.on { background: var(--raised); color: var(--text); }
+.bar .sp { flex: 1; }
+.bar .sr-btn { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 6px 0 10px; border-radius: 9px; box-shadow: inset 0 0 0 1px var(--border-strong); color: var(--text-muted); white-space: nowrap; flex: none; }
+.bar .sr-btn svg { width: 14px; height: 14px; }
+.bar .nt { height: 30px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 9px; background: var(--text); color: var(--bg); font-weight: 500; white-space: nowrap; flex: none; }
+.bar .av { width: 28px; height: 28px; border-radius: 50%; background: var(--raised); display: grid; place-items: center; font-weight: 600; font-size: 11px; flex: none; }
+.bars { display: grid; gap: 14px; justify-items: start; }
+.bars .w { font: 500 12px/1 var(--mono); color: var(--text-muted); margin: 4px 0 -6px; }
+@media (max-width: 640px) {
+  .bar .dest { display: none; }
+}
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#what"><span>01</span>What it is</a></li>
+    <li><a href="#entry"><span>02</span>How it opens</a></li>
+    <li><a href="#finds"><span>03</span>What it finds</a></li>
+    <li><a href="#rank"><span>04</span>Ranking</a></li>
+    <li><a href="#load"><span>05</span>How results load</a></li>
+    <li><a href="#keys"><span>06</span>The keyboard</a></li>
+    <li><a href="#states"><span>07</span>States</a></li>
+    <li><a href="#a11y"><span>08</span>Access and motion</a></li>
+    <li><a href="#open"><span>09</span>Open questions</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo · web · Spec</span>
+    <h1>The command palette</h1>
+    <p>One search box for the whole web app. Press <kbd>⌘K</kbd> on any page, type, and open a page, an action, an account or a transaction.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Source</b> Web redesign, open item 5</span>
+    <span><b>Date</b> 2026-10-23</span>
+  </div>
+</header>
+
+<!-- 01 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="what" aria-labelledby="h-what">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-what">What it is</h2>
+      <p class="lead">The palette is a dialog with a search field and one list of results. It replaces a click path with a few keys.</p>
+    </div>
+    <div class="prose">
+      <p>The web redesign puts “Search” with <kbd>⌘K</kbd> in the top bar (H1). Open item 5 of that spec says: do not show “Search” until the palette exists. This spec defines the palette. When the palette ships, “Search” goes into the top bar.</p>
+      <p>The palette finds three types of things:</p>
+      <ul>
+        <li><b>Commands.</b> The pages of the app and the actions that make a new item.</li>
+        <li><b>Your items.</b> Accounts, goals, budgets, categories and tags, by name.</li>
+        <li><b>Your transactions.</b> By description or by amount.</li>
+      </ul>
+      <p>The palette does not replace the search field on Transactions (§5.12). The last row of the results opens that list with the same query.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="cards">
+      <div class="card rv"><div class="stat">1</div><h4>Shortcut</h4><p><kbd>⌘K</kbd> on a Mac, <kbd>Ctrl</kbd> <kbd>K</kbd> on other systems. Both keys work on every system.</p></div>
+      <div class="card rv"><div class="stat">8</div><h4>Groups</h4><p>Actions, Go to, Accounts, Goals, Budgets, Categories, Tags and Transactions.</p></div>
+      <div class="card rv"><div class="stat">0</div><h4>New libraries</h4><p>The palette uses the <code>Dialog</code> and <code>Autocomplete</code> of Base UI, which the app already has.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="entry" aria-labelledby="h-entry">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-entry">How it opens</h2>
+      <p class="lead">The shortcut opens the palette on every page. The button in the top bar shows on wide screens only.</p>
+    </div>
+    <div class="prose">
+      <p><b>The button.</b> “Search” sits in the top bar, after the space and before “New transaction”. It shows a search icon, the word “Search” and the shortcut. The shortcut reads <kbd>⌘K</kbd> when the browser runs on an Apple system. On other systems it reads <kbd>Ctrl K</kbd>. The server reads the system from the <code>User-Agent</code> header, so the first render is correct.</p>
+      <p><b>The shortcut.</b> <kbd>⌘K</kbd> and <kbd>Ctrl</kbd> <kbd>K</kbd> open the palette, also when the focus is in a field. When the palette is open, the same keys close it. The keys do nothing while a confirmation dialog or a form dialog is open: that dialog owns the keyboard.</p>
+      <p><b>Narrow screens.</b> The rules of the redesign spec (§03) apply:</p>
+      <ol class="steps">
+        <li>From 1000px: the top bar shows “Search”.</li>
+        <li>From 760px to 999px: the top bar hides “Search”. The shortcut still opens the palette.</li>
+        <li>Below 760px: the top bar shows the brand and the avatar only. The shortcut still opens the palette.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <div class="bars" role="img" aria-label="The top bar at three widths. At 1000px and more: brand, four destinations, Search with ⌘K, New transaction, avatar. From 760px to 999px: the same bar without Search. Below 760px: the brand and the avatar only.">
+        <span class="w">1000px and more</span>
+        <div class="bar">
+          <span class="brandmark"><i></i>Saldo</span>
+          <span class="dest"><span class="on">Home</span><span>Transactions</span><span>Statistics</span><span>Accounts</span></span>
+          <span class="sp"></span>
+          <span class="sr-btn"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search <kbd>⌘K</kbd></span>
+          <span class="nt">New transaction</span>
+          <span class="av">SG</span>
+        </div>
+        <span class="w">760px – 999px</span>
+        <div class="bar" style="max-width:620px">
+          <span class="brandmark"><i></i>Saldo</span>
+          <span class="dest"><span class="on">Home</span><span>Transactions</span><span>Statistics</span><span>Accounts</span></span>
+          <span class="sp"></span>
+          <span class="nt">New transaction</span>
+          <span class="av">SG</span>
+        </div>
+        <span class="w">Below 760px</span>
+        <div class="bar" style="max-width:300px">
+          <span class="brandmark"><i></i>Saldo</span>
+          <span class="sp"></span>
+          <span class="av">SG</span>
+        </div>
+      </div>
+      <figcaption><b>Figure 1.</b> The top bar at three widths. Only the widest bar shows “Search”. The shortcut works at every width.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 03 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="finds" aria-labelledby="h-finds">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-finds">What it finds</h2>
+      <p class="lead">The results come in groups. The groups always have the same order. A group with no match does not show.</p>
+    </div>
+    <div class="prose">
+      <p>Each result is one row: an icon, a title, an optional second line and an optional figure on the right. Each row opens one URL. The palette closes before the navigation.</p>
+      <p>The palette shows live items only. It does not show archived accounts, archived categories or deleted rows.</p>
+      <p>Each group shows a maximum of 5 rows. After the transactions, a last row opens <code>/transactions?q=…</code> with the query. That list also matches category and account names, so it can show more rows than the palette.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Group</th><th scope="col">Matches on</th><th scope="col">Row shows</th><th scope="col">Opens</th></tr></thead>
+        <tbody>
+          <tr><td>Actions</td><td>Label</td><td>New transaction, New account, New goal, New budget, New category, New tag</td><td><code>/transactions?new</code>, <code>/accounts?new</code>, <code>/profile/goals?new</code>, …</td></tr>
+          <tr><td>Go to</td><td>Page title</td><td>Home, Transactions, Statistics, Accounts, Profile, and the pages of Profile</td><td>The page</td></tr>
+          <tr><td>Accounts</td><td>Name</td><td>Type · balance</td><td><code>/accounts?a=ID</code></td></tr>
+          <tr><td>Goals</td><td>Name</td><td>Account · target</td><td><code>/accounts?g=ID</code></td></tr>
+          <tr><td>Budgets</td><td>Name</td><td>Limit</td><td><code>/profile/budgets?b=ID</code></td></tr>
+          <tr><td>Categories</td><td>Name</td><td>Parent or kind</td><td><code>/profile/categories?c=ID</code></td></tr>
+          <tr><td>Tags</td><td>Name</td><td>—</td><td><code>/profile/tags?tag=ID</code></td></tr>
+          <tr><td>Transactions</td><td>Title, amount</td><td>Date · category · signed amount</td><td><code>/transactions?t=ID</code>, with <code>p=</code> when the date is in another period</td></tr>
+          <tr><td>See all</td><td>—</td><td>See all for “…” in Transactions</td><td><code>/transactions?q=…</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><span class="meta">Note</span><p>The title of a transaction is the title of its row in the list. A transaction with no description has its category name as title, and a transfer has “A → B”. Thus the palette finds what you see.</p></div>
+    <div class="callout"><span class="meta">Note</span><p>With an empty query, the palette shows all actions and the five main pages. The other pages of Profile show when the query matches them.</p></div>
+  </div>
+</section>
+
+<!-- 04 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="rank" aria-labelledby="h-rank">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-rank">Ranking</h2>
+      <p class="lead">A pure function in <code>@saldo/core</code> gives each match a score. A higher score comes first in its group.</p>
+    </div>
+    <div class="prose">
+      <p><b>Text.</b> The function compares the query and the title after <code>normalizeText</code>: lower case, no accents, single spaces. It uses the first rule that applies:</p>
+      <ol class="steps">
+        <li>The title is the query: score 400.</li>
+        <li>The title starts with the query: score 300.</li>
+        <li>Each word of the query starts a word of the title: score 200. The order of the words is free.</li>
+        <li>The title contains the query: score 100.</li>
+        <li>The title contains each word of the query: score 50.</li>
+      </ol>
+      <p>No rule applies: the row is not a match.</p>
+      <p><b>Amounts.</b> A query with digits and no letters is also an amount. The function removes currency symbols and spaces. A separator with 1 to <i>n</i> digits after it is the decimal separator, where <i>n</i> is the number of decimals of your currency. All other separators group thousands. Thus <code>12,50</code>, <code>12.50</code> and <code>€ 12,50</code> are the same amount, and <code>1.234</code> is one thousand two hundred thirty-four euros.</p>
+      <ul>
+        <li>A whole number, such as <code>12</code>, matches 12.00 with score 300, and 12.01 to 12.99 with score 200.</li>
+        <li>A number with decimals matches that amount only, with score 300.</li>
+      </ul>
+      <p>A transaction gets the higher of its text score and its amount score. If two rows have the same score, the newer date comes first. Rows with no date keep the order of their page (the order you set on Accounts or Categories).</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 360" role="img" aria-labelledby="f2t">
+        <title id="f2t">The five text rules as steps from 400 to 50, with an example title “Grocery run” for each, and the amount rules beside them.</title>
+        <g font-size="17">
+          <rect class="bx-ink" x="20" y="20" width="620" height="52" rx="14"/>
+          <text x="40" y="52" class="ti b mono">400</text><text x="110" y="52" class="ti">“grocery run” is the title</text>
+          <rect class="bx" x="20" y="84" width="560" height="52" rx="14"/>
+          <text x="40" y="116" class="b mono">300</text><text x="110" y="116">“groc” starts the title</text>
+          <rect class="bx" x="20" y="148" width="500" height="52" rx="14"/>
+          <text x="40" y="180" class="b mono">200</text><text x="110" y="180">“run gro” starts two words</text>
+          <rect class="bx" x="20" y="212" width="440" height="52" rx="14"/>
+          <text x="40" y="244" class="b mono">100</text><text x="110" y="244">“cery r” is inside</text>
+          <rect class="bx-dash" x="20" y="276" width="380" height="52" rx="14"/>
+          <text x="40" y="308" class="b mono tm">50</text><text x="110" y="308" class="tm">“run ocer”: each word inside</text>
+        </g>
+        <line class="lane" x1="680" y1="20" x2="680" y2="330"/>
+        <g font-size="17">
+          <text x="710" y="44" class="tm mono" font-size="14">Amount, currency EUR</text>
+          <rect class="bx-ok" x="710" y="64" width="310" height="52" rx="14"/>
+          <text x="730" y="96" class="tok b mono">300</text><text x="800" y="96">12 → 12.00</text>
+          <rect class="bx" x="710" y="128" width="310" height="52" rx="14"/>
+          <text x="730" y="160" class="b mono">200</text><text x="800" y="160">12 → 12.01 … 12.99</text>
+          <rect class="bx-ok" x="710" y="192" width="310" height="52" rx="14"/>
+          <text x="730" y="224" class="tok b mono">300</text><text x="800" y="224">12,5 → 12.50</text>
+          <text x="710" y="290" class="tm" font-size="15">Same score: newer date first.</text>
+        </g>
+      </svg>
+      <figcaption><b>Figure 2.</b> The text rules, from the best match to the weakest. The amount rules apply to transactions only.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 05 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="load" aria-labelledby="h-load">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-load">How results load</h2>
+      <p class="lead">The browser ranks the commands. The server ranks your data. Each request reads the data of the signed-in user only.</p>
+    </div>
+    <div class="prose">
+      <p><b>Commands.</b> The <code>(app)</code> layout gives the palette the translated labels of the pages and the actions. The browser ranks them at each key, with the same core function. They show without a request.</p>
+      <p><b>Your data.</b> The palette calls the Server Action <code>searchAction(query)</code> 150ms after the last key. The action:</p>
+      <ol class="steps">
+        <li>Reads the session with <code>requireWebUser</code>. A Server Action is a public endpoint, so the action checks the session itself.</li>
+        <li>Loads the data with <code>loadUserData(user.id)</code>. The id comes from the session, never from the request.</li>
+        <li>Ranks the items and the transactions with <code>rankSearch</code> of <code>@saldo/core</code>.</li>
+        <li>Sends back the rows: titles, formatted figures and URLs. It sends no other field.</li>
+      </ol>
+      <p>The palette keeps the last rows on screen while a new request runs. It drops an answer for a query that is not the current query.</p>
+      <div class="callout"><span class="meta">Why not the layout</span><p>The layout already loads your data, but it cannot send all transactions to the browser on each page. The rows of the action are a maximum of 30, whatever the size of the ledger.</p></div>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 430" role="img" aria-labelledby="f3t">
+        <title id="f3t">In the browser, the palette ranks the commands itself and calls searchAction for the data. On the server, the action reads the session, loads the user's data, ranks it with the core function, and sends back at most 30 rows.</title>
+        <rect class="bx-dash" x="10" y="10" width="380" height="410" rx="22"/>
+        <text x="30" y="44" font-size="15" class="tm mono">Browser</text>
+        <rect class="bx-ink" x="40" y="66" width="320" height="56" rx="14"/>
+        <text x="200" y="100" text-anchor="middle" class="ti b" font-size="18">CommandPalette</text>
+        <rect class="bx-r" x="40" y="146" width="320" height="56" rx="14"/>
+        <text x="200" y="180" text-anchor="middle" font-size="16">Commands from the layout</text>
+        <rect class="bx-ok" x="40" y="226" width="320" height="56" rx="14"/>
+        <text x="200" y="260" text-anchor="middle" class="tok b" font-size="16">rankSearch (core)</text>
+        <rect class="bx-r" x="40" y="306" width="320" height="90" rx="14"/>
+        <text x="200" y="340" text-anchor="middle" font-size="16">One list:</text>
+        <text x="200" y="366" text-anchor="middle" font-size="15" class="tm">commands, then data groups</text>
+        <line class="ln" x1="200" y1="122" x2="200" y2="144" marker-end="url(#ah)"/>
+        <line class="ln" x1="200" y1="202" x2="200" y2="224" marker-end="url(#ah)"/>
+        <line class="ln" x1="200" y1="282" x2="200" y2="304" marker-end="url(#ah)"/>
+
+        <line class="ln-ink" x1="362" y1="94" x2="604" y2="94" marker-end="url(#ah-ink)"/>
+        <text x="482" y="80" text-anchor="middle" font-size="15" class="b mono">searchAction(q)</text>
+        <text x="482" y="116" text-anchor="middle" font-size="13" class="tf">150ms after the last key</text>
+        <line class="ln dash" x1="610" y1="350" x2="364" y2="350" marker-end="url(#ah)"/>
+        <text x="487" y="336" text-anchor="middle" font-size="15" class="tm">≤ 30 rows</text>
+
+        <rect class="bx" x="614" y="10" width="416" height="410" rx="22"/>
+        <path class="bx-ink" d="M636 10 H1008 A22 22 0 0 1 1030 32 V62 H614 V32 A22 22 0 0 1 636 10 Z"/>
+        <text x="822" y="44" text-anchor="middle" class="ti b" font-size="18">Server · Next.js</text>
+        <g font-size="16">
+          <rect class="bx-r" x="640" y="82" width="364" height="56" rx="12"/><text x="822" y="116" text-anchor="middle" class="mono">requireWebUser()</text>
+          <rect class="bx-r" x="640" y="160" width="364" height="56" rx="12"/><text x="822" y="194" text-anchor="middle" class="mono">loadUserData(user.id)</text>
+          <rect class="bx-r" x="640" y="238" width="364" height="56" rx="12"/><text x="822" y="272" text-anchor="middle" class="mono">searchView(data, q)</text>
+          <rect class="bx-ok" x="640" y="316" width="364" height="56" rx="12"/><text x="822" y="350" text-anchor="middle" class="tok b">rankSearch (core)</text>
+        </g>
+        <line class="ln" x1="822" y1="138" x2="822" y2="158" marker-end="url(#ah)"/>
+        <line class="ln" x1="822" y1="216" x2="822" y2="236" marker-end="url(#ah)"/>
+        <line class="ln" x1="822" y1="294" x2="822" y2="314" marker-end="url(#ah)"/>
+      </svg>
+      <figcaption><b>Figure 3.</b> Green is the shared rule in core. The browser and the server rank with the same function.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 06 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="keys" aria-labelledby="h-keys">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-keys">The keyboard</h2>
+      <p class="lead">The focus stays in the search field. The arrows move the highlight in the list.</p>
+    </div>
+    <div class="prose">
+      <p>The first row is always highlighted. When the results change, the highlight goes back to the first row. When the palette closes, the focus goes back to the element that had it before: the “Search” button, or the page.</p>
+      <p>The single-key shortcuts of the shell, such as <kbd>N</kbd>, do nothing while the palette is open. The palette is a dialog, and <code>ignoresShortcut</code> already gives a dialog all the keys.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Key</th><th scope="col">Effect</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌘K</kbd> / <kbd>Ctrl K</kbd></td><td>Opens the palette. When it is open, closes it.</td></tr>
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Moves the highlight to the previous or next row, across the groups.</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>Opens the highlighted row and closes the palette.</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Closes the palette. The query is not kept.</td></tr>
+          <tr><td><kbd>Tab</kbd></td><td>Stays in the dialog.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="rv">
+      <svg viewBox="0 0 1040 300" role="img" aria-labelledby="f4t">
+        <title id="f4t">States of the palette: closed, open with an empty query, and open with a query. Command K opens and closes. Typing moves to the query state. Enter and Escape close the palette, and the focus goes back.</title>
+        <rect class="bx" x="20" y="110" width="200" height="80" rx="18"/>
+        <text x="120" y="156" text-anchor="middle" class="b" font-size="20">Closed</text>
+        <rect class="bx-ink" x="390" y="30" width="260" height="80" rx="18"/>
+        <text x="520" y="66" text-anchor="middle" class="ti b" font-size="20">Open</text>
+        <text x="520" y="92" text-anchor="middle" class="ti" font-size="15">empty query: commands</text>
+        <rect class="bx-ok" x="390" y="190" width="260" height="80" rx="18"/>
+        <text x="520" y="226" text-anchor="middle" class="tok b" font-size="20">Query</text>
+        <text x="520" y="252" text-anchor="middle" class="tm" font-size="15">commands + your data</text>
+        <rect class="bx-r" x="820" y="110" width="200" height="80" rx="18"/>
+        <text x="920" y="146" text-anchor="middle" class="b" font-size="18">Navigate</text>
+        <text x="920" y="172" text-anchor="middle" class="tm" font-size="14">focus on the page</text>
+        <path class="ln-ink" d="M220 130 C300 80 320 70 388 70" marker-end="url(#ah-ink)"/>
+        <text x="270" y="72" class="b mono" font-size="15">⌘K</text>
+        <path class="ln" d="M520 112 V188" marker-end="url(#ah)"/>
+        <text x="532" y="156" class="tm" font-size="15">type</text>
+        <path class="ln" d="M388 230 C300 230 260 210 222 176" marker-end="url(#ah)"/>
+        <text x="230" y="246" class="tm" font-size="15">Esc, ⌘K: focus back</text>
+        <path class="ln-ok" d="M652 230 C740 230 770 210 818 172" marker-end="url(#ah-ok)"/>
+        <path class="ln-ok" d="M652 70 C740 70 770 90 818 128" marker-end="url(#ah-ok)"/>
+        <text x="730" y="62" class="tok b" font-size="15">Enter</text>
+        <text x="730" y="250" class="tok b" font-size="15">Enter</text>
+      </svg>
+      <figcaption><b>Figure 4.</b> The states of the palette. Black is the open dialog. Green is a choice.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 07 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="states" aria-labelledby="h-states">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">07</span>
+      <h2 id="h-states">States</h2>
+      <p class="lead">The palette has four states: empty query, results, searching and no results.</p>
+    </div>
+    <div class="prose">
+      <p><b>Position.</b> The dialog is 640px wide and starts at 12% of the screen height. Below 760px it fills the width, with 8px at each side, and starts 8px from the top. The list scrolls inside the dialog.</p>
+      <p><b>Searching.</b> While a request runs, the list keeps the last rows and the field shows “Searching…” on its right. The first request of a query shows the commands at once.</p>
+      <p><b>No results.</b> The palette says “Nothing matches “…”.” and why. The row “See all for “…” in Transactions” stays, because that list searches more fields.</p>
+      <p><b>Error.</b> If the action fails, the palette shows “The search did not work. Try again.” The commands stay.</p>
+      <p><b>The footer.</b> It shows the keys. It does not show on a touch screen.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="stage pals rv">
+      <div class="pal" role="img" aria-label="Illustration of the palette with an empty query: the Actions group and the Go to group, with New transaction highlighted.">
+        <div class="in"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="ph">Search pages, accounts, transactions…</span></div>
+        <div class="list">
+          <div class="gl">Actions</div>
+          <div class="it hl"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></span><span class="tx"><b>New transaction</b></span></div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></span><span class="tx"><b>New account</b></span></div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></span><span class="tx"><b>New goal</b></span></div>
+          <div class="gl">Go to</div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M4 11l8-6 8 6v8H4z"/></svg></span><span class="tx"><b>Home</b></span></div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M5 7h14M5 12h14M5 17h14"/></svg></span><span class="tx"><b>Transactions</b></span></div>
+        </div>
+        <div class="ft"><span><kbd>↑</kbd><kbd>↓</kbd> Move</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span></div>
+      </div>
+    </div>
+    <p class="stage-cap">Figure 5. Empty query: the actions first, then the main pages.</p>
+    <div class="stage pals rv">
+      <div class="pal" role="img" aria-label="Illustration of the palette with the query gro: the category Groceries, two transactions, and the row See all for gro in Transactions.">
+        <div class="in"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>gro</span></div>
+        <div class="list">
+          <div class="gl">Categories</div>
+          <div class="it hl"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M6 6h15l-2 9H7L5 3H2"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></span><span class="tx"><b>Groceries</b><small>Expense</small></span></div>
+          <div class="gl">Transactions</div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M6 6h15l-2 9H7L5 3H2"/></svg></span><span class="tx"><b>Grocery run</b><small>21 Oct · Groceries</small></span><span class="tr neg num">−€42.10</span></div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><path d="M6 6h15l-2 9H7L5 3H2"/></svg></span><span class="tx"><b>Groceries</b><small>14 Oct · Groceries</small></span><span class="tr neg num">−€18.60</span></div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span class="tx"><b>See all for “gro” in Transactions</b></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap">Figure 6. Results: one group for each type, then the row that opens the full list.</p>
+    <div class="stage pals rv">
+      <div class="pal" role="img" aria-label="Illustration of the palette with no results for the query zzz, and the row See all for zzz in Transactions.">
+        <div class="in"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>zzz</span></div>
+        <div class="list">
+          <div class="msg"><b>Nothing matches “zzz”.</b><small>Search looks at names, descriptions and amounts.</small></div>
+          <div class="it hl"><span class="ic"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span class="tx"><b>See all for “zzz” in Transactions</b></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap">Figure 7. No results: a sentence, and the full list as the one way on.</p>
+  </div>
+</section>
+
+<!-- 08 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="a11y" aria-labelledby="h-a11y">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">08</span>
+      <h2 id="h-a11y">Access and motion</h2>
+      <p class="lead">The palette follows the combobox pattern of WAI-ARIA. Base UI gives the roles, and the app gives the names.</p>
+    </div>
+    <div class="prose">
+      <ul>
+        <li>The dialog has the name “Search Saldo”. The field has the same name.</li>
+        <li>The field is a <code>combobox</code>. It points to the list with <code>aria-controls</code>, and to the highlighted row with <code>aria-activedescendant</code>.</li>
+        <li>The list is a <code>listbox</code>. Each group is a <code>group</code> with its label. Each row is an <code>option</code>.</li>
+        <li>A status region says “Searching…”, the error, or “Nothing matches”. A screen reader reads it.</li>
+        <li>The “Search” button has <code>aria-keyshortcuts="Meta+K Control+K"</code>. The visible <kbd>⌘K</kbd> is hidden from screen readers.</li>
+        <li>The dialog uses the tokens of <code>@saldo/ui</code>, so it follows the light and the dark theme.</li>
+      </ul>
+      <p><b>Motion.</b> The dialog fades in and moves 4px down in 150ms, with <code>--motion-easing</code>. It closes without motion. With <code>prefers-reduced-motion: reduce</code>, the dialog only fades.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 09 ────────────────────────────────────────────────────────────────────── -->
+<section class="ch" id="open" aria-labelledby="h-open">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">09</span>
+      <h2 id="h-open">Open questions</h2>
+      <p class="lead">Each question has a default. The plan uses the default. Change it in a later spec if necessary.</p>
+    </div>
+    <div class="prose">
+      <ol class="steps">
+        <li><b>A touch entry below 1000px.</b> The redesign spec gives no button below 1000px. A tablet with no keyboard cannot open the palette. Default: follow the redesign spec. Transactions keeps its own search field.</li>
+        <li><b>Archived items.</b> Default: the palette does not show them. Accounts and Categories have their archive pages.</li>
+        <li><b>Admin pages.</b> Default: not in the palette. The Profile menu shows them to an admin.</li>
+        <li><b>Recent items.</b> A list of recent rows with an empty query needs storage. Default: no recent items. The empty query shows the commands.</li>
+        <li><b>Search in notes, tags and category names of a transaction.</b> Default: no. The palette matches the title and the amount. The Transactions list matches more fields, and the last row opens it.</li>
+        <li><b><kbd>Ctrl K</kbd> on a Mac.</b> In a macOS text field, <kbd>Ctrl K</kbd> deletes to the end of the line. Default: the palette takes the key on every system, because one rule is simpler to learn.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · the command palette of the web app · 2026-10-23</footer>
+
+<div class="sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  var live = document.querySelector('.sr');
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    var t;
+    btn.addEventListener('click', function () {
+      var done = function () {
+        btn.classList.add('done'); btn.setAttribute('aria-label', 'Copied'); live.textContent = 'Copied';
+        clearTimeout(t);
+        t = setTimeout(function () { btn.classList.remove('done'); btn.setAttribute('aria-label', 'Copy command'); live.textContent = ''; }, 1600);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(done, done); else done();
+    });
+  });
+
+  onScroll();
+})();
+</script>
+</body>
+</html>

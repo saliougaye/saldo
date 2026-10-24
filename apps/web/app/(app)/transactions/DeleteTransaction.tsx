@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useContext, useEffect, useState, useTransition } from 'react';
 import type { WriteError } from '../../../src/server/write/transactions';
 import { actionApplied } from '../../../src/ui/actionApplied';
-import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
 import { Icon } from '../../../src/ui/Icon';
 import { deleteTransactionAction } from './actions';
-import styles from './transactions.module.css';
+import { DeletingContext } from './deleting';
+import styles from './TransactionForm.module.css';
 
 interface Props {
   id: string;
@@ -16,13 +16,8 @@ interface Props {
   /** Where the page goes once the row is a tombstone: the list without `t`, plus `deleted={id}`. */
   deletedHref: string;
   strings: {
-    /** The button in the detail's actions row, «Elimina». */
+    /** «Elimina». */
     action: string;
-    title: string;
-    /** `transactions.deleteBody`, or `transactions.deleteRecurringBody` for an occurrence. */
-    body: string;
-    confirm: string;
-    cancel: string;
     busy: string;
     /** `web.form.error_<error>`, resolved by the page for every error the action can return, and a throw. */
     errors: Record<WriteError | 'unexpected', string>;
@@ -30,18 +25,23 @@ interface Props {
 }
 
 /**
- * The detail panel's «Elimina» and its question (§17.1.7, the mockup's «Elimina» view). Confirming
- * tombstones the transaction (decision 9) and moves the page to `?deleted={id}`, where the page
- * renders «Annulla» (decision 8). A refusal keeps the dialog open and says why.
+ * «Elimina» on the left of the edit form's foot (W3). It deletes at once: the page moves to
+ * `?deleted={id}`, which closes the dialog and shows the toast with «Annulla» for 5 seconds.
+ * A refusal stays in the form and says why.
  */
 export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const setDeleting = useContext(DeletingContext);
+  // The form's Save waits while the row is being deleted.
+  useEffect(() => {
+    setDeleting(pending);
+  }, [pending, setDeleting]);
 
-  const confirm = () => {
+  const remove = () => {
     if (pending) return;
+    setError(null);
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof deleteTransactionAction>>;
       try {
@@ -51,9 +51,9 @@ export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props
         return;
       }
       if (result.ok) {
-        setOpen(false);
         await actionApplied();
-        router.push(deletedHref);
+        // `replace`: Back must not open the form of a row that is gone.
+        router.replace(deletedHref);
         return;
       }
       setError(strings.errors[result.error]);
@@ -61,33 +61,22 @@ export function DeleteTransaction({ id, updatedAt, deletedHref, strings }: Props
   };
 
   return (
-    <>
+    <div className={styles.deleteSlot}>
       <button
         type="button"
-        className={`${styles.action} ${styles.danger}`}
-        onClick={() => {
-          setError(null);
-          setOpen(true);
-        }}
+        className={styles.delete}
+        onClick={remove}
+        disabled={pending}
+        aria-busy={pending}
       >
         <Icon name="trash" size={14} />
-        {strings.action}
+        {pending ? strings.busy : strings.action}
       </button>
-      <ConfirmDialog
-        open={open}
-        onOpenChange={(next) => {
-          if (pending) return;
-          setOpen(next);
-        }}
-        title={strings.title}
-        body={strings.body}
-        error={error ?? undefined}
-        confirmLabel={strings.confirm}
-        cancelLabel={strings.cancel}
-        busy={pending}
-        busyLabel={strings.busy}
-        onConfirm={confirm}
-      />
-    </>
+      {error === null ? null : (
+        <span className={styles.deleteError} role="alert">
+          {error}
+        </span>
+      )}
+    </div>
   );
 }

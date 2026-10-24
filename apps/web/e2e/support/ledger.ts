@@ -68,11 +68,13 @@ export async function addTransaction(
 
 /** The fields of the form, for a form a link has already opened (a goal's «Accantona»). */
 export async function fillTransaction(page: Page, t: Translate, tx: NewTransaction): Promise<void> {
-  const amount = page.getByRole('textbox', { name: t('txForm.amount') });
+  // The form is a dialog: Transazioni with no row also has the quick add in the page (W11), with its own amount.
+  const form = page.getByRole('dialog');
+  const amount = form.getByRole('textbox', { name: t('txForm.amount') });
   await expect(amount).toBeVisible();
   const kind = tx.kind ?? 'expense';
   if (kind !== 'expense') {
-    await page.getByRole('radio', { name: t(`kinds.${kind}`) }).click();
+    await form.getByRole('radio', { name: t(`kinds.${kind}`) }).click();
   }
   await amount.fill(tx.amount);
 
@@ -83,21 +85,21 @@ export async function fillTransaction(page: Page, t: Translate, tx: NewTransacti
   }
 
   if (tx.description !== undefined) {
-    await page
+    await form
       .getByLabel(t(kind === 'income' ? 'txForm.descriptionIncome' : 'txForm.descriptionExpense'), {
         exact: true,
       })
       .fill(tx.description);
   }
   if (tx.category !== undefined) {
-    const tile = page.getByRole('button', { name: tx.category, exact: true });
+    const tile = form.getByRole('button', { name: tx.category, exact: true });
     if ((await tile.count()) > 0) {
       await tile.click();
       await expect(tile).toHaveAttribute('aria-pressed', 'true');
     } else {
-      await page.getByRole('button', { name: t('txForm.allCategories') }).click();
+      await form.getByRole('button', { name: t('txForm.allCategories') }).click();
       await page.getByRole('option', { name: tx.category, exact: true }).click();
-      await expect(page.getByRole('button', { name: tx.category, exact: true })).toHaveAttribute(
+      await expect(form.getByRole('button', { name: tx.category, exact: true })).toHaveAttribute(
         'aria-pressed',
         'true',
       );
@@ -105,19 +107,25 @@ export async function fillTransaction(page: Page, t: Translate, tx: NewTransacti
   }
   if (tx.account !== undefined) await pickOption(page, t('txForm.account'), tx.account);
   if (tx.tag !== undefined) {
-    const field = page.getByLabel(t('transactions.tags'), { exact: true });
+    const field = form.getByLabel(t('transactions.tags'), { exact: true });
+    // A new form keeps the tags under «Dettagli», a closed disclosure.
+    if (!(await field.isVisible()))
+      await form.getByText(t('txForm.details'), { exact: true }).click();
     await field.fill(tx.tag);
     await field.press('Enter');
-    await expect(page.getByText(`#${tx.tag}`)).toBeVisible();
+    await expect(form.getByText(`#${tx.tag}`)).toBeVisible();
   }
 }
 
-/** «Aggiungi»: submits the form and waits for where a save lands: the saved row, by default. */
+/** «Aggiungi»: submits the form and waits for where a save lands: the list, by default (W3). */
 export async function saveTransaction(
   page: Page,
   t: Translate,
-  landing: RegExp = /\/transactions\?(.*&)?t=/,
+  landing: RegExp = /\/transactions$/,
 ): Promise<void> {
-  await page.getByRole('button', { name: t('txForm.create'), exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: t('txForm.create'), exact: true })
+    .click();
   await expect(page).toHaveURL(landing);
 }

@@ -53,11 +53,6 @@
   white-space: nowrap;
 }
 
-.danger {
-  color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
-}
-
 .muted {
   font-size: var(--font-size-footnote);
   color: var(--color-text-faint);
@@ -131,4 +126,38 @@
 .readonlyValue {
   font-size: var(--font-size-body);
   color: var(--color-text-muted);
+}
+
+/* W9: «Archivia conto» and «Chiudi obiettivo» in a dialog's foot — a quiet button with its icon. */
+.footAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  margin-inline-start: -10px;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    scale var(--motion-press) var(--motion-easing),
+    background-color var(--motion-press) var(--motion-easing),
+    color var(--motion-press) var(--motion-easing);
+}
+
+.footAction:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footAction:hover {
+    background: var(--color-raised);
+    color: var(--color-text);
+  }
 }

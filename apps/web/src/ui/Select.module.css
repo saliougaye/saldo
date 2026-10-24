@@ -1,4 +1,4 @@
-/* A popup opens from inside the panel (20), the sheet (21: a layer over the page below 1024px),
+/* A popup opens from inside the panel (20), the sheet (21: a layer over the page below 760px),
    beside the toast (30) and possibly from a dialog (40, 41): it goes above them all. */
 .positioner {
   z-index: 50;

@@ -1,3 +1,19 @@
+/* W10: the head, then the menu beside the section. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.head {
+  min-width: 0;
+}
+
+/* «‹ Profile»: only below 760px, on a section. */
+.back {
+  display: none;
+}
+
 .layout {
   display: grid;
   gap: 24px;
@@ -5,21 +21,109 @@
 
 .subnav {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* Narrow: the links alone. The way back is the tab bar; the title is the page's own head. */
-.back,
-.sideTitle {
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 0 12px 4px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-faint);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subnav a,
+.subnav button {
+  width: 100%;
+}
+
+/* An item: `NavLink`'s look on a wide screen. */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-body);
+  letter-spacing: var(--tracking-tight);
+  transition-property: scale, background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+.link:hover {
+  color: var(--color-text);
+}
+
+/* Hover ≠ current: the same surface at 60%, so the two states are one family at two strengths. */
+.link:hover:not([aria-current]) {
+  background: color-mix(in srgb, var(--color-raised) 60%, transparent);
+}
+
+.link[aria-current="page"] {
+  color: var(--color-text);
+  background: var(--color-raised);
+}
+
+.link:active {
+  scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link:active {
+    scale: 1;
+  }
+}
+
+.linkIcon {
+  flex: none;
+}
+
+.linkLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Only on the list below 760px. */
+.hint,
+.chevron {
   display: none;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
 }
 
 .separator {
-  display: none;
   height: 1px;
-  margin: 10px 12px;
+  margin: 0 12px;
   border: 0;
   background: var(--color-border);
 }
@@ -39,81 +143,134 @@
   display: contents;
 }
 
-/* D3: a panel in the slot is fixed over the page, so the slot takes no place at any width. */
+/* W1: a panel in the slot is fixed over the page, so the slot takes no place at any width. */
 .slot {
   display: contents;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  /*
-   * D10: the sub-navigation is the sidebar. It sits exactly over the shell's sidebar, which the
-   * shell hides (`data-section-nav`), so the section does not move when you enter Profilo.
-   */
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
+  .layout {
+    grid-template-columns: var(--layout-subnav-width) minmax(0, 1fr);
+    align-items: start;
+    gap: 40px;
+  }
+
+  /* The menu stays in view under the top bar while the section scrolls. */
   .subnav {
-    position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
-    z-index: 11;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    gap: 2px;
-    inline-size: var(--layout-sidebar-width);
-    padding: 20px 16px;
-    border-inline-end: 1px solid var(--color-border);
-    background: var(--color-surface);
-    transition-property: translate, opacity;
-    transition-duration: var(--motion-fade);
-    transition-timing-function: var(--motion-easing);
-  }
-
-  /* A rare change of place: the links arrive 8px from the trailing side, once, on entering. */
-  @starting-style {
-    .subnav {
-      translate: 8px 0;
-      opacity: 0;
-    }
-  }
-
-  .subnav a {
-    width: 100%;
-  }
-
-  .back {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: var(--layout-nav-item-height);
-    padding: 0 8px;
-    border-radius: var(--radius-input);
-    color: var(--color-text-muted);
-    font-size: var(--font-size-footnote);
-    text-decoration: none;
-  }
-
-  .back:hover {
-    color: var(--color-text);
-    background: color-mix(in srgb, var(--color-raised) 60%, transparent);
-  }
-
-  .sideTitle {
-    display: block;
-    margin: 16px 0 14px;
-    padding: 0 10px;
-  }
-
-  /* «Esci» and what follows the rule sit at the foot of the column. */
-  .separator {
-    display: block;
-    margin-top: auto;
+    position: sticky;
+    top: calc(var(--layout-topbar-height) + 16px);
   }
 }
 
-@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  @starting-style {
-    .subnav {
-      translate: 0 0;
-    }
+@media (max-width: 759px) {
+  /* `/profile`: the menu alone, as the phone's list of groups. */
+  .page[data-index] .layout > :not(nav) {
+    display: none;
+  }
+
+  /* Spec §06, the list of groups: each group's items in a box, a line between them. */
+  .page[data-index] .groupTitle {
+    padding: 0 2px 6px;
+    font-size: var(--font-size-footnote);
+    color: var(--color-text-muted);
+  }
+
+  .page[data-index] .items,
+  .page[data-index] .foot {
+    gap: 0;
+    padding: 4px 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+  }
+
+  .page[data-index] .link {
+    gap: 12px;
+    height: auto;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 0;
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .page[data-index] .link + .link {
+    box-shadow: inset 0 1px 0 var(--color-border);
+  }
+
+  /* The list is a way in, not a place: nothing on it is the current one. */
+  .page[data-index] .link[aria-current="page"] {
+    background: transparent;
+  }
+
+  .page[data-index] .link:hover:not([aria-current]) {
+    background: var(--color-raised);
+  }
+
+  .page[data-index] .linkIcon,
+  .page[data-index] .chevron {
+    color: var(--color-text-muted);
+  }
+
+  .page[data-index] .count,
+  .page[data-index] .hint {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
+    margin-inline-start: 0;
+    padding-inline-start: 8px;
+    overflow: hidden;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page[data-index] .chevron {
+    display: block;
+    flex: none;
+  }
+
+  /* An item with both («Inviti 2», «2 attivi»): the list says the words. */
+  .page[data-index] .count:has(+ .hint) {
+    display: none;
+  }
+
+  /* The label takes the room, so the hint and the chevron sit at the end, with or without a hint. */
+  .page[data-index] .linkLabel {
+    flex: 1 0 auto;
+  }
+
+  /* «Sign out» in its own box, as a row of the list. */
+  .page[data-index] .foot > button {
+    gap: 12px;
+    height: auto;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 0;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .page[data-index] .separator {
+    display: none;
+  }
+
+  /* A section: alone, with the way back to the list. */
+  .page:not([data-index]) .head,
+  .page:not([data-index]) .subnav {
+    display: none;
+  }
+
+  .page:not([data-index]) .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    height: var(--layout-nav-item-height);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-footnote);
   }
 }

@@ -40,3 +40,11 @@
   display: flex;
   margin-top: 20px;
 }
+
+/* W11: the three presets of a page with no goal, under the lead text, then «Something else?». */
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}

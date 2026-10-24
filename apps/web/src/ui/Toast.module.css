@@ -56,11 +56,11 @@
 }
 
 /*
- * `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The mockup's
+ * `--layout-shell-breakpoint` (760): a media query cannot read a custom property. The mockup's
  * phone toast: a bar across the screen, the screen's padding from each side, and above the FAB
  * (which sits above the tab bar) rather than beside it.
  */
-@media (max-width: 1023px) {
+@media (max-width: 759px) {
   .toast {
     left: var(--layout-screen-padding-x);
     right: var(--layout-screen-padding-x);

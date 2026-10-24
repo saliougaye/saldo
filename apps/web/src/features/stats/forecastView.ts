@@ -23,6 +23,8 @@ export interface ForecastRecurrenceRow {
 export interface ForecastView {
   /** The forecast period the user selected. */
   selected: ForecastPeriod;
+  /** `selected`'s income less its expenses: «Netto circa». */
+  net: MinorUnits;
   /** All three, oldest first: the table under the chart. */
   periods: readonly ForecastPeriod[];
   /** What repeats inside `selected`, heaviest first; expenses before income on a tie. */
@@ -79,5 +81,5 @@ export function forecastView(input: {
     return a.recurrenceId < b.recurrenceId ? -1 : a.recurrenceId > b.recurrenceId ? 1 : 0;
   });
 
-  return { selected, periods, recurrences: rows };
+  return { selected, net: selected.income - selected.expenses, periods, recurrences: rows };
 }

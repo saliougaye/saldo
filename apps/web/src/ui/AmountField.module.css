@@ -53,8 +53,8 @@
   color: var(--color-text-faint);
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. The mockup's `.sheet .amount-field`. */
-@media (max-width: 1023px) {
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. The mockup's `.sheet .amount-field`: below it the panel is a sheet. */
+@media (max-width: 759px) {
   .field {
     font-size: var(--font-size-amount-xl);
   }

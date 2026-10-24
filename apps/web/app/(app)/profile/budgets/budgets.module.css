@@ -12,6 +12,64 @@
   white-space: nowrap;
 }
 
+/* W11: with no budget, the categories where the user spends most, in a block of their own. */
+.suggest {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-card);
+}
+
+.suggestHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+
+.suggestTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.suggestNote {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.suggestLead {
+  margin: 4px 0 8px;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.suggestTrailing {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.suggestAmount {
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 759px) {
+  .suggest {
+    padding: 16px 18px 8px;
+  }
+
+  .suggestTrailing {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+}
+
 /* A budget's row: the percentage over the state, then the ring (the same classes Home draws with). */
 .rowStatus {
   display: flex;

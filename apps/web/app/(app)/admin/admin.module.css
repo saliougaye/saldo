@@ -1,53 +1,3 @@
-/* §17.1.7, Admin: the header, then the same sub-navigation shell as Profilo. */
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-.head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.title {
-  margin: 0;
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-tighter);
-}
-
-.headCount {
-  margin: 0;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-muted);
-}
-
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .page {
-    gap: 56px;
-  }
-
-  .head {
-    display: none;
-  }
-}
-
-.sideTitle {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sideName {
-  margin: 0;
-  font-size: var(--font-size-headline);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-tight);
-}
-
 /* ---- Rows ---- */
 .avatar,
 .tile {
@@ -75,6 +25,7 @@
   color: var(--color-text-muted);
 }
 
+/* «Nuovo invito»: the page's one primary action (spec §06), in the colours of `Button`'s primary. */
 .newLink {
   display: inline-flex;
   align-items: center;
@@ -82,11 +33,57 @@
   height: 36px;
   padding: 0 14px;
   border-radius: var(--radius-button);
-  background: var(--color-raised);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.newLink:active {
+  scale: 0.97;
+}
+
+/* An invite's row: the link to its panel, then «Revoca» outside it (a button cannot sit in a link). */
+.inviteRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inviteRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* «Revoca» on the row: smaller than the panel's button, so the row keeps its height. */
+.inlineAction {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
   color: var(--color-text);
   font-size: var(--font-size-footnote);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  cursor: pointer;
+  transition: scale var(--motion-press) var(--motion-easing);
+}
+
+.inlineAction:hover {
+  background: var(--color-raised);
+}
+
+.inlineAction:active {
+  scale: 0.97;
+}
+
+.inlineAction:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
 }
 
 .note {
@@ -96,8 +93,28 @@
   text-wrap: pretty;
 }
 
+/* The end of an account's row: the role, and under it the last sign-in (spec §06). */
+.roleCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.lastSignIn {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 .role {
   white-space: nowrap;
+}
+
+.roleCell .role {
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .revoked {
@@ -355,4 +372,70 @@
   line-height: 1.45;
   overflow-wrap: anywhere;
   text-wrap: pretty;
+}
+
+/* W11: «Create the first invite» — the form in the page under the empty state. */
+.first {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-card);
+}
+
+@media (max-width: 759px) {
+  .first {
+    padding: 16px 18px;
+  }
+}
+
+/* The form of the first invite (W11): the label, then the lifetime and «Create code» on one row. */
+.inlineMint {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inlineTtl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inlineTtlLabel {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+}
+
+.inlineTtlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The four lifetimes keep room for their labels: «Create code» goes under them when they need it. */
+.inlineTtlRow > :first-child {
+  flex: 1 1 360px;
+  max-width: 420px;
+}
+
+@media (max-width: 759px) {
+  .inlineTtlRow > :first-child {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .inlineTtlRow > :last-child {
+    flex: 1 1 100%;
+  }
+}
+
+.firstTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
 }

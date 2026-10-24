@@ -1,48 +1,58 @@
+/*
+ * W12 (2026-10-21): a filter is a tool button, not a chip — 36px, the input's radius, a hairline.
+ * `Chip` (a link that toggles a filter) and `FilterMenu` (a button that opens a menu) share it.
+ */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border-strong);
-  background: transparent;
-  color: var(--color-text-muted);
+  height: var(--layout-nav-item-height);
+  padding: 0 10px 0 12px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
   font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition-property: scale, background-color, color;
+  transition-property: scale, background-color, border-color, color;
   transition-duration: var(--motion-press);
   transition-timing-function: var(--motion-easing);
 }
 
 .chip:active {
-  scale: 0.96;
+  scale: 0.97;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .chip:hover {
-    color: var(--color-text);
+    border-color: var(--color-border-strong);
   }
 }
 
-/* On: the chip fills, so a filter that is set reads at a glance among the ones that are not. */
+/* On: the button fills, so a filter that is set reads at a glance among the ones that are not. */
 .active {
-  border-color: transparent;
+  border-color: var(--color-text);
   background: var(--color-text);
   color: var(--color-bg);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .active:hover {
-    color: var(--color-bg);
+    border-color: var(--color-text);
   }
 }
 
 .chevron {
   flex: none;
+  color: var(--color-text-muted);
   transition: rotate var(--motion-press) var(--motion-easing);
+}
+
+.active .chevron {
+  color: inherit;
 }
 
 .chip[data-popup-open] .chevron {

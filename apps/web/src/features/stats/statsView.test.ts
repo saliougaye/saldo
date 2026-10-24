@@ -104,6 +104,7 @@ describe('statsView', () => {
       direction: 'expense',
     });
     expect(view.split.rows[0]?.delta).toBe(-40);
+    expect(view.split.rows[0]?.baseline).toBe(50000);
   });
 
   it('gives the two series of the trend, «il solito» over three periods and not six', () => {
@@ -147,5 +148,12 @@ describe('statsView', () => {
     const row = view.split.rows.find((entry) => entry.categoryId === CATEGORY.id);
     // June 40000, July nothing for this category (a used period, so a real zero), August 60000.
     expect(row?.history).toEqual([40000, 0, 60000, 20000]);
+    // The ticks of the panel's chart: one period for each value, in the same order.
+    expect(view.split.periods.map((range) => range.start)).toEqual([
+      '2026-06-01',
+      '2026-07-01',
+      '2026-08-01',
+      '2026-09-01',
+    ]);
   });
 });

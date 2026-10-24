@@ -31,7 +31,8 @@ export interface AccountDetailView {
   statement: CreditStatement | null;
   /** A pocket only. */
   goal: GoalProgress | null;
-  period: { income: number; spent: number };
+  /** The current period's income and spend, and income less spend. */
+  period: { income: number; spent: number; net: number };
 }
 
 /**
@@ -105,6 +106,6 @@ export function accountDetail(input: {
             def,
           )
         : null,
-    period: { income: summary.income, spent: summary.spent },
+    period: { income: summary.income, spent: summary.spent, net: summary.remaining },
   };
 }

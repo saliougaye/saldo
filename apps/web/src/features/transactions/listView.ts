@@ -7,8 +7,10 @@ import {
   type ListTotals,
   type LocalDate,
   newestFirst,
+  type PeriodSummary,
   type PeriodView,
   splitUpcoming,
+  summarizePeriod,
   type Transaction,
   type TransactionFilters,
   type TransactionKind,
@@ -52,6 +54,8 @@ export interface ListView {
   hiddenTransfers: number;
   /** What the rows on screen add up to, excluded ones included (`totalsOf`, §5.12). */
   totals: ListTotals;
+  /** The summary block (W5): the period's figures over the rows the filters keep. */
+  summary: PeriodSummary;
   filtered: boolean;
 }
 
@@ -62,6 +66,17 @@ export interface ListViewInput {
   period: PeriodView;
   /** `t('kinds.<kind>')`, injected so this stays pure; the page passes its translator. */
   kindLabel?: (kind: TransactionKind) => string;
+}
+
+/** What `filterTransactions` reads to match a search against names: the list and W11's other periods share it. */
+export function filterLookup(data: UserData): FilterLookup {
+  const categories = new Map(data.categories.map((category) => [category.id, category]));
+  const accounts = new Map(data.accounts.map((account) => [account.id, account]));
+  return {
+    accountName: (id) => accounts.get(id)?.name ?? '',
+    categoryName: (id) => categories.get(id)?.name ?? '',
+    categoryParentId: (id) => categories.get(id)?.parentId ?? null,
+  };
 }
 
 /**
@@ -79,12 +94,7 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
     .sort(newestFirst);
 
   const categories = new Map(data.categories.map((category) => [category.id, category]));
-  const accounts = new Map(data.accounts.map((account) => [account.id, account]));
-  const lookup: FilterLookup = {
-    accountName: (id) => accounts.get(id)?.name ?? '',
-    categoryName: (id) => categories.get(id)?.name ?? '',
-    categoryParentId: (id) => categories.get(id)?.parentId ?? null,
-  };
+  const lookup = filterLookup(data);
   const filtered = filterTransactions(inRange, filters, lookup);
   const split = splitUpcoming(filtered, today);
 
@@ -99,10 +109,21 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
   const tagsByName = [...data.tags].sort((a, b) => binary(a.name, b.name));
   const tagged = filters.tagIds.length > 0;
   /** With a tag filter on, a row says which tags it carries instead of its category (§5.12). */
-  const subtitleOf = (tx: Transaction, fallback: string): string => {
+  const leadOf = (tx: Transaction, fallback: string): string => {
     if (!tagged) return fallback;
     const names = tagsByName.filter((tag) => tx.tagIds.includes(tag.id)).map((tag) => tag.name);
     return names.length === 0 ? fallback : names.join(' · ');
+  };
+  /**
+   * W5, figure 3: «Category · Account». `transactionRow` gives the category only, as the phone's
+   * row wants it, so the web adds the account here. A list filtered to one account leaves it out:
+   * every row is on it. A transfer names its accounts in its title already.
+   */
+  const subtitleOf = (tx: Transaction, fallback: string): string => {
+    const lead = leadOf(tx, fallback);
+    if (tx.kind === 'transfer' || tx.accountId === filters.accountId) return lead;
+    const account = lookup.accountName(tx.accountId);
+    return account === '' ? lead : `${lead} · ${account}`;
   };
   const toDays = (txs: readonly Transaction[]): DayView[] =>
     groupByDay(txs).map((group) => ({
@@ -135,6 +156,7 @@ export function listView({ data, filters, today, period, kindLabel }: ListViewIn
     upcoming: { count: split.upcoming.length, net: split.upcomingNet },
     hiddenTransfers,
     totals: totalsOf(split.settled),
+    summary: summarizePeriod(filtered, period.range, today),
     filtered: hasActiveFilters(filters),
   };
 }

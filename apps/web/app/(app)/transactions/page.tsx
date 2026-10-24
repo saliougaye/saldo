@@ -1,23 +1,17 @@
-import { addDays, summarizePeriod } from '@saldo/core';
+import { addDays } from '@saldo/core';
 import {
-  cadenceLabel,
   catalogs,
-  endLabel,
   formatDayMonth,
-  formatLongDate,
   formatMoney,
   formatMoneyParts,
+  formatPeriodName,
   formatWeekday,
   plural,
+  upperFirst,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import type { ReactNode } from 'react';
-import { PERIOD_PARAM } from '../../../src/features/period/periodParams';
-import {
-  type DetailFactKind,
-  type DetailView,
-  detailView,
-} from '../../../src/features/transactions/detailView';
+import { PERIOD_PARAM, periodHref } from '../../../src/features/period/periodParams';
+import { detailView } from '../../../src/features/transactions/detailView';
 import { formView } from '../../../src/features/transactions/formView';
 import {
   filtersFromSearch,
@@ -25,31 +19,27 @@ import {
   toggleHref,
 } from '../../../src/features/transactions/listParams';
 import { type DayView, filterChoices, listView } from '../../../src/features/transactions/listView';
-import {
-  EDIT_PARAM,
-  NEW_PARAM,
-  SELECTION_PARAM,
-} from '../../../src/features/transactions/panelState';
+import { otherPeriodsView } from '../../../src/features/transactions/otherPeriodsView';
+import { NEW_PARAM, SELECTION_PARAM } from '../../../src/features/transactions/panelState';
 import { formMessages } from '../../../src/i18n/formMessages';
 import { getDb } from '../../../src/server/db/client';
 import { readPage } from '../../../src/server/page/context';
 import { loadRow } from '../../../src/server/userData/row';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
-import { Card, CardGrid, CardLabel, CardNote } from '../../../src/ui/Card';
 import { Chip } from '../../../src/ui/Chip';
 import { EmptyState } from '../../../src/ui/EmptyState';
 import { FilterMenu } from '../../../src/ui/FilterMenu';
 import { Icon } from '../../../src/ui/Icon';
-import { ListRow } from '../../../src/ui/ListRow';
+import { paletteIndex } from '../../../src/ui/IconBox';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
 import { ProgressBar } from '../../../src/ui/ProgressBar';
 import { SearchField } from '../../../src/ui/SearchField';
-import { Section } from '../../../src/ui/Section';
-import { VisuallyHidden } from '../../../src/ui/VisuallyHidden';
 import { DeleteTransaction } from './DeleteTransaction';
+import { QuickAdd } from './QuickAdd';
 import { TransactionForm } from './TransactionForm';
-import { type DetailPanel, TransactionsPanels } from './TransactionsPanels';
+import { TransactionsPanels } from './TransactionsPanels';
+import { TxRow } from './TxRow';
 import styles from './transactions.module.css';
 import { UndoToast } from './UndoToast';
 
@@ -61,24 +51,12 @@ const PATH = '/transactions';
 /** After a delete the page is `?deleted={id}`, which renders «Annulla» (decision 8). */
 const DELETED_PARAM = 'deleted';
 
-/** The DOM id of «In arrivo»'s disclosure: `ListKeys` walks its rows only while it is open. */
+/** The DOM id of «In arrivo»'s disclosure. The arrows skip its rows while it is closed. */
 const UPCOMING_ID = 'upcoming';
 
-/** What the phone's detail screen shows for a name that does not resolve. A glyph, not a word. */
-const MISSING = '—';
-
-/** Which label each fact of the panel takes: the phone's own, key for key (§6.6). */
-const FACT_LABELS: Record<DetailFactKind, string> = {
-  from: 'txForm.from',
-  to: 'txForm.to',
-  category: 'transactions.detailCategory',
-  account: 'transactions.detailAccount',
-  date: 'transactions.detailDate',
-};
-
 /**
- * Transazioni on the web (§17.1.7): the period, the search and the chips of §5.12, «In arrivo» as
- * a disclosure, then one section per day. The selected row's detail is a trailing panel.
+ * Transazioni on the web (§17.1.7, W5): the period, a summary of three cells, the tool row of
+ * §5.12, then one list block: «In arrivo» as a disclosure, then one section per day. The selected row's detail is a trailing panel.
  * `TransactionsPanels` opens it in place, with the URL as its state. Every figure comes from
  * `listView` and `detailView`, which are the same `@saldo/core` the phone calls: nothing is added
  * up here.
@@ -94,9 +72,9 @@ export default async function TransactionsPage({
   const kindLabel = (kind: string) => t(`kinds.${kind}`);
   const view = listView({ data: page.data, filters, today, period, kindLabel });
   const choices = filterChoices(page.data);
-  // D7: the cards say what the period holds, whatever the filters; the list under them is filtered.
-  const summary = summarizePeriod(page.data.transactions, period.range, today);
-  const upcomingRows = view.upcomingDays.flatMap((day) => day.rows);
+  // The summary follows the filters, as the list under it does (R8, the user's decision over D7).
+  const summary = view.summary;
+
   // The page opened with a panel (a reload, a link from Home): the server renders it. Opened on the
   // page, a panel is the client's (`TransactionsPanels`), and the URL follows it.
   const selectedId = params[SELECTION_PARAM];
@@ -118,9 +96,9 @@ export default async function TransactionsPage({
         }
       : undefined,
   });
-  // `new URLSearchParams({ edit: '' })` writes `edit=`: presence is what counts, so `?edit` works too.
+  // W3: `?t={id}` is the row's edit form. `?new` wins, as `panelFromSearch` reads it.
   const editForm =
-    selectedId !== undefined && params[EDIT_PARAM] !== undefined
+    selectedId !== undefined && !creating
       ? formView({ data: page.data, today, currency, mode: 'edit', id: selectedId })
       : null;
 
@@ -144,11 +122,6 @@ export default async function TransactionsPage({
     conflict: t('web.form.error_conflict'),
     unexpected: t('web.form.error_unexpected'),
   };
-  // Decision 10: deleting an occurrence of a recurrence says so, as the phone does.
-  const recurringIds = new Set(
-    page.data.transactions.filter((row) => row.recurrenceId !== null).map((row) => row.id),
-  );
-
   // What every link on this page carries: the filters, and the period, which is not one of them.
   const periodOnly: Record<string, string> = {};
   const periodParam = params[PERIOD_PARAM];
@@ -170,6 +143,27 @@ export default async function TransactionsPage({
     view.totals.count,
     { spent: money(view.totals.expense), income: money(view.totals.income) },
   );
+
+  // «59% of income spent · day 13 of 30»: the share of income, then where the period is.
+  const periodNote = period.isCurrent
+    ? t('home.dayOf', { elapsed: period.elapsed, length: period.length })
+    : t('home.closedCycle');
+  const expenseNote =
+    summary.income > 0
+      ? `${t('home.spentOfIncome', {
+          percent: t('targets.percent', { value: Math.round(summary.ratio * 100) }),
+        })} · ${periodNote}`
+      : periodNote;
+
+  // «More»: the three filters the tool row does not show; the label names the one that is on.
+  const moreLabel =
+    filters.direction === 'income'
+      ? t('transactions.onlyIncome')
+      : filters.direction === 'transfer'
+        ? t('transactions.onlyTransfers')
+        : filters.onlyExcluded
+          ? t('transactions.onlyExcluded')
+          : t('transactions.moreFilters');
 
   const accountLabel =
     choices.accounts.find((account) => account.id === filters.accountId)?.name ??
@@ -200,185 +194,68 @@ export default async function TransactionsPage({
     );
   };
 
+  // W5: one day of the list — its date and its expenses, then its rows. A `section` with an
+  // `h2`, and the head first: the e2e helpers (`sectionOf`, `:scope > div`) read the day so.
   const daySection = (day: DayView, upcoming: boolean) => (
-    <Section
-      open
-      key={day.date}
-      title={dayTitle(day.date)}
-      trailing={
-        <AmountText minor={day.expenseTotal} currency={currency} locale={locale} size="footnote" />
-      }
-    >
+    <section className={styles.day} key={day.date}>
+      <div className={styles.dayHead}>
+        <h2 className={styles.dayHeading}>{dayTitle(day.date)}</h2>
+        {/* Figure 3: the day's expenses with their minus sign; a day with none shows no figure. */}
+        {day.expenseTotal === 0 ? null : (
+          <AmountText
+            minor={-day.expenseTotal}
+            currency={currency}
+            locale={locale}
+            size="footnote"
+            muted
+          />
+        )}
+      </div>
       {day.rows.map((row) => (
-        <ListRow
+        <TxRow
           key={row.id}
-          open
+          id={row.id}
           href={href({ [SELECTION_PARAM]: row.id })}
-          selectId={row.id}
           icon={row.icon as IconName}
           colorIndex={row.colorIndex}
-          badge={row.recurring ? 'repeat' : undefined}
-          badgeLabel={t('recurrence.recurringRow')}
           title={row.title}
-          subtitle={row.subtitle}
+          // With a tag filter on, `listView` already puts the tags in place of the category.
+          subtitle={
+            filters.tagIds.length > 0
+              ? row.subtitle
+              : [row.subtitle, ...row.tagNames.map((name) => `#${name}`)].join(' · ')
+          }
+          recurring={row.recurring}
+          recurringLabel={t('recurrence.recurringRow')}
           upcoming={upcoming}
-          trailing={
-            <>
-              {row.tagNames.length === 0 ? null : (
-                <span className={styles.tags}>
-                  {row.tagNames.map((name) => (
-                    <span className={styles.pill} key={name}>
-                      #{name}
-                    </span>
-                  ))}
-                </span>
-              )}
-              <AmountText
-                minor={row.amount.minor}
-                currency={currency}
-                locale={locale}
-                sign={row.amount.signDisplay}
-                muted={row.amount.muted}
-              />
-            </>
+          amount={
+            <AmountText
+              minor={row.amount.minor}
+              currency={currency}
+              locale={locale}
+              sign={row.amount.signDisplay}
+              muted={upcoming || row.amount.muted}
+            />
           }
         />
       ))}
-    </Section>
+    </section>
   );
-
-  const fact = (key: string, label: string, value: ReactNode) => (
-    <div className={styles.fact} key={key}>
-      <dt className={styles.factLabel}>{label}</dt>
-      <dd className={styles.factValue}>{value}</dd>
-    </div>
-  );
-
-  /** The phone's «Nota» row: always there, with what it says when nothing was typed. */
-  const noteText = (detail: DetailView) => {
-    if (detail.note !== null) return detail.note;
-    const { recurrence } = detail;
-    if (recurrence === null) return t('transactions.manual');
-    return t('recurrence.recurringNote', {
-      cadence: cadenceLabel(recurrence, recurrence.startDate, t, locale).toLowerCase(),
-    });
-  };
 
   const hasRows = view.days.length > 0 || view.upcomingDays.length > 0;
+  // W11: no transaction at all, and no filter: the quick add stands alone, with no summary of
+  // zeros and no search above it, so the amount and «Add» stay in the first screen of a phone.
+  const firstUse = page.data.transactions.length === 0 && !view.filtered;
+  // W11: the same search in the other periods, when this one finds nothing.
+  const otherPeriods =
+    hasRows || !view.filtered || filters.query === ''
+      ? []
+      : otherPeriodsView({ data: page.data, filters, def, exclude: period.range, kindLabel });
+  const periodName = formatPeriodName(period.range, locale, today);
+  // W11: the quick add saves on the account the new form opens on (not a pocket, not archived).
+  const defaultAccount =
+    newForm?.accounts.find((account) => !account.pocket && !account.archived) ?? null;
   const moneyParts = formatMoneyParts(0, currency, locale, 'never');
-
-  /** The detail of one row: what the phone's detail screen shows (§6.6). */
-  const detailBody = (detail: DetailView) => (
-    <>
-      {/* Not the list row's amount on purpose: the phone's detail screen signs a transfer
-          `-amount` / `negative` while its list row leaves it unsigned, and the web matches
-          the phone screen for screen (see `DetailView.hero`). */}
-      <AmountText
-        minor={detail.hero.minor}
-        currency={currency}
-        locale={locale}
-        sign={detail.hero.signDisplay}
-        size="hero"
-      />
-
-      <dl className={styles.facts}>
-        {detail.facts.map((item) =>
-          fact(
-            item.kind,
-            t(FACT_LABELS[item.kind]),
-            item.value === null ? (
-              MISSING
-            ) : item.kind === 'date' ? (
-              formatLongDate(item.value, locale)
-            ) : item.href === null ? (
-              item.value
-            ) : (
-              <Link className={styles.factLink} href={item.href}>
-                {item.value}
-              </Link>
-            ),
-          ),
-        )}
-        {fact('note', t('transactions.detailNote'), noteText(detail))}
-        {detail.recurrence === null
-          ? null
-          : fact(
-              'recurrence',
-              t('recurrence.recurringRow'),
-              endLabel(detail.recurrence.endDate, t, locale),
-            )}
-        {detail.excluded
-          ? fact(
-              'excluded',
-              t('transactions.excludedFromTotals'),
-              // The tick is the whole value, and `Icon` is always `aria-hidden`: without the
-              // word beside it a screen reader reads the label and then silence.
-              <>
-                <Icon name="check" size={16} />
-                <VisuallyHidden>{t('common.yes')}</VisuallyHidden>
-              </>,
-            )
-          : null}
-        {detail.tagNames.length === 0
-          ? null
-          : fact('tags', t('transactions.tags'), detail.tagNames.join(' · '))}
-        {detail.attachmentCount === 0
-          ? null
-          : fact(
-              'attachments',
-              t('transactions.detailAttachments'),
-              plural(t, locale, 'attachments.summary', detail.attachmentCount),
-            )}
-      </dl>
-
-      <div className={styles.actions}>
-        {/* Still a navigation: the edit form is rendered by the server (2026-10-07 plan, decision 4). */}
-        <Link
-          className={styles.action}
-          href={href({ [SELECTION_PARAM]: detail.id, [EDIT_PARAM]: '' })}
-          aria-keyshortcuts="e"
-        >
-          <Icon name="pencil" size={14} />
-          {t('common.edit')}
-          <span aria-hidden="true">
-            <kbd className={styles.kbd}>E</kbd>
-          </span>
-        </Link>
-        <span className={styles.spacer} />
-        <DeleteTransaction
-          id={detail.id}
-          updatedAt={detail.updatedAt}
-          deletedHref={href({ [DELETED_PARAM]: detail.id })}
-          strings={{
-            action: t('common.delete'),
-            title: t('transactions.deleteTitle', { name: detail.title }),
-            body: t(
-              recurringIds.has(detail.id)
-                ? 'transactions.deleteRecurringBody'
-                : 'transactions.deleteBody',
-            ),
-            confirm: t('common.delete'),
-            cancel: t('common.cancel'),
-            busy: t('common.loading'),
-            errors: writeErrors,
-          }}
-        />
-      </div>
-    </>
-  );
-
-  // Every row of the list, and the one the URL selected when the list does not hold it (a link
-  // from Home to a row of another period).
-  const upcomingIds = view.upcomingDays.flatMap((day) => day.rows.map((row) => row.id));
-  const ids = view.days.flatMap((day) => day.rows.map((row) => row.id));
-  const listed = [...upcomingIds, ...ids];
-  const detailIds =
-    selectedId === undefined || listed.includes(selectedId) ? listed : [...listed, selectedId];
-  const details: Record<string, DetailPanel> = {};
-  for (const id of detailIds) {
-    const detail = detailView({ data: page.data, id, kindLabel });
-    if (detail !== null) details[id] = { title: detail.title, body: detailBody(detail) };
-  }
 
   const formProps = {
     locale,
@@ -388,9 +265,10 @@ export default async function TransactionsPage({
     symbolPosition: moneyParts.symbolPosition,
     messages: formMessages(catalogs[locale]),
   };
-  // A closing expense ends on Conti, where the goal has just left the list.
+  // Save closes the dialog: the list (W3). A closing expense ends on Conti, where the goal has just
+  // left the list.
   const afterSave = (form: { closeGoalId: string | null }) =>
-    form.closeGoalId === null ? href({ [SELECTION_PARAM]: '__ID__' }) : '/accounts';
+    form.closeGoalId === null ? href() : '/accounts';
 
   return (
     <>
@@ -399,6 +277,7 @@ export default async function TransactionsPage({
         newTitle={t('txForm.newTitle')}
         editTitle={t('txForm.editTitle')}
         closeLabel={t('common.close')}
+        savedLabel={t('transactions.changesSaved')}
         newForm={
           newForm === null ? null : (
             <TransactionForm
@@ -422,16 +301,26 @@ export default async function TransactionsPage({
                     key={`edit:${editForm.id}`}
                     view={editForm}
                     {...formProps}
-                    closeHref={href({ [SELECTION_PARAM]: editForm.id })}
+                    closeHref={href()}
                     afterSave={afterSave(editForm)}
+                    deleteControl={
+                      editForm.updatedAt === null ? undefined : (
+                        <DeleteTransaction
+                          id={editForm.id}
+                          updatedAt={editForm.updatedAt}
+                          deletedHref={href({ [DELETED_PARAM]: editForm.id })}
+                          strings={{
+                            action: t('common.delete'),
+                            busy: t('common.loading'),
+                            errors: writeErrors,
+                          }}
+                        />
+                      )
+                    }
                   />
                 ),
               }
         }
-        details={details}
-        upcomingIds={upcomingIds}
-        ids={ids}
-        upcomingDisclosureId={UPCOMING_ID}
       >
         <div className={styles.head}>
           <PeriodHeader
@@ -444,186 +333,285 @@ export default async function TransactionsPage({
             status={plural(t, locale, 'transactions.periodCount', view.totals.count)}
             strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
           />
-          <CardGrid>
-            <Card>
-              <CardLabel>{t('home.expenses')}</CardLabel>
-              <AmountText minor={summary.spent} currency={currency} locale={locale} size="title" />
-              <ProgressBar
-                thick
-                ratio={summary.ratio}
-                pace={period.isCurrent ? summary.pace : null}
-                tone={summary.overPace ? 'over' : 'normal'}
-              />
-              <CardNote>
-                {period.isCurrent
-                  ? t('home.dayOf', { elapsed: period.elapsed, length: period.length })
-                  : t('home.closedCycle')}
-              </CardNote>
-            </Card>
-            <Card>
-              <CardLabel>{t('home.income')}</CardLabel>
-              <AmountText
-                minor={summary.income}
-                currency={currency}
-                locale={locale}
-                size="title"
-                positive
-              />
-            </Card>
-            <Card>
-              <CardLabel>
-                {t('home.upcoming')} ·{' '}
-                {plural(t, locale, 'home.upcomingCount', view.upcoming.count)}
-              </CardLabel>
-              <AmountText
-                minor={view.upcoming.net}
-                currency={currency}
-                locale={locale}
-                size="title"
-                sign="always"
-              />
-              {/* D12: the next three; the disclosure in the list holds them all. */}
-              <div className={styles.cardRows}>
-                {upcomingRows.slice(0, 3).map((row) => (
-                  <ListRow
-                    key={row.id}
-                    open
-                    href={href({ [SELECTION_PARAM]: row.id })}
-                    selectId={row.id}
-                    title={row.title}
-                    subtitle={formatDayMonth(row.date, locale)}
-                    trailing={
-                      <AmountText
-                        minor={row.amount.minor}
-                        currency={currency}
-                        locale={locale}
-                        sign={row.amount.signDisplay}
-                        size="footnote"
-                        muted
-                      />
-                    }
-                  />
-                ))}
+
+          {/* W5: one block in three cells, over the rows the filters keep. */}
+          {firstUse ? null : (
+            <section className={styles.summary} aria-label={t('transactions.summaryLabel')}>
+              <div className={styles.cell}>
+                <span className={styles.cellLabel}>{t('home.expenses')}</span>
+                <AmountText
+                  minor={summary.spent}
+                  currency={currency}
+                  locale={locale}
+                  size="title"
+                />
+                <ProgressBar
+                  ratio={summary.ratio}
+                  pace={period.isCurrent ? summary.pace : null}
+                  // H12: grey over pace, the accent only once spending passes the income.
+                  tone={summary.ratio > 1 ? 'over' : 'normal'}
+                />
+                <span className={styles.cellNote}>{expenseNote}</span>
               </div>
-            </Card>
-          </CardGrid>
-          <div className={styles.filters}>
-            <SearchField
-              // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
-              key={filters.query}
-              path={PATH}
-              keep={keepWithoutQuery}
-              value={filters.query}
-              label={t('common.search')}
-              placeholder={t('transactions.searchPlaceholder')}
-            />
-            {/* The phone's account, category and tag sheets, as menus on the chips that open them (§5.12, §6.23). */}
-            <FilterMenu
-              label={accountLabel}
-              active={filters.accountId !== null}
-              options={choices.accounts.map((account) => ({
-                key: account.id,
-                label: account.archived
-                  ? `${account.name} · ${t('accounts.archivedBadge')}`
-                  : account.name,
-                href: toggleHref(PATH, filters, { accountId: account.id }, params),
-                selected: filters.accountId === account.id,
-              }))}
-            />
-            <FilterMenu
-              label={categoryLabel}
-              active={filters.categoryId !== null}
-              options={choices.categories.map((category) => ({
-                key: category.id,
-                label: category.child ? `— ${category.name}` : category.name,
-                href: toggleHref(PATH, filters, { categoryId: category.id }, params),
-                selected: filters.categoryId === category.id,
-              }))}
-            />
-            {choices.tags.length === 0 ? null : (
+              <div className={styles.cell}>
+                <span className={styles.cellLabel}>{t('home.income')}</span>
+                <AmountText
+                  minor={summary.income}
+                  currency={currency}
+                  locale={locale}
+                  size="title"
+                  positive
+                />
+                <span className={styles.cellNote}>
+                  {plural(t, locale, 'transactions.periodCount', summary.incomeCount)}
+                </span>
+              </div>
+              {period.isCurrent ? (
+                <div className={styles.cell}>
+                  <span className={styles.cellLabel}>{t('home.upcoming')}</span>
+                  <AmountText
+                    minor={view.upcoming.net}
+                    currency={currency}
+                    locale={locale}
+                    size="title"
+                    sign="always"
+                  />
+                  <span className={styles.cellNote}>
+                    {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                  </span>
+                </div>
+              ) : null}
+            </section>
+          )}
+
+          {/* W5: the search, the three menus, «Expenses only» and «More». */}
+          {firstUse ? null : (
+            <div className={styles.tools}>
+              <SearchField
+                // The field is uncontrolled once mounted; a query that changed in the URL must reset it.
+                key={filters.query}
+                path={PATH}
+                keep={keepWithoutQuery}
+                value={filters.query}
+                label={t('common.search')}
+                placeholder={t('transactions.searchPlaceholder')}
+              />
               <FilterMenu
-                label={tagLabel}
-                active={filters.tagIds.length > 0}
-                options={choices.tags.map((tag) => ({
-                  key: tag.id,
-                  label: tag.name,
-                  href: toggleHref(PATH, filters, { tagId: tag.id }, params),
-                  selected: filters.tagIds.includes(tag.id),
+                label={accountLabel}
+                active={filters.accountId !== null}
+                options={choices.accounts.map((account) => ({
+                  key: account.id,
+                  label: account.archived
+                    ? `${account.name} · ${t('accounts.archivedBadge')}`
+                    : account.name,
+                  href: toggleHref(PATH, filters, { accountId: account.id }, params),
+                  selected: filters.accountId === account.id,
                 }))}
               />
-            )}
-            <Chip
-              label={t('transactions.onlyExpenses')}
-              href={toggleHref(PATH, filters, { direction: 'expense' }, params)}
-              active={filters.direction === 'expense'}
-            />
-            <Chip
-              label={t('transactions.onlyIncome')}
-              href={toggleHref(PATH, filters, { direction: 'income' }, params)}
-              active={filters.direction === 'income'}
-            />
-            <Chip
-              label={t('transactions.onlyTransfers')}
-              href={toggleHref(PATH, filters, { direction: 'transfer' }, params)}
-              active={filters.direction === 'transfer'}
-            />
-            <Chip
-              label={t('transactions.onlyExcluded')}
-              href={toggleHref(PATH, filters, { excluded: !filters.onlyExcluded }, params)}
-              active={filters.onlyExcluded}
-            />
-          </div>
+              <FilterMenu
+                label={categoryLabel}
+                active={filters.categoryId !== null}
+                options={choices.categories.map((category) => ({
+                  key: category.id,
+                  label: category.child ? `— ${category.name}` : category.name,
+                  href: toggleHref(PATH, filters, { categoryId: category.id }, params),
+                  selected: filters.categoryId === category.id,
+                }))}
+              />
+              {choices.tags.length === 0 ? null : (
+                <FilterMenu
+                  label={tagLabel}
+                  active={filters.tagIds.length > 0}
+                  options={choices.tags.map((tag) => ({
+                    key: tag.id,
+                    label: tag.name,
+                    href: toggleHref(PATH, filters, { tagId: tag.id }, params),
+                    selected: filters.tagIds.includes(tag.id),
+                  }))}
+                />
+              )}
+              <Chip
+                label={t('transactions.onlyExpenses')}
+                href={toggleHref(PATH, filters, { direction: 'expense' }, params)}
+                active={filters.direction === 'expense'}
+              />
+              <FilterMenu
+                label={moreLabel}
+                active={
+                  filters.direction === 'income' ||
+                  filters.direction === 'transfer' ||
+                  filters.onlyExcluded
+                }
+                options={[
+                  {
+                    key: 'income',
+                    label: t('transactions.onlyIncome'),
+                    href: toggleHref(PATH, filters, { direction: 'income' }, params),
+                    selected: filters.direction === 'income',
+                  },
+                  {
+                    key: 'transfer',
+                    label: t('transactions.onlyTransfers'),
+                    href: toggleHref(PATH, filters, { direction: 'transfer' }, params),
+                    selected: filters.direction === 'transfer',
+                  },
+                  {
+                    key: 'excluded',
+                    label: t('transactions.onlyExcluded'),
+                    href: toggleHref(PATH, filters, { excluded: !filters.onlyExcluded }, params),
+                    selected: filters.onlyExcluded,
+                  },
+                ]}
+              />
+            </div>
+          )}
+
+          {/* W5: with a filter on, one line: the count, what it spent, and the way back. */}
+          {view.filtered && hasRows ? (
+            <p className={styles.filterLine}>
+              <span>{filteredTotal}</span>
+              <Link className={styles.reset} href={link(periodOnly)}>
+                {t('transactions.resetFilters')}
+              </Link>
+            </p>
+          ) : null}
           {view.hiddenTransfers === 0 ? null : (
             <p className={styles.filterNote}>
               {plural(t, locale, 'transactions.transfersHidden', view.hiddenTransfers)}
             </p>
           )}
-          {view.filtered ? <p className={styles.filterNote}>{filteredTotal}</p> : null}
         </div>
 
         {!hasRows ? (
           view.filtered ? (
-            <div className={styles.empty}>
+            <div className={`${styles.listBox} ${styles.noResults}`}>
               <EmptyState
-                title={t('transactions.noResults')}
+                title={t('transactions.noResultsIn', { period: periodName })}
                 body={t('transactions.noResultsBody')}
               />
+              {otherPeriods.length === 0 ? null : (
+                <div className={styles.otherPeriods}>
+                  <p className={styles.otherPeriodsLead}>
+                    {t('transactions.otherPeriods', { query: filters.query })}
+                  </p>
+                  {otherPeriods.map((entry) => {
+                    // The other period with the same search; a row opens there with its panel.
+                    const there = (extra: Record<string, string> = {}) =>
+                      periodHref(PATH, entry.range, def, today, {
+                        ...searchFromFilters(filters),
+                        ...extra,
+                      });
+                    return (
+                      <section key={entry.range.start} className={styles.otherPeriod}>
+                        <Link className={styles.otherPeriodHead} href={there()}>
+                          <b>{upperFirst(formatPeriodName(entry.range, locale, today), locale)}</b>
+                          <span className={styles.otherPeriodCount}>
+                            {plural(t, locale, 'transactions.periodCount', entry.count)}
+                            <Icon name="chevR" size={15} />
+                          </span>
+                        </Link>
+                        {entry.rows.map((row) => (
+                          <Link
+                            key={row.id}
+                            className={styles.otherRow}
+                            href={there({ [SELECTION_PARAM]: row.id })}
+                          >
+                            <span
+                              className={styles.otherRowIcon}
+                              style={{
+                                color:
+                                  row.colorIndex === null || row.colorIndex === undefined
+                                    ? undefined
+                                    : `var(--category-${paletteIndex(row.colorIndex)})`,
+                              }}
+                            >
+                              <Icon name={row.icon as IconName} size={18} />
+                            </span>
+                            <span className={styles.otherRowText}>
+                              <b>{row.title}</b>
+                              <span>
+                                {formatDayMonth(row.date, locale)} · {row.subtitle}
+                              </span>
+                            </span>
+                            <AmountText
+                              minor={row.amount.minor}
+                              currency={currency}
+                              locale={locale}
+                              sign={row.amount.signDisplay}
+                              muted={row.amount.muted}
+                            />
+                          </Link>
+                        ))}
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
               <Link className={styles.reset} href={link(periodOnly)}>
                 {t('transactions.resetFilters')}
               </Link>
+            </div>
+          ) : page.data.transactions.length === 0 ? (
+            // W11: no transaction at all — the first expense is a form away.
+            <div className={styles.listBox}>
+              {newForm === null || defaultAccount === null ? (
+                <div className={styles.empty}>
+                  <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
+                  <Link className={styles.reset} href="/accounts?new">
+                    {t('home.stepAccount')}
+                  </Link>
+                </div>
+              ) : (
+                <QuickAdd view={newForm} accountId={defaultAccount.id} {...formProps} />
+              )}
             </div>
           ) : (
             <EmptyState title={t('transactions.empty')} body={t('transactions.emptyBody')} />
           )
         ) : (
-          <>
-            {/* §5.12: what is still to come is folded behind one row. A native disclosure, so it
-                opens with no client state — the phone's `UpcomingRow`. */}
+          <div className={styles.listBox}>
+            {/* §5.12: what is still to come is one closed row at the top (W5). A native
+                disclosure, so it opens with no client state. */}
             {view.upcoming.count === 0 ? null : (
               <details className={styles.upcoming} id={UPCOMING_ID}>
                 <summary className={styles.upcomingSummary}>
-                  <Icon name="clock" size={16} className={styles.upcomingIcon} />
+                  <Icon name="chevR" size={16} className={styles.chevron} />
                   <span className={styles.upcomingText}>
-                    <b className={styles.upcomingTitle}>{t('transactions.upcoming')}</b> ·{' '}
-                    {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                    <b className={styles.upcomingTitle}>{t('transactions.upcoming')}</b>
+                    <span>
+                      {plural(t, locale, 'transactions.upcomingCount', view.upcoming.count)}
+                    </span>
                   </span>
-                  <span className={styles.upcomingShow}>{t('transactions.showUpcoming')}</span>
-                  <Icon name="chevD" size={16} className={styles.chevron} />
+                  <AmountText
+                    minor={view.upcoming.net}
+                    currency={currency}
+                    locale={locale}
+                    sign="always"
+                    muted
+                  />
                 </summary>
                 <div className={styles.upcomingBody}>
-                  <p className={styles.divider}>{t('transactions.upcomingSection')}</p>
                   {view.upcomingDays.map((day) => daySection(day, true))}
                 </div>
               </details>
             )}
-            {/* Shown by CSS only while the disclosure is open, as the phone shows it (§5.12). */}
-            {view.upcoming.count > 0 && view.days.length > 0 ? (
-              <p className={`${styles.divider} ${styles.settledDivider}`}>
-                {t('transactions.settledSection')}
-              </p>
-            ) : null}
             {view.days.map((day) => daySection(day, false))}
-          </>
+            {/* W5: the keys of the list. Shown with a mouse only; a screen reader has its own. */}
+            <p className={styles.keys} aria-hidden="true">
+              <span>
+                <kbd>↑</kbd> <kbd>↓</kbd> {t('transactions.keysMove')}
+              </span>
+              <span>
+                <kbd>↵</kbd> {t('transactions.keysOpen')}
+              </span>
+              <span>
+                <kbd>N</kbd> {t('transactions.keysNew')}
+              </span>
+              <span>
+                <kbd>/</kbd> {t('transactions.keysSearch')}
+              </span>
+            </p>
+          </div>
         )}
       </TransactionsPanels>
 
@@ -632,7 +620,7 @@ export default async function TransactionsPage({
           // A second delete is a new toast, with its own five seconds.
           key={deletedId}
           id={deletedId}
-          restoredHref={href({ [SELECTION_PARAM]: deletedId })}
+          restoredHref={href()}
           withoutDeletedHref={href()}
           strings={{
             message: t('transactions.deleted', { name: undoTitle }),

@@ -13,7 +13,7 @@ import { createMember } from './support/members';
 
 const MAIN = 'Conto principale';
 
-test('accounts sit in their group, a goal sits under its account, and an account is archived and restored', async ({
+test('accounts sit in their group, goals in their own block, and an account is archived and restored', async ({
   browser,
   t,
 }) => {
@@ -39,12 +39,17 @@ test('accounts sit in their group, a goal sits under its account, and an account
   await expect(spending.getByRole('link', { name: /^Risparmi/ })).toHaveCount(0);
   await expect(savings.getByRole('link', { name: /^Risparmi/ })).toBeVisible();
 
-  // The two goals are pockets of «Risparmi»: a ring row each, then what is left free in the account.
-  const giappone = savings.getByRole('link', { name: /^Viaggio in Giappone/ });
-  const emergenza = savings.getByRole('link', { name: /^Fondo emergenza/ });
+  // W9: the two goals are pockets of «Risparmi», in the Goals block; «Risparmi» says what is free.
+  const goals = page.locator('section').filter({
+    has: page.getByRole('heading', { name: t('goals.title') }),
+  });
+  const giappone = goals.getByRole('link', { name: /^Viaggio in Giappone/ });
+  const emergenza = goals.getByRole('link', { name: /^Fondo emergenza/ });
   await expect(giappone).toContainText(money(90000));
+  await expect(giappone).toContainText('Risparmi');
   await expect(emergenza).toContainText(money(180000));
-  await expect(savings.getByText(t('goals.free'))).toBeVisible();
+  await expect(savings.getByRole('link', { name: /^Risparmi/ })).toContainText(t('goals.free'));
+  await expect(savings.getByText('Viaggio in Giappone')).toHaveCount(0);
   await expect(spending.getByText('Viaggio in Giappone')).toHaveCount(0);
 
   // An account that holds goals cannot be archived until they are closed.
@@ -60,10 +65,12 @@ test('accounts sit in their group, a goal sits under its account, and an account
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+&edit$/);
   const edit = page.getByRole('dialog', { name: t('accounts.editAccount') });
   await expect(edit.getByLabel(t('accounts.name'), { exact: true })).toHaveValue('Risparmi');
+  // W4: «Edit» changes the same dialog into the form; a second dialog does not open.
+  await expect(page.getByRole('dialog')).toHaveCount(1);
   await edit.getByRole('link', { name: t('common.close') }).click();
   await expect(risparmi).toBeVisible();
   await expect(page).toHaveURL(/\/accounts\?a=[^&]+$/);
-  // D3: the panel is a dialog over the page, so the list is out of reach until it is closed.
+  // W1: the dialog is over the page, so the list is out of reach until it is closed.
   await risparmi.getByRole('link', { name: t('common.close') }).click();
   await expect(risparmi).toHaveCount(0);
 
@@ -146,7 +153,11 @@ test('a credit card shows what it owes, its next charge and the statement once i
     account: 'Visa',
   });
   await page.goto('/accounts');
-  await listRow(page, 'Visa').click();
+  // W9: a card in debt says «To repay» in its row, under what it owes.
+  const visaRow = listRow(page, 'Visa');
+  await expect(visaRow).toContainText(t('accounts.toRepay'));
+  await expect(visaRow).toContainText(money(25000));
+  await visaRow.click();
   const owing = page.getByRole('dialog', { name: 'Visa' });
   await expect(owing).toContainText(money(25000));
   await expect(owing.getByText(t('accounts.accruedInCycle'))).toBeVisible();

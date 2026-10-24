@@ -1,0 +1,76 @@
+/* W11: the tiles of a first step (account types, goal presets): three across, two on a phone. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-self: stretch;
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (max-width: 759px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  display: grid;
+  grid-template-columns: var(--layout-icon-box) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-card);
+  color: var(--color-text);
+  text-align: start;
+  text-decoration: none;
+  transition:
+    scale var(--motion-press) var(--motion-easing),
+    border-color var(--motion-press) var(--motion-easing);
+}
+
+.tile:active {
+  scale: 0.98;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover {
+    border-color: var(--color-border-strong);
+  }
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: 2px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: var(--layout-icon-box);
+  height: var(--layout-icon-box);
+  border-radius: var(--radius-icon-box);
+  background: var(--color-raised);
+}
+
+.round {
+  border-radius: var(--radius-pill);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-weight: var(--font-weight-medium);
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  text-wrap: pretty;
+}

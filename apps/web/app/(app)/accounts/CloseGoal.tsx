@@ -6,6 +6,7 @@ import type { AccountWriteError } from '../../../src/server/write/accounts';
 import { actionApplied } from '../../../src/ui/actionApplied';
 import { Button } from '../../../src/ui/Button';
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog';
+import { Icon } from '../../../src/ui/Icon';
 import { useNavTransition } from '../../../src/ui/NavPending';
 import { sharedProps } from '../../../src/ui/sharedProps';
 import styles from './accountForms.module.css';
@@ -92,12 +93,13 @@ export function CloseGoal({ id, updatedAt, expenseHref, body, returnTo }: Props)
     <>
       <button
         type="button"
-        className={`${styles.actionLink} ${styles.actionButton}`}
+        className={styles.footAction}
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
       >
+        <Icon name="check" size={15} />
         {strings.action}
       </button>
       <ConfirmDialog

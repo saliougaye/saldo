@@ -1,0 +1,50 @@
+/* `Segmented`'s look: equal segments on the raised track, the chosen one lifted onto the surface. */
+.group {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-input);
+  background: var(--color-raised);
+}
+
+.option {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-icon-box);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition-property: background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .option:not([aria-current="true"]):hover {
+    color: var(--color-text);
+  }
+}
+
+.option[aria-current="true"] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: -2px;
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (max-width: 759px) {
+  .option {
+    padding: 0 10px;
+  }
+}

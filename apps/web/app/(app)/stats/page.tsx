@@ -1,48 +1,46 @@
+import { isWithin, nearestPeriodWithData } from '@saldo/core';
 import {
   formatCycleRange,
   formatLongDate,
   formatMajor,
   formatMoney,
+  formatPeriodName,
   formatPeriodTick,
   formatSignedPercent,
   plural,
+  upperFirst,
 } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import {
   PERIOD_PARAM,
   periodFromParam,
   periodHref,
+  periodSteps,
 } from '../../../src/features/period/periodParams';
+import { expensesChartView } from '../../../src/features/stats/expensesChart';
 import { forecastView } from '../../../src/features/stats/forecastView';
-import {
-  type NavigatorColumn,
-  navigatorForecast,
-  navigatorView,
-} from '../../../src/features/stats/navigatorView';
-import { statsView } from '../../../src/features/stats/statsView';
+import { navigatorForecast, navigatorView } from '../../../src/features/stats/navigatorView';
+import { periodProjection, SPLIT_COLOURS, statsView } from '../../../src/features/stats/statsView';
 import { filtersFromSearch } from '../../../src/features/transactions/listParams';
 import { listView } from '../../../src/features/transactions/listView';
 import { readPage } from '../../../src/server/page/context';
 import { AmountText } from '../../../src/ui/AmountText';
 import { AppLink as Link } from '../../../src/ui/AppLink';
-import { Card, CardGrid, CardHead, CardLabel, CardNote } from '../../../src/ui/Card';
-import { Chip } from '../../../src/ui/Chip';
-import { Columns } from '../../../src/ui/Columns';
-import { CashflowChart } from '../../../src/ui/charts/CashflowChart';
-import { ChartFrame } from '../../../src/ui/charts/ChartFrame';
-import { Sparkline } from '../../../src/ui/charts/Sparkline';
+import { ExpensesChart, type ExpensesChartBar } from '../../../src/ui/charts/ExpensesChart';
+import { HistoryBars } from '../../../src/ui/charts/HistoryBars';
 import { SplitBar, type SplitSegment } from '../../../src/ui/charts/SplitBar';
-import { TrendChart } from '../../../src/ui/charts/TrendChart';
 import { EmptyState } from '../../../src/ui/EmptyState';
-import { HeroFigure } from '../../../src/ui/HeroBand';
 import { Icon } from '../../../src/ui/Icon';
-import { IconBox } from '../../../src/ui/IconBox';
+import { paletteIndex } from '../../../src/ui/IconBox';
 import { ListRow } from '../../../src/ui/ListRow';
-import { PageHead } from '../../../src/ui/PageHead';
+import { NewTransactionLink } from '../../../src/ui/NewTransactionLink';
+import { PanelLink } from '../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../src/ui/PanelSwitch';
 import { PeriodHeader } from '../../../src/ui/PeriodHeader';
+import { PeriodKeys } from '../../../src/ui/PeriodKeys';
 import { Section } from '../../../src/ui/Section';
+import { SegmentedLinks } from '../../../src/ui/SegmentedLinks';
 import styles from './stats.module.css';
 
 export const runtime = 'nodejs';
@@ -50,49 +48,75 @@ export const dynamic = 'force-dynamic';
 
 const PATH = '/stats';
 
-/** Which direction Ripartizione is reading; the phone's segmented control, as two chips. */
+/** Which direction the breakdown reads: «Expenses» and «Income», two tool buttons. */
 const DIRECTION_PARAM = 'direction';
 
-/** D8: a category card opens its panel, `?c=`; the key is `c:{categoryId}`. */
+/** D8: a category row opens its dialog, `?c=`; the key is `c:{categoryId}`. */
 const PANEL_PARAMS = { flags: [], values: ['c'] } as const;
 
-/** How many of a category's transactions its panel lists. */
+/** How many of a category's transactions its dialog lists. */
 const CATEGORY_ROWS = 5;
 
+/** The spec's «last six periods» of a category's dialog: the selected one and the five before it. */
+const HISTORY_BARS = 6;
+
 /** The name a category no longer in the list takes, as on the phone. */
-const MISSING = '—';
+const GREY = 'var(--color-bar-grey)';
 
-/**
- * How many categories keep a colour of their own in Ripartizione's bar; the rest share
- * `--color-segment-other`, as the design does — a sixth hue would be a hue nobody can name.
- */
-const SPLIT_SEGMENTS = 5;
-
-/** A category's colour in the bar and in the dot beside its row. */
-function segmentColour(rank: number): string {
-  return rank < SPLIT_SEGMENTS ? `var(--color-segments-${rank})` : 'var(--color-segment-other)';
+/** A category colour as the CSS variable the root layout injects; grey for a row with none. */
+function tint(colorIndex: number | null | undefined): string {
+  return colorIndex === null || colorIndex === undefined
+    ? GREY
+    : `var(--category-${paletteIndex(colorIndex)})`;
 }
 
-/** A key figure of the band: the label, the amount, and the line the design puts under it. */
-function Figure({ label, note, children }: { label: string; note?: string; children: ReactNode }) {
+/** The catalogs' one piece of markup: `<b>` around a term, as Home renders it. */
+function Rich({ text }: { text: string }) {
   return (
-    <HeroFigure label={label}>
+    <>
+      {text.split(/<b>|<\/b>/).map((part, index) =>
+        index % 2 === 1 ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed sentence, in order.
+          <b key={index}>{part}</b>
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed sentence, in order.
+          <Fragment key={index}>{part}</Fragment>
+        ),
+      )}
+    </>
+  );
+}
+
+/** A figure of the period block: the label, the amount, and an optional line under it. */
+function Figure({
+  label,
+  note,
+  hero = false,
+  children,
+}: {
+  label: string;
+  note?: string;
+  hero?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    // A figure captioned by its label: the amount reads as one thing, apart from the legend's words.
+    <figure className={hero ? styles.hero : styles.figure}>
+      <figcaption className={styles.label}>{label}</figcaption>
       {children}
       {note === undefined || note === '' ? null : <span className={styles.note}>{note}</span>}
-    </HeroFigure>
+    </figure>
   );
 }
 
 /**
- * Statistiche on the web (§17.1.7): Flussi spans the page with ten columns — six closed periods,
- * the one running and the three forecast ones — and **is** the period picker, so a column, like the
- * ‹ › beside it, is a link to its own period. Everything below follows the pick: a closed or running
- * period gets Andamento, Quota impegnata, Ripartizione and Tag; a forecast one gets how the forecast
- * is made, the table of the periods ahead and what repeats in that one, which is why the phone's
- * forecast sheet has no web counterpart.
+ * Statistics on the web (W6–W8): how this period compares with the others, and where the money
+ * went. The period block holds the figures and «Expenses by period», which is the period picker.
+ * A closed or running period then shows the breakdown and the tags; a forecast period shows the
+ * recurring transactions it expects and the table of the forecast periods.
  *
- * Every figure is `statsView`, `navigatorView` and `forecastView` — the same `@saldo/core` the phone
- * calls. Nothing is added up here.
+ * Every figure is `statsView`, `navigatorView`, `forecastView` and `expensesChartView` — the same
+ * `@saldo/core` the phone calls. Nothing is added up here.
  */
 export default async function StatsPage({
   searchParams,
@@ -103,10 +127,10 @@ export default async function StatsPage({
   const { t, locale, currency, today, def, params } = page;
 
   // The forecast first: how many periods `?p=` may reach ahead is how many forecast columns there
-  // are, so the period cannot be read before it is known. `page.period` is therefore not used on
-  // this one page — it was resolved with no reach, and would clamp a forecast column back to today.
+  // are, so the period cannot be read before it is known.
   const forecast = navigatorForecast({ data: page.data, def, today });
-  const period = periodFromParam(def, today, params[PERIOD_PARAM], forecast?.length ?? 0);
+  const reach = forecast?.length ?? 0;
+  const period = periodFromParam(def, today, params[PERIOD_PARAM], reach);
   const navigator = navigatorView({
     data: page.data,
     def,
@@ -119,7 +143,6 @@ export default async function StatsPage({
   // What every link on this page keeps. The period is not one of them: `periodHref` writes it.
   const keep: Record<string, string> =
     direction === 'income' ? { [DIRECTION_PARAM]: direction } : {};
-  /** The same period, reading the other direction: what Ripartizione's two chips link to. */
   const directionHref = (which: 'expense' | 'income') =>
     periodHref(
       PATH,
@@ -134,51 +157,136 @@ export default async function StatsPage({
     if (p !== undefined) search.set(PERIOD_PARAM, p);
     return `/transactions?${search.toString()}`;
   };
+  const money = (minor: number) => formatMoney(minor, currency, locale);
 
-  const chart = (
-    <Section open title={t('stats.cashflow')}>
-      <CashflowChart
-        columns={navigator.columns}
-        currency={currency}
-        locale={locale}
-        href={(column: NavigatorColumn) => periodHref(PATH, column.range, def, today, keep)}
-        tick={(column: NavigatorColumn) => formatPeriodTick(column.range.start, def.kind, locale)}
-        label={(column: NavigatorColumn) =>
-          `${formatCycleRange(column.range, locale, today)} · ${formatMoney(column.net, currency, locale, 'always')}`
-        }
-        legend={{
-          income: t('stats.legendIncome'),
-          expenses: t('stats.legendExpenses'),
-          current: t('stats.legendCurrent'),
-          forecast: t('stats.legendForecast'),
-          range: t('stats.legendRange'),
-        }}
-      />
-    </Section>
+  // ---- The chart (W6) -------------------------------------------------------------------------
+  const major = (minor: number) => formatMajor(minor, currency, locale, 'never');
+  const running = navigator.columns.find((column) => column.kind === 'current');
+  const runningProjection =
+    running === undefined
+      ? null
+      : periodProjection({ txs: page.data.transactions, def, range: running.range, today });
+  const chart = expensesChartView({ columns: navigator.columns, projection: runningProjection });
+  const bars: ExpensesChartBar[] = chart.bars.map((bar) => {
+    const { column } = bar;
+    const amount = major(bar.amount);
+    const range = column.values.forecast;
+    const rangeText = formatCycleRange(column.range, locale, today);
+    const tipTitle =
+      column.kind === 'forecast'
+        ? `${rangeText} · ${t('period.forecast')}`
+        : column.kind === 'current'
+          ? `${rangeText} · ${t('period.running')}`
+          : rangeText;
+    // The tooltip says what the bar shows, then what it means against «usual» or the forecast.
+    const tipLines =
+      column.kind === 'forecast'
+        ? [
+            t('stats.tipForecast', { amount }),
+            ...(range === undefined
+              ? []
+              : [t('stats.forecastRange', { min: major(range.min), max: major(range.max) })]),
+          ]
+        : column.kind === 'current'
+          ? [
+              t('stats.tipSpentSoFar', { amount: money(bar.amount) }),
+              ...(runningProjection === null
+                ? []
+                : [t('stats.tipEndAbout', { amount: major(runningProjection) })]),
+            ]
+          : [
+              t('stats.tipSpent', { amount: money(bar.amount) }),
+              ...(chart.usual === null
+                ? []
+                : [
+                    t(bar.amount >= chart.usual ? 'stats.aboveUsual' : 'stats.belowUsual', {
+                      amount: major(Math.abs(bar.amount - chart.usual)),
+                    }),
+                  ]),
+            ];
+    return {
+      key: column.range.start,
+      href: periodHref(PATH, column.range, def, today, keep),
+      tick: formatPeriodTick(column.range.start, def.kind, locale),
+      value: column.kind === 'forecast' ? t('common.approx', { amount }) : amount,
+      label: [tipTitle, ...tipLines].join(' · '),
+      tipTitle,
+      tipLines,
+      kind: column.kind,
+      selected: column.selected,
+      height: bar.height,
+      projectionHeight: bar.projectionHeight,
+    };
+  });
+  const chartBlock = (
+    <>
+      <div className={styles.chartHead}>
+        <h2 className={styles.chartTitle}>{t('stats.expensesByPeriod')}</h2>
+        {/* The key of the chart: what each mark means. The bars say it again in their labels. */}
+        <ul className={styles.legend} aria-hidden="true">
+          <li>
+            <i className={styles.keySpent} />
+            {t('stats.legendExpenses')}
+          </li>
+          {bars.some((bar) => bar.kind === 'forecast') ? (
+            <li>
+              <i className={styles.keyForecast} />
+              {t('stats.legendForecast')}
+            </li>
+          ) : null}
+          {chart.usual === null ? null : (
+            <li>
+              <i className={styles.keyUsual} />
+              {t('stats.usual')}
+            </li>
+          )}
+        </ul>
+      </div>
+      <ExpensesChart bars={bars} usualHeight={chart.usualHeight} />
+      <p className={styles.chartFoot}>
+        {chart.usual === null ? null : (
+          <>
+            <Rich text={t('stats.usualNote', { amount: major(chart.usual) })} />{' '}
+          </>
+        )}
+        {t('stats.pickPeriod')}
+      </p>
+    </>
   );
 
+  const { previous: previousHref, next: nextHref } = periodSteps(
+    def,
+    period.range,
+    today,
+    PATH,
+    keep,
+    reach,
+  );
   const header = (
-    <PeriodHeader
-      period={period}
-      def={def}
-      today={today}
-      locale={locale}
-      path={PATH}
-      params={keep}
-      reach={forecast?.length ?? 0}
-      status={
-        period.ahead > 0
-          ? undefined
-          : period.isCurrent
-            ? t('period.inProgress', { elapsed: period.elapsed, length: period.length })
-            : t('period.closed')
-      }
-      strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
-    />
+    <>
+      <PeriodHeader
+        period={period}
+        def={def}
+        today={today}
+        locale={locale}
+        path={PATH}
+        params={keep}
+        reach={reach}
+        status={
+          period.ahead > 0
+            ? t('period.forecast')
+            : period.isCurrent
+              ? t('period.inProgress', { elapsed: period.elapsed, length: period.length })
+              : t('period.closed')
+        }
+        strings={{ previous: t('web.shell.previousPeriod'), next: t('web.shell.nextPeriod') }}
+      />
+      <PeriodKeys previousHref={previousHref} nextHref={nextHref} />
+    </>
   );
 
   // ─────────────────────────────────────────────────────────────────────────────────────────────
-  // A forecast column: the page is the phone's forecast sheet, opened out (§5.17).
+  // A forecast period: what it expects, and the table of the periods ahead (§5.17).
   // ─────────────────────────────────────────────────────────────────────────────────────────────
   const selectedForecast = navigator.selected === null ? null : navigator.selected.forecast;
   if (period.ahead > 0 && forecast !== null && selectedForecast !== null) {
@@ -192,187 +300,210 @@ export default async function StatsPage({
 
     return (
       <div className={styles.page}>
-        <div className={styles.top}>
-          {header}
+        {header}
+        <section className={styles.box} aria-label={t('stats.expensesByPeriod')}>
           <div className={styles.figures}>
-            <Figure label={t('stats.incomeAbout')} note={t('stats.fromRecurrences')}>
-              <AmountText
-                minor={selected.income}
-                currency={currency}
-                locale={locale}
-                size="large"
-                positive
-              />
-            </Figure>
             <Figure
+              hero
               label={t('stats.expensesAbout')}
               note={t('stats.forecastRange', {
-                min: formatMajor(selected.expensesMin, currency, locale, 'never'),
-                max: formatMajor(selected.expensesMax, currency, locale, 'never'),
+                min: major(selected.expensesMin),
+                max: major(selected.expensesMax),
               })}
             >
               <AmountText
                 minor={selected.expenses}
                 currency={currency}
                 locale={locale}
-                size="large"
+                size="hero"
               />
             </Figure>
-            <Figure label={t('stats.netAbout')}>
-              <AmountText
-                minor={selected.income - selected.expenses}
-                currency={currency}
-                locale={locale}
-                size="large"
-                sign="always"
-              />
-            </Figure>
-            <Figure
-              label={t('stats.balanceAbout')}
-              note={t('stats.atDate', { date: formatLongDate(selected.range.end, locale) })}
-            >
-              <AmountText
-                minor={selected.balance}
-                currency={currency}
-                locale={locale}
-                size="large"
-              />
-            </Figure>
-          </div>
-          {chart}
-        </div>
-
-        <Columns
-          lead={
-            <div className={styles.sticky}>
-              <Section title={t('stats.forecastHowTitle')}>
-                <p className={styles.prose}>{t('stats.forecastHow')}</p>
-              </Section>
-
-              <Section title={t('stats.forecastPeriods')}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('stats.forecastColAt')}</th>
-                      <th scope="col">{t('stats.expensesAbout')}</th>
-                      <th scope="col" className={styles.rangeCol}>
-                        {t('stats.forecastColRange')}
-                      </th>
-                      <th scope="col">{t('stats.balanceAbout')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {view.periods.map((entry) => (
-                      <tr
-                        key={entry.range.start}
-                        className={
-                          entry.range.start === selected.range.start ? styles.tableSelected : ''
-                        }
-                      >
-                        <th scope="row">{formatLongDate(entry.range.end, locale)}</th>
-                        <td>{formatMoney(entry.expenses, currency, locale)}</td>
-                        <td className={`${styles.faint} ${styles.rangeCol}`}>
-                          {t('stats.forecastRange', {
-                            min: formatMajor(entry.expensesMin, currency, locale, 'never'),
-                            max: formatMajor(entry.expensesMax, currency, locale, 'never'),
-                          })}
-                        </td>
-                        <td>{formatMoney(entry.balance, currency, locale)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Section>
+            <div className={styles.stats}>
+              <Figure label={t('stats.incomeAbout')} note={t('stats.fromRecurrences')}>
+                <AmountText
+                  minor={selected.income}
+                  currency={currency}
+                  locale={locale}
+                  size="headline"
+                  positive
+                />
+              </Figure>
+              <Figure label={t('stats.netAbout')}>
+                <AmountText
+                  minor={view.net}
+                  currency={currency}
+                  locale={locale}
+                  size="headline"
+                  sign="always"
+                />
+              </Figure>
+              <Figure
+                label={t('stats.balanceAbout')}
+                note={t('stats.atDate', { date: formatLongDate(selected.range.end, locale) })}
+              >
+                <AmountText
+                  minor={selected.balance}
+                  currency={currency}
+                  locale={locale}
+                  size="headline"
+                />
+              </Figure>
             </div>
-          }
-          trail={
-            <Section
-              title={t('stats.forecastRecurrences')}
-              trailing={
-                <span className={styles.status}>
-                  {formatCycleRange(selected.range, locale, today)}
-                </span>
-              }
-            >
-              {view.recurrences.length === 0 ? (
-                <EmptyState title={t('stats.forecastNoRecurrences')} />
-              ) : (
-                view.recurrences.map((row) => {
-                  const category =
-                    row.categoryId === null ? undefined : categories.get(row.categoryId);
-                  return (
-                    <ListRow
-                      key={row.recurrenceId}
-                      icon={category?.icon as IconName | undefined}
-                      colorIndex={category?.colorIndex}
-                      title={row.description === '' ? (category?.name ?? MISSING) : row.description}
-                      subtitle={
-                        row.count > 1
-                          ? plural(t, locale, 'stats.forecastTimes', row.count)
-                          : undefined
-                      }
-                      trailing={
-                        <AmountText
-                          minor={row.kind === 'income' ? row.total : -row.total}
-                          currency={currency}
-                          locale={locale}
-                          sign="always"
-                        />
-                      }
-                    />
-                  );
-                })
-              )}
-            </Section>
-          }
-        />
+          </div>
+          {chartBlock}
+        </section>
+
+        <div className={styles.pair}>
+          <section className={styles.box}>
+            <div className={styles.boxHead}>
+              <h2 className={styles.boxTitle}>{t('stats.forecastRecurrences')}</h2>
+              <span className={styles.status}>
+                {formatCycleRange(selected.range, locale, today)}
+              </span>
+            </div>
+            {view.recurrences.length === 0 ? (
+              <EmptyState title={t('stats.forecastNoRecurrences')} />
+            ) : (
+              view.recurrences.map((row) => {
+                const category =
+                  row.categoryId === null ? undefined : categories.get(row.categoryId);
+                return (
+                  <ListRow
+                    key={row.recurrenceId}
+                    open
+                    icon={category?.icon as IconName | undefined}
+                    colorIndex={category?.colorIndex}
+                    title={
+                      row.description === ''
+                        ? (category?.name ?? t('common.missing'))
+                        : row.description
+                    }
+                    subtitle={
+                      row.count > 1
+                        ? plural(t, locale, 'stats.forecastTimes', row.count)
+                        : undefined
+                    }
+                    trailing={
+                      <AmountText
+                        minor={row.kind === 'income' ? row.total : -row.total}
+                        currency={currency}
+                        locale={locale}
+                        sign="always"
+                      />
+                    }
+                  />
+                );
+              })
+            )}
+          </section>
+
+          <section className={styles.box}>
+            <div className={styles.boxHead}>
+              <h2 className={styles.boxTitle}>{t('stats.forecastPeriods')}</h2>
+            </div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">{t('stats.forecastColAt')}</th>
+                  <th scope="col">{t('stats.expensesAbout')}</th>
+                  <th scope="col" className={styles.rangeCol}>
+                    {t('stats.forecastColRange')}
+                  </th>
+                  <th scope="col">{t('stats.balanceAbout')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {view.periods.map((entry) => (
+                  <tr
+                    key={entry.range.start}
+                    className={
+                      entry.range.start === selected.range.start ? styles.tableSelected : ''
+                    }
+                  >
+                    <th scope="row">{formatLongDate(entry.range.end, locale)}</th>
+                    <td>{money(entry.expenses)}</td>
+                    <td className={`${styles.faint} ${styles.rangeCol}`}>
+                      {t('stats.forecastRange', {
+                        min: major(entry.expensesMin),
+                        max: major(entry.expensesMax),
+                      })}
+                    </td>
+                    <td>{money(entry.balance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* «How it's calculated» is a line at the bottom of «Forecast periods». */}
+            <p className={styles.foot}>
+              <b>{t('stats.forecastHowTitle')}</b> {t('stats.forecastHow')}
+            </p>
+          </section>
+        </div>
       </div>
     );
   }
 
   // ─────────────────────────────────────────────────────────────────────────────────────────────
-  // A running or closed period: what the phone's Statistiche shows, in two columns.
+  // A running or closed period: the period block, the breakdown, the tags.
   // ─────────────────────────────────────────────────────────────────────────────────────────────
   const view = statsView({ data: page.data, def, today, period, direction });
   const tagNames = new Map(page.data.tags.map((tag) => [tag.id, tag.name]));
+  // W11: a period with no row at all. The chart stays; the breakdown and the tags give the way out.
+  const periodEmpty = !page.data.transactions.some((tx) => isWithin(period.range, tx.date));
+  const nearestWithData = periodEmpty
+    ? nearestPeriodWithData({ txs: page.data.transactions, def, period: period.range })
+    : null;
   const anyTagIncome = view.tags.tags.some((row) => row.income > 0);
 
-  const ranked = view.split.rows.map((row, rank) => ({ row, colour: segmentColour(rank) }));
-  // Past the fifth the categories share one segment, so the bar keeps as many pieces as it has
-  // colours; the rows below still each carry their own amount.
+  // W7: each row in the colour of its category; past the sixth, the bar shares one grey segment.
+  const ranked = view.split.rows.map((row) => ({ row, colour: tint(row.category?.colorIndex) }));
   const segments: SplitSegment[] = [
-    ...ranked.slice(0, SPLIT_SEGMENTS).map(({ row, colour }) => ({
+    ...ranked.slice(0, SPLIT_COLOURS).map(({ row, colour }) => ({
       key: row.categoryId,
       amount: row.amount,
       colour,
     })),
     {
       key: 'other',
-      amount: ranked.slice(SPLIT_SEGMENTS).reduce((sum, { row }) => sum + row.amount, 0),
-      colour: 'var(--color-segment-other)',
+      amount: view.split.other,
+      colour: GREY,
     },
   ];
 
   const projection = view.figures.projection;
   const median = view.figures.median;
-  // What the design writes under Uscite: «finora» while the period runs, and how a closed one sat
-  // against the median of the six before it.
+  // Under Expenses: «so far» while the period runs, and how a closed one sat against the median.
   const spentNote =
     period.isCurrent || median === null
       ? period.isCurrent
         ? t('stats.soFar')
         : undefined
       : t(view.figures.spent >= median ? 'stats.aboveMedian' : 'stats.belowMedian', {
-          amount: formatMoney(Math.abs(view.figures.spent - median), currency, locale),
+          amount: money(Math.abs(view.figures.spent - median)),
+        });
+  const projectionNote =
+    projection === null || chart.usual === null
+      ? undefined
+      : t(projection >= chart.usual ? 'stats.projectionAboveShort' : 'stats.projectionBelowShort', {
+          amount: money(Math.abs(projection - chart.usual)),
         });
 
   const baseHref = periodHref(PATH, period.range, def, today, keep);
   const categoryHref = (categoryId: string) =>
     periodHref(PATH, period.range, def, today, { ...keep, c: categoryId });
+  const deltaText = (delta: number | null) =>
+    delta === null
+      ? t('stats.newLabel')
+      : t('stats.vsUsual', { delta: formatSignedPercent(delta) });
 
-  // Every category's panel, rendered here: a click only chooses one (`PanelSwitch`).
+  // W7: a row's share bar is relative to the largest category, which fills its track.
+  const largest = ranked[0]?.row.amount ?? 0;
+  const shareWidth = (amount: number) => (largest <= 0 ? 0 : (amount / largest) * 100);
+  const historyPeriods = view.split.periods.slice(-HISTORY_BARS);
+
+  // Every category's dialog, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {};
-  for (const { row } of ranked) {
+  for (const { row, colour } of ranked) {
     const rows = listView({
       data: page.data,
       filters: filtersFromSearch({ category: row.categoryId, direction }),
@@ -382,18 +513,20 @@ export default async function StatsPage({
     })
       .days.flatMap((day) => day.rows)
       .slice(0, CATEGORY_ROWS);
+    const history = row.history.slice(-HISTORY_BARS);
     panels[`c:${row.categoryId}`] = {
-      title: row.category?.name ?? MISSING,
+      title: row.category?.name ?? t('common.missing'),
+      icon:
+        row.category === undefined ? undefined : (
+          <span className={styles.dialogIcon} style={{ color: colour }}>
+            <Icon name={row.category.icon as IconName} size={18} />
+          </span>
+        ),
       body: (
         <>
           <Figure
             label={direction === 'income' ? t('stats.income') : t('stats.expenses')}
-            note={[
-              t('stats.ofTotal', { pct: row.share }),
-              row.delta === null
-                ? t('stats.newLabel')
-                : t('stats.vsUsual', { delta: formatSignedPercent(row.delta) }),
-            ].join(' · ')}
+            note={[t('stats.ofTotal', { pct: row.share }), deltaText(row.delta)].join(' · ')}
           >
             <AmountText
               minor={row.amount}
@@ -403,16 +536,39 @@ export default async function StatsPage({
               positive={direction === 'income'}
             />
           </Figure>
-          <ChartFrame title={plural(t, locale, 'stats.lastPeriods', row.history.length)}>
-            <Sparkline series={row.history} height={56} />
-          </ChartFrame>
+          <Section
+            open
+            title={plural(t, locale, 'stats.lastPeriods', history.length)}
+            trailing={
+              row.baseline === null
+                ? undefined
+                : t('stats.dashedMedian', { amount: major(row.baseline) })
+            }
+          >
+            <HistoryBars
+              colour={colour}
+              median={row.baseline}
+              bars={history.map((amount, index) => {
+                const range = historyPeriods[index];
+                return {
+                  key: range?.start ?? `${index}`,
+                  tick: range === undefined ? '' : formatPeriodTick(range.start, def.kind, locale),
+                  amount,
+                };
+              })}
+            />
+          </Section>
           <Section
             open
             title={t('tabs.transactions')}
-            more={
-              <Link className={styles.more} href={transactionsHref({ category: row.categoryId })}>
-                <span>{t('home.allTransactions')}</span>
-                <Icon name="chevR" size={16} />
+            trailing={
+              <Link
+                className={styles.more}
+                href={transactionsHref({ category: row.categoryId })}
+                aria-label={t('home.allTransactions')}
+              >
+                <span>{t('stats.allShort')}</span>
+                <Icon name="chevR" size={14} />
               </Link>
             }
           >
@@ -453,10 +609,51 @@ export default async function StatsPage({
       closeLabel={t('common.close')}
     >
       <div className={styles.page}>
-        <PageHead
-          title={header}
-          hero={
-            <Figure label={t('stats.expenses')} note={spentNote}>
+        {header}
+
+        {/* W11: a period with no row. The way out comes first; the chart stays under it. */}
+        {periodEmpty ? (
+          <section className={styles.box}>
+            <div className={styles.emptyText}>
+              <h2 className={styles.emptyTitle}>
+                {upperFirst(
+                  t('stats.emptyPeriod', {
+                    period: formatPeriodName(period.range, locale, today),
+                  }),
+                  locale,
+                )}
+              </h2>
+              <p className={styles.emptyBody}>{t('stats.emptyPeriodBody')}</p>
+            </div>
+            <div className={styles.emptyActions}>
+              {nearestWithData === null ? null : (
+                <Link
+                  className={styles.emptyAction}
+                  href={periodHref(PATH, nearestWithData, def, today, keep)}
+                >
+                  {nearestWithData.start < period.range.start ? (
+                    <Icon name="chevL" size={15} />
+                  ) : null}
+                  {t('stats.goToPeriod', {
+                    period: formatPeriodName(nearestWithData, locale, today),
+                  })}
+                  {nearestWithData.start > period.range.start ? (
+                    <Icon name="chevR" size={15} />
+                  ) : null}
+                </Link>
+              )}
+              <NewTransactionLink className={`${styles.emptyAction} ${styles.emptyPrimary}`}>
+                <Icon name="plus" size={15} />
+                {t('web.shell.newTransaction')}
+              </NewTransactionLink>
+            </div>
+          </section>
+        ) : null}
+
+        {/* The period block: Expenses, then Income, Net and the projection; the chart under them. */}
+        <section className={styles.box} aria-label={t('stats.expensesByPeriod')}>
+          <div className={styles.figures}>
+            <Figure hero label={t('stats.expenses')} note={spentNote}>
               <AmountText
                 minor={view.figures.spent}
                 currency={currency}
@@ -464,9 +661,7 @@ export default async function StatsPage({
                 size="hero"
               />
             </Figure>
-          }
-          stats={
-            <>
+            <div className={styles.stats}>
               <Figure label={t('stats.income')}>
                 <AmountText
                   minor={view.figures.income}
@@ -486,7 +681,7 @@ export default async function StatsPage({
                 />
               </Figure>
               {projection === null ? null : (
-                <Figure label={t('stats.projection')}>
+                <Figure label={t('stats.projection')} note={projectionNote}>
                   <AmountText
                     minor={projection}
                     currency={currency}
@@ -495,171 +690,171 @@ export default async function StatsPage({
                   />
                 </Figure>
               )}
-            </>
-          }
-          aside={
-            <ChartFrame
-              title={t('stats.cycleTrend')}
-              value={
-                <AmountText
-                  minor={view.figures.spent}
-                  currency={currency}
-                  locale={locale}
-                  size="footnote"
+            </div>
+          </div>
+          {chartBlock}
+        </section>
+
+        {periodEmpty ? null : (
+          <>
+            {/* W7: the breakdown, in the colours of the categories. */}
+            <section className={styles.box}>
+              <div className={styles.boxHead}>
+                <h2 className={styles.boxTitle}>{t('stats.split')}</h2>
+                <SegmentedLinks
+                  options={[
+                    {
+                      key: 'expense',
+                      label: t('stats.expenses'),
+                      href: directionHref('expense'),
+                      active: direction === 'expense',
+                    },
+                    {
+                      key: 'income',
+                      label: t('stats.income'),
+                      href: directionHref('income'),
+                      active: direction === 'income',
+                    },
+                  ]}
                 />
-              }
-              foot={
-                <span>
-                  {t('stats.trendFooter', { elapsed: period.elapsed, length: period.length })}
-                </span>
-              }
-            >
-              <TrendChart current={view.trend.current} usual={view.trend.usual} height={96} />
-            </ChartFrame>
-          }
-        />
-
-        {chart}
-
-        <Section
-          title={t('stats.split')}
-          trailing={
-            <span className={styles.chips}>
-              <Chip
-                label={t('stats.expenses')}
-                href={directionHref('expense')}
-                active={direction === 'expense'}
-              />
-              <Chip
-                label={t('stats.income')}
-                href={directionHref('income')}
-                active={direction === 'income'}
-              />
-            </span>
-          }
-        >
-          {view.split.rows.length === 0 ? (
-            <EmptyState title={t('stats.empty')} />
-          ) : (
-            <>
-              <SplitBar segments={segments} />
-              <CardGrid>
-                {ranked.map(({ row, colour }) => (
-                  <Card
-                    key={row.categoryId}
-                    href={categoryHref(row.categoryId)}
-                    selectId={`c:${row.categoryId}`}
-                  >
-                    <CardHead
-                      leading={
-                        row.category === undefined ? undefined : (
-                          <IconBox
-                            name={row.category.icon as IconName}
-                            colorIndex={row.category.colorIndex}
-                          />
-                        )
-                      }
-                      name={row.category?.name ?? MISSING}
-                      meta={t('targets.percent', { value: row.share })}
-                    />
-                    <div>
-                      <AmountText
-                        minor={row.amount}
-                        currency={currency}
-                        locale={locale}
-                        size="large"
-                      />
-                      <CardNote>
-                        {row.delta === null
-                          ? t('stats.newLabel')
-                          : t('stats.vsUsual', { delta: formatSignedPercent(row.delta) })}
-                      </CardNote>
-                    </div>
-                    <SplitBar
-                      segments={[
-                        { key: 'share', amount: row.amount, colour },
-                        {
-                          key: 'rest',
-                          amount: Math.max(0, view.split.total - row.amount),
-                          colour: 'var(--color-track)',
-                        },
-                      ]}
-                    />
-                  </Card>
-                ))}
-                {/* Quota impegnata leaves its section for a ghost card at the end of the grid (K). */}
-                <Card ghost>
-                  <CardLabel>{t('stats.committed')}</CardLabel>
-                  <span className={styles.percent}>
-                    {t('targets.percent', { value: view.committed.share })}
-                  </span>
-                  <p className={styles.note}>
+              </div>
+              {view.split.rows.length === 0 ? (
+                <EmptyState title={t('stats.empty')} />
+              ) : (
+                <>
+                  <p className={styles.total}>
+                    <b>{money(view.split.total)}</b>
+                    <span>{plural(t, locale, 'stats.categoryCount', view.split.rows.length)}</span>
+                  </p>
+                  <SplitBar segments={segments} />
+                  <div className={styles.cats}>
+                    {ranked.map(({ row, colour }) => (
+                      <PanelLink
+                        key={row.categoryId}
+                        className={styles.cat}
+                        selectedClassName={styles.catSelected}
+                        selectId={`c:${row.categoryId}`}
+                        href={categoryHref(row.categoryId)}
+                      >
+                        <span className={styles.catIcon} style={{ color: colour }}>
+                          {row.category === undefined ? null : (
+                            <Icon name={row.category.icon as IconName} size={18} />
+                          )}
+                        </span>
+                        {/* Below 760px the share and the change go under the name, on one line. */}
+                        <span className={styles.catText}>
+                          <span className={styles.catName}>
+                            {row.category?.name ?? t('common.missing')}
+                          </span>
+                          <span className={styles.catSub}>
+                            {t('targets.percent', { value: row.share })} · {deltaText(row.delta)}
+                          </span>
+                        </span>
+                        <span className={styles.catShare}>
+                          <span className={styles.track}>
+                            <span
+                              style={{ width: `${shareWidth(row.amount)}%`, background: colour }}
+                            />
+                          </span>
+                          <span>{t('targets.percent', { value: row.share })}</span>
+                        </span>
+                        <span className={styles.catDelta}>{deltaText(row.delta)}</span>
+                        <span className={styles.catAmount}>
+                          <AmountText minor={row.amount} currency={currency} locale={locale} />
+                        </span>
+                      </PanelLink>
+                    ))}
+                  </div>
+                </>
+              )}
+              {view.split.excluded.count === 0 ? null : (
+                <p className={styles.note}>
+                  {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
+                    amount: money(view.split.excluded.amount),
+                  })}
+                </p>
+              )}
+              {/* «Committed share» is a line at the bottom of the block. */}
+              {direction === 'expense' && view.split.rows.length > 0 ? (
+                <div className={styles.commit}>
+                  <b>{t('stats.committed')}</b>
+                  <SplitBar
+                    segments={[
+                      {
+                        key: 'committed',
+                        amount: view.committed.amount,
+                        colour: 'var(--color-text)',
+                      },
+                      {
+                        key: 'discretionary',
+                        amount: view.committed.discretionary,
+                        colour: 'var(--color-track)',
+                      },
+                    ]}
+                  />
+                  <p>
                     {t('stats.committedLine', {
                       pct: view.committed.share,
-                      amount: formatMoney(view.committed.amount, currency, locale),
+                      amount: money(view.committed.amount),
                     })}
                   </p>
-                </Card>
-              </CardGrid>
-            </>
-          )}
-          {view.split.excluded.count === 0 ? null : (
-            <p className={styles.note}>
-              {plural(t, locale, 'stats.excludedRow', view.split.excluded.count, {
-                amount: formatMoney(view.split.excluded.amount, currency, locale),
-              })}
-            </p>
-          )}
-        </Section>
+                </div>
+              ) : null}
+            </section>
 
-        <Section
-          title={t('stats.tags')}
-          trailing={
-            <span className={styles.status}>
-              {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
-            </span>
-          }
-        >
-          {view.tags.tags.length === 0 ? (
-            <EmptyState title={t('stats.tagsEmpty')} />
-          ) : (
-            view.tags.tags.map((row) => (
-              <ListRow
-                key={row.tagId}
-                title={tagNames.get(row.tagId) ?? row.tagId}
-                subtitle={plural(t, locale, 'tags.uses', row.count)}
-                href={transactionsHref({ tag: row.tagId })}
-                trailing={
-                  <span className={styles.tagAmounts}>
-                    {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
-                    {row.expense === 0 && row.income > 0 ? null : (
-                      <AmountText minor={row.expense} currency={currency} locale={locale} />
-                    )}
-                    {row.income === 0 ? null : (
-                      <AmountText
-                        minor={row.income}
-                        currency={currency}
-                        locale={locale}
-                        size="footnote"
-                        sign="always"
-                      />
-                    )}
-                  </span>
-                }
-              />
-            ))
-          )}
-          {view.tags.untaggedCount === 0 ? null : (
-            <p className={styles.note}>
-              {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
-                amount: formatMoney(view.tags.untagged, currency, locale),
-              })}
-            </p>
-          )}
-          {view.tags.tags.length < 2 ? null : (
-            <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
-          )}
-        </Section>
+            <section className={styles.box}>
+              <div className={styles.boxHead}>
+                <h2 className={styles.boxTitle}>{t('stats.tags')}</h2>
+                <span className={styles.status}>
+                  {anyTagIncome ? t('stats.tagsFlows') : t('stats.expenses')}
+                </span>
+              </div>
+              {view.tags.tags.length === 0 ? (
+                <EmptyState title={t('stats.tagsEmpty')} />
+              ) : (
+                view.tags.tags.map((row) => (
+                  // «#casa-nuova 3 usi» on one line, the amounts at the end.
+                  <Link
+                    key={row.tagId}
+                    className={styles.tagRow}
+                    href={transactionsHref({ tag: row.tagId })}
+                  >
+                    <span className={styles.tagName}>
+                      <span className={styles.tagHash}>#</span>
+                      <span>{tagNames.get(row.tagId) ?? t('common.missing')}</span>
+                      <small>{plural(t, locale, 'tags.uses', row.count)}</small>
+                    </span>
+                    <span className={styles.tagAmounts}>
+                      {/* A tag that only brought money in has no spend worth a «0,00» above it. */}
+                      {row.expense === 0 && row.income > 0 ? null : (
+                        <AmountText minor={row.expense} currency={currency} locale={locale} />
+                      )}
+                      {row.income === 0 ? null : (
+                        <AmountText
+                          minor={row.income}
+                          currency={currency}
+                          locale={locale}
+                          size="footnote"
+                          sign="always"
+                        />
+                      )}
+                    </span>
+                  </Link>
+                ))
+              )}
+              {view.tags.untaggedCount === 0 ? null : (
+                <p className={styles.note}>
+                  {plural(t, locale, 'stats.tagsUntagged', view.tags.untaggedCount, {
+                    amount: money(view.tags.untagged),
+                  })}
+                </p>
+              )}
+              {view.tags.tags.length < 2 ? null : (
+                <p className={styles.footnote}>{t('stats.tagsOverlap')}</p>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </PanelSwitch>
   );

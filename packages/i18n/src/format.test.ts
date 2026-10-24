@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatMajor, formatMoney, formatMoneyParts } from './format';
+import {
+  formatMajor,
+  formatMoney,
+  formatMoneyParts,
+  formatPeriodName,
+  formatPeriodRange,
+} from './format';
 
 describe('formatMoney', () => {
   it('formats Italian amounts with suffix symbol', () => {
@@ -76,5 +82,57 @@ describe('formatMoney in the new locales', () => {
     expect(formatMoney(1234560, 'EUR', 'pt')).toBe(`12${NBSP}345,60 €`);
     expect(formatMajor(184260, 'EUR', 'es')).toBe('+1843');
     expect(formatMajor(1234560, 'EUR', 'es')).toBe('+12.346');
+  });
+});
+
+describe('formatPeriodRange', () => {
+  const september = { start: '2026-09-01', end: '2026-09-30' } as const;
+
+  it('names the month once when the range lies in one month', () => {
+    expect(formatPeriodRange(september, 'it', '2026-09-13')).toBe('1 – 30 settembre');
+    expect(formatPeriodRange(september, 'en', '2026-09-13')).toBe('September 1 – 30');
+    expect(formatPeriodRange(september, 'de', '2026-09-13')).toBe('1. – 30. September');
+    expect(formatPeriodRange(september, 'es', '2026-09-13')).toBe('1 – 30 de septiembre');
+  });
+
+  it('names the year of a month in another year, once', () => {
+    expect(formatPeriodRange(september, 'it', '2027-01-04')).toBe('1 – 30 settembre 2026');
+    expect(formatPeriodRange(september, 'en', '2027-01-04')).toBe('September 1 – 30, 2026');
+    expect(formatPeriodRange(september, 'pt', '2027-01-04')).toBe('1 – 30 de setembro de 2026');
+  });
+
+  it('falls back to the cycle range when the range crosses a month', () => {
+    const cycle = { start: '2026-09-27', end: '2026-10-26' } as const;
+    expect(formatPeriodRange(cycle, 'it', '2026-10-01')).toBe('27 set – 26 ott');
+    const newYear = { start: '2026-12-27', end: '2027-01-26' } as const;
+    expect(formatPeriodRange(newYear, 'it', '2027-01-04')).toBe('27 dic 2026 – 26 gen');
+  });
+});
+
+describe('formatPeriodName', () => {
+  const TODAY = '2026-10-21';
+
+  it('names a calendar month by its name, in the case of the catalog', () => {
+    expect(formatPeriodName({ start: '2026-10-01', end: '2026-10-31' }, 'it', TODAY)).toBe(
+      'ottobre',
+    );
+    expect(formatPeriodName({ start: '2026-02-01', end: '2026-02-28' }, 'en', TODAY)).toBe(
+      'February',
+    );
+  });
+
+  it('adds the year to a month outside the year of today', () => {
+    expect(formatPeriodName({ start: '2025-12-01', end: '2025-12-31' }, 'it', TODAY)).toBe(
+      'dicembre 2025',
+    );
+  });
+
+  it('names a cycle, a week or a year by its days', () => {
+    expect(formatPeriodName({ start: '2026-09-27', end: '2026-10-26' }, 'it', TODAY)).toBe(
+      '27 set – 26 ott',
+    );
+    expect(formatPeriodName({ start: '2026-10-19', end: '2026-10-25' }, 'it', TODAY)).toBe(
+      '19 ott – 25 ott',
+    );
   });
 });

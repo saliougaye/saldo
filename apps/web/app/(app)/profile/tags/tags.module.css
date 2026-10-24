@@ -12,14 +12,6 @@
   white-space: nowrap;
 }
 
-/* The line under the title: what a tag is for (the phone's footnote). */
-.note {
-  margin: 0 0 8px;
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
-  text-wrap: pretty;
-}
-
 .uses {
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
@@ -89,4 +81,23 @@
 
 .deleteButton:hover {
   background: var(--color-raised);
+}
+
+/* W11: the field of «New tag», in the page under the empty state. */
+.first {
+  margin-top: 8px;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The field and «Add» on one row; the button keeps its own width. */
+.inlineRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
 }

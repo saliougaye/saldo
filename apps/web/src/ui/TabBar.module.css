@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: space-around;
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-canvas);
   z-index: 10;
 }
 
@@ -28,8 +28,8 @@
   width: var(--layout-fab-size);
   height: var(--layout-fab-size);
   border-radius: var(--radius-fab);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-text);
+  color: var(--color-bg);
   display: grid;
   place-items: center;
   box-shadow: 0 8px 24px var(--color-shadow);
@@ -41,8 +41,8 @@
   scale: 0.96;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
   .bar,
   .fab {
     display: none;

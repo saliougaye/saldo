@@ -55,7 +55,10 @@ test.describe('seeded account', () => {
         .filter((tx) => tx.kind === 'expense' && !tx.excludeFromTotals)
         .reduce((total, tx) => total + tx.amount, 0);
       const section = sectionOf(page, dayHeading(date, ledger.today, t, appLocale(locale)));
-      await expect(section.locator(':scope > div').first()).toContainText(money(spend));
+      // Figure 3: the day's expenses with the minus sign; a day with none shows no figure.
+      const head = section.locator(':scope > div').first();
+      if (spend === 0) await expect(head).not.toContainText(money(0));
+      else await expect(head).toContainText(money(-spend));
       await expect(section.getByRole('link')).toHaveCount(dayRows.length);
     }
 
@@ -93,8 +96,7 @@ test.describe('seeded account', () => {
     await expect(disclosure.locator('summary')).toContainText(
       plural(t, lang, 'transactions.upcomingCount', ahead.length),
     );
-    // Folded: the disclosure hides its rows. The In arrivo card above the list shows the next
-    // three, so the checks look inside the disclosure only.
+    // Folded: the disclosure hides its rows.
     for (const tx of ahead) {
       await expect(disclosure.getByRole('link', { name: tx.description })).toBeHidden();
     }
@@ -183,10 +185,55 @@ test.describe('seeded account', () => {
     await member.context.close();
   });
 
-  test('a row opens its detail in the panel, and the panel closes again', async ({
+  test('the summary counts the period and follows the filters, and «More» holds the other filters', async ({
     browser,
     t,
     locale,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Riepilogo',
+      email: 'tx-summary@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const lang = appLocale(locale);
+    const money = moneyFormatter(ledger, lang);
+    const month = previousMonth(monthOf(ledger.today));
+    const rows = ledger.transactions.filter((tx) => inRange(tx.date, month));
+    const counted = rows.filter((tx) => tx.kind !== 'transfer' && !tx.excludeFromTotals);
+    const spent = counted
+      .filter((tx) => tx.kind === 'expense')
+      .reduce((total, tx) => total + tx.amount, 0);
+    const income = counted.filter((tx) => tx.kind === 'income');
+    const earned = income.reduce((total, tx) => total + tx.amount, 0);
+
+    await page.goto(`/transactions?p=${month.start}`);
+
+    // W5: a closed period has two cells, Expenses and Income.
+    const summary = page.getByRole('region', { name: t('transactions.summaryLabel') });
+    await expect(summary).toContainText(money(spent));
+    await expect(summary).toContainText(plural(t, lang, 'transactions.periodCount', income.length));
+    await expect(summary.getByText(t('home.upcoming'), { exact: true })).toHaveCount(0);
+
+    // «More» holds «Income only»; its label then names the filter that is on.
+    await page.getByRole('button', { name: t('transactions.moreFilters') }).click();
+    await page.getByRole('menuitem', { name: t('transactions.onlyIncome') }).click();
+    await expect(page.getByRole('button', { name: t('transactions.onlyIncome') })).toBeVisible();
+    await expect(page.locator(`${SETTLED_DAYS} a`)).toHaveCount(
+      rows.filter((tx) => tx.kind === 'income').length,
+    );
+    // R8: the summary follows the filters, so «Income only» spent nothing.
+    await expect(summary).not.toContainText(money(spent));
+    await expect(summary).toContainText(money(0));
+    await expect(summary).toContainText(money(earned));
+    await expect(page.getByRole('link', { name: t('transactions.resetFilters') })).toBeVisible();
+    await member.context.close();
+  });
+
+  test('a row opens its edit form in the dialog, and the dialog closes again', async ({
+    browser,
+    t,
   }) => {
     const member = await createMember(browser, t, {
       name: 'Dettaglio',
@@ -195,38 +242,99 @@ test.describe('seeded account', () => {
     });
     const { page } = member;
     const ledger = await readLedger(member);
-    const lang = appLocale(locale);
-    const money = moneyFormatter(ledger, lang);
     const target = ledger.transactions.find((tx) => tx.description === 'Idraulico');
     if (target === undefined) throw new Error('the seed has no «Idraulico»');
-    const category = ledger.categories.find((entry) => entry.id === target.categoryId);
-    const account = ledger.accounts.find((entry) => entry.id === target.accountId);
 
     await page.goto(`/transactions?p=${target.date}`);
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
+    // W3: the row opens «Edit transaction» at once, with its fields filled.
     await page.getByRole('link', { name: 'Idraulico' }).click();
     await expect(page).toHaveURL(new RegExp(`[?&]t=${target.id}`));
-    const panel = page.getByRole('dialog', { name: 'Idraulico' });
-    await expect(panel).toBeVisible();
-    await expect(panel).toContainText(money(-target.amount));
-    await expect(panel).toContainText(category?.name ?? '');
-    await expect(panel).toContainText(account?.name ?? '');
-    await expect(panel).toContainText(t('transactions.manual'));
-    await expect(page.getByRole('link', { name: 'Idraulico' })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    const form = page.getByRole('dialog', { name: t('txForm.editTitle') });
+    await expect(form).toBeVisible();
+    await expect(form.getByLabel(t('txForm.descriptionExpense'))).toHaveValue('Idraulico');
+    await expect(form.getByLabel(t('txForm.amount'))).not.toBeFocused();
+    await expect(page.getByRole('dialog')).toHaveCount(1);
 
-    await panel.getByRole('link', { name: t('common.close') }).click();
+    await form.getByRole('link', { name: t('common.close') }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page).not.toHaveURL(/[?&]t=/);
 
     // Esc closes it too.
     await page.getByRole('link', { name: 'Idraulico' }).click();
-    await expect(panel).toBeVisible();
+    await expect(form).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await member.context.close();
+  });
+
+  test('the dialog is in the centre of a wide screen and at the bottom of a narrow one', async ({
+    browser,
+    t,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Dialogo',
+      email: 'tx-dialog@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const target = ledger.transactions.find((tx) => tx.description === 'Idraulico');
+    if (target === undefined) throw new Error('the seed has no «Idraulico»');
+    const form = page.getByRole('dialog', { name: t('txForm.editTitle') });
+    const box = async () => {
+      const value = await form.boundingBox();
+      if (value === null) throw new Error('the dialog has no box');
+      return value;
+    };
+
+    // W1: a form is 480px wide, in the centre of the screen. The poll waits for the entrance.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/transactions?t=${target.id}`);
+    await expect(form).toBeVisible();
+    await expect.poll(async () => Math.round((await box()).width)).toBe(480);
+    const wide = await box();
+    expect(Math.abs(wide.x + wide.width / 2 - 640)).toBeLessThanOrEqual(1);
+    expect(Math.abs(wide.y + wide.height / 2 - 400)).toBeLessThanOrEqual(1);
+
+    // W2: below 760px it is a sheet at the bottom of the screen, as wide as the screen.
+    await page.setViewportSize({ width: 390, height: 800 });
+    await expect
+      .poll(async () => {
+        const narrow = await box();
+        return Math.round(narrow.y + narrow.height);
+      })
+      .toBe(800);
+    expect(Math.round((await box()).width)).toBe(390);
+    await member.context.close();
+  });
+
+  test('↑ ↓ walk the rows and ↵ opens the row with the focus', async ({ browser, t }) => {
+    const member = await createMember(browser, t, {
+      name: 'Tasti',
+      email: 'tx-keys@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    // A closed month: no «In arrivo», so every row in the DOM is on screen.
+    const month = previousMonth(monthOf(ledger.today));
+    await page.goto(`/transactions?p=${month.start}`);
+    const rows = page.locator('#content [data-select-id]');
+    await expect(rows.nth(1)).toBeVisible();
+
+    await page.keyboard.press('ArrowDown');
+    await expect(rows.first()).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(rows.nth(1)).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(rows.first()).toBeFocused();
+
+    const id = await rows.first().getAttribute('data-select-id');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`[?&]t=${id}`));
+    await expect(page.getByRole('dialog', { name: t('txForm.editTitle') })).toBeVisible();
     await member.context.close();
   });
 });
@@ -244,44 +352,48 @@ test.describe('own rows', () => {
     const { page } = member;
     const ledger = await readLedger(member);
     const money = moneyFormatter(ledger, appLocale(locale));
+    // W11: with no transaction the Home lists the accounts, not the summary.
     await page.goto('/home');
-    await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));
+    await expect(page.getByRole('region', { name: t('home.inAccounts') })).toBeVisible();
 
-    // Create.
+    // Create: Save closes the dialog, and the row is in the list.
     const id = await createExpense(page, t, {
       amount: '12,50',
       description: 'Pranzo di prova',
       category: t('seed.restaurants'),
     });
-    const detail = page.getByRole('dialog', { name: 'Pranzo di prova' });
-    await expect(detail).toContainText(money(-1250));
     const today = ledger.today;
     const day = sectionOf(page, dayHeading(today, today, t, appLocale(locale)));
     await expect(day.getByRole('link', { name: 'Pranzo di prova' })).toContainText(money(-1250));
-    await expect(day.locator(':scope > div').first()).toContainText(money(1250));
+    await expect(day.locator(':scope > div').first()).toContainText(money(-1250));
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(1250));
 
-    // Edit.
+    // Edit: `?t=` opens the form at once (W3); Save closes it.
     await page.goto(`/transactions?t=${id}`);
-    await page.getByRole('link', { name: t('common.edit'), exact: true }).click();
     const form = page.getByRole('dialog', { name: t('txForm.editTitle') });
     await form.getByLabel(t('txForm.amount')).fill('20');
     await form.getByLabel(t('txForm.descriptionExpense')).fill('Cena di prova');
+    // A row with no tag, no exclusion and no repeat keeps «Dettagli» as one closed row.
+    await expect(form.getByText(t('txForm.detailsNone'), { exact: true })).toBeVisible();
+    await expect(form.getByLabel(t('transactions.tags'), { exact: true })).toBeHidden();
     await form.getByRole('button', { name: t('txForm.save') }).click();
-    const edited = page.getByRole('dialog', { name: 'Cena di prova' });
-    await expect(edited).toContainText(money(-2000));
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // The mockup's toast confirms the change.
+    await expect(
+      page.getByRole('status').filter({ hasText: t('transactions.changesSaved') }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Cena di prova' })).toContainText(money(-2000));
     await expect(page.getByRole('link', { name: 'Pranzo di prova' })).toHaveCount(0);
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(2000));
 
-    // Delete.
+    // Delete: no question. The dialog closes and the toast offers «Undo».
     await page.goto(`/transactions?t=${id}`);
-    await page.getByRole('button', { name: t('common.delete') }).click();
-    const dialog = page.getByRole('alertdialog');
-    await expect(dialog).toContainText(t('transactions.deleteTitle', { name: 'Cena di prova' }));
-    await dialog.getByRole('button', { name: t('common.delete') }).click();
+    await form.getByRole('button', { name: t('common.delete'), exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`[?&]deleted=${id}`));
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     // The shell has its own status element (the navigation bar's «Loading…»): find the toast by its text.
     await expect(
       page
@@ -290,7 +402,8 @@ test.describe('own rows', () => {
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Cena di prova' })).toHaveCount(0);
     await page.goto('/home');
-    await expect(homeFigure(page, t('home.expenses'))).toContainText(money(0));
+    await expect(page.getByRole('region', { name: t('home.inAccounts') })).toBeVisible();
+    await expect(page.getByText(t('home.expenses'), { exact: true })).toHaveCount(0);
     await member.context.close();
   });
 
@@ -316,18 +429,18 @@ test.describe('own rows', () => {
       ),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: t('common.delete') }).click();
+    await page.getByRole('link', { name: 'Caffè di prova' }).click();
     await page
-      .getByRole('alertdialog')
-      .getByRole('button', { name: t('common.delete') })
+      .getByRole('dialog', { name: t('txForm.editTitle') })
+      .getByRole('button', { name: t('common.delete'), exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`[?&]deleted=${id}`));
     await expect(page.getByRole('link', { name: 'Caffè di prova' })).toHaveCount(0);
 
-    // The toast stays five seconds: «Annulla» writes the row back and selects it again.
+    // The toast stays five seconds: «Undo» writes the row back into the list.
     await page.getByRole('button', { name: t('common.undo') }).click();
-    await expect(page).toHaveURL(new RegExp(`[?&]t=${id}`));
-    await expect(page.getByRole('dialog', { name: 'Caffè di prova' })).toContainText(money(-800));
+    await expect(page).not.toHaveURL(/[?&]deleted=/);
+    await expect(page.getByRole('link', { name: 'Caffè di prova' })).toContainText(money(-800));
     await page.goto('/home');
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(800));
     await member.context.close();
@@ -359,7 +472,7 @@ test.describe('own rows', () => {
 
     await firstForm.getByLabel(t('txForm.descriptionExpense')).fill('Bolletta del primo');
     await firstForm.getByRole('button', { name: t('txForm.save') }).click();
-    await expect(first.getByRole('dialog', { name: 'Bolletta del primo' })).toBeVisible();
+    await expect(first.getByRole('link', { name: 'Bolletta del primo' })).toBeVisible();
 
     await secondForm.getByLabel(t('txForm.descriptionExpense')).fill('Bolletta del secondo');
     await secondForm.getByRole('button', { name: t('txForm.save') }).click();
@@ -367,7 +480,11 @@ test.describe('own rows', () => {
     // The form stays open with the draft, and the first save is what the server holds.
     await expect(secondForm).toBeVisible();
     await second.goto(`/transactions?t=${id}`);
-    await expect(second.getByRole('dialog', { name: 'Bolletta del primo' })).toBeVisible();
+    await expect(
+      second
+        .getByRole('dialog', { name: t('txForm.editTitle') })
+        .getByLabel(t('txForm.descriptionExpense')),
+    ).toHaveValue('Bolletta del primo');
     await expect(second.getByRole('link', { name: 'Bolletta del secondo' })).toHaveCount(0);
     await member.context.close();
   });

@@ -12,13 +12,13 @@ import { requireWebAdmin } from '../../../../src/server/auth/currentUser';
 import { listInvites, MAX_INVITE_LABEL_LENGTH } from '../../../../src/server/auth/invites';
 import { getDb } from '../../../../src/server/db/client';
 import { adminContext } from '../../../../src/server/page/adminContext';
-import { EmptyState } from '../../../../src/ui/EmptyState';
 import { Icon } from '../../../../src/ui/Icon';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import styles from '../admin.module.css';
+import { FirstInvite } from './FirstInvite';
 import { MintInvite } from './MintInvite';
 import { RevokeInvite, RevokeInviteShared } from './RevokeInvite';
 
@@ -52,44 +52,45 @@ export default async function AdminInvitesPage() {
     </PanelLink>
   );
 
+  // What «Nuovo invito» needs: in its panel, and — with no invite yet — in the page (W11).
+  const mint = {
+    closeHref: PATH,
+    doneHref: PATH,
+    maxLabelLength: MAX_INVITE_LABEL_LENGTH,
+    defaultTtl: String(DEFAULT_TTL_DAYS),
+    ttlOptions: INVITE_TTL_CHOICES.map((days) => ({
+      value: String(days),
+      label: plural(t, locale, 'admin.invites.ttlDays', days),
+    })),
+    strings: {
+      newTitle: t('admin.invites.new'),
+      label: t('admin.invites.label'),
+      labelHint: t('admin.invites.labelHint'),
+      ttl: t('admin.invites.ttl'),
+      create: t('admin.invites.create'),
+      cancel: t('common.cancel'),
+      busy: t('common.loading'),
+      keyboardHint: t('web.form.keyboardHint'),
+      mintedTitle: t('admin.invites.mintedTitle', { label: '{{label}}' }),
+      copyNow: t('admin.invites.copyNow'),
+      copyNowBody: t('admin.invites.copyNowBody'),
+      copyCode: t('admin.invites.copyCode'),
+      copyLink: t('admin.invites.copyLink'),
+      copied: t('admin.invites.copied'),
+      qrLabel: t('admin.invites.qrLabel'),
+      qrCaption: t('admin.invites.qrCaption'),
+      expiresOn: t('admin.invites.expiresOn', { date: '{{date}}' }),
+      done: t('admin.invites.done'),
+      errors,
+    },
+  };
+
   // Every panel the page can open, rendered here: a click only chooses one (`PanelSwitch`).
   const panels: Record<string, PanelSpec> = {
     new: {
       title: t('admin.invites.new'),
-      sheet: true,
-      body: (
-        <MintInvite
-          closeHref={PATH}
-          doneHref={PATH}
-          maxLabelLength={MAX_INVITE_LABEL_LENGTH}
-          defaultTtl={String(DEFAULT_TTL_DAYS)}
-          ttlOptions={INVITE_TTL_CHOICES.map((days) => ({
-            value: String(days),
-            label: plural(t, locale, 'admin.invites.ttlDays', days),
-          }))}
-          strings={{
-            newTitle: t('admin.invites.new'),
-            label: t('admin.invites.label'),
-            labelHint: t('admin.invites.labelHint'),
-            ttl: t('admin.invites.ttl'),
-            create: t('admin.invites.create'),
-            cancel: t('common.cancel'),
-            busy: t('common.loading'),
-            keyboardHint: t('web.form.keyboardHint'),
-            mintedTitle: t('admin.invites.mintedTitle', { label: '{{label}}' }),
-            copyNow: t('admin.invites.copyNow'),
-            copyNowBody: t('admin.invites.copyNowBody'),
-            copyCode: t('admin.invites.copyCode'),
-            copyLink: t('admin.invites.copyLink'),
-            copied: t('admin.invites.copied'),
-            qrLabel: t('admin.invites.qrLabel'),
-            qrCaption: t('admin.invites.qrCaption'),
-            expiresOn: t('admin.invites.expiresOn', { date: '{{date}}' }),
-            done: t('admin.invites.done'),
-            errors,
-          }}
-        />
-      ),
+      form: true,
+      body: <MintInvite {...mint} />,
     },
     ...Object.fromEntries(
       invites.map((invite): [string, PanelSpec] => {
@@ -98,7 +99,7 @@ export default async function AdminInvitesPage() {
           `i:${invite.id}`,
           {
             title: label,
-            sheet: true,
+            form: true,
             body: (
               <>
                 <div className={styles.who}>
@@ -179,14 +180,19 @@ export default async function AdminInvitesPage() {
         closeLabel={t('common.close')}
         slot
       >
-        <Section open title={t('admin.nav.invites')} trailing={newLink}>
-          <p className={styles.note}>{t('admin.invites.note')}</p>
-          {rows.length === 0 ? (
-            <EmptyState title={t('admin.invites.empty')} body={t('admin.invites.emptyBody')} />
-          ) : (
-            <div>
+        <SettingsSection
+          title={t('admin.nav.invites')}
+          lead={t('admin.invites.note')}
+          trailing={newLink}
+        >
+          {/* W11: with no invite, the form of the first one is the whole state: no «No invites» above it. */}
+          {rows.length === 0 ? null : (
+            <SettingsBox>
               {rows.map((row) => (
-                <div key={row.id} className={row.muted ? styles.muted : undefined}>
+                <div
+                  key={row.id}
+                  className={`${styles.inviteRow} ${row.muted ? styles.muted : ''}`}
+                >
                   <SummaryRow
                     href={`${PATH}?i=${encodeURIComponent(row.id)}`}
                     selectId={`i:${row.id}`}
@@ -199,11 +205,30 @@ export default async function AdminInvitesPage() {
                     subtitle={say(row.subtitle, 'short')}
                     value={t(row.statusKey)}
                   />
+                  {/* Beside the row's link, not in it: a button cannot sit in a link. */}
+                  {row.status === 'active' ? (
+                    <RevokeInvite
+                      id={row.id}
+                      inline
+                      title={t('admin.invites.revokeTitle', {
+                        label: row.label ?? t('admin.invites.noLabel'),
+                      })}
+                      name={t('admin.invites.revokeRow', {
+                        label: row.label ?? t('admin.invites.noLabel'),
+                      })}
+                    />
+                  ) : null}
                 </div>
               ))}
-            </div>
+            </SettingsBox>
           )}
-        </Section>
+          {/* Outside the branch above: the first mint brings a row, and the code must stay on screen. */}
+          <FirstInvite
+            empty={rows.length === 0}
+            title={t('admin.invites.createFirst')}
+            mint={mint}
+          />
+        </SettingsSection>
       </PanelSwitch>
     </RevokeInviteShared>
   );

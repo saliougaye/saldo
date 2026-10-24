@@ -15,6 +15,13 @@ export interface Palette {
   page: string;
   bg: string;
   surface: string;
+  /**
+   * Web only (redesign H3, 2026-10-20): the signed-in page under the blocks, and the block on it.
+   * The page is tinted and the block is lighter in light, darker in dark, so neither pair maps onto
+   * `bg` and `surface` in both themes. The phone does not read these two.
+   */
+  canvas: string;
+  card: string;
   raised: string;
   border: string;
   borderStrong: string;
@@ -52,6 +59,8 @@ export const palettes: Record<ThemeName, Palette> = {
     page: '#050505',
     bg: '#0A0A0A',
     surface: '#121212',
+    canvas: '#0A0A0A',
+    card: '#121212',
     raised: '#1A1A1A',
     border: 'rgba(255,255,255,0.07)',
     borderStrong: 'rgba(255,255,255,0.12)',
@@ -82,6 +91,8 @@ export const palettes: Record<ThemeName, Palette> = {
     page: '#E9E9E7',
     bg: '#FFFFFF',
     surface: '#FAFAF9',
+    canvas: '#FAFAF9',
+    card: '#FFFFFF',
     raised: '#F1F1EF',
     border: 'rgba(0,0,0,0.08)',
     borderStrong: 'rgba(0,0,0,0.18)',
@@ -213,6 +224,10 @@ export const fontSize = {
   hero: 44,
   /** The one figure a wide web page leads with: «Rimasto da spendere», Patrimonio (§17.1.7). */
   heroWeb: 56,
+  /** H5: the cents and the currency beside `heroWeb`, 45% of its size (56 × 0.45 = 25.2). */
+  heroWebCents: 25.2,
+  /** Web (redesign §04): the period name in the page head, between ‹ and ›. */
+  periodTitle: 20,
   /** The marketing site's headline at full width (spec 0.8a, D48). Never in the app. */
   siteDisplay: 72,
 } as const;
@@ -273,8 +288,24 @@ export const layout = {
   targetRing: 36,
   targetRingSmall: 28,
   minHitTarget: 44,
-  /** Web (§17.1.7). The top bar that replaces the tab bar on wide screens. */
-  topbarHeight: 64,
+  /** Web (H1, 2026-10-20): the top bar, on every width. */
+  topbarHeight: 56,
+  /** Site (spec 0.8a): the marketing site keeps its own 64px bar; the app's bar is `topbarHeight`. */
+  siteTopbarHeight: 64,
+  /** Web (redesign §04): the page head — ‹ period › and the day — on one row. */
+  periodHeadHeight: 72,
+  /** Web: the ‹ and › of the page head. */
+  periodStep: 30,
+  /** Web (H2): the one column every page sits in. The inner part of the top bar has the same width. */
+  contentColumn: 1040,
+  /** Web (H2): the padding on each side of the column, at and above `shellBreakpoint`. */
+  columnPadding: 32,
+  /**
+   * Web (H1): the top bar shows the destinations and «New transaction» at and above this width;
+   * below it, the phone's tab bar does. A media query cannot read a custom property, so the web
+   * writes 760 in its `@media` rules with a comment naming this token.
+   */
+  shellBreakpoint: 760,
   /** Web: the widest a page's content grows, and its inline margin. */
   contentWide: 1120,
   /** Web: the widest a page's content grows beside the sidebar, so a large screen has no empty band on the right. */
@@ -285,11 +316,20 @@ export const layout = {
   /** Web: between open sections, and between the two columns of Home and Statistiche. */
   sectionGapWeb: 56,
   columnGapWeb: 72,
-  /** Web: the trailing panel where details and forms open (Transazioni, Conti, Profilo, Admin). */
-  panelWidth: 420,
+  /** Web (W1, 2026-10-21): the centred dialog where a detail opens. */
+  dialogDetailWidth: 440,
+  /** Web (W1): the centred dialog where a form opens. */
+  dialogFormWidth: 480,
   searchWidth: 320,
-  /** Web: the sub-navigation of Profilo and Admin. */
-  subnavWidth: 200,
+  /** Web (palette spec 2026-10-23, §07): the width of the command palette. */
+  paletteWidth: 640,
+  /**
+   * Web (redesign H1): the top bar shows «Search» at and above this width. A media query cannot read
+   * a custom property, so the web writes 1000 in its `@media` rule with a comment naming this token.
+   */
+  searchBreakpoint: 1000,
+  /** Web (W10, 2026-10-21): the menu of Profile, which Admin shares. */
+  subnavWidth: 220,
   /** Web: the sidebar that replaces the top bar at and above `wideBreakpoint` (G2, 2026-10-11). */
   sidebarWidth: 232,
   /** Web: the column of the sign-in and registration pages. */

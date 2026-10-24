@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { CurrencyCode } from '@saldo/core';
 import type { SignDisplay, Translate } from '@saldo/i18n';
 import { type AppLocale, formatDayMonth, formatMoney, formatWeekday } from '@saldo/i18n';
@@ -15,12 +15,12 @@ export function moneyFormatter(ledger: Pick<Ledger, 'currency'>, locale: AppLoca
     formatMoney(minor, ledger.currency as CurrencyCode, locale, sign);
 }
 
-/** A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the words. */
+/**
+ * A key figure of Statistiche (the label, then the amount), not the chart legend that repeats the
+ * words: each figure is a `<figure>` captioned by its label.
+ */
 export function statFigure(page: Page, label: string): Locator {
-  return page
-    .locator('[class*="figures"] > div, [class*="HeroBand"][class*="figure"]')
-    .filter({ has: page.getByText(label, { exact: true }) })
-    .first();
+  return page.getByRole('figure', { name: label, exact: true });
 }
 
 /** «Oggi · 6 ott», «Ieri · 5 ott», then «Domenica · 4 ott»: the title of a day's section. */
@@ -57,9 +57,13 @@ interface NewExpense {
   category: string;
 }
 
-/** Fills «Nuova transazione» as an expense and saves it. Returns the id the page lands on. */
+/** Fills «Nuova transazione» as an expense and saves it. Returns the id of the new row. */
 export async function createExpense(page: Page, t: Translate, input: NewExpense): Promise<string> {
-  await page.getByRole('link', { name: t('web.shell.newTransaction') }).click();
+  // The top bar's link: Transazioni also has its own «Nuova transazione» in the page.
+  await page
+    .getByRole('banner')
+    .getByRole('link', { name: t('web.shell.newTransaction') })
+    .click();
   const form = page.getByRole('dialog', { name: t('txForm.newTitle') });
   await form.getByLabel(t('txForm.amount')).fill(input.amount);
   await form.getByLabel(t('txForm.descriptionExpense')).fill(input.description);
@@ -67,9 +71,19 @@ export async function createExpense(page: Page, t: Translate, input: NewExpense)
   await form.getByRole('button', { name: t('txForm.allCategories') }).click();
   await page.getByRole('option', { name: input.category, exact: true }).click();
   await form.getByRole('button', { name: t('txForm.create') }).click();
-  await page.waitForURL(/[?&]t=/);
-  const id = new URL(page.url()).searchParams.get('t');
-  if (id === null) throw new Error('the saved transaction is not selected');
+  // Save closes the dialog and lands on the list (W3): the new row's link carries its id. The row's
+  // title is the description, whole — a name that only contains it is another row.
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const href = await page
+    .getByRole('main')
+    .getByRole('link')
+    .filter({
+      has: page.locator('b', { hasText: new RegExp(`^${literal(input.description).source}$`) }),
+    })
+    .first()
+    .getAttribute('href');
+  const id = href === null ? null : new URL(href, page.url()).searchParams.get('t');
+  if (id === null) throw new Error('the saved transaction has no row');
   return id;
 }
 

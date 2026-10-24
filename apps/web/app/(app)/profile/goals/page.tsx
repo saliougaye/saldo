@@ -1,4 +1,11 @@
-import { type GoalView, goalTone, goalViews, pocketParentCandidates } from '@saldo/core';
+import {
+  emergencyFundTarget,
+  type GoalView,
+  getCurrency,
+  goalTone,
+  goalViews,
+  pocketParentCandidates,
+} from '@saldo/core';
 import { catalogs, formatMoney, formatMoneyParts, type GoalTextDeps, goalOf } from '@saldo/i18n';
 import type { IconName } from '@saldo/ui';
 import { archivedView } from '../../../../src/features/accounts/archivedView';
@@ -7,7 +14,12 @@ import {
   goalFormView,
   goalParentOptions,
 } from '../../../../src/features/accounts/formView';
-import { goalAccountsHref, NEW_GOAL_HREF } from '../../../../src/features/accounts/goalLinks';
+import {
+  goalAccountsHref,
+  goalPrefillFrom,
+  goalPresets,
+  NEW_GOAL_HREF,
+} from '../../../../src/features/accounts/goalLinks';
 import { accountWriteErrors } from '../../../../src/features/accounts/writeErrors';
 import { accountMessages } from '../../../../src/i18n/accountMessages';
 import { readPage } from '../../../../src/server/page/context';
@@ -16,9 +28,11 @@ import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { Icon } from '../../../../src/ui/Icon';
 import { IconBox } from '../../../../src/ui/IconBox';
 import { ListRow } from '../../../../src/ui/ListRow';
+import { MoreRow, MoreRowLabel, moreRowLinkClassName } from '../../../../src/ui/MoreRow';
 import { PanelLink } from '../../../../src/ui/PanelNav';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { PickTileBody, pickTileClassName, pickTilesClassName } from '../../../../src/ui/PickTile';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { TargetRing } from '../../../../src/ui/TargetRing';
 import formStyles from '../../accounts/accountForms.module.css';
 import { GoalForm, GoalFormProvider, type GoalFormSharedValue } from '../../accounts/GoalForm';
@@ -50,7 +64,7 @@ export default async function ProfileGoalsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const page = await readPage(searchParams);
-  const { t, locale, currency, today, def, settings } = page;
+  const { t, locale, currency, today, def, settings, params } = page;
   const items = goalViews(page.data.accounts, page.data.transactions, today, def);
   const closed = archivedView(page.data).goals;
   const canCreate = pocketParentCandidates(page.data.accounts).length > 0;
@@ -69,7 +83,15 @@ export default async function ProfileGoalsPage({
     messages: accountMessages(catalogs[locale]),
   };
   const formOf = (id: string | null) =>
-    goalFormView({ data: page.data, today, currency, mode: id === null ? 'new' : 'edit', id });
+    goalFormView({
+      data: page.data,
+      today,
+      currency,
+      mode: id === null ? 'new' : 'edit',
+      id,
+      // W11: a preset's link fills in the name and the target of the new form.
+      prefill: id === null ? goalPrefillFrom(params, getCurrency(currency).minorDigits) : undefined,
+    });
   const formBody = (form: GoalFormView, parentName: string | null) => (
     <>
       <GoalForm
@@ -96,8 +118,7 @@ export default async function ProfileGoalsPage({
   if (fresh !== null) {
     panels.new = {
       title: t('goals.newGoal'),
-      sheet: true,
-      bare: true,
+      form: true,
       body: formBody(fresh, null),
     };
   }
@@ -106,11 +127,16 @@ export default async function ProfileGoalsPage({
     if (form === null) continue;
     panels[`g:${item.account.id}`] = {
       title: t('goals.editGoal'),
-      sheet: true,
-      bare: true,
+      form: true,
       body: formBody(form, item.parent?.name ?? null),
     };
   }
+
+  // W11: the emergency fund is 3 times the median monthly spend; holiday and car have no figure.
+  const presets = goalPresets({
+    names: [t('goals.presetEmergency'), t('goals.presetHoliday'), t('goals.presetCar')],
+    emergency: emergencyFundTarget({ txs: page.data.transactions, def, today }),
+  });
 
   const tone = (item: GoalView): 'normal' | 'over' | 'done' => {
     const value = goalTone(item.progress);
@@ -126,8 +152,7 @@ export default async function ProfileGoalsPage({
         closeLabel={t('common.close')}
         slot
       >
-        <Section
-          open
+        <SettingsSection
           title={t('goals.title')}
           trailing={
             canCreate ? (
@@ -139,61 +164,96 @@ export default async function ProfileGoalsPage({
           }
         >
           {items.length === 0 ? <p className={styles.note}>{t('goals.emptyBody')}</p> : null}
+          {items.length === 0 && canCreate ? (
+            <div className={styles.presets}>
+              <div className={pickTilesClassName}>
+                {presets.map((preset) => (
+                  // A navigation, not a panel switch: the server fills the form from the link.
+                  <Link key={preset.key} className={pickTileClassName} href={preset.href}>
+                    <PickTileBody
+                      icon={preset.icon}
+                      colorIndex={preset.colorIndex}
+                      round
+                      title={preset.name}
+                      hint={
+                        preset.key === 'emergency'
+                          ? preset.amount === null
+                            ? t('goals.presetEmergencyHintNone')
+                            : t('goals.presetEmergencyHint', { amount: money(preset.amount) })
+                          : preset.key === 'holiday'
+                            ? t('goals.presetHolidayHint')
+                            : t('goals.presetCarHint')
+                      }
+                    />
+                  </Link>
+                ))}
+              </div>
+              <MoreRow prompt={t('goals.somethingElse')}>
+                <PanelLink className={moreRowLinkClassName} href={NEW_GOAL_HREF}>
+                  <MoreRowLabel label={t('goals.create')} />
+                </PanelLink>
+              </MoreRow>
+            </div>
+          ) : null}
           {canCreate ? null : <p className={styles.note}>{t('web.accounts.goalNeedsAccount')}</p>}
-          {items.map((item) => (
-            <ListRow
-              key={item.account.id}
-              open
-              href={`${PATH}?g=${item.account.id}`}
-              selectId={`g:${item.account.id}`}
-              leading={
-                <TargetRing
-                  size={ROW_RING}
-                  ratio={item.progress.ratio}
-                  pace={null}
-                  tone={tone(item)}
-                  icon={item.account.icon as IconName}
-                  colorIndex={item.account.colorIndex}
+          {items.length === 0 ? null : (
+            <SettingsBox>
+              {items.map((item) => (
+                <ListRow
+                  key={item.account.id}
+                  open
+                  href={`${PATH}?g=${item.account.id}`}
+                  selectId={`g:${item.account.id}`}
+                  leading={
+                    <TargetRing
+                      size={ROW_RING}
+                      ratio={item.progress.ratio}
+                      pace={null}
+                      tone={tone(item)}
+                      icon={item.account.icon as IconName}
+                      colorIndex={item.account.colorIndex}
+                    />
+                  }
+                  title={item.account.name}
+                  subtitle={item.parent?.name}
+                  trailing={
+                    <span className={styles.rowAmount}>
+                      <AmountText minor={item.progress.saved} currency={currency} locale={locale} />
+                      <span className={styles.rowOf}>{goalOf(item, goalDeps)}</span>
+                    </span>
+                  }
                 />
-              }
-              title={item.account.name}
-              subtitle={item.parent?.name}
-              trailing={
-                <span className={styles.rowAmount}>
-                  <AmountText minor={item.progress.saved} currency={currency} locale={locale} />
-                  <span className={styles.rowOf}>{goalOf(item, goalDeps)}</span>
-                </span>
-              }
-            />
-          ))}
-        </Section>
+              ))}
+            </SettingsBox>
+          )}
 
-        {closed.length === 0 ? null : (
-          <Section open title={t('web.accounts.closedGoals')}>
-            {closed.map((row) => (
-              <ListRow
-                key={row.id}
-                leading={
-                  <span className={formStyles.faded}>
-                    <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
-                  </span>
-                }
-                title={row.name}
-                subtitle={row.parentName}
-                trailing={
-                  <RestoreButton
-                    id={row.id}
-                    kind="goal"
-                    label={t('accounts.restore')}
-                    busyLabel={t('common.loading')}
-                    errors={writeErrors}
-                    disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
-                  />
-                }
-              />
-            ))}
-          </Section>
-        )}
+          {closed.length === 0 ? null : (
+            <SettingsBox title={t('web.accounts.closedGoals')}>
+              {closed.map((row) => (
+                <ListRow
+                  key={row.id}
+                  leading={
+                    <span className={formStyles.faded}>
+                      <IconBox name={row.icon as IconName} colorIndex={row.colorIndex} />
+                    </span>
+                  }
+                  title={row.name}
+                  subtitle={row.parentName}
+                  trailing={
+                    <RestoreButton
+                      id={row.id}
+                      kind="goal"
+                      label={t('accounts.restore')}
+                      busyLabel={t('common.loading')}
+                      errors={writeErrors}
+                      disabledNote={row.canRestore ? undefined : t('goals.parentArchived')}
+                    />
+                  }
+                />
+              ))}
+            </SettingsBox>
+          )}
+        </SettingsSection>
       </PanelSwitch>
     </GoalFormProvider>
   );

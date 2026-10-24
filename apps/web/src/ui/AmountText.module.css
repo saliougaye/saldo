@@ -4,15 +4,21 @@
   white-space: nowrap;
 }
 
-.dim {
-  opacity: 0.5;
-}
-
 .hero {
   font-size: var(--font-size-hero-web);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-tightest);
   line-height: 1.1;
+}
+
+/* H5: only in the Home's big figure, the cents and the currency are 45% of the size (a token: no `em` by hand), in `textFaint`. */
+.faint {
+  color: var(--color-text-faint);
+}
+
+.hero .faint {
+  font-size: var(--font-size-hero-web-cents);
+  letter-spacing: var(--tracking-tight);
 }
 
 .large {

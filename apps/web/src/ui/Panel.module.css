@@ -1,41 +1,46 @@
 /**
- * Below the breakpoint the panel is the screen (§17.1.7), or a bottom sheet for a form. At and
- * above it, the panel is a dialog over the page with a scrim under it (D3, 2026-10-11): the page
- * does not move. Panel and scrim arrive and leave together; the panel along the trailing edge.
+ * W1, W2 (2026-10-21): a detail or a form opens in a dialog in the centre of the screen, over a
+ * scrim — 440px for a detail, 480px for a form. Below 760px the dialog is a sheet at the bottom of
+ * the screen. The page does not move. Dialog and scrim arrive and leave together.
  */
 .panel {
   position: fixed;
-  inset: 0;
+  inset: auto 0 0;
   z-index: 21;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px var(--layout-screen-padding-x) calc(var(--layout-tab-bar-height) + 24px);
+  max-block-size: 92dvh;
+  /* The bottom padding, named: a form's foot sticks over it (see FormFoot). */
+  --dialog-pad-end: calc(24px + env(safe-area-inset-bottom));
+  padding: 8px var(--layout-screen-padding-x) var(--dialog-pad-end);
   overflow-y: auto;
-  background: var(--color-bg);
-  animation: panel-in 200ms cubic-bezier(0.2, 0, 0, 1);
-  transition-property: opacity, translate;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--color-surface);
+  animation: sheet-in 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition-property: opacity, translate, scale;
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* The sheet leaves the way it came: down. */
 .panel[data-closing] {
-  opacity: 0;
-  translate: 0 16px;
+  translate: 0 100%;
 }
 
-@keyframes panel-in {
+@keyframes sheet-in {
   from {
-    opacity: 0;
-    translate: 0 16px;
+    translate: 0 100%;
   }
 }
 
-@keyframes panel-in-wide {
-  from {
-    opacity: 0;
-    translate: 12px 0;
-  }
+.handle {
+  flex: none;
+  inline-size: var(--layout-sheet-handle-width);
+  block-size: var(--layout-sheet-handle-height);
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
 }
 
 .head {
@@ -54,9 +59,20 @@
   overflow-wrap: anywhere;
 }
 
+/* The icon before the title (an account's, a goal's): the title moves next to it. */
+.icon {
+  display: flex;
+  flex: none;
+}
+
+.icon + .title {
+  margin-inline-start: -4px;
+}
+
 .close {
   display: grid;
   flex: none;
+  margin-inline-start: auto;
   place-items: center;
   inline-size: var(--layout-header-button);
   block-size: var(--layout-header-button);
@@ -97,42 +113,12 @@
   white-space: nowrap;
 }
 
-/* Narrow: a form rises from the bottom over the scrim, the mockup's `.sheet`. */
-.panel[data-sheet] {
-  inset: auto 0 0;
-  max-block-size: 92dvh;
-  padding: 8px var(--layout-screen-padding-x) calc(32px + env(safe-area-inset-bottom));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  background: var(--color-surface);
-  animation: sheet-in var(--motion-sheet) var(--motion-easing);
-}
-
-.panel[data-sheet][data-closing] {
-  opacity: 1;
-  translate: 0 100%;
-}
-
-@keyframes sheet-in {
-  from {
-    translate: 0 100%;
-  }
-}
-
-.handle {
-  flex: none;
-  inline-size: var(--layout-sheet-handle-width);
-  block-size: var(--layout-sheet-handle-height);
-  margin: 0 auto;
-  border-radius: var(--radius-pill);
-  background: var(--color-border-strong);
-}
-
 .scrim {
   position: fixed;
   inset: 0;
   z-index: 20;
   background: var(--color-scrim);
-  animation: scrim-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  animation: scrim-in 200ms cubic-bezier(0.23, 1, 0.32, 1);
   transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -147,29 +133,39 @@
   }
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .panel,
-  .panel[data-sheet] {
-    inset: 16px 16px 16px auto;
-    inline-size: var(--layout-panel-width);
-    max-block-size: none;
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
+  .panel {
+    --dialog-pad-end: 22px;
+    inset: 0;
+    inline-size: min(var(--layout-dialog-detail-width), calc(100vw - 32px));
+    block-size: fit-content;
+    max-block-size: calc(100dvh - 64px);
+    margin: auto;
     gap: 0;
     padding: 0;
     overflow: hidden;
     border-radius: var(--radius-dialog);
-    background: var(--color-surface);
     box-shadow:
       0 0 0 1px var(--color-border-strong) inset,
       0 1px 2px var(--color-shadow),
       0 12px 32px color-mix(in srgb, var(--color-shadow) 60%, transparent);
-    animation: panel-in-wide 200ms cubic-bezier(0.2, 0, 0, 1);
+    animation: dialog-in 200ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  .panel[data-closing],
-  .panel[data-sheet][data-closing] {
+  .panel[data-form] {
+    inline-size: min(var(--layout-dialog-form-width), calc(100vw - 32px));
+  }
+
+  /* The dialog leaves in place: it fades and shrinks a little. */
+  .panel[data-closing] {
     opacity: 0;
-    translate: 12px 0;
+    translate: none;
+    scale: 0.96;
+  }
+
+  .handle {
+    display: none;
   }
 
   .head {
@@ -191,24 +187,28 @@
     min-height: 0;
     overflow-y: auto;
     gap: 24px;
-    padding: 24px 22px;
-  }
-
-  .handle {
-    display: none;
+    padding: 8px 22px var(--dialog-pad-end);
   }
 }
 
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+/* Section 02: with reduced motion, opacity only. */
 @media (prefers-reduced-motion: reduce) {
-  .panel,
-  .panel[data-sheet] {
+  .panel {
     animation-name: panel-fade;
     transition-property: opacity;
   }
 
-  .panel[data-closing],
-  .panel[data-sheet][data-closing] {
+  .panel[data-closing] {
+    opacity: 0;
     translate: none;
+    scale: none;
   }
 }
 

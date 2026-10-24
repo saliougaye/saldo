@@ -12,20 +12,45 @@ export interface AccountRowView {
   name: string;
   /** Null for a synthetic address: the page shows `admin.noEmail` instead of `…@passkey.saldo.invalid`. */
   email: string | null;
+  /**
+   * The second line (spec §06): «email · verificata» or «email · non verificata», and
+   * `admin.noEmail` for a synthetic address.
+   */
+  subtitle: AdminMessage;
   /** `admin.roleAdmin` or `admin.roleMember`. */
   roleKey: string;
   revoked: boolean;
+  /** Under the role: «ultimo accesso 12 set», or that the account never signed in. */
+  lastSignIn: AdminMessage;
 }
 
-/** Admin → Account (§17.1.7): one row per account, in the order `listAccounts` gives (oldest first). */
-export function accountRows(accounts: readonly AccountSummary[]): AccountRowView[] {
+/** The address with its state, as the row and the panel say it. */
+function emailMessage(account: Pick<AccountDetail, 'email' | 'emailVerified'>): AdminMessage {
+  if (isSyntheticEmail(account.email)) return { key: 'admin.noEmail' };
+  return {
+    key: account.emailVerified ? 'admin.accounts.emailVerified' : 'admin.accounts.emailUnverified',
+    vars: { email: account.email },
+  };
+}
+
+/** Admin → Account (§17.1.7): one row per account, in the order `accountDetails` gives (oldest first). */
+export function accountRows(accounts: readonly AccountDetail[]): AccountRowView[] {
   return accounts.map((account) => ({
     id: account.id,
     initials: initials(account.displayName),
     name: account.displayName,
     email: isSyntheticEmail(account.email) ? null : account.email,
+    subtitle: emailMessage(account),
     roleKey: roleKey(account.role),
     revoked: account.revoked,
+    lastSignIn:
+      account.lastSignInAt === null
+        ? { key: 'admin.accounts.rowNeverSignedIn' }
+        : {
+            key: 'admin.accounts.rowSignedIn',
+            vars: { date: account.lastSignInAt },
+            dateVars: ['date'],
+          },
   }));
 }
 
@@ -45,7 +70,6 @@ export interface AccountFact {
 
 /** The fact list of an account's panel, in the order it is shown. */
 export function accountFacts(detail: AccountDetail): AccountFact[] {
-  const synthetic = isSyntheticEmail(detail.email);
   const createdDate = { date: detail.createdAt };
   const inviteLabel = detail.invite?.label ?? null;
   return [
@@ -59,18 +83,7 @@ export function accountFacts(detail: AccountDetail): AccountFact[] {
           ? { key: 'admin.accounts.statusRevoked' }
           : { key: 'admin.accounts.statusRevokedReason', vars: { reason: detail.revokedReason } },
     },
-    {
-      id: 'email',
-      labelKey: 'admin.accounts.email',
-      value: synthetic
-        ? { key: 'admin.noEmail' }
-        : {
-            key: detail.emailVerified
-              ? 'admin.accounts.emailVerified'
-              : 'admin.accounts.emailUnverified',
-            vars: { email: detail.email },
-          },
-    },
+    { id: 'email', labelKey: 'admin.accounts.email', value: emailMessage(detail) },
     {
       id: 'created',
       labelKey: 'admin.accounts.created',

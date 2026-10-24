@@ -5,34 +5,33 @@ const search = (query: string) => new URLSearchParams(query);
 const at = (query: string) => ({ pathname: '/transactions', search: search(query) });
 
 describe('panelFromSearch', () => {
-  it('reads the panel with the precedence the page always had', () => {
+  it('reads the panel: `?new` first, then the row, which opens its edit form (W3)', () => {
     expect(panelFromSearch(search(''))).toEqual({ kind: 'none' });
     expect(panelFromSearch(search('new&t=a'))).toEqual({ kind: 'new' });
-    expect(panelFromSearch(search('t=a&edit'))).toEqual({ kind: 'edit', id: 'a' });
-    expect(panelFromSearch(search('t=a'))).toEqual({ kind: 'detail', id: 'a' });
+    expect(panelFromSearch(search('t=a'))).toEqual({ kind: 'edit', id: 'a' });
     expect(panelFromSearch(search('t='))).toEqual({ kind: 'none' });
+  });
+
+  // A link from before W3 carries `&edit`: it opens the same form.
+  it('reads an old `&edit` link as the same form', () => {
+    expect(panelFromSearch(search('t=a&edit'))).toEqual({ kind: 'edit', id: 'a' });
   });
 });
 
 describe('panelOnlyChange', () => {
   it('opens and closes a panel over the same list', () => {
     expect(panelOnlyChange(at('direction=expense'), '/transactions?direction=expense&t=a')).toEqual(
-      {
-        kind: 'detail',
-        id: 'a',
-      },
+      { kind: 'edit', id: 'a' },
     );
     expect(panelOnlyChange(at('direction=expense&t=a'), '/transactions?direction=expense')).toEqual(
-      {
-        kind: 'none',
-      },
+      { kind: 'none' },
     );
     expect(panelOnlyChange(at('t=a'), '/transactions?new=')).toEqual({ kind: 'new' });
   });
 
   it('ignores the order of the parameters', () => {
     expect(panelOnlyChange(at('p=2026-09&q=bar'), '/transactions?q=bar&p=2026-09&t=a')).toEqual({
-      kind: 'detail',
+      kind: 'edit',
       id: 'a',
     });
   });
@@ -62,19 +61,16 @@ describe('panelOnlyChange, links that leave the page', () => {
 });
 
 describe('panelHref', () => {
-  it('replaces the panel that the base already has', () => {
-    expect(panelHref('/transactions?t=old&edit=&q=1', { kind: 'detail', id: 'a' })).toBe(
+  it('replaces the panel that the base already has, an old `edit` included', () => {
+    expect(panelHref('/transactions?t=old&edit=&q=1', { kind: 'edit', id: 'a' })).toBe(
       '/transactions?q=1&t=a',
     );
     expect(panelHref('/transactions?new=&q=1', { kind: 'none' })).toBe('/transactions?q=1');
   });
 
   it('adds the panel after the list parameters', () => {
-    expect(panelHref('/transactions?direction=expense', { kind: 'detail', id: 'a' })).toBe(
+    expect(panelHref('/transactions?direction=expense', { kind: 'edit', id: 'a' })).toBe(
       '/transactions?direction=expense&t=a',
-    );
-    expect(panelHref('/transactions', { kind: 'edit', id: '__ID__' })).toBe(
-      '/transactions?t=__ID__&edit=',
     );
     expect(panelHref('/transactions', { kind: 'new' })).toBe('/transactions?new=');
     expect(panelHref('/transactions', { kind: 'none' })).toBe('/transactions');
@@ -83,9 +79,9 @@ describe('panelHref', () => {
 
 describe('samePanel', () => {
   it('compares the kind and the row', () => {
-    expect(samePanel({ kind: 'detail', id: 'a' }, { kind: 'detail', id: 'a' })).toBe(true);
-    expect(samePanel({ kind: 'detail', id: 'a' }, { kind: 'detail', id: 'b' })).toBe(false);
-    expect(samePanel({ kind: 'detail', id: 'a' }, { kind: 'edit', id: 'a' })).toBe(false);
+    expect(samePanel({ kind: 'edit', id: 'a' }, { kind: 'edit', id: 'a' })).toBe(true);
+    expect(samePanel({ kind: 'edit', id: 'a' }, { kind: 'edit', id: 'b' })).toBe(false);
+    expect(samePanel({ kind: 'new' }, { kind: 'none' })).toBe(false);
     expect(samePanel({ kind: 'none' }, { kind: 'none' })).toBe(true);
   });
 });

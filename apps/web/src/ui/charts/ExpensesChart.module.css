@@ -1,0 +1,203 @@
+/* W6: ten columns, one bar each; the dashed line of «usual» across them. */
+.cols {
+  --plot: 176px;
+  --pad: 6px;
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  margin: 0 calc(var(--pad) * -1);
+}
+
+.col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--pad);
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .col:hover {
+    background: var(--color-raised);
+  }
+}
+
+.col[aria-current="true"] {
+  background: var(--color-raised);
+}
+
+.col:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: var(--plot);
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(28px, 62%);
+  block-size: calc(max(var(--h), var(--pj)) * var(--plot));
+  min-block-size: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-icon-box) var(--radius-icon-box) 0 0;
+}
+
+.spent {
+  flex: 1;
+  background: var(--color-bar-grey);
+}
+
+/* A forecast period: a light bar. */
+.forecast .spent {
+  background: var(--color-track);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.col[aria-current="true"] .spent {
+  background: var(--color-text);
+}
+
+/* The running period: the projection above what was spent, as an outline. */
+.projection {
+  flex: none;
+  block-size: calc((var(--pj) - var(--h)) * var(--plot));
+  background: var(--color-track);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.forecast[aria-current="true"] .spent {
+  background: var(--color-bar-grey);
+  box-shadow: none;
+}
+
+/* «Usual»: the median of the closed bars. */
+.usual {
+  position: absolute;
+  inset-inline: var(--pad);
+  top: calc(var(--pad) + (1 - var(--usual)) * var(--plot));
+  z-index: 1;
+  border-top: 1.5px dashed var(--color-text-muted);
+  pointer-events: none;
+}
+
+.tick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.forecast .tick {
+  color: var(--color-text-faint);
+}
+
+.col[aria-current="true"] .tick {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.current .month {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.value {
+  font-weight: var(--font-weight-regular);
+}
+
+.tip {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 50%;
+  z-index: 3;
+  padding: 7px 10px;
+  border-radius: var(--radius-input);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity var(--motion-press) var(--motion-easing),
+    transform var(--motion-press) var(--motion-easing);
+}
+
+.tip b,
+.tipLine {
+  display: block;
+}
+
+.tip b {
+  font-weight: var(--font-weight-semibold);
+}
+
+.col:first-child .tip,
+.usual + .col .tip {
+  left: 0;
+  transform: translate(0, 4px);
+}
+
+.col:last-child .tip {
+  left: auto;
+  right: 0;
+  transform: translate(0, 4px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .col:hover .tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .col:first-child:hover .tip,
+  .usual + .col:hover .tip,
+  .col:last-child:hover .tip {
+    transform: none;
+  }
+}
+
+.col:focus-visible .tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.col:first-child:focus-visible .tip,
+.usual + .col:focus-visible .tip,
+.col:last-child:focus-visible .tip {
+  transform: none;
+}
+
+/* `--layout-shell-breakpoint` (760): the amounts do not show below it (W6). */
+@media (max-width: 759px) {
+  .cols {
+    --plot: 140px;
+    --pad: 3px;
+  }
+
+  .value {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    transition: opacity var(--motion-press) var(--motion-easing);
+  }
+}

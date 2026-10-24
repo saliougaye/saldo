@@ -13,7 +13,7 @@ import {
 import { minuteOf } from '../../../../src/features/profile/timeZoneRows';
 import { readPage } from '../../../../src/server/page/context';
 import { type PanelSpec, PanelSwitch } from '../../../../src/ui/PanelSwitch';
-import { Section } from '../../../../src/ui/Section';
+import { SettingsBox, SettingsSection } from '../../../../src/ui/SettingsSection';
 import { SummaryRow } from '../../../../src/ui/SummaryRow';
 import { CurrencyPanel } from './CurrencyPanel';
 import { LanguagePanel } from './LanguagePanel';
@@ -153,30 +153,32 @@ export default async function ProfilePreferencesPage({
         closeLabel={t('common.close')}
         slot
       >
-        <Section open title={t('settings.preferences')} trailing={t('settings.appliesToPhone')}>
-          {rows.map((row) => (
-            <SummaryRow
-              key={row.key}
-              href={row.href}
-              selectId={`edit:${row.key}`}
-              title={t(row.labelKey)}
-              value={
-                row.key === 'period'
-                  ? periodSummary(
-                      { kind: settings.periodKind, startDay: settings.cycleStartDay },
-                      t,
-                    )
-                  : row.key === 'theme'
-                    ? t(`profile.${row.value}`)
-                    : row.value === ''
-                      ? t('profile.system')
-                      : row.value
-              }
-            />
-          ))}
-          {/* Renders nothing: it makes the time zone list in idle time, so its row opens at once. */}
-          <TimeZoneWarmup locale={locale} saved={savedZone} />
-        </Section>
+        <SettingsSection title={t('settings.preferences')} lead={t('settings.appliesToPhone')}>
+          <SettingsBox>
+            {rows.map((row) => (
+              <SummaryRow
+                key={row.key}
+                href={row.href}
+                selectId={`edit:${row.key}`}
+                title={t(row.labelKey)}
+                value={
+                  row.key === 'period'
+                    ? periodSummary(
+                        { kind: settings.periodKind, startDay: settings.cycleStartDay },
+                        t,
+                      )
+                    : row.key === 'theme'
+                      ? t(`profile.${row.value}`)
+                      : row.value === ''
+                        ? t('profile.system')
+                        : row.value
+                }
+              />
+            ))}
+            {/* Renders nothing: it makes the time zone list in idle time, so its row opens at once. */}
+            <TimeZoneWarmup locale={locale} saved={savedZone} />
+          </SettingsBox>
+        </SettingsSection>
       </PanelSwitch>
     </SettingErrorsShared>
   );

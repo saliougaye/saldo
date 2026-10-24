@@ -56,6 +56,8 @@ export function PanelLink({ href, className, selectedClassName, selectId, childr
       prefetch={nav === null ? undefined : false}
       className={classes}
       aria-current={selected ? 'true' : undefined}
+      // The arrows of Transazioni walk the rows through this (`ListKeys`).
+      data-select-id={selectId}
       onClick={onClick}
     >
       {children}

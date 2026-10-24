@@ -1,3 +1,43 @@
+/* Uscite / Entrate: `Segmented`'s look, as two links (the list is the server's, chosen by `?d=`). */
+.switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  padding: 3px;
+  border-radius: var(--radius-button);
+  background: var(--color-raised);
+}
+
+.switchOption {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition-property: background-color, color;
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--motion-easing);
+}
+
+.switchOption:hover {
+  color: var(--color-text);
+}
+
+.switchOption[aria-current="page"] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px var(--color-shadow);
+}
+
+.switchOption:focus-visible {
+  outline: 2px solid var(--color-text-muted);
+  outline-offset: -2px;
+}
+
 .newCategory {
   display: inline-flex;
   align-items: center;

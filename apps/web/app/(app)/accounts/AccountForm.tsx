@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,8 @@ interface Props {
   closeHref: string;
   /** `/accounts?a=__ID__`: where a save lands. */
   afterSave: string;
+  /** «Modifica conto» only: «Archivia» in the foot's leading corner, when the account can go. */
+  archive?: ReactNode;
 }
 
 /** What stands above the foot: the gap the form found, or the answer the server gave. */
@@ -61,6 +64,7 @@ export function AccountForm({
   messages,
   closeHref,
   afterSave,
+  archive,
 }: Props) {
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
@@ -278,6 +282,7 @@ export function AccountForm({
         submitLabel={t('common.save')}
         busyLabel={t('common.loading')}
         pending={pending}
+        leading={archive}
       />
     </form>
   );

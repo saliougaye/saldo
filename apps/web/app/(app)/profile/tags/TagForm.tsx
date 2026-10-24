@@ -17,6 +17,7 @@ import type { TagMessages } from '../../../../src/i18n/tagMessages';
 import { Alert } from '../../../../src/ui/Alert';
 import { AppLink as Link } from '../../../../src/ui/AppLink';
 import { actionApplied } from '../../../../src/ui/actionApplied';
+import { Button } from '../../../../src/ui/Button';
 import { FormFoot } from '../../../../src/ui/FormFoot';
 import { Icon } from '../../../../src/ui/Icon';
 import { sharedProps } from '../../../../src/ui/sharedProps';
@@ -47,13 +48,18 @@ interface Props {
   tag: { id: string; name: string; updatedAt: string; uses: number } | null;
   /** The transactions list filtered by this tag; null for a new one. */
   transactionsHref: string | null;
+  /**
+   * In the page, not in the panel (W11): the field does not take the focus when the page opens, the
+   * form leaves the page's single-key shortcuts alone, and there is no «Annulla».
+   */
+  inline?: boolean;
 }
 
 /**
  * «Nuovo tag» and «Modifica tag» (§5.10): a tag is only its name. An existing one also offers
  * «Vedi le transazioni», «Unisci a un altro tag» and «Elimina tag»; the last two ask first.
  */
-export function TagForm({ tag, transactionsHref }: Props) {
+export function TagForm({ tag, transactionsHref, inline = false }: Props) {
   const { tags, locale, messages, closeHref, afterSave } = shared.useShared();
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
@@ -110,6 +116,35 @@ export function TagForm({ tag, transactionsHref }: Props) {
       event.target.blur();
     }
   };
+
+  // W11: the first tag, in the page — one field and «Add», with no key hint and nothing to close.
+  if (inline) {
+    return (
+      <form className={styles.inlineForm} ref={form} onSubmit={onSubmit} noValidate>
+        <div className={styles.inlineRow} data-field="name">
+          <TextField
+            label={t('tags.name')}
+            labelHidden
+            placeholder={t('tags.namePlaceholder')}
+            value={name}
+            maxLength={40}
+            autoComplete="off"
+            invalid={problem?.field === true}
+            onChange={(event) => {
+              setName(event.target.value);
+              setProblem(null);
+            }}
+          />
+          <div>
+            <Button type="submit" busy={pending} busyLabel={t('common.loading')}>
+              {t('tags.add')}
+            </Button>
+          </div>
+        </div>
+        {problem === null ? null : <Alert body={problem.text} />}
+      </form>
+    );
+  }
 
   return (
     <form

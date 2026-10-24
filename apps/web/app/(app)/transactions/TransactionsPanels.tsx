@@ -1,6 +1,14 @@
 'use client';
 
-import { Activity, Fragment, type ReactNode, useCallback, useEffect, useMemo } from 'react';
+import {
+  Activity,
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   type PanelState,
   panelFromSearch,
@@ -12,39 +20,36 @@ import { ListKeys } from '../../../src/ui/ListKeys';
 import { NEW_TRANSACTION_EVENT, wantsInstant } from '../../../src/ui/NewTransactionLink';
 import { type CloseFrom, Panel } from '../../../src/ui/Panel';
 import { type PanelNav, PanelNavContext } from '../../../src/ui/PanelNav';
+import { Toast } from '../../../src/ui/Toast';
 import { usePanelController } from '../../../src/ui/usePanelController';
+import { SavedContext } from './saved';
 import styles from './transactions.module.css';
 
 const NONE: PanelState = { kind: 'none' };
 
-export interface DetailPanel {
-  title: string;
-  body: ReactNode;
-}
+/** «Modifiche salvate» stays as long as the mockup's toasts do. */
+const SAVED_MS = 5000;
 
 interface Props {
-  /** The list: the period, the search, the chips and the days. */
+  /** The list: the period, the search, the filters and the days. */
   children: ReactNode;
   /** The list's URL with no panel: its filters and its period. */
   baseHref: string;
   newTitle: string;
   editTitle: string;
   closeLabel: string;
+  /** `transactions.changesSaved`: the toast after an edit is saved. */
+  savedLabel: string;
   /**
    * «Nuova transazione», rendered once by the server. It waits hidden in `<Activity>`, and a new
    * draft takes its place in the background each time it leaves the screen.
    */
   newForm: ReactNode;
   /**
-   * «Modifica transazione», only on a page loaded with `?t=…&edit`: the form needs the row's own
-   * balances, so opening it is still a navigation, and the detail stays up while it loads.
+   * «Modifica transazione», only on a page loaded with `?t=…`: the form needs the row's own
+   * balances, so a row opens it with a navigation (W3).
    */
   edit: { id: string; form: ReactNode } | null;
-  /** The detail of every row of the list, so a click opens one without asking the server. */
-  details: Record<string, DetailPanel>;
-  upcomingIds: string[];
-  ids: string[];
-  upcomingDisclosureId: string;
 }
 
 /** `next` takes the place of `previous`: a new form that leaves is spent, and the next one is a new draft. */
@@ -53,11 +58,11 @@ function spendsDraft(previous: PanelState, next: PanelState): boolean {
 }
 
 /**
- * The trailing panel of Transazioni (§17.1.7), in client state (`usePanelController`). The server
- * renders the detail of every row and the new form, so a click only chooses the one to show.
+ * The dialog of Transazioni (W1, W3), in client state (`usePanelController`). The new form is on
+ * the page from the start; the edit form comes with the page that `?t=…` loads.
  */
 export function TransactionsPanels(props: Props) {
-  const { baseHref, details, edit, newForm } = props;
+  const { baseHref, edit, newForm } = props;
   const { view, viewRef, go, side } = usePanelController<PanelState>({
     parse: panelFromSearch,
     same: samePanel,
@@ -90,29 +95,16 @@ export function TransactionsPanels(props: Props) {
   }, [go, viewRef, baseHref, newForm]);
 
   const { panel } = view;
-  // The row whose panel is on screen, and the selected row: none while the exit plays.
-  const panelId = panel.kind === 'detail' || panel.kind === 'edit' ? panel.id : null;
+  // The row whose form is on screen: none while the exit plays.
+  const panelId = panel.kind === 'edit' ? panel.id : null;
   const selectedId = view.closing ? null : panelId;
   const nav = useMemo<PanelNav>(() => ({ selectedId, go }), [selectedId, go]);
-  const detail = panelId === null ? undefined : details[panelId];
-  const editing = panel.kind === 'edit' && edit?.id === panel.id ? edit : null;
-  const motion = { closing: view.closing, instant: view.instant };
+  const editing = panelId !== null && edit?.id === panelId ? edit : null;
 
-  // Stable across renders: `Panel` and `ListKeys` subscribe their keys through these. Esc closes
-  // with no motion (decision 6); the ✕ and the scrim play the exit.
+  // Stable across renders: `Panel` subscribes Esc through it. Esc closes with no motion; the ✕
+  // and the scrim play the exit.
   const closeToList = useCallback(
     (from: CloseFrom) => go(baseHref, { instant: from === 'key' }),
-    [go, baseHref],
-  );
-  const editCloseHref =
-    editing === null ? baseHref : panelHref(baseHref, { kind: 'detail', id: editing.id });
-  const closeToDetail = useCallback(
-    (from: CloseFrom) => go(editCloseHref, { instant: from === 'key' }),
-    [go, editCloseHref],
-  );
-  const onSelect = useCallback(
-    (id: string) =>
-      go(panelHref(baseHref, { kind: 'detail', id }), { replace: true, instant: true }),
     [go, baseHref],
   );
 
@@ -124,7 +116,7 @@ export function TransactionsPanels(props: Props) {
     newForm === null ? null : (
       <Activity mode={creating ? 'visible' : 'hidden'}>
         <Panel
-          sheet
+          form
           bare
           title={props.newTitle}
           closeHref={baseHref}
@@ -140,36 +132,31 @@ export function TransactionsPanels(props: Props) {
       </Activity>
     );
 
-  let content: ReactNode = null;
-  if (editing !== null) {
-    content = (
+  // W3: the row opens the form at once. The form comes with a navigation, which the controller
+  // follows with no motion; the dialog still plays its entrance, and only Esc closes it with none.
+  const editPanel =
+    editing === null ? null : (
       <Panel
         key="form"
-        sheet
+        form
         bare
         title={props.editTitle}
-        closeHref={editCloseHref}
+        closeHref={baseHref}
         closeLabel={props.closeLabel}
-        onClose={closeToDetail}
-        {...motion}
+        onClose={closeToList}
+        closing={view.closing}
+        instant={view.closing && view.instant}
       >
         {editing.form}
       </Panel>
     );
-  } else if (detail !== undefined) {
-    content = (
-      <Panel
-        key="detail"
-        title={detail.title}
-        closeHref={baseHref}
-        closeLabel={props.closeLabel}
-        onClose={closeToList}
-        {...motion}
-      >
-        {detail.body}
-      </Panel>
-    );
-  }
+
+  // The mockup's «Modifiche salvate». Each save counts one up: a second save is a new toast, with
+  // its own five seconds.
+  const [saves, setSaves] = useState(0);
+  const onSaved = useCallback(() => setSaves((count) => count + 1), []);
+  // Stable: `Toast` restarts its timer whenever `onDismiss` changes.
+  const dismissSaved = useCallback(() => setSaves(0), []);
 
   const formOpen = creating || editing !== null;
   return (
@@ -177,22 +164,22 @@ export function TransactionsPanels(props: Props) {
       <div className={styles.layout}>
         <div className={styles.list}>{props.children}</div>
         <div className={styles.side} ref={side}>
-          {newPanel}
-          {content}
+          <SavedContext value={onSaved}>
+            {newPanel}
+            {editPanel}
+          </SavedContext>
         </div>
       </div>
-      {/* ↑ ↓ and E belong to the list; while a form is open the keys are the form's. */}
-      {formOpen ? null : (
-        <ListKeys
-          upcomingIds={props.upcomingIds}
-          ids={props.ids}
-          upcomingDisclosureId={props.upcomingDisclosureId}
-          selectedId={selectedId}
-          href={panelHref(baseHref, { kind: 'detail', id: '__ID__' })}
-          editHref={panelHref(baseHref, { kind: 'edit', id: '__ID__' })}
-          onSelect={onSelect}
+      {saves === 0 ? null : (
+        <Toast
+          key={saves}
+          message={props.savedLabel}
+          durationMs={SAVED_MS}
+          onDismiss={dismissSaved}
         />
       )}
+      {/* ↑ ↓ belong to the list; while a form is open the keys are the form's. */}
+      {formOpen ? null : <ListKeys />}
     </PanelNavContext>
   );
 }

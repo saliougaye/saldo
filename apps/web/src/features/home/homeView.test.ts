@@ -38,4 +38,23 @@ describe('homeView', () => {
     });
     expect(view.upcoming.net).toBe(-700);
   });
+
+  it('lists «Coming up» with the nearest date first (H7)', () => {
+    const view = homeView({
+      data: dataWith([
+        tx({ id: 'far', amount: 100, date: '2026-09-28' }),
+        tx({ id: 'near', amount: 100, date: '2026-09-17' }),
+        tx({ id: 'middle', amount: 100, date: '2026-09-22' }),
+      ]),
+      today: '2026-09-15',
+      def: { kind: 'month', startDay: 1 },
+      period: {
+        range: { start: '2026-09-01', end: '2026-09-30' },
+        isCurrent: true,
+        elapsed: 15,
+        length: 30,
+      },
+    });
+    expect(view.upcoming.rows.map((row) => row.id)).toEqual(['near', 'middle', 'far']);
+  });
 });

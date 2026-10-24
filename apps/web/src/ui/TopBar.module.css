@@ -1,29 +1,43 @@
-/**
- * Narrow first. §17.1.7 gives a narrow screen the phone's tab bar for the sections — so the bar
- * itself stays, carrying only the brand and what the tab bar cannot: Admin and the avatar.
- */
+/* H1: 56px, sticky, the page colour at 88% with a 12px blur, a 1px line under it. */
 .bar {
-  height: var(--layout-topbar-height);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
   position: sticky;
   top: 0;
   z-index: 10;
+  height: var(--layout-topbar-height);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-canvas) 88%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
+/* H2: the same inner width as the content column, so the brand and the avatar align with the blocks. */
 .inner {
   height: 100%;
-  max-width: calc(var(--layout-content-wide) + 2 * var(--layout-page-padding-web));
+  max-width: calc(var(--layout-content-column) + 2 * var(--layout-column-padding));
   margin: 0 auto;
   padding: 0 var(--layout-screen-padding-x);
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
 }
 
 .brand {
   color: var(--color-text);
   text-decoration: none;
+}
+
+/* The destinations are words only: the icons belong to the tab bar. */
+.nav {
+  display: none;
+  gap: 2px;
+}
+
+.nav a {
+  height: 32px;
+}
+
+.nav svg {
+  display: none;
 }
 
 .actions {
@@ -33,16 +47,44 @@
   gap: 12px;
 }
 
-/* Icon-only, so it fits beside the avatar on a phone too. */
-.trailing {
-  display: flex;
+.new {
+  display: none;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--radius-input);
+  /* The mockup's primary: the text colour, not the accent, which is paler than the text in light. */
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: scale var(--motion-press) var(--motion-easing);
 }
 
-/* `--layout-wide-breakpoint` (1024): the sidebar navigates there (D1), so the bar is not drawn. */
-@media (min-width: 1024px) {
-  .bar {
-    display: none;
+.new:active {
+  scale: 0.97;
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (min-width: 760px) {
+  .inner {
+    padding: 0 var(--layout-column-padding);
+  }
+
+  .nav {
+    display: flex;
+  }
+
+  .new {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new:active {
+    scale: 1;
   }
 }

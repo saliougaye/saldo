@@ -1,0 +1,102 @@
+/* Spec §06: the title, the lead sentence under it, then the blocks, 16px apart. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+  min-height: var(--layout-header-button);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+.trailing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under the title, 8px from it: the section's gap less 8. */
+.lead {
+  max-width: 64ch;
+  margin: -8px 0 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+/* H3: a plain card — `bg`, a 1px border, the card radius, no shadow (as Home's blocks). */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-card);
+}
+
+.boxHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.boxTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.boxTrailing {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.more {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (max-width: 759px) {
+  .head {
+    justify-content: flex-start;
+  }
+
+  /* The trailing part goes under the title, on its own line. */
+  .title {
+    flex-basis: 100%;
+  }
+
+  .box {
+    padding: 10px 18px;
+  }
+}

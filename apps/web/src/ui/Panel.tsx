@@ -35,8 +35,10 @@ interface Props {
   closeLabel: string;
   /** The body carries its own heading: the title stays as the name of the landmark and the focus target. */
   bare?: boolean;
-  /** Below the breakpoint, a bottom sheet over a scrim instead of the whole screen: the form's shape. */
-  sheet?: boolean;
+  /** A form: 480px wide on a wide screen, where a detail is 440px (W1). */
+  form?: boolean;
+  /** Before the title: the icon of what the dialog shows (an account, a goal). Decorative. */
+  icon?: ReactNode;
   /**
    * A page that keeps the panel in client state: the ✕, the scrim and Esc ask it to close,
    * and it closes at once. `from` says which: the keyboard closes with no motion. It answers false
@@ -58,10 +60,11 @@ interface Props {
 const EXIT_MS = 150;
 
 /**
- * §17.1.7: the trailing panel of Transazioni, Conti and Profilo — a 420px dialog over the page, with a
- * scrim, on a wide screen (D3, 2026-10-11); the whole screen, or a bottom sheet for a form, on a narrow one. Rendered only when something is selected, so it mounts —
- * and slides in — when the panel opens, and stays put while the selection moves between rows. A page
- * may instead keep the panel mounted and hidden in `<Activity>`: it then slides in each time it shows.
+ * W1, W2 (2026-10-21): the one dialog of the web app — in the centre of the screen over a scrim,
+ * 440px for a detail and 480px for a form; a sheet at the bottom of the screen below 760px.
+ * Rendered only when something is open, so it mounts — and plays its entrance — when it opens, and
+ * stays put while the selection moves between rows. A page may instead keep the panel mounted and
+ * hidden in `<Activity>`: it then plays its entrance each time it shows.
  *
  * A client component for Esc and for focus. The selection lives in the URL, so closing is a
  * navigation and the ✕ is a plain link: a reload keeps the panel open, and a modified click opens
@@ -73,7 +76,8 @@ export function Panel({
   closeHref,
   closeLabel,
   bare = false,
-  sheet = false,
+  form = false,
+  icon,
   onClose,
   closing: closingProp = false,
   instant = false,
@@ -206,10 +210,16 @@ export function Panel({
         data-closing={closing ? '' : undefined}
         data-instant={instant ? '' : undefined}
         data-still={enteredInstantly ? '' : undefined}
-        data-sheet={sheet ? '' : undefined}
+        data-form={form ? '' : undefined}
       >
-        {sheet ? <span className={styles.handle} aria-hidden="true" /> : null}
+        {/* Below 760px every dialog is a sheet (W2); the CSS hides the handle on a wide screen. */}
+        <span className={styles.handle} aria-hidden="true" />
         <div className={`${styles.head} ${bare ? styles.bare : ''}`}>
+          {icon === undefined || bare ? null : (
+            <span className={styles.icon} aria-hidden="true">
+              {icon}
+            </span>
+          )}
           <h2
             className={`${styles.title} ${bare ? styles.hidden : ''}`}
             ref={heading}

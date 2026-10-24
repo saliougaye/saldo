@@ -17,6 +17,7 @@ export function NavLink({
   label,
   iconOnly = false,
   count,
+  alsoCurrentAt,
 }: {
   href: string;
   icon: IconName;
@@ -25,8 +26,11 @@ export function NavLink({
   iconOnly?: boolean;
   /** How many there are, at the end of the link (the admin's «Account 4»); absent, nothing is drawn. */
   count?: number;
+  /** A second path where this link is the current one: «Profile» on the bare `/profile`. */
+  alsoCurrentAt?: string;
 }) {
-  const current = isCurrent(href, usePathname());
+  const path = usePathname();
+  const current = isCurrent(href, path) || (alsoCurrentAt !== undefined && path === alsoCurrentAt);
   return (
     <Link
       className={styles.link}

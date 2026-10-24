@@ -1,5 +1,6 @@
 import type { Locator } from '@playwright/test';
-import { formatDayMonth, formatMonthLong, plural } from '@saldo/i18n';
+import type { CurrencyCode } from '@saldo/core';
+import { formatDayMonth, formatMoneyParts, formatPeriodRange, plural } from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
   categoryFamily,
@@ -23,10 +24,6 @@ import {
   sectionOf,
   statFigure,
 } from './support/txPage';
-
-function upperFirst(text: string): string {
-  return text.charAt(0).toLocaleUpperCase('it') + text.slice(1);
-}
 
 /** What a goal has put aside: transfers into the pocket, less transfers out of it. */
 function saved(ledger: Ledger, pocketId: string): number {
@@ -69,7 +66,11 @@ test.describe('Home', () => {
 
     await page.goto('/home');
     await expect(
-      page.getByText(upperFirst(formatMonthLong(month.end, lang)), { exact: true }),
+      page.getByRole('heading', {
+        level: 1,
+        name: formatPeriodRange(month, lang, ledger.today),
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(homeFigure(page, t('home.income'))).toContainText(money(income));
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(spent));
@@ -78,7 +79,7 @@ test.describe('Home', () => {
     // «In arrivo»: every row dated ahead, up to the five the card shows.
     const ahead = ledger.transactions
       .filter((tx) => tx.date > ledger.today && tx.date <= month.end)
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => a.date.localeCompare(b.date));
     expect(ahead.length).toBeGreaterThanOrEqual(2);
     // Transazioni holds both lists: the group label tells «In arrivo» from «Ultime». The summary
     // beside the title says how many there are; its amount is left out (it adds the rows up).
@@ -127,11 +128,7 @@ test.describe('Home', () => {
     await member.context.close();
   });
 
-  test('the budgets and the goals are cards that carry the seeded figures', async ({
-    browser,
-    t,
-    locale,
-  }) => {
+  test('the budgets and the goals carry the seeded figures', async ({ browser, t, locale }) => {
     const member = await createMember(browser, t, {
       name: 'Obiettivi',
       email: 'home-targets@e2e.test',
@@ -142,12 +139,11 @@ test.describe('Home', () => {
     const lang = appLocale(locale);
     const money = moneyFormatter(ledger, lang);
     const month = monthOf(ledger.today);
-    const percent = (value: number) => t('targets.percent', { value });
-    const ofLine = (limit: number, spentSoFar: number) =>
-      t('targets.ofLimit', {
-        amount: money(limit),
-        percent: percent(percentOf(spentSoFar, limit)),
-      });
+    // «195,60 di 480,00 €»: the spent figure has no symbol, the limit carries it.
+    const bare = (minor: number) => {
+      const parts = formatMoneyParts(minor, ledger.currency as CurrencyCode, lang);
+      return `${parts.sign}${parts.integer}${parts.fraction === '' ? '' : `${parts.decimalSeparator}${parts.fraction}`}`;
+    };
 
     await page.goto('/home');
 
@@ -160,24 +156,22 @@ test.describe('Home', () => {
           (tx) => tx.kind === 'expense' && tx.categoryId !== null && covered.has(tx.categoryId),
         ),
       );
+      // H6: every budget is a ring tile, named by its label; under what is left, a line of the
+      // same tile says what is spent of the limit (§06).
+      const tile = page.getByRole('link', {
+        name: labelStart(t, 'targets.itemLabel', {
+          name: budget.name,
+          amount: money(spentSoFar),
+          limit: money(budget.amount),
+        }),
+      });
+      await expect(tile).toHaveCount(1);
       await expect(
-        page.getByText(
-          labelStart(t, 'targets.itemLabel', {
-            name: budget.name,
-            amount: money(spentSoFar),
-            limit: money(budget.amount),
-          }),
+        tile.getByText(
+          t('targets.spentOf', { spent: bare(spentSoFar), limit: money(budget.amount) }),
+          { exact: true },
         ),
-      ).toHaveCount(1);
-      // D5: every budget is a card; the line under the figure says what is spent of the limit.
-      if (spentSoFar <= budget.amount) {
-        await expect(
-          page.getByText(
-            t('targets.leftDetail', { spent: money(spentSoFar), limit: money(budget.amount) }),
-            { exact: true },
-          ),
-        ).toHaveCount(1);
-      }
+      ).toBeVisible();
     }
 
     // Goals: a pocket's balance is the transfers into it.
@@ -196,8 +190,12 @@ test.describe('Home', () => {
           }),
         ),
       ).toHaveCount(1);
-      // Every goal is a card too, with the same «of» line under its figure.
-      await expect(page.getByText(ofLine(target, put), { exact: true })).toHaveCount(1);
+      // Under the name, the row says what is saved of the target (§07).
+      await expect(
+        page.getByText(t('goals.savedOf', { saved: money(put), target: money(target) }), {
+          exact: true,
+        }),
+      ).toHaveCount(1);
     }
     await member.context.close();
   });
@@ -257,7 +255,9 @@ test.describe('Home', () => {
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
     const earlier = previousMonth(closed);
-    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
     const next = page.getByRole('link', { name: t('web.shell.nextPeriod') });
     const previous = page.getByRole('link', { name: t('web.shell.previousPeriod') });
 
@@ -282,20 +282,41 @@ test.describe('Home', () => {
     await expect(page.getByText(title(earlier), { exact: true })).toBeVisible();
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(before.spent));
 
+    // Each click is a navigation: wait for its page before the next click, or both land on one link.
     await next.click();
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
     await next.click();
     await expect(page.getByText(title(current), { exact: true })).toBeVisible();
     await expect(next).toHaveCount(0);
     await expect(page).not.toHaveURL(/[?&]p=/);
     await member.context.close();
   });
+
+  test('the trend moves day by day with the arrow keys (H5)', async ({ browser, t }) => {
+    const member = await createMember(browser, t, {
+      name: 'Andamento',
+      email: 'home-trend@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    await page.goto('/home');
+    const trend = page.getByRole('slider', { name: t('stats.cycleTrend') });
+    await trend.focus();
+    await page.keyboard.press('Home');
+    await expect(trend).toHaveAttribute('aria-valuenow', '1');
+    await page.keyboard.press('ArrowRight');
+    await expect(trend).toHaveAttribute('aria-valuenow', '2');
+    await page.keyboard.press('End');
+    const last = await trend.getAttribute('aria-valuemax');
+    await expect(trend).toHaveAttribute('aria-valuenow', last ?? '');
+    await member.context.close();
+  });
 });
 
 /** A category card of Ripartizione: the link that holds the category's name. */
 function cardOf(scope: Locator, name: string): Locator {
-  return scope
-    .locator('a[class*="Card"]')
-    .filter({ has: scope.page().getByText(name, { exact: true }) });
+  // By role, not by class name: a production build hashes CSS-module names and drops the file name.
+  return scope.getByRole('link').filter({ has: scope.page().getByText(name, { exact: true }) });
 }
 
 test.describe('Statistiche', () => {
@@ -338,6 +359,8 @@ test.describe('Statistiche', () => {
     const expenses = split('expense');
     expect(expenses.ranked.length).toBeGreaterThan(5);
     const income = split('income');
+    // The closed month has income, so the loop below reads a populated income view.
+    expect(income.ranked.length).toBeGreaterThan(0);
     // The figures above the split agree with it.
     await expect(statFigure(page, t('stats.expenses'))).toContainText(money(expenses.total));
     for (const { name, amount } of expenses.ranked) {
@@ -350,10 +373,11 @@ test.describe('Statistiche', () => {
     // Biggest first.
     const first = expenses.ranked[0];
     await expect(cardOf(section, first?.name ?? '')).toBeVisible();
-    const order = await section
-      .locator('a[class*="Card"] [class*="Card"][class*="name"]')
-      .allTextContents();
-    expect(order).toEqual(expenses.ranked.map((row) => row.name));
+    const cards = section.locator('a[href*="c="]');
+    await expect(cards).toHaveCount(expenses.ranked.length);
+    for (const [index, row] of expenses.ranked.entries()) {
+      await expect(cards.nth(index).getByText(row.name, { exact: true })).toBeVisible();
+    }
 
     // The same month read as income.
     await section.getByRole('link', { name: t('stats.income') }).click();
@@ -458,7 +482,9 @@ test.describe('Statistiche', () => {
     const money = moneyFormatter(ledger, lang);
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
-    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
     const figure = (label: string) => statFigure(page, label);
 
     await page.goto('/stats');
@@ -474,6 +500,52 @@ test.describe('Statistiche', () => {
     await expect(figure(t('stats.income'))).toContainText(money(last.income));
     await expect(figure(t('stats.expenses'))).toContainText(money(last.spent));
     await expect(figure(t('stats.net'))).toContainText(money(last.income - last.spent, 'always'));
+    await member.context.close();
+  });
+
+  test('a bar of the chart selects its period, and ← → move it (W6)', async ({
+    browser,
+    t,
+    locale,
+  }) => {
+    const member = await createMember(browser, t, {
+      name: 'Grafico',
+      email: 'stats-chart@e2e.test',
+      seed: true,
+    });
+    const { page } = member;
+    const ledger = await readLedger(member);
+    const lang = appLocale(locale);
+    const current = monthOf(ledger.today);
+    const closed = previousMonth(current);
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
+
+    await page.goto('/stats');
+    await expect(page.getByText(title(current), { exact: true })).toBeVisible();
+    const block = page.getByRole('region', { name: t('stats.expensesByPeriod') });
+    // «Usual» is said in words under the chart; the term is in bold, so the text has no markup.
+    await expect(block).toContainText(
+      t('stats.usualNote', { amount: 'X' })
+        .replace(/<\/?b>/g, '')
+        .split('X')[0]
+        ?.trim() ?? '',
+    );
+
+    // Six closed bars, then the running one, which is selected. Each bar is a link to its period.
+    const bars = block.getByRole('link');
+    await expect(bars.nth(6)).toHaveAttribute('aria-current', 'true');
+    await bars.nth(5).click();
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
+    await expect(bars.nth(5)).toHaveAttribute('aria-current', 'true');
+    await expect(block.locator('a[aria-current="true"]')).toHaveCount(1);
+
+    // → goes back to the current month, ← to the previous one.
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByText(title(current), { exact: true })).toBeVisible();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByText(title(closed), { exact: true })).toBeVisible();
     await member.context.close();
   });
 });

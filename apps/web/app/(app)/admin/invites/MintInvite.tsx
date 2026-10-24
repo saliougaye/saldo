@@ -28,6 +28,13 @@ interface Props {
   /** The four lifetimes, as the server accepts them; `value` is the number of days. */
   ttlOptions: readonly { value: string; label: string }[];
   defaultTtl: string;
+  /**
+   * In the page, not in the panel (W11): the field does not take the focus when the page opens, the
+   * form leaves the page's single-key shortcuts alone, and there is no «Annulla».
+   */
+  inline?: boolean;
+  /** Called on «Fatto», before the navigation: `FirstInvite` lets the form go then. */
+  onDone?: () => void;
   strings: {
     newTitle: string;
     label: string;
@@ -63,7 +70,8 @@ const COPIED_MS = 2000;
  * once. It is never written to the URL, a cookie or web storage; leaving any way but «Fatto» loses it.
  */
 export function MintInvite(props: Props) {
-  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings } = props;
+  const { closeHref, doneHref, maxLabelLength, ttlOptions, defaultTtl, strings, inline, onDone } =
+    props;
   const router = useRouter();
   const [label, setLabel] = useState('');
   const [ttl, setTtl] = useState(defaultTtl);
@@ -119,6 +127,40 @@ export function MintInvite(props: Props) {
     timer.current = setTimeout(() => setCopied(null), COPIED_MS);
   };
 
+  // W11: the first invite, in the page — the label, then the lifetime and «Create code» on one
+  // row. No key hint and no «Cancel»: the form is the page's, there is nothing to close.
+  if (minted === null && inline === true) {
+    return (
+      <form className={styles.inlineMint} onSubmit={onSubmit} onKeyDown={onKeyDown} noValidate>
+        <TextField
+          label={strings.label}
+          hint={strings.labelHint}
+          value={label}
+          maxLength={maxLabelLength}
+          autoComplete="off"
+          onChange={(event) => {
+            setLabel(event.target.value);
+            setProblem(null);
+          }}
+        />
+        <div className={styles.inlineTtl}>
+          <span className={styles.inlineTtlLabel} aria-hidden="true">
+            {strings.ttl}
+          </span>
+          <div className={styles.inlineTtlRow}>
+            <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+            <div>
+              <Button type="submit" busy={pending} busyLabel={strings.busy}>
+                {strings.create}
+              </Button>
+            </div>
+          </div>
+        </div>
+        {problem === null ? null : <Alert body={problem} />}
+      </form>
+    );
+  }
+
   if (minted === null) {
     return (
       <form
@@ -140,7 +182,13 @@ export function MintInvite(props: Props) {
             setProblem(null);
           }}
         />
-        <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+        {/* «Scade dopo» over the control, as a field's label; the group carries the same name. */}
+        <div className={styles.field}>
+          <span className={styles.fieldLabel} aria-hidden="true">
+            {strings.ttl}
+          </span>
+          <Segmented label={strings.ttl} value={ttl} options={ttlOptions} onChange={setTtl} />
+        </div>
         {problem === null ? null : <Alert body={problem} />}
         <FormFoot
           hint={strings.keyboardHint}
@@ -198,6 +246,7 @@ export function MintInvite(props: Props) {
       </p>
       <Button
         onClick={() => {
+          onDone?.();
           router.replace(doneHref);
         }}
       >

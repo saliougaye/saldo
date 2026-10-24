@@ -28,16 +28,14 @@ const nextConfig: NextConfig = {
       : undefined,
   },
   /**
-   * The index pages of Profilo and Admin only redirect (`app/(app)/profile/page.tsx`,
-   * `app/(app)/admin/page.tsx`). Under a `loading.tsx` that redirect streams after the shell and a
-   * skeleton, with the status 200. Here it is a 307 before any render. The pages stay as the
-   * fallback. A member still gets 404 for Admin: `/admin/accounts` answers it.
+   * The index page of Admin only redirects (`app/(app)/admin/page.tsx`). Under a `loading.tsx` that
+   * redirect streams after the shell and a skeleton, with the status 200. Here it is a 307 before
+   * any render. The page stays as the fallback. A member still gets 404 for Admin:
+   * `/admin/accounts` answers it. `/profile` does not redirect since W10: it is the first section,
+   * and below 760px the menu (`SubnavLayout`).
    */
   async redirects() {
-    return [
-      { source: '/profile', destination: '/profile/account', permanent: false },
-      { source: '/admin', destination: '/admin/accounts', permanent: false },
-    ];
+    return [{ source: '/admin', destination: '/admin/accounts', permanent: false }];
   },
   async headers() {
     /**

@@ -1,10 +1,4 @@
-/* Variant «5» (§17.1.7): the header, then the sub-navigation beside the section. */
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
+/* W10: the head of the frame (`SettingsPage`); the menu and the section are `SubnavLayout`'s. */
 .head {
   display: flex;
   align-items: center;
@@ -66,36 +60,6 @@
   cursor: default;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .page {
-    gap: 56px;
-  }
-
-  .head {
-    display: none;
-  }
-}
-
-.sideWho {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.who {
   min-width: 0;
-  font-size: var(--font-size-headline);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-tight);
-}
-
-.sideAvatar {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-pill);
-  background: var(--color-raised);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-medium);
 }

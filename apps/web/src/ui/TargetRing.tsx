@@ -60,7 +60,7 @@ export function TargetRing({ size, ratio, pace = null, tone = 'normal', icon, co
     >
       {svg}
       <span className={styles.icon}>
-        <Icon name={icon} size={size >= 36 ? 16 : 14} />
+        <Icon name={icon} size={size >= 64 ? 24 : size >= 36 ? 16 : 14} />
       </span>
     </span>
   );

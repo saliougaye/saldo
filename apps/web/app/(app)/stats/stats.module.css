@@ -1,34 +1,64 @@
-/* The head, Flussi, Ripartizione, Tag — D8. */
+/* W6–W8: the period block, the breakdown, the tags — plain blocks in the column (H3). */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 16px;
 }
 
-.top {
+.box {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 12px;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-card);
 }
 
+.boxHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.boxTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The figures: Expenses large, then a row of the others. */
 .figures {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.hero,
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+}
+
+.stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px 32px;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 16px 32px;
 }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
-@media (min-width: 1024px) {
-  .page {
-    gap: var(--layout-section-gap-web);
-  }
-
-  .figures {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
 }
 
-/* The line the design puts under a key figure, and under a chart. */
 .note {
   font-size: var(--font-size-footnote);
   color: var(--color-text-muted);
@@ -43,124 +73,423 @@
   max-width: 52ch;
 }
 
-.prose {
-  font-size: var(--font-size-body);
-  line-height: 1.5;
-  color: var(--color-text-muted);
-  text-wrap: pretty;
-  max-width: 62ch;
+/* «Expenses by period» and the key of its marks, on one line; the key wraps under on a narrow screen. */
+.chartHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
 }
 
-/* A section's trailing status: «Uscite · entrate», the period a list is about. */
+.chartTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* The marks of the chart, small: a closed bar, a forecast bar, the dashed «usual». */
+.keySpent,
+.keyForecast {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--color-bar-grey);
+}
+
+.keyForecast {
+  background: var(--color-track);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.keyUsual {
+  display: inline-block;
+  width: 16px;
+  border-top: 1.5px dashed var(--color-text-muted);
+}
+
+.chartFoot {
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.chartFoot b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Under «Breakdown»: the total and how many categories make it. */
+.total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.total b {
+  font-size: var(--font-size-amount-key);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tightest);
+  white-space: nowrap;
+}
+
+.total span {
+  color: var(--color-text-muted);
+}
+
+/* «Committed share»: the label, the two-tone bar beside it, and the sentence under both. */
+.commit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.commit b {
+  font-weight: var(--font-weight-medium);
+}
+
+.commit p {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  text-wrap: pretty;
+}
+
+/* A line at the bottom of a block: «Committed share», «How it's calculated». */
+.foot {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-footnote);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.foot b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
 .status {
   font-size: var(--font-size-footnote);
   color: var(--color-text-faint);
   white-space: nowrap;
 }
 
-/* Quota impegnata stands where an amount stands, so it takes the amount's size. */
-.percent {
-  font-size: var(--font-size-title);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: var(--tracking-tighter);
+/* W7: one row for each category — icon, name, share bar, change against usual, amount. */
+.cats {
+  display: flex;
+  flex-direction: column;
 }
 
-.chips {
+.cat {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(0, 220px) 96px 104px;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cat:hover {
+    background: var(--color-raised);
+  }
+}
+
+.cat:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.catSelected {
+  background: var(--color-raised);
+}
+
+.catIcon {
+  display: grid;
+  place-items: center;
+}
+
+.catText {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-bottom: 4px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.catName {
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* «11% · +34% vs usual» under the name: only below 760px, where the columns do not show. */
+.catSub {
+  display: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catShare {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+}
+
+.catShare > :last-child {
+  width: 34px;
+  text-align: end;
+}
+
+.track {
+  flex: 1;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-track);
+}
+
+.track > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+.catDelta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  white-space: nowrap;
+}
+
+.catAmount {
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* A tag: «#casa-nuova 3 uses» on one line, then its amounts. */
+.tagRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--motion-press) var(--motion-easing);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tagRow:hover {
+    background: var(--color-raised);
+  }
+}
+
+.tagRow:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.tagName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+}
+
+.tagName small {
+  margin-inline-start: 8px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-regular);
+}
+
+.tagHash {
+  color: var(--color-text-muted);
 }
 
 .tagAmounts {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  font-weight: var(--font-weight-medium);
 }
 
-/* The forecast periods: a real table, because it is one — four columns of figures per period. */
+/* The head of a category's dialog: its icon, in its colour, in a ring of the track. */
+.dialogIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--color-track);
+  border-radius: var(--radius-pill);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+/* A forecast period: two blocks side by side on a wide screen. */
+.pair {
+  display: grid;
+  gap: 16px;
+}
+
+/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
+@media (min-width: 1024px) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
 .table {
-  inline-size: 100%;
+  width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-footnote);
-  font-variant-numeric: tabular-nums;
 }
 
 .table th,
 .table td {
-  padding: 10px 0;
-  text-align: end;
-  white-space: nowrap;
-}
-
-.table thead th {
+  padding: 8px 0;
+  text-align: start;
   font-weight: var(--font-weight-regular);
-  color: var(--color-text-faint);
-  font-size: var(--font-size-caption);
   border-bottom: 1px solid var(--color-border);
 }
 
-.table th:first-child,
-.table td:first-child {
-  text-align: start;
+.table thead th {
+  color: var(--color-text-muted);
 }
 
-.table tbody th {
-  font-weight: var(--font-weight-regular);
-  color: var(--color-text);
+.table td:not(:first-child),
+.table th:not(:first-child) {
+  text-align: end;
 }
 
-.table tbody tr + tr th,
-.table tbody tr + tr td {
-  border-top: 1px solid var(--color-border);
-}
-
-/* Scoped through `.table` so it outranks the head and the body rules above, which the row it
-   marks is also matched by. */
 .table .tableSelected th,
 .table .tableSelected td {
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
 }
 
 .faint {
   color: var(--color-text-faint);
 }
 
-/* Every cell is `nowrap`, because a figure broken across two lines is worse than a missing column.
-   Four of them do not fit 390px, so the widest — «tra X e Y» — is the one that goes: the selected
-   period's own min–max is already in the key figures above, under Uscite. */
-.rangeCol {
-  display: none;
-}
+/* `--layout-shell-breakpoint` (760): a media query cannot read a custom property. */
+@media (max-width: 759px) {
+  .box {
+    padding: 18px;
+  }
 
-/* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. Below it the
-   columns stack, and a sticky lead would pin a chart over the list under it. */
-@media (min-width: 1024px) {
+  .stats {
+    grid-template-columns: repeat(2, auto);
+  }
+
+  .cat {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+  }
+
+  .catShare,
+  .catDelta {
+    display: none;
+  }
+
+  .catSub {
+    display: block;
+  }
+
   .rangeCol {
-    display: table-cell;
-  }
-
-  .sticky {
-    position: sticky;
-    top: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-section-gap-web);
+    display: none;
   }
 }
 
-.more {
+/* W11: an empty period — what it says, and the ways out. */
+.emptyText {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: var(--layout-min-hit-target);
-  font-size: var(--font-size-footnote);
+  flex-direction: column;
+  gap: 4px;
+  max-width: 60ch;
+}
+
+.emptyTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyBody {
   color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--layout-nav-item-height);
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  color: var(--color-text);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
   text-decoration: none;
 }
 
-.more:hover {
-  color: var(--color-text);
+/* «New transaction»: the one filled button of the block. */
+.emptyPrimary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
