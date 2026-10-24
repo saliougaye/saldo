@@ -84,6 +84,8 @@ export const pt: Messages = {
       lastSignIn: 'Último acesso',
       signedIn: '{{date}}',
       neverSignedIn: 'nunca',
+      rowSignedIn: 'último acesso {{date}}',
+      rowNeverSignedIn: 'sem acessos',
       passkeysLabel: 'Passkeys',
       passkeys_one: '{{count}} passkey',
       passkeys_other: '{{count}} passkeys',
@@ -165,6 +167,7 @@ export const pt: Messages = {
       revoke: 'Revogar',
       revokeTitle: 'Revogar o convite «{{label}}»?',
       revokeBody: 'O código deixa de funcionar de imediato. Não se pode anular.',
+      revokeRow: 'Revogar «{{label}}»',
       createFirst: 'Cria o primeiro convite',
     },
     instance: {
@@ -1069,6 +1072,7 @@ export const pt: Messages = {
   },
   categories: {
     title: 'Categorias',
+    lead: 'As categorias agrupam as suas transações. Abra uma para a editar.',
     expenses: 'Despesas',
     income: 'Receitas',
     reorder: 'Reordenar',
@@ -1671,6 +1675,13 @@ export const pt: Messages = {
       groupConnections: 'Ligações e dados',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Voltar ao perfil',
+      hintData: 'Cópia e CSV',
+      hintInvites_one: '{{count}} ativo',
+      hintInvites_other: '{{count}} ativos',
+      hintConnectors_one: '{{count}} ligado',
+      hintConnectors_other: '{{count}} ligados',
+      hintOn: 'ativado',
+      hintOff: 'desativado',
     },
     preferences: {
       systemFollows: '«Sistema» segue as definições do dispositivo que estás a usar.',
@@ -1705,11 +1716,17 @@ export const pt: Messages = {
       empty: 'Nenhuma passkey nesta conta.',
     },
     account: {
+      nameEdit: 'Editar',
+      nameTitle: 'O seu nome',
+      nameHint: 'Aparece no seu perfil e na lista de contas do servidor.',
+      nameEmpty: 'Escreva um nome.',
+      nameTooLong: 'Use no máximo {{max}} caracteres.',
       verified: 'verificado',
       unverified: 'não verificado',
       verify: 'Enviar o link de verificação',
       verifySent: 'Link enviado para {{email}}',
       mailOff: 'Este servidor não envia e-mails: o endereço continua por verificar.',
+      changeEmail: 'Alterar e-mail',
       changeLabel: 'Novo endereço de e-mail',
       changeSend: 'Enviar a ligação de confirmação',
       changeSent:
@@ -1748,6 +1765,7 @@ export const pt: Messages = {
       allBudgets: 'Todos os orçamentos',
     },
     categories: {
+      directionLabel: 'Despesas ou receitas',
       error_invalid: 'Não foi possível guardar: verifica os campos e tenta de novo.',
       error_notFound: 'Esta categoria já não existe. Atualiza a página.',
       error_conflict:

@@ -83,6 +83,8 @@ export const de: Messages = {
       lastSignIn: 'Letzte Anmeldung',
       signedIn: '{{date}}',
       neverSignedIn: 'nie',
+      rowSignedIn: 'zuletzt angemeldet {{date}}',
+      rowNeverSignedIn: 'nie angemeldet',
       passkeysLabel: 'Passkeys',
       passkeys_one: '{{count}} Passkey',
       passkeys_other: '{{count}} Passkeys',
@@ -167,6 +169,7 @@ export const de: Messages = {
       revokeTitle: 'Einladung „{{label}}“ widerrufen?',
       revokeBody:
         'Der Code funktioniert sofort nicht mehr. Das lässt sich nicht rückgängig machen.',
+      revokeRow: '„{{label}}“ widerrufen',
       createFirst: 'Erste Einladung erstellen',
     },
     instance: {
@@ -1076,6 +1079,7 @@ export const de: Messages = {
   },
   categories: {
     title: 'Kategorien',
+    lead: 'Kategorien ordnen deine Transaktionen. Öffne eine, um sie zu bearbeiten.',
     expenses: 'Ausgaben',
     income: 'Einnahmen',
     reorder: 'Sortieren',
@@ -1685,6 +1689,13 @@ export const de: Messages = {
       groupConnections: 'Verbindungen und Daten',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Zurück zum Profil',
+      hintData: 'Backup und CSV',
+      hintInvites_one: '{{count}} aktiv',
+      hintInvites_other: '{{count}} aktiv',
+      hintConnectors_one: '{{count}} verbunden',
+      hintConnectors_other: '{{count}} verbunden',
+      hintOn: 'an',
+      hintOff: 'aus',
     },
     preferences: {
       systemFollows: '„System“ folgt den Einstellungen des Geräts, das du gerade benutzt.',
@@ -1719,11 +1730,17 @@ export const de: Messages = {
       empty: 'Keine Passkeys in diesem Konto.',
     },
     account: {
+      nameEdit: 'Bearbeiten',
+      nameTitle: 'Dein Name',
+      nameHint: 'Er steht in deinem Profil und in der Kontoliste des Servers.',
+      nameEmpty: 'Gib einen Namen ein.',
+      nameTooLong: 'Nutze höchstens {{max}} Zeichen.',
       verified: 'bestätigt',
       unverified: 'nicht bestätigt',
       verify: 'Bestätigungslink senden',
       verifySent: 'Link an {{email}} gesendet',
       mailOff: 'Dieser Server verschickt keine E-Mails: Die Adresse bleibt unbestätigt.',
+      changeEmail: 'E-Mail ändern',
       changeLabel: 'Neue E-Mail-Adresse',
       changeSend: 'Bestätigungslink senden',
       changeSent:
@@ -1762,6 +1779,7 @@ export const de: Messages = {
       allBudgets: 'Alle Budgets',
     },
     categories: {
+      directionLabel: 'Ausgaben oder Einnahmen',
       error_invalid: 'Speichern nicht möglich: Prüfe die Felder und versuche es erneut.',
       error_notFound: 'Diese Kategorie existiert nicht mehr. Aktualisiere die Seite.',
       error_conflict:

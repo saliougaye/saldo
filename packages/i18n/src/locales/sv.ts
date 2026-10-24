@@ -83,6 +83,8 @@ export const sv: Messages = {
       lastSignIn: 'Senaste inloggning',
       signedIn: '{{date}}',
       neverSignedIn: 'aldrig',
+      rowSignedIn: 'senast inloggad {{date}}',
+      rowNeverSignedIn: 'aldrig inloggad',
       passkeysLabel: 'Passnycklar',
       passkeys_one: '{{count}} passnyckel',
       passkeys_other: '{{count}} passnycklar',
@@ -165,6 +167,7 @@ export const sv: Messages = {
       revoke: 'Återkalla',
       revokeTitle: 'Återkalla inbjudan ”{{label}}”?',
       revokeBody: 'Koden slutar fungera direkt. Det går inte att ångra.',
+      revokeRow: 'Återkalla ”{{label}}”',
       createFirst: 'Skapa den första inbjudan',
     },
     instance: {
@@ -1064,6 +1067,7 @@ export const sv: Messages = {
   },
   categories: {
     title: 'Kategorier',
+    lead: 'Kategorier grupperar dina transaktioner. Öppna en för att redigera den.',
     expenses: 'Utgifter',
     income: 'Inkomster',
     reorder: 'Sortera',
@@ -1664,6 +1668,13 @@ export const sv: Messages = {
       groupConnections: 'Anslutningar och data',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Tillbaka till profilen',
+      hintData: 'Säkerhetskopia och CSV',
+      hintInvites_one: '{{count}} aktiv',
+      hintInvites_other: '{{count}} aktiva',
+      hintConnectors_one: '{{count}} ansluten',
+      hintConnectors_other: '{{count}} anslutna',
+      hintOn: 'på',
+      hintOff: 'av',
     },
     preferences: {
       systemFollows: '”System” följer inställningarna på enheten du använder.',
@@ -1698,11 +1709,17 @@ export const sv: Messages = {
       empty: 'Inga passnycklar på kontot.',
     },
     account: {
+      nameEdit: 'Redigera',
+      nameTitle: 'Ditt namn',
+      nameHint: 'Det syns i din profil och i serverns lista över konton.',
+      nameEmpty: 'Skriv ett namn.',
+      nameTooLong: 'Använd högst {{max}} tecken.',
       verified: 'verifierad',
       unverified: 'inte verifierad',
       verify: 'Skicka verifieringslänken',
       verifySent: 'Länk skickad till {{email}}',
       mailOff: 'Den här servern skickar inte e-post: adressen förblir overifierad.',
+      changeEmail: 'Byt e-post',
       changeLabel: 'Ny e-postadress',
       changeSend: 'Skicka bekräftelselänken',
       changeSent:
@@ -1741,6 +1758,7 @@ export const sv: Messages = {
       allBudgets: 'Alla budgetar',
     },
     categories: {
+      directionLabel: 'Utgifter eller inkomster',
       error_invalid: 'Det gick inte att spara: kontrollera fälten och försök igen.',
       error_notFound: 'Den här kategorin finns inte längre. Uppdatera sidan.',
       error_conflict:

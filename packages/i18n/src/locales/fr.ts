@@ -83,6 +83,8 @@ export const fr: Messages = {
       lastSignIn: 'Dernière connexion',
       signedIn: '{{date}}',
       neverSignedIn: 'jamais',
+      rowSignedIn: 'dernière connexion {{date}}',
+      rowNeverSignedIn: 'jamais connecté',
       passkeysLabel: 'Passkeys',
       passkeys_one: '{{count}} passkey',
       passkeys_other: '{{count}} passkeys',
@@ -166,6 +168,7 @@ export const fr: Messages = {
       revoke: 'Révoquer',
       revokeTitle: 'Révoquer l’invitation « {{label}} » ?',
       revokeBody: 'Le code cesse de fonctionner aussitôt. Impossible d’annuler.',
+      revokeRow: 'Révoquer « {{label}} »',
       createFirst: 'Crée la première invitation',
     },
     instance: {
@@ -1076,6 +1079,7 @@ export const fr: Messages = {
   },
   categories: {
     title: 'Catégories',
+    lead: 'Les catégories regroupent vos transactions. Ouvrez-en une pour la modifier.',
     expenses: 'Dépenses',
     income: 'Revenus',
     reorder: 'Réorganiser',
@@ -1687,6 +1691,13 @@ export const fr: Messages = {
       groupConnections: 'Connexions et données',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Retour au profil',
+      hintData: 'Sauvegarde et CSV',
+      hintInvites_one: '{{count}} actif',
+      hintInvites_other: '{{count}} actifs',
+      hintConnectors_one: '{{count}} connecté',
+      hintConnectors_other: '{{count}} connectés',
+      hintOn: 'activé',
+      hintOff: 'désactivé',
     },
     preferences: {
       systemFollows: '« Système » suit les réglages de l’appareil utilisé.',
@@ -1721,11 +1732,17 @@ export const fr: Messages = {
       empty: 'Aucune passkey sur ce compte.',
     },
     account: {
+      nameEdit: 'Modifier',
+      nameTitle: 'Votre nom',
+      nameHint: 'Il apparaît sur votre profil et dans la liste des comptes du serveur.',
+      nameEmpty: 'Saisissez un nom.',
+      nameTooLong: 'Utilisez {{max}} caractères au maximum.',
       verified: 'vérifiée',
       unverified: 'non vérifiée',
       verify: 'Envoyer le lien de vérification',
       verifySent: 'Lien envoyé à {{email}}',
       mailOff: 'Ce serveur n’envoie pas d’e-mails : l’adresse reste non vérifiée.',
+      changeEmail: 'Changer d’e-mail',
       changeLabel: 'Nouvelle adresse e-mail',
       changeSend: 'Envoyer le lien de confirmation',
       changeSent:
@@ -1765,6 +1782,7 @@ export const fr: Messages = {
       allBudgets: 'Tous les budgets',
     },
     categories: {
+      directionLabel: 'Dépenses ou revenus',
       error_invalid: 'Enregistrement impossible : vérifiez les champs et réessayez.',
       error_notFound: 'Cette catégorie n’existe plus. Actualisez la page.',
       error_conflict:

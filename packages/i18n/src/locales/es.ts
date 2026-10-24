@@ -83,6 +83,8 @@ export const es: Messages = {
       lastSignIn: 'Último acceso',
       signedIn: '{{date}}',
       neverSignedIn: 'nunca',
+      rowSignedIn: 'último acceso {{date}}',
+      rowNeverSignedIn: 'sin accesos',
       passkeysLabel: 'Passkeys',
       passkeys_one: '{{count}} passkey',
       passkeys_other: '{{count}} passkeys',
@@ -165,6 +167,7 @@ export const es: Messages = {
       revoke: 'Revocar',
       revokeTitle: '¿Revocar la invitación «{{label}}»?',
       revokeBody: 'El código deja de funcionar al instante. No se puede deshacer.',
+      revokeRow: 'Revocar «{{label}}»',
       createFirst: 'Crea la primera invitación',
     },
     instance: {
@@ -1070,6 +1073,7 @@ export const es: Messages = {
   },
   categories: {
     title: 'Categorías',
+    lead: 'Las categorías agrupan tus transacciones. Abre una para editarla.',
     expenses: 'Gastos',
     income: 'Ingresos',
     reorder: 'Reordenar',
@@ -1673,6 +1677,13 @@ export const es: Messages = {
       groupConnections: 'Conexiones y datos',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Volver al perfil',
+      hintData: 'Copia y CSV',
+      hintInvites_one: '{{count}} activa',
+      hintInvites_other: '{{count}} activas',
+      hintConnectors_one: '{{count}} conectado',
+      hintConnectors_other: '{{count}} conectados',
+      hintOn: 'activado',
+      hintOff: 'desactivado',
     },
     preferences: {
       systemFollows: '«Sistema» sigue los ajustes del dispositivo que estás usando.',
@@ -1707,11 +1718,17 @@ export const es: Messages = {
       empty: 'No hay passkeys en esta cuenta.',
     },
     account: {
+      nameEdit: 'Editar',
+      nameTitle: 'Tu nombre',
+      nameHint: 'Se ve en tu perfil y en la lista de cuentas del servidor.',
+      nameEmpty: 'Escribe un nombre.',
+      nameTooLong: 'Usa {{max}} caracteres como máximo.',
       verified: 'verificado',
       unverified: 'no verificado',
       verify: 'Enviar el enlace de verificación',
       verifySent: 'Enlace enviado a {{email}}',
       mailOff: 'Este servidor no envía correos: la dirección sigue sin verificar.',
+      changeEmail: 'Cambiar correo',
       changeLabel: 'Nueva dirección de correo',
       changeSend: 'Enviar el enlace de confirmación',
       changeSent:
@@ -1750,6 +1767,7 @@ export const es: Messages = {
       allBudgets: 'Todos los presupuestos',
     },
     categories: {
+      directionLabel: 'Gastos o ingresos',
       error_invalid: 'No se pudo guardar: revisa los campos e inténtalo de nuevo.',
       error_notFound: 'Esta categoría ya no existe. Actualiza la página.',
       error_conflict:

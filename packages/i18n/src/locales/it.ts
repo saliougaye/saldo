@@ -84,6 +84,8 @@ export const it = {
       lastSignIn: 'Ultimo accesso',
       signedIn: '{{date}}',
       neverSignedIn: 'mai',
+      rowSignedIn: 'ultimo accesso {{date}}',
+      rowNeverSignedIn: 'nessun accesso',
       passkeysLabel: 'Passkey',
       passkeys_one: '{{count}} passkey',
       passkeys_other: '{{count}} passkey',
@@ -166,6 +168,7 @@ export const it = {
       revoke: 'Revoca',
       revokeTitle: 'Revocare l’invito «{{label}}»?',
       revokeBody: 'Il codice smette di funzionare subito. Non si può annullare.',
+      revokeRow: 'Revoca «{{label}}»',
       createFirst: 'Crea il primo invito',
     },
     instance: {
@@ -1071,6 +1074,7 @@ export const it = {
   },
   categories: {
     title: 'Categorie',
+    lead: 'Le categorie raggruppano le tue transazioni. Aprine una per modificarla.',
     expenses: 'Uscite',
     income: 'Entrate',
     reorder: 'Riordina',
@@ -1672,6 +1676,13 @@ export const it = {
       groupConnections: 'Collegamenti e dati',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Torna a Profilo',
+      hintData: 'Backup e CSV',
+      hintInvites_one: '{{count}} attivo',
+      hintInvites_other: '{{count}} attivi',
+      hintConnectors_one: '{{count}} collegato',
+      hintConnectors_other: '{{count}} collegati',
+      hintOn: 'attivo',
+      hintOff: 'spento',
     },
     preferences: {
       systemFollows: '«Sistema» segue le impostazioni del dispositivo che stai usando.',
@@ -1706,11 +1717,17 @@ export const it = {
       empty: 'Nessuna passkey su questo account.',
     },
     account: {
+      nameEdit: 'Modifica',
+      nameTitle: 'Il tuo nome',
+      nameHint: 'Si vede nel tuo profilo e nell’elenco degli account del server.',
+      nameEmpty: 'Scrivi un nome.',
+      nameTooLong: 'Usa al massimo {{max}} caratteri.',
       verified: 'verificata',
       unverified: 'non verificata',
       verify: 'Invia il link di verifica',
       verifySent: 'Link inviato a {{email}}',
       mailOff: 'Questo server non invia email: l’indirizzo resta non verificato.',
+      changeEmail: 'Cambia email',
       changeLabel: 'Nuovo indirizzo email',
       changeSend: 'Manda il link di conferma',
       changeSent:
@@ -1749,6 +1766,7 @@ export const it = {
       allBudgets: 'Tutti i budget',
     },
     categories: {
+      directionLabel: 'Uscite o entrate',
       error_invalid: 'Non riesco a salvare: controlla i campi e riprova.',
       error_notFound: 'Questa categoria non esiste più. Aggiorna la pagina.',
       error_conflict:

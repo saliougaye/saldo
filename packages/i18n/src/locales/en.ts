@@ -83,6 +83,8 @@ export const en: Messages = {
       lastSignIn: 'Last sign-in',
       signedIn: '{{date}}',
       neverSignedIn: 'never',
+      rowSignedIn: 'last sign-in {{date}}',
+      rowNeverSignedIn: 'never signed in',
       passkeysLabel: 'Passkeys',
       passkeys_one: '{{count}} passkey',
       passkeys_other: '{{count}} passkeys',
@@ -166,6 +168,7 @@ export const en: Messages = {
       revoke: 'Revoke',
       revokeTitle: 'Revoke the invite “{{label}}”?',
       revokeBody: 'The code stops working at once. This can’t be undone.',
+      revokeRow: 'Revoke “{{label}}”',
       createFirst: 'Create the first invite',
     },
     instance: {
@@ -1065,6 +1068,7 @@ export const en: Messages = {
   },
   categories: {
     title: 'Categories',
+    lead: 'Categories group your transactions. Open one to edit it.',
     expenses: 'Expenses',
     income: 'Income',
     reorder: 'Reorder',
@@ -1666,6 +1670,13 @@ export const en: Messages = {
       groupConnections: 'Connections and data',
       groupAdmin: 'Admin · {{name}}',
       backLabel: 'Back to Profile',
+      hintData: 'Backup and CSV',
+      hintInvites_one: '{{count}} active',
+      hintInvites_other: '{{count}} active',
+      hintConnectors_one: '{{count}} connected',
+      hintConnectors_other: '{{count}} connected',
+      hintOn: 'on',
+      hintOff: 'off',
     },
     preferences: {
       systemFollows: '“System” follows the settings of the device you’re using.',
@@ -1700,11 +1711,17 @@ export const en: Messages = {
       empty: 'No passkeys on this account.',
     },
     account: {
+      nameEdit: 'Edit',
+      nameTitle: 'Your name',
+      nameHint: 'It shows on your profile and in the server’s list of accounts.',
+      nameEmpty: 'Enter a name.',
+      nameTooLong: 'Use {{max}} characters at most.',
       verified: 'verified',
       unverified: 'not verified',
       verify: 'Send the verification link',
       verifySent: 'Link sent to {{email}}',
       mailOff: 'This server does not send email: the address stays unverified.',
+      changeEmail: 'Change email',
       changeLabel: 'New email address',
       changeSend: 'Send the confirmation link',
       changeSent:
@@ -1743,6 +1760,7 @@ export const en: Messages = {
       allBudgets: 'All budgets',
     },
     categories: {
+      directionLabel: 'Expenses or income',
       error_invalid: 'Couldn’t save: check the fields and try again.',
       error_notFound: 'This category no longer exists. Refresh the page.',
       error_conflict:
