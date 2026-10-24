@@ -133,7 +133,7 @@ export default async function ProfileCategoriesPage({
       title: t('categories.editCategory'),
       form: true,
       // The mockup's «Modifica categoria»: the category's icon in its colour, before the title.
-      leading: <IconBox name={category.icon as IconName} colorIndex={category.colorIndex} />,
+      icon: <IconBox name={category.icon as IconName} colorIndex={category.colorIndex} />,
       body: formBody(form, view.usage.get(category.id) ?? 0),
     };
   }
