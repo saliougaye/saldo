@@ -525,7 +525,9 @@ export const de: Messages = {
     detailNote: 'Notiz',
     detailAttachments: 'Anhänge',
     quickAddTitle: 'Erfasse deine erste Ausgabe',
+    quickAddBody: 'Daraus entstehen Statistik, Budgets und der Stand jedes Kontos.',
     importCsv: 'Aus CSV importieren',
+    importCsvPrompt: 'Hast du deine Buchungen schon in einer Datei?',
     noResultsIn: 'Keine Ergebnisse in {{period}}',
     otherPeriods: '„{{query}}“ kommt in anderen Zeiträumen vor:',
   },
@@ -781,6 +783,7 @@ export const de: Messages = {
     forecastColAt: 'Bis',
     forecastColRange: 'zwischen',
     emptyPeriod: '{{period}} hat noch keine Buchungen',
+    emptyPeriodBody: 'Die Statistik dieses Zeitraums beginnt mit der ersten Ausgabe.',
     goToPeriod: 'Zu {{period}}',
   },
   attachments: {
@@ -1014,6 +1017,12 @@ export const de: Messages = {
     emptyBody:
       'Ein Budget setzt einer Kategorie ein Limit und warnt dich, wenn du schneller ausgibst, als der Zeitraum vergeht.',
     suggestTitle: 'Wofür du am meisten ausgibst',
+    suggestLead:
+      'Ein Budget setzt einer Kategorie ein Limit. Fang mit einer davon an, mit dem Betrag, den du sonst ausgibst.',
+    suggestNote_month: 'Median der letzten 6 Monate',
+    suggestNote_week: 'Median der letzten 6 Wochen',
+    suggestNote_cycle: 'Median der letzten 6 Zyklen',
+    suggestNote_year: 'Median der letzten 6 Jahre',
     suggestAmount_month: '{{amount}} im Monat',
     suggestAmount_week: '{{amount}} pro Woche',
     suggestAmount_cycle: '{{amount}} pro Zyklus',
@@ -1076,6 +1085,17 @@ export const de: Messages = {
     archived_other: '{{count}} archivierte Konten',
     empty: 'Keine Konten',
     whichType: 'Welches Konto möchtest du hinzufügen?',
+    whichTypeBody:
+      'Fang mit dem an, das du am meisten nutzt. Der heutige Stand reicht: Frühere Buchungen kannst du später importieren.',
+    typeHint: {
+      cash: 'Dein Portemonnaie',
+      checking: 'Gehalt, Rechnungen, Überweisungen',
+      debit_card: 'Zahlungen vom Konto',
+      credit_card: 'Mit Abbuchungstag',
+      savings: 'Nicht im verfügbaren Betrag',
+      investment: 'ETFs, Fonds, Aktien',
+      pocket: 'Geld, für einen Zweck zurückgelegt',
+    },
   },
   categories: {
     title: 'Kategorien',
@@ -1125,6 +1145,8 @@ export const de: Messages = {
     editTag: 'Tag bearbeiten',
     newTag: 'Neuer Tag',
     name: 'Name',
+    namePlaceholder: 'Urlaub, Arbeit, Geschenke…',
+    add: 'Hinzufügen',
     missing_name: 'Gib einen Namen ein, um zu sichern.',
     missing_taken: 'Es gibt schon einen Tag mit diesem Namen.',
     mergeInto: 'Mit anderem Tag zusammenführen',
@@ -1290,6 +1312,7 @@ export const de: Messages = {
     stepGoal: 'Für ein Ziel zurücklegen',
     stepGoalBody: 'Optional.',
     inAccounts: 'Auf deinen Konten',
+    inAccountsNote: 'Der Rest der Startseite erscheint mit der ersten Buchung.',
   },
   targets: {
     today: 'heute',
@@ -1401,6 +1424,11 @@ export const de: Messages = {
     presetEmergency: 'Notgroschen',
     presetHoliday: 'Urlaub',
     presetCar: 'Auto',
+    presetEmergencyHint: '3 Monate Ausgaben: etwa {{amount}}',
+    presetEmergencyHintNone: '3 Monate Ausgaben',
+    presetHolidayHint: 'Ein Betrag und ein Datum',
+    presetCarHint: 'Anzahlung oder Kauf',
+    somethingElse: 'Etwas anderes?',
   },
   recap: {
     title_month: '{{month}} ist vorbei',

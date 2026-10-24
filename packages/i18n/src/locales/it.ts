@@ -519,7 +519,9 @@ export const it = {
     detailNote: 'Nota',
     detailAttachments: 'Allegati',
     quickAddTitle: 'Registra la prima spesa',
+    quickAddBody: 'Da lì nascono le statistiche, i budget e il saldo di ogni conto.',
     importCsv: 'Importa da CSV',
+    importCsvPrompt: 'Hai già i movimenti in un file?',
     noResultsIn: 'Nessun risultato in {{period}}',
     otherPeriods: '«{{query}}» compare in altri periodi:',
   },
@@ -775,6 +777,7 @@ export const it = {
     forecastColAt: 'Al',
     forecastColRange: 'tra',
     emptyPeriod: '{{period}} non ha ancora transazioni',
+    emptyPeriodBody: 'Le statistiche di questo periodo partono dalla prima spesa.',
     goToPeriod: 'Vai a {{period}}',
   },
   attachments: {
@@ -1008,6 +1011,12 @@ export const it = {
     emptyBody:
       'Un budget fissa un tetto per categoria e ti avvisa quando sei in anticipo sul ritmo del periodo.',
     suggestTitle: 'Dove spendi di più',
+    suggestLead:
+      'Un budget fissa un tetto per categoria. Parti da una di queste, con la cifra che spendi di solito.',
+    suggestNote_month: 'mediana degli ultimi 6 mesi',
+    suggestNote_week: 'mediana delle ultime 6 settimane',
+    suggestNote_cycle: 'mediana degli ultimi 6 cicli',
+    suggestNote_year: 'mediana degli ultimi 6 anni',
     suggestAmount_month: '{{amount}} al mese',
     suggestAmount_week: '{{amount}} a settimana',
     suggestAmount_cycle: '{{amount}} a ciclo',
@@ -1071,6 +1080,17 @@ export const it = {
     archived_other: '{{count}} conti archiviati',
     empty: 'Nessun conto',
     whichType: 'Che conto vuoi aggiungere?',
+    whichTypeBody:
+      'Parti da quello che usi di più. Il saldo di oggi basta: i movimenti passati si possono importare dopo.',
+    typeHint: {
+      cash: 'Il portafoglio',
+      checking: 'Stipendio, bollette, bonifici',
+      debit_card: 'Pagamenti dal conto',
+      credit_card: 'Con giorno di addebito',
+      savings: 'Fuori dal totale spendibile',
+      investment: 'ETF, fondi, azioni',
+      pocket: 'Soldi da parte per uno scopo',
+    },
   },
   categories: {
     title: 'Categorie',
@@ -1118,6 +1138,8 @@ export const it = {
     editTag: 'Modifica tag',
     newTag: 'Nuovo tag',
     name: 'Nome',
+    namePlaceholder: 'vacanze, lavoro, regali…',
+    add: 'Aggiungi',
     missing_name: 'Inserisci un nome per salvare.',
     missing_taken: 'Esiste già un tag con questo nome.',
     mergeInto: 'Unisci a un altro tag',
@@ -1284,6 +1306,7 @@ export const it = {
     stepGoal: 'Metti da parte per un obiettivo',
     stepGoalBody: 'Facoltativo.',
     inAccounts: 'Nei tuoi conti',
+    inAccountsNote: 'Il resto della Home compare con la prima transazione.',
   },
   targets: {
     today: 'oggi',
@@ -1395,6 +1418,11 @@ export const it = {
     presetEmergency: 'Fondo emergenza',
     presetHoliday: 'Vacanze',
     presetCar: 'Macchina',
+    presetEmergencyHint: '3 mesi di spese: circa {{amount}}',
+    presetEmergencyHintNone: '3 mesi di spese',
+    presetHolidayHint: 'Una cifra e una data',
+    presetCarHint: 'Anticipo o acquisto',
+    somethingElse: 'Qualcos’altro?',
   },
   recap: {
     title_month: '{{month}} si è chiuso',

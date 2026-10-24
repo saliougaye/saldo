@@ -525,7 +525,10 @@ export const fr: Messages = {
     detailNote: 'Note',
     detailAttachments: 'Pièces jointes',
     quickAddTitle: 'Enregistre ta première dépense',
+    quickAddBody:
+      'C’est de là que viennent les statistiques, les budgets et le solde de chaque compte.',
     importCsv: 'Importer depuis un CSV',
+    importCsvPrompt: 'Tu as déjà tes opérations dans un fichier ?',
     noResultsIn: 'Aucun résultat en {{period}}',
     otherPeriods: '« {{query}} » apparaît dans d’autres périodes :',
   },
@@ -780,6 +783,7 @@ export const fr: Messages = {
     forecastColAt: 'Au',
     forecastColRange: 'entre',
     emptyPeriod: '{{period}} n’a pas encore d’opérations',
+    emptyPeriodBody: 'Les statistiques de cette période commencent avec la première dépense.',
     goToPeriod: 'Aller à {{period}}',
   },
   attachments: {
@@ -1013,6 +1017,12 @@ export const fr: Messages = {
     emptyBody:
       'Un budget fixe un plafond par catégorie et te prévient quand tu dépenses plus vite que le rythme de la période.',
     suggestTitle: 'Où tu dépenses le plus',
+    suggestLead:
+      'Un budget fixe un plafond par catégorie. Commence par l’une de celles-ci, avec ce que tu dépenses d’habitude.',
+    suggestNote_month: 'médiane des 6 derniers mois',
+    suggestNote_week: 'médiane des 6 dernières semaines',
+    suggestNote_cycle: 'médiane des 6 derniers cycles',
+    suggestNote_year: 'médiane des 6 dernières années',
     suggestAmount_month: '{{amount}} par mois',
     suggestAmount_week: '{{amount}} par semaine',
     suggestAmount_cycle: '{{amount}} par cycle',
@@ -1076,6 +1086,17 @@ export const fr: Messages = {
     archived_other: '{{count}} comptes archivés',
     empty: 'Aucun compte',
     whichType: 'Quel compte veux-tu ajouter ?',
+    whichTypeBody:
+      'Commence par celui que tu utilises le plus. Le solde du jour suffit : tu pourras importer les opérations passées plus tard.',
+    typeHint: {
+      cash: 'Ton portefeuille',
+      checking: 'Salaire, factures, virements',
+      debit_card: 'Paiements depuis le compte',
+      credit_card: 'Avec un jour de prélèvement',
+      savings: 'Hors du total disponible',
+      investment: 'ETF, fonds, actions',
+      pocket: 'De l’argent mis de côté pour un projet',
+    },
   },
   categories: {
     title: 'Catégories',
@@ -1127,6 +1148,8 @@ export const fr: Messages = {
     editTag: 'Modifier le tag',
     newTag: 'Nouveau tag',
     name: 'Nom',
+    namePlaceholder: 'vacances, travail, cadeaux…',
+    add: 'Ajouter',
     missing_name: 'Saisis un nom pour enregistrer.',
     missing_taken: 'Un tag porte déjà ce nom.',
     mergeInto: 'Fusionner avec un autre tag',
@@ -1293,6 +1316,7 @@ export const fr: Messages = {
     stepGoal: 'Mets de côté pour un objectif',
     stepGoalBody: 'Facultatif.',
     inAccounts: 'Dans tes comptes',
+    inAccountsNote: 'Le reste de l’accueil apparaît avec la première opération.',
   },
   targets: {
     today: 'aujourd’hui',
@@ -1404,6 +1428,11 @@ export const fr: Messages = {
     presetEmergency: 'Fonds d’urgence',
     presetHoliday: 'Vacances',
     presetCar: 'Voiture',
+    presetEmergencyHint: '3 mois de dépenses : environ {{amount}}',
+    presetEmergencyHintNone: '3 mois de dépenses',
+    presetHolidayHint: 'Un montant et une date',
+    presetCarHint: 'Apport ou achat',
+    somethingElse: 'Autre chose ?',
   },
   recap: {
     title_month: '{{month}} est terminé',

@@ -1,6 +1,7 @@
 import {
   type CurrencyCode,
   type DateRange,
+  daysInMonth,
   type FirstWeekday,
   getCurrency,
   type LocalDate,
@@ -548,6 +549,30 @@ export function formatPeriodRange(range: DateRange, locale: AppLocale, today: Lo
     monthName(conventions.monthsLong, start.month),
     year,
   );
+}
+
+/**
+ * The name of a period inside a sentence (W11, «Nessun risultato in ottobre»): a calendar month by
+ * its name, in the catalog's case, with the year when it is not `today`'s; any other period (a
+ * cycle, a week, a year) by its days, as `formatCycleRange` writes them.
+ */
+export function formatPeriodName(range: DateRange, locale: AppLocale, today: LocalDate): string {
+  const start = parseLocalDate(range.start);
+  const end = parseLocalDate(range.end);
+  const calendarMonth =
+    start.day === 1 &&
+    end.year === start.year &&
+    end.month === start.month &&
+    end.day === daysInMonth(start.year, start.month);
+  if (!calendarMonth) return formatCycleRange(range, locale, today);
+  return start.year === parseLocalDate(today).year
+    ? formatMonthLong(range.start, locale)
+    : formatMonthYear({ year: start.year, month: start.month }, locale);
+}
+
+/** The first letter in upper case: a sentence or a title that starts with `formatPeriodName`. */
+export function upperFirst(text: string, locale: AppLocale): string {
+  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
 }
 
 /**

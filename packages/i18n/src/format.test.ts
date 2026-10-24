@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatMajor, formatMoney, formatMoneyParts, formatPeriodRange } from './format';
+import {
+  formatMajor,
+  formatMoney,
+  formatMoneyParts,
+  formatPeriodName,
+  formatPeriodRange,
+} from './format';
 
 describe('formatMoney', () => {
   it('formats Italian amounts with suffix symbol', () => {
@@ -100,5 +106,33 @@ describe('formatPeriodRange', () => {
     expect(formatPeriodRange(cycle, 'it', '2026-10-01')).toBe('27 set – 26 ott');
     const newYear = { start: '2026-12-27', end: '2027-01-26' } as const;
     expect(formatPeriodRange(newYear, 'it', '2027-01-04')).toBe('27 dic 2026 – 26 gen');
+  });
+});
+
+describe('formatPeriodName', () => {
+  const TODAY = '2026-10-21';
+
+  it('names a calendar month by its name, in the case of the catalog', () => {
+    expect(formatPeriodName({ start: '2026-10-01', end: '2026-10-31' }, 'it', TODAY)).toBe(
+      'ottobre',
+    );
+    expect(formatPeriodName({ start: '2026-02-01', end: '2026-02-28' }, 'en', TODAY)).toBe(
+      'February',
+    );
+  });
+
+  it('adds the year to a month outside the year of today', () => {
+    expect(formatPeriodName({ start: '2025-12-01', end: '2025-12-31' }, 'it', TODAY)).toBe(
+      'dicembre 2025',
+    );
+  });
+
+  it('names a cycle, a week or a year by its days', () => {
+    expect(formatPeriodName({ start: '2026-09-27', end: '2026-10-26' }, 'it', TODAY)).toBe(
+      '27 set – 26 ott',
+    );
+    expect(formatPeriodName({ start: '2026-10-19', end: '2026-10-25' }, 'it', TODAY)).toBe(
+      '19 ott – 25 ott',
+    );
   });
 });

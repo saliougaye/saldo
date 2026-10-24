@@ -516,7 +516,9 @@ export const sv: Messages = {
     detailNote: 'Anteckning',
     detailAttachments: 'Bilagor',
     quickAddTitle: 'Registrera din första utgift',
+    quickAddBody: 'Därifrån kommer statistiken, budgetarna och saldot på varje konto.',
     importCsv: 'Importera från CSV',
+    importCsvPrompt: 'Har du redan transaktionerna i en fil?',
     noResultsIn: 'Inga resultat i {{period}}',
     otherPeriods: '”{{query}}” finns i andra perioder:',
   },
@@ -771,6 +773,7 @@ export const sv: Messages = {
     forecastColAt: 'Den',
     forecastColRange: 'mellan',
     emptyPeriod: '{{period}} har inga transaktioner än',
+    emptyPeriodBody: 'Statistiken för den här perioden börjar med den första utgiften.',
     goToPeriod: 'Gå till {{period}}',
   },
   attachments: {
@@ -1001,6 +1004,12 @@ export const sv: Messages = {
     emptyBody:
       'En budget sätter ett tak per kategori och varnar dig när du ligger före periodens takt.',
     suggestTitle: 'Där du spenderar mest',
+    suggestLead:
+      'En budget sätter ett tak per kategori. Börja med en av dessa, med det du brukar spendera.',
+    suggestNote_month: 'median för de senaste 6 månaderna',
+    suggestNote_week: 'median för de senaste 6 veckorna',
+    suggestNote_cycle: 'median för de senaste 6 perioderna',
+    suggestNote_year: 'median för de senaste 6 åren',
     suggestAmount_month: '{{amount}} i månaden',
     suggestAmount_week: '{{amount}} i veckan',
     suggestAmount_cycle: '{{amount}} per period',
@@ -1064,6 +1073,17 @@ export const sv: Messages = {
     archived_other: '{{count}} arkiverade konton',
     empty: 'Inga konton',
     whichType: 'Vilket konto vill du lägga till?',
+    whichTypeBody:
+      'Börja med det du använder mest. Dagens saldo räcker: tidigare transaktioner kan du importera senare.',
+    typeHint: {
+      cash: 'Plånboken',
+      checking: 'Lön, räkningar, överföringar',
+      debit_card: 'Betalningar från kontot',
+      credit_card: 'Med dragningsdag',
+      savings: 'Utanför det tillgängliga beloppet',
+      investment: 'ETF:er, fonder, aktier',
+      pocket: 'Pengar undanlagda för ett syfte',
+    },
   },
   categories: {
     title: 'Kategorier',
@@ -1111,6 +1131,8 @@ export const sv: Messages = {
     editTag: 'Redigera tagg',
     newTag: 'Ny tagg',
     name: 'Namn',
+    namePlaceholder: 'semester, jobb, presenter…',
+    add: 'Lägg till',
     missing_name: 'Ange ett namn för att spara.',
     missing_taken: 'Det finns redan en tagg med det namnet.',
     mergeInto: 'Slå ihop med en annan tagg',
@@ -1275,6 +1297,7 @@ export const sv: Messages = {
     stepGoal: 'Spara till ett mål',
     stepGoalBody: 'Valfritt.',
     inAccounts: 'På dina konton',
+    inAccountsNote: 'Resten av Hem visas med den första transaktionen.',
   },
   targets: {
     today: 'i dag',
@@ -1386,6 +1409,11 @@ export const sv: Messages = {
     presetEmergency: 'Buffert',
     presetHoliday: 'Semester',
     presetCar: 'Bil',
+    presetEmergencyHint: '3 månaders utgifter: cirka {{amount}}',
+    presetEmergencyHintNone: '3 månaders utgifter',
+    presetHolidayHint: 'Ett belopp och ett datum',
+    presetCarHint: 'Kontantinsats eller köp',
+    somethingElse: 'Något annat?',
   },
   recap: {
     title_month: '{{month}} är slut',
