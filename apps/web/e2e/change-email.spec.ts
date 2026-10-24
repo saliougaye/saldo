@@ -9,6 +9,11 @@ function masked(email: string): string {
   return `${email.slice(0, 1)}***${email.slice(at)}`;
 }
 
+/** A literal as a pattern: every character that a regular expression reads is escaped, backslash too. */
+function literal(text: string): RegExp {
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+}
+
 // Plan `docs/superpowers/plans/2026-10-19-change-email.md`. The route tests cover the refusals (same
 // address, taken address, expired link, replay, throttle). This flow follows the happy path through
 // the real pages and a real SMTP connection.
@@ -65,7 +70,7 @@ test('a verified member changes the address: the link in the new mailbox swaps i
     await expect(page.getByText(t('web.account.verified'), { exact: true })).toBeVisible();
 
     // The old address is told, with the new one masked.
-    await sink.waitFor(oldEmail, new RegExp(masked(newEmail).replace(/\*/g, '\\*')));
+    await sink.waitFor(oldEmail, literal(masked(newEmail)));
     await member.context.close();
   } finally {
     await clearSmtp(browser, t);
