@@ -346,7 +346,8 @@ export default async function TransactionsPage({
               <ProgressBar
                 ratio={summary.ratio}
                 pace={period.isCurrent ? summary.pace : null}
-                tone={summary.overPace ? 'over' : 'normal'}
+                // H12: grey over pace, the accent only once spending passes the income.
+                tone={summary.ratio > 1 ? 'over' : 'normal'}
               />
               <span className={styles.cellNote}>{expenseNote}</span>
             </div>
