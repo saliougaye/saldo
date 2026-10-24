@@ -2,7 +2,7 @@
 
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { Dialog } from '@base-ui/react/dialog';
-import { rankSearch, SEARCH_GROUP_LIMIT } from '@saldo/core';
+import { MAX_SEARCH_QUERY, rankSearch, SEARCH_GROUP_LIMIT } from '@saldo/core';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -27,6 +27,8 @@ interface Group {
   value: string;
   label: string;
   items: Row[];
+  /** Rows of an older query, kept on screen while the new one runs (§05), but not to be opened. */
+  stale?: boolean;
 }
 
 interface Props {
@@ -117,6 +119,11 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== 'k' || !(event.metaKey || event.ctrlKey)) return;
       if (event.altKey || event.shiftKey) return;
+      // A held ⌘K repeats the event: it must not open and close the palette over and over.
+      if (event.repeat) {
+        event.preventDefault();
+        return;
+      }
       if (!open && otherOwnerOpen()) return;
       event.preventDefault();
       if (open) reset();
@@ -187,6 +194,7 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
           value: group.key,
           label: group.label,
           items: group.hits.map((hit) => ({ ...hit, id: `${group.key}:${hit.id}` })),
+          stale: current === null || failed,
         }))),
   ].filter((group) => group.items.length > 0);
   const nothing = current !== null && !pending && groups.length === 0;
@@ -251,6 +259,8 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
               <Autocomplete.Input
                 ref={input}
                 className={styles.input}
+                // The server reads no more than this: a longer text would never match its answer.
+                maxLength={MAX_SEARCH_QUERY}
                 placeholder={strings.placeholder}
                 aria-label={strings.title}
               />
@@ -280,6 +290,8 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
                     key={group.value}
                     items={group.items}
                     className={styles.group}
+                    // «See all» has no heading: its one row names the group.
+                    aria-label={group.label === '' ? group.items[0]?.title : undefined}
                   >
                     {group.label === '' ? null : (
                       <Autocomplete.GroupLabel className={styles.groupLabel}>
@@ -292,6 +304,7 @@ export function CommandPalette({ commands, search, apple, strings }: Props) {
                           key={row.id}
                           value={row}
                           className={styles.item}
+                          disabled={group.stale === true}
                           onClick={() => go(row.href)}
                         >
                           <span className={styles.itemIcon}>

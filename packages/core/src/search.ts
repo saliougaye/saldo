@@ -24,6 +24,9 @@ export const SEARCH_SCORE = {
   amountWhole: 200,
 } as const;
 
+/** The longest query the palette sends: longer than any name or description it can match. */
+export const MAX_SEARCH_QUERY = 120;
+
 /** The palette shows at most this many rows in one group. */
 export const SEARCH_GROUP_LIMIT = 5;
 
@@ -62,7 +65,8 @@ export interface AmountQuery {
  */
 export function amountQuery(query: string, minorDigits: MinorDigits): AmountQuery | null {
   if (!/\d/.test(query) || !/^[\s\d.,+\-−\p{Sc}]+$/u.test(query)) return null;
-  const compact = query.replace(/[^\d.,]/g, '').replace(/^[.,]+|[.,]+$/g, '');
+  // A trailing separator is still being typed; a leading one is a zero whole part (`,05`).
+  const compact = query.replace(/[^\d.,]/g, '').replace(/[.,]+$/g, '');
   const last = Math.max(compact.lastIndexOf('.'), compact.lastIndexOf(','));
   const decimals = last === -1 ? '' : compact.slice(last + 1);
   const isDecimal = minorDigits > 0 && last !== -1 && decimals.length <= minorDigits;

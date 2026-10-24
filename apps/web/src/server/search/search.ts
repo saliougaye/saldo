@@ -1,12 +1,9 @@
-import { readSettings } from '@saldo/core';
+import { MAX_SEARCH_QUERY, readSettings } from '@saldo/core';
 import { catalogs, makeTranslator } from '@saldo/i18n';
 import { type SearchResult, searchView } from '../../features/search/searchView';
 import { webLocale } from '../../i18n/locale';
 import { pageState } from '../page/context';
 import { loadUserData } from '../userData/load';
-
-/** The longest query the palette sends: longer than any name or description it can match. */
-export const MAX_SEARCH_QUERY = 120;
 
 /**
  * Palette spec §05: the data search of one user. `userId` comes from the session, never from the

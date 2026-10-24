@@ -37,6 +37,12 @@ describe('amountQuery', () => {
     expect(amountQuery('1.234,56', 2)).toEqual({ min: 123456, max: 123456, exact: 123456 });
   });
 
+  // Bug: the leading separator was stripped, so `,05` read as 5.00–5.99 € instead of 0.05 €.
+  it('reads a leading separator as a zero whole part', () => {
+    expect(amountQuery(',05', 2)).toEqual({ min: 5, max: 5, exact: 5 });
+    expect(amountQuery('.5', 2)).toEqual({ min: 50, max: 50, exact: 50 });
+  });
+
   it('follows the decimals of the currency', () => {
     expect(amountQuery('1.234', 3)).toEqual({ min: 1234, max: 1234, exact: 1234 });
     expect(amountQuery('1.5', 0)).toEqual({ min: 15, max: 15, exact: 15 });

@@ -188,6 +188,11 @@
   background: var(--color-raised);
 }
 
+/* The rows of an older query while the new one runs: on screen, not to be opened. */
+.item[data-disabled] {
+  opacity: 0.5;
+}
+
 .itemIcon {
   flex: none;
   display: grid;
