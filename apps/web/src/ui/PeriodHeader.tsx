@@ -1,5 +1,5 @@
 import type { LocalDate, PeriodDef, PeriodView } from '@saldo/core';
-import { type AppLocale, formatCycleRange, formatMonthLong } from '@saldo/i18n';
+import { type AppLocale, formatPeriodRange } from '@saldo/i18n';
 import { periodSteps } from '../features/period/periodParams';
 import { AppLink as Link } from './AppLink';
 import { Icon } from './Icon';
@@ -15,25 +15,27 @@ interface Props {
   params?: Record<string, string>;
   /** How many periods after the current one `›` may reach (§17.1.7). 0 by default, as on the phone. */
   reach?: number;
-  /** After the range, under the title: «giorno 19 di 31». */
+  /** After the `›`, on the same row: «giorno 13 di 30», «periodo chiuso», «42 transazioni». */
   status?: string;
   strings: { previous: string; next: string };
 }
 
-function upperFirst(text: string, locale: AppLocale): string {
-  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
-}
-
-/** The title says which period, the line under it exactly which days: a month is «Settembre», a week its range. */
-function periodTitle(period: PeriodView, def: PeriodDef, locale: AppLocale, range: string): string {
-  if (def.kind === 'month' || def.kind === 'cycle') {
-    return upperFirst(formatMonthLong(period.range.end, locale), locale);
-  }
+/** The name between ‹ and ›: the days of the period (`1 – 30 settembre`), or the year of a yearly one. */
+export function periodTitle(
+  period: PeriodView,
+  def: PeriodDef,
+  today: LocalDate,
+  locale: AppLocale,
+): string {
   if (def.kind === 'year') return period.range.start.slice(0, 4);
-  return range;
+  return formatPeriodRange(period.range, locale, today);
 }
 
-/** The period header (§5.4, §17.1.7): title and days on the leading side, ‹ › as one joined control. No client state: the URL is the state. */
+/**
+ * The page head (redesign §04): «‹ 1 – 30 settembre › giorno 13 di 30» on one row. The ‹ › sit
+ * beside the name they change. No client state: both steps are links, so the period survives a
+ * reload and a new tab.
+ */
 export function PeriodHeader({
   period,
   def,
@@ -46,30 +48,26 @@ export function PeriodHeader({
   strings,
 }: Props) {
   const steps = periodSteps(def, period.range, today, path, params, reach);
-  const range = formatCycleRange(period.range, locale, period.isCurrent ? today : undefined);
-  const title = periodTitle(period, def, locale, range);
-  const sub = title === range ? status : [range, status].filter(Boolean).join(' · ');
   return (
     <div className={styles.header}>
-      {/* G: the ‹ › sit beside the word they change, not at the far edge of the page. */}
-      <div className={styles.titleRow}>
-        <span className={styles.title}>{title}</span>
-        <div className={styles.stepper}>
-          <Link className={styles.step} href={steps.previous} aria-label={strings.previous}>
-            <Icon name="chevL" size={18} className={styles.chevL} />
+      <span className={styles.stepper}>
+        <Link className={styles.step} href={steps.previous} aria-label={strings.previous}>
+          <Icon name="chevL" size={16} className={styles.chevL} />
+        </Link>
+        <h1 className={styles.title}>{periodTitle(period, def, today, locale)}</h1>
+        {steps.next === null ? (
+          <span className={`${styles.step} ${styles.disabled}`} aria-hidden="true">
+            <Icon name="chevR" size={16} className={styles.chevR} />
+          </span>
+        ) : (
+          <Link className={styles.step} href={steps.next} aria-label={strings.next}>
+            <Icon name="chevR" size={16} className={styles.chevR} />
           </Link>
-          {steps.next === null ? (
-            <span className={`${styles.step} ${styles.disabled}`} aria-hidden="true">
-              <Icon name="chevR" size={18} className={styles.chevR} />
-            </span>
-          ) : (
-            <Link className={styles.step} href={steps.next} aria-label={strings.next}>
-              <Icon name="chevR" size={18} className={styles.chevR} />
-            </Link>
-          )}
-        </div>
-      </div>
-      {sub === undefined || sub === '' ? null : <span className={styles.sub}>{sub}</span>}
+        )}
+      </span>
+      {status === undefined || status === '' ? null : (
+        <span className={styles.status}>{status}</span>
+      )}
     </div>
   );
 }

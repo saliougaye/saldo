@@ -7,7 +7,7 @@
 .box {
   padding: 24px;
   border-radius: var(--radius-card);
-  background: var(--color-bg);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -26,8 +26,9 @@
 
 .title {
   width: 180px;
-  height: 24px;
-  margin: 16px 0;
+  height: 20px;
+  /* The page head's one row (redesign §04), so the blocks do not move when the page arrives. */
+  margin: calc((var(--layout-period-head-height) - 20px) / 2) 0;
 }
 
 .label {

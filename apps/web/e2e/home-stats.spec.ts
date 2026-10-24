@@ -1,6 +1,11 @@
 import type { Locator } from '@playwright/test';
 import type { CurrencyCode } from '@saldo/core';
-import { formatDayMonth, formatMoneyParts, formatMonthLong, plural } from '@saldo/i18n';
+import {
+  formatDayMonth,
+  formatMoneyParts,
+  formatPeriodRange,
+  plural,
+} from '@saldo/i18n';
 import { expect, test } from './fixtures';
 import {
   categoryFamily,
@@ -24,10 +29,6 @@ import {
   sectionOf,
   statFigure,
 } from './support/txPage';
-
-function upperFirst(text: string): string {
-  return text.charAt(0).toLocaleUpperCase('it') + text.slice(1);
-}
 
 /** What a goal has put aside: transfers into the pocket, less transfers out of it. */
 function saved(ledger: Ledger, pocketId: string): number {
@@ -70,7 +71,11 @@ test.describe('Home', () => {
 
     await page.goto('/home');
     await expect(
-      page.getByText(upperFirst(formatMonthLong(month.end, lang)), { exact: true }),
+      page.getByRole('heading', {
+        level: 1,
+        name: formatPeriodRange(month, lang, ledger.today),
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(homeFigure(page, t('home.income'))).toContainText(money(income));
     await expect(homeFigure(page, t('home.expenses'))).toContainText(money(spent));
@@ -255,7 +260,9 @@ test.describe('Home', () => {
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
     const earlier = previousMonth(closed);
-    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
     const next = page.getByRole('link', { name: t('web.shell.nextPeriod') });
     const previous = page.getByRole('link', { name: t('web.shell.previousPeriod') });
 
@@ -480,7 +487,9 @@ test.describe('Statistiche', () => {
     const money = moneyFormatter(ledger, lang);
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
-    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
     const figure = (label: string) => statFigure(page, label);
 
     await page.goto('/stats');
@@ -514,7 +523,9 @@ test.describe('Statistiche', () => {
     const lang = appLocale(locale);
     const current = monthOf(ledger.today);
     const closed = previousMonth(current);
-    const title = (range: { end: string }) => upperFirst(formatMonthLong(range.end, lang));
+    // The page head names the period by its days (redesign §04): «1 – 30 settembre».
+    const title = (range: { start: string; end: string }) =>
+      formatPeriodRange(range, lang, ledger.today);
 
     await page.goto('/stats');
     await expect(page.getByText(title(current), { exact: true })).toBeVisible();
