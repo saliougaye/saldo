@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saldo — A fresh passkey to change the email address</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens: @saldo/ui palettes (light / dark), Geist ─────────────────────── */
+:root {
+  --page: #E9E9E7; --bg: #FFFFFF; --surface: #FAFAF9; --raised: #F1F1EF;
+  --border: rgba(0,0,0,.08); --border-strong: rgba(0,0,0,.18);
+  --text: #171717; --text-muted: #6E6E6E; --text-faint: #9A9A9A;
+  --ok: #2E8A50; --bad: #B5584F;
+  --ok-soft: color-mix(in oklch, var(--ok) 11%, var(--bg));
+  --bad-soft: color-mix(in oklch, var(--bad) 11%, var(--bg));
+  --sans: Geist, "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --r-card: 14px; --r-sheet: 20px; --r-pill: 999px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #050505; --bg: #0A0A0A; --surface: #121212; --raised: #1A1A1A;
+    --border: rgba(255,255,255,.07); --border-strong: rgba(255,255,255,.14);
+    --text: #EDEDED; --text-muted: #8C8C8C; --text-faint: #5C5C5C;
+    --ok: #5FBF7F; --bad: #D0806A;
+    --shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.5);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p, li, figcaption, td { text-wrap: pretty; }
+p { margin: 0 0 14px; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .86em; }
+:not(pre) > code { background: var(--raised); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { top: 12px; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.meta { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.lead { color: var(--text-muted); font-size: 1.12em; max-width: 64ch; }
+.ch-num { font: 500 13px/1 var(--mono); color: var(--text-faint); letter-spacing: .04em; }
+figure { margin: 0 0 24px; background: var(--surface); border-radius: var(--r-sheet); box-shadow: var(--shadow); padding: 28px; }
+figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+figcaption { font-size: 14px; color: var(--text-muted); margin-top: 16px; }
+figcaption b { color: var(--text); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+.card h4 { font-size: 16px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.stat { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.callout { background: var(--raised); border-radius: var(--r-card); padding: 16px 18px; margin: 0 0 18px; font-size: 16px; }
+.callout .meta { display: block; margin-bottom: 8px; }
+.callout.caution { background: var(--bad-soft); }
+.callout.caution .meta { color: var(--bad); }
+.callout p:last-child { margin: 0; }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 18px; }
+ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 44px; border-bottom: 1px solid var(--border); }
+ol.steps li:last-child { border-bottom: 0; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font: 600 13px/28px var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; background: var(--raised); color: var(--text); border-radius: var(--r-card); padding: 16px 64px 16px 18px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+.copy { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text-muted); box-shadow: 0 0 0 1px var(--border); cursor: pointer; display: grid; place-items: center; transition-property: scale, color; transition-duration: 160ms; transition-timing-function: ease-out; }
+.copy:active { scale: 0.96; }
+@media (hover: hover) and (pointer: fine) { .copy:hover { color: var(--text); } }
+.copy svg { grid-area: 1 / 1; width: 18px; height: 18px; transition-property: opacity, scale, filter; transition-duration: 200ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.copy .i-check { opacity: 0; scale: .25; filter: blur(4px); color: var(--ok); }
+.copy.done .i-copy { opacity: 0; scale: .25; filter: blur(4px); }
+.copy.done .i-check { opacity: 1; scale: 1; filter: blur(0); }
+.tablewrap { overflow-x: auto; margin: 0 0 24px; border-radius: var(--r-card); box-shadow: var(--shadow); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 16px; vertical-align: top; border-bottom: 1px solid var(--border); }
+th { font: 500 12px/1.2 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); background: var(--raised); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.chip { font: 13px/1 var(--mono); padding: 7px 10px; border-radius: 8px; background: var(--raised); color: var(--text); }
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+.split2 > .card { padding: 22px; }
+.json { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre; overflow-x: auto; color: var(--text); }
+.json .k { color: var(--text-muted); } .json .s { color: var(--ok); }
+
+/* Screen illustrations (shipped English strings, Saldo tokens) */
+.stage { background: var(--page); border-radius: var(--r-sheet); padding: 36px 20px; display: grid; place-items: center; margin: 0 0 24px; }
+.screen { width: 380px; max-width: 100%; background: var(--bg); border-radius: 28px; box-shadow: var(--shadow), 0 24px 60px rgba(0,0,0,.12); padding: 24px 20px; font-size: 14px; line-height: 1.45; }
+.screen .brandline { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.screen .brandline i { width: 22px; height: 22px; border-radius: 7px; background: var(--text); display: inline-block; }
+.screen h5 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+.screen .sub { color: var(--text-muted); font-size: 13px; }
+.screen .lbl { font-weight: 600; margin: 16px 0 6px; display: flex; justify-content: space-between; }
+.screen .lbl span { color: var(--text-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.screen .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--raised); border-radius: 10px; padding: 9px 10px; font: 12px var(--mono); margin: 8px 0 10px; overflow: hidden; white-space: nowrap; }
+.screen .field span { overflow: hidden; text-overflow: ellipsis; }
+.screen .field b { font: 600 12px var(--sans); }
+.screen .seg { display: flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
+.screen .seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: 8px; color: var(--text-muted); }
+.screen .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.screen .row { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.screen .row .grow { flex: 1; min-width: 0; }
+.screen .tile { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-weight: 600; flex: none; }
+.screen .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--raised); margin: 3px 4px 0 0; }
+.screen .muted { color: var(--text-muted); font-size: 12px; }
+.screen .clientcard { display: flex; gap: 12px; align-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--border); border-radius: 14px; padding: 12px; }
+.screen .fresh { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin: 10px 0 4px; }
+.screen .fresh b { display: block; font-size: 12px; }
+.screen .scope { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.screen .scope .bx { width: 18px; height: 18px; border-radius: 5px; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; flex: none; margin-top: 2px; }
+.screen .scope small { display: block; color: var(--text-muted); font-size: 12px; }
+.screen .btn { display: block; text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; margin-top: 8px; background: var(--raised); }
+.screen .btn.p { background: var(--text); color: var(--bg); }
+.stage-cap { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; text-align: center; }
+
+/* SVG vocabulary */
+svg text { font-family: var(--sans); fill: var(--text); }
+svg .tm { fill: var(--text-muted); } svg .tf { fill: var(--text-faint); } svg .ti { fill: var(--bg); }
+svg .tok { fill: var(--ok); } svg .tbad { fill: var(--bad); }
+svg .b { font-weight: 600; } svg .mono { font-family: var(--mono); }
+svg .bx { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+svg .bx-r { fill: var(--raised); }
+svg .bx-ink { fill: var(--text); }
+svg .bx-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+svg .bx-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+svg .bx-dash { fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg .ln { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+svg .ln-ink { stroke: var(--text); stroke-width: 2.5; fill: none; }
+svg .ln-ok { stroke: var(--ok); stroke-width: 2.5; fill: none; }
+svg .ln-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 6 5; }
+svg .lane { stroke: var(--border-strong); stroke-width: 1.5; stroke-dasharray: 3 6; }
+svg .ah { fill: var(--text-muted); } svg .ah-ink { fill: var(--text); } svg .ah-ok { fill: var(--ok); } svg .ah-bad { fill: var(--bad); }
+svg .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Reveal: infrequent, once per figure, explanatory */
+.js .rv { opacity: 0; translate: 0 14px; transition-property: opacity, translate; transition-duration: 600ms; transition-timing-function: var(--ease-out); }
+.js .rv.in { opacity: 1; translate: 0 0; }
+.js .rv.now { transition: none; }
+@media (prefers-reduced-motion: reduce) { .js .rv { translate: none; transition-property: opacity; transition-duration: 200ms; } }
+
+/* ── Header & footer (shared bones) ───────────────────────────────────────── */
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero p { color: var(--text-muted); font-size: clamp(18px, 2vw, 21px); max-width: 52ch; margin: 18px 0 0; }
+.hero .meta { margin-bottom: 22px; display: block; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px; font-size: 14px; color: var(--text-muted); }
+.facts b { color: var(--text); font-weight: 500; }
+footer { color: var(--text-faint); font-size: 13px; padding: 48px 24px 120px; text-align: center; }
+
+/* ── Layout: sidebar contents, one reading column ─────────────────────── */
+body { font-size: 16px; }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+.toc { display: block; position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--border); }
+.toc .meta { margin-bottom: 16px; display: block; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc a { display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; margin: 0 -10px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 14px; transition-property: background-color, color; transition-duration: 150ms; transition-timing-function: ease; }
+.toc a span { font: 12px var(--mono); color: var(--text-faint); min-width: 18px; }
+@media (hover: hover) and (pointer: fine) { .toc a:hover { color: var(--text); } }
+.toc a[aria-current="location"] { background: var(--raised); color: var(--text); }
+main { padding: 40px 48px 0; min-width: 0; max-width: 900px; }
+.hero { padding: 24px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 52px); }
+.ch { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+.ch-head { display: grid; grid-template-columns: 44px 1fr; align-items: baseline; margin-bottom: 18px; }
+.ch-head h2 { font-size: 28px; }
+.ch-head .lead { grid-column: 2; margin-top: 8px; font-size: 17px; }
+.prose, .visual { padding-left: 44px; }
+figure { padding: 22px; }
+@media (max-width: 900px) {
+  .shell { display: block; }
+  .toc { position: sticky; top: 0; z-index: 3; height: auto; padding: 8px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(10px); overflow-x: auto; }
+  .toc .meta { display: none; }
+  .toc ol { display: flex; gap: 2px; width: max-content; }
+  .toc a { margin: 0; white-space: nowrap; }
+  main { padding: 24px 16px 0; }
+  .prose, .visual { padding-left: 0; }
+  .ch-head { grid-template-columns: 34px 1fr; }
+  html { scroll-padding-top: 64px; }
+}
+
+@media (max-width: 640px) {
+  figure { padding: 16px; }
+  .split2 { grid-template-columns: 1fr; }
+}
+
+
+/* Screen illustration: the email change block */
+.screen .inp { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 6px 0 10px; overflow-wrap: anywhere; }
+.screen .inp.bad { box-shadow: 0 0 0 1.5px var(--bad); }
+.screen .msg { background: var(--raised); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin: 0 0 4px; }
+.screen .hint { color: var(--bad); font-size: 12px; margin: -4px 0 10px; }
+.screen .btn { font-size: 14px; }
+.screen .field-lbl { font-weight: 600; font-size: 13px; }
+.split2 > * { min-width: 0; }
+.stage > div { min-width: 0; max-width: 100%; }
+@media (max-width: 640px) { td:first-child { white-space: normal; } td code { white-space: normal; overflow-wrap: anywhere; } th, td { padding: 10px 12px; } }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<!-- Shared SVG markers -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <span class="meta">Contents</span>
+  <ol>
+    <li><a href="#what"><span>01</span>What changes</a></li>
+    <li><a href="#rule"><span>02</span>The rule</a></li>
+    <li><a href="#flow"><span>03</span>The flow</a></li>
+    <li><a href="#screen"><span>04</span>The screen</a></li>
+    <li><a href="#limits"><span>05</span>Limits</a></li>
+    <li><a href="#words"><span>06</span>Words</a></li>
+  </ol>
+</nav>
+
+<main id="content">
+
+<header class="hero">
+  <div>
+    <span class="meta">Saldo · Account security · Spec</span>
+    <h1>A fresh passkey to change the email address</h1>
+    <p>To start a change to a real email address, you must sign in with your passkey in the last 5 minutes. A stolen session cannot take the account this way.</p>
+  </div>
+  <div class="facts">
+    <span><b>Language</b> Simplified Technical English (ASD-STE100)</span>
+    <span><b>Extends</b> <code>docs/superpowers/plans/2026-10-19-change-email.md</code></span>
+    <span><b>Date</b> 2026-10-24</span>
+  </div>
+</header>
+
+<!-- 01 -->
+<section class="ch" id="what" aria-labelledby="h-what">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">01</span>
+      <h2 id="h-what">What changes</h2>
+      <p class="lead">Saldo asks for a new passkey check before it starts the change of a real email address.</p>
+    </div>
+    <div class="prose">
+      <p>Since 2026-10-19, an account with a verified email can change it. The new address gets a link. The swap happens when the link is opened. The old address gets a notice.</p>
+      <p>Now the person must also confirm with a passkey. The passkey sign-in must be less than 5 minutes old.</p>
+      <div class="callout caution"><span class="meta">Threat</span><p>A person with a stolen session can start a change to a mailbox that this person controls. After the swap, «recover by email» (<code>/recover</code>) lets this person register a passkey and take the account. The notice to the old address comes too late.</p></div>
+      <p>A stolen session is a cookie or a bearer token. The rule applies on a server with SMTP. A server without SMTP does not change a real address at all, and this does not change.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="ch" id="rule" aria-labelledby="h-rule">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">02</span>
+      <h2 id="h-rule">The rule</h2>
+      <p class="lead">Only the start of a change to a real address needs a fresh session. All other actions stay as they are.</p>
+    </div>
+    <div class="prose">
+      <p>A session is fresh when its <code>createdAt</code> is less than 300 seconds old. The constant is <code>FRESH_SESSION_SECONDS</code>.</p>
+      <p>The sliding <code>updateAge</code> of Better Auth never changes <code>createdAt</code>. Thus a long-lived stolen session is never fresh.</p>
+      <p>The route <code>POST /api/me/email</code> and the Server Action <code>requestEmailChangeAction</code> both call <code>startEmailChange</code>. The function makes these checks in this order:</p>
+      <ol class="steps">
+        <li>Mail is off: answer <code>409 email_already_set</code>, as today.</li>
+        <li>The session is not fresh: answer <code>403 reauth_required</code>.</li>
+        <li>The address is unchanged: answer <code>400</code>.</li>
+        <li>The rate limit is reached: answer <code>429</code>.</li>
+        <li>Store the pending change and send the link: answer <code>202</code>.</li>
+      </ol>
+      <p>The freshness check comes before the rate limit. A refused request stores nothing, sends no mail, and spends no rate-limit slot.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Action</th><th scope="col">Fresh passkey needed</th><th scope="col">Answer when the session is old</th></tr></thead>
+        <tbody>
+          <tr><td>Start a change</td><td>Yes</td><td>Route: <code>403 reauth_required</code><br>Action: <code>{ ok: false, reason: 'reauth' }</code></td></tr>
+          <tr><td>Cancel a pending change</td><td>No</td><td>The request works. It only removes a row.</td></tr>
+          <tr><td>Open the mailed link</td><td>No</td><td>The link works. The token is the proof. Saldo reads no session.</td></tr>
+          <tr><td>Fill a synthetic address</td><td>No</td><td>The request works. See section 05.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3 style="font-size:17px;margin:0 0 6px">The phone</h3>
+      <p>The phone app only fills a synthetic address. It never calls the real-address branch. Thus the rule does not affect it.</p>
+      <p>A bearer client that calls the branch gets <code>403 reauth_required</code>. A phone session from the browser hand-off (<code>/auth/mobile</code>) starts right after a passkey sign-in. It is fresh for 5 minutes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="ch" id="flow" aria-labelledby="h-flow">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">03</span>
+      <h2 id="h-flow">The flow</h2>
+      <p class="lead">The form asks for the step-up one time, then it sends the same request again.</p>
+    </div>
+    <div class="prose">
+      <p>When the form gets <code>reauth</code>, it shows a sentence and a button. The button calls <code>authClient.signIn.passkey()</code>. The login page makes the same call.</p>
+      <p>The passkey verify step of Better Auth always creates a new session and sets its cookie. Thus the new session is fresh.</p>
+      <div class="callout"><span class="meta">Note</span><p>The person must click the button. Some browsers, for example Safari, refuse a WebAuthn prompt that no click started. Thus the form never starts the prompt itself.</p></div>
+      <p>If the passkey sign-in fails, or the person cancels it, the form shows «not confirmed». Nothing changes.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <figure class="rv">
+      <svg viewBox="0 0 1040 960" role="img" aria-labelledby="f1t">
+        <title id="f1t">Sequence of nine steps. The form sends the request. The server sees an old session and answers reauth. The form shows a button. The person clicks it. The passkey sign-in makes a new session. The form sends the same request again. The server answers 202 pending.</title>
+        <rect class="bx-ink" x="20" y="10" width="180" height="50" rx="25"/><text x="110" y="42" text-anchor="middle" class="ti b" font-size="19">Browser</text>
+        <line class="lane" x1="110" y1="60" x2="110" y2="940"/>
+        <rect class="bx" x="300" y="10" width="180" height="50" rx="25"/><text x="390" y="42" text-anchor="middle" class="b" font-size="19">Profile form</text>
+        <line class="lane" x1="390" y1="60" x2="390" y2="940"/>
+        <rect class="bx" x="580" y="10" width="180" height="50" rx="25"/><text x="670" y="42" text-anchor="middle" class="b" font-size="19">Saldo server</text>
+        <line class="lane" x1="670" y1="60" x2="670" y2="940"/>
+        <rect class="bx" x="860" y="10" width="180" height="50" rx="25"/><text x="950" y="42" text-anchor="middle" class="b" font-size="19">Authenticator</text>
+        <line class="lane" x1="950" y1="60" x2="950" y2="940"/>
+        <circle class="bx-ink" cx="22" cy="110" r="15"/><text x="22" y="116" text-anchor="middle" class="b ti" font-size="16">1</text>
+        <line class="ln-ink" x1="116" y1="110" x2="384" y2="110" marker-end="url(#ah-ink)"/>
+        <text x="250" y="100" text-anchor="middle" class="" font-size="17">click Send the link</text>
+        <circle class="bx" cx="22" cy="195" r="15"/><text x="22" y="201" text-anchor="middle" class="b " font-size="16">2</text>
+        <line class="ln-ink" x1="396" y1="195" x2="664" y2="195" marker-end="url(#ah-ink)"/>
+        <text x="530" y="185" text-anchor="middle" class=" mono" font-size="14">requestEmailChangeAction</text>
+        <text x="530" y="217" text-anchor="middle" class="tm" font-size="15">cookie + new address</text>
+        <rect class="bx-bad" x="500" y="226" width="340" height="32" rx="16"/><text x="670" y="247" text-anchor="middle" class="tbad" font-size="15">session older than 300 s</text>
+        <circle class="bx" cx="22" cy="300" r="15"/><text x="22" y="306" text-anchor="middle" class="b " font-size="16">3</text>
+        <line class="ln-bad dash" x1="664" y1="300" x2="396" y2="300" marker-end="url(#ah-bad)"/>
+        <text x="530" y="290" text-anchor="middle" class="tbad b mono" font-size="14">{ ok: false, reason: 'reauth' }</text>
+        <text x="530" y="322" text-anchor="middle" class="tm" font-size="15">nothing stored · no mail</text>
+        <circle class="bx" cx="22" cy="395" r="15"/><text x="22" y="401" text-anchor="middle" class="b " font-size="16">4</text>
+        <line class="ln dash" x1="384" y1="395" x2="116" y2="395" marker-end="url(#ah)"/>
+        <text x="250" y="385" text-anchor="middle" class="" font-size="17">sentence + button</text>
+        <text x="250" y="417" text-anchor="middle" class="tm" font-size="15">no passkey prompt yet</text>
+        <circle class="bx-ink" cx="22" cy="495" r="15"/><text x="22" y="501" text-anchor="middle" class="b ti" font-size="16">5</text>
+        <line class="ln-ink" x1="116" y1="495" x2="384" y2="495" marker-end="url(#ah-ink)"/>
+        <text x="250" y="485" text-anchor="middle" class="" font-size="17">click the button</text>
+        <text x="250" y="517" text-anchor="middle" class="tm" font-size="15">a click starts the prompt</text>
+        <circle class="bx" cx="22" cy="590" r="15"/><text x="22" y="596" text-anchor="middle" class="b " font-size="16">6</text>
+        <line class="ln-ink" x1="396" y1="590" x2="944" y2="590" marker-end="url(#ah-ink)"/>
+        <text x="810" y="580" text-anchor="middle" class=" mono" font-size="14">authClient.signIn.passkey()</text>
+        <circle class="bx" cx="22" cy="675" r="15"/><text x="22" y="681" text-anchor="middle" class="b " font-size="16">7</text>
+        <line class="ln dash" x1="944" y1="675" x2="396" y2="675" marker-end="url(#ah)"/>
+        <text x="810" y="665" text-anchor="middle" class="" font-size="17">signed assertion</text>
+        <text x="810" y="697" text-anchor="middle" class="tm" font-size="15">touch or biometric</text>
+        <circle class="bx" cx="22" cy="775" r="15"/><text x="22" y="781" text-anchor="middle" class="b " font-size="16">8</text>
+        <line class="ln-ink" x1="396" y1="775" x2="664" y2="775" marker-end="url(#ah-ink)"/>
+        <text x="530" y="765" text-anchor="middle" class="" font-size="17">verify the assertion</text>
+        <line class="ln-ok dash" x1="664" y1="835" x2="396" y2="835" marker-end="url(#ah-ok)"/><text x="530" y="825" text-anchor="middle" class="tok b" font-size="17">new session · new cookie</text><text x="530" y="857" text-anchor="middle" class="tm" font-size="15">createdAt is now: fresh</text>
+        <circle class="bx-ok" cx="22" cy="905" r="15"/><text x="22" y="911" text-anchor="middle" class="b tok" font-size="16">9</text>
+        <line class="ln-ok" x1="396" y1="905" x2="664" y2="905" marker-end="url(#ah-ok)"/>
+        <text x="530" y="895" text-anchor="middle" class="" font-size="17">same request again</text>
+        <line class="ln-ok dash" x1="664" y1="935" x2="396" y2="935" marker-end="url(#ah-ok)"/><text x="530" y="925" text-anchor="middle" class="tok b" font-size="17">202 pending · mail sent</text>
+      </svg>
+      <figcaption><b>Figure 1.</b> Black number: your step. Outlined number: automatic step. Green: the request that works.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 04 -->
+<section class="ch" id="screen" aria-labelledby="h-screen">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">04</span>
+      <h2 id="h-screen">The screen</h2>
+      <p class="lead">The email block of Profile shows two new states. Both use new i18n keys.</p>
+    </div>
+    <div class="prose">
+      <p>Add three keys to <code>packages/i18n/src/locales/en.ts</code> and <code>it.ts</code>. Put them in the group of <code>changeEmail</code> and <code>changeLabel</code>.</p>
+      <div class="chips">
+        <span class="chip">changeReauth</span><span class="chip">changeReauthButton</span><span class="chip">changeReauthFailed</span>
+      </div>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="split2">
+      <div class="stage rv">
+        <div>
+          <div class="screen" role="img" aria-label="Illustration of the email block after the reauth answer: the typed address, the sentence about the passkey, and the button Confirm with my passkey.">
+            <div class="brandline"><i></i>Profile</div>
+            <h5>Change email</h5>
+            <div class="field-lbl">New email address</div>
+            <div class="inp">anna@example.com</div>
+            <div class="msg">To protect your account, confirm with your passkey before you change your email.</div>
+            <span class="btn p">Confirm with my passkey</span>
+          </div>
+          <p class="stage-cap">State 1 · the answer is <code>reauth</code></p>
+        </div>
+      </div>
+      <div class="stage rv">
+        <div>
+          <div class="screen" role="img" aria-label="Illustration of the email block after a failed passkey sign-in: the field shows the message that the passkey was not confirmed and that nothing changed.">
+            <div class="brandline"><i></i>Profile</div>
+            <h5>Change email</h5>
+            <div class="field-lbl">New email address</div>
+            <div class="inp bad">anna@example.com</div>
+            <div class="hint">The passkey was not confirmed. Nothing changed.</div>
+            <span class="btn">Send the confirmation link</span>
+          </div>
+          <p class="stage-cap">State 2 · the passkey sign-in failed or was cancelled</p>
+        </div>
+      </div>
+    </div>
+    <p class="stage-cap" style="margin:-12px 0 24px">The illustrations follow the light or dark theme of your system. The strings are the real strings of <code>en.ts</code>.</p>
+  </div>
+</section>
+
+<!-- 05 -->
+<section class="ch" id="limits" aria-labelledby="h-limits">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">05</span>
+      <h2 id="h-limits">Limits</h2>
+      <p class="lead">The rule makes a stolen session much weaker. It does not remove every risk.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Item</th><th scope="col">Limit</th></tr></thead>
+        <tbody>
+          <tr><td>Session under 5 minutes</td><td>A thief who holds a session that is less than 5 minutes old can start a change. The thief cannot make a fresh session later without the passkey.</td></tr>
+          <tr><td>Synthetic address</td><td>An account from before D32 can fill a synthetic address with an old session. This account has no real address to protect. This gap affects only such old accounts.</td></tr>
+          <tr><td>Old sessions stay</td><td>The step-up makes a new session. The library does not revoke the old sessions. A stolen session stays valid for all other actions. Revoking other sessions is out of scope.</td></tr>
+          <tr><td>No undo link</td><td>The notice to the old address has no undo link. We rejected it. It is weaker, because the thief can use recovery before the owner reads the mail.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section class="ch" id="words" aria-labelledby="h-words">
+  <div class="ch-text">
+    <div class="ch-head">
+      <span class="ch-num">06</span>
+      <h2 id="h-words">Words</h2>
+      <p class="lead">The meaning of the special words in this document.</p>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="tablewrap rv">
+      <table>
+        <thead><tr><th scope="col">Word</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Fresh session</td><td>A session that a passkey sign-in made less than 300 seconds ago. Saldo measures from <code>createdAt</code>.</td></tr>
+          <tr><td>Step-up</td><td>An extra passkey sign-in that the person does to continue an action.</td></tr>
+          <tr><td>Real address</td><td>An email address that the person gave and verified.</td></tr>
+          <tr><td>Synthetic address</td><td>A placeholder address that Saldo made for an account from before D32. It has no mailbox.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Saldo · spec · a fresh passkey to change the email address</footer>
+
+<script>
+(function () {
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.ch'));
+  var links = {};
+  document.querySelectorAll('.toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+
+  function showAll() { reveals.forEach(function (el) { el.classList.add('now', 'in'); }); }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var line = innerHeight * 0.3, current = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+      Object.keys(links).forEach(function (id) {
+        if (id === current) links[id].setAttribute('aria-current', 'location'); else links[id].removeAttribute('aria-current');
+      });
+    });
+  }
+
+  // Reveal each figure once. Those on screen at load appear without motion.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(function (el) {
+      if (el.getBoundingClientRect().top < innerHeight) el.classList.add('now', 'in');
+      else io.observe(el);
+    });
+  } else { showAll(); }
+
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  onScroll();
+})();
+</script>
+</body>
+</html>
