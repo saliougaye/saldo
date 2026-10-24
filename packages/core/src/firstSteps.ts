@@ -4,7 +4,7 @@ import type { LocalDate } from './dates';
 import type { Category } from './entities';
 import { type FilterLookup, filterTransactions, type TransactionFilters } from './filters';
 import { categorySpendHistory, HISTORY_WINDOW, periodHistory, periodSpendHistory } from './history';
-import type { CategoryRef, LedgerTx } from './ledger';
+import { type CategoryRef, countsInTotals, type LedgerTx } from './ledger';
 import type { MinorUnits } from './money';
 import { type PeriodDef, periodContaining } from './period';
 import { median } from './stats';
@@ -16,6 +16,8 @@ export interface BudgetSuggestion {
   categoryId: string;
   /** The median spend of the category in one of the user's periods: what §5.5 suggests. */
   amount: MinorUnits;
+  /** How many counted expenses of the category (its children too) the window holds. */
+  txCount: number;
 }
 
 /** What a suggestion reads of a category: a budget's form offers only live top-level expense ones. */
@@ -39,11 +41,17 @@ export function budgetSuggestions(input: {
   count?: number;
 }): BudgetSuggestion[] {
   const { txs, categories, budgets, def, period, today, count = 3 } = input;
-  const history = categorySpendHistory(
-    periodHistory(txs, def, period, HISTORY_WINDOW),
-    categories,
-    today,
-  );
+  const used = periodHistory(txs, def, period, HISTORY_WINDOW);
+  const history = categorySpendHistory(used, categories, today);
+  const parentOf = new Map(categories.map((category) => [category.id, category.parentId]));
+  const txCounts = new Map<string, number>();
+  for (const entry of used) {
+    for (const tx of entry.txs) {
+      if (tx.kind !== 'expense' || tx.categoryId === null || !countsInTotals(tx, today)) continue;
+      const id = parentOf.get(tx.categoryId) ?? tx.categoryId;
+      txCounts.set(id, (txCounts.get(id) ?? 0) + 1);
+    }
+  }
   const taken = takenCategoryIds(budgets, categories);
   const known = new Set(
     categories
@@ -56,20 +64,24 @@ export function budgetSuggestions(input: {
     .map((categoryId) => ({
       categoryId,
       amount: suggestBudgetAmount(history, [categoryId], categories) ?? 0,
+      txCount: txCounts.get(categoryId) ?? 0,
     }))
     .filter((suggestion) => suggestion.amount > 0)
     .sort((a, b) => b.amount - a.amount || a.categoryId.localeCompare(b.categoryId))
     .slice(0, count);
 }
 
-export interface PeriodMatches {
+export interface PeriodMatches<T extends LedgerTx = LedgerTx> {
   range: ReturnType<typeof periodContaining>;
+  /** Every match of the period, also the ones past `rowLimit`. */
   count: number;
+  /** The newest matches of the period, newest first: at most `rowLimit`. */
+  rows: T[];
 }
 
 /**
  * W11, Transactions · no results: the periods other than `exclude` where the same filters find rows,
- * newest first, with how many rows each one holds.
+ * newest first, with how many rows each one holds and its newest `rowLimit` rows.
  */
 export function matchesInOtherPeriods<T extends LedgerTx>(input: {
   txs: readonly T[];
@@ -78,19 +90,29 @@ export function matchesInOtherPeriods<T extends LedgerTx>(input: {
   def: PeriodDef;
   exclude: { start: LocalDate };
   limit?: number;
-}): PeriodMatches[] {
-  const { def, exclude, limit = 3 } = input;
-  const byStart = new Map<string, PeriodMatches>();
+  rowLimit?: number;
+}): PeriodMatches<T>[] {
+  const { def, exclude, limit = 3, rowLimit = 3 } = input;
+  const byStart = new Map<string, PeriodMatches<T>>();
   for (const tx of filterTransactions(input.txs, input.filters, input.lookup)) {
     const range = periodContaining(def, tx.date);
     if (range.start === exclude.start) continue;
     const entry = byStart.get(range.start);
-    if (entry === undefined) byStart.set(range.start, { range, count: 1 });
-    else entry.count += 1;
+    if (entry === undefined) byStart.set(range.start, { range, count: 1, rows: [tx] });
+    else {
+      entry.count += 1;
+      entry.rows.push(tx);
+    }
   }
   return [...byStart.values()]
     .sort((a, b) => b.range.start.localeCompare(a.range.start))
-    .slice(0, limit);
+    .slice(0, limit)
+    .map((entry) => ({
+      ...entry,
+      rows: [...entry.rows]
+        .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id))
+        .slice(0, rowLimit),
+    }));
 }
 
 /**

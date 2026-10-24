@@ -47,8 +47,32 @@ describe('budgetSuggestions', () => {
       today: TODAY,
     });
     expect(suggestions).toEqual([
-      { categoryId: 'cat-groceries', amount: 20000 },
-      { categoryId: 'cat-transport', amount: 5000 },
+      { categoryId: 'cat-groceries', amount: 20000, txCount: 3 },
+      { categoryId: 'cat-transport', amount: 5000, txCount: 3 },
+    ]);
+  });
+
+  it('counts the rows behind each suggestion: a child in its parent, an excluded row not at all', () => {
+    const suggestions = budgetSuggestions({
+      txs: [
+        ...threeMonths(),
+        tx({ date: '2026-03-12', amount: 900, categoryId: 'cat-supermarket' }),
+        tx({
+          date: '2026-03-13',
+          amount: 900,
+          categoryId: 'cat-transport',
+          excludeFromTotals: true,
+        }),
+      ],
+      categories: LIVE,
+      budgets: [],
+      def: MONTH,
+      period: APRIL,
+      today: TODAY,
+    });
+    expect(suggestions.map((suggestion) => [suggestion.categoryId, suggestion.txCount])).toEqual([
+      ['cat-groceries', 4],
+      ['cat-transport', 3],
     ]);
   });
 
@@ -62,7 +86,7 @@ describe('budgetSuggestions', () => {
       today: TODAY,
       count: 1,
     });
-    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
+    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000, txCount: 3 }]);
   });
 
   it('REGRESSION: leaves out an archived category, whose «Create» link the budget form drops', () => {
@@ -79,7 +103,7 @@ describe('budgetSuggestions', () => {
       period: APRIL,
       today: TODAY,
     });
-    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000 }]);
+    expect(suggestions).toEqual([{ categoryId: 'cat-transport', amount: 5000, txCount: 3 }]);
   });
 
   it('suggests nothing with no history', () => {
@@ -118,10 +142,38 @@ describe('matchesInOtherPeriods', () => {
       def: MONTH,
       exclude: APRIL,
     });
-    expect(matches).toEqual([
+    expect(matches.map(({ range, count }) => ({ range, count }))).toEqual([
       { range: { start: '2026-03-01', end: '2026-03-31' }, count: 1 },
       { range: { start: '2026-01-01', end: '2026-01-31' }, count: 2 },
     ]);
+  });
+
+  it('carries the matching rows of each period, newest first', () => {
+    const matches = matchesInOtherPeriods({
+      txs,
+      filters: { ...EMPTY_FILTERS, query: 'esselunga' },
+      lookup,
+      def: MONTH,
+      exclude: APRIL,
+    });
+    expect(matches.map((entry) => entry.rows.map((row) => row.date))).toEqual([
+      ['2026-03-02'],
+      ['2026-01-20', '2026-01-03'],
+    ]);
+  });
+
+  it('keeps the count of a period whole when its rows stop at the row limit', () => {
+    const matches = matchesInOtherPeriods({
+      txs,
+      filters: { ...EMPTY_FILTERS, query: 'esselunga' },
+      lookup,
+      def: MONTH,
+      exclude: APRIL,
+      rowLimit: 1,
+    });
+    const january = matches.find((entry) => entry.range.start === '2026-01-01');
+    expect(january?.count).toBe(2);
+    expect(january?.rows.map((row) => row.description)).toEqual(['Esselunga Viale']);
   });
 
   it('stops at the limit', () => {
