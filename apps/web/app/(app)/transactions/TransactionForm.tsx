@@ -18,13 +18,14 @@ import {
   transferOverpaysCard,
 } from '@saldo/core';
 import { type AppLocale, formatMoney } from '@saldo/i18n/format';
-import { makeTranslator } from '@saldo/i18n/translate';
+import { makeTranslator, plural } from '@saldo/i18n/translate';
 import type { IconName } from '@saldo/ui';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
   type KeyboardEvent,
   type ReactNode,
+  useContext,
   useEffect,
   useId,
   useMemo,
@@ -47,6 +48,7 @@ import { Switch } from '../../../src/ui/Switch';
 import { TextField } from '../../../src/ui/TextField';
 import { createTagAction, saveTransactionAction } from './actions';
 import { DeletingContext } from './deleting';
+import { SavedContext } from './saved';
 import styles from './TransactionForm.module.css';
 
 interface Props {
@@ -98,6 +100,7 @@ export function TransactionForm({
 }: Props) {
   const t = useMemo(() => makeTranslator(messages), [messages]);
   const router = useRouter();
+  const onSaved = useContext(SavedContext);
   const form = useRef<HTMLFormElement>(null);
   const [values, setValues] = useState<TransactionFormValues>(view.initial);
   const [problem, setProblem] = useState<Problem>(null);
@@ -110,6 +113,11 @@ export function TransactionForm({
   // its first click), and kept Tab from ever reaching them.
   const [tagsOpen, setTagsOpen] = useState(false);
   const [allCategories, setAllCategories] = useState(false);
+  // «Dettagli» opens by itself on a row that has one: tags, «Escludi dai totali» or a repeat show as
+  // fields when the transaction has them (spec 2026-10-21, §02). Otherwise it is one closed row.
+  const [detailsOpen, setDetailsOpen] = useState(
+    view.initial.tagIds.length > 0 || view.initial.excludeFromTotals || view.recurring,
+  );
   const { minorDigits, today } = view;
   // A hidden new form and an edit form can be in the DOM together: their ids must differ.
   const dateId = useId();
@@ -232,6 +240,8 @@ export function TransactionForm({
         await actionApplied();
         // `replace`: Back from the saved row goes where the form was opened from, not into the form.
         router.replace(afterSave.replace('__ID__', encodeURIComponent(result.id)));
+        // The mockup confirms a change, not a new row: the new one shows up in the list.
+        if (view.mode === 'edit') onSaved();
         return;
       }
       if ('missing' in result) {
@@ -311,6 +321,15 @@ export function TransactionForm({
             now: money(preview.from.now),
             after: money(preview.from.after),
           });
+
+  // What the closed «Dettagli» row says is set, as the phone's form says it.
+  const detailsParts = [
+    values.tagIds.length > 0 ? plural(t, locale, 'txForm.detailsTags', values.tagIds.length) : null,
+    values.excludeFromTotals ? t('txForm.exclude') : null,
+    view.recurring ? t('web.form.repeatRecurring') : null,
+  ].filter((part): part is string => part !== null);
+  const detailsSummary =
+    detailsParts.length === 0 ? t('txForm.detailsNone') : detailsParts.join(' · ');
 
   const placeholder = minorDigits === 0 ? '0' : `0${decimalSeparator}${'0'.repeat(minorDigits)}`;
   const tagName = (id: string) => tags.find((tag) => tag.id === id)?.name ?? id;
@@ -547,83 +566,98 @@ export function TransactionForm({
         </div>
       </div>
 
-      <p className={styles.separator}>{t('txForm.details')}</p>
-
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor={tagsId}>
-          {t('transactions.tags')}
-        </label>
-        <div className={styles.tagBox}>
-          {values.tagIds.map((id) => (
-            <span className={styles.pill} key={id}>
-              #{tagName(id)}
-              <button
-                type="button"
-                className={styles.pillRemove}
-                aria-label={t('web.form.removeTag', { name: tagName(id) })}
-                onClick={() => set({ tagIds: values.tagIds.filter((tagId) => tagId !== id) })}
-              >
-                <Icon name="x" size={12} />
-              </button>
-            </span>
-          ))}
-          <input
-            id={tagsId}
-            className={styles.tagInput}
-            value={tagQuery}
-            placeholder={t('txForm.tagsPlaceholder')}
-            autoComplete="off"
-            maxLength={40}
-            onChange={(event) => setTagQuery(event.target.value)}
-            onKeyDown={onTagKeyDown}
-            onFocus={() => setTagsOpen(true)}
-          />
-        </div>
-        {tagsOpen && (suggestions.length > 0 || creatable) ? (
-          // A pick with the pointer keeps the focus in the field (`onMouseDown`), so typing goes on.
-          <div className={styles.suggestions}>
-            {suggestions.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                className={styles.chip}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => addTag(tag.id)}
-              >
-                #{tag.name}
-              </button>
-            ))}
-            {creatable ? (
-              <button
-                type="button"
-                className={styles.chip}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => createTag(tagQuery.trim())}
-              >
-                <Icon name="plus" size={14} />
-                {t('txForm.createTag', { name: tagQuery.trim() })}
-              </button>
+      {/* The mockup's «Dettagli · Niente di impostato ›»: a native disclosure, open on a row that
+          has a detail. Closed, it only hides its fields: their values stay in the draft. */}
+      <details
+        className={styles.details}
+        open={detailsOpen}
+        onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
+      >
+        <summary className={styles.detailsSummary}>
+          <span>{t('txForm.details')}</span>
+          <span className={styles.detailsValue}>
+            {detailsSummary}
+            <Icon name="chevR" size={14} className={styles.detailsChevron} />
+          </span>
+        </summary>
+        <div className={styles.detailsBody}>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor={tagsId}>
+              {t('transactions.tags')}
+            </label>
+            <div className={styles.tagBox}>
+              {values.tagIds.map((id) => (
+                <span className={styles.pill} key={id}>
+                  #{tagName(id)}
+                  <button
+                    type="button"
+                    className={styles.pillRemove}
+                    aria-label={t('web.form.removeTag', { name: tagName(id) })}
+                    onClick={() => set({ tagIds: values.tagIds.filter((tagId) => tagId !== id) })}
+                  >
+                    <Icon name="x" size={12} />
+                  </button>
+                </span>
+              ))}
+              <input
+                id={tagsId}
+                className={styles.tagInput}
+                value={tagQuery}
+                placeholder={t('txForm.tagsPlaceholder')}
+                autoComplete="off"
+                maxLength={40}
+                onChange={(event) => setTagQuery(event.target.value)}
+                onKeyDown={onTagKeyDown}
+                onFocus={() => setTagsOpen(true)}
+              />
+            </div>
+            {tagsOpen && (suggestions.length > 0 || creatable) ? (
+              // A pick with the pointer keeps the focus in the field (`onMouseDown`), so typing goes on.
+              <div className={styles.suggestions}>
+                {suggestions.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    className={styles.chip}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => addTag(tag.id)}
+                  >
+                    #{tag.name}
+                  </button>
+                ))}
+                {creatable ? (
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => createTag(tagQuery.trim())}
+                  >
+                    <Icon name="plus" size={14} />
+                    {t('txForm.createTag', { name: tagQuery.trim() })}
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
-        ) : null}
-      </div>
 
-      <Switch
-        label={t('txForm.exclude')}
-        note={t('txForm.excludeNote')}
-        checked={values.excludeFromTotals}
-        onChange={(excludeFromTotals) => set({ excludeFromTotals })}
-      />
+          <Switch
+            label={t('txForm.exclude')}
+            note={t('txForm.excludeNote')}
+            checked={values.excludeFromTotals}
+            onChange={(excludeFromTotals) => set({ excludeFromTotals })}
+          />
 
-      <div className={styles.repeat}>
-        <div className={styles.repeatText}>
-          <span>{t('txForm.repeat')}</span>
-          <span className={styles.faintNote}>{t('web.form.repeatOnPhone')}</span>
+          <div className={styles.repeat}>
+            <div className={styles.repeatText}>
+              <span>{t('txForm.repeat')}</span>
+              <span className={styles.faintNote}>{t('web.form.repeatOnPhone')}</span>
+            </div>
+            <span className={styles.repeatValue}>
+              {t(view.recurring ? 'web.form.repeatRecurring' : 'web.form.repeatNever')}
+            </span>
+          </div>
         </div>
-        <span className={styles.repeatValue}>
-          {t(view.recurring ? 'web.form.repeatRecurring' : 'web.form.repeatNever')}
-        </span>
-      </div>
+      </details>
 
       {problem === null ? null : <Alert body={message(problem)} />}
 

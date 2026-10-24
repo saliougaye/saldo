@@ -108,6 +108,9 @@ export async function fillTransaction(page: Page, t: Translate, tx: NewTransacti
   if (tx.account !== undefined) await pickOption(page, t('txForm.account'), tx.account);
   if (tx.tag !== undefined) {
     const field = form.getByLabel(t('transactions.tags'), { exact: true });
+    // A new form keeps the tags under «Dettagli», a closed disclosure.
+    if (!(await field.isVisible()))
+      await form.getByText(t('txForm.details'), { exact: true }).click();
     await field.fill(tx.tag);
     await field.press('Enter');
     await expect(form.getByText(`#${tx.tag}`)).toBeVisible();

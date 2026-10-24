@@ -508,6 +508,7 @@ export const de: Messages = {
     newTransaction: 'Neue Buchung',
     deleted: '„{{name}}“ gelöscht',
     saved: 'Buchung gesichert',
+    changesSaved: 'Änderungen gesichert',
     created: 'Buchung hinzugefügt',
     manual: 'Manuell erfasst',
     excludedFromTotals: 'Aus Summen ausgenommen',

@@ -366,8 +366,15 @@ test.describe('own rows', () => {
     const form = page.getByRole('dialog', { name: t('txForm.editTitle') });
     await form.getByLabel(t('txForm.amount')).fill('20');
     await form.getByLabel(t('txForm.descriptionExpense')).fill('Cena di prova');
+    // A row with no tag, no exclusion and no repeat keeps «Dettagli» as one closed row.
+    await expect(form.getByText(t('txForm.detailsNone'), { exact: true })).toBeVisible();
+    await expect(form.getByLabel(t('transactions.tags'), { exact: true })).toBeHidden();
     await form.getByRole('button', { name: t('txForm.save') }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    // The mockup's toast confirms the change.
+    await expect(
+      page.getByRole('status').filter({ hasText: t('transactions.changesSaved') }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Cena di prova' })).toContainText(money(-2000));
     await expect(page.getByRole('link', { name: 'Pranzo di prova' })).toHaveCount(0);
     await page.goto('/home');

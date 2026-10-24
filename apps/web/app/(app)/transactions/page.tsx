@@ -278,6 +278,7 @@ export default async function TransactionsPage({
         newTitle={t('txForm.newTitle')}
         editTitle={t('txForm.editTitle')}
         closeLabel={t('common.close')}
+        savedLabel={t('transactions.changesSaved')}
         newForm={
           newForm === null ? null : (
             <TransactionForm

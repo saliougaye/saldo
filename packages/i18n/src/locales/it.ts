@@ -502,6 +502,7 @@ export const it = {
     newTransaction: 'Nuova transazione',
     deleted: 'Eliminata «{{name}}»',
     saved: 'Transazione salvata',
+    changesSaved: 'Modifiche salvate',
     created: 'Transazione aggiunta',
     manual: 'Registrata manualmente',
     excludedFromTotals: 'Esclusa dai totali',

@@ -201,11 +201,53 @@ legend.label {
   font-size: var(--font-size-caption);
 }
 
-.separator {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-footnote);
-  color: var(--color-text-faint);
+/* The mockup's `.more`: «Dettagli» on the left, what is set and a chevron on the right. */
+.detailsSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.detailsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.detailsSummary:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+  border-radius: var(--radius-input);
+}
+
+.detailsValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  text-align: end;
+}
+
+.detailsChevron {
+  flex: none;
+  transition: rotate var(--motion-press) var(--motion-easing);
+}
+
+.details[open] .detailsChevron {
+  rotate: 90deg;
+}
+
+.detailsBody {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 8px;
 }
 
 /* Tags: the chosen ones as pills inside the field, then the input for the next. */
@@ -371,6 +413,10 @@ legend.label {
   .chip:active {
     scale: 1;
   }
+
+  .detailsChevron {
+    transition: none;
+  }
 }
 
 /* `--layout-wide-breakpoint` (1024): a media query cannot read a custom property. */
@@ -382,7 +428,8 @@ legend.label {
 
 /* The mockup's `.sheet .form` and `.narrow .two`: tighter, and Conto/Data one above the other. */
 @media (max-width: 1023px) {
-  .form {
+  .form,
+  .detailsBody {
     gap: 20px;
   }
 

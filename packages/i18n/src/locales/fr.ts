@@ -508,6 +508,7 @@ export const fr: Messages = {
     newTransaction: 'Nouvelle opération',
     deleted: '« {{name}} » supprimée',
     saved: 'Opération enregistrée',
+    changesSaved: 'Modifications enregistrées',
     created: 'Opération ajoutée',
     manual: 'Saisie manuellement',
     excludedFromTotals: 'Exclue des totaux',

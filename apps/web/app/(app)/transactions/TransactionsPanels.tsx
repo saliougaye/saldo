@@ -1,6 +1,14 @@
 'use client';
 
-import { Activity, Fragment, type ReactNode, useCallback, useEffect, useMemo } from 'react';
+import {
+  Activity,
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   type PanelState,
   panelFromSearch,
@@ -12,10 +20,15 @@ import { ListKeys } from '../../../src/ui/ListKeys';
 import { NEW_TRANSACTION_EVENT, wantsInstant } from '../../../src/ui/NewTransactionLink';
 import { type CloseFrom, Panel } from '../../../src/ui/Panel';
 import { type PanelNav, PanelNavContext } from '../../../src/ui/PanelNav';
+import { Toast } from '../../../src/ui/Toast';
 import { usePanelController } from '../../../src/ui/usePanelController';
+import { SavedContext } from './saved';
 import styles from './transactions.module.css';
 
 const NONE: PanelState = { kind: 'none' };
+
+/** «Modifiche salvate» stays as long as the mockup's toasts do. */
+const SAVED_MS = 5000;
 
 interface Props {
   /** The list: the period, the search, the filters and the days. */
@@ -25,6 +38,8 @@ interface Props {
   newTitle: string;
   editTitle: string;
   closeLabel: string;
+  /** `transactions.changesSaved`: the toast after an edit is saved. */
+  savedLabel: string;
   /**
    * «Nuova transazione», rendered once by the server. It waits hidden in `<Activity>`, and a new
    * draft takes its place in the background each time it leaves the screen.
@@ -136,16 +151,33 @@ export function TransactionsPanels(props: Props) {
       </Panel>
     );
 
+  // The mockup's «Modifiche salvate». Each save counts one up: a second save is a new toast, with
+  // its own five seconds.
+  const [saves, setSaves] = useState(0);
+  const onSaved = useCallback(() => setSaves((count) => count + 1), []);
+  // Stable: `Toast` restarts its timer whenever `onDismiss` changes.
+  const dismissSaved = useCallback(() => setSaves(0), []);
+
   const formOpen = creating || editing !== null;
   return (
     <PanelNavContext value={nav}>
       <div className={styles.layout}>
         <div className={styles.list}>{props.children}</div>
         <div className={styles.side} ref={side}>
-          {newPanel}
-          {editPanel}
+          <SavedContext value={onSaved}>
+            {newPanel}
+            {editPanel}
+          </SavedContext>
         </div>
       </div>
+      {saves === 0 ? null : (
+        <Toast
+          key={saves}
+          message={props.savedLabel}
+          durationMs={SAVED_MS}
+          onDismiss={dismissSaved}
+        />
+      )}
       {/* ↑ ↓ belong to the list; while a form is open the keys are the form's. */}
       {formOpen ? null : <ListKeys />}
     </PanelNavContext>

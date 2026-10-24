@@ -499,6 +499,7 @@ export const sv: Messages = {
     newTransaction: 'Ny transaktion',
     deleted: '”{{name}}” raderad',
     saved: 'Transaktionen sparad',
+    changesSaved: 'Ändringarna sparade',
     created: 'Transaktionen tillagd',
     manual: 'Registrerad manuellt',
     excludedFromTotals: 'Undantagen från summor',

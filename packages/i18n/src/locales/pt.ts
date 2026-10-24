@@ -502,6 +502,7 @@ export const pt: Messages = {
     newTransaction: 'Novo movimento',
     deleted: '«{{name}}» eliminado',
     saved: 'Movimento guardado',
+    changesSaved: 'Alterações guardadas',
     created: 'Movimento adicionado',
     manual: 'Registado manualmente',
     excludedFromTotals: 'Excluído dos totais',

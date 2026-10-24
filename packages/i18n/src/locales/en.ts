@@ -502,6 +502,7 @@ export const en: Messages = {
     newTransaction: 'New transaction',
     deleted: 'Deleted “{{name}}”',
     saved: 'Transaction saved',
+    changesSaved: 'Changes saved',
     created: 'Transaction added',
     manual: 'Added manually',
     excludedFromTotals: 'Excluded from totals',
