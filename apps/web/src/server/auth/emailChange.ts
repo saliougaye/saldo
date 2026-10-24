@@ -11,6 +11,7 @@ import { mailThrottle } from '../mail/throttle';
 import { createFixedWindowLimiter } from '../mcp/rateLimit';
 import { isRevoked } from './admin';
 import { emailIsTaken, isSyntheticEmail } from './email';
+import { isFreshSession } from './freshSession';
 import { deliver, VERIFICATION_TTL_SECONDS } from './mailCallbacks';
 
 /**
@@ -48,12 +49,19 @@ export interface PendingChange {
 
 export type StartResult =
   | { ok: true; pending: PendingChange }
-  | { ok: false; reason: 'mail_off' | 'unchanged' | 'rate_limited' };
+  | { ok: false; reason: 'mail_off' | 'reauth' | 'unchanged' | 'rate_limited' };
 
 /**
  * The rules of a request, shared by `POST /api/me/email` and the Profilo form: a server without SMTP
- * cannot prove the new address, and an address the account already has is no change. `newEmail` is
- * normalised (`normaliseEmail`) and the account's address is real: the caller has checked both.
+ * cannot prove the new address, a session that no passkey ceremony created a short time ago cannot
+ * start the change, and an address the account already has is no change. `newEmail` is normalised
+ * (`normaliseEmail`) and the account's address is real: the caller has checked both.
+ *
+ * **Why the session must be fresh.** The change ends with `emailVerified = true` on an address that
+ * the asker reads, and «recover by email» then lets that person register a passkey of their own. So
+ * whoever can start the change can take the account, and a stolen session is enough to start it. The
+ * notice to the old address is too slow to be the only defence. A refusal here stores nothing and
+ * spends no slot of the hourly limit.
  */
 export async function startEmailChange(
   db: ServerDatabase,
@@ -62,10 +70,13 @@ export async function startEmailChange(
     currentEmail: string;
     newEmail: string;
     acceptLanguage: string | null;
+    /** `AuthenticatedUser.sessionCreatedAt` of the session that asks. */
+    sessionCreatedAt: Date;
     now: Date;
   },
 ): Promise<StartResult> {
   if (!(await mailEnabled(db))) return { ok: false, reason: 'mail_off' };
+  if (!isFreshSession(input.sessionCreatedAt, input.now)) return { ok: false, reason: 'reauth' };
   if (input.newEmail === input.currentEmail.toLowerCase()) {
     return { ok: false, reason: 'unchanged' };
   }
