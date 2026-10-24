@@ -389,6 +389,9 @@ server runs and restart, or remove the variable and choose in the panel.
   address. The address changes only when the person uses the link (valid 24 hours, one time). If the old
   address is verified, it gets a notice. Without SMTP, the form is not shown, and `POST /api/me/email`
   answers `email_already_set` for a real address.
+  To start the change, the person must have used a passkey in the last 5 minutes. If the session is
+  older, the form asks for the passkey again, and `POST /api/me/email` answers `403 reauth_required`.
+  This stops a person who stole a session from taking the account through email recovery.
 - **Mail on your machine.** Start [Mailpit](https://mailpit.axllent.org):
   `docker run --rm -d -p 1025:1025 -p 8025:8025 axllent/mailpit`. In `/admin/settings`, set host
   `localhost`, port `1025`, no user, and any sender. A plain connection to `localhost` is allowed. Each

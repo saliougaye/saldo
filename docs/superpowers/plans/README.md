@@ -848,6 +848,17 @@ Not checked: Safari, Firefox and a real phone.
 - ✅ **Change of a real email address.** The new address gets a link; the swap happens when it is opened; the old address
   gets a notice. The change is a row in `email_changes` (migration `0007`). Run `pnpm --filter web db:migrate` on a dev
   database. Better Auth's `/change-email` stays disabled.
+- ✅ **E2E flow for the change of email.** `apps/web/e2e/change-email.spec.ts` follows the link from the mail sink to
+  the swap and the notice. It points the instance at the sink with `configureSmtp`, so `e2e/env.ts` keeps `SMTP_*` blank.
+- ✅ **Safer change of email.** Plan `2026-10-24-email-change-fresh-passkey.md`, spec
+  `specs/2026-10-24-email-change-fresh-passkey.html`. A change of a real address needs a session that a passkey
+  ceremony created in the last 5 minutes; an older one gets `403 reauth_required`, and the Profilo form asks for the
+  passkey with a button. The undo link in the notice is not built: the thief can use recovery before the owner reads the mail.
+- **Not fixed, on purpose: `POST /api/me/email` answers `409 email_taken` on the synthetic path.** That path serves only
+  accounts from before D32. Registration says «this email already has an account» by decision 7 of
+  `2026-09-27-0.3b-web-auth.md`, so the answer is not a new leak. A false `200` would make the phone think that the
+  address is saved. A uniform `202` with a link needs a change in the phone (`saveEmail`) and takes away the fill on a
+  server without SMTP.
 
 ## Future (not POC)
 
