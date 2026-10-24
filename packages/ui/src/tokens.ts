@@ -15,6 +15,13 @@ export interface Palette {
   page: string;
   bg: string;
   surface: string;
+  /**
+   * Web only (redesign H3, 2026-10-20): the signed-in page under the blocks, and the block on it.
+   * The page is tinted and the block is lighter in light, darker in dark, so neither pair maps onto
+   * `bg` and `surface` in both themes. The phone does not read these two.
+   */
+  canvas: string;
+  card: string;
   raised: string;
   border: string;
   borderStrong: string;
@@ -52,6 +59,8 @@ export const palettes: Record<ThemeName, Palette> = {
     page: '#050505',
     bg: '#0A0A0A',
     surface: '#121212',
+    canvas: '#0A0A0A',
+    card: '#121212',
     raised: '#1A1A1A',
     border: 'rgba(255,255,255,0.07)',
     borderStrong: 'rgba(255,255,255,0.12)',
@@ -82,6 +91,8 @@ export const palettes: Record<ThemeName, Palette> = {
     page: '#E9E9E7',
     bg: '#FFFFFF',
     surface: '#FAFAF9',
+    canvas: '#FAFAF9',
+    card: '#FFFFFF',
     raised: '#F1F1EF',
     border: 'rgba(0,0,0,0.08)',
     borderStrong: 'rgba(0,0,0,0.18)',
@@ -215,6 +226,8 @@ export const fontSize = {
   heroWeb: 56,
   /** H5: the cents and the currency beside `heroWeb`, 45% of its size (56 × 0.45 = 25.2). */
   heroWebCents: 25.2,
+  /** Web (redesign §04): the period name in the page head, between ‹ and ›. */
+  periodTitle: 20,
   /** The marketing site's headline at full width (spec 0.8a, D48). Never in the app. */
   siteDisplay: 72,
 } as const;
@@ -277,6 +290,10 @@ export const layout = {
   minHitTarget: 44,
   /** Web (H1, 2026-10-20): the top bar, on every width. */
   topbarHeight: 56,
+  /** Web (redesign §04): the page head — ‹ period › and the day — on one row. */
+  periodHeadHeight: 72,
+  /** Web: the ‹ and › of the page head. */
+  periodStep: 30,
   /** Web (H2): the one column every page sits in. The inner part of the top bar has the same width. */
   contentColumn: 1040,
   /** Web (H2): the padding on each side of the column, at and above `shellBreakpoint`. */

@@ -42,6 +42,8 @@ interface Conventions {
   dayMonth: (day: number, month: string) => string;
   dayMonthYear: (dayMonth: string, year: number) => string;
   dayMonthLong: (day: number, month: string) => string;
+  /** Two days of one month, the month in full: it `1 – 30 settembre`, en `September 1 – 30`. */
+  dayRangeLong: (first: number, last: number, month: string, year?: number) => string;
   longDate: (day: number, month: string, year: number) => string;
   monthYear: (month: string, year: number) => string;
 }
@@ -51,6 +53,8 @@ const dayFirst = {
   dayMonth: (day: number, month: string) => `${day} ${month}`,
   dayMonthYear: (dayMonth: string, year: number) => `${dayMonth} ${year}`,
   dayMonthLong: (day: number, month: string) => `${day} ${month}`,
+  dayRangeLong: (first: number, last: number, month: string, year?: number) =>
+    `${first} ${EN_DASH} ${last} ${month}${year === undefined ? '' : ` ${year}`}`,
   longDate: (day: number, month: string, year: number) => `${day} ${month} ${year}`,
   monthYear: (month: string, year: number) => `${month} ${year}`,
 };
@@ -59,6 +63,8 @@ const dayFirst = {
 const dayFirstWithDe = {
   ...dayFirst,
   dayMonthLong: (day: number, month: string) => `${day} de ${month}`,
+  dayRangeLong: (first: number, last: number, month: string, year?: number) =>
+    `${first} ${EN_DASH} ${last} de ${month}${year === undefined ? '' : ` de ${year}`}`,
   longDate: (day: number, month: string, year: number) => `${day} de ${month} de ${year}`,
   monthYear: (month: string, year: number) => `${month} de ${year}`,
 };
@@ -141,6 +147,8 @@ const CONVENTIONS: Record<AppLocale, Conventions> = {
     dayMonth: (day, month) => `${month} ${day}`,
     dayMonthYear: (dayMonth, year) => `${dayMonth}, ${year}`,
     dayMonthLong: (day, month) => `${month} ${day}`,
+    dayRangeLong: (first, last, month, year) =>
+      `${month} ${first} ${EN_DASH} ${last}${year === undefined ? '' : `, ${year}`}`,
     longDate: (day, month, year) => `${month} ${day}, ${year}`,
     monthYear: (month, year) => `${month} ${year}`,
   },
@@ -235,6 +243,8 @@ const CONVENTIONS: Record<AppLocale, Conventions> = {
     dayMonth: (day, month) => `${day}. ${month}`,
     dayMonthYear: (dayMonth, year) => `${dayMonth} ${year}`,
     dayMonthLong: (day, month) => `${day}. ${month}`,
+    dayRangeLong: (first, last, month, year) =>
+      `${first}. ${EN_DASH} ${last}. ${month}${year === undefined ? '' : ` ${year}`}`,
     longDate: (day, month, year) => `${day}. ${month} ${year}`,
     monthYear: (month, year) => `${month} ${year}`,
   },
@@ -517,6 +527,27 @@ export function formatCycleRange(range: DateRange, locale: AppLocale, today?: Lo
   const start = startFormat ? withYear(range.start) : plain(range.start);
   const end = endFormat ? withYear(range.end) : plain(range.end);
   return `${start} ${EN_DASH} ${end}`;
+}
+
+/**
+ * The name of a period in the page head of the web (redesign §04): `1 – 30 settembre` when the
+ * range lies in one month, with the year when that month is not in `today`'s year. A range that
+ * crosses a month is `formatCycleRange`'s: `27 set – 26 ott`.
+ */
+export function formatPeriodRange(range: DateRange, locale: AppLocale, today: LocalDate): string {
+  const start = parseLocalDate(range.start);
+  const end = parseLocalDate(range.end);
+  if (start.year !== end.year || start.month !== end.month) {
+    return formatCycleRange(range, locale, today);
+  }
+  const conventions = CONVENTIONS[locale];
+  const year = start.year === parseLocalDate(today).year ? undefined : start.year;
+  return conventions.dayRangeLong(
+    start.day,
+    end.day,
+    monthName(conventions.monthsLong, start.month),
+    year,
+  );
 }
 
 /**
