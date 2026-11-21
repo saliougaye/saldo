@@ -23,7 +23,7 @@
     "@saldo/core": "workspace:*",
     "@saldo/i18n": "workspace:*",
     "@saldo/ui": "workspace:*",
-    "astro": "^7.4.0"
+    "astro": "^7.4.7"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
